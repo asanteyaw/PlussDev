@@ -109,9 +109,9 @@ auto whole_frame = orders.tail(100);  // orders only has 6 cases
   suffix.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tabelize.html">
+  <a class="prev-link" href="sum.html">
     <span class="label">Previous</span>
-    <span class="title">tabelize</span>
+    <span class="title">sum</span>
   </a>
   <a class="next-link" href="take.html">
     <span class="label">Next</span>

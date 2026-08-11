@@ -15,7 +15,7 @@ void Registry::save_txt(std::string_view filepath, const pluss::loader::Config& 
 ## What It Does
 
 Writes the registry to a delimited text file (tab-separated by default), following
-the same [`to_kindle()`](to_kindle.md) → `tabelize()` → format-specific writer path
+the same [`kindelize()`](kindelize.md) → `tabelize()` → format-specific writer path
 as [`save_csv()`](save_csv.md), just with a text-file-style default separator rather
 than comma.
 

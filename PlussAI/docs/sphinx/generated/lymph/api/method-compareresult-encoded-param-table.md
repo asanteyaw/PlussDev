@@ -26,7 +26,11 @@ Option semantics used by this method:
     Option field used by this method.
   - `std::optional<Model> best_model{}`
     Option field used by this method.
+  - `std::optional<Model> worst_model{}`
+    Option field used by this method.
   - `std::vector<Model> fitted{}`
+    Option field used by this method.
+  - `std::vector<Model> bottom_fitted{}`
     Option field used by this method.
 
 - `SpecTuneResult` (`struct`):

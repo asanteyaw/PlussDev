@@ -81,7 +81,7 @@ auto cleaned = catalog.apply("balance", [](const pluss::kindle::Stream& s) {
   return s.fillnull(0.0);
 });
 
-auto table = cleaned.to_table();
+auto table = cleaned.tabelize();
 ```
 
 Use Catalog when:

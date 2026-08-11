@@ -54,7 +54,7 @@ document is the target shape and the plan to get there.
    Once a family object exists, anything naturally done *by* that object is a method, full
    stop. The one accepted-looking exception is not really an exception: another family may
    consume an existing object through a free factory only when that call creates a new object
-   of the consuming family. `lymph::workflow::from(champion, policy)` consumes a `Model` and
+   of the consuming family. `lymph::workflow::make(champion, policy)` consumes a `Model` and
    `Policy` to create a new `Workflow`; after that, `workflow.save(...)` and
    `workflow.infer(...)` are methods. `lymph::spotcheck::models(builder)` consumes a
    `Builder` to create a `SpotCheck`; after that, `spotcheck.run(...)` is a method.
@@ -79,7 +79,7 @@ document is the target shape and the plan to get there.
    redesign must not preserve scattered public free-function APIs merely because the current
    implementation already has them.
 1.3. **Interop does not erase ownership boundaries.** A family may consume another family's
-   value only to do its own line of work: `workflow::from(model, policy)` creates a deployable
+   value only to do its own line of work: `workflow::make(model, policy)` creates a deployable
    `Workflow`; `spotcheck::models(builder)` creates a comparison object; `validate::cross(...)`
    creates a validation plan that can run against a `Model`; a reporting family may consume
    predictions, labels, or a model to produce report values. That consumption does not make
@@ -89,7 +89,7 @@ document is the target shape and the plan to get there.
    (case-sensitive), so it can never be lowercased — the fix is moving construction off the
    class entirely into a real namespace. `ColumnRouter::names(...)` becomes free functions in
    `lymph::columnrouter::names(...)` / `where(...)` / `remaining_of(...)`; `Workflow::load(...)`
-   becomes `lymph::workflow::load(...)`, sibling to `lymph::workflow::from(...)`. No
+   becomes `lymph::workflow::load(...)`, sibling to `lymph::workflow::make(...)`. No
    exceptions — every constructible lymph type gets a matching lowercase namespace, even ones
    with only one construction shape (`lymph::policy(...)` for the one-shape `Policy` type,
    `lymph::random::seeded(...)` if that ends up worth having at all).
@@ -120,9 +120,12 @@ document is the target shape and the plan to get there.
    (`const auto make_variant = [&](...) {...};`). Every other local gets its real type spelled
    out — `const lymph::FrameHoldoutSplit split = lymph::holdout_split(...)`, not
    `const auto split = ...`.
-6. **`Policy`** is the single-shape frame cleanup type:
-   `lymph::Policy prep_policy = lymph::policy({.drop_columns = {...}, .filter_nulls = true});`.
-   The old frame-prep compatibility names have been removed.
+6. **`Policy`** is the single-shape raw-frame admission/schema type:
+   `lymph::Policy raw = lymph::policy({.drop_columns = {...}, .require_columns = {...}, .reject_missing = {"target"}});`.
+   It owns raw column admission, required/forbidden checks, explicit row rejection, and
+   missingness pass-through for downstream imputers. It does not own imputation, scaling,
+   encoding, feature engineering, or balancing. The legacy `filter_nulls` field remains for
+   compatibility, but new code should prefer explicit `reject_missing`.
 
 ## 2.1 Implementation doctrine for future tranches
 
@@ -404,7 +407,7 @@ than adding an ad hoc auto-counter.
 ### 3.4 Workflow — the actual "stack everything, raw data in" object
 
 ```cpp
-lymph::Workflow deployed = lymph::workflow::from(champion, prep_policy);
+lymph::Workflow deployed = lymph::workflow::make(champion, prep_policy);
 deployed.save(bundle_path, raw_train_frame, data_options);
 
 lymph::Workflow reloaded = lymph::workflow::load(bundle_path);
@@ -647,7 +650,7 @@ copy-on-write detach powered by `Flow::clone()`, instead of faking copyability i
 
 `Workflow`/`Policy` landed as real public families. The old pipeline skeleton and frame-prep
 compatibility wrappers are gone; `workflow.h` owns the deployable raw-frame artifact,
-`policy.h` owns cleanup semantics, and `workflow::from(...)` / `workflow::load(...)` are the
+`policy.h` owns cleanup semantics, and `workflow::make(...)` / `workflow::load(...)` are the
 construction entry points.
 
 Full regression: 26/26 AI tests pass, plus a full rebuild of every touched example target

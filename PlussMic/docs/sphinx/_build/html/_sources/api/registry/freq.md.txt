@@ -103,8 +103,8 @@ std::cout << "]";
     <span class="label">Previous</span>
     <span class="title">fillnull</span>
   </a>
-  <a class="next-link" href="from_kindle.html">
+  <a class="next-link" href="get.html">
     <span class="label">Next</span>
-    <span class="title">from_kindle</span>
+    <span class="title">get</span>
   </a>
 </div>

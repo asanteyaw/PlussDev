@@ -19,8 +19,10 @@
 //   feature_select.h - pluss::ai::lymph::feature (ranking/selection)
 //   detail/model_core.h - internal Model implementation, included through model.h
 //   workflow_dsl.h      - workflow::feature/stage branch DSL, FeatureTransformer builders
-//   policy.h            - Policy + lymph::policy(...) raw-frame cleanup rules
-//   workflow.h          - Workflow + lymph::workflow::from/load deployable raw-frame artifact
+//   policy.h            - Policy + lymph::policy(...) raw-frame admission/schema rules
+//   time.h              - TimeOptions + row-step duration helpers for temporal Workflow safety
+//   payload.h           - Payload + lymph::payload::make(...) typed data/metadata carrier
+//   workflow.h          - Workflow + lymph::workflow::make/load composition object
 //   factories.h         - internal detail::*_factory construction tags for model.h
 //   online.h            - OnlineLinearClassifier/Regressor + models::online_linear_*
 //   selection.h         - pluss::ai::lymph::selection (model/hyperparameter tuning)
@@ -57,6 +59,8 @@
 #include "pluss/ai/lymph/feature_select.h"
 #include "pluss/ai/lymph/workflow_dsl.h"
 #include "pluss/ai/lymph/policy.h"
+#include "pluss/ai/lymph/time.h"
+#include "pluss/ai/lymph/payload.h"
 #include "pluss/ai/lymph/workflow.h"
 #include "pluss/ai/lymph/factories.h"
 #include "pluss/ai/lymph/online.h"

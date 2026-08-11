@@ -93,7 +93,7 @@ TimeIndex must be sorted (non-decreasing)
 
 ## See Also
 
-- [`Axel::from_kindle`](../axel/from_kindle.md): the round-trip partner
+- [`Archive::bundelize`](../archive/bundelize.md): the round-trip partner
   that reconstructs `TimeIndex` values from a `kindle::Archive`.
 - [`Axel::tl`](../axel/tl.md): the entry point this accessor is reached
   from.

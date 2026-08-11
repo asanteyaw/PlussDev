@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -70,8 +70,8 @@ owned state.</p>
 <section id="registry">
 <h2>Registry<a class="headerlink" href="#registry" title="Link to this heading">¶</a></h2>
 <p>A <code class="docutils literal notranslate"><span class="pre">Registry</span></code> is a named collection of slots.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">catalog</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">catalog2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">catalog2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Load and save registry data:</p>
@@ -120,10 +120,10 @@ owned state.</p>
 <section id="kindle-bridge">
 <h2>Kindle bridge<a class="headerlink" href="#kindle-bridge" title="Link to this heading">¶</a></h2>
 <p>Some Registry operations require slots that can map cleanly to streams. The public
-surface no longer exposes separate compatibility checkers; <code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code> is the
+surface no longer exposes separate compatibility checkers; <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> is the
 single contract point.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="p">}</span>
@@ -141,11 +141,11 @@ operations.</p>
 <h2>Bundle conversion strategy<a class="headerlink" href="#bundle-conversion-strategy" title="Link to this heading">¶</a></h2>
 <p>DataFrame path:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">catalog</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Back to table:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">tabelize</span><span class="p">();</span>
 </pre></div>
 </div>

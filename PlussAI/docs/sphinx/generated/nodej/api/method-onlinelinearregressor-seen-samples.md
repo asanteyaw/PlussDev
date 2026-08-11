@@ -66,7 +66,7 @@ online metrics [accuracy, logloss]: 1 0.27341
 ```cpp
     warm_opts.max_iterations = 80;
 
-    auto model = pluss::ai::lymph::online_factory::linear_classifier(online_options);
+    OnlineLinearClassifier model = pluss::ai::lymph::models::online_linear_classifier(online_options);
     model.learn_(warm, warm_opts).advance_(stream);
 
     const auto metrics = model.assess(full);

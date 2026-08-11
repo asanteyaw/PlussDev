@@ -16,12 +16,12 @@ void Registry::save_csv(std::string_view filepath, const pluss::loader::Config& 
 
 Writes the registry to a CSV file. Internally, `save_csv()` (and every `save_*`
 method except [`save_json()`](save_json.md)) first converts the registry to a
-`Catalog` via [`to_kindle()`](to_kindle.md), then aligns it into a `DataFrame` via
+`Catalog` via [`kindelize()`](kindelize.md), then aligns it into a `DataFrame` via
 `tabelize()`, then writes that `DataFrame` to CSV.
 
 ```{important} Every field must be stream-compatible
-Because the conversion goes through `to_kindle()`, every field (slot) must hold
-values of a single, uniform kind — the same requirement `to_kindle()` itself
+Because the conversion goes through `kindelize()`, every field (slot) must hold
+values of a single, uniform kind — the same requirement `kindelize()` itself
 enforces. A registry with a genuinely mixed-type field (e.g. one row `Series`, the
 next `Note`) throws before anything is written. [`save_json()`](save_json.md) is the
 one exception — it falls back to `to_json()`'s per-value output for mixed fields
@@ -68,7 +68,7 @@ id,city
 ```
 
 Example 2. A field with genuinely mixed value kinds throws — the underlying
-`to_kindle()` conversion cannot represent it as a uniform `Stream`.
+`kindelize()` conversion cannot represent it as a uniform `Stream`.
 
 ```cpp
 auto mixed = pluss::bundle::Registry({
@@ -86,13 +86,13 @@ try {
 ### Output
 
 ```text
-Registry::to_kindle: slot 'mixed': slot is not stream-compatible (kind=Mixed)
+Registry::kindelize: slot 'mixed': slot is not stream-compatible (kind=Mixed)
 ```
 
-```{important} The throw message says "to_kindle", not "save_csv"
+```{important} The throw message says "kindelize", not "save_csv"
 Every `save_*` method except `save_json()` routes through
-[`to_kindle()`](to_kindle.md) internally, so the stream-compatibility check
-reports the error under the name `"Registry::to_kindle"` regardless of which
+[`kindelize()`](kindelize.md) internally, so the stream-compatibility check
+reports the error under the name `"Registry::kindelize"` regardless of which
 `save_*` method was actually called.
 ```
 
@@ -108,7 +108,7 @@ reports the error under the name `"Registry::to_kindle"` regardless of which
 - [`Registry::load_csv`](load_csv.md): the read-side counterpart.
 - [`Registry::save_as`](save_as.md): save to a format chosen by a runtime string,
   rather than a fixed method name.
-- [`Registry::to_kindle`](to_kindle.md): the underlying conversion every `save_*`
+- [`Registry::kindelize`](kindelize.md): the underlying conversion every `save_*`
   method except `save_json()` performs first.
 - [`Catalog::save_csv`](../catalog/save_csv.md): the equivalent saver on the kindle
   model.

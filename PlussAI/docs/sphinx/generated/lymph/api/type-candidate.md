@@ -24,7 +24,7 @@ Public fields on this type:
 - `Model model`
 - `std::optional<TrainOptions> train_options{}`
 - `Candidate& operator=(Candidate&&) noexcept = default`
-- `Candidate& operator=(const Candidate&) = delete`
+- `Candidate& operator=(const Candidate&) noexcept = default`
 
 ## Examples
 
@@ -42,13 +42,13 @@ Public fields on this type:
   //========== Cell 13: Tune Candidate Families ========
   // Equivalent in spirit to Grid/Random search over model hyperparameters.
   std::vector<lymph::selection::Candidate> candidates{};
-  candidates.emplace_back("linear_l2_1e6", lymph::linear_factory::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
+  candidates.emplace_back("linear_l2_1e6", lymph::models::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
       .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
       .regularization = pluss::ai::nodej::RegularizationKind::L2,
       .regularization_strength = 1e-6,
       .fit_intercept = true,
   }));
-  candidates.emplace_back("linear_l2_1e4", lymph::linear_factory::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
+  candidates.emplace_back("linear_l2_1e4", lymph::models::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
       .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
       .regularization = pluss::ai::nodej::RegularizationKind::L2,
       .regularization_strength = 1e-4,

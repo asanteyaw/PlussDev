@@ -17,7 +17,7 @@ Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) const -> pluss::k
 Converts the atlas into an `Archive`, one catalog per frame, in the same depth order — the
 inverse of [`Archive::tabelize()`](../archive/tabelize.md), which goes the other direction
 (`Archive` → `Atlas`). Internally, each frame is converted via
-[`Catalog::kindelize()`](../catalog/kindelize.md), using the same `policy` for every one,
+[`DataFrame::kindelize()`](../dataframe/kindelize.md), using the same `policy` for every one,
 and the atlas's own depth labels are carried over.
 
 ## Parameters
@@ -26,7 +26,7 @@ and the atlas's own depth labels are carried over.
     `attach_labels` (default `true`) carries each frame's own case-label axis into its
     resulting catalog's streams. `materialize_label` (default `false`) additionally adds
     the case-label axis as its own stream, named `label_key` (default `"_label"`). See
-    [`Catalog::kindelize`](../catalog/kindelize.md) for the full field breakdown.
+    [`DataFrame::kindelize`](../dataframe/kindelize.md) for the full field breakdown.
 
 ## Returns
 
@@ -72,7 +72,7 @@ id                       | Series       | Series[float64]  | 2       | [1, 2]
 - The atlas's own depth labels are carried over onto the resulting archive's
   [`label()`](label.md).
 - `policy` is applied uniformly to every frame via
-  [`Catalog::kindelize()`](../catalog/kindelize.md) — see that page for the full field
+  [`DataFrame::kindelize()`](../dataframe/kindelize.md) — see that page for the full field
   breakdown.
 - Round-trips with [`Archive::tabelize()`](../archive/tabelize.md):
   `atlas.kindelize().tabelize()` reconstructs an equivalent atlas.
@@ -81,10 +81,7 @@ id                       | Series       | Series[float64]  | 2       | [1, 2]
 
 - [`Archive::tabelize`](../archive/tabelize.md): the inverse conversion, from `Archive`
   back to `Atlas`.
-- [`Archive::kindelize`](../archive/kindelize.md): the depth-stacked-catalog analog of what
-  this method produces, wrapping [`Catalog::kindelize`](../catalog/kindelize.md) the same
-  way.
-- [`Catalog::kindelize`](../catalog/kindelize.md): the single-frame delegate this method
+- [`DataFrame::kindelize`](../dataframe/kindelize.md): the single-frame delegate this method
   applies to every frame.
 
 <div class="pluss-inline-prev-next">

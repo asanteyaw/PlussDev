@@ -12,6 +12,12 @@ This page documents the full public `Archive` surface for depth-stacked catalogs
 
 The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
+## Accessors
+
+`Archive` exposes nested accessors, each with its own method pages and sidebar:
+
+- `plot()` -> [`ArchivePlotAccessor`](archive_plot_accessor_api_reference.md)
+
 ```{toctree}
 :hidden:
 :maxdepth: 1
@@ -39,7 +45,6 @@ api/archive/invalid
 api/archive/isnull
 api/archive/keyaxis
 api/archive/keys
-api/archive/kindelize
 api/archive/label
 api/archive/loc
 api/archive/map_catalogs
@@ -51,6 +56,7 @@ api/archive/ndistinct
 api/archive/nkeys
 api/archive/notnull
 api/archive/nrecords
+api/archive/plot
 api/archive/rename
 api/archive/shape
 api/archive/show
@@ -59,6 +65,5 @@ api/archive/slice_depth
 api/archive/tabelize
 api/archive/tail
 api/archive/to_string
-api/archive/to_table
 api/archive/unique
 ```

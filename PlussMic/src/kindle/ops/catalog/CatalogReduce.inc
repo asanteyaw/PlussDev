@@ -12,7 +12,7 @@ Catalog reduce_recordwise(const Catalog& catalog,
   std::vector<std::pair<std::string, Stream>> out;
   out.reserve(static_cast<std::size_t>(catalog.nkeys()));
   for (const auto& key : catalog.keys()) {
-    out.emplace_back(key, reducer(catalog.at(key)));
+    out.emplace_back(key, reducer(catalog.keys(key)));
   }
   return Catalog(std::move(out));
 }
@@ -28,7 +28,7 @@ TabelizePolicy reduce_tabelize_policy(const CatalogReduceOptions& options) {
 
 void require_series_streams(const Catalog& catalog, std::string_view where) {
   for (const auto& key : catalog.keys()) {
-    PLUSS_CHECK(catalog.at(key).kind() == StreamKind::Series,
+    PLUSS_CHECK(catalog.keys(key).kind() == StreamKind::Series,
                 std::string(where) + ": key '" + key + "' must be a Series stream for cross-key reduction");
   }
 }

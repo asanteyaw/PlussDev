@@ -60,11 +60,13 @@ only covers what's specific to `step()`.
     struct StepPlotOptions {
       double alpha{1.0};
       double line_width{1.5};
+      XYAlignOptions align{};
     };
     ```
-    Only opacity and stroke width — unlike [`LinePlotOptions`](line.md), there is no
-    `y_limit_method` field on `StepPlotOptions`; the y-axis always uses the figure's default
-    auto-fit behavior for step charts.
+    Only opacity, stroke width, and `align` — unlike [`LinePlotOptions`](line.md), there is
+    no `y_limit_method` field on `StepPlotOptions`; the y-axis always uses the figure's
+    default auto-fit behavior for step charts. `align` is present but inert here — see
+    [`line()`](line.md)'s note on the field.
 
 ## Returns
 

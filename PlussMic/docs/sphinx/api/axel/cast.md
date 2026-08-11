@@ -75,9 +75,9 @@ std::cout << std::get<pluss::Note>(out.registry(0).fields("ids").at(0)).at(0);
   casting it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="as_kindle.html">
+  <a class="prev-link" href="../../axel_api_reference.html">
     <span class="label">Previous</span>
-    <span class="title">as_kindle</span>
+    <span class="title">Axel API</span>
   </a>
   <a class="next-link" href="concat_depth.html">
     <span class="label">Next</span>

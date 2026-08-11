@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,13 +52,13 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Writes the registry to a CSV file. Internally, <code class="docutils literal notranslate"><span class="pre">save_csv()</span></code> (and every <code class="docutils literal notranslate"><span class="pre">save_*</span></code>
 method except <a class="reference internal" href="save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_json()</span></code></span></a>) first converts the registry to a
-<code class="docutils literal notranslate"><span class="pre">Catalog</span></code> via <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a>, then aligns it into a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> via
+<code class="docutils literal notranslate"><span class="pre">Catalog</span></code> via <a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a>, then aligns it into a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> via
 <code class="docutils literal notranslate"><span class="pre">tabelize()</span></code>, then writes that <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> to CSV.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Every field must be stream-compatible
-Because the conversion goes through <code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code>, every field (slot) must hold
-values of a single, uniform kind — the same requirement <code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code> itself
+Because the conversion goes through <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code>, every field (slot) must hold
+values of a single, uniform kind — the same requirement <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> itself
 enforces. A registry with a genuinely mixed-type field (e.g. one row <code class="docutils literal notranslate"><span class="pre">Series</span></code>, the
 next <code class="docutils literal notranslate"><span class="pre">Note</span></code>) throws before anything is written. <a class="reference internal" href="save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_json()</span></code></span></a> is the
 one exception — it falls back to <code class="docutils literal notranslate"><span class="pre">to_json()</span></code>’s per-value output for mixed fields
@@ -101,7 +101,7 @@ Writes the file as a side effect; produces no return value.</p>
 </pre></div>
 </div>
 <p>Example 2. A field with genuinely mixed value kinds throws — the underlying
-<code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code> conversion cannot represent it as a uniform <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> conversion cannot represent it as a uniform <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;mixed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)})},</span>
@@ -117,15 +117,15 @@ Writes the file as a side effect; produces no return value.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Registry::to_kindle: slot &#39;mixed&#39;: slot is not stream-compatible (kind=Mixed)
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Registry::kindelize: slot &#39;mixed&#39;: slot is not stream-compatible (kind=Mixed)
 </pre></div>
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>The throw message says “to_kindle”, not “save_csv”
+<p>The throw message says “kindelize”, not “save_csv”
 Every <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method except <code class="docutils literal notranslate"><span class="pre">save_json()</span></code> routes through
-<a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a> internally, so the stream-compatibility check
-reports the error under the name <code class="docutils literal notranslate"><span class="pre">&quot;Registry::to_kindle&quot;</span></code> regardless of which
+<a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a> internally, so the stream-compatibility check
+reports the error under the name <code class="docutils literal notranslate"><span class="pre">&quot;Registry::kindelize&quot;</span></code> regardless of which
 <code class="docutils literal notranslate"><span class="pre">save_*</span></code> method was actually called.</p>
 </div>
 </section>
@@ -145,7 +145,7 @@ no-config overload.</p></li>
 <li><p><a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::load_csv</span></code></span></a>: the read-side counterpart.</p></li>
 <li><p><a class="reference internal" href="save_as.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::save_as</span></code></span></a>: save to a format chosen by a runtime string,
 rather than a fixed method name.</p></li>
-<li><p><a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_kindle</span></code></span></a>: the underlying conversion every <code class="docutils literal notranslate"><span class="pre">save_*</span></code>
+<li><p><a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::kindelize</span></code></span></a>: the underlying conversion every <code class="docutils literal notranslate"><span class="pre">save_*</span></code>
 method except <code class="docutils literal notranslate"><span class="pre">save_json()</span></code> performs first.</p></li>
 <li><p><a class="reference internal" href="../catalog/save_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::save_csv</span></code></span></a>: the equivalent saver on the kindle
 model.</p></li>

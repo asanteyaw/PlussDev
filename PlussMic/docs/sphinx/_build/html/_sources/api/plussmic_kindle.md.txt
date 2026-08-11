@@ -10,6 +10,10 @@ The `kindle` model is the stream-first surface.
 :maxdepth: 1
 
 ../stream_api_reference
+../stream_plot_accessor_api_reference
 ../catalog_api_reference
+../catalog_plot_accessor_api_reference
+../catalog_plot3d_accessor_api_reference
 ../archive_api_reference
+../archive_plot_accessor_api_reference
 ```

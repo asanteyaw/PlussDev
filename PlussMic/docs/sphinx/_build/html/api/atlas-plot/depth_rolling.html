@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -43,46 +43,43 @@
 <p><a class="reference internal" href="../../atlas_plot_accessor_api_reference.html"><span class="doc std std-doc">Back to AtlasPlotAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">depth_rolling</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
-<span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">depth_rolling</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AtlasDepthRollingPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span><span class="w"> </span><span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">depth_rolling</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span><span class="w"> </span><span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">depth_rolling</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AtlasDepthRollingPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reduces <code class="docutils literal notranslate"><span class="pre">feature</span></code> to one scalar per frame (statistic <code class="docutils literal notranslate"><span class="pre">options.statistic</span></code>, default
-<code class="docutils literal notranslate"><span class="pre">Mean</span></code> — the same per-frame reduction <a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth()</span></code></span></a> uses), then applies a
-simple trailing moving average (<code class="docutils literal notranslate"><span class="pre">options.window</span></code>, default <code class="docutils literal notranslate"><span class="pre">3</span></code>) over that reduced
-series, and plots both the raw reduced series (gray, optional) and the smoothed
-series (teal) against depth.</p>
+<p>Reduces <code class="docutils literal notranslate"><span class="pre">feature</span></code> to a single scalar per frame (statistic <code class="docutils literal notranslate"><span class="pre">options.statistic</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>) —
+the same per-frame reduction <a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth()</span></code></span></a> uses for its center line — then draws both the
+raw reduced series and a rolling average of it, smoothing out frame-to-frame noise.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Returns a Studio, not printable output
 Like every method on <code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor</span></code>, this builds and returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> —
-call <code class="docutils literal notranslate"><span class="pre">.show()</span></code>/<code class="docutils literal notranslate"><span class="pre">.save_svg(path)</span></code>/etc. to view or persist it.</p>
+call <code class="docutils literal notranslate"><span class="pre">.show()</span></code>/<code class="docutils literal notranslate"><span class="pre">.to_svg()</span></code>/<code class="docutils literal notranslate"><span class="pre">.save_svg(path)</span></code>/etc. to view or persist it; <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">chart</span></code> does
+not compile.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
-The numeric feature to reduce, then smooth, one value per frame.</p>
+The numeric feature to reduce and smooth, one value per frame.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">AtlasDepthRollingPlotOptions&amp;</span></code>)
-<code class="docutils literal notranslate"><span class="pre">statistic</span></code> (default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>) is the per-frame reduction, same set as
-<a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">AtlasDepthStatistic</span></code>; <code class="docutils literal notranslate"><span class="pre">window</span></code> (default <code class="docutils literal notranslate"><span class="pre">3</span></code>) is the
-rolling average’s window size; <code class="docutils literal notranslate"><span class="pre">show_raw</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>) toggles the
-unsmoothed series; <code class="docutils literal notranslate"><span class="pre">show_grid</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>); <code class="docutils literal notranslate"><span class="pre">raw_line_width</span></code>/
-<code class="docutils literal notranslate"><span class="pre">rolling_line_width</span></code> control the two lines’ thickness.</p>
+<code class="docutils literal notranslate"><span class="pre">statistic</span></code> (<code class="docutils literal notranslate"><span class="pre">AtlasDepthStatistic</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>). <code class="docutils literal notranslate"><span class="pre">window</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">3</span></code>):
+the rolling-average window size, in frames. <code class="docutils literal notranslate"><span class="pre">show_raw</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>): whether the
+unsmoothed raw series is drawn alongside the rolling average. <code class="docutils literal notranslate"><span class="pre">show_grid</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>).
+<code class="docutils literal notranslate"><span class="pre">raw_line_width</span></code>/<code class="docutils literal notranslate"><span class="pre">rolling_line_width</span></code> control line thickness.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
-A figure with one 2D pane containing the raw reduced series (if <code class="docutils literal notranslate"><span class="pre">show_raw</span></code>) and
-its rolling-average smoothed counterpart.</p>
+A figure with one 2D pane: the raw per-frame reduced series (if <code class="docutils literal notranslate"><span class="pre">show_raw</span></code>) plus its rolling
+average.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Plot a feature’s per-frame mean alongside its default 3-wide rolling
-average, across a 5-frame atlas.</p>
+<p>Example 1. Default call: raw per-frame means plus a 3-frame rolling average.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="w"> </span><span class="n">frames</span><span class="p">;</span>
@@ -95,32 +92,51 @@ average, across a 5-frame atlas.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;day1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day5&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">depth_rolling</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;depth_rolling_temp.svg&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p>The raw (gray) series is <code class="docutils literal notranslate"><span class="pre">temp_c</span></code>’s per-frame mean — the same straight <code class="docutils literal notranslate"><span class="pre">20,</span> <span class="pre">21,</span> <span class="pre">22,</span> <span class="pre">23,</span> <span class="pre">24</span></code> line <a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth()</span></code></span></a>’s Example 1 plots — with the rolling (teal) series
-overlaid alongside it.</p>
-<p><img alt="Output of Example 1" src="../../_images/depth_rolling-1.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/depth_rolling-11.svg" /></p>
+<p>Both the raw line (per-frame mean, <code class="docutils literal notranslate"><span class="pre">20,</span> <span class="pre">21,</span> <span class="pre">22,</span> <span class="pre">23,</span> <span class="pre">24</span></code>) and its 3-frame rolling average appear —
+the rolling line lags and smooths the raw one.</p>
+<p>Example 2. A shorter <code class="docutils literal notranslate"><span class="pre">window</span></code> and <code class="docutils literal notranslate"><span class="pre">show_raw</span> <span class="pre">=</span> <span class="pre">false</span></code> draws only the smoothed line, with a
+tighter rolling window.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="w"> </span><span class="n">frames</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">    </span><span class="n">frames</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">19.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">}));</span>
+<span class="p">}</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;day1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day5&quot;</span><span class="p">})));</span>
+
+<span class="n">AtlasDepthRollingPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">show_raw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">depth_rolling</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 2" src="../../_images/depth_rolling-21.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The reduction happens first (per frame, <code class="docutils literal notranslate"><span class="pre">options.statistic</span></code>), and the rolling
-average is computed over that already-reduced series — not over each frame’s raw
-case-level values.</p></li>
-<li><p>Set <code class="docutils literal notranslate"><span class="pre">options.show_raw</span> <span class="pre">=</span> <span class="pre">false</span></code> to draw only the smoothed line.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code> (shared with <a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth()</span></code></span></a>/<a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>/
-etc.) controls which frames are included and in what order, before reduction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window</span></code> is measured in frames, not in any depth-label unit — a <code class="docutils literal notranslate"><span class="pre">window</span></code> of <code class="docutils literal notranslate"><span class="pre">3</span></code> averages the
+three most recent frames’ reduced values, regardless of what <code class="docutils literal notranslate"><span class="pre">depth_labels()</span></code> are attached.</p></li>
+<li><p>Setting <code class="docutils literal notranslate"><span class="pre">show_raw</span> <span class="pre">=</span> <span class="pre">false</span></code> hides the unsmoothed series entirely, leaving just the rolling
+average — useful once you’ve confirmed the raw shape and only want the trend.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code> (shared with <a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth()</span></code></span></a>/<a class="reference internal" href="depth_compare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth_compare()</span></code></span></a>/
+<a class="reference internal" href="depth_facet.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">depth_facet()</span></code></span></a>) controls which frames are included and in what order.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::depth</span></code></span></a>: the unsmoothed per-frame reduction this
-method builds on.</p></li>
-<li><p><a class="reference internal" href="depth_compare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::depth_compare</span></code></span></a>: several features’ reduced
-series overlaid, without any smoothing.</p></li>
-<li><p><a class="reference internal" href="../atlas/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::plot</span></code></span></a>: how to enter this accessor.</p></li>
+<li><p><a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::depth</span></code></span></a>: the unsmoothed center-plus-band chart this method
+builds on.</p></li>
+<li><p><a class="reference internal" href="../atlas/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::plot</span></code></span></a>: the entry point this accessor is reached from.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="depth_facet.html">

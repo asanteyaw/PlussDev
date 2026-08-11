@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -64,9 +64,9 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Converts the catalog into a <code class="docutils literal notranslate"><span class="pre">pluss::table::DataFrame</span></code>, one feature per stream, aligning
 all streams onto a single shared row axis first. This is the bridge every <code class="docutils literal notranslate"><span class="pre">save_*()</span></code>
-method (through an internal <code class="docutils literal notranslate"><span class="pre">Outer</span></code>/<code class="docutils literal notranslate"><span class="pre">Pos</span></code> policy variant) and <a class="reference internal" href="to_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_table()</span></code></span></a>
-use to turn a possibly-ragged <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> into a strictly rectangular <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.
-<a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a> is the inverse direction.</p>
+method uses to turn a possibly-ragged <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> into a strictly rectangular
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. <a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize()</span></code></span></a> is the inverse
+direction.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The default Align::Inner truncates a ragged catalog to its shortest stream
@@ -208,9 +208,8 @@ than throwing.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="to_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::to_table</span></code></span></a>: a thin wrapper over this method that optionally
-prints the result.</p></li>
-<li><p><a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize</span></code></span></a>: the inverse direction, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> → <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p></li>
+<li><p><a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize</span></code></span></a>: the inverse direction,
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> → <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p></li>
 <li><p><a class="reference internal" href="save_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::save_csv</span></code></span></a> (and the other <code class="docutils literal notranslate"><span class="pre">save_*()</span></code> methods): use an
 outer-align variant of this same mechanism internally.</p></li>
 </ul>

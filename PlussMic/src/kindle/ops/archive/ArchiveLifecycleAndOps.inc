@@ -74,21 +74,6 @@ Archive::~Archive() = default;
 
 Archive::Archive(pluss::msharp::intrusive_ptr<detail::ArchiveImpl> impl) : impl_(std::move(impl)) {}
 
-Archive Archive::kindelize(const pluss::table::Atlas& atlas, const KindelizePolicy& policy) {
-  PLUSS_CHECK(atlas.defined(), "Archive::kindelize requires a defined Atlas");
-  std::vector<Catalog> catalogs;
-  catalogs.reserve(static_cast<std::size_t>(atlas.depth()));
-  for (std::int64_t i = 0; i < atlas.depth(); ++i) {
-    catalogs.push_back(Catalog::kindelize(atlas.frame(i), policy));
-  }
-
-  std::optional<Stream> depth_labels = std::nullopt;
-  if (atlas.axis0_labels().has_value()) {
-    depth_labels = Stream::from_thread(*atlas.axis0_labels());
-  }
-  return Archive(std::move(catalogs), std::move(depth_labels));
-}
-
 bool Archive::defined() const noexcept { return static_cast<bool>(impl_); }
 bool Archive::unique() const noexcept { return defined() && impl_.use_count() == 1; }
 
@@ -332,6 +317,16 @@ Archive Archive::cast(pluss::table::ThreadCastTarget target,
   return map_catalogs([&](const Catalog& catalog) { return catalog.cast(target, options); });
 }
 
+ArchiveTimelineAccessor Archive::tl() const {
+  if (empty()) return ArchiveTimelineAccessor(*this, {});
+  return ArchiveTimelineAccessor(*this, catalog(0).keys());
+}
+
+ArchiveTimeSeriesAccessor Archive::ts() const {
+  if (empty()) return ArchiveTimeSeriesAccessor(*this, {});
+  return ArchiveTimeSeriesAccessor(*this, catalog(0).keys());
+}
+
 Archive Archive::astype(pluss::codem::ScalarType dtype) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.astype(dtype); });
 }
@@ -365,5 +360,14 @@ pluss::table::Atlas Archive::tabelize(const TabelizePolicy& policy) const {
 
 pluss::bundle::Axel Archive::bundelize() const {
   PLUSS_CHECK(defined(), "Archive::bundelize: archive undefined");
-  return pluss::bundle::Axel::from_kindle(*this);
+  std::vector<pluss::bundle::Registry> out;
+  out.reserve(static_cast<std::size_t>(depth()));
+  for (std::int64_t i = 0; i < depth(); ++i) {
+    out.push_back(catalog(i).bundelize());
+  }
+  std::optional<pluss::bundle::Slot> labels = std::nullopt;
+  if (label().has()) {
+    labels = label().values().bundelize();
+  }
+  return pluss::bundle::Axel(std::move(out), std::move(labels));
 }

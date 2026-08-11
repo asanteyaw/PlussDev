@@ -24,3 +24,8 @@ target_include_directories(pluss PRIVATE
 # PlussAI/test/, as of this project's standing convention (every lymph test
 # belongs next to the module it tests, matching src/ above).
 add_subdirectory(test)
+
+# User-facing Lymph demos. Targets are intentionally excluded from the default
+# build so normal developer builds do not pick up heavier end-to-end examples,
+# but each demo remains buildable by target name.
+add_subdirectory(demos)

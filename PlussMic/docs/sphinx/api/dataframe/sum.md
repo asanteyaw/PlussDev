@@ -124,8 +124,8 @@ missing values to begin with.
     <span class="label">Previous</span>
     <span class="title">sub</span>
   </a>
-  <a class="next-link" href="tabelize.html">
+  <a class="next-link" href="tail.html">
     <span class="label">Next</span>
-    <span class="title">tabelize</span>
+    <span class="title">tail</span>
   </a>
 </div>

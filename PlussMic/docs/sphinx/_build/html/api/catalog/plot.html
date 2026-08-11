@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Catalog::query" href="query.html" />
+    <link rel="next" title="Catalog::plot3d" href="plot3d.html" />
     <link rel="prev" title="Catalog::nt" href="nt.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -36,79 +36,84 @@
 
           <div class="body" role="main">
             
-  <section id="catalog-plot">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9e2e04b5507d -->
+<section id="catalog-plot">
 <h1>Catalog::plot<a class="headerlink" href="#catalog-plot" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">plot</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogPlotAccessor</span>
-
-<span class="n">Catalog</span><span class="o">::</span><span class="n">plot</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFramePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogPlotAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">plot</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogPlotAccessor</span>
+<span class="n">Catalog</span><span class="o">::</span><span class="n">plot</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFramePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogPlotAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This opens the plotting accessor for the current data object.</p>
+<p>The entry point into the catalog-level 2D plotting accessor — key-based line/step/area/
+scatter/bar/hist/density/corr_heatmap/scatter_matrix/auto_plot charts, returning
+<code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figures. There is no separate <code class="docutils literal notranslate"><span class="pre">CatalogPlotOptions</span></code> type — the accessor
+reuses <code class="docutils literal notranslate"><span class="pre">pluss::table::DataFramePlotOptions</span></code> as-is, the same struct
+<a class="reference internal" href="../dataframe/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::plot</span></code></span></a> takes, so fields like <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> still
+apply even though what they resolve is a catalog key rather than a frame feature. Every
+method on the returned <code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor</span></code> has its own page, with real rendered charts,
+under <a class="reference internal" href="../../catalog_plot_accessor_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor</span></code> API Reference</span></a>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>options</strong>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::DataFramePlotOptions&amp;</span></code>, optional)
+Shared defaults (<code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code>, <code class="docutils literal notranslate"><span class="pre">default_hue_feature</span></code>, tick/label formatting,
+figure size, …) applied to every chart method called on the returned accessor.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor</span></code>
-Value produced by this call.</p>
+A binder for the current catalog — call one of its methods to build a specific chart.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">plot()</span></code> binds without rendering; the returned accessor’s methods do the actual
+chart-building.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;sales&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.5</span><span class="p">})),</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">plot</span><span class="p">();</span>
-</pre></div>
-</div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
-</pre></div>
-</div>
-<p>Example 2. Pass an explicit options object to control the operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">plot</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
-</pre></div>
-</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">plot()</span></code> alone does no work — it only binds the catalog; call one of the returned
+accessor’s methods to actually build a chart.</p></li>
+<li><p>Reuses <code class="docutils literal notranslate"><span class="pre">pluss::table::DataFramePlotOptions</span></code> directly — there is no <code class="docutils literal notranslate"><span class="pre">CatalogPlotOptions</span></code>.</p></li>
+<li><p>For 3D charts (scatter3d/line3d/hist3d/surface/wireframe), see
+<a class="reference internal" href="plot3d.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::plot3d</span></code></span></a> instead.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../catalog_plot_accessor_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor</span></code> API Reference</span></a>: every
+chart method on the accessor this call returns, each with a real rendered example.</p></li>
+<li><p><a class="reference internal" href="plot3d.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::plot3d</span></code></span></a>: the 3D counterpart of this entry point.</p></li>
+<li><p><a class="reference internal" href="../dataframe/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::plot</span></code></span></a>: the shared <code class="docutils literal notranslate"><span class="pre">DataFramePlotOptions</span></code> struct’s
+canonical documentation.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nt.html">
     <span class="label">Previous</span>
     <span class="title">nt</span>
   </a>
-  <a class="next-link" href="query.html">
+  <a class="next-link" href="plot3d.html">
     <span class="label">Next</span>
-    <span class="title">query</span>
+    <span class="title">plot3d</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 
@@ -164,7 +169,7 @@ Value produced by this call.</p>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
       <li>Previous: <a href="nt.html" title="previous chapter">Catalog::nt</a></li>
-      <li>Next: <a href="query.html" title="next chapter">Catalog::query</a></li>
+      <li>Next: <a href="plot3d.html" title="next chapter">Catalog::plot3d</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

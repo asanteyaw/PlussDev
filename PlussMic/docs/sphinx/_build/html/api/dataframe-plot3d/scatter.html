@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -93,9 +93,14 @@ Optional numeric feature mapped onto the trace’s color scale, one continuous g
 across all points (not a categorical split into separate traces — contrast the 2D
 accessor’s <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code>).</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">Scatter3DPlotOptions</span></code>)
-<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">Scatter3DPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Plot3DSceneOptions</span> <span class="pre">scene{};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Plot3DTraceOptions</span> <span class="pre">trace{};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">default_marker_size{12.0};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">Scatter3DPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Plot3DSceneOptions</span> <span class="pre">scene{};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Plot3DTraceOptions</span> <span class="pre">trace{};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">default_marker_size{12.0};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">XYAlignOptions</span> <span class="pre">align{XYAlignMode::Inner,</span> <span class="pre">XYAlignBy::Auto,</span> <span class="pre">0.0};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
 <code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> is only consulted when <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> is omitted; <code class="docutils literal notranslate"><span class="pre">scene</span></code>/<code class="docutils literal notranslate"><span class="pre">trace</span></code>
-are the same shared structs documented in full on <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>.</p>
+are the same shared structs documented in full on <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>. <code class="docutils literal notranslate"><span class="pre">align</span></code> exists so
+<code class="docutils literal notranslate"><span class="pre">Catalog::plot3d().scatter()</span></code> can reuse this struct type for its own multi-key
+reconciliation (see
+<a class="reference internal" href="../catalog-plot3d/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlot3DAccessor::scatter</span></code></span></a>) — <code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::scatter()</span></code>
+itself never reads it: every feature named here is already a column of the same,
+already-constructed <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, so there is no length mismatch for <code class="docutils literal notranslate"><span class="pre">align</span></code> to resolve.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -120,13 +125,13 @@ points.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;points3d.svg&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 1" src="../../_images/scatter-11.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/scatter-13.svg" /></p>
 <p>Example 2. <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> only: marker size scales with <code class="docutils literal notranslate"><span class="pre">mass</span></code>, color stays uniform.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mass&quot;</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 2" src="../../_images/scatter-21.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/scatter-23.svg" /></p>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">color_feature</span></code> only: every point stays <code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> (12.0), but
 color now maps to <code class="docutils literal notranslate"><span class="pre">speed</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;speed&quot;</span><span class="p">);</span>
@@ -135,14 +140,14 @@ color now maps to <code class="docutils literal notranslate"><span class="pre">s
 </div>
 <p>Passing <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> explicitly for <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> here is required syntax — there is no
 overload that skips straight to <code class="docutils literal notranslate"><span class="pre">color_feature</span></code> while omitting <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> entirely.</p>
-<p><img alt="Output of Example 3" src="../../_images/scatter-3.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/scatter-32.svg" /></p>
 <p>Example 4. Both <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> and <code class="docutils literal notranslate"><span class="pre">color_feature</span></code>: marker size scales with <code class="docutils literal notranslate"><span class="pre">mass</span></code>, color
 maps to <code class="docutils literal notranslate"><span class="pre">speed</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mass&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;speed&quot;</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 4" src="../../_images/scatter-4.svg" /></p>
+<p><img alt="Output of Example 4" src="../../_images/scatter-42.svg" /></p>
 <p>Example 5. An explicit <code class="docutils literal notranslate"><span class="pre">Scatter3DPlotOptions</span></code>, raising <code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> (which only
 takes effect because <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> is omitted here) and applying a <code class="docutils literal notranslate"><span class="pre">Cloud</span></code> trace preset.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Scatter3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -152,7 +157,7 @@ takes effect because <code class="docutils literal notranslate"><span class="pre
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 5" src="../../_images/scatter-51.svg" /></p>
+<p><img alt="Output of Example 5" src="../../_images/scatter-52.svg" /></p>
 <p>Example 6. A mismatched-length <code class="docutils literal notranslate"><span class="pre">size_feature</span></code> (fewer rows than the frame) throws, same as
 every axis feature.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mismatched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>

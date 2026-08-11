@@ -43,7 +43,7 @@ std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
 ## Notes
 
 - Always collapses to exactly one value.
-- Bridges through [`to_kindle()`](to_kindle.md) internally — requires the
+- Bridges through [`kindelize()`](kindelize.md) internally — requires the
   slot to be stream-compatible (a single, homogeneous numeric kind).
 - Requires the slot to be defined — an undefined `Slot` throws
   `"Slot: undefined handle"`.

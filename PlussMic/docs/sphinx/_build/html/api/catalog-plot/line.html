@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>CatalogPlotAccessor::line &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="CatalogPlotAccessor::scatter" href="scatter.html" />
+    <link rel="prev" title="CatalogPlotAccessor::hist" href="hist.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0eebf24e097e -->
+<section id="catalogplotaccessor-line">
+<h1>CatalogPlotAccessor::line<a class="headerlink" href="#catalogplotaccessor-line" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../catalog_plot_accessor_api_reference.html"><span class="doc std std-doc">Back to CatalogPlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">CatalogPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_key</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">CatalogPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">                           </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">CatalogPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_keys</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">CatalogPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_key</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_key</span><span class="p">,</span>
+<span class="w">                           </span><span class="k">const</span><span class="w"> </span><span class="n">LinePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">CatalogPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_keys</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_key</span><span class="p">,</span>
+<span class="w">                           </span><span class="k">const</span><span class="w"> </span><span class="n">LinePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">CatalogPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_keys</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_key</span><span class="p">,</span>
+<span class="w">                           </span><span class="k">const</span><span class="w"> </span><span class="n">LinePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws one line trace per requested y-key over a shared x-axis, returning a
+<code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure. This page also explains mechanics shared by every method on
+this accessor — <code class="docutils literal notranslate"><span class="pre">step()</span></code>, <code class="docutils literal notranslate"><span class="pre">area()</span></code>, <code class="docutils literal notranslate"><span class="pre">scatter()</span></code>, <code class="docutils literal notranslate"><span class="pre">bar()</span></code>, and the rest all follow the same
+“nothing is drawn until you export it” and x-axis-resolution rules described here, so their
+own pages link back to this one instead of repeating it. The three <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>
+overloads are thin convenience wrappers that forward straight into the matching
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code>-taking overload — same behavior, just a brace-init call site.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Every plot method returns a Studio, not a Catalog — and nothing prints
+<code class="docutils literal notranslate"><span class="pre">line()</span></code> (like every method on this accessor) builds and returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — a
+figure object from the separate <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code> plotting library. It does <strong>not</strong> print a table,
+and <code class="docutils literal notranslate"><span class="pre">Studio</span></code> has no <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>, so <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">chart</span></code> will not compile. To actually see
+or persist the result, call one of <code class="docutils literal notranslate"><span class="pre">Studio</span></code>’s own methods afterward:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">chart.show()</span></code> — opens the figure in a native window or the OS default browser/viewer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chart.save_svg(&quot;out.svg&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">chart.save_pdf(&quot;out.pdf&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">chart.save_png(&quot;out.png&quot;,</span> <span class="pre">dpi)</span></code>
+— write the figure to a file (<code class="docutils literal notranslate"><span class="pre">save_png</span></code> shells out to an external SVG-to-raster
+converter such as <code class="docutils literal notranslate"><span class="pre">rsvg-convert</span></code>, <code class="docutils literal notranslate"><span class="pre">inkscape</span></code>, or ImageMagick, and throws if none is found).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chart.to_svg()</span></code> / <code class="docutils literal notranslate"><span class="pre">chart.to_pdf()</span></code> — return the rendered markup as a <code class="docutils literal notranslate"><span class="pre">std::string</span></code>, for
+embedding elsewhere instead of writing a file.</p></li>
+</ul>
+<p>Every example on this page ends with one of these calls to make that visible; none of them
+show a rendered “Output” block the way <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>/<code class="docutils literal notranslate"><span class="pre">Stream</span></code> method pages do, because there is
+no text form of a chart to display.</p>
+</div>
+<section id="choosing-the-x-axis-three-ways-to-end-up-with-an-x-key">
+<h3>Choosing the x-axis: three ways to end up with an x-key<a class="headerlink" href="#choosing-the-x-axis-three-ways-to-end-up-with-an-x-key" title="Link to this heading">¶</a></h3>
+<p>Every 2D chart method that takes an <code class="docutils literal notranslate"><span class="pre">x_key</span></code> argument resolves it the same way:</p>
+<ol class="arabic simple">
+<li><p><strong>Pass it explicitly</strong> — <code class="docutils literal notranslate"><span class="pre">ct.plot().line(&quot;sales&quot;,</span> <span class="pre">&quot;month&quot;)</span></code> always wins, regardless of
+any accessor-level default.</p></li>
+<li><p><strong>Set a shared default on the accessor</strong> — <code class="docutils literal notranslate"><span class="pre">ct.plot(options)</span></code> where
+<code class="docutils literal notranslate"><span class="pre">options.default_x_feature</span> <span class="pre">=</span> <span class="pre">&quot;month&quot;</span></code> lets every subsequent chart method omit <code class="docutils literal notranslate"><span class="pre">x_key</span></code>
+and still use <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>. An explicit <code class="docutils literal notranslate"><span class="pre">x_key</span></code> argument on a given call still takes
+precedence over this default. (<code class="docutils literal notranslate"><span class="pre">DataFramePlotOptions</span></code> is reused as-is for
+<code class="docutils literal notranslate"><span class="pre">Catalog::plot()</span></code> — there is no separate <code class="docutils literal notranslate"><span class="pre">CatalogPlotOptions</span></code> type, so the field is still
+named <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> even though the value being resolved is a key.)</p></li>
+<li><p><strong>Omit it entirely, with no default set</strong> — falls back to the y-key’s <strong>own stream
+label</strong> (<code class="docutils literal notranslate"><span class="pre">Stream::label()</span></code>, attached via <code class="docutils literal notranslate"><span class="pre">Stream::with_label()</span></code>), if it has one: the
+x-axis becomes that label’s values, rendered as evenly spaced categorical positions if
+text/time-like or as real numeric coordinates if the label is itself numeric — but the
+axis title is always the literal string <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code>, never the y-key’s own label feature
+name. If the y-stream carries <strong>no</strong> label at all, the axis falls back further, to a bare
+<code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> positional index, also titled <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code>.</p></li>
+</ol>
+<p>See Examples 1, 3, and 4 below for the explicit, no-label, and own-label paths in turn, and
+Example 2 for the accessor-level default.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>With several y-keys and no x_key, each trace still gets its own independent axis
+When <code class="docutils literal notranslate"><span class="pre">y_keys</span></code> has more than one key and no <code class="docutils literal notranslate"><span class="pre">x_key</span></code> is resolved (no explicit argument, no
+<code class="docutils literal notranslate"><span class="pre">options.default_x_feature</span></code>), the pane’s x-axis is titled <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code> but there is no single
+shared x-axis object underneath it — <strong>each</strong> y-key’s trace is positioned using <em>that key’s
+own</em> self-axis resolution (see “Choosing the x-axis” above — its own label if it has one,
+otherwise its own <code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> index), independently of every other
+requested key. Two keys of different lengths, or with unrelated labels, will not line up
+against each other on such a chart even though they share one pane — pass an explicit
+<code class="docutils literal notranslate"><span class="pre">x_key</span></code> (or set <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code>) whenever the keys must be visually aligned.</p>
+</div>
+</section>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>y_key</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+A single Series/Timeline/TimeIndex key to draw as one line trace.</p>
+<p><strong>y_keys</strong> (<code class="docutils literal notranslate"><span class="pre">RangeView&lt;std::string_view&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>,
+defaults to <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
+Several keys, each drawn as its own line trace on the same axes. A legend is shown
+automatically whenever more than one y-key is requested (and suppressed for a single
+key). An <strong>empty</strong> range (the default) selects every Series/Timeline/TimeIndex key in
+the catalog, in catalog order — Note keys are silently excluded from this default
+selection, not an error. If the catalog has no plottable keys at all, this throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Catalog::plot().line:</span> <span class="pre">no</span> <span class="pre">plottable</span> <span class="pre">streams</span> <span class="pre">found&quot;</span></code>.</p>
+<p><strong>x_key</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+The key to use as the shared x-axis. See “Choosing the x-axis” above.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>)
+```cpp
+enum class XYAlignMode : std::uint8_t { Strict, Inner, PadScalar };
+enum class XYAlignBy : std::uint8_t { Auto, Label, Pos };</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>struct XYAlignOptions {
+  XYAlignMode mode{XYAlignMode::Strict};
+  XYAlignBy align_by{XYAlignBy::Auto};
+  double pad_scalar{0.0};
+};
+
+struct LinePlotOptions {
+  double alpha{1.0};
+  double line_width{1.6};
+  std::optional&lt;pluss::pl::LimitMethod&gt; y_limit_method{pluss::pl::LimitMethod::Padded};
+  XYAlignOptions align{};
+};
+```
+`alpha` controls trace opacity, `line_width` the stroke width. `y_limit_method` chooses
+how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin beyond
+the data&#39;s min/max, `Tight` fits exactly to the data range with no margin, and
+`TickAligned` snaps the limits outward to the nearest tick boundaries. `align` controls
+how an explicit `x_key` of a different length than a y-key is reconciled — see &quot;Aligning
+x and y of different lengths&quot; below.
+</pre></div>
+</div>
+<section id="aligning-x-and-y-of-different-lengths">
+<h3>Aligning x and y of different lengths<a class="headerlink" href="#aligning-x-and-y-of-different-lengths" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">align</span></code> only matters when an explicit <code class="docutils literal notranslate"><span class="pre">x_key</span></code> is passed <strong>and</strong> that key’s resolved length
+differs from a given y-key’s — with no <code class="docutils literal notranslate"><span class="pre">x_key</span></code> (the self-axis/record fallback) or with
+matching lengths, <code class="docutils literal notranslate"><span class="pre">align</span></code>’s fields are never consulted at all. Three <code class="docutils literal notranslate"><span class="pre">XYAlignMode</span></code> values:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Strict</span></code></strong> (the default): the mismatched pair throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Catalog::plot().line:</span> <span class="pre">x/y</span> <span class="pre">length</span> <span class="pre">mismatch</span> <span class="pre">between</span> <span class="pre">'&lt;x_key&gt;'</span> <span class="pre">and</span> <span class="pre">'&lt;y_key&gt;'&quot;</span></code> — see
+Example 9.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Inner</span></code></strong>: silently truncates both the x-axis and the y-values down to the shorter of
+the two, keeping only the leading overlap.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">PadScalar</span></code></strong>: keeps the x-axis at its <strong>full</strong> length, padding the shorter y-values out
+with <code class="docutils literal notranslate"><span class="pre">pad_scalar</span></code> (default <code class="docutils literal notranslate"><span class="pre">0.0</span></code>) for the positions that don’t have a real value.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">align_by</span></code> (<code class="docutils literal notranslate"><span class="pre">Auto</span></code>/<code class="docutils literal notranslate"><span class="pre">Label</span></code>/<code class="docutils literal notranslate"><span class="pre">Pos</span></code>) chooses whether the reconciliation is positional or by each
+stream’s own attached label — same three-way choice as
+<a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogScatterPlotOptions::align</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">align_by</span></code>, just spelled
+<code class="docutils literal notranslate"><span class="pre">XYAlignBy</span></code> here instead of <code class="docutils literal notranslate"><span class="pre">PairAlignBy</span></code>. <code class="docutils literal notranslate"><span class="pre">Auto</span></code> (the default) uses <code class="docutils literal notranslate"><span class="pre">Label</span></code> only if <strong>both</strong>
+the x-key’s stream and the given y-key’s stream carry their own label; otherwise <code class="docutils literal notranslate"><span class="pre">Pos</span></code>.</p>
+<p>See Example 8 for <code class="docutils literal notranslate"><span class="pre">Inner</span></code> and <code class="docutils literal notranslate"><span class="pre">PadScalar</span></code> side by side.</p>
+</section>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one pane containing one line trace per requested y-key.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Explicit x-key: the most common and clearest form.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">weather</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Fri&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">62.0</span><span class="p">,</span><span class="w"> </span><span class="mf">58.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;pressure&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1005.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1008.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1010.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1009.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1012.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weather</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">weather.plot()</span></code> enters the accessor with no shared options; <code class="docutils literal notranslate"><span class="pre">.line(&quot;temp_c&quot;,</span> <span class="pre">&quot;day&quot;)</span></code> draws
+<code class="docutils literal notranslate"><span class="pre">temp_c</span></code> on the y-axis against the Note key <code class="docutils literal notranslate"><span class="pre">day</span></code> on the x-axis (rendered as five evenly
+spaced categorical positions labeled <code class="docutils literal notranslate"><span class="pre">&quot;Mon&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Fri&quot;</span></code>), producing a single unlabeled
+(no-legend) line trace.</p>
+<p><img alt="Output of Example 1" src="../../_images/line-1.svg" /></p>
+<p>Example 2. A shared <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> set once on the accessor, used implicitly by
+multiple chart calls, with an explicit <code class="docutils literal notranslate"><span class="pre">x_key</span></code> on a later call overriding it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">weather</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Fri&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">62.0</span><span class="p">,</span><span class="w"> </span><span class="mf">58.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;pressure&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1005.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1008.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1010.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1009.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1012.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">default_x_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">plot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weather</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">);</span><span class="w">                 </span><span class="c1">// x defaults to &quot;day&quot;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity&quot;</span><span class="p">);</span><span class="w">      </span><span class="c1">// explicit x_key=&quot;humidity&quot; overrides the default</span>
+<span class="n">chart1</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+<span class="n">chart2</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">chart1</span></code> uses <code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code> as its x-axis without repeating it. <code class="docutils literal notranslate"><span class="pre">chart2</span></code> demonstrates that an
+explicit <code class="docutils literal notranslate"><span class="pre">x_key</span></code> argument (here, <code class="docutils literal notranslate"><span class="pre">&quot;humidity&quot;</span></code>, a plain numeric key) always wins over
+<code class="docutils literal notranslate"><span class="pre">options.default_x_feature</span></code>, even when both are present in the same call — note that
+<code class="docutils literal notranslate"><span class="pre">humidity</span></code> here becomes a genuinely numeric x-axis, quite different in shape from <code class="docutils literal notranslate"><span class="pre">day</span></code>’s
+categorical one.</p>
+<p><code class="docutils literal notranslate"><span class="pre">chart1</span></code> (<code class="docutils literal notranslate"><span class="pre">temp_c</span></code> vs. default <code class="docutils literal notranslate"><span class="pre">day</span></code>):</p>
+<p><img alt="Output of Example 2, chart1" src="../../_images/line-2-a.svg" /></p>
+<p><code class="docutils literal notranslate"><span class="pre">chart2</span></code> (<code class="docutils literal notranslate"><span class="pre">temp_c</span></code> vs. explicit <code class="docutils literal notranslate"><span class="pre">humidity</span></code>, overriding the default):</p>
+<p><img alt="Output of Example 2, chart2" src="../../_images/line-2-b.svg" /></p>
+<p>Example 3. No <code class="docutils literal notranslate"><span class="pre">x_key</span></code> at all, and the y-key’s stream carries no label of its own — falls
+back to a bare positional <code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> index, titled <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;amount&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">amount</span></code> has no attached label (it was built from a plain <code class="docutils literal notranslate"><span class="pre">Stream(Series)</span></code> with no <code class="docutils literal notranslate"><span class="pre">cases</span></code>
+argument and never had <code class="docutils literal notranslate"><span class="pre">with_label()</span></code> called on it), so <code class="docutils literal notranslate"><span class="pre">line(&quot;amount&quot;)</span></code> with no <code class="docutils literal notranslate"><span class="pre">x_key</span></code> and
+no <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> set falls all the way back to a positional index: the x-axis renders
+<code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span></code> and the axis title is <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code>.</p>
+<p><img alt="Output of Example 3" src="../../_images/line-3.svg" /></p>
+<p>Example 4. No <code class="docutils literal notranslate"><span class="pre">x_key</span></code>, but the y-key’s stream <strong>does</strong> carry its own label — that label
+becomes the x-axis, still titled <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code> rather than the label’s own meaning.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">amount_stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q4&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">quarterly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amount_stream</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">quarterly</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">amount_stream</span></code> was built with <code class="docutils literal notranslate"><span class="pre">.with_label(...)</span></code> attaching <code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Q4&quot;</span></code> as its own
+per-value labels. With no <code class="docutils literal notranslate"><span class="pre">x_key</span></code> and no <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code>, <code class="docutils literal notranslate"><span class="pre">catalog_resolve_self_axis</span></code>
+finds this label and uses it: the x-axis renders <code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Q4&quot;</span></code> as categorical positions —
+but the axis title is still the literal <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;amount&quot;</span></code> and not any name derived
+from the label itself.</p>
+<p><img alt="Output of Example 4" src="../../_images/line-4.svg" /></p>
+<p>Example 5. Multiple y-keys overlaid on one pane, drawn from a brace-init list.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">weather</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Fri&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">62.0</span><span class="p">,</span><span class="w"> </span><span class="mf">58.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weather</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Two line traces share the same <code class="docutils literal notranslate"><span class="pre">day</span></code> x-axis and the same pane; a legend appears
+automatically (labeled <code class="docutils literal notranslate"><span class="pre">&quot;temp_c&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;humidity&quot;</span></code>) because more than one y-key was
+requested.</p>
+<p><img alt="Output of Example 5" src="../../_images/line-5.svg" /></p>
+<p>Example 6. The same multi-key call using a reusable <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> instead of a brace-init
+list — useful when the key list is built at runtime rather than known at the call site.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">weather</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Fri&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">62.0</span><span class="p">,</span><span class="w"> </span><span class="mf">58.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_names</span><span class="p">{</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weather</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="n">y_names</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Behaves identically to Example 5 — the <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload and the <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>
+overload are the same underlying call, just accepting the y-key list in different forms.</p>
+<p><img alt="Output of Example 6" src="../../_images/line-6.svg" /></p>
+<p>Example 7. An explicit <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>, tuning opacity, stroke width, and y-axis fit.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">weather</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Fri&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">line_options</span><span class="p">;</span>
+<span class="n">line_options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.85</span><span class="p">;</span>
+<span class="n">line_options</span><span class="p">.</span><span class="n">line_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.5</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weather</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">line_options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The line is drawn slightly translucent (<code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">=</span> <span class="pre">0.85</span></code>) and thicker (<code class="docutils literal notranslate"><span class="pre">line_width</span> <span class="pre">=</span> <span class="pre">2.5</span></code>)
+than the default.</p>
+<p><img alt="Output of Example 7" src="../../_images/line-7.svg" /></p>
+<p>Example 8. <code class="docutils literal notranslate"><span class="pre">align</span></code>: an explicit <code class="docutils literal notranslate"><span class="pre">x_key</span></code> and y-key of different lengths, reconciled with
+<code class="docutils literal notranslate"><span class="pre">Inner</span></code> (truncate to the shorter) and <code class="docutils literal notranslate"><span class="pre">PadScalar</span></code> (pad the shorter with a scalar) side by
+side.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">short_metric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Fri&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;sales&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">inner_options</span><span class="p">;</span>
+<span class="n">inner_options</span><span class="p">.</span><span class="n">align</span><span class="p">.</span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">XYAlignMode</span><span class="o">::</span><span class="n">Inner</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart_inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">short_metric</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inner_options</span><span class="p">);</span>
+<span class="n">chart_inner</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">pad_options</span><span class="p">;</span>
+<span class="n">pad_options</span><span class="p">.</span><span class="n">align</span><span class="p">.</span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">XYAlignMode</span><span class="o">::</span><span class="n">PadScalar</span><span class="p">;</span>
+<span class="n">pad_options</span><span class="p">.</span><span class="n">align</span><span class="p">.</span><span class="n">pad_scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart_pad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">short_metric</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pad_options</span><span class="p">);</span>
+<span class="n">chart_pad</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">day</span></code> has 5 values, <code class="docutils literal notranslate"><span class="pre">sales</span></code> only 3. <code class="docutils literal notranslate"><span class="pre">Inner</span></code> (<code class="docutils literal notranslate"><span class="pre">chart_inner</span></code>) truncates the x-axis down to
+<code class="docutils literal notranslate"><span class="pre">&quot;Mon&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Tue&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Wed&quot;</span></code> — only the leading 3-value overlap is drawn. <code class="docutils literal notranslate"><span class="pre">PadScalar</span></code>
+(<code class="docutils literal notranslate"><span class="pre">chart_pad</span></code>) keeps all 5 <code class="docutils literal notranslate"><span class="pre">day</span></code> positions, filling <code class="docutils literal notranslate"><span class="pre">&quot;Thu&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;Fri&quot;</span></code>’s missing <code class="docutils literal notranslate"><span class="pre">sales</span></code> values
+with <code class="docutils literal notranslate"><span class="pre">pad_scalar</span></code> (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">chart_inner</span></code>:</p>
+<p><img alt="Output of Example 8, chart_inner" src="../../_images/line-8-a.svg" /></p>
+<p><code class="docutils literal notranslate"><span class="pre">chart_pad</span></code>:</p>
+<p><img alt="Output of Example 8, chart_pad" src="../../_images/line-8-b.svg" /></p>
+<p>Example 9. The default <code class="docutils literal notranslate"><span class="pre">Strict</span></code> alignment: a mismatched-length explicit <code class="docutils literal notranslate"><span class="pre">x_key</span></code>/y-key pair
+throws instead of being reconciled.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">short_metric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Fri&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;sales&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">short_metric</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Catalog::plot().line: x/y length mismatch between &#39;day&#39; and &#39;sales&#39;
+</pre></div>
+</div>
+<p>Example 10. The empty-selection edge case: an unknown key throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">weather</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;day&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Mon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Wed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Thu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Fri&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weather</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;nonexistent&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Catalog::plot().line: unknown key &#39;nonexistent&#39;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>, never a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> and never printed text — see the
+important callout above for how to actually view or save the result.</p></li>
+<li><p>An explicitly named key that isn’t in the catalog throws — see Example 10. Leaving
+<code class="docutils literal notranslate"><span class="pre">y_keys</span></code> empty is different: it silently selects every plottable (Series/Timeline/
+TimeIndex) key rather than throwing, unless the catalog has no plottable keys at all.</p></li>
+<li><p>A legend is shown automatically once more than one y-key is requested.</p></li>
+<li><p>The x-axis resolves in three steps — explicit argument, then <code class="docutils literal notranslate"><span class="pre">options.default_x_feature</span></code>,
+then the y-key’s own stream label (or a bare positional index if it has none), always
+titled <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code> in the fallback cases — see “Choosing the x-axis” above.</p></li>
+<li><p>With several y-keys and no shared x-axis, each trace is positioned independently — see the
+important callout above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align</span></code>’s <code class="docutils literal notranslate"><span class="pre">Strict</span></code>/<code class="docutils literal notranslate"><span class="pre">Inner</span></code>/<code class="docutils literal notranslate"><span class="pre">PadScalar</span></code> modes only apply when an explicit <code class="docutils literal notranslate"><span class="pre">x_key</span></code> is
+resolved and its length differs from a y-key’s — see “Aligning x and y of different
+lengths” and Examples 8–9. With several y-keys and <code class="docutils literal notranslate"><span class="pre">align.mode</span> <span class="pre">=</span> <span class="pre">Inner</span></code>, the pane’s x-axis
+falls back to the bare key name (no tick labels), since different y-keys can end up
+trimmed to different lengths.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="step.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::step</span></code></span></a>: the same shape, drawn as a step function instead
+of straight line segments.</p></li>
+<li><p><a class="reference internal" href="area.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::area</span></code></span></a>: a filled variant of the same y-keys-over-shared-
+x-axis idea.</p></li>
+<li><p><a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::scatter</span></code></span></a>: points instead of connected lines, with an
+optional hue key and a genuinely different alignment story for plain numeric keys.</p></li>
+<li><p><a class="reference internal" href="../catalog/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::plot</span></code></span></a>: how to enter this accessor in the first place.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="hist.html">
+    <span class="label">Previous</span>
+    <span class="title">hist</span>
+  </a>
+  <a class="next-link" href="scatter.html">
+    <span class="label">Next</span>
+    <span class="title">scatter</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../catalog_plot_accessor_api_reference.html">CatalogPlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="hist.html" title="previous chapter">CatalogPlotAccessor::hist</a></li>
+      <li>Next: <a href="scatter.html" title="next chapter">CatalogPlotAccessor::scatter</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/catalog-plot/line.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -64,12 +64,15 @@ when it fires from a `plot3d()` call.
     struct Line3DPlotOptions {
       Plot3DSceneOptions scene{};
       Plot3DTraceOptions trace{};
+      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
     };
     ```
     `scene` controls the 3D pane's camera, lighting, theme, and grid style; `trace`
     controls the drawn line's shading, lighting response, material, stroke width, and
     transparency. Both are described in full below, since every method on this accessor
-    shares the exact same two structs.
+    shares the exact same two structs. `align` is present for the same
+    struct-reuse-with-`Catalog::plot3d()` reason as
+    [`scatter()`](scatter.md)'s — inert on `DataFramePlot3DAccessor::line()` itself.
 
     ```cpp
     enum class ScenePreset3D { Survey, Presentation, Studio, Topology };

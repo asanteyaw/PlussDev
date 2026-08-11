@@ -88,8 +88,8 @@ void demo_slot_methods() {
             << ", concat size: " << concatenated.size() << "\n";
   std::cout << "type_counts[Series]: " << type_counts.at("Series") << "\n";
 
-  const auto stream = ids.to_kindle();
-  const auto back_slot = Slot::from_kindle(stream);
+  const auto stream = ids.kindelize();
+  const auto back_slot = stream.bundelize();
   std::cout << "slot -> stream -> field size: " << back_slot.size() << "\n";
 
   const Slot hetero({
@@ -97,9 +97,9 @@ void demo_slot_methods() {
       as_note("mixed"),
   });
   try {
-    (void)hetero.to_kindle();
+    (void)hetero.kindelize();
   } catch (const std::exception& e) {
-    std::cout << "expected heterogeneous to_kindle failure: " << e.what() << "\n";
+    std::cout << "expected heterogeneous kindelize failure: " << e.what() << "\n";
   }
 
   std::cout << "slot json:\n" << ids.to_json() << "\n";
@@ -188,8 +188,8 @@ void demo_registry_methods() {
                            {"ids", ids},
                            {"city", cities},
                        })
-                           .to_kindle();
-  const auto from_catalog = Registry::from_kindle(catalog);
+                           .kindelize();
+  const auto from_catalog = catalog.bundelize();
   std::cout << "registry -> catalog -> registry nfields: " << from_catalog.nfields() << "\n";
   std::cout << "registry display:\n" << registry << "\n";
   std::cout << "registry json:\n" << registry.to_json() << "\n";
@@ -234,8 +234,8 @@ void demo_axel_methods() {
             << ", applied depth: " << applied_slot.depth()
             << ", concat depth: " << concatenated.depth() << "\n";
 
-  const auto archive = axel.to_kindle();
-  const auto back = Axel::from_kindle(archive);
+  const auto archive = axel.kindelize();
+  const auto back = archive.bundelize();
   std::cout << "axel -> archive -> axel depth: " << back.depth()
             << ", labels: " << (back.labels().has_value() ? "yes" : "no") << "\n";
   std::cout << "axel display:\n" << axel << "\n";

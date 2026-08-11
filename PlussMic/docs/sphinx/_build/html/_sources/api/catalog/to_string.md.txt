@@ -76,8 +76,8 @@ id                       | Series       | Series[float64]  | 3       | [1, 2, 3]
     <span class="label">Previous</span>
     <span class="title">to_json</span>
   </a>
-  <a class="next-link" href="to_table.html">
+  <a class="next-link" href="transform.html">
     <span class="label">Next</span>
-    <span class="title">to_table</span>
+    <span class="title">transform</span>
   </a>
 </div>

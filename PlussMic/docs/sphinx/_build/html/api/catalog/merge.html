@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Joins two catalogs on a shared key stream — internally, both catalogs are
 <a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tabelize()</span></code></span></a>d into <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>s, joined via <code class="docutils literal notranslate"><span class="pre">DataFrame::unify</span></code>, and the
-result is <a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a>d back into a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p>
+result is <a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize()</span></code></span></a>d back into a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>how currently only accepts “inner” — every other value throws
@@ -154,15 +154,16 @@ score                    | Series       | Series[float64]  | 2       | [80, 90]
 <li><p><code class="docutils literal notranslate"><span class="pre">on</span></code> must exist in both catalogs; the throw message names which side (“left” or
 “right”) is missing it.</p></li>
 <li><p>Implemented via <a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tabelize()</span></code></span></a> + <code class="docutils literal notranslate"><span class="pre">DataFrame::unify</span></code> +
-<a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a> — a round trip through <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, not a direct
+<a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize()</span></code></span></a> — a round trip through
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, not a direct
 stream-to-stream join.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tabelize</span></code></span></a> / <a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize</span></code></span></a>: the two
-conversions this method uses internally.</p></li>
+<li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tabelize</span></code></span></a> / <a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize</span></code></span></a>:
+the two conversions this method uses internally.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mean.html">

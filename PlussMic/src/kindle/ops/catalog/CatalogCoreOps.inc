@@ -113,14 +113,14 @@ Catalog Catalog::select(pluss::msharp::RangeView::Of<pluss::table::Thread> condi
     std::vector<Stream> stream_choices;
     stream_choices.reserve(choices.size());
     for (const auto& choice : choices) {
-      stream_choices.push_back(choice.at(key));
+      stream_choices.push_back(choice.keys(key));
     }
     out.emplace_back(
         key,
         Stream::select(
             conditions,
             pluss::msharp::RangeView::Of<Stream>(stream_choices),
-            default_value.at(key)));
+            default_value.keys(key)));
   }
   return Catalog(std::move(out));
 }
@@ -434,7 +434,7 @@ Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_vi
   const auto right = other.tabelize();
   PLUSS_CHECK(left.get(key).has_value(), "Catalog::merge: left key not found '" + key + "'");
   PLUSS_CHECK(right.get(key).has_value(), "Catalog::merge: right key not found '" + key + "'");
-  return kindelize(left.unify(key, right, key));
+  return left.unify(key, right, key).kindelize();
 }
 
 Catalog Catalog::map(const std::function<Stream(const Stream&)>& fn) const {

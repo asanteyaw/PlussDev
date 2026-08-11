@@ -15,7 +15,7 @@ void Registry::save_excel(std::string_view filepath, const pluss::loader::Config
 ## What It Does
 
 Writes the registry to an `.xlsx` workbook, following the same
-[`to_kindle()`](to_kindle.md) → `tabelize()` → format-specific writer path as
+[`kindelize()`](kindelize.md) → `tabelize()` → format-specific writer path as
 [`save_csv()`](save_csv.md).
 
 ```{important} Excel support is an optional build feature (requires libzip)

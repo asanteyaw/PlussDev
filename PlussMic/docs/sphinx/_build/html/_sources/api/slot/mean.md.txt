@@ -45,7 +45,7 @@ std::cout << std::get<pluss::Series>(out.at(0)).to_vec<double>()[0];
 
 - Always collapses to exactly one value, and the result is always
   `float64` regardless of the source values' dtype.
-- Bridges through [`to_kindle()`](to_kindle.md) internally — requires the
+- Bridges through [`kindelize()`](kindelize.md) internally — requires the
   slot to be stream-compatible (a single, homogeneous numeric kind).
 - Requires the slot to be defined — an undefined `Slot` throws
   `"Slot: undefined handle"`.

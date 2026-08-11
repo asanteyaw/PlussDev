@@ -6,6 +6,7 @@
 
 #include <initializer_list>
 #include <map>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -186,8 +187,8 @@ class Builder final {
                                                     MetricKind objective_metric = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
-    return selection::compare(candidates(), batch, cv, train_options, assess_options,
-                              objective_metric, objective_policy, fit_options);
+    return remember_(selection::compare(candidates(), batch, cv, train_options, assess_options,
+                                        objective_metric, objective_policy, fit_options));
   }
 
   [[nodiscard]] selection::CompareResult benchmark(const pluss::table::DataFrame& x,
@@ -198,8 +199,8 @@ class Builder final {
                                                     MetricKind objective_metric = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
-    return selection::compare(candidates(), x, y, cv, train_options, assess_options,
-                              objective_metric, objective_policy, fit_options);
+    return remember_(selection::compare(candidates(), x, y, cv, train_options, assess_options,
+                                        objective_metric, objective_policy, fit_options));
   }
 
   // (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin in
@@ -214,12 +215,37 @@ class Builder final {
                                                     MetricKind objective_metric = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
-    return selection::compare(candidates(), frame, data_options, cv, train_options, assess_options,
-                              objective_metric, objective_policy, fit_options);
+    return remember_(selection::compare(candidates(), frame, data_options, cv, train_options, assess_options,
+                                        objective_metric, objective_policy, fit_options));
+  }
+
+  [[nodiscard]] bool benchmarked() const noexcept {
+    return last_result_.has_value();
+  }
+
+  [[nodiscard]] Model best() const {
+    return require_last_result_().best();
+  }
+
+  [[nodiscard]] Model worst() const {
+    return require_last_result_().worst();
   }
 
  private:
+  [[nodiscard]] const selection::CompareResult& require_last_result_() const {
+    if (!last_result_.has_value()) {
+      ::pluss::throw_error("lymph::Builder: benchmark() must be run before best() or worst().");
+    }
+    return *last_result_;
+  }
+
+  [[nodiscard]] selection::CompareResult remember_(selection::CompareResult result) const {
+    last_result_ = result;
+    return result;
+  }
+
   std::vector<std::pair<std::string, Model>> items_{};
+  mutable std::optional<selection::CompareResult> last_result_{};
 };
 
 [[nodiscard]] inline pluss::table::DataFrame Builder::report(std::int64_t n) const {

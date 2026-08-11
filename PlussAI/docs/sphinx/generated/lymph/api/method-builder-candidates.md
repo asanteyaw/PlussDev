@@ -81,17 +81,16 @@ NodeJ CV + tune demo completed.
 ### Example 3 (Demo Pattern)
 
 ```cpp
+    nja::CrossValidationOptions cv_options{};
+    cv_options.plan = CVPlanKind::CrossVal;
+    cv_options.folds = 5;
+    cv_options.shuffle = true;
+    cv_options.random_state = 73;
     cv_options.deterministic = true;
 
-    // Was built via the old Workflow{.model=..., .stages={...}} facade --
-    // Model already has one builder method per TransformKind
-    // (.simple_imputer(...), .standard_scaler(...), ...) that attaches the
-    // stage immediately (no lazy replay needed), so this is a direct
-    // substitution: same options, called on the model itself before it's
-    // handed to a Candidate.
     std::vector<nja::selection::Candidate> candidates{};
     {
-      auto wf = nja::linear_factory::linear_regression(LinearFamilyOptions{
+      nja::Model wf = nja::models::linear_regression(LinearFamilyOptions{
           .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
@@ -99,7 +98,7 @@ NodeJ CV + tune demo completed.
       });
       wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
       wf.standard_scaler();
-      candidates.emplace_back("linear_ridge", std::move(wf));
+      candidates.emplace_back("linear_ridge", wf);
     }
     {
 ```

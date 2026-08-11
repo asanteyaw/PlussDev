@@ -95,8 +95,8 @@ std::cout << undef.to_json();
     <span class="label">Previous</span>
     <span class="title">tl</span>
   </a>
-  <a class="next-link" href="to_kindle.html">
+  <a class="next-link" href="to_string.html">
     <span class="label">Next</span>
-    <span class="title">to_kindle</span>
+    <span class="title">to_string</span>
   </a>
 </div>

@@ -739,6 +739,32 @@ lymph_shape_test/fast:
 .PHONY : lymph_shape_test/fast
 
 #=============================================================================
+# Target rules for targets named lymph_split_surface_test
+
+# Build rule for target.
+lymph_split_surface_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_split_surface_test
+.PHONY : lymph_split_surface_test
+
+# fast build rule for target.
+lymph_split_surface_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/build
+.PHONY : lymph_split_surface_test/fast
+
+#=============================================================================
+# Target rules for targets named lymph_spotcheck_test
+
+# Build rule for target.
+lymph_spotcheck_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_spotcheck_test
+.PHONY : lymph_spotcheck_test
+
+# fast build rule for target.
+lymph_spotcheck_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/build
+.PHONY : lymph_spotcheck_test/fast
+
+#=============================================================================
 # Target rules for targets named lymph_target_transform_test
 
 # Build rule for target.
@@ -789,6 +815,513 @@ lymph_workflow_test: cmake_check_build_system
 lymph_workflow_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_workflow_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_workflow_test.dir/build
 .PHONY : lymph_workflow_test/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_supervised_workflow_demo
+
+# Build rule for target.
+plussai_lymph_supervised_workflow_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_supervised_workflow_demo
+.PHONY : plussai_lymph_supervised_workflow_demo
+
+# fast build rule for target.
+plussai_lymph_supervised_workflow_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_lymph_supervised_workflow_demo.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_lymph_supervised_workflow_demo.dir/build
+.PHONY : plussai_lymph_supervised_workflow_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_selection_search_demo
+
+# Build rule for target.
+plussai_lymph_selection_search_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_selection_search_demo
+.PHONY : plussai_lymph_selection_search_demo
+
+# fast build rule for target.
+plussai_lymph_selection_search_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_lymph_selection_search_demo.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_lymph_selection_search_demo.dir/build
+.PHONY : plussai_lymph_selection_search_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_general_ml_demo
+
+# Build rule for target.
+plussai_lymph_general_ml_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_general_ml_demo
+.PHONY : plussai_lymph_general_ml_demo
+
+# fast build rule for target.
+plussai_lymph_general_ml_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_lymph_general_ml_demo.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_lymph_general_ml_demo.dir/build
+.PHONY : plussai_lymph_general_ml_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_workflow_regression
+
+# Build rule for target.
+plussai_toy_workflow_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_workflow_regression
+.PHONY : plussai_toy_workflow_regression
+
+# fast build rule for target.
+plussai_toy_workflow_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_workflow_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_workflow_regression.dir/build
+.PHONY : plussai_toy_workflow_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_workflow_classification
+
+# Build rule for target.
+plussai_toy_workflow_classification: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_workflow_classification
+.PHONY : plussai_toy_workflow_classification
+
+# fast build rule for target.
+plussai_toy_workflow_classification/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_workflow_classification.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_workflow_classification.dir/build
+.PHONY : plussai_toy_workflow_classification/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_builder_spotcheck
+
+# Build rule for target.
+plussai_toy_builder_spotcheck: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_builder_spotcheck
+.PHONY : plussai_toy_builder_spotcheck
+
+# fast build rule for target.
+plussai_toy_builder_spotcheck/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_builder_spotcheck.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_builder_spotcheck.dir/build
+.PHONY : plussai_toy_builder_spotcheck/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_search_workflow
+
+# Build rule for target.
+plussai_toy_search_workflow: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_search_workflow
+.PHONY : plussai_toy_search_workflow
+
+# fast build rule for target.
+plussai_toy_search_workflow/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_search_workflow.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_search_workflow.dir/build
+.PHONY : plussai_toy_search_workflow/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_time_series_workflow
+
+# Build rule for target.
+plussai_toy_time_series_workflow: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_time_series_workflow
+.PHONY : plussai_toy_time_series_workflow
+
+# fast build rule for target.
+plussai_toy_time_series_workflow/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_time_series_workflow.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_time_series_workflow.dir/build
+.PHONY : plussai_toy_time_series_workflow/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_shape_cluster_embed_detect
+
+# Build rule for target.
+plussai_toy_shape_cluster_embed_detect: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_shape_cluster_embed_detect
+.PHONY : plussai_toy_shape_cluster_embed_detect
+
+# fast build rule for target.
+plussai_toy_shape_cluster_embed_detect/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_shape_cluster_embed_detect.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_shape_cluster_embed_detect.dir/build
+.PHONY : plussai_toy_shape_cluster_embed_detect/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_semi_supervised
+
+# Build rule for target.
+plussai_toy_semi_supervised: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_semi_supervised
+.PHONY : plussai_toy_semi_supervised
+
+# fast build rule for target.
+plussai_toy_semi_supervised/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_semi_supervised.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_semi_supervised.dir/build
+.PHONY : plussai_toy_semi_supervised/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_custom_stage_payload_save
+
+# Build rule for target.
+plussai_toy_custom_stage_payload_save: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_custom_stage_payload_save
+.PHONY : plussai_toy_custom_stage_payload_save
+
+# fast build rule for target.
+plussai_toy_custom_stage_payload_save/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_custom_stage_payload_save.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_custom_stage_payload_save.dir/build
+.PHONY : plussai_toy_custom_stage_payload_save/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_policy_payload_gate
+
+# Build rule for target.
+plussai_toy_policy_payload_gate: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_policy_payload_gate
+.PHONY : plussai_toy_policy_payload_gate
+
+# fast build rule for target.
+plussai_toy_policy_payload_gate/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_policy_payload_gate.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_policy_payload_gate.dir/build
+.PHONY : plussai_toy_policy_payload_gate/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_reports_threshold_curve
+
+# Build rule for target.
+plussai_toy_reports_threshold_curve: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_reports_threshold_curve
+.PHONY : plussai_toy_reports_threshold_curve
+
+# fast build rule for target.
+plussai_toy_reports_threshold_curve/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_reports_threshold_curve.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_reports_threshold_curve.dir/build
+.PHONY : plussai_toy_reports_threshold_curve/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_workflow_options_branch_factory
+
+# Build rule for target.
+plussai_toy_workflow_options_branch_factory: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_workflow_options_branch_factory
+.PHONY : plussai_toy_workflow_options_branch_factory
+
+# fast build rule for target.
+plussai_toy_workflow_options_branch_factory/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_workflow_options_branch_factory.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_workflow_options_branch_factory.dir/build
+.PHONY : plussai_toy_workflow_options_branch_factory/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_kernel_one_class_detect
+
+# Build rule for target.
+plussai_toy_kernel_one_class_detect: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_kernel_one_class_detect
+.PHONY : plussai_toy_kernel_one_class_detect
+
+# fast build rule for target.
+plussai_toy_kernel_one_class_detect/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_kernel_one_class_detect.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_kernel_one_class_detect.dir/build
+.PHONY : plussai_toy_kernel_one_class_detect/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_neighbors_and_bayes
+
+# Build rule for target.
+plussai_toy_neighbors_and_bayes: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_neighbors_and_bayes
+.PHONY : plussai_toy_neighbors_and_bayes
+
+# fast build rule for target.
+plussai_toy_neighbors_and_bayes/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_neighbors_and_bayes.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_neighbors_and_bayes.dir/build
+.PHONY : plussai_toy_neighbors_and_bayes/fast
+
+#=============================================================================
+# Target rules for targets named plussai_toy_series_batch_model
+
+# Build rule for target.
+plussai_toy_series_batch_model: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_toy_series_batch_model
+.PHONY : plussai_toy_series_batch_model
+
+# fast build rule for target.
+plussai_toy_series_batch_model/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_toy_series_batch_model.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_toy_series_batch_model.dir/build
+.PHONY : plussai_toy_series_batch_model/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_iris_multiclass_workflow
+
+# Build rule for target.
+plussai_real_iris_multiclass_workflow: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_iris_multiclass_workflow
+.PHONY : plussai_real_iris_multiclass_workflow
+
+# fast build rule for target.
+plussai_real_iris_multiclass_workflow/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_iris_multiclass_workflow.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_iris_multiclass_workflow.dir/build
+.PHONY : plussai_real_iris_multiclass_workflow/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_diabetes_classification_workflow
+
+# Build rule for target.
+plussai_real_diabetes_classification_workflow: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_diabetes_classification_workflow
+.PHONY : plussai_real_diabetes_classification_workflow
+
+# fast build rule for target.
+plussai_real_diabetes_classification_workflow/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_diabetes_classification_workflow.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_diabetes_classification_workflow.dir/build
+.PHONY : plussai_real_diabetes_classification_workflow/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_boston_housing_regression
+
+# Build rule for target.
+plussai_real_boston_housing_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_boston_housing_regression
+.PHONY : plussai_real_boston_housing_regression
+
+# fast build rule for target.
+plussai_real_boston_housing_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_boston_housing_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_boston_housing_regression.dir/build
+.PHONY : plussai_real_boston_housing_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_boston_shape_gaussianize
+
+# Build rule for target.
+plussai_real_boston_shape_gaussianize: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_boston_shape_gaussianize
+.PHONY : plussai_real_boston_shape_gaussianize
+
+# fast build rule for target.
+plussai_real_boston_shape_gaussianize/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_boston_shape_gaussianize.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_boston_shape_gaussianize.dir/build
+.PHONY : plussai_real_boston_shape_gaussianize/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_abalone_mixed_regression
+
+# Build rule for target.
+plussai_real_abalone_mixed_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_abalone_mixed_regression
+.PHONY : plussai_real_abalone_mixed_regression
+
+# fast build rule for target.
+plussai_real_abalone_mixed_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_abalone_mixed_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_abalone_mixed_regression.dir/build
+.PHONY : plussai_real_abalone_mixed_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_bank_marketing_spotcheck
+
+# Build rule for target.
+plussai_real_bank_marketing_spotcheck: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_bank_marketing_spotcheck
+.PHONY : plussai_real_bank_marketing_spotcheck
+
+# fast build rule for target.
+plussai_real_bank_marketing_spotcheck/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_bank_marketing_spotcheck.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_bank_marketing_spotcheck.dir/build
+.PHONY : plussai_real_bank_marketing_spotcheck/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_online_news_search
+
+# Build rule for target.
+plussai_real_online_news_search: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_online_news_search
+.PHONY : plussai_real_online_news_search
+
+# fast build rule for target.
+plussai_real_online_news_search/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_online_news_search.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_online_news_search.dir/build
+.PHONY : plussai_real_online_news_search/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_steel_load_classification
+
+# Build rule for target.
+plussai_real_steel_load_classification: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_steel_load_classification
+.PHONY : plussai_real_steel_load_classification
+
+# fast build rule for target.
+plussai_real_steel_load_classification/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_steel_load_classification.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_steel_load_classification.dir/build
+.PHONY : plussai_real_steel_load_classification/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_stock_mtd_time_regression
+
+# Build rule for target.
+plussai_real_stock_mtd_time_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_stock_mtd_time_regression
+.PHONY : plussai_real_stock_mtd_time_regression
+
+# fast build rule for target.
+plussai_real_stock_mtd_time_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_stock_mtd_time_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_stock_mtd_time_regression.dir/build
+.PHONY : plussai_real_stock_mtd_time_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_sp500_time_regression
+
+# Build rule for target.
+plussai_real_sp500_time_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_sp500_time_regression
+.PHONY : plussai_real_sp500_time_regression
+
+# fast build rule for target.
+plussai_real_sp500_time_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_sp500_time_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_sp500_time_regression.dir/build
+.PHONY : plussai_real_sp500_time_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_amsterdam_price_regression
+
+# Build rule for target.
+plussai_real_amsterdam_price_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_amsterdam_price_regression
+.PHONY : plussai_real_amsterdam_price_regression
+
+# fast build rule for target.
+plussai_real_amsterdam_price_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_amsterdam_price_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_amsterdam_price_regression.dir/build
+.PHONY : plussai_real_amsterdam_price_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_breast_cancer_categorical
+
+# Build rule for target.
+plussai_real_breast_cancer_categorical: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_breast_cancer_categorical
+.PHONY : plussai_real_breast_cancer_categorical
+
+# fast build rule for target.
+plussai_real_breast_cancer_categorical/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_breast_cancer_categorical.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_breast_cancer_categorical.dir/build
+.PHONY : plussai_real_breast_cancer_categorical/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_sonar_embedding_cluster
+
+# Build rule for target.
+plussai_real_sonar_embedding_cluster: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_sonar_embedding_cluster
+.PHONY : plussai_real_sonar_embedding_cluster
+
+# fast build rule for target.
+plussai_real_sonar_embedding_cluster/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_sonar_embedding_cluster.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_sonar_embedding_cluster.dir/build
+.PHONY : plussai_real_sonar_embedding_cluster/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_oil_spill_detection
+
+# Build rule for target.
+plussai_real_oil_spill_detection: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_oil_spill_detection
+.PHONY : plussai_real_oil_spill_detection
+
+# fast build rule for target.
+plussai_real_oil_spill_detection/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_oil_spill_detection.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_oil_spill_detection.dir/build
+.PHONY : plussai_real_oil_spill_detection/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_oil_spill_classification
+
+# Build rule for target.
+plussai_real_oil_spill_classification: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_oil_spill_classification
+.PHONY : plussai_real_oil_spill_classification
+
+# fast build rule for target.
+plussai_real_oil_spill_classification/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_oil_spill_classification.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_oil_spill_classification.dir/build
+.PHONY : plussai_real_oil_spill_classification/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_warehouse_sales_regression
+
+# Build rule for target.
+plussai_real_warehouse_sales_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_warehouse_sales_regression
+.PHONY : plussai_real_warehouse_sales_regression
+
+# fast build rule for target.
+plussai_real_warehouse_sales_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_warehouse_sales_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_warehouse_sales_regression.dir/build
+.PHONY : plussai_real_warehouse_sales_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_ev_range_regression
+
+# Build rule for target.
+plussai_real_ev_range_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_ev_range_regression
+.PHONY : plussai_real_ev_range_regression
+
+# fast build rule for target.
+plussai_real_ev_range_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_ev_range_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_ev_range_regression.dir/build
+.PHONY : plussai_real_ev_range_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_accidents_severity_workflow
+
+# Build rule for target.
+plussai_real_accidents_severity_workflow: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_accidents_severity_workflow
+.PHONY : plussai_real_accidents_severity_workflow
+
+# fast build rule for target.
+plussai_real_accidents_severity_workflow/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_accidents_severity_workflow.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_accidents_severity_workflow.dir/build
+.PHONY : plussai_real_accidents_severity_workflow/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_employee_salary_regression
+
+# Build rule for target.
+plussai_real_employee_salary_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_employee_salary_regression
+.PHONY : plussai_real_employee_salary_regression
+
+# fast build rule for target.
+plussai_real_employee_salary_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_employee_salary_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_employee_salary_regression.dir/build
+.PHONY : plussai_real_employee_salary_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_estate_sale_regression
+
+# Build rule for target.
+plussai_real_estate_sale_regression: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_estate_sale_regression
+.PHONY : plussai_real_estate_sale_regression
+
+# fast build rule for target.
+plussai_real_estate_sale_regression/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_estate_sale_regression.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_estate_sale_regression.dir/build
+.PHONY : plussai_real_estate_sale_regression/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_horse_colic_classification
+
+# Build rule for target.
+plussai_real_horse_colic_classification: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_horse_colic_classification
+.PHONY : plussai_real_horse_colic_classification
+
+# fast build rule for target.
+plussai_real_horse_colic_classification/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_horse_colic_classification.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_horse_colic_classification.dir/build
+.PHONY : plussai_real_horse_colic_classification/fast
+
+#=============================================================================
+# Target rules for targets named plussai_real_stock_project_scout
+
+# Build rule for target.
+plussai_real_stock_project_scout: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_real_stock_project_scout
+.PHONY : plussai_real_stock_project_scout
+
+# fast build rule for target.
+plussai_real_stock_project_scout/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/demos/CMakeFiles/plussai_real_stock_project_scout.dir/build.make PlussAI/Lymph/demos/CMakeFiles/plussai_real_stock_project_scout.dir/build
+.PHONY : plussai_real_stock_project_scout/fast
 
 #=============================================================================
 # Target rules for targets named plussai_minimax_demo
@@ -9647,6 +10180,8 @@ help:
 	@echo "... lymph_model_append_test"
 	@echo "... lymph_search_test"
 	@echo "... lymph_shape_test"
+	@echo "... lymph_split_surface_test"
+	@echo "... lymph_spotcheck_test"
 	@echo "... lymph_target_transform_test"
 	@echo "... lymph_unsupervised_test"
 	@echo "... lymph_validate_test"
@@ -9723,8 +10258,11 @@ help:
 	@echo "... plussai_ice_full_capability_demo"
 	@echo "... plussai_lymph_end_to_end_hour_workflow_showcase"
 	@echo "... plussai_lymph_feature_transformer_workflow_demo"
+	@echo "... plussai_lymph_general_ml_demo"
 	@echo "... plussai_lymph_housing_ch2_end_to_end_notebook"
 	@echo "... plussai_lymph_online_demo"
+	@echo "... plussai_lymph_selection_search_demo"
+	@echo "... plussai_lymph_supervised_workflow_demo"
 	@echo "... plussai_minimax_demo"
 	@echo "... plussai_minimax_multiblock_constraints_demo"
 	@echo "... plussai_nn_binary_classifier_minimal_demo"
@@ -9764,7 +10302,43 @@ help:
 	@echo "... plussai_nodej_unsupervised_demo"
 	@echo "... plussai_nodej_workflow_tuning_demo"
 	@echo "... plussai_outlier_holdout_parity_probe"
+	@echo "... plussai_real_abalone_mixed_regression"
+	@echo "... plussai_real_accidents_severity_workflow"
+	@echo "... plussai_real_amsterdam_price_regression"
+	@echo "... plussai_real_bank_marketing_spotcheck"
+	@echo "... plussai_real_boston_housing_regression"
+	@echo "... plussai_real_boston_shape_gaussianize"
+	@echo "... plussai_real_breast_cancer_categorical"
+	@echo "... plussai_real_diabetes_classification_workflow"
+	@echo "... plussai_real_employee_salary_regression"
+	@echo "... plussai_real_estate_sale_regression"
+	@echo "... plussai_real_ev_range_regression"
+	@echo "... plussai_real_horse_colic_classification"
+	@echo "... plussai_real_iris_multiclass_workflow"
+	@echo "... plussai_real_oil_spill_classification"
+	@echo "... plussai_real_oil_spill_detection"
+	@echo "... plussai_real_online_news_search"
+	@echo "... plussai_real_sonar_embedding_cluster"
+	@echo "... plussai_real_sp500_time_regression"
+	@echo "... plussai_real_steel_load_classification"
+	@echo "... plussai_real_stock_mtd_time_regression"
+	@echo "... plussai_real_stock_project_scout"
+	@echo "... plussai_real_warehouse_sales_regression"
 	@echo "... plussai_tcn_demo"
+	@echo "... plussai_toy_builder_spotcheck"
+	@echo "... plussai_toy_custom_stage_payload_save"
+	@echo "... plussai_toy_kernel_one_class_detect"
+	@echo "... plussai_toy_neighbors_and_bayes"
+	@echo "... plussai_toy_policy_payload_gate"
+	@echo "... plussai_toy_reports_threshold_curve"
+	@echo "... plussai_toy_search_workflow"
+	@echo "... plussai_toy_semi_supervised"
+	@echo "... plussai_toy_series_batch_model"
+	@echo "... plussai_toy_shape_cluster_embed_detect"
+	@echo "... plussai_toy_time_series_workflow"
+	@echo "... plussai_toy_workflow_classification"
+	@echo "... plussai_toy_workflow_options_branch_factory"
+	@echo "... plussai_toy_workflow_regression"
 	@echo "... plussma_adam_functional_demo"
 	@echo "... plussma_bike_sharing_regression_notebook_demo"
 	@echo "... plussma_dfo_suite_demo"

@@ -24,7 +24,6 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
-api/registry/as_kindle
 api/registry/begin
 api/registry/cast
 api/registry/clear
@@ -43,7 +42,6 @@ api/registry/fieldaxis
 api/registry/fields
 api/registry/fillnull
 api/registry/freq
-api/registry/from_kindle
 api/registry/get
 api/registry/has
 api/registry/has_all
@@ -98,7 +96,6 @@ api/registry/take
 api/registry/take_
 api/registry/tl
 api/registry/to_json
-api/registry/to_kindle
 api/registry/to_string
 api/registry/unique
 ```

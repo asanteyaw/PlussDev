@@ -187,36 +187,16 @@ Axel Axel::concat_depth(const Axel& other) const {
   return Axel(std::move(out), std::move(merged_labels));
 }
 
-pluss::kindle::Archive Axel::to_kindle() const {
+pluss::kindle::Archive Axel::kindelize() const {
   PLUSS_CHECK(defined(), "Axel: undefined handle");
   std::vector<pluss::kindle::Catalog> out;
   out.reserve(static_cast<std::size_t>(depth()));
   for (std::int64_t i = 0; i < depth(); ++i) {
-    out.push_back(registry(i).to_kindle());
+    out.push_back(registry(i).kindelize());
   }
   std::optional<pluss::kindle::Stream> depth_labels = std::nullopt;
-  if (labels().has_value()) depth_labels = labels()->to_kindle();
+  if (labels().has_value()) depth_labels = labels()->kindelize();
   return pluss::kindle::Archive(std::move(out), std::move(depth_labels));
-}
-
-pluss::kindle::Archive Axel::kindelize() const {
-  return to_kindle();
-}
-
-pluss::kindle::Archive Axel::as_kindle() const {
-  return to_kindle();
-}
-
-Axel Axel::from_kindle(const pluss::kindle::Archive& archive) {
-  PLUSS_CHECK(archive.defined(), "Axel::from_kindle: archive undefined");
-  std::vector<Registry> out;
-  out.reserve(static_cast<std::size_t>(archive.depth()));
-  for (std::int64_t i = 0; i < archive.depth(); ++i) {
-    out.push_back(Registry::from_kindle(archive.catalog(i)));
-  }
-  std::optional<Slot> labels = std::nullopt;
-  if (archive.label().has()) labels = Slot::from_kindle(archive.label().values());
-  return Axel(std::move(out), std::move(labels));
 }
 
 pluss::table::Atlas Axel::tabelize() const {
@@ -225,5 +205,5 @@ pluss::table::Atlas Axel::tabelize() const {
 
 pluss::table::Atlas Axel::tabelize(const pluss::kindle::TabelizePolicy& policy) const {
   PLUSS_CHECK(defined(), "Axel::tabelize: axel undefined");
-  return to_kindle().tabelize(policy);
+  return kindelize().tabelize(policy);
 }

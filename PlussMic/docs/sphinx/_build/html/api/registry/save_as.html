@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,7 +54,7 @@
 name.</p>
 <p><code class="docutils literal notranslate"><span class="pre">target_type</span> <span class="pre">==</span> <span class="pre">&quot;json&quot;</span></code> is special-cased: it calls <a class="reference internal" href="save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_json()</span></code></span></a>
 directly, which means it inherits that method’s heterogeneous-registry fallback.
-Every other target type routes through the shared <code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code>-requiring path (the
+Every other target type routes through the shared <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code>-requiring path (the
 same one <a class="reference internal" href="save_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_csv()</span></code></span></a>, <a class="reference internal" href="save_txt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_txt()</span></code></span></a>,
 <a class="reference internal" href="save_excel.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_excel()</span></code></span></a>, and <a class="reference internal" href="save_parquet.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_parquet()</span></code></span></a> use), and
 throws on a genuinely mixed-type field.</p>

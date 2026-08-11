@@ -153,7 +153,7 @@ std::unordered_map<std::string, std::int64_t> Slot::type_counts() const {
 Slot Slot::isnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (is_stream_compatible()) {
-    return Slot::from_kindle(to_kindle().isnull());
+    return kindelize().isnull().bundelize();
   }
   std::vector<Value> out;
   out.reserve(values().size());
@@ -166,7 +166,7 @@ Slot Slot::isnull() const {
 Slot Slot::notnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (is_stream_compatible()) {
-    return Slot::from_kindle(to_kindle().notnull());
+    return kindelize().notnull().bundelize();
   }
   std::vector<Value> out;
   out.reserve(values().size());
@@ -179,7 +179,7 @@ Slot Slot::notnull() const {
 Slot Slot::invalid() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (is_stream_compatible()) {
-    return Slot::from_kindle(to_kindle().invalid());
+    return kindelize().invalid().bundelize();
   }
   std::vector<Value> out;
   out.reserve(values().size());
@@ -224,7 +224,7 @@ Slot Slot::fillnull(const pluss::TimeIndex& value) const {
 Slot Slot::dropnull() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (is_stream_compatible()) {
-    return Slot::from_kindle(to_kindle().dropnull());
+    return kindelize().dropnull().bundelize();
   }
   std::vector<Value> out;
   out.reserve(values().size());
@@ -236,15 +236,15 @@ Slot Slot::dropnull() const {
 }
 
 Slot Slot::distinct(pluss::kindle::DistinctOptions options) const {
-  return Slot::from_kindle(to_kindle().distinct(options));
+  return kindelize().distinct(options).bundelize();
 }
 
 Slot Slot::freq(pluss::kindle::FreqOptions options) const {
-  return Slot::from_kindle(to_kindle().freq(options));
+  return kindelize().freq(options).bundelize();
 }
 
 Slot Slot::ndistinct(pluss::kindle::DistinctOptions options) const {
-  return Slot::from_kindle(to_kindle().ndistinct(options));
+  return kindelize().ndistinct(options).bundelize();
 }
 
 SlotCastAccessor Slot::cast() const {
@@ -267,7 +267,7 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
                 const pluss::table::ThreadCastOptions& options) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (is_stream_compatible()) {
-    return Slot::from_kindle(to_kindle().cast(target, options));
+    return kindelize().cast(target, options).bundelize();
   }
   if (target == pluss::table::ThreadCastTarget::Note) {
     std::vector<Value> out;
@@ -338,7 +338,7 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
 
   auto scatter_casted = [&](const std::vector<std::int64_t>& positions, std::vector<Value> values_batch) {
     if (positions.empty()) return;
-    auto casted = Slot::from_kindle(Slot(std::move(values_batch)).to_kindle().cast(target, options));
+    auto casted = Slot(std::move(values_batch)).kindelize().cast(target, options).bundelize();
     const auto& casted_values = casted.values();
     for (std::size_t j = 0; j < positions.size(); ++j) {
       out[static_cast<std::size_t>(positions[j])] = casted_values[j];
@@ -379,19 +379,19 @@ Slot Slot::astype(pluss::codem::ScalarType dtype) const {
 }
 
 Slot Slot::sum() const {
-  return Slot::from_kindle(to_kindle().sum());
+  return kindelize().sum().bundelize();
 }
 
 Slot Slot::mean() const {
-  return Slot::from_kindle(to_kindle().mean());
+  return kindelize().mean().bundelize();
 }
 
 Slot Slot::min() const {
-  return Slot::from_kindle(to_kindle().min());
+  return kindelize().min().bundelize();
 }
 
 Slot Slot::max() const {
-  return Slot::from_kindle(to_kindle().max());
+  return kindelize().max().bundelize();
 }
 
 bool Slot::is_stream_compatible() const {
@@ -407,14 +407,14 @@ void Slot::ensure_stream_compatible(std::string_view where) const {
                   ": slot is not stream-compatible (kind=" + slot_kind_name(profile.kind) + ")");
 }
 
-pluss::kindle::Stream Slot::to_kindle() const {
+pluss::kindle::Stream Slot::kindelize() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   const auto& profile = slot_profile(impl_ref_());
   if (profile.kind == SlotKind::Empty) {
     return pluss::kindle::Stream(pluss::make_note(std::vector<std::string>{}));
   }
   PLUSS_CHECK(profile.stream_compatible,
-              "Slot::to_kindle: slot is not stream-compatible (kind=" + slot_kind_name(profile.kind) + ")");
+              "Slot::kindelize: slot is not stream-compatible (kind=" + slot_kind_name(profile.kind) + ")");
 
   if (profile.kind == SlotKind::Series) {
     // A single scalar value is stored as a 0D Series (numel() == 1, dim() ==
@@ -490,7 +490,7 @@ pluss::kindle::Stream Slot::to_kindle() const {
         tz_name = std::move(value_tz);
       } else {
         PLUSS_CHECK(*tz_name == value_tz,
-                    std::string("Slot::to_kindle: Timeline slot values carry mismatched timezones ('") +
+                    std::string("Slot::kindelize: Timeline slot values carry mismatched timezones ('") +
                         *tz_name + "' vs '" + value_tz +
                         "'); a Stream's Timeline column has one shared tz, so relabel with tz() "
                         "(or localize()) to a common zone before combining");
@@ -522,7 +522,7 @@ pluss::kindle::Stream Slot::to_kindle() const {
         tz_name = std::move(value_tz);
       } else {
         PLUSS_CHECK(*tz_name == value_tz,
-                    std::string("Slot::to_kindle: TimeIndex slot values carry mismatched timezones ('") +
+                    std::string("Slot::kindelize: TimeIndex slot values carry mismatched timezones ('") +
                         *tz_name + "' vs '" + value_tz +
                         "'); a Stream's TimeIndex column has one shared tz, so relabel with tz() "
                         "(or localize()) to a common zone before combining");
@@ -535,13 +535,9 @@ pluss::kindle::Stream Slot::to_kindle() const {
     return pluss::kindle::Stream(pluss::make_timeindex(merged, false));
   }
 
-  throw pluss::Error("Slot::to_kindle: unsupported slot kind");
+  throw pluss::Error("Slot::kindelize: unsupported slot kind");
 }
 
-pluss::kindle::Stream Slot::kindelize() const {
-  return to_kindle();
-}
-
-pluss::kindle::Stream Slot::as_kindle() const {
-  return to_kindle();
+pluss::table::Thread Slot::tabelize() const {
+  return kindelize().tabelize();
 }

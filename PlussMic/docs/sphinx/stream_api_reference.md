@@ -12,6 +12,12 @@ This page documents the full public `Stream` surface for the Kindle model.
 
 The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
+## Accessors
+
+`Stream` exposes nested accessors, each with its own method pages and sidebar:
+
+- `plot()` -> [`StreamPlotAccessor`](stream_plot_accessor_api_reference.md)
+
 ```{toctree}
 :hidden:
 :maxdepth: 1
@@ -23,6 +29,7 @@ api/stream/as_timeindex
 api/stream/as_timeline
 api/stream/astype
 api/stream/bfill
+api/stream/bundelize
 api/stream/cast
 api/stream/clear_label
 api/stream/clear_label_
@@ -57,6 +64,7 @@ api/stream/min
 api/stream/ndistinct
 api/stream/notnull
 api/stream/nrecords
+api/stream/plot
 api/stream/ptype
 api/stream/select
 api/stream/shape
@@ -65,6 +73,7 @@ api/stream/size
 api/stream/slice
 api/stream/std
 api/stream/sum
+api/stream/tabelize
 api/stream/tail
 api/stream/take
 api/stream/to_json

@@ -428,14 +428,12 @@ std::vector<double> depth_statistic_values(const std::vector<DataFrame>& frames,
                                            AtlasDepthStatistic statistic,
                                            std::string_view where) {
   PLUSS_CHECK(!positions.empty(), std::string(where) + ": empty depth selection");
-  const auto ncases = frames[static_cast<std::size_t>(positions.front())].ncases();
-  PLUSS_CHECK(ncases > 0, std::string(where) + ": frame has zero cases");
 
   std::vector<double> values;
   values.reserve(positions.size());
   for (const auto p : positions) {
     const auto& frame = frames[static_cast<std::size_t>(p)];
-    require_size(frame.ncases(), ncases, where, "case axis");
+    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": frame has zero cases");
     PLUSS_CHECK(
         frame.get(feature).has_value(),
         std::string(where) + ": missing feature '" + std::string(feature) + "'");
@@ -449,22 +447,23 @@ std::vector<pluss::Series> flatten_feature_columns(const std::vector<DataFrame>&
                                                    const std::vector<std::string>& features,
                                                    std::string_view where) {
   PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
-  const auto depth = static_cast<std::int64_t>(frames.size());
-  const auto ncases = frames.front().ncases();
-  PLUSS_CHECK(ncases > 0, std::string(where) + ": frame has zero cases");
+  std::int64_t total_cases = 0;
+  for (const auto& frame : frames) {
+    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": frame has zero cases");
+    total_cases += frame.ncases();
+  }
 
   std::vector<std::vector<double>> flattened(features.size());
   for (auto& column : flattened) {
-    column.reserve(static_cast<std::size_t>(depth * ncases));
+    column.reserve(static_cast<std::size_t>(total_cases));
   }
 
   for (const auto& frame : frames) {
-    require_size(frame.ncases(), ncases, where, "case axis");
     for (const auto i : std::views::iota(std::size_t{0}, features.size())) {
       const auto& feature = features[i];
       PLUSS_CHECK(frame.get(feature).has_value(), std::string(where) + ": missing feature '" + feature + "'");
       const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
-      require_size(static_cast<std::int64_t>(values.size()), ncases, where, feature);
+      require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), where, feature);
       auto& dest = flattened[i];
       dest.insert(dest.end(), values.begin(), values.end());
     }
@@ -486,25 +485,68 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
   PLUSS_CHECK(!positions.empty(), std::string(where) + ": empty depth selection");
 
   const auto depth = static_cast<std::int64_t>(positions.size());
-  const auto ncases = frames[static_cast<std::size_t>(positions.front())].ncases();
-  PLUSS_CHECK(ncases > 0, std::string(where) + ": frame has zero cases");
-
+  bool all_case_labeled = true;
+  std::int64_t max_cases = 0;
   for (const auto p : positions) {
     const auto& frame = frames[static_cast<std::size_t>(p)];
-    require_size(frame.ncases(), ncases, where, "case axis");
+    PLUSS_CHECK(frame.ncases() > 0, std::string(where) + ": frame has zero cases");
     PLUSS_CHECK(frame.get(feature).has_value(),
                 std::string(where) + ": missing feature '" + std::string(feature) + "' in one or more frames");
+    max_cases = std::max(max_cases, frame.ncases());
+    all_case_labeled = all_case_labeled && thread_prefers_labels(frame.label().values());
   }
 
   AtlasGrid3D out;
-  const auto& case_thread = frames[static_cast<std::size_t>(positions.front())].label().values();
-  if (thread_prefers_labels(case_thread)) {
+  std::vector<std::vector<double>> rows;
+  rows.reserve(static_cast<std::size_t>(depth));
+
+  if (all_case_labeled) {
+    std::vector<std::string> union_labels;
+    std::unordered_map<std::string, std::int64_t> union_index;
+    union_labels.reserve(static_cast<std::size_t>(max_cases));
+
+    for (const auto p : positions) {
+      const auto& frame = frames[static_cast<std::size_t>(p)];
+      const auto labels = thread_to_labels(frame.label().values());
+      require_size(static_cast<std::int64_t>(labels.size()), frame.ncases(), where, "case labels");
+      for (const auto& label : labels) {
+        if (!union_index.contains(label)) {
+          const auto pos = static_cast<std::int64_t>(union_labels.size());
+          union_index.emplace(label, pos);
+          union_labels.push_back(label);
+        }
+      }
+    }
+
+    const auto ncases = static_cast<std::int64_t>(union_labels.size());
     out.x_axis = positional_axis(ncases);
-    out.x_labels = thread_to_labels(case_thread);
-    require_size(static_cast<std::int64_t>(out.x_labels.size()), ncases, where, "case labels");
+    out.x_labels = union_labels;
+
+    for (const auto p : positions) {
+      const auto& frame = frames[static_cast<std::size_t>(p)];
+      const auto labels = thread_to_labels(frame.label().values());
+      const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
+      require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), where, feature);
+
+      std::vector<double> row(static_cast<std::size_t>(ncases), std::numeric_limits<double>::quiet_NaN());
+      for (std::size_t i = 0; i < labels.size(); ++i) {
+        row[static_cast<std::size_t>(union_index.at(labels[i]))] = values[i];
+      }
+      rows.push_back(std::move(row));
+    }
   } else {
-    out.x_axis = thread_to_numeric_values(case_thread, where, "case axis");
-    require_size(static_cast<std::int64_t>(out.x_axis.size()), ncases, where, "case axis");
+    const auto ncases = max_cases;
+    out.x_axis = positional_axis(ncases);
+
+    for (const auto p : positions) {
+      const auto& frame = frames[static_cast<std::size_t>(p)];
+      const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
+      require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), where, feature);
+
+      std::vector<double> row(static_cast<std::size_t>(ncases), std::numeric_limits<double>::quiet_NaN());
+      std::copy(values.begin(), values.end(), row.begin());
+      rows.push_back(std::move(row));
+    }
   }
 
   auto depth_axis = build_depth_axis(depth_labels, positions, where);
@@ -512,12 +554,10 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
   out.y_labels = std::move(depth_axis.labels);
 
   std::vector<double> z_values;
+  const auto ncases = static_cast<std::int64_t>(out.x_axis.size());
   z_values.reserve(static_cast<std::size_t>(depth * ncases));
-  for (const auto p : positions) {
-    const auto& frame = frames[static_cast<std::size_t>(p)];
-    const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
-    require_size(static_cast<std::int64_t>(values.size()), ncases, where, feature);
-    z_values.insert(z_values.end(), values.begin(), values.end());
+  for (auto& row : rows) {
+    z_values.insert(z_values.end(), row.begin(), row.end());
   }
   out.z = pluss::make_series(z_values, {depth, ncases});
   return out;
@@ -734,8 +774,7 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
   PLUSS_CHECK(!frames_.empty(), "Atlas::plot().cloud3: atlas has no frames");
   const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
   const auto depth = static_cast<std::int64_t>(selected_depth.size());
-  const auto ncases = frames_[static_cast<std::size_t>(selected_depth.front())].ncases();
-  PLUSS_CHECK(ncases > 0, "Atlas::plot().cloud3: frame has zero cases");
+  (void)depth;
 
   const auto labels = depth_legend_labels(depth_labels_, selected_depth, "Atlas::plot().cloud3");
 
@@ -747,7 +786,7 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
 
   for (const auto i : std::views::iota(std::size_t{0}, selected_depth.size())) {
     const auto& frame = frames_[static_cast<std::size_t>(selected_depth[i])];
-    require_size(frame.ncases(), ncases, "Atlas::plot().cloud3", "case axis");
+    PLUSS_CHECK(frame.ncases() > 0, "Atlas::plot().cloud3: frame has zero cases");
     PLUSS_CHECK(
         frame.get(x_feature).has_value() && frame.get(y_feature).has_value() && frame.get(z_feature).has_value(),
         "Atlas::plot().cloud3: one or more requested features are missing in one or more frames");
@@ -756,9 +795,9 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
     const auto y = thread_to_numeric_values(frame.features(y_feature), "Atlas::plot().cloud3", y_feature);
     const auto z = thread_to_numeric_values(frame.features(z_feature), "Atlas::plot().cloud3", z_feature);
 
-    require_size(static_cast<std::int64_t>(x.size()), ncases, "Atlas::plot().cloud3", x_feature);
-    require_size(static_cast<std::int64_t>(y.size()), ncases, "Atlas::plot().cloud3", y_feature);
-    require_size(static_cast<std::int64_t>(z.size()), ncases, "Atlas::plot().cloud3", z_feature);
+    require_size(static_cast<std::int64_t>(x.size()), frame.ncases(), "Atlas::plot().cloud3", x_feature);
+    require_size(static_cast<std::int64_t>(y.size()), frame.ncases(), "Atlas::plot().cloud3", y_feature);
+    require_size(static_cast<std::int64_t>(z.size()), frame.ncases(), "Atlas::plot().cloud3", z_feature);
 
     auto& trace = flash::cloud3(
                       pane,
@@ -783,8 +822,6 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const Atlas
   PLUSS_CHECK(!frames_.empty(), "Atlas::plot().depth: atlas has no frames");
   const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
   const auto depth_size = static_cast<std::int64_t>(selected_depth.size());
-  const auto ncases = frames_[static_cast<std::size_t>(selected_depth.front())].ncases();
-  PLUSS_CHECK(ncases > 0, "Atlas::plot().depth: frame has zero cases");
 
   auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth");
   std::vector<double> center_values;
@@ -803,7 +840,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const Atlas
 
   for (const auto p : selected_depth) {
     const auto& frame = frames_[static_cast<std::size_t>(p)];
-    require_size(frame.ncases(), ncases, "Atlas::plot().depth", "case axis");
+    PLUSS_CHECK(frame.ncases() > 0, "Atlas::plot().depth: frame has zero cases");
     PLUSS_CHECK(
         frame.get(feature).has_value(),
         std::string("Atlas::plot().depth: missing feature '") + std::string(feature) + "'");

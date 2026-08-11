@@ -21,9 +21,7 @@ overload writes to the given stream; the no-argument overload is meant to write 
 
 ```{important} The no-argument overload is confirmed to hang outside an interactive terminal
 `Atlas::show()` (no `std::ostream&` argument) has been directly verified to hang
-indefinitely when run non-interactively (this is the same underlying call
-[`Archive::to_table(policy, true)`](../archive/to_table.md) used to route through before
-that path was fixed to use a direct `std::cout` print instead). The `std::ostream&`
+indefinitely when run non-interactively. The `std::ostream&`
 overload does **not** exhibit this hang — it prints immediately and returns, verified
 directly. Until the no-argument overload is fixed, always call `show(std::cout, options)`
 explicitly rather than `show(options)`/`show()`.

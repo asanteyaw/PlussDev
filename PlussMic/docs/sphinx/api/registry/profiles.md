@@ -21,7 +21,7 @@ can use directly rather than parsed back out of a rendered string.
 
 ```{important} A stream-compatible field has exactly one kind in its tally
 A field where every value shares one kind (a precondition of
-[`to_kindle()`](to_kindle.md) succeeding) has a single-entry inner map — one
+[`kindelize()`](kindelize.md) succeeding) has a single-entry inner map — one
 kind, count equal to the field's `size()`. A genuinely mixed field's inner map
 has more than one entry; that's exactly what makes that field not
 stream-compatible. See Example 1's `mixed` field.

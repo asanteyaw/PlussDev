@@ -82,9 +82,9 @@ false
 - [`Catalog::get`](../catalog/get.md): the equivalent lookup on the kindle model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="from_kindle.html">
+  <a class="prev-link" href="freq.html">
     <span class="label">Previous</span>
-    <span class="title">from_kindle</span>
+    <span class="title">freq</span>
   </a>
   <a class="next-link" href="has.html">
     <span class="label">Next</span>

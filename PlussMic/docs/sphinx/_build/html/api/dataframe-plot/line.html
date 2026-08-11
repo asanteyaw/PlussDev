@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -123,11 +123,23 @@ for a single feature). At least one y-feature is required — an empty list thro
 <p><strong>x_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
 The feature to use as the shared x-axis. See “Choosing the x-axis” above.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>)
-<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">LinePlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">alpha{1.0};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">line_width{1.6};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">std::optional&lt;pluss::pl::LimitMethod&gt;</span> <span class="pre">y_limit_method{pluss::pl::LimitMethod::Padded};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">LinePlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">alpha{1.0};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">line_width{1.6};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">std::optional&lt;pluss::pl::LimitMethod&gt;</span> <span class="pre">y_limit_method{pluss::pl::LimitMethod::Padded};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">XYAlignOptions</span> <span class="pre">align{};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
 <code class="docutils literal notranslate"><span class="pre">alpha</span></code> controls trace opacity, <code class="docutils literal notranslate"><span class="pre">line_width</span></code> the stroke width. <code class="docutils literal notranslate"><span class="pre">y_limit_method</span></code> chooses
 how the y-axis auto-fits to the data: <code class="docutils literal notranslate"><span class="pre">Padded</span></code> (the default) adds a small margin beyond
 the data’s min/max, <code class="docutils literal notranslate"><span class="pre">Tight</span></code> fits exactly to the data range with no margin, and
 <code class="docutils literal notranslate"><span class="pre">TickAligned</span></code> snaps the limits outward to the nearest tick boundaries.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>```{note} align is present on the struct but has no effect at this layer
+`align` (`XYAlignOptions`) exists so `Catalog::plot().line()` can reuse this exact
+struct type for its own key-to-key alignment — see
+[`CatalogPlotAccessor::line`](../catalog-plot/line.md)
+for where it actually does something. `DataFramePlotAccessor::line()` itself never reads
+`align`: every column in an already-constructed `DataFrame` shares one row count by
+construction, so there is no length mismatch here for `align` to resolve in the first
+place. Setting it to any `XYAlignMode`/`XYAlignBy` combination produces byte-identical
+output.
+```
+</pre></div>
+</div>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -154,7 +166,7 @@ A figure with one pane containing one line trace per requested y-feature.</p>
 evenly spaced categorical positions labeled <code class="docutils literal notranslate"><span class="pre">&quot;Jan&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Apr&quot;</span></code>), producing a single unlabeled
 (no-legend, since there’s only one y-feature) line trace. <code class="docutils literal notranslate"><span class="pre">chart.show()</span></code> is what actually
 opens the figure — nothing above it renders anything on its own.</p>
-<p><img alt="Output of Example 1" src="../../_images/line-1.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/line-12.svg" /></p>
 <p>Example 2. A shared <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> set once on the accessor, used implicitly by
 multiple chart calls.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -170,9 +182,9 @@ multiple chart calls.</p>
 demonstrates that an explicit <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> argument (here, <code class="docutils literal notranslate"><span class="pre">&quot;cost&quot;</span></code>) always wins over
 <code class="docutils literal notranslate"><span class="pre">options.default_x_feature</span></code>, even when both are present in the same call.</p>
 <p><code class="docutils literal notranslate"><span class="pre">chart1</span></code> (<code class="docutils literal notranslate"><span class="pre">amount</span></code> vs. <code class="docutils literal notranslate"><span class="pre">month</span></code>):</p>
-<p><img alt="Output of Example 2, chart1" src="../../_images/line-2-a.svg" /></p>
+<p><img alt="Output of Example 2, chart1" src="../../_images/line-2-a1.svg" /></p>
 <p><code class="docutils literal notranslate"><span class="pre">chart2</span></code> (<code class="docutils literal notranslate"><span class="pre">cost</span></code> vs. <code class="docutils literal notranslate"><span class="pre">month</span></code>):</p>
-<p><img alt="Output of Example 2, chart2" src="../../_images/line-2-b.svg" /></p>
+<p><img alt="Output of Example 2, chart2" src="../../_images/line-2-b1.svg" /></p>
 <p><code class="docutils literal notranslate"><span class="pre">chart3</span></code> (<code class="docutils literal notranslate"><span class="pre">amount</span></code> vs. explicit <code class="docutils literal notranslate"><span class="pre">cost</span></code>, overriding the default):</p>
 <p><img alt="Output of Example 2, chart3" src="../../_images/line-2-c.svg" /></p>
 <p>Example 3. No x-feature at all — falls back to the frame’s own row labels.</p>
@@ -189,7 +201,7 @@ at all. <code class="docutils literal notranslate"><span class="pre">line(&quot;
 those row labels: the x-axis renders <code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Q4&quot;</span></code> as categorical positions, and the axis
 title becomes <code class="docutils literal notranslate"><span class="pre">&quot;case&quot;</span></code> (not <code class="docutils literal notranslate"><span class="pre">&quot;amount&quot;</span></code> and not the row-label feature’s own name — literally
 the string <code class="docutils literal notranslate"><span class="pre">&quot;case&quot;</span></code>).</p>
-<p><img alt="Output of Example 3" src="../../_images/line-3.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/line-31.svg" /></p>
 <p>Example 4. Multiple y-features overlaid on one pane, drawn from a brace-init list.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
@@ -199,7 +211,7 @@ the string <code class="docutils literal notranslate"><span class="pre">&quot;ca
 automatically (labeled <code class="docutils literal notranslate"><span class="pre">&quot;amount&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;cost&quot;</span></code>) because more than one y-feature was
 requested. <code class="docutils literal notranslate"><span class="pre">chart.show()</span></code> opens the figure directly instead of writing a file — useful
 during interactive exploration.</p>
-<p><img alt="Output of Example 4" src="../../_images/line-4.svg" /></p>
+<p><img alt="Output of Example 4" src="../../_images/line-41.svg" /></p>
 <p>Example 5. The same multi-feature call using a reusable <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> instead of a brace-init
 list — useful when the feature list is built at runtime rather than known at the call site.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_names</span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">};</span>
@@ -209,7 +221,7 @@ list — useful when the feature list is built at runtime rather than known at t
 </div>
 <p>Behaves identically to Example 4 — the <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload and the <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>
 overload are the same underlying call, just accepting the y-feature list in different forms.</p>
-<p><img alt="Output of Example 5" src="../../_images/line-5.svg" /></p>
+<p><img alt="Output of Example 5" src="../../_images/line-51.svg" /></p>
 <p>Example 6. An explicit <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>, tuning opacity, stroke width, and y-axis fit.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">line_options</span><span class="p">;</span>
 <span class="n">line_options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.85</span><span class="p">;</span>
@@ -223,13 +235,13 @@ overload are the same underlying call, just accepting the y-feature list in diff
 <p>The line is drawn slightly translucent (<code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">=</span> <span class="pre">0.85</span></code>), thicker (<code class="docutils literal notranslate"><span class="pre">line_width</span> <span class="pre">=</span> <span class="pre">2.5</span></code>), and
 the y-axis is fit tightly to the data’s actual min/max instead of the default padded
 margin.</p>
-<p><img alt="Output of Example 6" src="../../_images/line-6.svg" /></p>
+<p><img alt="Output of Example 6" src="../../_images/line-61.svg" /></p>
 <p>Example 7. Multiple y-features with an explicit options object — the three-argument
 overload works the same way for the list-based forms as it does for the single-feature form.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">line_options</span><span class="p">);</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 7" src="../../_images/line-7.svg" /></p>
+<p><img alt="Output of Example 7" src="../../_images/line-71.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>

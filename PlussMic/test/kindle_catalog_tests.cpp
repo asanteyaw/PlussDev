@@ -126,7 +126,7 @@ DataFrame make_base_frame() {
 }
 
 Catalog make_base_catalog() {
-  return Catalog::kindelize(make_base_frame());
+  return make_base_frame().kindelize();
 }
 
 Stream labeled_series(std::vector<double> values, std::vector<std::string> labels) {
@@ -156,7 +156,7 @@ std::vector<std::string> note_values(const pluss::Note& note) {
 
 void test_stream_methods() {
   const auto catalog = make_base_catalog();
-  auto metric = catalog.at("metric");
+  auto metric = catalog.keys("metric");
 
   expect(metric.defined(), "metric stream should be defined");
   expect(metric.kind() == StreamKind::Series, "metric should be Series stream");
@@ -208,29 +208,29 @@ void test_stream_methods() {
   const auto distinct_keep_null = metric.distinct({.dropnull = false});
   expect(distinct_keep_null.size() == 4, "Stream::distinct(false) should keep one null bucket");
 
-  const auto freq = catalog.at("city").freq();
+  const auto freq = catalog.keys("city").freq();
   expect(freq.size() == 3, "Stream::freq(city) should return one count per distinct city");
   expect(freq.has_label(), "Stream::freq should label counts by observed values");
 
-  const auto ndistinct = catalog.at("city").ndistinct();
+  const auto ndistinct = catalog.keys("city").ndistinct();
   expect(static_cast<std::int64_t>(scalar_stream_to_double(ndistinct)) == 3,
          "Stream::ndistinct(city) mismatch");
 }
 
 void test_stream_accessors() {
   const auto catalog = make_base_catalog();
-  const auto text = catalog.at("text");
+  const auto text = catalog.keys("text");
   const auto lower = text.nt().lower();
   expect(lower.kind() == StreamKind::Note, "Stream::nt().lower should keep Note kind");
   expect(std::string(lower.as_note().at(0)) == "heavy rain", "Stream::nt().lower value mismatch");
 
-  const auto timestamp = catalog.at("timestamp");
+  const auto timestamp = catalog.keys("timestamp");
   const auto year = timestamp.tl().year();
   expect(year.kind() == StreamKind::Series, "Stream::tl().year should yield Series");
   expect(year.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
          "Stream::tl().year values mismatch");
 
-  const auto ids_as_note = catalog.at("id").cast().note();
+  const auto ids_as_note = catalog.keys("id").cast().note();
   expect(ids_as_note.kind() == StreamKind::Note, "Stream::cast().note should convert Series to Note");
 
   const std::array<std::int64_t, 1> shape2{2};
@@ -238,7 +238,7 @@ void test_stream_accessors() {
   const auto parsed = date_text.cast({.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null}).timeline();
   expect(parsed.kind() == StreamKind::Timeline, "Stream::cast(options).timeline should parse Note dates");
 
-  const auto metric = catalog.at("metric").fillnull(0.0);
+  const auto metric = catalog.keys("metric").fillnull(0.0);
   const auto lagged = metric.ts().lag(1);
   expect(lagged.kind() == StreamKind::Series, "Stream::ts().lag should yield Series");
   expect(lagged.size() == metric.size(), "Stream::ts().lag should preserve length");
@@ -337,43 +337,263 @@ void test_catalog_plot_accessor() {
       },
       "Catalog::plot().line(shared x) should reject y streams whose lengths do not match the shared x stream");
 
+  pluss::table::LinePlotOptions line_inner;
+  line_inner.align.mode = pluss::table::XYAlignMode::Inner;
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().line("short", "long", line_inner);
+    (void)fig;
+  }, "Catalog::plot().line(shared x, Inner) should trim y to the shared overlap");
+
+  pluss::table::LinePlotOptions line_pad;
+  line_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
+  line_pad.align.pad_scalar = 0.0;
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().line("short", "long", line_pad);
+    (void)fig;
+  }, "Catalog::plot().line(shared x, PadScalar) should pad missing y values against the x anchor");
+
+  pluss::table::StepPlotOptions step_inner;
+  step_inner.align.mode = pluss::table::XYAlignMode::Inner;
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().step("short", "long", step_inner);
+    (void)fig;
+  }, "Catalog::plot().step(shared x, Inner) should trim ragged y values to the overlap");
+
+  pluss::table::AreaPlotOptions area_pad;
+  area_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
+  area_pad.align.pad_scalar = 0.0;
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().area("short", "long", area_pad);
+    (void)fig;
+  }, "Catalog::plot().area(shared x, PadScalar) should pad ragged y values against the x anchor");
+
+  pluss::table::BarPlotOptions bar_pad;
+  bar_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
+  bar_pad.align.pad_scalar = 0.0;
+  expect_no_throw([&]() {
+    auto fig = ragged.plot().bar("short", "long", bar_pad);
+    (void)fig;
+  }, "Catalog::plot().bar(shared x, PadScalar) should pad ragged y values against the x anchor");
+
   const auto reduced = paired.keys({"x", "y"}).sum(pluss::kindle::ReduceAxis::Key);
   expect(reduced.nkeys() == 1 && reduced.has("sum"),
          "Catalog::sum(ReduceAxis::Key) should behave like cross-key reduction");
+}
+
+void test_catalog_plot3d_accessor() {
+  const auto clean = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"x", Stream(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}))},
+      {"y", Stream(pluss::make_series(std::vector<double>{5.0, 7.0, 6.0, 8.0}, {4}))},
+      {"z", Stream(pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0}, {4}))},
+  });
+
+  expect_no_throw([&]() {
+    auto fig = clean.plot3d().scatter("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().scatter should render a well-aligned catalog");
+
+  expect_no_throw([&]() {
+    auto fig = clean.plot3d().scatter("x", "y", "z", "x", "y");
+    (void)fig;
+  }, "Catalog::plot3d().scatter should support size/color keys");
+
+  expect_no_throw([&]() {
+    auto fig = clean.plot3d().line("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().line should render a well-aligned catalog");
+
+  expect_no_throw([&]() {
+    auto fig = clean.plot3d().hist("x", "y");
+    (void)fig;
+  }, "Catalog::plot3d().hist should render a well-aligned catalog");
+
+  expect_no_throw([&]() {
+    auto fig = clean.plot3d().surface("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().surface should render a well-aligned catalog");
+
+  expect_no_throw([&]() {
+    auto fig = clean.plot3d().wireframe("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().wireframe should render a well-aligned catalog");
+
+  expect_throw(
+      [&]() { (void)clean.plot3d().scatter("missing", "y", "z"); },
+      "Catalog::plot3d().scatter should reject an unknown x key");
+
+  // Catalog only enforces per-key type homogeneity, not length homogeneity
+  // across keys -- x/y/z here are individually well-formed but ragged
+  // relative to each other. Labeled streams should reconcile by shared
+  // label; the earlier x/y/z lengths differ but "a"/"c"/"e" are common to
+  // both, so exactly those 3 rows should survive alignment.
+  const auto ragged_labeled = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"x", labeled_series({1.0, 2.0, 3.0, 4.0, 5.0}, {"a", "b", "c", "d", "e"})},
+      {"y", labeled_series({10.0, 30.0, 50.0}, {"a", "c", "e"})},
+      {"z", labeled_series({100.0, 300.0, 500.0}, {"a", "c", "e"})},
+  });
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot3d().scatter("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().scatter should align ragged labeled x/y/z by shared label");
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot3d().line("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().line should align ragged labeled x/y/z by shared label");
+
+  // Unlabeled ragged streams have no label to reconcile by, so Auto must
+  // fall back to positional alignment (truncated to the shortest stream)
+  // rather than throwing.
+  const auto ragged_unlabeled = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"x", Stream(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}))},
+      {"y", Stream(pluss::make_series(std::vector<double>{5.0, 7.0}, {2}))},
+      {"z", Stream(pluss::make_series(std::vector<double>{2.0, 3.0, 1.0}, {3}))},
+  });
+  expect_no_throw([&]() {
+    auto fig = ragged_unlabeled.plot3d().scatter("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().scatter should fall back to positional alignment for unlabeled ragged streams");
+
+  // Regression: a catalog carrying an *unrelated* ragged/mismatched key
+  // must not affect plotting keys that are themselves well-aligned. Before
+  // the fix, scatter/line/hist derived their row count from
+  // Catalog::nrows() (which throws if *any* two streams in the whole
+  // catalog differ in length), so this would have failed even though
+  // x/y/z here are perfectly consistent with each other.
+  const auto unrelated_ragged = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"x", Stream(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}))},
+      {"y", Stream(pluss::make_series(std::vector<double>{5.0, 7.0, 6.0, 8.0}, {4}))},
+      {"z", Stream(pluss::make_series(std::vector<double>{2.0, 3.0, 1.0, 4.0}, {4}))},
+      {"unrelated", Stream(pluss::make_series(std::vector<double>{9.0, 9.0}, {2}))},
+  });
+  expect_throw([&]() { (void)unrelated_ragged.nrows(); },
+               "sanity check: this catalog really is ragged at the whole-catalog level");
+  expect_no_throw([&]() {
+    auto fig = unrelated_ragged.plot3d().scatter("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().scatter must not be affected by an unrelated ragged key elsewhere in the catalog");
+  expect_no_throw([&]() {
+    auto fig = unrelated_ragged.plot3d().line("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().line must not be affected by an unrelated ragged key elsewhere in the catalog");
+  expect_no_throw([&]() {
+    auto fig = unrelated_ragged.plot3d().hist("x", "y");
+    (void)fig;
+  }, "Catalog::plot3d().hist must not be affected by an unrelated ragged key elsewhere in the catalog");
+  expect_no_throw([&]() {
+    auto fig = unrelated_ragged.plot3d().surface("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().surface must not be affected by an unrelated ragged key elsewhere in the catalog");
+  expect_no_throw([&]() {
+    auto fig = unrelated_ragged.plot3d().wireframe("x", "y", "z");
+    (void)fig;
+  }, "Catalog::plot3d().wireframe must not be affected by an unrelated ragged key elsewhere in the catalog");
+
+  // Explicit align_by override via the Catalog*3DPlotOptions wrapper: force
+  // Pos alignment on labeled-but-differently-ordered streams to confirm the
+  // override actually changes which rows survive.
+  const auto reordered_labeled = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"x", labeled_series({1.0, 2.0, 3.0}, {"a", "b", "c"})},
+      {"y", labeled_series({30.0, 10.0, 20.0}, {"c", "a", "b"})},
+      {"z", labeled_series({300.0, 100.0, 200.0}, {"c", "a", "b"})},
+  });
+  pluss::kindle::CatalogScatter3DPlotOptions pos_options;
+  pos_options.align_by = pluss::table::XYAlignBy::Pos;
+  expect_no_throw([&]() {
+    auto fig = reordered_labeled.plot3d().scatter("x", "y", "z", std::nullopt, std::nullopt, pos_options);
+    (void)fig;
+  }, "Catalog::plot3d().scatter(CatalogScatter3DPlotOptions) should honor an explicit Pos override");
+
+  pluss::kindle::CatalogLine3DPlotOptions line_pos_options;
+  line_pos_options.align_by = pluss::table::XYAlignBy::Pos;
+  expect_no_throw([&]() {
+    auto fig = reordered_labeled.plot3d().line("x", "y", "z", line_pos_options);
+    (void)fig;
+  }, "Catalog::plot3d().line(CatalogLine3DPlotOptions) should honor an explicit Pos override");
+
+  pluss::kindle::CatalogHist3DPlotOptions hist_pos_options;
+  hist_pos_options.align_by = pluss::table::XYAlignBy::Pos;
+  expect_no_throw([&]() {
+    auto fig = reordered_labeled.plot3d().hist("x", "y", hist_pos_options);
+    (void)fig;
+  }, "Catalog::plot3d().hist(CatalogHist3DPlotOptions) should honor an explicit Pos override");
+
+  pluss::table::Scatter3DPlotOptions scatter_strict;
+  scatter_strict.align.mode = pluss::table::XYAlignMode::Strict;
+  expect_throw(
+      [&]() { (void)ragged_unlabeled.plot3d().scatter("x", "y", "z", std::nullopt, std::nullopt, scatter_strict); },
+      "Catalog::plot3d().scatter(Strict) should reject ragged unlabeled coordinates");
+
+  pluss::table::Scatter3DPlotOptions scatter_pad;
+  scatter_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
+  scatter_pad.align.pad_scalar = 0.0;
+  expect_no_throw([&]() {
+    auto fig = ragged_unlabeled.plot3d().scatter("x", "y", "z", std::nullopt, std::nullopt, scatter_pad);
+    (void)fig;
+  }, "Catalog::plot3d().scatter(PadScalar) should pad ragged unlabeled coordinates from the x anchor");
+
+  pluss::table::Line3DPlotOptions line_strict;
+  line_strict.align.mode = pluss::table::XYAlignMode::Strict;
+  expect_throw(
+      [&]() { (void)ragged_unlabeled.plot3d().line("x", "y", "z", line_strict); },
+      "Catalog::plot3d().line(Strict) should reject ragged unlabeled coordinates");
+
+  pluss::table::Line3DPlotOptions line_pad3d;
+  line_pad3d.align.mode = pluss::table::XYAlignMode::PadScalar;
+  line_pad3d.align.pad_scalar = 0.0;
+  expect_no_throw([&]() {
+    auto fig = ragged_unlabeled.plot3d().line("x", "y", "z", line_pad3d);
+    (void)fig;
+  }, "Catalog::plot3d().line(PadScalar) should pad ragged unlabeled coordinates from the x anchor");
+
+  pluss::table::Hist3DPlotOptions hist_strict;
+  hist_strict.align.mode = pluss::table::XYAlignMode::Strict;
+  expect_throw(
+      [&]() { (void)ragged_unlabeled.plot3d().hist("x", "y", hist_strict); },
+      "Catalog::plot3d().hist(Strict) should reject ragged unlabeled coordinates");
+
+  pluss::table::Hist3DPlotOptions hist_pad;
+  hist_pad.align.mode = pluss::table::XYAlignMode::PadScalar;
+  hist_pad.align.pad_scalar = 0.0;
+  expect_no_throw([&]() {
+    auto fig = ragged_unlabeled.plot3d().hist("x", "y", hist_pad);
+    (void)fig;
+  }, "Catalog::plot3d().hist(PadScalar) should pad ragged unlabeled coordinates from the x anchor");
 }
 
 void test_catalog_accessors() {
   const auto base = make_base_catalog();
 
   const auto lower = base.keys({"text"}).nt().lower();
-  expect(lower.at("text").kind() == StreamKind::Note, "Catalog::keys().nt().lower should keep Note kind");
-  expect(std::string(lower.at("text").as_note().at(0)) == "heavy rain",
+  expect(lower.keys("text").kind() == StreamKind::Note, "Catalog::keys().nt().lower should keep Note kind");
+  expect(std::string(lower.keys("text").as_note().at(0)) == "heavy rain",
          "Catalog::keys().nt().lower value mismatch");
 
   const auto year = base.keys({"timestamp"}).tl().year();
-  expect(year.at("timestamp").kind() == StreamKind::Series,
+  expect(year.keys("timestamp").kind() == StreamKind::Series,
          "Catalog::keys().tl().year should yield Series");
-  expect(year.at("timestamp").as_series().to_vec<std::int64_t>() ==
+  expect(year.keys("timestamp").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
          "Catalog::keys().tl().year values mismatch");
 
   const auto filled = base.keys({"metric"}).fillnull(0.0);
-  expect(filled.at("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+  expect(filled.keys("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Catalog::keys().fillnull should preserve valid values and replace only null rows");
 
   const auto dropped = base.keys({"metric"}).dropnull();
   expect(dropped.nrows() == 3, "Catalog::keys().dropnull should drop rows by selected key mask");
-  expect(dropped.at("id").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({3, 2, 5}),
-         "Catalog::keys().dropnull should filter every stream with the shared selected mask");
+  expect(dropped.nkeys() == 1 && dropped.has("metric"),
+         "Catalog::keys().dropnull should keep the projected key set");
+  expect(dropped.keys("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 30.0, 40.0}),
+         "Catalog::keys().dropnull should keep only valid rows from the projected key");
 
   const auto lagged = base.keys({"metric"}).ts().lag(1);
-  expect(lagged.at("metric").kind() == StreamKind::Series,
+  expect(lagged.keys("metric").kind() == StreamKind::Series,
          "Catalog::keys().ts().lag should keep Series kind");
-  expect(lagged.at("metric").size() == base.at("metric").size(),
+  expect(lagged.keys("metric").size() == base.keys("metric").size(),
          "Catalog::keys().ts().lag should preserve selected stream length");
 
   const auto ids_as_note = base.keys({"id"}).cast().note();
-  expect(ids_as_note.at("id").kind() == StreamKind::Note,
+  expect(ids_as_note.keys("id").kind() == StreamKind::Note,
          "Catalog::keys().cast().note should convert selected Series streams");
 
   const std::array<std::int64_t, 1> shape2{2};
@@ -383,7 +603,7 @@ void test_catalog_accessors() {
   const auto parsed = note_dates.cast(
       pluss::table::ThreadCastTarget::Timeline,
       pluss::table::ThreadCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null});
-  expect(parsed.at("date_text").kind() == StreamKind::Timeline,
+  expect(parsed.keys("date_text").kind() == StreamKind::Timeline,
          "Catalog::cast({}, Timeline, options) should forward full parse options");
 }
 
@@ -392,20 +612,20 @@ void test_catalog_reductions() {
 
   const auto record_sum = base.sum();
   expect(record_sum.nkeys() == 2, "Catalog::sum() should keep one scalar stream per key");
-  expect(std::fabs(scalar_stream_to_double(record_sum.at("id")) - 15.0) < 1e-9,
+  expect(std::fabs(scalar_stream_to_double(record_sum.keys("id")) - 15.0) < 1e-9,
          "Catalog::sum() id mismatch");
-  expect(std::fabs(scalar_stream_to_double(record_sum.at("metric")) - 80.0) < 1e-9,
+  expect(std::fabs(scalar_stream_to_double(record_sum.keys("metric")) - 80.0) < 1e-9,
          "Catalog::sum() metric mismatch");
 
   const auto key_sum = base.sum(ReduceAxis::Key);
   expect(key_sum.nkeys() == 1 && key_sum.has("sum"),
          "Catalog::sum(Key) should return a single reduced stream");
-  expect(key_sum.at("sum").as_series().to_vec<double>() ==
+  expect(key_sum.keys("sum").as_series().to_vec<double>() ==
              std::vector<double>({13.0, 1.0, 32.0, 45.0, 4.0}),
          "Catalog::sum(Key) should reduce across selected keys row-wise");
 
   const auto pop_var = base.var(CatalogReduceOptions{.unbiased = false});
-  expect(std::fabs(scalar_stream_to_double(pop_var.at("id")) - 2.0) < 1e-9,
+  expect(std::fabs(scalar_stream_to_double(pop_var.keys("id")) - 2.0) < 1e-9,
          "Catalog::var(population) mismatch");
 
   const auto ragged = Catalog(std::vector<std::pair<std::string, Stream>>{
@@ -414,11 +634,11 @@ void test_catalog_reductions() {
   });
 
   const auto inner = ragged.sum(CatalogReduceOptions{.axis = ReduceAxis::Key, .align = pluss::kindle::Align::Inner});
-  expect(inner.at("sum").as_series().to_vec<double>() == std::vector<double>({11.0, 22.0, 33.0}),
+  expect(inner.keys("sum").as_series().to_vec<double>() == std::vector<double>({11.0, 22.0, 33.0}),
          "Catalog::sum(Key, Inner) should trim to common length");
 
   const auto outer = ragged.sum(CatalogReduceOptions{.axis = ReduceAxis::Key, .align = pluss::kindle::Align::Outer});
-  expect(outer.at("sum").as_series().to_vec<double>() == std::vector<double>({11.0, 22.0, 33.0, 4.0, 5.0}),
+  expect(outer.keys("sum").as_series().to_vec<double>() == std::vector<double>({11.0, 22.0, 33.0, 4.0, 5.0}),
          "Catalog::sum(Key, Outer) should preserve the longest stream and ignore missing values by default");
 
   expect_throw(
@@ -452,16 +672,16 @@ void test_catalog_construction_and_selection() {
 
   using namespace pluss::kindle::literals;
   const auto via_named = Catalog({
-      "id"_k = base.at("id"),
-      "city"_k = base.at("city"),
+      "id"_k = base.keys("id"),
+      "city"_k = base.keys("city"),
   });
   const auto via_pairs = Catalog(std::vector<std::pair<std::string, Stream>>{
-      {"id", base.at("id")},
-      {"city", base.at("city")},
+      {"id", base.keys("id")},
+      {"city", base.keys("city")},
   });
   std::vector<std::pair<std::string, Stream>> vec_items{
-      {"id", base.at("id")},
-      {"city", base.at("city")},
+      {"id", base.keys("id")},
+      {"city", base.keys("city")},
   };
   const auto via_vector = Catalog(std::move(vec_items));
   expect(via_named.nkeys() == 2, "named constructor mismatch");
@@ -476,18 +696,18 @@ void test_catalog_construction_and_selection() {
   expect(base.keyaxis().match("time_index").nkeys() == 1 && base.keyaxis().match("time_index").has("time_index"),
          "keyaxis().match should regex-select keys");
   const auto prefixed = Catalog(std::vector<std::pair<std::string, Stream>>{
-      {"src_id", base.at("id")},
-      {"src_city", base.at("city")},
-      {"stamp", base.at("timestamp")},
+      {"src_id", base.keys("id")},
+      {"src_city", base.keys("city")},
+      {"stamp", base.keys("timestamp")},
   });
   expect(prefixed.keyaxis().prefix("src_").nkeys() == 2, "keyaxis().prefix should filter matching keys");
   expect(prefixed.keyaxis().prefix("src_").has("src_id"), "keyaxis().prefix should keep prefixed keys");
   expect(!prefixed.keyaxis().prefix("src_").has("stamp"), "keyaxis().prefix should exclude non-matching keys");
 
   const auto suffixed = Catalog(std::vector<std::pair<std::string, Stream>>{
-      {"id_raw", base.at("id")},
-      {"city_raw", base.at("city")},
-      {"timestamp", base.at("timestamp")},
+      {"id_raw", base.keys("id")},
+      {"city_raw", base.keys("city")},
+      {"timestamp", base.keys("timestamp")},
   });
   expect(suffixed.keyaxis().suffix("_raw").nkeys() == 2, "keyaxis().suffix should filter matching keys");
   expect(suffixed.keyaxis().suffix("_raw").has("id_raw"), "keyaxis().suffix should keep suffixed keys");
@@ -512,12 +732,12 @@ void test_catalog_construction_and_selection() {
 
   const auto sampled_a = base.sample(2, 42);
   const auto sampled_b = base.sample(2, 42);
-  expect(sampled_a.at("id").as_series().to_vec<std::int64_t>()
-             == sampled_b.at("id").as_series().to_vec<std::int64_t>(),
+  expect(sampled_a.keys("id").as_series().to_vec<std::int64_t>()
+             == sampled_b.keys("id").as_series().to_vec<std::int64_t>(),
          "sample with same seed should be deterministic");
 
   const auto queried = base.query([](const Catalog& c) {
-    return (c.at("id") > 2.0).as_series();
+    return (c.keys("id") > 2.0).as_series();
   });
   expect(queried.nrows() == 3, "query row count mismatch");
 
@@ -530,14 +750,15 @@ void test_catalog_construction_and_selection() {
 
   expect_throw([&]() { (void)base.keys({"missing_key"}); }, "keys unknown key should throw");
 
-  const auto replaced = base.keys("id").map([](const Stream& s) { return s + 100.0; });
+  auto replaced = base;
+  replaced.set_("id", base.keys("id") + 100.0);
   const auto chosen = Catalog::select(
       {pluss::table::Thread(bool_mask({true, false, true, false, false}))},
       {replaced},
       base);
-  expect(chosen.at("id").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({103, 1, 102, 5, 4}),
+  expect(chosen.keys("id").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({103, 1, 102, 5, 4}),
          "Catalog::select should choose row-wise between catalogs");
-  expect(note_values(chosen.at("city").as_note()) == note_values(base.at("city").as_note()),
+  expect(note_values(chosen.keys("city").as_note()) == note_values(base.keys("city").as_note()),
          "Catalog::select should preserve untouched streams");
 }
 
@@ -584,7 +805,7 @@ void test_catalog_label_alignment() {
 void test_catalog_sort_group_missing() {
   const auto base = make_base_catalog();
   const auto sorted = base.sort("id", true);
-  const auto id_sorted = sorted.at("id").as_series().to_vec<std::int64_t>();
+  const auto id_sorted = sorted.keys("id").as_series().to_vec<std::int64_t>();
   expect((id_sorted == std::vector<std::int64_t>{1, 2, 3, 4, 5}), "sort(id) order mismatch");
 
   const auto sorted_by = base.sort({"city", "id"}, {true, false});
@@ -603,14 +824,14 @@ void test_catalog_sort_group_missing() {
   const auto not_nulls = base.keys({"metric"}).notnull();
   const auto invalid = base.keys({"metric"}).invalid();
   expect(filled.nrows() == 5, "fillnull should not change row count");
-  expect(filled.at("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+  expect(filled.keys("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Catalog::fillnull(double, keys) should preserve valid values and replace only null rows");
   expect(dropped.nrows() == 3, "dropnull(metric) should drop null rows");
   expect(ffilled.nrows() == 5, "ffill should preserve row count");
   expect(bfilled.nrows() == 5, "bfill should preserve row count");
-  expect(nulls.at("metric").kind() == StreamKind::Series, "isnull should return Series stream");
-  expect(not_nulls.at("metric").kind() == StreamKind::Series, "notnull should return Series stream");
-  expect(invalid.at("metric").kind() == StreamKind::Series, "invalid should return Series stream");
+  expect(nulls.keys("metric").kind() == StreamKind::Series, "isnull should return Series stream");
+  expect(not_nulls.keys("metric").kind() == StreamKind::Series, "notnull should return Series stream");
+  expect(invalid.keys("metric").kind() == StreamKind::Series, "invalid should return Series stream");
 
   const std::array<std::int64_t, 1> shape4{4};
   const auto mixed_missing = Catalog(std::vector<std::pair<std::string, Stream>>{
@@ -636,38 +857,38 @@ void test_catalog_sort_group_missing() {
   });
 
   const auto note_filled = mixed_missing.keys({"note_col"}).fillnull("missing");
-  expect(std::string(note_filled.at("note_col").as_note().at(1)) == "missing",
+  expect(std::string(note_filled.keys("note_col").as_note().at(1)) == "missing",
          "Catalog::fillnull(string, keys) should replace null Note values");
-  expect(!pluss::kindle::detail::has_validity_mask(note_filled.at("note_col")),
+  expect(!pluss::kindle::detail::has_validity_mask(note_filled.keys("note_col")),
          "Catalog::fillnull(string, keys) should clear Note mask when fully resolved");
   const auto note_untouched_by_double = mixed_missing.keys({"note_col"}).fillnull(0.0);
-  expect(pluss::kindle::detail::has_validity_mask(note_untouched_by_double.at("note_col")),
+  expect(pluss::kindle::detail::has_validity_mask(note_untouched_by_double.keys("note_col")),
          "Catalog::fillnull(double, keys) should skip Note streams instead of throwing");
-  expect(std::string(note_untouched_by_double.at("note_col").as_note().at(0)) == "a",
+  expect(std::string(note_untouched_by_double.keys("note_col").as_note().at(0)) == "a",
          "Catalog::fillnull(double, keys) should leave Note payload untouched");
 
   const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
   const auto ts_filled = mixed_missing.keys({"ts_col"}).fillnull(ts_fill);
-  const auto ts_ticks = ts_filled.at("ts_col").as_timeline().to_epoch_nanos_vector();
+  const auto ts_ticks = ts_filled.keys("ts_col").as_timeline().to_epoch_nanos_vector();
   const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];
   expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
          "Catalog::fillnull(Timeline, keys) should replace null Timeline values");
-  expect(!pluss::kindle::detail::has_validity_mask(ts_filled.at("ts_col")),
+  expect(!pluss::kindle::detail::has_validity_mask(ts_filled.keys("ts_col")),
          "Catalog::fillnull(Timeline, keys) should clear Timeline mask when fully resolved");
   const auto ts_untouched_by_string = mixed_missing.keys({"ts_col"}).fillnull("missing");
-  expect(pluss::kindle::detail::has_validity_mask(ts_untouched_by_string.at("ts_col")),
+  expect(pluss::kindle::detail::has_validity_mask(ts_untouched_by_string.keys("ts_col")),
          "Catalog::fillnull(string, keys) should skip Timeline streams instead of throwing");
 
   const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
   const auto ti_filled = mixed_missing.keys({"ti_col"}).fillnull(ti_fill);
-  const auto ti_ticks = ti_filled.at("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
+  const auto ti_ticks = ti_filled.keys("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
   const auto ti_fill_tick = ti_fill.timeline().to_epoch_nanos_vector()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
          "Catalog::fillnull(TimeIndex, keys) should replace null TimeIndex values");
-  expect(!pluss::kindle::detail::has_validity_mask(ti_filled.at("ti_col")),
+  expect(!pluss::kindle::detail::has_validity_mask(ti_filled.keys("ti_col")),
          "Catalog::fillnull(TimeIndex, keys) should clear TimeIndex mask when fully resolved");
   const auto ti_filled_by_timeline = mixed_missing.keys({"ti_col"}).fillnull(ts_fill);
-  const auto ti_from_timeline_ticks = ti_filled_by_timeline.at("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
+  const auto ti_from_timeline_ticks = ti_filled_by_timeline.keys("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
   expect(ti_from_timeline_ticks[1] == ts_fill_tick && ti_from_timeline_ticks[3] == ts_fill_tick,
          "Catalog::fillnull(Timeline, keys) should also fill TimeIndex streams");
 
@@ -676,26 +897,28 @@ void test_catalog_sort_group_missing() {
       pluss::table::ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}).series();
   const auto ts_as_ti = base.keys({"timestamp"}).cast().timeindex();
   const auto id_as_f64 = base.keys({"id"}).astype(pluss::codem::ScalarType::Float64);
-  expect(id_as_note.at("id").kind() == StreamKind::Note, "cast(Note) id kind mismatch");
-  expect(ts_as_series.at("timestamp").kind() == StreamKind::Series, "cast(Series) timestamp kind mismatch");
-  expect(ts_as_ti.at("timestamp").kind() == StreamKind::TimeIndex, "cast(TimeIndex) timestamp kind mismatch");
-  expect(id_as_f64.at("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
+  expect(id_as_note.keys("id").kind() == StreamKind::Note, "cast(Note) id kind mismatch");
+  expect(ts_as_series.keys("timestamp").kind() == StreamKind::Series, "cast(Series) timestamp kind mismatch");
+  expect(ts_as_ti.keys("timestamp").kind() == StreamKind::TimeIndex, "cast(TimeIndex) timestamp kind mismatch");
+  expect(id_as_f64.keys("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "astype(id,float64) scalar type mismatch");
 
-  const auto city_distinct = base.at("city").distinct();
+  const auto city_distinct = base.keys("city").distinct();
   expect(city_distinct.size() == 3, "Catalog::distinct(key) should delegate to Stream::distinct");
   const auto selected_distinct = base.keys({"city"}).distinct();
-  expect(selected_distinct.at("city").size() == 3, "Catalog::distinct(keys) should transform selected key");
-  expect(selected_distinct.at("id").size() == base.at("id").size(),
-         "Catalog::distinct(keys) should preserve unselected keys");
+  expect(selected_distinct.keys("city").size() == 3, "Catalog::distinct(keys) should transform selected key");
+  expect(selected_distinct.nkeys() == 1 && selected_distinct.has("city"),
+         "Catalog::distinct(keys) should keep the projected key set");
 
-  const auto city_freq = base.at("city").freq();
+  const auto city_freq = base.keys("city").freq();
   expect(city_freq.size() == 3, "Catalog::freq(key) should delegate to Stream::freq");
   expect(city_freq.has_label(), "Catalog::freq(key) result should carry value labels");
   const auto selected_freq = base.keys({"city"}).freq({.top = 2});
-  expect(selected_freq.at("city").size() == 2, "Catalog::freq(keys, top_n) should limit selected frequency");
+  expect(selected_freq.keys("city").size() == 2, "Catalog::freq(keys, top_n) should limit selected frequency");
+  expect(selected_freq.nkeys() == 1 && selected_freq.has("city"),
+         "Catalog::freq(keys, top_n) should keep the projected key set");
 
-  const auto city_ndistinct = base.at("city").ndistinct();
+  const auto city_ndistinct = base.keys("city").ndistinct();
   expect(static_cast<std::int64_t>(scalar_stream_to_double(city_ndistinct)) == 3,
          "Catalog::ndistinct(key) mismatch");
   const auto all_ndistinct = base.ndistinct();
@@ -710,36 +933,36 @@ void test_catalog_and_archive_lvalue_name_ranges() {
 
   const std::vector<std::string> metric{"metric"};
   const auto filled = base.keys(metric).fillnull(0.0);
-  expect(filled.at("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+  expect(filled.keys("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Catalog lvalue fillnull should delegate to selected keys");
 
   const auto casted = base.keys(keys).cast().note();
-  expect(casted.at("id").kind() == StreamKind::Note, "Catalog lvalue cast should delegate to selected keys");
+  expect(casted.keys("id").kind() == StreamKind::Note, "Catalog lvalue cast should delegate to selected keys");
 
   const auto f0 = make_base_frame().slice(0, 3);
   const auto f1 = make_base_frame().slice(2, 5);
   const auto labels = pluss::table::Thread(
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
-  const auto archive = pluss::kindle::Archive::kindelize(atlas);
+  const auto archive = atlas.kindelize();
 
   const auto archive_selected = archive.keys(keys);
   expect(archive_selected.catalog(0).nkeys() == 2, "Archive lvalue select should delegate to Catalog");
 
   const auto archive_freq = archive.keys(std::vector<std::string>{"city"}).freq({.top = 1});
-  expect(archive_freq.catalog(0).at("city").size() == 1,
+  expect(archive_freq.catalog(0).keys("city").size() == 1,
          "Archive lvalue freq should delegate to Catalog");
 }
 
 void test_catalog_aggregates_apply_text_merge() {
   auto base = make_base_catalog();
-  expect(std::fabs(scalar_stream_to_double(base.at("id").sum()) - 15.0) < 1e-9, "sum(id) mismatch");
-  expect(std::fabs(scalar_stream_to_double(base.at("id").min()) - 1.0) < 1e-9, "min(id) mismatch");
-  expect(std::fabs(scalar_stream_to_double(base.at("id").max()) - 5.0) < 1e-9, "max(id) mismatch");
+  expect(std::fabs(scalar_stream_to_double(base.keys("id").sum()) - 15.0) < 1e-9, "sum(id) mismatch");
+  expect(std::fabs(scalar_stream_to_double(base.keys("id").min()) - 1.0) < 1e-9, "min(id) mismatch");
+  expect(std::fabs(scalar_stream_to_double(base.keys("id").max()) - 5.0) < 1e-9, "max(id) mismatch");
   expect(base.nrows() == 5, "catalog row count mismatch");
 
   const auto right = Catalog(std::vector<std::pair<std::string, Stream>>{
-      {"id", base.at("id")},
+      {"id", base.keys("id")},
       {"bonus", Stream(pluss::make_series(std::vector<double>{100, 200, 300, 400, 500}, {5}))},
   });
   const auto merged = base.merge(right, "id", "inner");
@@ -747,23 +970,23 @@ void test_catalog_aggregates_apply_text_merge() {
   expect(merged.nrows() == 5, "merge row count mismatch");
   expect_throw([&]() { (void)base.merge(right, "id", "left"); }, "merge(how!=inner) should throw");
 
-  const auto applied = base.keys("id").map([](const Stream& s) { return s + 10.0; });
-  const auto applied_values = applied.at("id").as_series().to_vec<std::int64_t>();
+  const auto applied = base.keys({"id"}).map([](const Stream& s) { return s + 10.0; });
+  const auto applied_values = applied.keys("id").as_series().to_vec<std::int64_t>();
   expect(applied_values[0] == 13, "keys().map should transform target field");
 
   const auto transformed_all = base.transform([](const Stream& s) { return s; });
-  const auto transformed_one = base.keys("id").map([](const Stream& s) { return s + 1.0; });
+  const auto transformed_one = base.keys({"id"}).map([](const Stream& s) { return s + 1.0; });
   expect(transformed_all.nrows() == base.nrows(), "transform(all) should preserve row count");
-  expect(transformed_one.at("id").as_series().to_vec<std::int64_t>()[0] == 4,
+  expect(transformed_one.keys("id").as_series().to_vec<std::int64_t>()[0] == 4,
          "keys().map should transform target field");
 
-  base = base.keys("id").map([](const Stream& s) { return s - 1.0; });
-  expect(base.at("id").as_series().to_vec<std::int64_t>()[0] == 2,
+  const auto updated_id_only = base.keys({"id"}).map([](const Stream& s) { return s - 1.0; });
+  expect(updated_id_only.keys("id").as_series().to_vec<std::int64_t>()[0] == 2,
          "keys().map reassignment should update target field");
 
   expect_throw(
       [&]() {
-        (void)base.keys("id").map([](const Stream& s) { return s.head(2); });
+        (void)base.keys({"id"}).map([](const Stream& s) { return s.head(2); });
       },
       "keys().map with size-changing fn should throw");
 
@@ -793,12 +1016,12 @@ void test_catalog_mutation_tabelize_io() {
       {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
       {"units", pluss::make_series({10.0, 7.0, 12.0})},
   });
-  const auto default_cases_roundtrip = Catalog::kindelize(default_cases).tabelize();
+  const auto default_cases_roundtrip = default_cases.kindelize().tabelize();
   expect(default_cases_roundtrip.equals(default_cases),
          "kindelize/tabelize should preserve a numeric default case axis");
 
-  base = base.set("id_plus", base.at("id") + 1.0);
-  base.set_("city_copy", base.at("city"));
+  base = base.set("id_plus", base.keys("id") + 1.0);
+  base.set_("city_copy", base.keys("city"));
   base = base.set({
       "ones"_k = Stream(pluss::make_series(std::vector<double>{1, 1, 1, 1, 1}, {5})),
   });
@@ -820,19 +1043,15 @@ void test_catalog_mutation_tabelize_io() {
   const auto frame = base.tabelize(policy);
   expect(frame.ncases() == 5, "tabelize row count mismatch");
   expect(frame.nfeatures() >= base.nkeys(), "tabelize feature count mismatch");
-  const auto frame_via_to_table = base.to_table(policy, false);
-  expect(frame_via_to_table.ncases() == frame.ncases(), "to_table(row count) should match tabelize");
-  expect(frame_via_to_table.nfeatures() == frame.nfeatures(), "to_table(feature count) should match tabelize");
-
   expect(!base.to_string().empty(), "to_string should not be empty");
   expect(!base.to_json().empty(), "to_json should not be empty");
   expect(base.to_json().find("\"_type\": \"Catalog\"") != std::string::npos,
          "Catalog::to_json should emit a Catalog JSON object");
   expect(base.to_json().find("\"streams\"") != std::string::npos,
          "Catalog::to_json should include stream entries");
-  expect(base.at("id").to_json().find("\"_type\": \"Stream\"") != std::string::npos,
+  expect(base.keys("id").to_json().find("\"_type\": \"Stream\"") != std::string::npos,
          "Stream::to_json should emit a Stream JSON object");
-  expect(base.at("id").to_json().find("\"values\"") != std::string::npos,
+  expect(base.keys("id").to_json().find("\"values\"") != std::string::npos,
          "Stream::to_json should include values");
 
   std::int64_t iter_count = 0;
@@ -888,9 +1107,9 @@ void test_catalog_mutation_tabelize_io() {
   {"id": 3, "city": "Tema", "when": "2024-01-03T00:00:00Z"}
 ])");
   expect(from_json.nkeys() == 3, "Catalog::from_json key count mismatch");
-  expect(from_json.at("id").kind() == StreamKind::Series, "Catalog::from_json id kind mismatch");
-  expect(from_json.at("city").kind() == StreamKind::Note, "Catalog::from_json city kind mismatch");
-  expect(from_json.at("when").kind() == StreamKind::Timeline, "Catalog::from_json when kind mismatch");
+  expect(from_json.keys("id").kind() == StreamKind::Series, "Catalog::from_json id kind mismatch");
+  expect(from_json.keys("city").kind() == StreamKind::Note, "Catalog::from_json city kind mismatch");
+  expect(from_json.keys("when").kind() == StreamKind::Timeline, "Catalog::from_json when kind mismatch");
 
   auto json_path = temp_csv_path("catalog_json");
   json_path.replace_extension(".json");
@@ -931,7 +1150,7 @@ void test_archive_to_table_bridge() {
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
 
-  const auto archive = pluss::kindle::Archive::kindelize(atlas);
+  const auto archive = atlas.kindelize();
   expect(archive.size() == archive.depth(), "Archive::size should match depth");
   expect(archive.nkeys() == 6, "Archive::nkeys mismatch");
   expect(archive.minkeys() == 6 && archive.maxkeys() == 6, "Archive key span mismatch");
@@ -958,7 +1177,7 @@ void test_archive_to_table_bridge() {
 
   const auto aligned = archive.label().align(
       Stream(pluss::make_note(std::vector<std::string>{"batch_b", "batch_a"}, std::array<std::int64_t, 1>{2})));
-  const auto aligned_first = aligned.catalog(0).at("id").as_series().to_vec<std::int64_t>();
+  const auto aligned_first = aligned.catalog(0).keys("id").as_series().to_vec<std::int64_t>();
   expect(aligned_first == f1.features("id").as_series().to_vec<std::int64_t>(),
          "Archive::label().align should reorder catalogs");
   expect(!relabeled.label().reset().label().has(), "Archive::label().reset should clear labels");
@@ -980,14 +1199,14 @@ void test_archive_to_table_bridge() {
   const auto& cat0 = archive.catalog(0);
   const auto archive_prefixed = pluss::kindle::Archive({
       Catalog(std::vector<std::pair<std::string, Stream>>{
-          {"src_id", cat0.at("id")},
-          {"src_city", cat0.at("city")},
-          {"stamp", cat0.at("timestamp")},
+          {"src_id", cat0.keys("id")},
+          {"src_city", cat0.keys("city")},
+          {"stamp", cat0.keys("timestamp")},
       }),
       Catalog(std::vector<std::pair<std::string, Stream>>{
-          {"src_id", cat0.at("id")},
-          {"src_city", cat0.at("city")},
-          {"stamp", cat0.at("timestamp")},
+          {"src_id", cat0.keys("id")},
+          {"src_city", cat0.keys("city")},
+          {"stamp", cat0.keys("timestamp")},
       }),
   });
   expect(archive_prefixed.keyaxis().prefix("src_").catalog(0).nkeys() == 2,
@@ -996,14 +1215,14 @@ void test_archive_to_table_bridge() {
          "Archive::keyaxis().prefix should exclude non-matching keys");
   const auto archive_suffixed = pluss::kindle::Archive({
       Catalog(std::vector<std::pair<std::string, Stream>>{
-          {"id_raw", cat0.at("id")},
-          {"city_raw", cat0.at("city")},
-          {"timestamp", cat0.at("timestamp")},
+          {"id_raw", cat0.keys("id")},
+          {"city_raw", cat0.keys("city")},
+          {"timestamp", cat0.keys("timestamp")},
       }),
       Catalog(std::vector<std::pair<std::string, Stream>>{
-          {"id_raw", cat0.at("id")},
-          {"city_raw", cat0.at("city")},
-          {"timestamp", cat0.at("timestamp")},
+          {"id_raw", cat0.keys("id")},
+          {"city_raw", cat0.keys("city")},
+          {"timestamp", cat0.keys("timestamp")},
       }),
   });
   expect(archive_suffixed.keyaxis().suffix("_raw").catalog(0).nkeys() == 2,
@@ -1016,36 +1235,189 @@ void test_archive_to_table_bridge() {
   const auto nulls = archive.keys({"metric"}).isnull();
   const auto notnulls = archive.keys({"metric"}).notnull();
   const auto invalid = archive.keys({"metric"}).invalid();
-  expect(filled.catalog(0).at("metric").as_series().to_vec<double>()[1] == 0.0,
+  expect(filled.catalog(0).keys("metric").as_series().to_vec<double>()[1] == 0.0,
          "Archive::fillnull should delegate to catalogs");
   expect(dropped_null.catalog(0).nrows() == 2 && dropped_null.catalog(1).nrows() == 2,
          "Archive::dropnull should delegate to catalogs");
-  expect(nulls.catalog(0).at("metric").kind() == StreamKind::Series,
+  expect(nulls.catalog(0).keys("metric").kind() == StreamKind::Series,
          "Archive::isnull should return boolean streams");
-  expect(notnulls.catalog(0).at("metric").kind() == StreamKind::Series,
+  expect(notnulls.catalog(0).keys("metric").kind() == StreamKind::Series,
          "Archive::notnull should return boolean streams");
-  expect(invalid.catalog(0).at("metric").kind() == StreamKind::Series,
+  expect(invalid.catalog(0).keys("metric").kind() == StreamKind::Series,
          "Archive::invalid should return boolean streams");
 
   const auto casted = archive.keys({"id"}).cast().note();
   const auto typed = archive.keys({"id"}).astype(pluss::codem::ScalarType::Float64);
-  expect(casted.catalog(0).at("id").kind() == StreamKind::Note, "Archive::keys().cast should delegate to catalogs");
-  expect(typed.catalog(0).at("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
+  expect(casted.catalog(0).keys("id").kind() == StreamKind::Note, "Archive::keys().cast should delegate to catalogs");
+  expect(typed.catalog(0).keys("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "Archive::keys().astype should delegate to catalogs");
 
   const auto distinct = archive.keys({"city"}).distinct();
   const auto freq = archive.keys({"city"}).freq({.top = 1});
   const auto ndistinct = archive.keys({"city"}).ndistinct();
-  expect(distinct.catalog(0).at("city").size() == 2, "Archive::keys().distinct should delegate to catalogs");
-  expect(freq.catalog(0).at("city").size() == 1, "Archive::keys().freq should delegate to catalogs");
-  expect(ndistinct.catalog(0).at("city").size() == 1,
+  expect(distinct.catalog(0).keys("city").size() == 2, "Archive::keys().distinct should delegate to catalogs");
+  expect(freq.catalog(0).keys("city").size() == 1, "Archive::keys().freq should delegate to catalogs");
+  expect(ndistinct.catalog(0).keys("city").size() == 1,
          "Archive::keys().ndistinct should produce scalar streams for selected keys");
 
   const auto atlas_a = archive.tabelize();
-  const auto atlas_b = archive.to_table({}, false);
-  expect(atlas_a.depth() == atlas_b.depth(), "Archive::to_table depth mismatch");
-  expect(atlas_a.ncases() == atlas_b.ncases(), "Archive::to_table nrows mismatch");
-  expect(atlas_a.nfeatures() == atlas_b.nfeatures(), "Archive::to_table ncols mismatch");
+  const auto atlas_b = archive.tabelize();
+  expect(atlas_a.depth() == atlas_b.depth(), "Archive::tabelize depth mismatch");
+  expect(atlas_a.ncases() == atlas_b.ncases(), "Archive::tabelize nrows mismatch");
+  expect(atlas_a.nfeatures() == atlas_b.nfeatures(), "Archive::tabelize ncols mismatch");
+}
+
+void test_archive_plot_accessor() {
+  const auto depth_labels =
+      Stream(pluss::make_note(std::vector<std::string>{"d0", "d1", "d2"}, std::array<std::int64_t, 1>{3}));
+
+  const auto ragged_labeled = pluss::kindle::Archive(
+      {
+          Catalog(std::vector<std::pair<std::string, Stream>>{
+              {"x", labeled_series({1.0, 2.0, 3.0, 4.0}, {"a", "b", "c", "d"})},
+              {"y", labeled_series({10.0, 20.0, 30.0, 40.0}, {"a", "b", "c", "d"})},
+              {"z", labeled_series({100.0, 200.0, 300.0, 400.0}, {"a", "b", "c", "d"})},
+              {"metric", labeled_series({5.0, 6.0, 7.0, 8.0}, {"a", "b", "c", "d"})},
+              {"unrelated", Stream(pluss::make_series(std::vector<double>{9.0, 9.0}, {2}))},
+          }),
+          Catalog(std::vector<std::pair<std::string, Stream>>{
+              {"x", labeled_series({1.5, 3.5}, {"a", "c"})},
+              {"y", labeled_series({15.0, 35.0}, {"a", "c"})},
+              {"z", labeled_series({150.0, 350.0}, {"a", "c"})},
+              {"metric", labeled_series({5.5, 7.5}, {"a", "c"})},
+              {"unrelated", Stream(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}))},
+          }),
+          Catalog(std::vector<std::pair<std::string, Stream>>{
+              {"x", labeled_series({2.5, 4.5, 5.5}, {"b", "d", "e"})},
+              {"y", labeled_series({25.0, 45.0, 55.0}, {"b", "d", "e"})},
+              {"z", labeled_series({250.0, 450.0, 550.0}, {"b", "d", "e"})},
+              {"metric", labeled_series({6.5, 8.5, 9.5}, {"b", "d", "e"})},
+              {"unrelated", Stream(pluss::make_series(std::vector<double>{4.0}, {1}))},
+          }),
+      },
+      depth_labels);
+
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot().surface("metric");
+    (void)fig;
+  }, "Archive::plot().surface should reconcile ragged labeled frames over depth");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot().wireframe("metric");
+    (void)fig;
+  }, "Archive::plot().wireframe should reconcile ragged labeled frames over depth");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot().cloud3("x", "y", "z");
+    (void)fig;
+  }, "Archive::plot().cloud3 should allow each depth frame to keep its own row count");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot().depth("metric");
+    (void)fig;
+  }, "Archive::plot().depth should summarize ragged frames without forcing equal case counts");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot().depth_compare({"metric", "x"});
+    (void)fig;
+  }, "Archive::plot().depth_compare should summarize selected ragged features over depth");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot().depth_facet({"metric", "x"});
+    (void)fig;
+  }, "Archive::plot().depth_facet should summarize selected ragged features over depth");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot().depth_rolling("metric");
+    (void)fig;
+  }, "Archive::plot().depth_rolling should compute rolling depth statistics on ragged frames");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_labeled.plot().triplot({"x", "y", "z"});
+    (void)fig;
+  }, "Archive::plot().triplot should flatten ragged frame columns without equal-length depth requirements");
+
+  const auto ragged_positional = pluss::kindle::Archive(
+      {
+          Catalog(std::vector<std::pair<std::string, Stream>>{
+              {"x", Stream(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}))},
+              {"y", Stream(pluss::make_series(std::vector<double>{11.0, 12.0, 13.0, 14.0}, {4}))},
+              {"z", Stream(pluss::make_series(std::vector<double>{21.0, 22.0, 23.0, 24.0}, {4}))},
+              {"metric", Stream(pluss::make_series(std::vector<double>{31.0, 32.0, 33.0, 34.0}, {4}))},
+          }),
+          Catalog(std::vector<std::pair<std::string, Stream>>{
+              {"x", Stream(pluss::make_series(std::vector<double>{1.5, 2.5}, {2}))},
+              {"y", Stream(pluss::make_series(std::vector<double>{11.5, 12.5}, {2}))},
+              {"z", Stream(pluss::make_series(std::vector<double>{21.5, 22.5}, {2}))},
+              {"metric", Stream(pluss::make_series(std::vector<double>{31.5, 32.5}, {2}))},
+          }),
+      },
+      Stream(pluss::make_note(std::vector<std::string>{"p0", "p1"}, std::array<std::int64_t, 1>{2})));
+
+  expect_no_throw([&]() {
+    auto fig = ragged_positional.plot().surface("metric");
+    (void)fig;
+  }, "Archive::plot().surface should fall back to positional outer alignment when case labels are unavailable");
+
+  expect_no_throw([&]() {
+    auto fig = ragged_positional.plot().wireframe("metric");
+    (void)fig;
+  }, "Archive::plot().wireframe should fall back to positional outer alignment when case labels are unavailable");
+}
+
+void test_archive_time_accessors() {
+  const auto archive = pluss::kindle::Archive({
+      Catalog(std::vector<std::pair<std::string, Stream>>{
+          {"timestamp",
+           Stream(pluss::make_timeline({
+               "2024-01-01T00:00:00Z",
+               "2024-01-02T00:00:00Z",
+               "2024-01-03T00:00:00Z",
+           }))},
+          {"metric", Stream(pluss::make_series(std::vector<double>{10.0, 12.0, 11.0}, {3}))},
+      }),
+      Catalog(std::vector<std::pair<std::string, Stream>>{
+          {"timestamp",
+           Stream(pluss::make_timeline({
+               "2024-02-01T00:00:00Z",
+               "2024-02-02T00:00:00Z",
+               "2024-02-03T00:00:00Z",
+               "2024-02-04T00:00:00Z",
+               "2024-02-05T00:00:00Z",
+           }))},
+          {"metric", Stream(pluss::make_series(std::vector<double>{20.0, 22.0, 24.0, 26.0, 28.0}, {5}))},
+      }),
+  });
+
+  const auto years = archive.keys({"timestamp"}).tl().year();
+  expect(years.catalog(0).keys("timestamp").kind() == StreamKind::Series,
+         "Archive::keys(...).tl().year should convert selected timeline streams to Series");
+  expect(years.catalog(0).keys("timestamp").as_series().to_vec<std::int64_t>()
+             == std::vector<std::int64_t>({2024, 2024, 2024}),
+         "Archive::keys(...).tl().year should preserve first ragged catalog length");
+  expect(years.catalog(1).keys("timestamp").as_series().to_vec<std::int64_t>()
+             == std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
+         "Archive::keys(...).tl().year should preserve second ragged catalog length");
+
+  const auto month_start = archive.keys({"timestamp"}).tl().month_start();
+  expect(month_start.catalog(0).keys("timestamp").kind() == StreamKind::Series,
+         "Archive::keys(...).tl().month_start should yield boolean Series streams");
+  expect(month_start.catalog(1).keys("timestamp").size() == 5,
+         "Archive::keys(...).tl().month_start should preserve ragged per-catalog sizes");
+
+  const auto lagged = archive.keys({"metric"}).ts().lag(1);
+  expect(lagged.catalog(0).keys("metric").kind() == StreamKind::Series,
+         "Archive::keys(...).ts().lag should keep Series kind");
+  expect(lagged.catalog(0).keys("metric").size() == 3,
+         "Archive::keys(...).ts().lag should preserve first ragged catalog length");
+  expect(lagged.catalog(1).keys("metric").size() == 5,
+         "Archive::keys(...).ts().lag should preserve second ragged catalog length");
+
+  const auto rolled = archive.keys({"metric"}).ts().rolling(2, pluss::table::WindowStatistic::Mean);
+  expect(rolled.catalog(0).keys("metric").size() == 3,
+         "Archive::keys(...).ts().rolling should preserve first ragged catalog length");
+  expect(rolled.catalog(1).keys("metric").size() == 5,
+         "Archive::keys(...).ts().rolling should preserve second ragged catalog length");
 }
 
 } // namespace
@@ -1056,6 +1428,7 @@ int main() {
     test_stream_methods();
     test_stream_accessors();
     test_catalog_plot_accessor();
+    test_catalog_plot3d_accessor();
     test_catalog_accessors();
     test_catalog_reductions();
     test_catalog_construction_and_selection();
@@ -1065,6 +1438,8 @@ int main() {
     test_catalog_aggregates_apply_text_merge();
     test_catalog_mutation_tabelize_io();
     test_archive_to_table_bridge();
+    test_archive_plot_accessor();
+    test_archive_time_accessors();
   } catch (const std::exception& e) {
     std::cerr << "[kindle_catalog_tests] failure: " << e.what() << "\n";
     return 1;

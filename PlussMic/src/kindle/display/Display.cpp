@@ -295,7 +295,7 @@ std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions&
 
     const auto row = static_cast<std::size_t>(idx[i]);
     const auto& key = catalog.keys()[row];
-    const auto stream = catalog.at(key);
+    const auto stream = catalog.keys(key);
     std::string line = right_pad(clip_text(key, key_w), key_w) + " | "
                      + right_pad(kind_name(stream.kind()), kind_w);
     if (show_dtype) {
@@ -381,7 +381,7 @@ std::string render_archive_frame(const Archive& archive, const EffectiveOptions&
     if (cat.nkeys() > 0) {
       min_cs = std::numeric_limits<std::int64_t>::max();
       for (const auto& key : cat.keys()) {
-        const auto s = cat.at(key);
+        const auto s = cat.keys(key);
         min_cs = std::min(min_cs, s.size());
         max_cs = std::max(max_cs, s.size());
       }

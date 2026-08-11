@@ -15,7 +15,7 @@ void Registry::save_parquet(std::string_view filepath, const pluss::loader::Conf
 ## What It Does
 
 Writes the registry to a `.parquet` file, following the same
-[`to_kindle()`](to_kindle.md) → `tabelize()` → format-specific writer path as
+[`kindelize()`](kindelize.md) → `tabelize()` → format-specific writer path as
 [`save_csv()`](save_csv.md).
 
 ```{important} Parquet support is an optional build feature (requires Arrow + Parquet C++)

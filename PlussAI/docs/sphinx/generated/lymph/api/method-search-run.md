@@ -6,6 +6,11 @@
 - `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
 - `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
 - `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
+- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
+- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
+- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
+- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
+- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
 
 ## Notes
 
@@ -42,6 +47,8 @@ Option semantics used by this method:
 
 - `FitOptions` (`struct`):
   - `std::int64_t fit_top = 0`
+    Option field used by this method.
+  - `std::int64_t fit_bottom = 0`
     Option field used by this method.
 
 ## Examples

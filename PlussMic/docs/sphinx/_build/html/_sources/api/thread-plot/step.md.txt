@@ -33,7 +33,8 @@ inheritance rules shared by every method on this accessor.
 **options** (`StepPlotOptions`)
     The identical struct documented on
     [`DataFramePlotAccessor::step`](../../api/dataframe-plot/step.md) (`alpha`,
-    `line_width`).
+    `line_width`, `align`). `align` is inert here — a mismatched-size `x` throws
+    unconditionally before it could ever apply, same as [`line()`](line.md).
 
 ## Returns
 

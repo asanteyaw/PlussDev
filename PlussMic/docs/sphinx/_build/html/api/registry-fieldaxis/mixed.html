@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,7 +53,7 @@
 registry containing only the fields whose <code class="docutils literal notranslate"><span class="pre">Slot::kind()</span></code> is
 <code class="docutils literal notranslate"><span class="pre">SlotKind::Mixed</span></code> (the field holds more than one distinct value kind, or a
 <code class="docutils literal notranslate"><span class="pre">Series</span></code> field mixes numeric dtypes). These are exactly the fields that make a
-registry fail <a class="reference internal" href="../registry/to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a>’s stream-compatibility
+registry fail <a class="reference internal" href="../registry/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a>’s stream-compatibility
 check.</p>
 </section>
 <section id="parameters">
@@ -89,7 +89,7 @@ A new registry containing only the genuinely mixed-kind fields.</p>
 <ul class="simple">
 <li><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">kind(SlotKind::Mixed)</span></code> — see <a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind()</span></code></span></a> for the
 general form.</p></li>
-<li><p>Directly identifies which fields would make <a class="reference internal" href="../registry/to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a>
+<li><p>Directly identifies which fields would make <a class="reference internal" href="../registry/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a>
 throw.</p></li>
 </ul>
 </section>
@@ -98,7 +98,7 @@ throw.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryFieldAxisAccessor::kind</span></code></span></a>: the general form this method
 wraps.</p></li>
-<li><p><a class="reference internal" href="../registry/to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::to_kindle</span></code></span></a>: the conversion these
+<li><p><a class="reference internal" href="../registry/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::kindelize</span></code></span></a>: the conversion these
 fields block.</p></li>
 <li><p><a class="reference internal" href="../registry/profiles.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::profiles</span></code></span></a>: the per-field type tally
 that shows exactly <em>why</em> a field is mixed.</p></li>

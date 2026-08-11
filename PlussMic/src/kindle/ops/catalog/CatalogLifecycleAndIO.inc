@@ -19,28 +19,6 @@ Catalog::~Catalog() = default;
 
 Catalog::Catalog(pluss::msharp::intrusive_ptr<detail::CatalogImpl> impl) : impl_(std::move(impl)) {}
 
-Catalog Catalog::kindelize(const pluss::table::DataFrame& frame, const KindelizePolicy& policy) {
-  PLUSS_CHECK(frame.defined(), "Catalog::kindelize requires a defined DataFrame");
-  std::vector<std::pair<std::string, Stream>> out;
-  out.reserve(static_cast<std::size_t>(frame.nfeatures()) + (policy.materialize_label ? 1u : 0u));
-
-  const auto case_axis = frame.label().values();
-  for (const auto& key : frame.features()) {
-    auto s = Stream::from_thread(frame.features(key),
-                                 policy.attach_labels ? std::optional<pluss::table::Thread>{case_axis}
-                                                      : std::nullopt);
-    out.emplace_back(key, std::move(s));
-  }
-
-  if (policy.materialize_label) {
-    PLUSS_CHECK(frame.features().end() ==
-                    std::find(frame.features().begin(), frame.features().end(), policy.label_key),
-                "Catalog::kindelize: label key collides with existing feature '" + policy.label_key + "'");
-    out.emplace_back(policy.label_key, Stream::from_thread(case_axis));
-  }
-  return Catalog(std::move(out));
-}
-
 Catalog Catalog::load(std::string_view source_type, std::string_view filepath) {
   const auto source = lowercase_copy(trim_copy(source_type));
   if (source == "csv") {

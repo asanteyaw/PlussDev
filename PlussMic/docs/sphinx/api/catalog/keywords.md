@@ -62,8 +62,8 @@ count   -> Series([1, 1, 1, 1, 1])
     <span class="label">Previous</span>
     <span class="title">keys</span>
   </a>
-  <a class="next-link" href="kindelize.html">
+  <a class="next-link" href="load.html">
     <span class="label">Next</span>
-    <span class="title">kindelize</span>
+    <span class="title">load</span>
   </a>
 </div>

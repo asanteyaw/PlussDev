@@ -8,45 +8,46 @@
 ## Signatures
 
 ```cpp
-AtlasPlotAccessor::depth_facet(pluss::RangeView<std::string_view> features = {}) const -> pluss::pl::Studio
-AtlasPlotAccessor::depth_facet(pluss::RangeView<std::string_view> features, const AtlasDepthFacetPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+
+pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> features,
+                                                  const AtlasDepthFacetPlotOptions& options) const
 ```
 
 ## What It Does
 
-The same per-frame reduction as [`depth_compare()`](depth_compare.md) — each of
-`features` reduced to one scalar per frame via `options.statistic` (default `Mean`)
-— but instead of overlaying every feature's line on one pane, draws one subplot per
-feature, each titled with that feature's name, x-axis labeled `"depth"`, y-axis
-labeled with the feature name.
+The same per-frame reduction and multi-feature selection as
+[`depth_compare()`](depth_compare.md), but instead of overlaying every feature's line on one
+shared pane, each feature gets its own small-multiple pane in a grid — easier to read when the
+features have very different scales, since each pane gets its own y-axis.
 
 ```{important} Returns a Studio, not printable output
 Like every method on `AtlasPlotAccessor`, this builds and returns a `pluss::pl::Studio` —
-call `.show()`/`.save_svg(path)`/etc. to view or persist it.
+call `.show()`/`.to_svg()`/`.save_svg(path)`/etc. to view or persist it; `std::cout << chart` does
+not compile.
 ```
 
 ## Parameters
 
-**features** (`pluss::RangeView<std::string_view>`, default empty)
-    The features to facet, one subplot per feature. Empty selects every numeric
-    feature on the bound frames, subject to `options.max_features`.
+**features** (`pluss::msharp::RangeView::Of<std::string_view>`, defaults to `{}`)
+    The numeric features to facet, one pane each. An empty range (the default) selects **every**
+    numeric feature present in the first frame.
 
 **options** (`const AtlasDepthFacetPlotOptions&`)
-    `statistic` (default `Mean`); `show_grid` (default `true`); `rows`/`cols`
-    (default `0`, meaning auto-computed) size the subplot grid; `grid_gap_x`/
-    `grid_gap_y` (default `16.0`) space the subplots; `max_features` (default `0`,
-    unlimited) caps auto-resolved features when `features` is left empty.
+    `statistic` (`AtlasDepthStatistic`, default `Mean`): the per-frame reduction applied to every
+    feature. `show_grid` (default `true`). `rows`/`cols` (facet grid shape, `0` auto-sizes).
+    `grid_gap_x`/`grid_gap_y`. `max_features` (`std::int64_t`, default `0`, `0` means no cap) —
+    same truncation semantics as [`depth_compare`](depth_compare.md)'s `max_features`.
 
 ## Returns
 
 `pluss::pl::Studio`
-    A figure with one subplot per compared feature, each showing that feature's
-    per-frame reduced line.
+    A figure with one small-multiple pane per selected feature, each showing that feature's
+    per-frame reduction against depth.
 
 ## Examples
 
-Example 1. Facet two features' per-frame means across a 5-frame atlas into separate
-subplots.
+Example 1. Default call: facet every numeric feature into its own pane, auto-sized grid.
 
 ```cpp
 using namespace pluss::table;
@@ -56,38 +57,62 @@ for (int i = 0; i < 5; ++i) {
     double base = static_cast<double>(i);
     frames.push_back(DataFrame({
         {"temp_c", Thread(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
-        {"humidity", Thread(pluss::make_series({40.0 + base * 2, 42.0 + base * 2, 44.0 + base * 2, 46.0 + base * 2, 48.0 + base * 2}))},
+        {"humidity", Thread(pluss::make_series({55.0 - base, 60.0 - base, 65.0 - base, 70.0 - base, 75.0 - base}))},
+        {"pressure", Thread(pluss::make_series({1005.0 + base * 2, 1008.0 + base * 2, 1010.0 + base * 2, 1012.0 + base * 2, 1015.0 + base * 2}))},
     }));
 }
 auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
-auto chart = atlas.plot().depth_facet({"temp_c", "humidity"});
-chart.save_svg("depth_facet_temp_humidity.svg");
+auto chart = atlas.plot().depth_facet();
+chart.show();
 ```
-
-Two subplots appear side by side: `temp_c`'s own titled pane (mean line `20, 21, 22,
-23, 24`) and `humidity`'s own titled pane (mean line `44, 46, 48, 50, 52`) — the same
-underlying values as [`depth_compare()`](depth_compare.md)'s overlay, just split
-apart.
 
 ![Output of Example 1](img/depth_facet-1.svg)
 
+`temp_c`, `humidity`, and `pressure` each get their own pane, laid out in an auto-sized grid.
+
+Example 2. Explicit `options.rows`/`options.cols` force a single row of three panes instead of
+the auto-sized default.
+
+```cpp
+using namespace pluss::table;
+
+std::vector<DataFrame> frames;
+for (int i = 0; i < 5; ++i) {
+    double base = static_cast<double>(i);
+    frames.push_back(DataFrame({
+        {"temp_c", Thread(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
+        {"humidity", Thread(pluss::make_series({55.0 - base, 60.0 - base, 65.0 - base, 70.0 - base, 75.0 - base}))},
+        {"pressure", Thread(pluss::make_series({1005.0 + base * 2, 1008.0 + base * 2, 1010.0 + base * 2, 1012.0 + base * 2, 1015.0 + base * 2}))},
+    }));
+}
+auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
+
+AtlasDepthFacetPlotOptions options;
+options.rows = 1;
+options.cols = 3;
+auto chart = atlas.plot().depth_facet({}, options);
+chart.show();
+```
+
+![Output of Example 2](img/depth_facet-2.svg)
+
 ## Notes
 
-- Each feature's reduction is computed independently, frame by frame.
-- With `rows`/`cols` left at their default `0`, the subplot grid is auto-sized to fit
-  the number of features.
-- `options.depth_axis` (shared with [`depth()`](depth.md)/[`surface()`](surface.md)/
-  etc.) controls which frames are included and in what order.
+- `features = {}` selects every numeric feature in the **first** frame — a feature only present in
+  later frames is never picked up this way.
+- `rows`/`cols` left at `0` (the default) auto-sizes the grid to the number of selected features;
+  set both explicitly to control the exact layout, as in Example 2.
+- `options.depth_axis` (shared with [`depth()`](depth.md)/[`depth_compare()`](depth_compare.md)/
+  [`depth_rolling()`](depth_rolling.md)) controls which frames are included and in what order.
 
 ## See Also
 
-- [`AtlasPlotAccessor::depth_compare`](depth_compare.md): the same per-frame
-  reductions, overlaid on one pane instead of faceted into subplots.
-- [`AtlasPlotAccessor::frames`](frames.md) (multi-frame overload): also builds a
-  facet grid via `AtlasFramesPlotOptions`, but faceting by frame rather than by
-  feature.
-- [`Atlas::plot`](../atlas/plot.md): how to enter this accessor.
+- [`AtlasPlotAccessor::depth_compare`](depth_compare.md): the overlaid counterpart, all features
+  sharing one pane instead of getting their own.
+- [`AtlasPlotAccessor::frames`](frames.md)'s `Facet` mode: small multiples over *frames* instead
+  of over *features*.
+- [`Atlas::plot`](../atlas/plot.md): the entry point this accessor is reached from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="depth_compare.html">

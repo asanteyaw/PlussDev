@@ -41,7 +41,7 @@ default-constructed `KindelizePolicy`. Its fields:
   than only being attached to each feature's `Stream`.
 - **`label_key`** (`std::string`, default `"_label"`): the key used for the
   materialized label entry when `materialize_label` is `true`. Throws
-  `"Catalog::kindelize: label key collides with existing feature '<label_key>'"` if a
+  `"DataFrame::kindelize: label key collides with existing feature '<label_key>'"` if a
   feature already uses that exact name.
 
 ## Returns

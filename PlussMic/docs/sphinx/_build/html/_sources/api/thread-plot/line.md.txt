@@ -51,7 +51,10 @@ index, exactly like a `DataFrame` built without explicit row labels.
 **options** (`LinePlotOptions`)
     The identical struct documented on
     [`DataFramePlotAccessor::line`](../../api/dataframe-plot/line.md)
-    (`alpha`, `line_width`, `y_limit_method`) — see that page for each field's meaning.
+    (`alpha`, `line_width`, `y_limit_method`, `align`) — see that page for each field's
+    meaning. `align` is doubly inert at this layer: `x`'s own size check above
+    (`"Thread::plot: thread size mismatch"`) throws unconditionally on a mismatch, before
+    any `align`-aware reconciliation could ever run.
 
 ## Returns
 

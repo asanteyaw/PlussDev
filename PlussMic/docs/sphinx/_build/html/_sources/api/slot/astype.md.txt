@@ -85,9 +85,9 @@ std::cout << out.to_json();
   narrower shorthand for.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="as_kindle.html">
+  <a class="prev-link" href="../../slot_api_reference.html">
     <span class="label">Previous</span>
-    <span class="title">as_kindle</span>
+    <span class="title">Slot API</span>
   </a>
   <a class="next-link" href="at.html">
     <span class="label">Next</span>

@@ -55,11 +55,13 @@ covers what's specific to `area()`.
     struct AreaPlotOptions {
       double alpha{0.88};
       double line_width{1.3};
+      XYAlignOptions align{};
     };
     ```
     `alpha` defaults noticeably lower than [`line()`](line.md)'s `1.0` — filled regions
     default to slightly translucent so overlapping areas from multiple y-features stay
-    visually distinguishable instead of one fully opaque area hiding another.
+    visually distinguishable instead of one fully opaque area hiding another. `align` is
+    present but inert here — see [`line()`](line.md)'s note on the field.
 
 ## Returns
 

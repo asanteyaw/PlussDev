@@ -47,7 +47,7 @@ std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
 
 - Always collapses to exactly one value, regardless of the source slot's
   size.
-- Bridges through [`to_kindle()`](to_kindle.md) internally — requires the
+- Bridges through [`kindelize()`](kindelize.md) internally — requires the
   slot to be stream-compatible.
 - Requires the slot to be defined — an undefined `Slot` throws
   `"Slot: undefined handle"`.

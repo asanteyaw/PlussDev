@@ -41,6 +41,7 @@ api/thread/bottom
 api/thread/bounded
 api/thread/btw
 api/thread/bucketize
+api/thread/bundelize
 api/thread/casefold
 api/thread/cast
 api/thread/chars
@@ -91,6 +92,7 @@ api/thread/isfinite
 api/thread/isnan
 api/thread/isnull
 api/thread/kind
+api/thread/kindelize
 api/thread/kurtosis
 api/thread/label
 api/thread/land

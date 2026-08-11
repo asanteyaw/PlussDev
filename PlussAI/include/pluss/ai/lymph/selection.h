@@ -64,7 +64,9 @@ struct CompareResult {
   // Holds public Models rather than internal implementation objects. std::optional
   // keeps CompareResult default-constructible before the winner is known.
   std::optional<Model> best_model{};
+  std::optional<Model> worst_model{};
   std::vector<Model> fitted{};
+  std::vector<Model> bottom_fitted{};
 
   [[nodiscard]] const Model& best() const {
     if (!best_model.has_value()) {
@@ -77,6 +79,19 @@ struct CompareResult {
       ::pluss::throw_error("selection::CompareResult::best: no best model has been computed.");
     }
     return *best_model;
+  }
+
+  [[nodiscard]] const Model& worst() const {
+    if (!worst_model.has_value()) {
+      ::pluss::throw_error("selection::CompareResult::worst: no worst model has been computed.");
+    }
+    return *worst_model;
+  }
+  [[nodiscard]] Model& worst() {
+    if (!worst_model.has_value()) {
+      ::pluss::throw_error("selection::CompareResult::worst: no worst model has been computed.");
+    }
+    return *worst_model;
   }
 
   [[nodiscard]] std::vector<std::pair<std::string, Model>> top(std::int64_t k) const {
@@ -92,6 +107,35 @@ struct CompareResult {
       const std::int64_t trial_index = report.ranked_indices[static_cast<std::size_t>(i)];
       out.emplace_back(report.trials[static_cast<std::size_t>(trial_index)].name,
                        fitted[static_cast<std::size_t>(i)]);
+    }
+    return out;
+  }
+
+  [[nodiscard]] std::vector<std::pair<std::string, Model>> bottom(std::int64_t k) const {
+    if (k < 0) {
+      ::pluss::throw_error("selection::CompareResult::bottom: k must be non-negative.");
+    }
+    if (k == 0) return {};
+    if (k == 1 && bottom_fitted.empty()) {
+      if (!worst_model.has_value()) {
+        ::pluss::throw_error("selection::CompareResult::bottom: no worst model has been computed.");
+      }
+      if (report.ranked_indices.empty()) {
+        ::pluss::throw_error("selection::CompareResult::bottom: no ranked trials are available.");
+      }
+      const std::int64_t trial_index = report.ranked_indices.back();
+      return {{report.trials[static_cast<std::size_t>(trial_index)].name, *worst_model}};
+    }
+    if (k > static_cast<std::int64_t>(bottom_fitted.size())) {
+      ::pluss::throw_error("selection::CompareResult::bottom: requested k exceeds bottom fitted model count; increase FitOptions.fit_bottom.");
+    }
+    std::vector<std::pair<std::string, Model>> out{};
+    out.reserve(static_cast<std::size_t>(k));
+    const std::int64_t ranked_count = static_cast<std::int64_t>(report.ranked_indices.size());
+    for (std::int64_t i = 0; i < k; ++i) {
+      const std::int64_t trial_index = report.ranked_indices[static_cast<std::size_t>(ranked_count - 1 - i)];
+      out.emplace_back(report.trials[static_cast<std::size_t>(trial_index)].name,
+                       bottom_fitted[static_cast<std::size_t>(i)]);
     }
     return out;
   }
@@ -140,6 +184,7 @@ struct CompareResult {
 
 struct FitOptions {
   std::int64_t fit_top = 0;
+  std::int64_t fit_bottom = 0;
 };
 
 struct SpecTuneResult {
@@ -254,6 +299,9 @@ inline void assign_objective_ranks_(CompareReport& report) {
   }
   if (fit_options.fit_top < 0) {
     ::pluss::throw_error("selection::compare: FitOptions.fit_top must be non-negative.");
+  }
+  if (fit_options.fit_bottom < 0) {
+    ::pluss::throw_error("selection::compare: FitOptions.fit_bottom must be non-negative.");
   }
   if (assess_options.metrics.empty()) {
     assess_options.metrics = {objective_metric};
@@ -378,11 +426,35 @@ inline void assign_objective_ranks_(CompareReport& report) {
     // clone it (dump+reload trained state, not a retrain) instead of training
     // the winner a second time.
     result.best_model = result.fitted.front().clone();
-    return result;
   }
 
-  const auto& best_candidate = candidates[static_cast<std::size_t>(best_index)];
-  result.best_model = best_candidate.model.learn(batch, best_candidate.train_options.value_or(train_options));
+  if (fit_options.fit_bottom > 0) {
+    const std::int64_t fit_count =
+        std::min<std::int64_t>(fit_options.fit_bottom, static_cast<std::int64_t>(result.report.ranked_indices.size()));
+    result.bottom_fitted.reserve(static_cast<std::size_t>(fit_count));
+    const std::int64_t ranked_count = static_cast<std::int64_t>(result.report.ranked_indices.size());
+    for (std::int64_t i = 0; i < fit_count; ++i) {
+      const std::int64_t candidate_index = result.report.ranked_indices[static_cast<std::size_t>(ranked_count - 1 - i)];
+      const auto& candidate = candidates[static_cast<std::size_t>(candidate_index)];
+      Model fitted = candidate.model.learn(batch, candidate.train_options.value_or(train_options));
+      result.bottom_fitted.push_back(std::move(fitted));
+    }
+    result.worst_model = result.bottom_fitted.front().clone();
+  }
+
+  if (!result.best_model.has_value()) {
+    const auto& best_candidate = candidates[static_cast<std::size_t>(best_index)];
+    result.best_model = best_candidate.model.learn(batch, best_candidate.train_options.value_or(train_options));
+  }
+  if (!result.worst_model.has_value()) {
+    const std::int64_t worst_index = result.report.ranked_indices.back();
+    if (worst_index == best_index) {
+      result.worst_model = *result.best_model;
+    } else {
+      const auto& worst_candidate = candidates[static_cast<std::size_t>(worst_index)];
+      result.worst_model = worst_candidate.model.learn(batch, worst_candidate.train_options.value_or(train_options));
+    }
+  }
   return result;
 }
 
@@ -422,6 +494,9 @@ struct FoldFramePair_ {
   }
   if (fit_options.fit_top < 0) {
     ::pluss::throw_error("selection::compare: FitOptions.fit_top must be non-negative.");
+  }
+  if (fit_options.fit_bottom < 0) {
+    ::pluss::throw_error("selection::compare: FitOptions.fit_bottom must be non-negative.");
   }
   if (assess_options.metrics.empty()) {
     assess_options.metrics = {objective_metric};
@@ -536,11 +611,35 @@ struct FoldFramePair_ {
       result.fitted.push_back(std::move(fitted));
     }
     result.best_model = result.fitted.front().clone();
-    return result;
   }
 
-  const auto& best_candidate = candidates[static_cast<std::size_t>(best_index)];
-  result.best_model = best_candidate.model.learn(frame, data_options, best_candidate.train_options.value_or(train_options));
+  if (fit_options.fit_bottom > 0) {
+    const std::int64_t fit_count =
+        std::min<std::int64_t>(fit_options.fit_bottom, static_cast<std::int64_t>(result.report.ranked_indices.size()));
+    result.bottom_fitted.reserve(static_cast<std::size_t>(fit_count));
+    const std::int64_t ranked_count = static_cast<std::int64_t>(result.report.ranked_indices.size());
+    for (std::int64_t i = 0; i < fit_count; ++i) {
+      const std::int64_t candidate_index = result.report.ranked_indices[static_cast<std::size_t>(ranked_count - 1 - i)];
+      const auto& candidate = candidates[static_cast<std::size_t>(candidate_index)];
+      Model fitted = candidate.model.learn(frame, data_options, candidate.train_options.value_or(train_options));
+      result.bottom_fitted.push_back(std::move(fitted));
+    }
+    result.worst_model = result.bottom_fitted.front().clone();
+  }
+
+  if (!result.best_model.has_value()) {
+    const auto& best_candidate = candidates[static_cast<std::size_t>(best_index)];
+    result.best_model = best_candidate.model.learn(frame, data_options, best_candidate.train_options.value_or(train_options));
+  }
+  if (!result.worst_model.has_value()) {
+    const std::int64_t worst_index = result.report.ranked_indices.back();
+    if (worst_index == best_index) {
+      result.worst_model = *result.best_model;
+    } else {
+      const auto& worst_candidate = candidates[static_cast<std::size_t>(worst_index)];
+      result.worst_model = worst_candidate.model.learn(frame, data_options, worst_candidate.train_options.value_or(train_options));
+    }
+  }
   return result;
 }
 

@@ -201,6 +201,14 @@ class Model final {
     return *this;
   }
 
+  Model& add(const CustomStage& stage) {
+    if (!stage.map_fn) {
+      ::pluss::throw_error("lymph::Model::add: custom stage \"" + stage.name + "\" has no callable.");
+    }
+    mut_core_().function_transformer(prep::FunctionTransformer(stage.map_fn, stage.options));
+    return *this;
+  }
+
   Model& append(Stage stage, ColumnRouter router) {
     mut_core_().append(std::move(stage), std::move(router));
     return *this;
@@ -553,6 +561,14 @@ class ModelPrep final {
 
   ModelPrep& standardize(std::initializer_list<std::string> names, prep::StandardScalerOptions options = {}) {
     return standardize(this->names(names), options);
+  }
+
+  ModelPrep& scale(ColumnRouter router, prep::StandardScalerOptions options = {}) {
+    return standardize(std::move(router), options);
+  }
+
+  ModelPrep& scale(std::initializer_list<std::string> names, prep::StandardScalerOptions options = {}) {
+    return scale(this->names(names), options);
   }
 
   ModelPrep& rescale(ColumnRouter router, prep::MinMaxScalerOptions options = {}) {

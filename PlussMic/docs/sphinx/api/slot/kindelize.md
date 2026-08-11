@@ -13,9 +13,8 @@ pluss::kindle::Stream Slot::kindelize() const
 
 ## What It Does
 
-An identical alias for [`to_kindle()`](to_kindle.md), kept for
-backward-compatible call sites written before `to_kindle()`/`as_kindle()`
-were introduced.
+Converts the slot into a single `pluss::kindle::Stream`. This is the canonical
+bundle-to-kindle bridge for one heterogeneous-but-kind-compatible slot.
 
 ## Parameters
 
@@ -44,16 +43,18 @@ std::cout << stream.as_series().numel();
 
 ## Notes
 
-- Byte-identical behavior to [`to_kindle()`](to_kindle.md), including its
-  stream-compatibility requirement and throw text.
+- Every value in the slot must share one stream-compatible kind.
 - Requires the slot to be defined — an undefined `Slot` throws
   `"Slot: undefined handle"`.
+- A slot that later goes through `stream.tabelize()` or `stream.bundelize()` stays on the
+  same 1D bridge family; no table or registry wrapper is required.
 
 ## See Also
 
-- [`Slot::to_kindle`](to_kindle.md): the primary name for this
-  conversion, with the full stream-compatibility explanation.
-- [`Slot::as_kindle`](as_kindle.md): another identical alias.
+- [`Stream::bundelize`](../stream/bundelize.md): the reverse bridge from
+  Kindle back into the bundle model.
+- [`Slot::tabelize`](tabelize.md): the sibling bridge from the bundle model into the
+  table model.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="kind.html">

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -121,7 +121,7 @@ something.</p>
 </pre></div>
 </div>
 <p>Every row becomes one point at <code class="docutils literal notranslate"><span class="pre">(midterm,</span> <span class="pre">final)</span></code>; no legend is shown since there’s no hue.</p>
-<p><img alt="Output of Example 1" src="../../_images/scatter-1.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/scatter-12.svg" /></p>
 <p>Example 2. With a categorical hue feature: points split into one trace per distinct cohort
 value, each its own color.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cohort&quot;</span><span class="p">);</span>
@@ -132,7 +132,7 @@ value, each its own color.</p>
 in the data (row 0 is <code class="docutils literal notranslate"><span class="pre">&quot;Morning&quot;</span></code>, so it becomes the first group; row 1 introduces
 <code class="docutils literal notranslate"><span class="pre">&quot;Evening&quot;</span></code> as the second), <strong>not</strong> sorted alphabetically. A legend labeled with each
 cohort value is shown automatically.</p>
-<p><img alt="Output of Example 2" src="../../_images/scatter-2.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/scatter-22.svg" /></p>
 <p>Example 3. A shared <code class="docutils literal notranslate"><span class="pre">default_hue_feature</span></code>, set once on the accessor and reused across
 calls, mirroring <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> pattern.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -176,7 +176,7 @@ hue type check even though it’s a perfectly valid <code class="docutils litera
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 5" src="../../_images/scatter-5.svg" /></p>
+<p><img alt="Output of Example 5" src="../../_images/scatter-51.svg" /></p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>fit_line overlays a line of best fit — one per hue group, if hue is set

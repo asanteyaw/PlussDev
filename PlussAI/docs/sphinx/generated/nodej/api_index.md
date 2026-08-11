@@ -1,6 +1,6 @@
 # NodeJ Full API Reference: Method Index
 
-Total method pages: **185**
+Total method pages: **186**
 Total data-type pages: **44**
 
 ## Data Types
@@ -95,6 +95,7 @@ api/method-flow-add-function-transformer
 api/method-flow-append-transform
 api/method-flow-clear-model
 api/method-flow-clear-transforms
+api/method-flow-clone
 api/method-flow-dump-model-state
 api/method-flow-dump-transform-states
 api/method-flow-flow-summary

@@ -34,7 +34,7 @@ Option semantics used by this method:
     Controls fold/trial/count sizing.
   - `Candidate& operator=(Candidate&&) noexcept = default`
     Option field used by this method.
-  - `Candidate& operator=(const Candidate&) = delete`
+  - `Candidate& operator=(const Candidate&) noexcept = default`
     Option field used by this method.
 
 ## Examples
@@ -56,18 +56,16 @@ Candidate returned Candidate(std::string in_name, Model in_model, std::optional<
 ### Example 2 (Demo Pattern)
 
 ```cpp
+    nja::CrossValidationOptions cv_options{};
+    cv_options.plan = CVPlanKind::CrossVal;
+    cv_options.folds = 5;
+    cv_options.shuffle = true;
     cv_options.random_state = 73;
     cv_options.deterministic = true;
 
-    // Was built via the old Workflow{.model=..., .stages={...}} facade --
-    // Model already has one builder method per TransformKind
-    // (.simple_imputer(...), .standard_scaler(...), ...) that attaches the
-    // stage immediately (no lazy replay needed), so this is a direct
-    // substitution: same options, called on the model itself before it's
-    // handed to a Candidate.
     std::vector<nja::selection::Candidate> candidates{};
     {
-      auto wf = nja::linear_factory::linear_regression(LinearFamilyOptions{
+      nja::Model wf = nja::models::linear_regression(LinearFamilyOptions{
           .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
@@ -75,8 +73,9 @@ Candidate returned Candidate(std::string in_name, Model in_model, std::optional<
       });
       wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
       wf.standard_scaler();
-      candidates.emplace_back("linear_ridge", std::move(wf));
+      candidates.emplace_back("linear_ridge", wf);
     }
+    {
 ```
 
 **Expected output**

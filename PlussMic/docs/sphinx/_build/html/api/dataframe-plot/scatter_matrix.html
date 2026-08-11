@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -116,7 +116,7 @@ A figure containing the full grid of pairwise panes.</p>
 </div>
 <p>A 3×3 grid: six off-diagonal scatter cells (<code class="docutils literal notranslate"><span class="pre">revenue</span></code>×<code class="docutils literal notranslate"><span class="pre">cost</span></code>, <code class="docutils literal notranslate"><span class="pre">revenue</span></code>×<code class="docutils literal notranslate"><span class="pre">headcount</span></code>,
 <code class="docutils literal notranslate"><span class="pre">cost</span></code>×<code class="docutils literal notranslate"><span class="pre">headcount</span></code>, each appearing twice, mirrored) plus three diagonal histogram cells.</p>
-<p><img alt="Output of Example 1" src="../../_images/scatter_matrix-1.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/scatter_matrix-11.svg" /></p>
 <p>Example 2. An explicit feature subset via <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">};</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter_matrix</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="n">names</span><span class="p">));</span>
@@ -125,14 +125,14 @@ A figure containing the full grid of pairwise panes.</p>
 </div>
 <p>A 2×2 grid: two off-diagonal scatter cells (mirror images of the same <code class="docutils literal notranslate"><span class="pre">revenue</span></code> vs <code class="docutils literal notranslate"><span class="pre">cost</span></code>
 relationship) plus two diagonal histograms.</p>
-<p><img alt="Output of Example 2" src="../../_images/scatter_matrix-2.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/scatter_matrix-21.svg" /></p>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">triangle</span> <span class="pre">=</span> <span class="pre">Lower</span></code>: only the lower triangle and diagonal are drawn.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter_matrix</span><span class="p">({},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ScatterMatrixTriangle</span><span class="o">::</span><span class="n">Lower</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;metrics_lower.pdf&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Each pairwise relationship now appears exactly once instead of twice.</p>
-<p><img alt="Output of Example 3" src="../../_images/scatter_matrix-3.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/scatter_matrix-31.svg" /></p>
 <p>Example 4. An explicit <code class="docutils literal notranslate"><span class="pre">ScatterMatrixPlotOptions</span></code>, using the <code class="docutils literal notranslate"><span class="pre">corner</span></code> shorthand instead of
 setting <code class="docutils literal notranslate"><span class="pre">pair.triangle</span></code> directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ScatterMatrixPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>

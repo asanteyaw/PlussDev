@@ -95,8 +95,8 @@ show length: 767
     <span class="label">Previous</span>
     <span class="title">tail</span>
   </a>
-  <a class="next-link" href="to_table.html">
+  <a class="next-link" href="unique.html">
     <span class="label">Next</span>
-    <span class="title">to_table</span>
+    <span class="title">unique</span>
   </a>
 </div>

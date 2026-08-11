@@ -57,6 +57,7 @@ mechanics.
       bool ci_enabled{false};
       double ci_level{0.95};
       bool horizontal{false};
+      XYAlignOptions align{};
     };
     ```
     `horizontal = true` swaps the chart's orientation: bars extend along the x-axis instead
@@ -69,6 +70,8 @@ mechanics.
     `0.95`, i.e. roughly ±1.96 standard errors). A group with only one row still draws a bar
     (at that row's own value, as its "mean") but its whisker has zero width — there's no
     variance to estimate from a single sample.
+
+    `align` is present but inert here — see [`line()`](line.md)'s note on the field.
 
 ## Returns
 

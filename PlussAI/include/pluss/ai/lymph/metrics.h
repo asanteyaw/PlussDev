@@ -64,16 +64,30 @@ struct HoldoutSplitOptions {
   bool shuffle = true;
 };
 
-struct FrameHoldoutSplit {
+struct HoldoutSplit {
   pluss::table::DataFrame train_set{};
   pluss::table::DataFrame test_set{};
+  LabeledBatch train_batch{};
+  LabeledBatch test_batch{};
   IndexSplit indices{};
+
+  [[nodiscard]] bool has_frame() const noexcept { return train_set.defined() || test_set.defined(); }
+  [[nodiscard]] bool has_batch() const noexcept {
+    return train_batch.features.x.defined() || test_batch.features.x.defined();
+  }
 };
 
-struct BatchHoldoutSplit {
-  LabeledBatch train_set{};
-  LabeledBatch test_set{};
+struct TimeSeriesSplit {
+  pluss::table::DataFrame train_set{};
+  pluss::table::DataFrame test_set{};
+  LabeledBatch train_batch{};
+  LabeledBatch test_batch{};
   IndexSplit indices{};
+
+  [[nodiscard]] bool has_frame() const noexcept { return train_set.defined() || test_set.defined(); }
+  [[nodiscard]] bool has_batch() const noexcept {
+    return train_batch.features.x.defined() || test_batch.features.x.defined();
+  }
 };
 
 [[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);
@@ -83,6 +97,9 @@ struct CrossValidationOptions {
   double holdout_fraction = 0.2;
   std::int64_t folds = 5;
   std::int64_t repeats = 1;
+  std::int64_t time_gap = 0;
+  std::int64_t time_test_size = 0;
+  std::int64_t time_max_train_size = 0;
   bool stratified = false;
   Series groups = Series::undefined();
   bool reliability_defaults = true;
@@ -122,6 +139,9 @@ struct FoldBatchPair {
   split.holdout_fraction = cv.holdout_fraction;
   split.folds = cv.folds;
   split.repeats = cv.repeats;
+  split.time_gap = cv.time_gap;
+  split.time_test_size = cv.time_test_size;
+  split.time_max_train_size = cv.time_max_train_size;
   split.stratified = cv.stratified;
   split.groups = cv.groups;
   split.reliability_defaults = cv.reliability_defaults;
@@ -143,6 +163,9 @@ struct FoldBatchPair {
   split.holdout_fraction = cv.holdout_fraction;
   split.folds = cv.folds;
   split.repeats = cv.repeats;
+  split.time_gap = cv.time_gap;
+  split.time_test_size = cv.time_test_size;
+  split.time_max_train_size = cv.time_max_train_size;
   split.stratified = cv.stratified;
   split.groups = cv.groups;
   split.reliability_defaults = cv.reliability_defaults;
@@ -296,6 +319,9 @@ struct FoldBatchPair {
   split.holdout_fraction = options.holdout_fraction;
   split.folds = options.folds;
   split.repeats = options.repeats;
+  split.time_gap = options.time_gap;
+  split.time_test_size = options.time_test_size;
+  split.time_max_train_size = options.time_max_train_size;
   split.stratified = options.stratified;
   split.groups = options.groups;
   split.reliability_defaults = options.reliability_defaults;
@@ -721,7 +747,7 @@ class Threshold final {
   return resolve(pluss::ai::nodej::holdout_split(frame.ncases(), split), "holdout_split");
 }
 
-[[nodiscard]] inline FrameHoldoutSplit holdout_split(const pluss::table::DataFrame& frame,
+[[nodiscard]] inline HoldoutSplit holdout_split(const pluss::table::DataFrame& frame,
                                                      HoldoutSplitOptions options = {}) {
   const IndexSplit indices = make_holdout_indices(frame, options);
   const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
@@ -730,25 +756,69 @@ class Threshold final {
   const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
                                                  .reshape({indices.test_indices.numel()})
                                                  .to_vec<std::int64_t>();
-  return FrameHoldoutSplit{
+  return HoldoutSplit{
       .train_set = frame.take(train_idx),
       .test_set = frame.take(test_idx),
       .indices = indices,
   };
 }
 
-[[nodiscard]] inline BatchHoldoutSplit holdout_split(const LabeledBatch& batch,
-                                                     HoldoutSplitOptions options = {}) {
+[[nodiscard]] inline HoldoutSplit holdout_split(const LabeledBatch& batch,
+                                                HoldoutSplitOptions options = {}) {
   const SplitOptions split = make_holdout_split_options(options);
   const bool use_stratify = options.stratify.defined();
   const IndexSplit indices = use_stratify
                                  ? resolve(pluss::ai::nodej::strat_holdout_split(options.stratify, split), "strat_holdout_split")
                                  : resolve(pluss::ai::nodej::holdout_split(batch.features.sample_count(), split), "holdout_split");
-  return BatchHoldoutSplit{
-      .train_set = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.train_indices), "slice_labeled_batch(train)"),
-      .test_set = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.test_indices), "slice_labeled_batch(test)"),
+  return HoldoutSplit{
+      .train_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.train_indices), "slice_labeled_batch(train)"),
+      .test_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.test_indices), "slice_labeled_batch(test)"),
       .indices = indices,
   };
+}
+
+[[nodiscard]] inline std::vector<TimeSeriesSplit> time_series_split(const pluss::table::DataFrame& frame,
+                                                                    CrossValidationOptions options = {}) {
+  options.plan = CVPlanKind::TSCrossVal;
+  options.shuffle = false;
+  const SplitOptions split = make_cross_validation_split_options(options);
+  const SplitPlan plan = resolve(pluss::ai::nodej::ts_crossval_plan(frame.ncases(), split), "ts_crossval_plan");
+  std::vector<TimeSeriesSplit> out{};
+  out.reserve(plan.folds.size());
+  for (const IndexSplit& indices : plan.folds) {
+    const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
+                                                    .reshape({indices.train_indices.numel()})
+                                                    .to_vec<std::int64_t>();
+    const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
+                                                   .reshape({indices.test_indices.numel()})
+                                                   .to_vec<std::int64_t>();
+    out.push_back(TimeSeriesSplit{
+        .train_set = frame.take(train_idx),
+        .test_set = frame.take(test_idx),
+        .indices = indices,
+    });
+  }
+  return out;
+}
+
+[[nodiscard]] inline std::vector<TimeSeriesSplit> time_series_split(const LabeledBatch& batch,
+                                                                    CrossValidationOptions options = {}) {
+  options.plan = CVPlanKind::TSCrossVal;
+  options.shuffle = false;
+  const SplitOptions split = make_cross_validation_split_options(options);
+  const SplitPlan plan = resolve(pluss::ai::nodej::ts_crossval_plan(batch.features.sample_count(), split), "ts_crossval_plan");
+  std::vector<TimeSeriesSplit> out{};
+  out.reserve(plan.folds.size());
+  for (const IndexSplit& indices : plan.folds) {
+    out.push_back(TimeSeriesSplit{
+        .train_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.train_indices),
+                               "slice_labeled_batch(train)"),
+        .test_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.test_indices),
+                              "slice_labeled_batch(test)"),
+        .indices = indices,
+    });
+  }
+  return out;
 }
 
 [[nodiscard]] inline std::pair<pluss::table::DataFrame, pluss::table::DataFrame> hold_out_split(

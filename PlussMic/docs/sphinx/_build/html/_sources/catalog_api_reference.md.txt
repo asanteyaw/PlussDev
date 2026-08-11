@@ -12,12 +12,18 @@ This page documents the full public `Catalog` surface for named stream collectio
 
 The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
+## Accessors
+
+`Catalog` exposes nested accessors, each with its own method pages and sidebar:
+
+- `plot()` -> [`CatalogPlotAccessor`](catalog_plot_accessor_api_reference.md)
+- `plot3d()` -> [`CatalogPlot3DAccessor`](catalog_plot3d_accessor_api_reference.md)
+
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
 api/catalog/astype
-api/catalog/at
 api/catalog/begin
 api/catalog/bfill
 api/catalog/bundelize
@@ -48,7 +54,6 @@ api/catalog/isnull
 api/catalog/keyaxis
 api/catalog/keys
 api/catalog/keywords
-api/catalog/kindelize
 api/catalog/load
 api/catalog/load_csv
 api/catalog/load_excel
@@ -70,6 +75,7 @@ api/catalog/notnull
 api/catalog/nrows
 api/catalog/nt
 api/catalog/plot
+api/catalog/plot3d
 api/catalog/query
 api/catalog/rename
 api/catalog/rename_
@@ -99,7 +105,6 @@ api/catalog/tfidf
 api/catalog/tl
 api/catalog/to_json
 api/catalog/to_string
-api/catalog/to_table
 api/catalog/transform
 api/catalog/ts
 api/catalog/unique

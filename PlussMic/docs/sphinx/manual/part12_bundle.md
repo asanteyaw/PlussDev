@@ -40,8 +40,8 @@ owned state.
 A `Registry` is a named collection of slots.
 
 ```cpp
-auto registry = pluss::bundle::Registry::from_kindle(catalog);
-auto catalog2 = registry.to_kindle();
+auto registry = catalog.bundelize();
+auto catalog2 = registry.kindelize();
 ```
 
 Load and save registry data:
@@ -101,12 +101,12 @@ auto merged = registry.combine(other, "_other");
 ## Kindle bridge
 
 Some Registry operations require slots that can map cleanly to streams. The public
-surface no longer exposes separate compatibility checkers; `to_kindle()` is the
+surface no longer exposes separate compatibility checkers; `kindelize()` is the
 single contract point.
 
 ```cpp
 try {
-  auto catalog = registry.to_kindle();
+  auto catalog = registry.kindelize();
 } catch (const std::exception& e) {
   std::cout << e.what();
 }
@@ -125,13 +125,13 @@ DataFrame path:
 
 ```cpp
 auto catalog = df.kindelize();
-auto registry = pluss::bundle::Registry::from_kindle(catalog);
+auto registry = catalog.bundelize();
 ```
 
 Back to table:
 
 ```cpp
-auto catalog = registry.to_kindle();
+auto catalog = registry.kindelize();
 auto df = catalog.tabelize();
 ```
 

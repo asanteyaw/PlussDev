@@ -19,7 +19,7 @@ Writes the registry to a JSON file. Unlike every other `save_*` method,
 into the kindle model:
 
 - **Uniform field kinds**: converts via
-  [`to_kindle()`](to_kindle.md) and writes a row-major array-of-objects JSON, same
+  [`kindelize()`](kindelize.md) and writes a row-major array-of-objects JSON, same
   shape as `Catalog::save_json()`.
 - **Mixed field kinds**: falls back to
   writing this registry's own [`to_json()`](to_json.md) output directly — the `config`
@@ -145,7 +145,7 @@ ambiguous first value; see [`Registry::to_json`](to_json.md) for details.
 - [`save_as()`](save_as.md)`("json", filepath)` is equivalent to this method's
   no-config overload — `Registry::save_as` special-cases `"json"` to call
   `save_json()` directly, rather than routing through the shared
-  `to_kindle()`-requiring path every other target type uses.
+  `kindelize()`-requiring path every other target type uses.
 
 ## See Also
 

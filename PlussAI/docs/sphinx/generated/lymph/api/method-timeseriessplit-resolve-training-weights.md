@@ -1,0 +1,52 @@
+# `TimeSeriesSplit::resolve_training_weights`
+
+## API Signature
+
+- `TimeSeriesSplit::resolve_training_weights(labels: const Series&, batch_sample_weights: const Series& = Series::undefined() -> Series`
+
+## Notes
+
+Returns normalized per-sample training weights from labels, optional sample weights, and class-weight options.
+
+## Inputs
+
+- `batch_sample_weights` (`const Series&`), default: `Series::undefined(`
+  Optional per-row weights aligned to input observations.
+- `labels` (`const Series&`)
+  Target values aligned to input observations.
+
+## Output
+
+- Returns `Series`.
+
+## Options
+
+Option semantics used by this method:
+
+- `TimeSeriesSplit` (`struct`):
+  - `pluss::table::DataFrame train_set{}`
+    Controls fold/trial/count sizing.
+  - `pluss::table::DataFrame test_set{}`
+    Option field used by this method.
+  - `LabeledBatch train_batch{}`
+    Controls fold/trial/count sizing.
+  - `LabeledBatch test_batch{}`
+    Option field used by this method.
+  - `IndexSplit indices{}`
+    Option field used by this method.
+
+## Examples
+
+### Example 1 (Minimal Usage)
+
+```cpp
+pluss::OutputEngine out;
+auto value = TimeSeriesSplit::resolve_training_weights(/* labels */, /* batch_sample_weights */);
+out.info("resolve_training_weights", value);
+```
+
+**Expected output**
+
+```text
+resolve_training_weights returned Series
+```

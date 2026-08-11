@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -68,7 +68,8 @@ Omitted falls back to the wrapped frame’s own row labels.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">StepPlotOptions</span></code>)
 The identical struct documented on
 <a class="reference internal" href="../dataframe-plot/step.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::step</span></code></span></a> (<code class="docutils literal notranslate"><span class="pre">alpha</span></code>,
-<code class="docutils literal notranslate"><span class="pre">line_width</span></code>).</p>
+<code class="docutils literal notranslate"><span class="pre">line_width</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>). <code class="docutils literal notranslate"><span class="pre">align</span></code> is inert here — a mismatched-size <code class="docutils literal notranslate"><span class="pre">x</span></code> throws
+unconditionally before it could ever apply, same as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -87,7 +88,7 @@ A figure with one pane containing a single step trace of the bound thread’s va
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 1" src="../../_images/step-11.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/step-12.svg" /></p>
 <p>Example 2. An explicit companion thread as the x-axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Bronze&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Silver&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Gold&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Platinum&quot;</span><span class="p">}));</span>
 <span class="n">tier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tier</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;tier&quot;</span><span class="p">);</span>
@@ -98,7 +99,7 @@ A figure with one pane containing a single step trace of the bound thread’s va
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">price</span></code> is drawn as a step function against <code class="docutils literal notranslate"><span class="pre">tier</span></code>’s categorical positions — visually
 emphasizing that the price is constant within a tier and jumps at tier boundaries.</p>
-<p><img alt="Output of Example 2" src="../../_images/step-21.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/step-22.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">StepPlotOptions</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">StepPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.8</span><span class="p">;</span>
@@ -108,7 +109,7 @@ emphasizing that the price is constant within a tier and jumps at tier boundarie
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 3" src="../../_images/step-31.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/step-32.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>

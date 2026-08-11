@@ -182,11 +182,11 @@ void test_slot_methods() {
   expect(concat.size() == 5, "concat size mismatch");
   expect(counts.at("Series") == 6, "type_counts[Series] mismatch");
 
-  const auto stream = ids.to_kindle();
-  expect(stream.size() == ids.size(), "Slot::to_kindle size mismatch");
-  expect(stream.kind() == pluss::kindle::StreamKind::Series, "Slot::to_kindle kind mismatch");
-  const auto roundtrip = Slot::from_kindle(stream);
-  expect(roundtrip.size() == ids.size(), "Slot::from_kindle size mismatch");
+  const auto stream = ids.kindelize();
+  expect(stream.size() == ids.size(), "Slot::kindelize size mismatch");
+  expect(stream.kind() == pluss::kindle::StreamKind::Series, "Slot::kindelize kind mismatch");
+  const auto roundtrip = stream.bundelize();
+  expect(roundtrip.size() == ids.size(), "Stream::bundelize size mismatch");
 
   const Slot nullable({
       as_series_i64(1),
@@ -195,7 +195,7 @@ void test_slot_methods() {
       as_series_i64(3),
   });
   expect(nullable.kind() == SlotKind::Series, "nullable homogeneous Slot kind should ignore nulls");
-  expect_throw([&]() { (void)nullable.to_kindle(); }, "nullable Slot should reject to_kindle");
+  expect_throw([&]() { (void)nullable.kindelize(); }, "nullable Slot should reject kindelize");
   const auto null_mask = nullable.isnull();
   const auto present_mask = nullable.notnull();
   const auto invalid_mask = nullable.invalid();
@@ -250,7 +250,7 @@ void test_slot_methods() {
   });
   expect(hetero.ptype() == "Mixed", "heterogeneous Slot ptype should be Mixed");
   expect(hetero.kind() == SlotKind::Mixed, "heterogeneous Slot kind should be Mixed");
-  expect_throw([&]() { (void)hetero.to_kindle(); }, "heterogeneous slot to_kindle should throw");
+  expect_throw([&]() { (void)hetero.kindelize(); }, "heterogeneous slot kindelize should throw");
   expect_throw([&]() { (void)hetero.fillnull(0.0); }, "Slot::fillnull(double) should reject non-Series values");
   expect_throw([&]() { (void)hetero.nt().lower(); }, "Slot::nt() should reject heterogeneous slots");
 
@@ -259,11 +259,11 @@ void test_slot_methods() {
       std::monostate{},
   });
   expect(all_null.kind() == SlotKind::Null, "all-null Slot kind should be Null");
-  expect_throw([&]() { (void)all_null.to_kindle(); }, "all-null Slot should reject to_kindle");
+  expect_throw([&]() { (void)all_null.kindelize(); }, "all-null Slot should reject kindelize");
 
   const Slot empty_slot({});
   expect(empty_slot.kind() == SlotKind::Empty, "empty Slot kind should be Empty");
-  expect(empty_slot.to_kindle().size() == 0, "empty Slot should convert to empty Stream");
+  expect(empty_slot.kindelize().size() == 0, "empty Slot should convert to empty Stream");
 }
 
 void test_registry_methods() {
@@ -442,16 +442,16 @@ void test_registry_methods() {
       {"ids", ids},
       {"city", city},
   });
-  const auto cat = clean.to_kindle();
-  expect(cat.nkeys() == 2, "Registry::to_kindle key count mismatch");
-  const auto from_cat = Registry::from_kindle(cat);
-  expect(from_cat.nfields() == 2, "Registry::from_kindle field count mismatch");
+  const auto cat = clean.kindelize();
+  expect(cat.nkeys() == 2, "Registry::kindelize key count mismatch");
+  const auto from_cat = cat.bundelize();
+  expect(from_cat.nfields() == 2, "Catalog::bundelize field count mismatch");
 
   const auto mixed = Registry({
       {"ids", ids},
       {"mixed", Slot({as_series_i64(7), as_note("bad")})},
   });
-  expect_throw([&]() { (void)mixed.to_kindle(); }, "Registry::to_kindle should throw on heterogeneous slot");
+  expect_throw([&]() { (void)mixed.kindelize(); }, "Registry::kindelize should throw on heterogeneous slot");
 }
 
 void test_bundle_lvalue_name_ranges() {
@@ -680,10 +680,10 @@ void test_axel_methods() {
   expect(concat.labels().has_value(), "concat_depth should keep labels when both inputs labeled");
   expect(concat.labels()->size() == 4, "concat_depth labels size mismatch");
 
-  const auto archive = axel.to_kindle();
-  expect(archive.depth() == 2, "Axel::to_kindle archive depth mismatch");
-  const auto back = Axel::from_kindle(archive);
-  expect(back.depth() == 2, "Axel::from_kindle depth mismatch");
+  const auto archive = axel.kindelize();
+  expect(archive.depth() == 2, "Axel::kindelize archive depth mismatch");
+  const auto back = archive.bundelize();
+  expect(back.depth() == 2, "Archive::bundelize depth mismatch");
 
   expect(!axel.to_string().empty(), "Axel::to_string should not be empty");
   expect(!axel.to_json().empty(), "Axel::to_json should not be empty");

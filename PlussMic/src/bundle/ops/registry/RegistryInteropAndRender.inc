@@ -1,30 +1,11 @@
-pluss::kindle::Catalog Registry::to_kindle() const {
-  ensure_stream_compatible("Registry::to_kindle");
+pluss::kindle::Catalog Registry::kindelize() const {
+  ensure_stream_compatible("Registry::kindelize");
   std::vector<std::pair<std::string, pluss::kindle::Stream>> out;
   out.reserve(static_cast<std::size_t>(nslots()));
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    out.emplace_back(impl_ref_().keys_[i], impl_ref_().slots_[i].to_kindle());
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().slots_[i].kindelize());
   }
   return pluss::kindle::Catalog(std::move(out));
-}
-
-pluss::kindle::Catalog Registry::kindelize() const {
-  return to_kindle();
-}
-
-pluss::kindle::Catalog Registry::as_kindle() const {
-  return to_kindle();
-}
-
-Registry Registry::from_kindle(const pluss::kindle::Catalog& catalog) {
-  PLUSS_CHECK(catalog.defined(), "Registry::from_kindle: catalog undefined");
-  std::vector<std::pair<std::string, Slot>> out;
-  out.reserve(static_cast<std::size_t>(catalog.nkeys()));
-  const auto& names = catalog.keys();
-  for (std::size_t i = 0; i < names.size(); ++i) {
-    out.emplace_back(names[i], Slot::from_kindle(catalog.at(names[i])));
-  }
-  return Registry(std::move(out));
 }
 
 pluss::table::DataFrame Registry::tabelize() const {
@@ -33,13 +14,13 @@ pluss::table::DataFrame Registry::tabelize() const {
 
 pluss::table::DataFrame Registry::tabelize(const pluss::kindle::TabelizePolicy& policy) const {
   PLUSS_CHECK(defined(), "Registry::tabelize: registry undefined");
-  return to_kindle().tabelize(policy);
+  return kindelize().tabelize(policy);
 }
 
 namespace {
 
 pluss::table::DataFrame registry_to_io_frame(const Registry& registry) {
-  auto catalog = registry.to_kindle();
+  auto catalog = registry.kindelize();
   pluss::kindle::TabelizePolicy policy;
   policy.align = pluss::kindle::Align::Outer;
   policy.align_by = pluss::kindle::AlignBy::Pos;

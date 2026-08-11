@@ -4,6 +4,11 @@
 #include "pluss/ai/lymph/columnrouter.h"
 #include "pluss/ai/lymph/prep.h"
 
+#include <functional>
+#include <string>
+#include <type_traits>
+#include <utility>
+
 // Stage -- one preprocessing step attachable to a Model via
 // Model::append(Stage, ColumnRouter). See LYMPH_REDESIGN_PLAN.md 2 for why
 // this is named Stage rather than Prep: lymph::prep:: (prep.h) already owns
@@ -25,12 +30,130 @@
 
 namespace pluss::ai::lymph {
 
+struct TransformContract {
+  bool reversible = false;
+  bool inverse_available = false;
+  bool lossy = true;
+  bool stateful = true;
+  bool target_aware = false;
+  bool changes_sample_count = false;
+  bool changes_feature_count = false;
+  bool needs_inverse_memory = false;
+};
+
 struct Stage {
   TransformKind kind = TransformKind::StandardScaler;
   TransformOptions options = prep::StandardScalerOptions{};
+
+  [[nodiscard]] TransformContract contract() const noexcept {
+    switch (kind) {
+      case TransformKind::StandardScaler:
+      case TransformKind::MinMaxScaler:
+      case TransformKind::RobustScaler:
+      case TransformKind::MaxAbsScaler:
+        return TransformContract{
+            .reversible = true,
+            .inverse_available = false,
+            .lossy = false,
+            .stateful = true,
+        };
+      case TransformKind::SimpleImputer:
+      case TransformKind::NeighborImputer:
+      case TransformKind::IterativeImputer:
+        return TransformContract{
+            .reversible = false,
+            .inverse_available = false,
+            .lossy = true,
+            .stateful = true,
+            .needs_inverse_memory = true,
+        };
+      case TransformKind::OneHotEncoder:
+      case TransformKind::FrequencyEncoder:
+      case TransformKind::OrdinalEncoder:
+      case TransformKind::LabelEncoder:
+        return TransformContract{
+            .reversible = true,
+            .inverse_available = false,
+            .lossy = kind == TransformKind::FrequencyEncoder,
+            .stateful = true,
+            .changes_feature_count = kind == TransformKind::OneHotEncoder,
+        };
+      case TransformKind::VectorNormalizer:
+      case TransformKind::ThresholdBinarizer:
+        return TransformContract{
+            .reversible = false,
+            .inverse_available = false,
+            .lossy = true,
+            .stateful = false,
+        };
+      case TransformKind::QuantileMap:
+      case TransformKind::PowerMap:
+        return TransformContract{
+            .reversible = true,
+            .inverse_available = false,
+            .lossy = false,
+            .stateful = true,
+        };
+      case TransformKind::PolynomialLift:
+        return TransformContract{
+            .reversible = false,
+            .inverse_available = false,
+            .lossy = true,
+            .stateful = false,
+            .changes_feature_count = true,
+        };
+    }
+    return TransformContract{};
+  }
+};
+
+struct CustomStage {
+  using SeriesMapFn = prep::FunctionTransformer::SeriesMapFn;
+
+  std::string name{};
+  SeriesMapFn map_fn{};
+  prep::FunctionTransformerOptions options{};
+  TransformContract contract{};
+  bool persistable = false;
 };
 
 namespace stage {
+
+[[nodiscard]] inline TransformContract callable_contract() noexcept {
+  return TransformContract{
+      .reversible = false,
+      .inverse_available = false,
+      .lossy = true,
+      .stateful = false,
+  };
+}
+
+template <typename Fn>
+requires std::is_invocable_v<Fn&, const Series&>
+[[nodiscard]] inline CustomStage custom(std::string name,
+                                        Fn map_fn,
+                                        TransformContract contract = callable_contract(),
+                                        prep::FunctionTransformerOptions options = {}) {
+  if (name.empty()) {
+    ::pluss::throw_error("lymph::stage::custom: custom stage name cannot be empty.");
+  }
+  CustomStage::SeriesMapFn wrapped = [fn = std::move(map_fn)](const Series& input) mutable -> StatusOr<Series> {
+    using Return = std::invoke_result_t<Fn&, const Series&>;
+    if constexpr (std::is_same_v<std::decay_t<Return>, StatusOr<Series>>) {
+      return fn(input);
+    } else {
+      return StatusOr<Series>(Series(fn(input)));
+    }
+  };
+  contract.inverse_available = false;
+  return CustomStage{
+      .name = std::move(name),
+      .map_fn = std::move(wrapped),
+      .options = options,
+      .contract = contract,
+      .persistable = false,
+  };
+}
 
 [[nodiscard]] inline Stage standard_scaler(prep::StandardScalerOptions options = {}) {
   return Stage{.kind = TransformKind::StandardScaler, .options = options};

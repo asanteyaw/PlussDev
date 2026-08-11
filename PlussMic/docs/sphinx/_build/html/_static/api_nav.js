@@ -434,6 +434,7 @@ window.PLUSS_API_NAV = {
       "bounded",
       "btw",
       "bucketize",
+      "bundelize",
       "casefold",
       "cast",
       "chars",
@@ -484,6 +485,7 @@ window.PLUSS_API_NAV = {
       "isnan",
       "isnull",
       "kind",
+      "kindelize",
       "kurtosis",
       "label",
       "land",
@@ -782,6 +784,64 @@ window.PLUSS_API_NAV = {
       "wireframe"
     ]
   },
+  "CatalogPlotAccessor": {
+    "title": "CatalogPlotAccessor",
+    "slug": "catalog-plot",
+    "landing": "catalog_plot_accessor_api_reference.html",
+    "methods": [
+      "area",
+      "auto_plot",
+      "bar",
+      "corr_heatmap",
+      "density",
+      "hist",
+      "line",
+      "scatter",
+      "scatter_matrix",
+      "step"
+    ]
+  },
+  "CatalogPlot3DAccessor": {
+    "title": "CatalogPlot3DAccessor",
+    "slug": "catalog-plot3d",
+    "landing": "catalog_plot3d_accessor_api_reference.html",
+    "methods": [
+      "hist",
+      "line",
+      "scatter",
+      "surface",
+      "wireframe"
+    ]
+  },
+  "StreamPlotAccessor": {
+    "title": "StreamPlotAccessor",
+    "slug": "stream-plot",
+    "landing": "stream_plot_accessor_api_reference.html",
+    "methods": [
+      "auto_plot",
+      "bar",
+      "density",
+      "hist",
+      "line",
+      "scatter"
+    ]
+  },
+  "ArchivePlotAccessor": {
+    "title": "ArchivePlotAccessor",
+    "slug": "archive-plot",
+    "landing": "archive_plot_accessor_api_reference.html",
+    "methods": [
+      "cloud3",
+      "depth",
+      "depth_compare",
+      "depth_facet",
+      "depth_rolling",
+      "frames",
+      "surface",
+      "triplot",
+      "wireframe"
+    ]
+  },
   "Stream": {
     "title": "Stream",
     "slug": "stream",
@@ -794,6 +854,7 @@ window.PLUSS_API_NAV = {
       "as_timeline",
       "astype",
       "bfill",
+      "bundelize",
       "cast",
       "clear_label",
       "clear_label_",
@@ -828,6 +889,7 @@ window.PLUSS_API_NAV = {
       "ndistinct",
       "notnull",
       "nrecords",
+      "plot",
       "ptype",
       "select",
       "shape",
@@ -836,6 +898,7 @@ window.PLUSS_API_NAV = {
       "slice",
       "std",
       "sum",
+      "tabelize",
       "tail",
       "take",
       "to_json",
@@ -855,7 +918,6 @@ window.PLUSS_API_NAV = {
     "landing": "catalog_api_reference.html",
     "methods": [
       "astype",
-      "at",
       "begin",
       "bfill",
       "bundelize",
@@ -886,7 +948,6 @@ window.PLUSS_API_NAV = {
       "keyaxis",
       "keys",
       "keywords",
-      "kindelize",
       "load",
       "load_csv",
       "load_excel",
@@ -908,6 +969,7 @@ window.PLUSS_API_NAV = {
       "nrows",
       "nt",
       "plot",
+      "plot3d",
       "query",
       "rename",
       "rename_",
@@ -937,7 +999,6 @@ window.PLUSS_API_NAV = {
       "tl",
       "to_json",
       "to_string",
-      "to_table",
       "transform",
       "ts",
       "unique",
@@ -973,7 +1034,6 @@ window.PLUSS_API_NAV = {
       "isnull",
       "keyaxis",
       "keys",
-      "kindelize",
       "label",
       "loc",
       "map_catalogs",
@@ -985,6 +1045,7 @@ window.PLUSS_API_NAV = {
       "nkeys",
       "notnull",
       "nrecords",
+      "plot",
       "rename",
       "shape",
       "show",
@@ -993,7 +1054,6 @@ window.PLUSS_API_NAV = {
       "tabelize",
       "tail",
       "to_string",
-      "to_table",
       "unique"
     ]
   },
@@ -1002,7 +1062,6 @@ window.PLUSS_API_NAV = {
     "slug": "slot",
     "landing": "slot_api_reference.html",
     "methods": [
-      "as_kindle",
       "astype",
       "at",
       "cast",
@@ -1014,7 +1073,6 @@ window.PLUSS_API_NAV = {
       "fillnull",
       "filter",
       "freq",
-      "from_kindle",
       "head",
       "invalid",
       "isnull",
@@ -1034,11 +1092,11 @@ window.PLUSS_API_NAV = {
       "size",
       "slice",
       "sum",
+      "tabelize",
       "tail",
       "take",
       "tl",
       "to_json",
-      "to_kindle",
       "to_string",
       "transform",
       "type_counts",
@@ -1051,7 +1109,6 @@ window.PLUSS_API_NAV = {
     "slug": "registry",
     "landing": "registry_api_reference.html",
     "methods": [
-      "as_kindle",
       "begin",
       "cast",
       "clear",
@@ -1070,7 +1127,6 @@ window.PLUSS_API_NAV = {
       "fields",
       "fillnull",
       "freq",
-      "from_kindle",
       "get",
       "has",
       "has_all",
@@ -1125,7 +1181,6 @@ window.PLUSS_API_NAV = {
       "take_",
       "tl",
       "to_json",
-      "to_kindle",
       "to_string",
       "unique"
     ]
@@ -1135,7 +1190,6 @@ window.PLUSS_API_NAV = {
     "slug": "axel",
     "landing": "axel_api_reference.html",
     "methods": [
-      "as_kindle",
       "cast",
       "concat_depth",
       "defined",
@@ -1148,7 +1202,6 @@ window.PLUSS_API_NAV = {
       "fields",
       "fillnull",
       "freq",
-      "from_kindle",
       "has",
       "head",
       "invalid",
@@ -1169,7 +1222,6 @@ window.PLUSS_API_NAV = {
       "tail",
       "tl",
       "to_json",
-      "to_kindle",
       "to_string",
       "unique"
     ]

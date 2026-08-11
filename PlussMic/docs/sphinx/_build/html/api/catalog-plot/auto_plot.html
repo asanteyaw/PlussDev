@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>CatalogPlotAccessor::auto_plot &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="CatalogPlotAccessor::bar" href="bar.html" />
+    <link rel="prev" title="CatalogPlotAccessor::area" href="area.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6fbe1aeea9e3 -->
+<section id="catalogplotaccessor-auto-plot">
+<h1>CatalogPlotAccessor::auto_plot<a class="headerlink" href="#catalogplotaccessor-auto-plot" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../catalog_plot_accessor_api_reference.html"><span class="doc std std-doc">Back to CatalogPlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">CatalogPlotAccessor</span><span class="o">::</span><span class="n">auto_plot</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">CatalogPlotAccessor</span><span class="o">::</span><span class="n">auto_plot</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">AutoPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Picks a chart automatically from the catalog’s own shape, with no feature/key selection
+required from the caller — useful for a quick first look at an unfamiliar catalog. Unlike
+<code class="docutils literal notranslate"><span class="pre">DataFrame::plot().auto_plot()</span></code>’s multi-rule decision tree (row count, feature count,
+feature kinds all feed into the choice), <code class="docutils literal notranslate"><span class="pre">Catalog::plot().auto_plot()</span></code> only has <strong>two</strong>
+outcomes, both of which delegate rather than drawing anything themselves:</p>
+<ul class="simple">
+<li><p><strong>Exactly one plottable (Series/Timeline/TimeIndex) key</strong> — delegates straight to that
+single key’s own <code class="docutils literal notranslate"><span class="pre">Stream::plot().auto_plot()</span></code> (<code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::auto_plot()</span></code>), passing
+the accessor’s own <code class="docutils literal notranslate"><span class="pre">options_</span></code> through.</p></li>
+<li><p><strong>Zero, or two-or-more, plottable keys</strong> — delegates to
+<code class="docutils literal notranslate"><span class="pre">line(pluss::msharp::RangeView::Of&lt;std::string_view&gt;{},</span> <span class="pre">std::nullopt,</span> <span class="pre">pluss::table::LinePlotOptions{})</span></code> — i.e. exactly <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s no-arguments,
+empty-selection form: every plottable key in the catalog, each its own trace, no shared
+<code class="docutils literal notranslate"><span class="pre">x_key</span></code> (so each key falls back to its own <a class="reference internal" href="line.html"><span class="std std-doc">self-axis</span></a>).</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">options</span></code> is accepted for shape-compatibility with the wider plotting-option story but is
+otherwise unused — <code class="docutils literal notranslate"><span class="pre">AutoPlotOptions</span></code> is an empty struct (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">AutoPlotOptions</span> <span class="pre">{};</span></code>), so
+the two overloads always behave identically.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">AutoPlotOptions&amp;</span></code>, optional)
+Accepted but unused — <code class="docutils literal notranslate"><span class="pre">AutoPlotOptions</span></code> has no fields.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+Either the single delegated key’s own auto-plot chart, or a multi-key <code class="docutils literal notranslate"><span class="pre">line()</span></code> chart —
+see “What It Does” above.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Two or more plottable keys: delegates to <code class="docutils literal notranslate"><span class="pre">line()</span></code>’s empty-selection form.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">weather</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">62.0</span><span class="p">,</span><span class="w"> </span><span class="mf">58.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weather</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Both <code class="docutils literal notranslate"><span class="pre">temp_c</span></code> and <code class="docutils literal notranslate"><span class="pre">humidity</span></code> are plottable, so this is exactly
+<code class="docutils literal notranslate"><span class="pre">weather.plot().line()</span></code> — every plottable key as its own line trace, each on its own
+positional self-axis (both happen to be the same length here, so they line up).</p>
+<p><img alt="Output of Example 1" src="../../_images/auto_plot-1.svg" /></p>
+<p>Example 2. Exactly one plottable key: delegates to that key’s own <code class="docutils literal notranslate"><span class="pre">Stream::plot().auto_plot()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">single</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">single</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">single</span></code> has exactly one plottable key, so this call is equivalent to
+<code class="docutils literal notranslate"><span class="pre">single.keys(&quot;temp_c&quot;).plot().auto_plot()</span></code> — a single-stream chart, not a <code class="docutils literal notranslate"><span class="pre">line()</span></code> call.</p>
+<p><img alt="Output of Example 2" src="../../_images/auto_plot-2.svg" /></p>
+<p>Example 3. An undefined (default-constructed) catalog throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="w"> </span><span class="n">empty</span><span class="p">;</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">empty</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Catalog::plot().auto_plot: undefined handle
+</pre></div>
+</div>
+<p>A default-constructed <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> is not just empty — <code class="docutils literal notranslate"><span class="pre">defined()</span></code> itself is <code class="docutils literal notranslate"><span class="pre">false</span></code>, so the
+<code class="docutils literal notranslate"><span class="pre">defined()</span></code> check fails before the (separate) <code class="docutils literal notranslate"><span class="pre">empty()</span></code> check ever runs.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Only two outcomes: exactly one plottable key delegates to that key’s own
+<code class="docutils literal notranslate"><span class="pre">Stream::plot().auto_plot()</span></code>; anything else (zero or several) delegates to <code class="docutils literal notranslate"><span class="pre">line()</span></code>’s
+empty-selection form. There is no row-count- or dtype-based branching the way
+<code class="docutils literal notranslate"><span class="pre">DataFrame::plot().auto_plot()</span></code> has.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> is accepted but has no effect — <code class="docutils literal notranslate"><span class="pre">AutoPlotOptions</span></code> is an empty struct.</p></li>
+<li><p>An undefined handle throws before an empty-but-defined one would even be checked — see
+Example 3.</p></li>
+<li><p>Note keys are never counted as “plottable” here, the same exclusion every other method on
+this accessor applies via its empty-key-selection default.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::line</span></code></span></a>: the chart this delegates to when there are zero or
+several plottable keys.</p></li>
+<li><p><a class="reference internal" href="../catalog/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::plot</span></code></span></a>: how to enter this accessor in the first place.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="area.html">
+    <span class="label">Previous</span>
+    <span class="title">area</span>
+  </a>
+  <a class="next-link" href="bar.html">
+    <span class="label">Next</span>
+    <span class="title">bar</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../catalog_plot_accessor_api_reference.html">CatalogPlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="area.html" title="previous chapter">CatalogPlotAccessor::area</a></li>
+      <li>Next: <a href="bar.html" title="next chapter">CatalogPlotAccessor::bar</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/catalog-plot/auto_plot.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

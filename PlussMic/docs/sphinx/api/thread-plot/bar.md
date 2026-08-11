@@ -29,9 +29,10 @@ rules as [`line()`](line.md).
 **options** (`BarPlotOptions`)
     The identical struct documented on
     [`DataFramePlotAccessor::bar`](../../api/dataframe-plot/bar.md)
-    (`ci_enabled`, `ci_level`, `horizontal`). `ci_enabled = true` still aggregates rows
-    sharing the same `x` position into a mean-plus-confidence-interval bar, exactly as on
-    the 2D accessor — useful when `x` has repeated values.
+    (`ci_enabled`, `ci_level`, `horizontal`, `align`). `ci_enabled = true` still aggregates
+    rows sharing the same `x` position into a mean-plus-confidence-interval bar, exactly as
+    on the 2D accessor — useful when `x` has repeated values. `align` is inert here, same
+    as [`line()`](line.md).
 
 ## Returns
 

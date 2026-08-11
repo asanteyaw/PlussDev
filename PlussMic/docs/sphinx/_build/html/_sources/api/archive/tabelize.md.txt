@@ -77,8 +77,6 @@ atlas depth: 2
 
 ## See Also
 
-- [`Archive::to_table`](to_table.md): a thin wrapper over this method that can also print
-  the result.
 - [`Catalog::tabelize`](../catalog/tabelize.md): the single-catalog delegate this method
   applies to every catalog, and the full `TabelizePolicy` field reference.
 

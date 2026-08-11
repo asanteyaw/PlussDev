@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/ai/lymph/model.h"
+#include "pluss/ai/lymph/workflow.h"
 
 #include <utility>
 
@@ -79,6 +80,50 @@ namespace pluss::ai::lymph::reports {
   return detail::classification_metric_series(detail::model_core(model), x, y, options);
 }
 
+[[nodiscard]] inline Series classification_metric_series(const Model& model,
+                                                         const pluss::table::DataFrame& frame,
+                                                         const DataFrameBatchOptions& data_options,
+                                                         const AssessOptions& options = {}) {
+  const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options),
+                                     "reports::classification_metric_series(frame,data_options)");
+  return reports::classification_metric_series(model, batch, options);
+}
+
+[[nodiscard]] inline ConfusionTable confusion_table(const Workflow& workflow,
+                                                    const Payload& payload,
+                                                    const InferOptions& infer_options = {},
+                                                    const ConfusionOptions& options = {}) {
+  const detail::WorkflowLabeledInput input =
+      detail::workflow_labeled_input_(workflow, payload, "reports::confusion_table(workflow,payload)");
+  if (input.frame.has_value()) {
+    return reports::confusion_table(workflow.model(), *input.frame, input.data_options, infer_options, options);
+  }
+  return reports::confusion_table(workflow.model(), *input.batch, infer_options, options);
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Workflow& workflow,
+                                                        const Payload& payload,
+                                                        const InferOptions& infer_options = {},
+                                                        const ClassReportOptions& options = {}) {
+  const detail::WorkflowLabeledInput input =
+      detail::workflow_labeled_input_(workflow, payload, "reports::classification_summary(workflow,payload)");
+  if (input.frame.has_value()) {
+    return reports::classification_summary(workflow.model(), *input.frame, input.data_options, infer_options, options);
+  }
+  return reports::classification_summary(workflow.model(), *input.batch, infer_options, options);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const Workflow& workflow,
+                                                         const Payload& payload,
+                                                         const AssessOptions& options = {}) {
+  const detail::WorkflowLabeledInput input =
+      detail::workflow_labeled_input_(workflow, payload, "reports::classification_metric_series(workflow,payload)");
+  if (input.frame.has_value()) {
+    return reports::classification_metric_series(workflow.model(), *input.frame, input.data_options, options);
+  }
+  return reports::classification_metric_series(workflow.model(), *input.batch, options);
+}
+
 [[nodiscard]] inline ThresholdCurve threshold_curve(const Model& model,
                                                     const LabeledBatch& batch,
                                                     const InferOptions& infer_options = {}) {
@@ -104,6 +149,17 @@ namespace pluss::ai::lymph::reports {
                                                     const DataFrameBatchOptions& data_options,
                                                     const InferOptions& infer_options = {}) {
   return detail::threshold_curve(detail::model_core(model), frame, data_options, infer_options);
+}
+
+[[nodiscard]] inline ThresholdCurve threshold_curve(const Workflow& workflow,
+                                                    const Payload& payload,
+                                                    const InferOptions& infer_options = {}) {
+  const detail::WorkflowLabeledInput input =
+      detail::workflow_labeled_input_(workflow, payload, "reports::threshold_curve(workflow,payload)");
+  if (input.frame.has_value()) {
+    return reports::threshold_curve(workflow.model(), *input.frame, input.data_options, infer_options);
+  }
+  return reports::threshold_curve(workflow.model(), *input.batch, infer_options);
 }
 
 [[nodiscard]] inline double best_threshold(const Model& model,
@@ -135,6 +191,18 @@ namespace pluss::ai::lymph::reports {
                                            MetricKind objective = MetricKind::F1,
                                            const InferOptions& infer_options = {}) {
   return detail::best_threshold(detail::model_core(model), frame, data_options, objective, infer_options);
+}
+
+[[nodiscard]] inline double best_threshold(const Workflow& workflow,
+                                           const Payload& payload,
+                                           MetricKind objective = MetricKind::F1,
+                                           const InferOptions& infer_options = {}) {
+  const detail::WorkflowLabeledInput input =
+      detail::workflow_labeled_input_(workflow, payload, "reports::best_threshold(workflow,payload)");
+  if (input.frame.has_value()) {
+    return reports::best_threshold(workflow.model(), *input.frame, input.data_options, objective, infer_options);
+  }
+  return reports::best_threshold(workflow.model(), *input.batch, objective, infer_options);
 }
 
 class ModelReports final {

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -109,7 +109,7 @@ distinct hue value when <code class="docutils literal notranslate"><span class="
 </pre></div>
 </div>
 <p>Every row becomes one point at <code class="docutils literal notranslate"><span class="pre">(midterm,</span> <span class="pre">final)</span></code>; no legend is shown since there’s no hue.</p>
-<p><img alt="Output of Example 1" src="../../_images/scatter-12.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/scatter-15.svg" /></p>
 <p>Example 2. With a categorical hue thread.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cohort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Morning&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Evening&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Morning&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Evening&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Morning&quot;</span><span class="p">}));</span>
 <span class="n">cohort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cohort</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;cohort&quot;</span><span class="p">);</span>
@@ -120,7 +120,7 @@ distinct hue value when <code class="docutils literal notranslate"><span class="
 </div>
 <p>Two traces are drawn — <code class="docutils literal notranslate"><span class="pre">&quot;Morning&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Evening&quot;</span></code> — each its own color, with a legend
 shown automatically.</p>
-<p><img alt="Output of Example 2" src="../../_images/scatter-22.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/scatter-25.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">ScatterPlotOptions</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ScatterPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.6</span><span class="p">;</span>
@@ -130,7 +130,7 @@ shown automatically.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 3" src="../../_images/scatter-31.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/scatter-34.svg" /></p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>fit_line overlays a line of best fit — one per hue group, if hue is set
@@ -149,7 +149,7 @@ Examples 4–5.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 4" src="../../_images/scatter-41.svg" /></p>
+<p><img alt="Output of Example 4" src="../../_images/scatter-44.svg" /></p>
 <p>Example 5. <code class="docutils literal notranslate"><span class="pre">fit_line</span> <span class="pre">=</span> <span class="pre">true</span></code> together with a <code class="docutils literal notranslate"><span class="pre">hue</span></code> thread: one fit line per hue group,
 color-matched to its own group’s points.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ScatterPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -159,7 +159,7 @@ color-matched to its own group’s points.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 5" src="../../_images/scatter-52.svg" /></p>
+<p><img alt="Output of Example 5" src="../../_images/scatter-53.svg" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Need more than fit_line offers? PlussPl’s flash::regplot has robust and LOWESS fits too

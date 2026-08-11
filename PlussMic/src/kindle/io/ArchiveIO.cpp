@@ -8,14 +8,6 @@
 
 namespace pluss::kindle {
 
-pluss::table::Atlas Archive::to_table(const TabelizePolicy& policy, bool render) const {
-  auto out = tabelize(policy);
-  if (render) {
-    pluss::table::display::print(std::cout, out, {});
-  }
-  return out;
-}
-
 std::string Archive::to_string() const {
   return display::render(*this);
 }

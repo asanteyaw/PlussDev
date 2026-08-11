@@ -93,9 +93,53 @@ bool run_workflow_checks(std::ostream* err) {
     }
   }
 
+  Policy admission = policy({.drop_columns = {"id"},
+                             .require_columns = {"id", "x", "y"},
+                             .reject_missing = {"y"},
+                             .allow_missing = {"x"}});
+  admission.forbid({"status"}).reject({"y"}).allow({"x"});
+  const DataFrame admitted = admission.apply(raw);
+  if (admitted.ncases() != 12 || admitted.features().size() != 2) {
+    if (err) *err << "Policy admission rules should drop id while leaving imputer-owned missing x rows intact\n";
+    return false;
+  }
+
+  Policy legacy_guard = policy({.drop_columns = {"id"}, .allow_missing = {"x"}, .filter_nulls = true});
+  const DataFrame legacy_guarded = legacy_guard.apply(raw);
+  if (legacy_guarded.ncases() != 12) {
+    if (err) *err << "Policy allow_missing should exempt imputer-owned feature columns from broad legacy filtering\n";
+    return false;
+  }
+
+  bool threw_required = false;
+  try {
+    (void)policy({.require_columns = {"missing_raw_column"}}).apply(raw);
+  } catch (const pluss::Error&) {
+    threw_required = true;
+  }
+  if (!threw_required) {
+    if (err) *err << "Policy should reject frames missing required raw columns\n";
+    return false;
+  }
+
+  bool threw_forbidden = false;
+  try {
+    (void)policy({.forbid_columns = {"id"}}).apply(raw);
+  } catch (const pluss::Error&) {
+    threw_forbidden = true;
+  }
+  if (!threw_forbidden) {
+    if (err) *err << "Policy should reject forbidden raw columns unless explicitly dropped\n";
+    return false;
+  }
+
   // 2) Workflow: raw frame in (with "id" and NaNs), correct predictions out.
-  pluss::ai::lymph::Workflow deployed = workflow::from(Model(linear_spec()), cleanup);
+  pluss::ai::lymph::Workflow deployed = workflow::make(Model(linear_spec()), cleanup);
   deployed.learn_(raw, xy_data_options());
+  if (!deployed.trained() || !deployed.has_model_spec() || deployed.task_kind() != TaskKind::Regression) {
+    if (err) *err << "Workflow should expose trained/model metadata from its held model\n";
+    return false;
+  }
   const Series predicted = deployed.infer(raw.drop({"y"}));
   const auto predicted_values = as_f64(predicted);
   if (predicted_values.size() != 10) {
@@ -111,7 +155,209 @@ bool run_workflow_checks(std::ostream* err) {
     return false;
   }
 
-  // 3) Save/load round-trip: a fresh Workflow loaded from disk should
+  // 3) Workflow is cheap-copy ergonomic like Model: learn(...) returns a
+  // trained copy without forcing std::move or mutating the source object.
+  pluss::ai::lymph::Workflow source = workflow::make(Model(linear_spec()), cleanup);
+  const pluss::ai::lymph::Workflow learned = source.learn(raw, xy_data_options());
+  if (source.trained() || !learned.trained()) {
+    if (err) *err << "Workflow::learn(...) should train a copied workflow and leave the source untrained\n";
+    return false;
+  }
+  if (learned.infer(raw.drop({"y"})).numel() != 10) {
+    if (err) *err << "Workflow::learn(...) result should infer through the copied trained model\n";
+    return false;
+  }
+
+  // 3b) Phase-2/6 lean step surface: Workflow exposes a compact routed
+  // accessor, but durable transformation breadth comes from Stage objects.
+  pluss::ai::lymph::Workflow routed = workflow::make(Model(linear_spec()), cleanup);
+  prep::SimpleImputerOptions median_fill{};
+  median_fill.strategy = prep::SimpleImputerStrategy::Median;
+  routed.on({"x"}).add(stage::simple_imputer(median_fill)).add(stage::standard_scaler());
+  const pluss::ai::lymph::Workflow routed_learned = routed.learn(raw, xy_data_options());
+  if (!routed_learned.trained() || routed_learned.stage_count() != 2 ||
+      routed_learned.infer(raw.drop({"y"})).numel() != 10) {
+    if (err) *err << "Workflow::on(...).add(stage).add(stage) should attach routed stages and train through them\n";
+    return false;
+  }
+  const TransformContract scaler_contract = stage::standard_scaler().contract();
+  const TransformContract imputer_contract = stage::simple_imputer().contract();
+  if (!scaler_contract.reversible || scaler_contract.inverse_available || scaler_contract.lossy ||
+      imputer_contract.reversible || !imputer_contract.needs_inverse_memory) {
+    if (err) *err << "Stage::contract should expose conservative inverse feasibility metadata\n";
+    return false;
+  }
+  const TransformContract identity_contract = TransformContract{
+      .reversible = true,
+      .inverse_available = false,
+      .lossy = false,
+      .stateful = false,
+  };
+  const CustomStage identity_stage = stage::custom(
+      "identity",
+      [](const Series& input) -> Series {
+        return input;
+      },
+      identity_contract);
+  if (identity_stage.name != "identity" || !identity_stage.map_fn || !identity_stage.contract.reversible ||
+      identity_stage.contract.inverse_available || identity_stage.contract.lossy || identity_stage.persistable) {
+    if (err) *err << "stage::custom should produce a named, copyable, non-persistable callable stage contract\n";
+    return false;
+  }
+  Model custom_model(linear_spec());
+  custom_model.add(identity_stage);
+  if (!custom_model.has_opaque_transforms()) {
+    if (err) *err << "Model::add(custom_stage) should attach callable stages through NodeJ's opaque transform path\n";
+    return false;
+  }
+  pluss::ai::lymph::Workflow custom_workflow = workflow::make(Model(linear_spec()), cleanup);
+  custom_workflow.add(identity_stage);
+  if (!custom_workflow.has_opaque_transforms()) {
+    if (err) *err << "Workflow::add(custom_stage) should attach whole-feature callable stages\n";
+    return false;
+  }
+
+  pluss::ai::lymph::Workflow prepped = workflow::make(Model(linear_spec()), cleanup);
+  prepped.prep().scale({"x"});
+  const pluss::ai::lymph::Workflow prepped_learned = prepped.learn(raw, xy_data_options());
+  if (!prepped_learned.trained() || prepped_learned.stage_count() != 1) {
+    if (err) *err << "Workflow::prep().scale(...) should expose the short prep verb\n";
+    return false;
+  }
+
+  // 3c) Phase-3 branch-DAG foundation: a Workflow can be built as a
+  // policy/prep design first, then absorb the selected Model later.
+  pluss::ai::lymph::Workflow design = workflow::make(cleanup);
+  design.workers(2);
+  design.on("num", {"x"}).add(stage::simple_imputer(median_fill)).add(stage::standard_scaler());
+  design.join();
+  if (design.branch_count() != 1 || !design.joined() || design.workers() != 2) {
+    if (err) *err << "Workflow design should record branch, join, and worker metadata\n";
+    return false;
+  }
+  if (!design.branches()[0].named || design.branches()[0].name != "num" ||
+      design.branches()[0].stage_count != 2) {
+    if (err) *err << "Workflow named branch should record its name and stage count\n";
+    return false;
+  }
+
+  const pluss::ai::lymph::Workflow candidate = design.with(Model(linear_spec()));
+  const pluss::ai::lymph::Workflow candidate_learned = candidate.learn(raw, xy_data_options());
+  if (!candidate_learned.trained() || candidate_learned.stage_count() != 2 ||
+      candidate_learned.infer(raw.drop({"y"})).numel() != 10) {
+    if (err) *err << "Workflow::with(model) should replay routed design stages onto the selected model\n";
+    return false;
+  }
+  if (design.trained() || candidate.trained()) {
+    if (err) *err << "Workflow design and candidate templates should stay untrained after out-of-place learn(...)\n";
+    return false;
+  }
+
+  pluss::ai::lymph::Workflow explicit_branch = workflow::make(cleanup);
+  explicit_branch.branch("numeric").route({"x"}).add(stage::standard_scaler());
+  if (explicit_branch.branch_count() != 1 || explicit_branch.branches()[0].name != "numeric" ||
+      explicit_branch.branches()[0].stage_count != 1) {
+    if (err) *err << "Workflow::branch(name).route(cols) should expose explicit branch construction\n";
+    return false;
+  }
+
+  bool threw_bad_workers = false;
+  try {
+    (void)workflow::make(cleanup).workers(0);
+  } catch (const pluss::Error&) {
+    threw_bad_workers = true;
+  }
+  if (!threw_bad_workers) {
+    if (err) *err << "Workflow::workers should reject worker counts below 1\n";
+    return false;
+  }
+
+  bool threw_empty_branch_name = false;
+  try {
+    (void)workflow::make(cleanup).on("", {"x"});
+  } catch (const pluss::Error&) {
+    threw_empty_branch_name = true;
+  }
+  if (!threw_empty_branch_name) {
+    if (err) *err << "Workflow named branch construction should reject empty names\n";
+    return false;
+  }
+
+  // 3d) Phase-4 typed payload: frame plus label/role metadata travels as
+  // one object, while Workflow still uses the frame overload internally so
+  // routed stages can resolve column names after Policy cleanup.
+  Payload train_payload = payload::make(raw).features({"x"}).label("y");
+  train_payload.groups(pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3}, {12}, f64()));
+  train_payload.time("event_time");
+  if (!train_payload.has_frame() || !train_payload.has_label_feature() ||
+      !train_payload.has_groups() || !train_payload.has_time()) {
+    if (err) *err << "Payload should retain frame, label, group, and time role metadata\n";
+    return false;
+  }
+
+  pluss::ai::lymph::Workflow payload_workflow = workflow::make(Model(linear_spec()), cleanup);
+  payload_workflow.on({"x"}).add(stage::simple_imputer(median_fill)).add(stage::standard_scaler());
+  payload_workflow.learn_(train_payload);
+  if (!payload_workflow.trained() || payload_workflow.stage_count() != 2 ||
+      payload_workflow.infer(payload::make(raw.drop({"y"})).features({"x"})).numel() != 10) {
+    if (err) *err << "Workflow should learn and infer through DataFrame-backed Payload objects\n";
+    return false;
+  }
+  if (payload_workflow.assess(train_payload).r2.item<double>() < 0.999) {
+    if (err) *err << "Workflow::assess(Payload) should evaluate labeled DataFrame payloads\n";
+    return false;
+  }
+
+  bool threw_payload_weight_alignment = false;
+  try {
+    Payload bad_weight_payload = payload::make(raw).features({"x"}).label("y").weights(
+        pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {12}, f64()));
+    workflow::make(Model(linear_spec()), cleanup).learn_(bad_weight_payload);
+  } catch (const pluss::Error&) {
+    threw_payload_weight_alignment = true;
+  }
+  if (!threw_payload_weight_alignment) {
+    if (err) *err << "DataFrame Payload Series weights should fail loudly when Policy can change row alignment\n";
+    return false;
+  }
+
+  // 4) Batch-level paths stay available for callers already working with
+  // Series/FeatureBatch/LabeledBatch. Policy is a raw-frame concern only.
+  const LabeledBatch batch = resolve(labeled_batch_from_dataframe(cleaned, xy_data_options()),
+                                     "lymph_workflow_test.labeled_batch_from_dataframe");
+  pluss::ai::lymph::Workflow batch_workflow = workflow::make(Model(linear_spec()));
+  batch_workflow.learn_(batch);
+  if (!batch_workflow.trained() || batch_workflow.infer(batch.features).numel() != batch.features.sample_count()) {
+    if (err) *err << "Workflow batch paths should train and infer directly on LabeledBatch/FeatureBatch\n";
+    return false;
+  }
+
+  // 5) Transform-style models use the same workflow object shape.
+  DecomposeFamilyOptions pca{};
+  pca.components = 1;
+  pluss::ai::lymph::Workflow embedder = workflow::make(models::pca(pca), cleanup);
+  const Series mapped = embedder.learn_map(raw.drop({"y"}));
+  if (!embedder.trained() || mapped.numel() != 10) {
+    if (err) *err << "Workflow::learn_map should support transform-style models after Policy cleanup\n";
+    return false;
+  }
+
+  // 6) Separate x/y overloads cannot safely use a row-dropping Policy,
+  // because y would not be filtered with x. That must fail loudly.
+  bool threw_row_filter_guard = false;
+  try {
+    (void)workflow::make(Model(linear_spec()), cleanup)
+        .learn_(raw.drop({"y"}),
+                pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, f64()));
+  } catch (const pluss::Error&) {
+    threw_row_filter_guard = true;
+  }
+  if (!threw_row_filter_guard) {
+    if (err) *err << "Workflow x/y overloads should reject row-dropping policies\n";
+    return false;
+  }
+
+  // 7) Save/load round-trip: a fresh Workflow loaded from disk should
   // apply the exact same policy and reproduce the same predictions.
   const std::string path = (std::filesystem::temp_directory_path() / "lymph_workflow_test_model.bin").string();
   deployed.save(path, raw, xy_data_options());
@@ -125,6 +371,19 @@ bool run_workflow_checks(std::ostream* err) {
     if (err) *err << "workflow::load should restore the null-filter policy from the sidecar\n";
     return false;
   }
+  const std::string policy_path = (std::filesystem::temp_directory_path() / "lymph_policy_v2_roundtrip.bin").string();
+  save_policy(policy_path, admission);
+  const Policy reloaded_policy = load_policy(policy_path);
+  if (reloaded_policy.drop_columns != admission.drop_columns ||
+      reloaded_policy.require_columns != admission.require_columns ||
+      reloaded_policy.forbid_columns != admission.forbid_columns ||
+      reloaded_policy.reject_missing != admission.reject_missing ||
+      reloaded_policy.allow_missing != admission.allow_missing) {
+    if (err) *err << "save_policy/load_policy should round-trip the strengthened Policy schema fields\n";
+    return false;
+  }
+  std::filesystem::remove(policy_path + ".policy");
+
   const Series reloaded_predicted = loaded.infer(raw.drop({"y"}));
   const auto reloaded_values = as_f64(reloaded_predicted);
   if (reloaded_values.size() != predicted_values.size()) {

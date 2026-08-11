@@ -21,6 +21,13 @@
 #include "pluss/codeh/codeh.h"
 #include "pluss/subsp/stats/ts.h"
 
+namespace pluss::kindle {
+class Stream;
+}
+namespace pluss::bundle {
+class Slot;
+}
+
 namespace pluss::table {
 
 class Thread;
@@ -375,6 +382,11 @@ public:
   std::string ptype() const;
   std::string dtype() const;
   ThreadValue value() const;
+
+  // 1D counterparts to DataFrame::kindelize()/bundelize() and
+  // Atlas::kindelize()/bundelize().
+  pluss::kindle::Stream kindelize() const;
+  pluss::bundle::Slot bundelize() const;
 
   Thread isnull() const;
   Thread notnull() const;

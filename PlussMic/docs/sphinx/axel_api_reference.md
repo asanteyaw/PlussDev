@@ -24,7 +24,6 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
-api/axel/as_kindle
 api/axel/cast
 api/axel/concat_depth
 api/axel/defined
@@ -37,7 +36,6 @@ api/axel/fieldaxis
 api/axel/fields
 api/axel/fillnull
 api/axel/freq
-api/axel/from_kindle
 api/axel/has
 api/axel/head
 api/axel/invalid
@@ -58,7 +56,6 @@ api/axel/tabelize
 api/axel/tail
 api/axel/tl
 api/axel/to_json
-api/axel/to_kindle
 api/axel/to_string
 api/axel/unique
 ```

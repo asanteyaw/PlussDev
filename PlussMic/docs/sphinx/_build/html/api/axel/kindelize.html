@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,8 +50,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Converts this <code class="docutils literal notranslate"><span class="pre">Axel</span></code> to its <code class="docutils literal notranslate"><span class="pre">kindle::Archive</span></code> representation. A
-backward-compatible alias for <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a> — the body
-is a single <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">to_kindle();</span></code>, kept for older call sites.</p>
+depth-stacked bridge from the bundle model into the Kindle model.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -60,25 +59,22 @@ is a single <code class="docutils literal notranslate"><span class="pre">return<
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Archive</span></code>
-The same result <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a> would produce.</p>
+One archive catalog per registry, in axel depth order.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> agrees with <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a> and
-<a class="reference internal" href="as_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">as_kindle()</span></code></span></a> on depth.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> preserves depth.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">)})}}),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})}}),</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">a1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">a2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">as_kindle</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">a3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a1</span><span class="p">.</span><span class="n">depth</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a2</span><span class="p">.</span><span class="n">depth</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a3</span><span class="p">.</span><span class="n">depth</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">depth</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2 2 2
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2
 </pre></div>
 </div>
 </section>
@@ -86,9 +82,6 @@ The same result <a class="reference internal" href="to_kindle.html"><span class=
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>For new code, prefer <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a> or
-<a class="reference internal" href="as_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">as_kindle()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> exists purely for
-backward compatibility with older call sites.</p></li>
 <li><p>Requires <code class="docutils literal notranslate"><span class="pre">defined()</span></code> — an undefined handle throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Axel:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
 </ul>
@@ -96,10 +89,8 @@ backward compatibility with older call sites.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::to_kindle</span></code></span></a>: the canonical name for this
-operation.</p></li>
-<li><p><a class="reference internal" href="as_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::as_kindle</span></code></span></a>: the semantic-switch-flavored
-alias.</p></li>
+<li><p><a class="reference internal" href="../archive/bundelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::bundelize</span></code></span></a>: the reverse bridge from
+Kindle back into the bundle model.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="isnull.html">

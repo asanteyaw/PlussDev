@@ -15,7 +15,7 @@ Catalog::merge(const Catalog& other, std::string_view on, std::string_view how =
 
 Joins two catalogs on a shared key stream — internally, both catalogs are
 [`tabelize()`](tabelize.md)d into `DataFrame`s, joined via `DataFrame::unify`, and the
-result is [`kindelize()`](kindelize.md)d back into a `Catalog`.
+result is [`DataFrame::kindelize()`](../dataframe/kindelize.md)d back into a `Catalog`.
 
 ```{important} how currently only accepts "inner" — every other value throws
 Despite the parameter existing for future flexibility, the current implementation supports
@@ -124,13 +124,14 @@ Catalog::merge: right key not found 'id'
 - `on` must exist in both catalogs; the throw message names which side ("left" or
   "right") is missing it.
 - Implemented via [`tabelize()`](tabelize.md) + `DataFrame::unify` +
-  [`kindelize()`](kindelize.md) — a round trip through `DataFrame`, not a direct
+  [`DataFrame::kindelize()`](../dataframe/kindelize.md) — a round trip through
+  `DataFrame`, not a direct
   stream-to-stream join.
 
 ## See Also
 
-- [`Catalog::tabelize`](tabelize.md) / [`Catalog::kindelize`](kindelize.md): the two
-  conversions this method uses internally.
+- [`Catalog::tabelize`](tabelize.md) / [`DataFrame::kindelize`](../dataframe/kindelize.md):
+  the two conversions this method uses internally.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mean.html">

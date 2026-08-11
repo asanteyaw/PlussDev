@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -87,7 +87,10 @@ and no <code class="docutils literal notranslate"><span class="pre">default_x_fe
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>)
 The identical struct documented on
 <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>
-(<code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">line_width</span></code>, <code class="docutils literal notranslate"><span class="pre">y_limit_method</span></code>) — see that page for each field’s meaning.</p>
+(<code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">line_width</span></code>, <code class="docutils literal notranslate"><span class="pre">y_limit_method</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>) — see that page for each field’s
+meaning. <code class="docutils literal notranslate"><span class="pre">align</span></code> is doubly inert at this layer: <code class="docutils literal notranslate"><span class="pre">x</span></code>’s own size check above
+(<code class="docutils literal notranslate"><span class="pre">&quot;Thread::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>) throws unconditionally on a mismatch, before
+any <code class="docutils literal notranslate"><span class="pre">align</span></code>-aware reconciliation could ever run.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -110,7 +113,7 @@ bound thread’s values.</p>
 <p><code class="docutils literal notranslate"><span class="pre">revenue</span></code> has no row labels of its own, so the wrapped one-column frame falls back to a
 plain <code class="docutils literal notranslate"><span class="pre">0..3</span></code> case index; the y-axis is labeled <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code>, taken from the thread’s own
 <code class="docutils literal notranslate"><span class="pre">name()</span></code>.</p>
-<p><img alt="Output of Example 1" src="../../_images/line-12.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/line-15.svg" /></p>
 <p>Example 2. An explicit companion thread as the x-axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Jan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Feb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Mar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Apr&quot;</span><span class="p">}));</span>
 <span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">month</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">);</span>
@@ -122,7 +125,7 @@ plain <code class="docutils literal notranslate"><span class="pre">0..3</span></
 <p>The wrapped frame now has two columns, <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code> (each named from its own
 thread’s <code class="docutils literal notranslate"><span class="pre">name()</span></code>), and the line is drawn against <code class="docutils literal notranslate"><span class="pre">month</span></code>’s four categorical
 positions instead of a numeric case index.</p>
-<p><img alt="Output of Example 2" src="../../_images/line-21.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/line-23.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>, tuning opacity and the y-axis fit.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.85</span><span class="p">;</span>
@@ -132,7 +135,7 @@ positions instead of a numeric case index.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 3" src="../../_images/line-32.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/line-34.svg" /></p>
 <p>Example 4. Row labels are inherited from whichever operand actually has them — here, from
 <code class="docutils literal notranslate"><span class="pre">month</span></code> since the bound <code class="docutils literal notranslate"><span class="pre">revenue</span></code> thread itself has none.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled_revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))</span>
@@ -144,7 +147,7 @@ positions instead of a numeric case index.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">labeled_revenue</span></code> carries its own row labels (<code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Q4&quot;</span></code>), so the wrapped frame’s case
 axis uses those directly, even with no companion <code class="docutils literal notranslate"><span class="pre">x</span></code> thread supplied.</p>
-<p><img alt="Output of Example 4" src="../../_images/line-42.svg" /></p>
+<p><img alt="Output of Example 4" src="../../_images/line-44.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>

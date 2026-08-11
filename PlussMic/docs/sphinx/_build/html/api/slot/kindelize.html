@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,9 +49,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>An identical alias for <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a>, kept for
-backward-compatible call sites written before <code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code>/<code class="docutils literal notranslate"><span class="pre">as_kindle()</span></code>
-were introduced.</p>
+<p>Converts the slot into a single <code class="docutils literal notranslate"><span class="pre">pluss::kindle::Stream</span></code>. This is the canonical
+bundle-to-kindle bridge for one heterogeneous-but-kind-compatible slot.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -80,18 +79,20 @@ The slot’s values as a single kindle <code class="docutils literal notranslate
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Byte-identical behavior to <a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a>, including its
-stream-compatibility requirement and throw text.</p></li>
+<li><p>Every value in the slot must share one stream-compatible kind.</p></li>
 <li><p>Requires the slot to be defined — an undefined <code class="docutils literal notranslate"><span class="pre">Slot</span></code> throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Slot:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
+<li><p>A slot that later goes through <code class="docutils literal notranslate"><span class="pre">stream.tabelize()</span></code> or <code class="docutils literal notranslate"><span class="pre">stream.bundelize()</span></code> stays on the
+same 1D bridge family; no table or registry wrapper is required.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::to_kindle</span></code></span></a>: the primary name for this
-conversion, with the full stream-compatibility explanation.</p></li>
-<li><p><a class="reference internal" href="as_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::as_kindle</span></code></span></a>: another identical alias.</p></li>
+<li><p><a class="reference internal" href="../stream/bundelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::bundelize</span></code></span></a>: the reverse bridge from
+Kindle back into the bundle model.</p></li>
+<li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::tabelize</span></code></span></a>: the sibling bridge from the bundle model into the
+table model.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="kind.html">

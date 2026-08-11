@@ -16,6 +16,99 @@ pluss::table::Thread Stream::to_thread(std::int64_t start, std::int64_t stop) co
   return t.slice(start, stop);
 }
 
+pluss::table::Thread Stream::tabelize() const {
+  return to_thread();
+}
+
+pluss::bundle::Slot Stream::bundelize() const {
+  PLUSS_CHECK(defined(), "Stream::bundelize: stream undefined");
+  const auto n = size();
+  const auto has_validity = pluss::kindle::detail::has_validity_mask(*this);
+  const auto valid = has_validity
+                         ? pluss::kindle::detail::validity_mask(*this)->to_vec<bool>()
+                         : std::vector<bool>{};
+  std::vector<pluss::bundle::Slot::Value> out;
+  out.reserve(static_cast<std::size_t>(n));
+
+  switch (kind()) {
+    case pluss::kindle::StreamKind::Series: {
+      const auto s = as_series();
+      if (s.scalar_type() == pluss::codem::ScalarType::Bool) {
+        const auto x = s.to_vec<bool>();
+        for (std::int64_t i = 0; i < n; ++i) {
+          if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+            out.emplace_back(std::monostate{});
+          } else {
+            auto scalar = pluss::Series::zeros({1}, pluss::codem::ScalarType::Bool);
+            reinterpret_cast<bool*>(scalar.raw_data())[0] = x[static_cast<std::size_t>(i)];
+            out.emplace_back(std::move(scalar));
+          }
+        }
+      } else if (s.scalar_type() == pluss::codem::ScalarType::Int64) {
+        const auto x = s.to_vec<std::int64_t>();
+        for (std::int64_t i = 0; i < n; ++i) {
+          if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+            out.emplace_back(std::monostate{});
+          } else {
+            out.emplace_back(pluss::make_series(x[static_cast<std::size_t>(i)], s.scalar_type()));
+          }
+        }
+      } else {
+        const auto x = s.to(pluss::codem::ScalarType::Float64).to_vec<double>();
+        for (std::int64_t i = 0; i < n; ++i) {
+          if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+            out.emplace_back(std::monostate{});
+          } else {
+            out.emplace_back(pluss::make_series(x[static_cast<std::size_t>(i)], s.scalar_type()));
+          }
+        }
+      }
+      break;
+    }
+    case pluss::kindle::StreamKind::Note: {
+      const auto& note = as_note();
+      for (std::int64_t i = 0; i < n; ++i) {
+        if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+          out.emplace_back(std::monostate{});
+        } else {
+          out.emplace_back(pluss::make_note(note.at(i)));
+        }
+      }
+      break;
+    }
+    case pluss::kindle::StreamKind::Timeline: {
+      const auto& tl = as_timeline();
+      const std::string tz_name(tl.tz());
+      const auto x = tl.to_epoch_nanos_vector();
+      for (std::int64_t i = 0; i < n; ++i) {
+        if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+          out.emplace_back(std::monostate{});
+        } else {
+          out.emplace_back(pluss::timeline::from_epoch(x[static_cast<std::size_t>(i)], tz_name));
+        }
+      }
+      break;
+    }
+    case pluss::kindle::StreamKind::TimeIndex: {
+      const auto& idx_tl = as_timeindex().timeline();
+      const std::string tz_name(idx_tl.tz());
+      const auto x = idx_tl.to_epoch_nanos_vector();
+      for (std::int64_t i = 0; i < n; ++i) {
+        if (has_validity && !valid[static_cast<std::size_t>(i)]) {
+          out.emplace_back(std::monostate{});
+        } else {
+          out.emplace_back(pluss::make_timeindex(
+              pluss::timeline::from_epoch(std::vector<std::int64_t>{x[static_cast<std::size_t>(i)]}, tz_name),
+              false));
+        }
+      }
+      break;
+    }
+  }
+
+  return pluss::bundle::Slot(std::move(out));
+}
+
 Stream Stream::head(std::int64_t n) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return rowwise_stream_transform(*this, [&](const pluss::table::Thread& t) { return t.head(n); });

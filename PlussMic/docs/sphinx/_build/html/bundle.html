@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="_static/api_nav.js?v=5bdb4faa"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -97,13 +97,13 @@
 </section>
 <section id="kindle-bridge">
 <h2>Kindle Bridge<a class="headerlink" href="#kindle-bridge" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">back_slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">stream</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">back_registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">catalog</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">back_axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">archive</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">back_slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">back_registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">back_axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>

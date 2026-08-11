@@ -2,7 +2,9 @@
 
 #include "pluss/ai/lymph/common.h"
 #include "pluss/ai/lymph/model.h"
+#include "pluss/ai/lymph/payload.h"
 #include "pluss/ai/lymph/selection.h"
+#include "pluss/ai/lymph/workflow.h"
 
 #include <functional>
 #include <numeric>
@@ -233,6 +235,46 @@ class Search final {
     const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options),
                                        "Search::run(frame,data_options).labeled_batch_from_dataframe");
     return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+  }
+
+  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+                                 const Workflow& design,
+                                 const Payload& payload,
+                                 const TrainOptions& train_options = {},
+                                 const AssessOptions& assess_options = {},
+                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                 selection::FitOptions fit_options = {}) const {
+    const auto make_designed_model = [&](const GridPoint& point) -> Model {
+      Workflow candidate = design.with(make_model(point));
+      return candidate.model();
+    };
+    const SplitOptions split = default_split_for_(make_designed_model);
+    return run(make_designed_model, design, payload, split, train_options, assess_options,
+               objective_metric, objective_policy, fit_options);
+  }
+
+  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+                                 const Workflow& design,
+                                 const Payload& payload,
+                                 const SplitOptions& split,
+                                 const TrainOptions& train_options = {},
+                                 const AssessOptions& assess_options = {},
+                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                 selection::FitOptions fit_options = {}) const {
+    const auto make_designed_model = [&](const GridPoint& point) -> Model {
+      Workflow candidate = design.with(make_model(point));
+      return candidate.model();
+    };
+    const detail::WorkflowLabeledInput input =
+        detail::workflow_labeled_input_(design, payload, "Search::run(workflow,payload)");
+    if (input.frame.has_value()) {
+      return run(make_designed_model, *input.frame, input.data_options, split, train_options, assess_options,
+                 objective_metric, objective_policy, fit_options);
+    }
+    return run(make_designed_model, *input.batch, split, train_options, assess_options,
+               objective_metric, objective_policy, fit_options);
   }
 
  private:

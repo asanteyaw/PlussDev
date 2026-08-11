@@ -65,10 +65,16 @@ passed to the underlying trace call is always populated, just filled with a cons
       Plot3DSceneOptions scene{};
       Plot3DTraceOptions trace{};
       double default_marker_size{12.0};
+      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
     };
     ```
     `default_marker_size` is only consulted when `size_feature` is omitted; `scene`/`trace`
-    are the same shared structs documented in full on [`line()`](line.md).
+    are the same shared structs documented in full on [`line()`](line.md). `align` exists so
+    `Catalog::plot3d().scatter()` can reuse this struct type for its own multi-key
+    reconciliation (see
+    [`CatalogPlot3DAccessor::scatter`](../catalog-plot3d/scatter.md)) — `DataFramePlot3DAccessor::scatter()`
+    itself never reads it: every feature named here is already a column of the same,
+    already-constructed `DataFrame`, so there is no length mismatch for `align` to resolve.
 
 ## Returns
 

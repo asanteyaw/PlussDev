@@ -24,7 +24,6 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
-api/slot/as_kindle
 api/slot/astype
 api/slot/at
 api/slot/cast
@@ -36,7 +35,6 @@ api/slot/empty
 api/slot/fillnull
 api/slot/filter
 api/slot/freq
-api/slot/from_kindle
 api/slot/head
 api/slot/invalid
 api/slot/isnull
@@ -56,11 +54,11 @@ api/slot/show
 api/slot/size
 api/slot/slice
 api/slot/sum
+api/slot/tabelize
 api/slot/tail
 api/slot/take
 api/slot/tl
 api/slot/to_json
-api/slot/to_kindle
 api/slot/to_string
 api/slot/transform
 api/slot/type_counts

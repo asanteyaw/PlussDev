@@ -180,14 +180,8 @@ public:
   Registry& concat_(std::string_view key, const Slot& other);
 
   // Explicit bridge with kindle model.
-  // Use `to_kindle()` to access Catalog-only operations, then convert back with `from_kindle()`.
   // Conversion may throw when slot heterogeneity is not stream-compatible.
-  pluss::kindle::Catalog to_kindle() const;
-  // Semantic alias for explicit model switch.
-  pluss::kindle::Catalog as_kindle() const;
-  // Backward-compatible alias for older call sites.
   pluss::kindle::Catalog kindelize() const;
-  static Registry from_kindle(const pluss::kindle::Catalog& catalog);
   pluss::table::DataFrame tabelize() const;
   pluss::table::DataFrame tabelize(const pluss::kindle::TabelizePolicy& policy) const;
 

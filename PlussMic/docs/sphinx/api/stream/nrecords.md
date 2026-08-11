@@ -72,8 +72,8 @@ nrecords: 5  size: 5
     <span class="label">Previous</span>
     <span class="title">notnull</span>
   </a>
-  <a class="next-link" href="ptype.html">
+  <a class="next-link" href="plot.html">
     <span class="label">Next</span>
-    <span class="title">ptype</span>
+    <span class="title">plot</span>
   </a>
 </div>

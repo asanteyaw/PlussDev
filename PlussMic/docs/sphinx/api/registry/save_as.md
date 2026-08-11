@@ -19,7 +19,7 @@ name.
 
 `target_type == "json"` is special-cased: it calls [`save_json()`](save_json.md)
 directly, which means it inherits that method's heterogeneous-registry fallback.
-Every other target type routes through the shared `to_kindle()`-requiring path (the
+Every other target type routes through the shared `kindelize()`-requiring path (the
 same one [`save_csv()`](save_csv.md), [`save_txt()`](save_txt.md),
 [`save_excel()`](save_excel.md), and [`save_parquet()`](save_parquet.md) use), and
 throws on a genuinely mixed-type field.

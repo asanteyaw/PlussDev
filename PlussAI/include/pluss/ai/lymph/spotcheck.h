@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/ai/lymph/builder.h"
+#include "pluss/ai/lymph/workflow.h"
 
 #include <optional>
 #include <string>
@@ -67,6 +68,23 @@ class Models final {
                               assess_options, objective_metric, objective_policy, fit_options);
   }
 
+  [[nodiscard]] SpotCheckResult run(const Workflow& design,
+                                    const Payload& payload,
+                                    CrossValidationOptions cv = {},
+                                    AssessOptions assess_options = {},
+                                    MetricKind objective_metric = MetricKind::Accuracy,
+                                    TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                    selection::FitOptions fit_options = {}) const {
+    const detail::WorkflowLabeledInput input =
+        detail::workflow_labeled_input_(design, payload, "lymph::spotcheck::Models::run(workflow,payload)");
+    if (input.frame.has_value()) {
+      return selection::compare(candidates_(design), *input.frame, input.data_options, cv, TrainOptions{},
+                                assess_options, objective_metric, objective_policy, fit_options);
+    }
+    return selection::compare(candidates_(design), *input.batch, cv, TrainOptions{},
+                              assess_options, objective_metric, objective_policy, fit_options);
+  }
+
  private:
   struct Strategy_ {
     std::string name{};
@@ -86,6 +104,15 @@ class Models final {
       for (const auto& [model_name, model] : entries_) {
         out.emplace_back(strategy.name + "__" + model_name, model, strategy.train_options);
       }
+    }
+    return out;
+  }
+
+  [[nodiscard]] std::vector<selection::Candidate> candidates_(const Workflow& design) const {
+    std::vector<selection::Candidate> out = candidates_();
+    for (auto& candidate : out) {
+      Workflow candidate_workflow = design.with(candidate.model);
+      candidate.model = candidate_workflow.model();
     }
     return out;
   }

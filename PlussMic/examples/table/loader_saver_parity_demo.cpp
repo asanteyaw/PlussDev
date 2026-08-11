@@ -252,10 +252,9 @@ void demo_registry_io(const TextFixtures& fixtures) {
       fixtures.whitespace_txt.string(),
       pluss::loader::config_from({{"txt_mode", "whitespace"}, {"header", true}}));
   const auto reg_json = pluss::bundle::Registry::load_json(fixtures.hetero_json.string());
-  const auto reg_stream_compatible = pluss::bundle::Registry::from_kindle(
-      pluss::kindle::Catalog::load_txt(
-          fixtures.whitespace_txt.string(),
-          pluss::loader::config_from({{"txt_mode", "whitespace"}, {"header", true}})));
+  const auto reg_stream_compatible = pluss::kindle::Catalog::load_txt(
+      fixtures.whitespace_txt.string(),
+      pluss::loader::config_from({{"txt_mode", "whitespace"}, {"header", true}})).bundelize();
 
   print_registry_shape("Registry::load(\"csv\", ...)", reg_csv);
   print_registry_shape("Registry::load(\"excel\", ...)", reg_excel);

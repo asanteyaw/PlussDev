@@ -84,9 +84,9 @@ metric                   | Series       | Series[float64]  | 3       | [11, 21, 
   selection with accessor `map(...)`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_table.html">
+  <a class="prev-link" href="to_string.html">
     <span class="label">Previous</span>
-    <span class="title">to_table</span>
+    <span class="title">to_string</span>
   </a>
   <a class="next-link" href="unique.html">
     <span class="label">Next</span>

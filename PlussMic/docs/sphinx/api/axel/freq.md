@@ -73,8 +73,8 @@ std::cout << "[" << std::get<pluss::Series>(counts.at(0)).to_vec<std::int64_t>()
     <span class="label">Previous</span>
     <span class="title">fillnull</span>
   </a>
-  <a class="next-link" href="from_kindle.html">
+  <a class="next-link" href="has.html">
     <span class="label">Next</span>
-    <span class="title">from_kindle</span>
+    <span class="title">has</span>
   </a>
 </div>

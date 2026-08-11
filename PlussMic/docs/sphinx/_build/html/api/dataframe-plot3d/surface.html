@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -146,13 +146,13 @@ aggregated grid.</p>
 values (<code class="docutils literal notranslate"><span class="pre">10.0</span></code>, <code class="docutils literal notranslate"><span class="pre">20.0</span></code>, <code class="docutils literal notranslate"><span class="pre">30.0</span></code>) become y-rows; each cell is the mean <code class="docutils literal notranslate"><span class="pre">temp_c</span></code> for that
 hour/depth combination — here, each combination happens to have exactly one matching row,
 so the “mean” is just that row’s own value.</p>
-<p><img alt="Output of Example 1" src="../../_images/surface-11.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/surface-13.svg" /></p>
 <p>Example 2. A different aggregation (<code class="docutils literal notranslate"><span class="pre">Max</span></code>).</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">surface</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depth_m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Max</span><span class="p">);</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 2" src="../../_images/surface-2.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/surface-23.svg" /></p>
 <p>Example 3. A categorical <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>: falls back to evenly spaced positional x-coordinates
 instead of parsed numeric values.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>

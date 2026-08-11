@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-AtlasPlotAccessor::depth(std::string_view feature) const -> pluss::pl::Studio
-AtlasPlotAccessor::depth(std::string_view feature, const AtlasDepthPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature) const
+pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const AtlasDepthPlotOptions& options) const
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ center line.
 
 ```{important} Returns a Studio, not printable output
 Like every method on `AtlasPlotAccessor`, this builds and returns a `pluss::pl::Studio` —
-call `.show()`/`.save_svg(path)`/etc. to view or persist it; `std::cout << chart` does
+call `.show()`/`.to_svg()`/`.save_svg(path)`/etc. to view or persist it; `std::cout << chart` does
 not compile.
 ```
 
@@ -64,22 +64,51 @@ for (int i = 0; i < 5; ++i) {
 auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
 auto chart = atlas.plot().depth("temp_c");
-chart.save_svg("depth_temp.svg");
+chart.show();
 ```
+
+![Output of Example 1](img/depth-1.svg)
 
 Each frame's `temp_c` values are `{18, 19, 20, 21, 22}` shifted up by that frame's
 index, so the center line (mean) is a straight `20, 21, 22, 23, 24` across the five
 "dayN" depth positions, with the shaded band spanning each frame's own min (`18`
 through `22`) to max (`22` through `26`).
 
-![Output of Example 1](img/depth-1.svg)
+Example 2. Setting `lower`/`upper` to `std::nullopt` and `center` to `Median` draws only the
+median line, with no band.
+
+```cpp
+using namespace pluss::table;
+
+std::vector<DataFrame> frames;
+for (int i = 0; i < 5; ++i) {
+    double base = static_cast<double>(i);
+    frames.push_back(DataFrame({
+        {"temp_c", Thread(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
+    }));
+}
+auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
+
+AtlasDepthPlotOptions options;
+options.center = AtlasDepthStatistic::Median;
+options.lower = std::nullopt;
+options.upper = std::nullopt;
+auto chart = atlas.plot().depth("temp_c", options);
+chart.show();
+```
+
+![Output of Example 2](img/depth-2.svg)
+
+With five values per frame (an odd count), the median equals the mean here, so the line traces
+the same `20, 21, 22, 23, 24` path as Example 1 — but with no shaded band, since both edges were
+explicitly omitted.
 
 ## Notes
 
 - `feature` is reduced independently within each selected frame — the band and
   center line never mix values across frames.
 - Set `options.lower`/`options.upper` to `std::nullopt` to draw just the center line,
-  with no band.
+  with no band — see Example 2.
 - `options.depth_axis` (shared with [`surface()`](surface.md)/[`cloud3()`](cloud3.md)/
   etc.) controls which frames are included and in what order.
 

@@ -17,7 +17,7 @@ A named shorthand for [`kind(SlotKind::Mixed)`](kind.md) — returns a new
 registry containing only the fields whose `Slot::kind()` is
 `SlotKind::Mixed` (the field holds more than one distinct value kind, or a
 `Series` field mixes numeric dtypes). These are exactly the fields that make a
-registry fail [`to_kindle()`](../registry/to_kindle.md)'s stream-compatibility
+registry fail [`kindelize()`](../registry/kindelize.md)'s stream-compatibility
 check.
 
 ## Parameters
@@ -53,14 +53,14 @@ mixed
 
 - Equivalent to `kind(SlotKind::Mixed)` — see [`kind()`](kind.md) for the
   general form.
-- Directly identifies which fields would make [`to_kindle()`](../registry/to_kindle.md)
+- Directly identifies which fields would make [`kindelize()`](../registry/kindelize.md)
   throw.
 
 ## See Also
 
 - [`RegistryFieldAxisAccessor::kind`](kind.md): the general form this method
   wraps.
-- [`Registry::to_kindle`](../registry/to_kindle.md): the conversion these
+- [`Registry::kindelize`](../registry/kindelize.md): the conversion these
   fields block.
 - [`Registry::profiles`](../registry/profiles.md): the per-field type tally
   that shows exactly *why* a field is mixed.

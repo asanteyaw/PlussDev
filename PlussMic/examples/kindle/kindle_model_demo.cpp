@@ -76,7 +76,7 @@ double scalar_stream_value(const pluss::kindle::Stream& stream) {
 
 void demo_stream_methods(const pluss::kindle::Catalog& catalog) {
   std::cout << "\n=== Stream Methods ===\n";
-  auto metric = catalog.at("metric");
+  auto metric = catalog.keys("metric");
   std::cout << "metric: " << metric << "\n";
   std::cout << "kind: " << static_cast<int>(metric.kind())
             << ", dtype: " << metric.dtype()
@@ -105,9 +105,9 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
 
   std::cout << "\n=== Catalog Methods ===\n";
 
-  const auto ids = base_catalog.at("id");
-  const auto metric = base_catalog.at("metric");
-  const auto city = base_catalog.at("city");
+  const auto ids = base_catalog.keys("id");
+  const auto metric = base_catalog.keys("metric");
+  const auto city = base_catalog.keys("city");
 
   const pluss::kindle::Catalog catalog_a(std::vector<std::pair<std::string, pluss::kindle::Stream>>{
       {"id", ids},
@@ -158,7 +158,7 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   std::cout << "selected keys: " << selected.nkeys()
             << ", dropped keys: " << dropped.nkeys()
             << ", renamed has(distance): " << renamed.has("distance") << "\n";
-  std::cout << "sorted head id: " << sorted.at("id").head(1).as_series().to_vec<std::int64_t>()[0] << "\n";
+  std::cout << "sorted head id: " << sorted.keys("id").head(1).as_series().to_vec<std::int64_t>()[0] << "\n";
   std::cout << "sorted_by rows: " << sorted_by.nrows()
             << ", grouped buckets: " << grouped.size()
             << ", filtered rows: " << filtered.nrows()
@@ -167,10 +167,10 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
 
   const auto metric_filled = catalog.keys({"metric"}).fillnull(0.0);
   const auto metric_dropnull = catalog.keys({"metric"}).dropnull();
-  std::cout << "sum(id): " << scalar_stream_value(catalog.at("id").sum())
-            << ", mean(id): " << scalar_stream_value(catalog.at("id").mean())
-            << ", min(id): " << scalar_stream_value(catalog.at("id").min())
-            << ", max(id): " << scalar_stream_value(catalog.at("id").max())
+  std::cout << "sum(id): " << scalar_stream_value(catalog.keys("id").sum())
+            << ", mean(id): " << scalar_stream_value(catalog.keys("id").mean())
+            << ", min(id): " << scalar_stream_value(catalog.keys("id").min())
+            << ", max(id): " << scalar_stream_value(catalog.keys("id").max())
             << ", rows: " << catalog.nrows() << "\n";
   std::cout << "metric fillnull rows: " << metric_filled.nrows()
             << ", metric dropnull rows: " << metric_dropnull.nrows() << "\n";
@@ -182,9 +182,9 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   const auto merged = catalog.merge(right, "id");
   std::cout << "merged has bonus: " << merged.has("bonus") << "\n";
 
-  auto applied = catalog.keys("id").map([](const pluss::kindle::Stream& s) { return s + 10.0; });
-  applied = applied.keys("id").map([](const pluss::kindle::Stream& s) { return s * 2.0; });
-  std::cout << "applied id head: " << applied.at("id").head(1).as_series().to_vec<std::int64_t>()[0] << "\n";
+  auto applied = catalog.keys({"id"}).map([](const pluss::kindle::Stream& s) { return s + 10.0; });
+  applied = applied.keys({"id"}).map([](const pluss::kindle::Stream& s) { return s * 2.0; });
+  std::cout << "applied id head: " << applied.keys("id").head(1).as_series().to_vec<std::int64_t>()[0] << "\n";
 
   const auto text_clean = catalog.clean("text");
   const auto keywords = catalog.keywords("text", 5);
@@ -202,8 +202,8 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
             << ", text_stats rows: " << text_stats.nrows()
             << ", tfidf key added: " << text_tfidf.has("text_tfidf_norm") << "\n";
 
-  catalog = catalog.set("id_plus_one", catalog.at("id") + 1.0);
-  catalog.set_("city_copy", catalog.at("city"));
+  catalog = catalog.set("id_plus_one", catalog.keys("id") + 1.0);
+  catalog.set_("city_copy", catalog.keys("city"));
   catalog = catalog.set({
       "ones"_k = pluss::kindle::Stream(pluss::make_series(std::vector<double>{1, 1, 1, 1, 1}, {5})),
   });
@@ -221,10 +221,10 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   policy.collision = pluss::kindle::CollisionPolicy::Suffix;
   const auto back_df = catalog.tabelize(policy);
   std::cout << "tabelize shape: [" << back_df.ncases() << " cs x " << back_df.nfeatures() << " feat]\n";
-  std::cout << "to_table (table renderer):\n";
-  (void)catalog.head(5).to_table(policy, true);
+  std::cout << "tabelize (table renderer):\n";
+  pluss::table::display::print(std::cout, catalog.head(5).tabelize(policy), {});
 
-  std::cout << "\nragged catalog -> to_table (inner/outer/strict)\n";
+  std::cout << "\nragged catalog -> tabelize (inner/outer/strict)\n";
   const std::array<std::int64_t, 1> city_shape{3};
   const pluss::kindle::Catalog ragged({
       "price"_k = pluss::kindle::Stream(pluss::make_series(std::vector<double>{100.0, 101.0, 102.0, 103.0}, {4})),
@@ -235,17 +235,17 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   pluss::kindle::TabelizePolicy inner_policy;
   inner_policy.align = pluss::kindle::Align::Inner;
   std::cout << "inner alignment:\n";
-  (void)ragged.to_table(inner_policy, true);
+  pluss::table::display::print(std::cout, ragged.tabelize(inner_policy), {});
 
   pluss::kindle::TabelizePolicy outer_policy;
   outer_policy.align = pluss::kindle::Align::Outer;
   std::cout << "outer alignment:\n";
-  (void)ragged.to_table(outer_policy, true);
+  pluss::table::display::print(std::cout, ragged.tabelize(outer_policy), {});
 
   pluss::kindle::TabelizePolicy strict_policy;
   strict_policy.align = pluss::kindle::Align::Strict;
   try {
-    (void)ragged.to_table(strict_policy, false);
+    (void)ragged.tabelize(strict_policy);
     std::cout << "strict alignment unexpectedly succeeded\n";
   } catch (const std::exception& e) {
     std::cout << "strict alignment expected failure: " << e.what() << "\n";
@@ -278,8 +278,8 @@ void demo_archive_methods(const pluss::table::DataFrame& base_df) {
   std::cout << "archive.tabelize depth: " << atlas_back.depth()
             << ", rows/frame: " << atlas_back.ncases()
             << ", features/frame: " << atlas_back.nfeatures() << "\n";
-  std::cout << "archive.to_table (atlas renderer):\n";
-  (void)archive.to_table({}, true);
+  std::cout << "archive.tabelize (atlas renderer):\n";
+  pluss::table::display::print(std::cout, archive.tabelize(), {});
 }
 
 void demo_loader_entrypoints() {
@@ -317,7 +317,7 @@ void demo_loader_entrypoints() {
 int main() {
   try {
     const auto df = make_base_frame();
-    const auto catalog = pluss::kindle::Catalog::kindelize(df);
+    const auto catalog = df.kindelize();
 
     std::cout << "Base catalog keys: " << catalog.nkeys()
               << ", rows: " << catalog.nrows() << "\n";

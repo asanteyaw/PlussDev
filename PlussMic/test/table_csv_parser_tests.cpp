@@ -2157,9 +2157,9 @@ void test_versatile_dataframe_families() {
          "Atlas should expose empty()/frames() with consistent depth");
   const auto atlas_empty = pluss::table::Atlas();
   expect(atlas_empty.empty(), "default Atlas should be empty");
-  const auto atlas_roundtrip = pluss::kindle::Archive::kindelize(atlas).tabelize();
+  const auto atlas_roundtrip = atlas.kindelize().tabelize();
   expect(atlas_roundtrip.depth() == atlas.depth() && atlas_roundtrip.ncases() == atlas.ncases(),
-         "Archive::kindelize(atlas).tabelize() should reconstruct atlas shape");
+         "Atlas::kindelize().tabelize() should reconstruct atlas shape");
   std::int64_t expected_between = 0;
   std::int64_t expected_in = 0;
   std::int64_t expected_not_in = 0;
@@ -2344,7 +2344,7 @@ void test_versatile_dataframe_families() {
       "clear sky and sun,clear sky\n"
       "fog near junction,fog near school\n");
   const auto text_df = DataFrame::load_csv(text_path.string());
-  const auto text_catalog = pluss::kindle::Catalog::kindelize(text_df);
+  const auto text_catalog = text_df.kindelize();
   const auto text_clean = text_catalog.clean("txt").tabelize();
   expect(text_clean.ncases() == text_df.ncases(), "clean should preserve case count");
 
@@ -2388,8 +2388,8 @@ void test_versatile_dataframe_families() {
          "stats should emit one-row stat table");
   const auto text_tfidf = text_catalog.tfidf("txt").tabelize();
   expect(text_tfidf.get("txt_tfidf_norm").has_value(), "tfidf should append tfidf norm feature");
-  const auto from_catalog = pluss::kindle::Catalog::kindelize(df.head(5, false)).tabelize();
-  expect(from_catalog.ncases() == 5, "Catalog::kindelize(df).tabelize() should reconstruct frame rows");
+  const auto from_catalog = df.head(5, false).kindelize().tabelize();
+  expect(from_catalog.ncases() == 5, "DataFrame::kindelize().tabelize() should reconstruct frame rows");
 
   const auto summary = df.aggregate(
       {

@@ -535,7 +535,24 @@ pluss::kindle::Catalog DataFrame::kindelize() const {
 
 pluss::kindle::Catalog DataFrame::kindelize(const pluss::kindle::KindelizePolicy& policy) const {
   PLUSS_CHECK(defined(), "DataFrame::kindelize requires a defined DataFrame");
-  return pluss::kindle::Catalog::kindelize(*this, policy);
+  std::vector<std::pair<std::string, pluss::kindle::Stream>> out;
+  out.reserve(static_cast<std::size_t>(nfeatures()) + (policy.materialize_label ? 1u : 0u));
+
+  const auto case_axis = label().values();
+  for (const auto& key : features()) {
+    auto stream = pluss::kindle::Stream::from_thread(
+        this->features(key),
+        policy.attach_labels ? std::optional<Thread>{case_axis} : std::nullopt);
+    out.emplace_back(key, std::move(stream));
+  }
+
+  if (policy.materialize_label) {
+    PLUSS_CHECK(features().end() == std::find(features().begin(), features().end(), policy.label_key),
+                "DataFrame::kindelize: label key collides with existing feature '" + policy.label_key + "'");
+    out.emplace_back(policy.label_key, pluss::kindle::Stream::from_thread(case_axis));
+  }
+
+  return pluss::kindle::Catalog(std::move(out));
 }
 
 pluss::bundle::Registry DataFrame::bundelize() const {

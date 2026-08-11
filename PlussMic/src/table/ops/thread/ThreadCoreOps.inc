@@ -134,6 +134,14 @@ std::string Thread::ptype() const {
 }
 std::string Thread::dtype() const { return impl_ref_().dtype_; }
 ThreadValue Thread::value() const { return ThreadValue(*this); }
+
+pluss::kindle::Stream Thread::kindelize() const {
+  return pluss::kindle::Stream::from_thread(*this);
+}
+
+pluss::bundle::Slot Thread::bundelize() const {
+  return kindelize().bundelize();
+}
 bool Thread::is_valid(std::int64_t row) const {
   const auto idx = normalize_index(row, size());
   if (!has_validity_mask()) {

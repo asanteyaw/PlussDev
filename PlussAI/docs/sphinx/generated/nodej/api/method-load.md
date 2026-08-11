@@ -53,7 +53,7 @@ result.value() is available
     const Series pred = best.infer(test_x);
     const fs::path best_model_path = model_dir / "hour_best_workflow.bin";
     best.save(best_model_path.string(), train_x, train_y, train_options);
-    auto restored = nja::WorkflowModel::load(best_model_path.string());
+    auto restored = nja::Model::load(best_model_path.string());
     const Series pred_restored = restored.infer(test_x);
     const double restored_max_abs_diff = nja::max_abs_diff(pred, pred_restored);
     std::cout << "restored prediction max_abs_diff: " << restored_max_abs_diff << "\n";

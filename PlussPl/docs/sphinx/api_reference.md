@@ -2,6 +2,14 @@
 
 This hub is organized by surface area.
 
+## Studio, Pane, Trace (per-method reference)
+
+- [Studio API Reference](studio_api_reference.md)
+  `Studio`, the top-level figure object — one method page per method, with verified
+  examples and real rendered output for every overload and option. This is actively being
+  expanded to cover `Pane` and `Trace` the same way; until then, see "Core plotting engine"
+  below for broader (but less granular) coverage of those two classes.
+
 ## Core plotting engine
 
 - [PlussPl Core API](plusspl_core_api.md)

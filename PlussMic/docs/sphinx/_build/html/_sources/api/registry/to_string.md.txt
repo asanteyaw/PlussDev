@@ -70,7 +70,7 @@ std::cout << rg.to_string();
 
 - Identical output to `operator<<` and [`show()`](show.md).
 - A field's `types` tally having more than one entry is exactly what makes that
-  field not stream-compatible — see [`Registry::to_kindle`](to_kindle.md).
+  field not stream-compatible — see [`Registry::kindelize`](kindelize.md).
 - On an undefined registry, returns `{ "_type": "Registry", "defined": false }`
   rather than throwing.
 
@@ -85,9 +85,9 @@ std::cout << rg.to_string();
   kindle model (a box-table format, not JSON).
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_kindle.html">
+  <a class="prev-link" href="to_json.html">
     <span class="label">Previous</span>
-    <span class="title">to_kindle</span>
+    <span class="title">to_json</span>
   </a>
   <a class="next-link" href="unique.html">
     <span class="label">Next</span>

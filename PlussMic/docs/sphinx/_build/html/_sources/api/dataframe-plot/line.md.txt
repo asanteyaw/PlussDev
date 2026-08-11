@@ -94,12 +94,24 @@ See Examples 1, 2, and 3 below for each of these three paths in turn.
       double alpha{1.0};
       double line_width{1.6};
       std::optional<pluss::pl::LimitMethod> y_limit_method{pluss::pl::LimitMethod::Padded};
+      XYAlignOptions align{};
     };
     ```
     `alpha` controls trace opacity, `line_width` the stroke width. `y_limit_method` chooses
     how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin beyond
     the data's min/max, `Tight` fits exactly to the data range with no margin, and
     `TickAligned` snaps the limits outward to the nearest tick boundaries.
+
+    ```{note} align is present on the struct but has no effect at this layer
+    `align` (`XYAlignOptions`) exists so `Catalog::plot().line()` can reuse this exact
+    struct type for its own key-to-key alignment — see
+    [`CatalogPlotAccessor::line`](../catalog-plot/line.md)
+    for where it actually does something. `DataFramePlotAccessor::line()` itself never reads
+    `align`: every column in an already-constructed `DataFrame` shares one row count by
+    construction, so there is no length mismatch here for `align` to resolve in the first
+    place. Setting it to any `XYAlignMode`/`XYAlignBy` combination produces byte-identical
+    output.
+    ```
 
 ## Returns
 

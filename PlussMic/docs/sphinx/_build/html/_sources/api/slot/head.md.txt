@@ -74,9 +74,9 @@ std::cout << out.size();
   `head()` is built on.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="from_kindle.html">
+  <a class="prev-link" href="freq.html">
     <span class="label">Previous</span>
-    <span class="title">from_kindle</span>
+    <span class="title">freq</span>
   </a>
   <a class="next-link" href="invalid.html">
     <span class="label">Next</span>

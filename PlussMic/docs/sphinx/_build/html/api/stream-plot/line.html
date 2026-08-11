@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>StreamPlotAccessor::line &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="StreamPlotAccessor::scatter" href="scatter.html" />
+    <link rel="prev" title="StreamPlotAccessor::hist" href="hist.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 75b3eba1c308 -->
+<section id="streamplotaccessor-line">
+<h1>StreamPlotAccessor::line<a class="headerlink" href="#streamplotaccessor-line" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../stream_plot_accessor_api_reference.html"><span class="doc std std-doc">Back to StreamPlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">StreamPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">StreamPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">StreamPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">LinePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">StreamPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">LinePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws a single line trace of the bound stream’s own values, against either a plain case
+index (no <code class="docutils literal notranslate"><span class="pre">x</span></code> given) or an explicit companion <code class="docutils literal notranslate"><span class="pre">Stream</span></code> used as the x-axis. Every overload
+is a one-line forward — <code class="docutils literal notranslate"><span class="pre">base_.to_thread().plot(options_).line(...)</span></code> — into
+<a class="reference internal" href="../thread-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code></span></a>, converting the bound stream (and, if
+given, <code class="docutils literal notranslate"><span class="pre">x</span></code>) to <code class="docutils literal notranslate"><span class="pre">Thread</span></code> first via <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code>. See that page for the full
+mechanics; this page covers what’s specific to the <code class="docutils literal notranslate"><span class="pre">Stream</span></code> layer.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Stream has no name() — every chart is column-named “value”/”x”/”hue”
+<code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code>’s naming rule names the wrapped column after the source
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s own <code class="docutils literal notranslate"><span class="pre">name()</span></code> if it has one, falling back to <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> (the bound thread) or
+<code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> (a companion thread) otherwise. <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code> never sets a name on the
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> it produces — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no <code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> concept at all — so every
+<code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor</span></code> chart’s axis labels are <strong>always</strong> the generic fallback names: <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>
+for the bound stream, <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> for a companion stream (other methods on this accessor use
+<code class="docutils literal notranslate"><span class="pre">&quot;hue&quot;</span></code> for their own second-stream argument). There is no way to get a custom column name
+out of a <code class="docutils literal notranslate"><span class="pre">Stream</span></code>-sourced chart the way a named <code class="docutils literal notranslate"><span class="pre">Thread</span></code> or a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> feature can.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Row (case) labels are still inherited, via with_label()
+Unlike naming, <strong>row labels do carry through</strong>: <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code> copies the bound
+stream’s own label (attached via <a class="reference internal" href="../stream/with_label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::with_label</span></code></span></a>) onto the
+resulting <code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s row labels. <code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code>’s own inheritance rule then
+applies — the bound stream’s label wins if present, otherwise a companion <code class="docutils literal notranslate"><span class="pre">x</span></code> stream’s
+label, otherwise a plain case index. See Examples 1 and 2.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>, optional)
+A companion stream used as the x-axis. Must be the same size as the bound stream — a
+mismatched size throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code> (the message still refers
+to <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, since that’s where the size check actually runs after both streams
+convert). Omitted means the x-axis falls back to the bound stream’s own label, or a
+plain case index if it has none — see the important callout above.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>)
+The identical struct documented on
+<a class="reference internal" href="../catalog-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::line</span></code></span></a> (<code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">line_width</span></code>,
+<code class="docutils literal notranslate"><span class="pre">y_limit_method</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>) — see that page for each field’s meaning. <code class="docutils literal notranslate"><span class="pre">align</span></code> is
+accepted for shape-compatibility but has no observable effect here: <code class="docutils literal notranslate"><span class="pre">Stream::line()</span></code>
+only ever wraps at most two operands (the bound stream and <code class="docutils literal notranslate"><span class="pre">x</span></code>) into a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-level
+call, which has no multi-key alignment step to configure.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one pane containing a single, unlabeled (no-legend) line trace of the
+bound stream’s values.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. No companion stream, and the bound stream has no label of its own: falls back
+to a plain case index.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">revenue</span></code> has no label, so the x-axis falls back to a plain <code class="docutils literal notranslate"><span class="pre">0..3</span></code> case index; the y-axis
+is labeled <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> — never <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code>, since <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no name to draw from.</p>
+<p><img alt="Output of Example 1" src="../../_images/line-14.svg" /></p>
+<p>Example 2. No companion stream, but the bound stream carries its own label — that label
+becomes the x-axis instead of a bare case index.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">labeled_revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q4&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled_revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 2" src="../../_images/line-22.svg" /></p>
+<p>Example 3. An explicit companion stream as the x-axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Jan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Feb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Mar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Apr&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="n">month</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The line is drawn against <code class="docutils literal notranslate"><span class="pre">month</span></code>’s four categorical positions instead of a case index; the
+x-axis is titled <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">month</span></code> has no name to contribute either).</p>
+<p><img alt="Output of Example 3" src="../../_images/line-33.svg" /></p>
+<p>Example 4. An explicit <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>, tuning opacity and the y-axis fit, with no
+companion stream.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}));</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.85</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">y_limit_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">LimitMethod</span><span class="o">::</span><span class="n">Tight</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 4" src="../../_images/line-43.svg" /></p>
+<p>Example 5. A companion stream together with explicit options — the four-argument-equivalent
+overload.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Jan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Feb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Mar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Apr&quot;</span><span class="p">}));</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.85</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">y_limit_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">LimitMethod</span><span class="o">::</span><span class="n">Tight</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 5" src="../../_images/line-53.svg" /></p>
+<p>Example 6. A mismatched-size companion stream throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">short_month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Jan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Feb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Mar&quot;</span><span class="p">}));</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="n">short_month</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::plot: thread size mismatch
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Delegates straight to <a class="reference internal" href="../thread-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code></span></a> after
+<code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code> — see that page (and, beneath it,
+<a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>) for the full mechanics.</p></li>
+<li><p>Column naming is always the generic fallback (<code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code>) — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no
+<code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> the way <code class="docutils literal notranslate"><span class="pre">Thread</span></code> does. See the important callout above.</p></li>
+<li><p>Row labels <strong>do</strong> carry through, via <code class="docutils literal notranslate"><span class="pre">Stream::with_label()</span></code> → <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code>.</p></li>
+<li><p>A mismatched-size companion <code class="docutils literal notranslate"><span class="pre">x</span></code> throws — see Example 6.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see
+<a class="reference internal" href="../catalog-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::line</span></code></span></a>’s important callout for how to view
+or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../thread-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code></span></a>: the method this delegates to.</p></li>
+<li><p><a class="reference internal" href="bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::bar</span></code></span></a>: the same shape, drawn as bars instead of a connected
+line.</p></li>
+<li><p><a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::scatter</span></code></span></a>: points against a required companion stream,
+instead of a connected line against an optional one.</p></li>
+<li><p><a class="reference internal" href="../stream/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::plot</span></code></span></a>: how to enter this accessor in the first place.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="hist.html">
+    <span class="label">Previous</span>
+    <span class="title">hist</span>
+  </a>
+  <a class="next-link" href="scatter.html">
+    <span class="label">Next</span>
+    <span class="title">scatter</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../stream_plot_accessor_api_reference.html">StreamPlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="hist.html" title="previous chapter">StreamPlotAccessor::hist</a></li>
+      <li>Next: <a href="scatter.html" title="next chapter">StreamPlotAccessor::scatter</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/stream-plot/line.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

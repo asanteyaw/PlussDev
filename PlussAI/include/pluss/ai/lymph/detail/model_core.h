@@ -33,6 +33,7 @@ public:
   [[nodiscard]] TaskKind task_kind() const noexcept { return workflow_.task_kind(); }
   [[nodiscard]] const std::optional<ModelSpec>& model_spec() const noexcept { return workflow_.model_spec(); }
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const noexcept { return workflow_.transform_specs(); }
+  [[nodiscard]] const CategoryMaps& category_maps() const noexcept { return category_maps_; }
   [[nodiscard]] FlowGraphInfo graph_info() const { return resolve(workflow_.graph_info(), "graph_info"); }
   [[nodiscard]] std::vector<std::string> nested_param_keys() const { return workflow_.nested_param_keys(); }
   [[nodiscard]] double nested_param(std::string_view path) const {
@@ -1315,7 +1316,10 @@ struct FoldFramePair_ {
   if (!data_options.label_feature.has_value()) {
     ::pluss::throw_error("confusion_table(model,frame,data_options): data_options.label_feature is required.");
   }
-  const Series y = frame.features(*data_options.label_feature).as_series().reshape({frame.ncases()});
+  const LabeledBatch batch =
+      resolve(labeled_batch_from_dataframe(frame, data_options, &model.category_maps(), nullptr),
+              "confusion_table(model,frame,data_options).labeled_batch");
+  const Series y = batch.y.reshape({batch.y.numel()});
   const Series predicted = model.infer(frame, data_options, infer_options);
   return ::pluss::ai::lymph::confusion_table(y, predicted, options);
 }
@@ -1340,7 +1344,10 @@ struct FoldFramePair_ {
   if (!data_options.label_feature.has_value()) {
     ::pluss::throw_error("classification_summary(model,frame,data_options): data_options.label_feature is required.");
   }
-  const Series y = frame.features(*data_options.label_feature).as_series().reshape({frame.ncases()});
+  const LabeledBatch batch =
+      resolve(labeled_batch_from_dataframe(frame, data_options, &model.category_maps(), nullptr),
+              "classification_summary(model,frame,data_options).labeled_batch");
+  const Series y = batch.y.reshape({batch.y.numel()});
   const Series predicted = model.infer(frame, data_options, infer_options);
   return ::pluss::ai::lymph::classification_summary(y, predicted, options);
 }

@@ -157,8 +157,8 @@ Rows are reordered into ascending alphabetical order by case label (`Accra`,
   *names*, rather than case labels.
 - [`DataFrame::case_study`](case_study.md): select rows by label or position, once you
   know what the label axis looks like.
-- `DataFrame::sort()`: the root-level equivalent of `label().sort()` (not yet
-  published as its own page).
+- [`DataFrame::sort`](sort.md): the value-order planning surface, separate from
+  `label().sort()` which owns case-axis ordering.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="kurtosis.html">

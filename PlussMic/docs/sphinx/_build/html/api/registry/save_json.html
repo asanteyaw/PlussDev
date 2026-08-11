@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -55,7 +55,7 @@
 into the kindle model:</p>
 <ul class="simple">
 <li><p><strong>Uniform field kinds</strong>: converts via
-<a class="reference internal" href="to_kindle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code></span></a> and writes a row-major array-of-objects JSON, same
+<a class="reference internal" href="kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kindelize()</span></code></span></a> and writes a row-major array-of-objects JSON, same
 shape as <code class="docutils literal notranslate"><span class="pre">Catalog::save_json()</span></code>.</p></li>
 <li><p><strong>Mixed field kinds</strong>: falls back to
 writing this registry’s own <a class="reference internal" href="to_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></span></a> output directly — the <code class="docutils literal notranslate"><span class="pre">config</span></code>
@@ -179,7 +179,7 @@ it writes that method’s output verbatim.</p></li>
 <li><p><a class="reference internal" href="save_as.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_as()</span></code></span></a><code class="docutils literal notranslate"><span class="pre">(&quot;json&quot;,</span> <span class="pre">filepath)</span></code> is equivalent to this method’s
 no-config overload — <code class="docutils literal notranslate"><span class="pre">Registry::save_as</span></code> special-cases <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code> to call
 <code class="docutils literal notranslate"><span class="pre">save_json()</span></code> directly, rather than routing through the shared
-<code class="docutils literal notranslate"><span class="pre">to_kindle()</span></code>-requiring path every other target type uses.</p></li>
+<code class="docutils literal notranslate"><span class="pre">kindelize()</span></code>-requiring path every other target type uses.</p></li>
 </ul>
 </section>
 <section id="see-also">

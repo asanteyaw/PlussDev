@@ -22,7 +22,9 @@ Public fields on this type:
 
 - `CompareReport report{}`
 - `std::optional<Model> best_model{}`
+- `std::optional<Model> worst_model{}`
 - `std::vector<Model> fitted{}`
+- `std::vector<Model> bottom_fitted{}`
 
 ## Examples
 

@@ -30,6 +30,7 @@
 #include "kindle/display/Display.h"
 #include "table/DataFrame.h"
 #include "table/io/CsvSchemaConvert.h"
+#include "table/plot/detail/Plot3DConfig.h"
 
 namespace pluss::kindle {
 
@@ -81,7 +82,7 @@ Catalog project_catalog(const Catalog& catalog,
   out.reserve(names.size());
   for (const auto& name : names) {
     PLUSS_CHECK(catalog.has(name), std::string(where) + ": unknown key '" + name + "'");
-    out.emplace_back(name, catalog.at(name));
+    out.emplace_back(name, catalog.keys(name));
   }
   return Catalog(std::move(out));
 }

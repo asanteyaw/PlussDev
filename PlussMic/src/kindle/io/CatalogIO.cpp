@@ -42,17 +42,14 @@ pluss::table::DataFrame catalog_to_io_frame(const Catalog& catalog) {
 
 } // namespace
 
-pluss::table::DataFrame Catalog::to_table(const TabelizePolicy& policy, bool render) const {
-  auto out = tabelize(policy);
-  if (render) {
-    pluss::table::display::print(std::cout, out, {});
-  }
-  return out;
-}
-
 pluss::bundle::Registry Catalog::bundelize() const {
   PLUSS_CHECK(defined(), "Catalog::bundelize: catalog undefined");
-  return pluss::bundle::Registry::from_kindle(*this);
+  std::vector<std::pair<std::string, pluss::bundle::Slot>> out;
+  out.reserve(static_cast<std::size_t>(nkeys()));
+  for (const auto& key : keys()) {
+    out.emplace_back(key, keys(key).bundelize());
+  }
+  return pluss::bundle::Registry(std::move(out));
 }
 
 void Catalog::display() const {

@@ -13,9 +13,8 @@ pluss::kindle::Catalog Registry::kindelize() const
 
 ## What It Does
 
-A pure alias for [`to_kindle()`](to_kindle.md), kept for older call sites — the
-comment in `registry.h` marks it as a "backward-compatible alias." Prefer
-[`to_kindle()`](to_kindle.md) or [`as_kindle()`](as_kindle.md) in new code.
+Converts the registry into a `pluss::kindle::Catalog`, one stream per field, in
+the registry's field order.
 
 ## Parameters
 
@@ -24,12 +23,11 @@ comment in `registry.h` marks it as a "backward-compatible alias." Prefer
 ## Returns
 
 `pluss::kindle::Catalog`
-    A new catalog with one stream per field — identical to what `to_kindle()`
-    would return.
+    A new catalog with one stream per field.
 
 ## Examples
 
-Example 1. `kindelize()` produces the same result as `to_kindle()`.
+Example 1. `kindelize()` produces one catalog key per registry field.
 
 ```cpp
 auto rg = pluss::bundle::Registry({
@@ -47,16 +45,15 @@ std::cout << rg.kindelize().nkeys();
 
 ## Notes
 
-- Identical to `to_kindle()` in every respect, including throwing on a
-  non-stream-compatible field.
-- Kept for backward compatibility — prefer `to_kindle()` or `as_kindle()` for
-  new code.
+- Every field must be stream-compatible; mixed-kind slots throw.
+- Requires a defined registry.
 
 ## See Also
 
-- [`Registry::to_kindle`](to_kindle.md): the method this is a pure alias for.
-- [`Registry::as_kindle`](as_kindle.md): another pure alias for the same
-  method.
+- [`Catalog::bundelize`](../catalog/bundelize.md): the reverse bridge from
+  Kindle back into the bundle model.
+- [`Registry::save_csv`](save_csv.md): one of the export methods that routes
+  through this conversion internally.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="keep_.html">

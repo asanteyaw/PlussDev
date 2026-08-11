@@ -68,7 +68,7 @@ size=1 val=2
 - Returns the counts, not the distinct values themselves — pair with
   [`distinct()`](distinct.md) if both are needed, in the same
   descending-frequency order.
-- Bridges through [`to_kindle()`](to_kindle.md) internally — requires the
+- Bridges through [`kindelize()`](kindelize.md) internally — requires the
   slot to be stream-compatible.
 - Requires the slot to be defined — an undefined `Slot` throws
   `"Slot: undefined handle"`.
@@ -84,8 +84,8 @@ size=1 val=2
     <span class="label">Previous</span>
     <span class="title">filter</span>
   </a>
-  <a class="next-link" href="from_kindle.html">
+  <a class="next-link" href="head.html">
     <span class="label">Next</span>
-    <span class="title">from_kindle</span>
+    <span class="title">head</span>
   </a>
 </div>

@@ -44,6 +44,7 @@ This set follows the same usage-first API pattern used across the other Pluss do
 :hidden:
 
 api_reference
+studio_api_reference
 plusspl_core_api
 plusspl_core_controls_api
 plusspl_object_model_api

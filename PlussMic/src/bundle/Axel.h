@@ -91,12 +91,7 @@ public:
   Axel freq(pluss::kindle::FreqOptions options = {}) const;
   Axel ndistinct(pluss::kindle::DistinctOptions options = {}) const;
 
-  pluss::kindle::Archive to_kindle() const;
-  // Semantic alias for explicit model switch.
-  pluss::kindle::Archive as_kindle() const;
-  // Backward-compatible alias for older call sites.
   pluss::kindle::Archive kindelize() const;
-  static Axel from_kindle(const pluss::kindle::Archive& archive);
   pluss::table::Atlas tabelize() const;
   pluss::table::Atlas tabelize(const pluss::kindle::TabelizePolicy& policy) const;
 

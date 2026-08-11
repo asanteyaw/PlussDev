@@ -319,6 +319,34 @@ lymph_shape_test/fast:
 .PHONY : lymph_shape_test/fast
 
 # Convenience name for target.
+PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/rule
+.PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/rule
+
+# Convenience name for target.
+lymph_split_surface_test: PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/rule
+.PHONY : lymph_split_surface_test
+
+# fast build rule for target.
+lymph_split_surface_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/build
+.PHONY : lymph_split_surface_test/fast
+
+# Convenience name for target.
+PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/rule
+.PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/rule
+
+# Convenience name for target.
+lymph_spotcheck_test: PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/rule
+.PHONY : lymph_spotcheck_test
+
+# fast build rule for target.
+lymph_spotcheck_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/build
+.PHONY : lymph_spotcheck_test/fast
+
+# Convenience name for target.
 PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/rule
 .PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_target_transform_test.dir/rule
@@ -590,6 +618,54 @@ lymph_shape_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_shape_test.dir/lymph_shape_test.cpp.s
 .PHONY : lymph_shape_test.cpp.s
 
+lymph_split_surface_test.o: lymph_split_surface_test.cpp.o
+.PHONY : lymph_split_surface_test.o
+
+# target to build an object file
+lymph_split_surface_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/lymph_split_surface_test.cpp.o
+.PHONY : lymph_split_surface_test.cpp.o
+
+lymph_split_surface_test.i: lymph_split_surface_test.cpp.i
+.PHONY : lymph_split_surface_test.i
+
+# target to preprocess a source file
+lymph_split_surface_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/lymph_split_surface_test.cpp.i
+.PHONY : lymph_split_surface_test.cpp.i
+
+lymph_split_surface_test.s: lymph_split_surface_test.cpp.s
+.PHONY : lymph_split_surface_test.s
+
+# target to generate assembly for a file
+lymph_split_surface_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_split_surface_test.dir/lymph_split_surface_test.cpp.s
+.PHONY : lymph_split_surface_test.cpp.s
+
+lymph_spotcheck_test.o: lymph_spotcheck_test.cpp.o
+.PHONY : lymph_spotcheck_test.o
+
+# target to build an object file
+lymph_spotcheck_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/lymph_spotcheck_test.cpp.o
+.PHONY : lymph_spotcheck_test.cpp.o
+
+lymph_spotcheck_test.i: lymph_spotcheck_test.cpp.i
+.PHONY : lymph_spotcheck_test.i
+
+# target to preprocess a source file
+lymph_spotcheck_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/lymph_spotcheck_test.cpp.i
+.PHONY : lymph_spotcheck_test.cpp.i
+
+lymph_spotcheck_test.s: lymph_spotcheck_test.cpp.s
+.PHONY : lymph_spotcheck_test.s
+
+# target to generate assembly for a file
+lymph_spotcheck_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_spotcheck_test.dir/lymph_spotcheck_test.cpp.s
+.PHONY : lymph_spotcheck_test.cpp.s
+
 lymph_target_transform_test.o: lymph_target_transform_test.cpp.o
 .PHONY : lymph_target_transform_test.o
 
@@ -710,6 +786,8 @@ help:
 	@echo "... lymph_model_append_test"
 	@echo "... lymph_search_test"
 	@echo "... lymph_shape_test"
+	@echo "... lymph_split_surface_test"
+	@echo "... lymph_spotcheck_test"
 	@echo "... lymph_target_transform_test"
 	@echo "... lymph_unsupervised_test"
 	@echo "... lymph_validate_test"
@@ -741,6 +819,12 @@ help:
 	@echo "... lymph_shape_test.o"
 	@echo "... lymph_shape_test.i"
 	@echo "... lymph_shape_test.s"
+	@echo "... lymph_split_surface_test.o"
+	@echo "... lymph_split_surface_test.i"
+	@echo "... lymph_split_surface_test.s"
+	@echo "... lymph_spotcheck_test.o"
+	@echo "... lymph_spotcheck_test.i"
+	@echo "... lymph_spotcheck_test.s"
 	@echo "... lymph_target_transform_test.o"
 	@echo "... lymph_target_transform_test.i"
 	@echo "... lymph_target_transform_test.s"

@@ -10,20 +10,7 @@ DataFrame::sort(bool ascending = true, bool nulls_last = true) -> DataFrameSortB
 
 ## What It Does
 
-Creates the sort planner used for explicit value-based frame ordering.
-
-`sort()` itself does not execute anything. It builds an ordering plan which you
-finish with a terminal such as:
-
-- `.yield()` to materialize the sorted frame
-- `.order()` to return the reusable row permutation
-- `.head(n)` / `.tail(n)` to take ranked slices directly
-
-The planner grows beyond `arrange(...)` when you want:
-
-- chained per-key policies with `.by(...).desc().then(...).asc()`
-- a reusable permutation artifact from `.order()`
-- within-group ordering through `.within(...).by(...)`
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 ## Parameters
 
@@ -36,11 +23,11 @@ The planner grows beyond `arrange(...)` when you want:
 ## Returns
 
 `DataFrameSortBuilder`
-    Planner surface for chained sort configuration and explicit terminals.
+    Value produced by this call.
 
 ## Examples
 
-Example 1. Sort rows by one or more feature values through the explicit builder chain.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -49,54 +36,17 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.sort().by({"sales", "city"}).yield();
+auto out = df.sort();
 ```
 
 ### Output
 
 ```text
 id  sales  city
-3    90.0  Kumasi
 1   100.0  Accra
 2   120.0  Tema
+3    90.0  Kumasi
 ```
-
-Example 2. Chain per-key direction and null policy without dropping into
-`ArrangeSpec`.
-
-```cpp
-auto ordered = df.sort()
-    .by("sales").desc()
-    .then("city").asc()
-    .yield();
-```
-
-Example 3. Reuse the row permutation across aligned frames.
-
-```cpp
-auto ord = df.sort().by("sales").desc().order();
-auto left = df.take(ord);
-auto right = peer.take(ord);
-```
-
-Example 4. Sort within first-seen groups instead of globally sorting the group
-keys themselves.
-
-```cpp
-auto within = df.sort()
-    .within({"sector"})
-    .by("sales").desc()
-    .yield();
-```
-
-## Notes
-
-- `sort()` is not a standalone terminal. Use `.by(...)` to define the sort keys.
-- Use `arrange(...)` when you want the low-level execute-now sorter directly.
-- Use `label().sort(...)` for case-axis sorting. `sort()` is for value-based row
-  ordering.
-- `within(...)` preserves the first-seen order of groups, then sorts rows inside
-  each group by the configured sort keys.
 
 
 <div class="pluss-inline-prev-next">

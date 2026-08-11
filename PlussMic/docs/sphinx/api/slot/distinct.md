@@ -47,7 +47,7 @@ size=2 vals=1,2
 
 ## Notes
 
-- Bridges through [`to_kindle()`](to_kindle.md) internally — requires the
+- Bridges through [`kindelize()`](kindelize.md) internally — requires the
   slot to be stream-compatible (a single, homogeneous value kind).
 - `options.dropnull` defaults to `true`; pass `{.dropnull = false}` to
   keep a single null as one of the distinct values.

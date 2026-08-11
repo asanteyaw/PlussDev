@@ -1,5 +1,5 @@
 Catalog Catalog::clean(std::string_view field) const {
-  return keys(field).map([](const Stream& s) {
+  return keys({field}).map([](const Stream& s) {
     const auto t = s.to_thread().cast().note().as_note();
     std::vector<std::string> out;
     out.reserve(static_cast<std::size_t>(s.size()));

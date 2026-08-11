@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -58,9 +58,7 @@ overload writes to the given stream; the no-argument overload is meant to write 
 <p class="admonition-title">Important</p>
 <p>The no-argument overload is confirmed to hang outside an interactive terminal
 <code class="docutils literal notranslate"><span class="pre">Atlas::show()</span></code> (no <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code> argument) has been directly verified to hang
-indefinitely when run non-interactively (this is the same underlying call
-<a class="reference internal" href="../archive/to_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::to_table(policy,</span> <span class="pre">true)</span></code></span></a> used to route through before
-that path was fixed to use a direct <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> print instead). The <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>
+indefinitely when run non-interactively. The <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>
 overload does <strong>not</strong> exhibit this hang — it prints immediately and returns, verified
 directly. Until the no-argument overload is fixed, always call <code class="docutils literal notranslate"><span class="pre">show(std::cout,</span> <span class="pre">options)</span></code>
 explicitly rather than <code class="docutils literal notranslate"><span class="pre">show(options)</span></code>/<code class="docutils literal notranslate"><span class="pre">show()</span></code>.</p>

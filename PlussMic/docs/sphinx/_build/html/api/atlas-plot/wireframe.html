@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -43,88 +43,94 @@
 <p><a class="reference internal" href="../../atlas_plot_accessor_api_reference.html"><span class="doc std std-doc">Back to AtlasPlotAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">wireframe</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
-<span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">wireframe</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Wireframe3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span><span class="w"> </span><span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">wireframe</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span><span class="w"> </span><span class="n">AtlasPlotAccessor</span><span class="o">::</span><span class="n">wireframe</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Wireframe3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Draws the same <code class="docutils literal notranslate"><span class="pre">[depth</span> <span class="pre">×</span> <span class="pre">case]</span></code> grid as <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a> — case axis on x,
-selected depth positions on y, <code class="docutils literal notranslate"><span class="pre">feature</span></code>’s values as height — but rendered as
-<code class="docutils literal notranslate"><span class="pre">flash::lattice</span></code> (mesh edges only) instead of <code class="docutils literal notranslate"><span class="pre">surface()</span></code>’s <code class="docutils literal notranslate"><span class="pre">flash::sheet</span></code> (a filled
-mesh). Grid construction (<code class="docutils literal notranslate"><span class="pre">build_depth_case_grid</span></code>) is identical between the two
-methods; only the rendering primitive differs.</p>
+<p>Builds the same case × depth × <code class="docutils literal notranslate"><span class="pre">feature</span></code> grid as <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>, but draws it as an
+open mesh (a lattice of connecting lines) instead of a filled sheet — useful when you want to see
+through the shape to gridlines or overlapping structure behind it.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Returns a Studio, not printable output
 Like every method on <code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor</span></code>, this builds and returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> —
-call <code class="docutils literal notranslate"><span class="pre">.show()</span></code>/<code class="docutils literal notranslate"><span class="pre">.save_svg(path)</span></code>/etc. to view or persist it.</p>
+call <code class="docutils literal notranslate"><span class="pre">.show()</span></code>/<code class="docutils literal notranslate"><span class="pre">.to_svg()</span></code>/<code class="docutils literal notranslate"><span class="pre">.save_svg(path)</span></code>/etc. to view or persist it; <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">chart</span></code> does
+not compile.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
-The numeric feature supplying each grid cell’s height. Must be present, with a
-matching case count, in every frame <code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code> selects.</p>
+The numeric feature forming the mesh’s z-axis. Must exist in every selected frame.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Wireframe3DPlotOptions&amp;</span></code>)
-<code class="docutils literal notranslate"><span class="pre">scene</span></code>/<code class="docutils literal notranslate"><span class="pre">trace</span></code> are the shared <code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>/<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code> structs
-also used by <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>/<a class="reference internal" href="cloud3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cloud3()</span></code></span></a> — see
-<a class="reference internal" href="../dataframe-plot3d/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::line</span></code></span></a> for the full field
-breakdown.</p>
+Same shape as <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Surface3DPlotOptions</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">scene</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">trace</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code>).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
-A figure with one 3D pane containing the <code class="docutils literal notranslate"><span class="pre">[depth</span> <span class="pre">×</span> <span class="pre">case]</span></code> grid rendered as mesh
-edges.</p>
+A figure with one 3D pane holding a single wireframe (lattice) trace.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. The same grid as <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>’s example, rendered as a
-wireframe instead of a filled mesh.</p>
+<p>Example 1. Plot <code class="docutils literal notranslate"><span class="pre">humidity</span></code> as a wireframe mesh across every frame’s cases and the depth stack.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="w"> </span><span class="n">frames</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Takoradi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ho&quot;</span><span class="p">};</span>
 <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
 <span class="w">    </span><span class="n">frames</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">        </span><span class="p">{</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">19.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">}));</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">70.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="n">cities</span><span class="p">))));</span>
 <span class="p">}</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;day1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day5&quot;</span><span class="p">})));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">wireframe</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">);</span>
-<span class="n">chart</span><span class="p">.</span><span class="n">save_svg</span><span class="p">(</span><span class="s">&quot;wireframe_temp.svg&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">wireframe</span><span class="p">(</span><span class="s">&quot;humidity&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p>Same underlying <code class="docutils literal notranslate"><span class="pre">[5</span> <span class="pre">×</span> <span class="pre">5]</span></code> grid as <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>’s example (values rising
-along both the case axis and the depth axis), but visible here as mesh edges rather
-than a filled surface.</p>
-<p><img alt="Output of Example 1" src="../../_images/wireframe-1.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/wireframe-11.svg" /></p>
+<p>Example 2. Same mesh, with a <code class="docutils literal notranslate"><span class="pre">Topology</span></code>-preset scene (a top-down-leaning camera suited to
+grid/contour-like shapes).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="w"> </span><span class="n">frames</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Takoradi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ho&quot;</span><span class="p">};</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">    </span><span class="n">frames</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">70.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">base</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="n">cities</span><span class="p">))));</span>
+<span class="p">}</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;day1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;day5&quot;</span><span class="p">})));</span>
+
+<span class="n">Wireframe3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">scene</span><span class="p">.</span><span class="n">preset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">flash</span><span class="o">::</span><span class="n">ScenePreset3D</span><span class="o">::</span><span class="n">Topology</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">wireframe</span><span class="p">(</span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 2" src="../../_images/wireframe-21.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">feature</span></code> must exist, with the same case count, in every frame <code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code>
-selects — a missing feature or mismatched case count throws, same as
-<a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>.</p></li>
-<li><p>Grid construction is identical to <a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>’s — the two methods
-differ only in rendering primitive.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">options.depth_axis</span></code> controls which frames form the grid’s y-axis, and in what
-order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">feature</span></code> must exist and be numeric in every frame selected by <code class="docutils literal notranslate"><span class="pre">options().depth_axis</span></code> (shared
+across <code class="docutils literal notranslate"><span class="pre">surface()</span></code>/<code class="docutils literal notranslate"><span class="pre">wireframe()</span></code>/<code class="docutils literal notranslate"><span class="pre">cloud3()</span></code>) — a missing feature in any of them throws.</p></li>
+<li><p>Every selected frame must share the same case count — a mismatched frame throws.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::surface</span></code></span></a>: the identical grid, rendered as a
-filled mesh instead of edges.</p></li>
-<li><p><a class="reference internal" href="cloud3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::cloud3</span></code></span></a>: raw per-frame points instead of an
-aggregated grid.</p></li>
-<li><p><a class="reference internal" href="../dataframe-plot3d/wireframe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::wireframe</span></code></span></a>: the
-single-frame wireframe method this generalizes across the depth stack.</p></li>
-<li><p><a class="reference internal" href="../atlas/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::plot</span></code></span></a>: how to enter this accessor.</p></li>
+<li><p><a class="reference internal" href="surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::surface</span></code></span></a>: the filled-sheet counterpart, same underlying grid.</p></li>
+<li><p><a class="reference internal" href="cloud3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor::cloud3</span></code></span></a>: a genuinely 3-feature scatter, rather than one
+feature over a case/depth grid.</p></li>
+<li><p><a class="reference internal" href="../atlas/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::plot</span></code></span></a>: the entry point this accessor is reached from.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="triplot.html">

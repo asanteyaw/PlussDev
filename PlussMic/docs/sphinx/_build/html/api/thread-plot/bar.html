@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -64,9 +64,10 @@ Same as <a class="reference internal" href="line.html"><span class="std std-doc"
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">BarPlotOptions</span></code>)
 The identical struct documented on
 <a class="reference internal" href="../dataframe-plot/bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::bar</span></code></span></a>
-(<code class="docutils literal notranslate"><span class="pre">ci_enabled</span></code>, <code class="docutils literal notranslate"><span class="pre">ci_level</span></code>, <code class="docutils literal notranslate"><span class="pre">horizontal</span></code>). <code class="docutils literal notranslate"><span class="pre">ci_enabled</span> <span class="pre">=</span> <span class="pre">true</span></code> still aggregates rows
-sharing the same <code class="docutils literal notranslate"><span class="pre">x</span></code> position into a mean-plus-confidence-interval bar, exactly as on
-the 2D accessor — useful when <code class="docutils literal notranslate"><span class="pre">x</span></code> has repeated values.</p>
+(<code class="docutils literal notranslate"><span class="pre">ci_enabled</span></code>, <code class="docutils literal notranslate"><span class="pre">ci_level</span></code>, <code class="docutils literal notranslate"><span class="pre">horizontal</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>). <code class="docutils literal notranslate"><span class="pre">ci_enabled</span> <span class="pre">=</span> <span class="pre">true</span></code> still aggregates
+rows sharing the same <code class="docutils literal notranslate"><span class="pre">x</span></code> position into a mean-plus-confidence-interval bar, exactly as
+on the 2D accessor — useful when <code class="docutils literal notranslate"><span class="pre">x</span></code> has repeated values. <code class="docutils literal notranslate"><span class="pre">align</span></code> is inert here, same
+as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -85,7 +86,7 @@ A figure with one pane containing a single bar trace of the bound thread’s val
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 1" src="../../_images/bar-11.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/bar-13.svg" /></p>
 <p>Example 2. An explicit companion thread as the category axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}));</span>
 <span class="n">city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">city</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">);</span>
@@ -94,7 +95,7 @@ A figure with one pane containing a single bar trace of the bound thread’s val
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 2" src="../../_images/bar-21.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/bar-23.svg" /></p>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">ci_enabled</span> <span class="pre">=</span> <span class="pre">true</span></code> — rows sharing the same <code class="docutils literal notranslate"><span class="pre">x</span></code> value aggregate into a mean bar
 with a confidence-interval whisker.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">repeated_amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">300.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">340.0</span><span class="p">,</span><span class="w"> </span><span class="mf">175.0</span><span class="p">,</span><span class="w"> </span><span class="mf">185.0</span><span class="p">}));</span>
@@ -113,7 +114,7 @@ with a confidence-interval whisker.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>’s three rows aggregate into one bar at the mean of <code class="docutils literal notranslate"><span class="pre">300,</span> <span class="pre">320,</span> <span class="pre">340</span> <span class="pre">=</span> <span class="pre">320</span></code>, with a
 90% confidence-interval whisker.</p>
-<p><img alt="Output of Example 3" src="../../_images/bar-31.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/bar-33.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>

@@ -621,7 +621,17 @@ pluss::kindle::Archive Atlas::kindelize() const {
 
 pluss::kindle::Archive Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) const {
   PLUSS_CHECK(defined(), "Atlas::kindelize requires a defined Atlas");
-  return pluss::kindle::Archive::kindelize(*this, policy);
+  std::vector<pluss::kindle::Catalog> catalogs;
+  catalogs.reserve(static_cast<std::size_t>(depth()));
+  for (std::int64_t i = 0; i < depth(); ++i) {
+    catalogs.push_back(frame(i).kindelize(policy));
+  }
+
+  std::optional<pluss::kindle::Stream> depth_labels = std::nullopt;
+  if (axis0_labels().has_value()) {
+    depth_labels = pluss::kindle::Stream::from_thread(*axis0_labels());
+  }
+  return pluss::kindle::Archive(std::move(catalogs), std::move(depth_labels));
 }
 
 pluss::bundle::Axel Atlas::bundelize() const {

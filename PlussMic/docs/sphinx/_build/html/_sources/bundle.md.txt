@@ -60,11 +60,11 @@ auto combined = axel.concat_depth(first);
 ## Kindle Bridge
 
 ```cpp
-auto stream = ids.to_kindle();
-auto catalog = registry.to_kindle();
-auto archive = axel.to_kindle();
+auto stream = ids.kindelize();
+auto catalog = registry.kindelize();
+auto archive = axel.kindelize();
 
-auto back_slot = pluss::bundle::Slot::from_kindle(stream);
-auto back_registry = pluss::bundle::Registry::from_kindle(catalog);
-auto back_axel = pluss::bundle::Axel::from_kindle(archive);
+auto back_slot = stream.bundelize();
+auto back_registry = catalog.bundelize();
+auto back_axel = archive.bundelize();
 ```

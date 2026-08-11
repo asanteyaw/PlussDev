@@ -29,9 +29,9 @@ struct TabelizePolicy {
 
 Converts the catalog into a `pluss::table::DataFrame`, one feature per stream, aligning
 all streams onto a single shared row axis first. This is the bridge every `save_*()`
-method (through an internal `Outer`/`Pos` policy variant) and [`to_table()`](to_table.md)
-use to turn a possibly-ragged `Catalog` into a strictly rectangular `DataFrame`.
-[`kindelize()`](kindelize.md) is the inverse direction.
+method uses to turn a possibly-ragged `Catalog` into a strictly rectangular
+`DataFrame`. [`DataFrame::kindelize()`](../dataframe/kindelize.md) is the inverse
+direction.
 
 ```{important} The default Align::Inner truncates a ragged catalog to its shortest stream
 With the default policy, streams of different lengths are aligned to their **shortest**
@@ -176,9 +176,8 @@ std::cout << frame;
 
 ## See Also
 
-- [`Catalog::to_table`](to_table.md): a thin wrapper over this method that optionally
-  prints the result.
-- [`Catalog::kindelize`](kindelize.md): the inverse direction, `DataFrame` → `Catalog`.
+- [`DataFrame::kindelize`](../dataframe/kindelize.md): the inverse direction,
+  `DataFrame` → `Catalog`.
 - [`Catalog::save_csv`](save_csv.md) (and the other `save_*()` methods): use an
   outer-align variant of this same mechanism internally.
 

@@ -21,6 +21,8 @@ PER_METHOD_CLASSES = {
     'TimeSeriesAccessor', 'DataFrameCastAccessor', 'ThreadPlotAccessor',
     'AtlasLabelAccessor', 'AtlasTimelineAccessor', 'AtlasTsAccessor',
     'AtlasTsResampler', 'AtlasPlotAccessor',
+    'CatalogPlotAccessor', 'CatalogPlot3DAccessor',
+    'StreamPlotAccessor', 'ArchivePlotAccessor',
     'Slot', 'Registry', 'Axel',
     'SlotCastAccessor', 'SlotNoteAccessor', 'SlotTimelineAccessor',
     'RegistryFieldAxisAccessor', 'RegistryCastAccessor',
@@ -256,6 +258,38 @@ CLASS_CONFIG = {
         'intro': 'This page documents the public plotting accessor returned by `Atlas::plot()`.',
         'binder': 'plot()',
     },
+    'CatalogPlotAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/catalog.h',
+        'output': DOCS / 'catalog_plot_accessor_api_reference.md',
+        'title': 'CatalogPlotAccessor API Reference',
+        'subtitle': 'Practical CatalogPlotAccessor API Reference',
+        'intro': 'This page documents the public plotting accessor returned by `Catalog::plot()`.',
+        'binder': 'plot()',
+    },
+    'CatalogPlot3DAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/catalog.h',
+        'output': DOCS / 'catalog_plot3d_accessor_api_reference.md',
+        'title': 'CatalogPlot3DAccessor API Reference',
+        'subtitle': 'Practical CatalogPlot3DAccessor API Reference',
+        'intro': 'This page documents the public 3D plotting accessor returned by `Catalog::plot3d()`.',
+        'binder': 'plot3d()',
+    },
+    'StreamPlotAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Stream.h',
+        'output': DOCS / 'stream_plot_accessor_api_reference.md',
+        'title': 'StreamPlotAccessor API Reference',
+        'subtitle': 'Practical StreamPlotAccessor API Reference',
+        'intro': 'This page documents the public plotting accessor returned by `Stream::plot()`.',
+        'binder': 'plot()',
+    },
+    'ArchivePlotAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Archive.h',
+        'output': DOCS / 'archive_plot_accessor_api_reference.md',
+        'title': 'ArchivePlotAccessor API Reference',
+        'subtitle': 'Practical ArchivePlotAccessor API Reference',
+        'intro': 'This page documents the public plotting accessor returned by `Archive::plot()`.',
+        'binder': 'plot()',
+    },
     'Stream': {
         'header': ROOT / 'PlussMic/src/kindle/Stream.h',
         'output': DOCS / 'stream_api_reference.md',
@@ -400,6 +434,10 @@ METHOD_PAGE_DIR = {
     'AtlasTsAccessor': 'atlas-ts',
     'AtlasTsResampler': 'atlas-ts-resample',
     'AtlasPlotAccessor': 'atlas-plot',
+    'CatalogPlotAccessor': 'catalog-plot',
+    'CatalogPlot3DAccessor': 'catalog-plot3d',
+    'StreamPlotAccessor': 'stream-plot',
+    'ArchivePlotAccessor': 'archive-plot',
     'DataFrameNoteAccessor': 'dataframe-note',
     'DataFrameTimelineAccessor': 'dataframe-timeline',
     'DataFrameLabelAccessor': 'dataframe-label',
@@ -458,6 +496,16 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
     ],
     'AtlasTsAccessor': [
         'AtlasTsResampler',
+    ],
+    'Catalog': [
+        'CatalogPlotAccessor',
+        'CatalogPlot3DAccessor',
+    ],
+    'Stream': [
+        'StreamPlotAccessor',
+    ],
+    'Archive': [
+        'ArchivePlotAccessor',
     ],
     'Slot': [
         'SlotCastAccessor',
@@ -6366,6 +6414,42 @@ auto atlas = pluss::table::Atlas({q1, q2});
 auto plot = atlas.plot();"""
 
 
+def catalog_plot_accessor_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto ct = pluss::kindle::Catalog({
+    \"x\"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0})),
+    \"y\"_k = pluss::kindle::Stream(pluss::make_series({4.0, 5.0, 6.0})),
+});
+auto plot = ct.plot();"""
+
+
+def catalog_plot3d_accessor_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto ct = pluss::kindle::Catalog({
+    \"x\"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0})),
+    \"y\"_k = pluss::kindle::Stream(pluss::make_series({4.0, 5.0, 6.0})),
+    \"z\"_k = pluss::kindle::Stream(pluss::make_series({7.0, 8.0, 9.0})),
+});
+auto plot3d = ct.plot3d();"""
+
+
+def stream_plot_accessor_base() -> str:
+    return """auto stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0}));
+auto plot = stream.plot();"""
+
+
+def archive_plot_accessor_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto c0 = pluss::kindle::Catalog({
+    \"x\"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    \"x\"_k = pluss::kindle::Stream(pluss::make_series({4.0, 5.0, 6.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1});
+auto plot = archive.plot();"""
+
+
 def slot_cast_accessor_base() -> str:
     return slot_base() + '\n' + 'auto cast = slot.cast();'
 
@@ -6449,6 +6533,10 @@ ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'AtlasTsAccessor': atlas_ts_accessor_base,
     'AtlasTsResampler': atlas_ts_resampler_accessor_base,
     'AtlasPlotAccessor': atlas_plot_accessor_base,
+    'CatalogPlotAccessor': catalog_plot_accessor_base,
+    'CatalogPlot3DAccessor': catalog_plot3d_accessor_base,
+    'StreamPlotAccessor': stream_plot_accessor_base,
+    'ArchivePlotAccessor': archive_plot_accessor_base,
     'SlotCastAccessor': slot_cast_accessor_base,
     'SlotNoteAccessor': slot_note_accessor_base,
     'SlotTimelineAccessor': slot_timeline_accessor_base,
@@ -6477,6 +6565,10 @@ ACCESSOR_STUB_VAR: dict[str, str] = {
     'AtlasTsAccessor': 'ts',
     'AtlasTsResampler': 'resampler',
     'AtlasPlotAccessor': 'plot',
+    'CatalogPlotAccessor': 'plot',
+    'CatalogPlot3DAccessor': 'plot3d',
+    'StreamPlotAccessor': 'plot',
+    'ArchivePlotAccessor': 'plot',
     'SlotCastAccessor': 'cast',
     'SlotNoteAccessor': 'notes',
     'SlotTimelineAccessor': 'timelines',
@@ -8215,7 +8307,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'take': return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = catalog.take(picks);'
             if n == 'sample': return base + '\n\nauto out = catalog.sample(2, 7);'
             if n == 'filter' or n == 'where': return base + f'\n\nauto mask = pluss::make_series({{true, false, true}}, pluss::codem::ScalarType::Bool);\nauto out = catalog.{n}(mask);'
-            if n == 'query': return base + '\n\nauto out = catalog.query([](const pluss::kindle::Catalog& c) { return c.at("metric").as_series().gt(15.0); });'
+            if n == 'query': return base + '\n\nauto out = catalog.query([](const pluss::kindle::Catalog& c) { return c.keys("metric").as_series().gt(15.0); });'
             if n == 'select':
                 if 'vector<std::string>' in sig:
                     return base + '\n\nstd::vector<std::string> names{"id", "metric"};\nauto out = catalog.select(names);'
@@ -9822,13 +9914,17 @@ def main(argv: list[str] | None = None) -> int:
             continue
         methods = [m for m in methods if m.name not in {'begin', 'end'} or class_name in {'Catalog', 'Registry'}]
         if class_name == 'Stream':
-            # nt()/tl()/ts()/plot() are entry points into StreamNoteAccessor/
-            # StreamTimelineAccessor/StreamTimeSeriesAccessor/StreamPlotAccessor --
-            # each too large (or, for plot(), not verifiable via stdout capture) to
-            # document in this phase. Deliberately out of scope, same as Catalog's
-            # equivalent CatalogNoteAccessor/CatalogTimelineAccessor/
+            # nt()/tl()/ts() are entry points into StreamNoteAccessor/
+            # StreamTimelineAccessor/StreamTimeSeriesAccessor -- each too large
+            # to document in this phase. Deliberately out of scope, same as
+            # Catalog's equivalent CatalogNoteAccessor/CatalogTimelineAccessor/
             # CatalogTimeSeriesAccessor entry points never getting pages at all.
-            methods = [m for m in methods if m.name not in {'nt', 'tl', 'ts', 'plot'}]
+            # plot() *was* in this exclusion set too (each chart's Studio return
+            # isn't verifiable via plain stdout capture, unlike this generator's
+            # other stub examples) until it was hand-authored directly -- see
+            # api/stream/plot.md and the StreamPlotAccessor pages under
+            # api/stream-plot/.
+            methods = [m for m in methods if m.name not in {'nt', 'tl', 'ts'}]
         extracted[class_name] = methods
 
     write_api_nav_manifest(extracted)

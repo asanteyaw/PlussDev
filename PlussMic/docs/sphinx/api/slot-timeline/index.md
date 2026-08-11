@@ -85,7 +85,7 @@ TimeIndex must be sorted (non-decreasing)
 
 ## See Also
 
-- [`Slot::from_kindle`](../slot/from_kindle.md): the round-trip partner
+- [`Stream::bundelize`](../stream/bundelize.md): the round-trip partner
   that reconstructs `TimeIndex` values from a `kindle::Stream`.
 - [`Slot::tl`](../slot/tl.md): the entry point this accessor is reached
   from.

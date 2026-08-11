@@ -68,9 +68,9 @@ id city
   kindle model.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="as_kindle.html">
+  <a class="prev-link" href="../../registry_api_reference.html">
     <span class="label">Previous</span>
-    <span class="title">as_kindle</span>
+    <span class="title">Registry API</span>
   </a>
   <a class="next-link" href="cast.html">
     <span class="label">Next</span>

@@ -46,6 +46,7 @@ explanation — this page only covers what's specific to `hist()`.
       bool as_wireframe{false};
       Plot3DSceneOptions scene{};
       Plot3DTraceOptions trace{};
+      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
     };
     ```
     `bins_x`/`bins_y` are floored to a minimum of `4` each — a request below that is
@@ -55,7 +56,9 @@ explanation — this page only covers what's specific to `hist()`.
     applies a smoothing pass to the grid before rendering, repeated `smooth_passes` times
     (floored to a minimum of `1`); this softens sharp bin-to-bin jumps at the cost of
     blurring the exact counts. `as_wireframe` and `as_surface` control the render shape —
-    see the note below for exactly how they interact.
+    see the note below for exactly how they interact. `align` is present for the same
+    struct-reuse-with-`Catalog::plot3d()` reason as `Scatter3DPlotOptions`'s (see
+    [`scatter()`](scatter.md)) — inert on `DataFramePlot3DAccessor::hist()` itself.
 
     ```{note} Three mutually exclusive render shapes, checked in a fixed order
     `as_wireframe` is checked first: if `true`, the grid is drawn as a **wireframe mesh**

@@ -45,10 +45,29 @@ struct DataFramePlotOptions {
   double tight_layout_padding{6.0};
 };
 
+enum class XYAlignMode : std::uint8_t {
+  Strict = 0,
+  Inner = 1,
+  PadScalar = 2,
+};
+
+enum class XYAlignBy : std::uint8_t {
+  Auto = 0,
+  Label = 1,
+  Pos = 2,
+};
+
+struct XYAlignOptions {
+  XYAlignMode mode{XYAlignMode::Strict};
+  XYAlignBy align_by{XYAlignBy::Auto};
+  double pad_scalar{0.0};
+};
+
 struct BarPlotOptions {
   bool ci_enabled{false};
   double ci_level{0.95};
   bool horizontal{false};
+  XYAlignOptions align{};
 };
 
 struct HeatmapPlotOptions {
@@ -151,11 +170,13 @@ struct Scatter3DPlotOptions {
   Plot3DSceneOptions scene{};
   Plot3DTraceOptions trace{};
   double default_marker_size{12.0};
+  XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
 };
 
 struct Line3DPlotOptions {
   Plot3DSceneOptions scene{};
   Plot3DTraceOptions trace{};
+  XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
 };
 
 struct Hist3DPlotOptions {
@@ -168,6 +189,7 @@ struct Hist3DPlotOptions {
   bool as_wireframe{false};
   Plot3DSceneOptions scene{};
   Plot3DTraceOptions trace{};
+  XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
 };
 
 struct Surface3DPlotOptions {
@@ -196,16 +218,19 @@ struct LinePlotOptions {
   double alpha{1.0};
   double line_width{1.6};
   std::optional<pluss::pl::LimitMethod> y_limit_method{pluss::pl::LimitMethod::Padded};
+  XYAlignOptions align{};
 };
 
 struct StepPlotOptions {
   double alpha{1.0};
   double line_width{1.5};
+  XYAlignOptions align{};
 };
 
 struct AreaPlotOptions {
   double alpha{0.88};
   double line_width{1.3};
+  XYAlignOptions align{};
 };
 
 struct AreaStackedPlotOptions {

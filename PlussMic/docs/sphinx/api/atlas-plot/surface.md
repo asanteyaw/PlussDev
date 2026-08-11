@@ -8,92 +8,104 @@
 ## Signatures
 
 ```cpp
-AtlasPlotAccessor::surface(std::string_view feature) const -> pluss::pl::Studio
-AtlasPlotAccessor::surface(std::string_view feature, const Surface3DPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio AtlasPlotAccessor::surface(std::string_view feature) const
+pluss::pl::Studio AtlasPlotAccessor::surface(std::string_view feature, const Surface3DPlotOptions& options) const
 ```
 
 ## What It Does
 
-Draws a continuous 3D surface mesh over a `[depth × case]` grid: the case axis
-(each frame's row position) becomes the grid's x-axis, the depth axis (which frames
-were selected, via `options.depth_axis`) becomes the y-axis, and each cell's height
-is `feature`'s value at that `(case, frame)` position. Internally this builds the
-grid via a `build_depth_case_grid` helper shared with [`wireframe()`](wireframe.md),
-then renders it with `flash::sheet` (a filled mesh) instead of `wireframe()`'s
-`flash::lattice` (mesh edges only).
+Builds a 3D surface (case × depth × `feature`) — `feature`'s value at every case, in every
+selected frame, forms a continuous filled sheet over a case-position/depth-position grid.
 
 ```{important} Returns a Studio, not printable output
 Like every method on `AtlasPlotAccessor`, this builds and returns a `pluss::pl::Studio` —
-call `.show()`/`.save_svg(path)`/etc. to view or persist it.
+call `.show()`/`.to_svg()`/`.save_svg(path)`/etc. to view or persist it; `std::cout << chart` does
+not compile.
 ```
 
 ## Parameters
 
 **feature** (`std::string_view`)
-    The numeric feature supplying each grid cell's height. Must be present, with a
-    matching case count, in every frame `options.depth_axis` selects.
+    The numeric feature forming the surface's z-axis. Must exist in every selected frame.
 
 **options** (`const Surface3DPlotOptions&`)
-    `scene`/`trace` are the shared `Plot3DSceneOptions`/`Plot3DTraceOptions` structs
-    also used by [`wireframe()`](wireframe.md)/[`cloud3()`](cloud3.md) — see
-    [`DataFramePlot3DAccessor::line`](../dataframe-plot3d/line.md) for the full field
-    breakdown (camera, theme, lighting, shading, material).
+    `scene` (`Plot3DSceneOptions`): `preset` (`ScenePreset3D`: `Survey`/`Presentation`/`Studio`/
+    `Topology`), `theme`, `camera_preset`/`camera`, `lighting`, `grid_style` — all optional,
+    layered on top of the default scene. `trace` (`Plot3DTraceOptions`): `preset`
+    (`TracePreset3D`), `shade` (`ShadeMode`: `Faceted`/`Flat`/`Smooth`), `lighting`, `material`,
+    `line_width`, `transparent` — all optional.
 
 ## Returns
 
 `pluss::pl::Studio`
-    A figure with one 3D pane containing a single continuous surface mesh over the
-    `[depth × case]` grid.
+    A figure with one 3D pane holding a single filled surface trace.
 
 ## Examples
 
-Example 1. A surface over a 5-frame, 5-case-per-frame atlas, where `temp_c` grows
-along both the case axis and the depth axis.
+Example 1. Plot `temp_c` as a surface across every frame's cases and the depth stack, using
+default scene/trace settings.
 
 ```cpp
 using namespace pluss::table;
 
 std::vector<DataFrame> frames;
+std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
 for (int i = 0; i < 5; ++i) {
     double base = static_cast<double>(i);
     frames.push_back(DataFrame({
         {"temp_c", Thread(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
-    }));
+    }, Thread(pluss::make_note(cities))));
 }
 auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
 auto chart = atlas.plot().surface("temp_c");
-chart.save_svg("surface_temp.svg");
+chart.show();
 ```
-
-Every frame's `temp_c` values increase from case `0` to case `4` (a rising ramp
-along x), and every frame is itself shifted `1.0` higher than the previous one (a
-rising ramp along y, the depth axis) — the surface tilts upward in both directions
-at once.
 
 ![Output of Example 1](img/surface-1.svg)
 
+The x-axis is each frame's case labels (`"Accra"`...`"Ho"`), the y-axis is the depth labels
+(`"day1"`...`"day5"`), and the z-axis/surface height is `temp_c`.
+
+Example 2. Same surface, with an explicit `Studio`-preset scene and smooth shading.
+
+```cpp
+using namespace pluss::table;
+
+std::vector<DataFrame> frames;
+std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
+for (int i = 0; i < 5; ++i) {
+    double base = static_cast<double>(i);
+    frames.push_back(DataFrame({
+        {"temp_c", Thread(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
+    }, Thread(pluss::make_note(cities))));
+}
+auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
+
+Surface3DPlotOptions options;
+options.scene.preset = pluss::pl::flash::ScenePreset3D::Studio;
+options.trace.shade = pluss::pl::ShadeMode::Smooth;
+auto chart = atlas.plot().surface("temp_c", options);
+chart.show();
+```
+
+![Output of Example 2](img/surface-2.svg)
+
 ## Notes
 
-- `feature` must exist, with the same case count, in every frame `options.depth_axis`
-  selects — a missing feature or mismatched case count throws.
-- Grid construction is identical to [`wireframe()`](wireframe.md)'s — the two
-  methods differ only in how the resulting grid is rendered (filled mesh vs. mesh
-  edges).
-- `options.depth_axis` (an `AtlasDepthAxisOptions`, shared across every 3D/depth
-  method on this accessor) controls which frames form the grid's y-axis, and in what
-  order.
+- `feature` must exist and be numeric in every frame selected by `options().depth_axis` (shared
+  across `surface()`/`wireframe()`/`cloud3()`) — a missing feature in any of them throws.
+- `Studio`-, `Presentation`-, `Topology`-preset scenes change camera angle and lighting defaults
+  without needing to hand-tune `camera`/`lighting` fields individually.
+- Every selected frame must share the same case count — a mismatched frame throws.
 
 ## See Also
 
-- [`AtlasPlotAccessor::wireframe`](wireframe.md): the identical grid construction,
-  rendered as mesh edges instead of a filled surface.
-- [`AtlasPlotAccessor::cloud3`](cloud3.md): raw per-frame points instead of an
-  aggregated grid.
-- [`DataFramePlot3DAccessor::surface`](../dataframe-plot3d/surface.md): the
-  single-frame surface method this generalizes across the depth stack (there, the
-  grid comes from pivoting two features against each other rather than case-vs-depth).
-- [`Atlas::plot`](../atlas/plot.md): how to enter this accessor.
+- [`AtlasPlotAccessor::wireframe`](wireframe.md): the same case×depth×feature grid, drawn as an
+  open mesh instead of a filled sheet.
+- [`AtlasPlotAccessor::cloud3`](cloud3.md): a genuinely 3-feature scatter, rather than one
+  feature over a case/depth grid.
+- [`Atlas::plot`](../atlas/plot.md): the entry point this accessor is reached from.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="frames.html">

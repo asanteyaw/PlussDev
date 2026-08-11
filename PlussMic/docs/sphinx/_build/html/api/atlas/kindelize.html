@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c66ac8e1"></script>
+    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,7 +53,7 @@
 <p>Converts the atlas into an <code class="docutils literal notranslate"><span class="pre">Archive</span></code>, one catalog per frame, in the same depth order — the
 inverse of <a class="reference internal" href="../archive/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tabelize()</span></code></span></a>, which goes the other direction
 (<code class="docutils literal notranslate"><span class="pre">Archive</span></code> → <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>). Internally, each frame is converted via
-<a class="reference internal" href="../catalog/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize()</span></code></span></a>, using the same <code class="docutils literal notranslate"><span class="pre">policy</span></code> for every one,
+<a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize()</span></code></span></a>, using the same <code class="docutils literal notranslate"><span class="pre">policy</span></code> for every one,
 and the atlas’s own depth labels are carried over.</p>
 </section>
 <section id="parameters">
@@ -62,7 +62,7 @@ and the atlas’s own depth labels are carried over.</p>
 <code class="docutils literal notranslate"><span class="pre">attach_labels</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>) carries each frame’s own case-label axis into its
 resulting catalog’s streams. <code class="docutils literal notranslate"><span class="pre">materialize_label</span></code> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>) additionally adds
 the case-label axis as its own stream, named <code class="docutils literal notranslate"><span class="pre">label_key</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;_label&quot;</span></code>). See
-<a class="reference internal" href="../catalog/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize</span></code></span></a> for the full field breakdown.</p>
+<a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize</span></code></span></a> for the full field breakdown.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -108,7 +108,7 @@ id                       | Series       | Series[float64]  | 2       | [1, 2]
 <li><p>The atlas’s own depth labels are carried over onto the resulting archive’s
 <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label()</span></code></span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">policy</span></code> is applied uniformly to every frame via
-<a class="reference internal" href="../catalog/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize()</span></code></span></a> — see that page for the full field
+<a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize()</span></code></span></a> — see that page for the full field
 breakdown.</p></li>
 <li><p>Round-trips with <a class="reference internal" href="../archive/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tabelize()</span></code></span></a>:
 <code class="docutils literal notranslate"><span class="pre">atlas.kindelize().tabelize()</span></code> reconstructs an equivalent atlas.</p></li>
@@ -119,10 +119,7 @@ breakdown.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="../archive/tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tabelize</span></code></span></a>: the inverse conversion, from <code class="docutils literal notranslate"><span class="pre">Archive</span></code>
 back to <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>.</p></li>
-<li><p><a class="reference internal" href="../archive/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::kindelize</span></code></span></a>: the depth-stacked-catalog analog of what
-this method produces, wrapping <a class="reference internal" href="../catalog/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize</span></code></span></a> the same
-way.</p></li>
-<li><p><a class="reference internal" href="../catalog/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::kindelize</span></code></span></a>: the single-frame delegate this method
+<li><p><a class="reference internal" href="../dataframe/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::kindelize</span></code></span></a>: the single-frame delegate this method
 applies to every frame.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

@@ -60,6 +60,7 @@ class CatalogNoteAccessor;
 class CatalogTimelineAccessor;
 class CatalogTimeSeriesAccessor;
 class CatalogPlotAccessor;
+class CatalogPlot3DAccessor;
 class CatalogGroupBuilder;
 
 enum class Align : std::uint8_t {
@@ -157,6 +158,31 @@ struct CatalogCorrHeatmapPlotOptions {
   pluss::table::DataFrame::CorrMethod method{pluss::table::DataFrame::CorrMethod::Pearson};
 };
 
+// CatalogPlot3DAccessor's scatter/line/hist reconcile all of their requested
+// keys together as one group (not a matrix of independent pairs), so unlike
+// CatalogPairAlignOptions there is no PairwiseInner/GlobalInner axis to
+// expose here -- align_by is the only knob that applies.
+struct CatalogScatter3DPlotOptions {
+  pluss::table::XYAlignMode align{pluss::table::XYAlignMode::Inner};
+  pluss::table::XYAlignBy align_by{pluss::table::XYAlignBy::Auto};
+  double pad_scalar{0.0};
+  pluss::table::Scatter3DPlotOptions scatter{};
+};
+
+struct CatalogLine3DPlotOptions {
+  pluss::table::XYAlignMode align{pluss::table::XYAlignMode::Inner};
+  pluss::table::XYAlignBy align_by{pluss::table::XYAlignBy::Auto};
+  double pad_scalar{0.0};
+  pluss::table::Line3DPlotOptions line{};
+};
+
+struct CatalogHist3DPlotOptions {
+  pluss::table::XYAlignMode align{pluss::table::XYAlignMode::Inner};
+  pluss::table::XYAlignBy align_by{pluss::table::XYAlignBy::Auto};
+  double pad_scalar{0.0};
+  pluss::table::Hist3DPlotOptions hist{};
+};
+
 class Catalog {
 public:
   using const_iterator = std::vector<std::string>::const_iterator;
@@ -172,8 +198,6 @@ public:
   Catalog& operator=(Catalog&& other) noexcept;
   ~Catalog();
 
-  static Catalog kindelize(const pluss::table::DataFrame& frame,
-                           const KindelizePolicy& policy = {});
   static Catalog load(std::string_view source_type,
                       std::string_view filepath);
   static Catalog load(std::string_view source_type,
@@ -206,7 +230,7 @@ public:
   bool empty() const;
 
   const std::vector<std::string>& keys() const;
-  Catalog keys(std::string_view key) const;
+  Stream keys(std::string_view key) const;
   Catalog keys(std::span<const std::string_view> field_names) const;
   Catalog keys(std::initializer_list<std::string_view> field_names) const;
   template <pluss::detail::StringViewNameRange NameRange>
@@ -214,7 +238,6 @@ public:
   CatalogKeyAxisAccessor keyaxis() const;
   CatalogGroupBuilder group() const;
   bool has(std::string_view key) const;
-  Stream at(std::string_view key) const;
   std::optional<Stream> get(std::string_view key) const;
 
   // Vectorized stream delegation.
@@ -284,6 +307,8 @@ public:
   CatalogTimeSeriesAccessor ts() const;
   CatalogPlotAccessor plot() const;
   CatalogPlotAccessor plot(const pluss::table::DataFramePlotOptions& options) const;
+  CatalogPlot3DAccessor plot3d() const;
+  CatalogPlot3DAccessor plot3d(const pluss::table::DataFramePlotOptions& options) const;
   Catalog astype(pluss::codem::ScalarType dtype) const;
   Catalog distinct(DistinctOptions options = {}) const;
   Catalog freq(FreqOptions options = {}) const;
@@ -329,7 +354,6 @@ public:
   Catalog drop(std::initializer_list<std::string_view> keys) const;
 
   pluss::table::DataFrame tabelize(const TabelizePolicy& policy = {}) const;
-  pluss::table::DataFrame to_table(const TabelizePolicy& policy = {}, bool render = false) const;
   pluss::bundle::Registry bundelize() const;
 
   void display() const;
@@ -355,6 +379,9 @@ public:
 
 private:
   explicit Catalog(pluss::msharp::intrusive_ptr<detail::CatalogImpl> impl);
+  // Retired from the public surface -- Catalog::keys(std::string_view) is
+  // the public single-key lookup now; this stays as its implementation.
+  Stream at(std::string_view key) const;
   std::int64_t nstreams() const;
   std::int64_t count() const;
   std::vector<Stream> streams() const;
@@ -720,6 +747,58 @@ private:
   pluss::table::DataFramePlotOptions options_{};
 };
 
+// Chart-level 3D plots (scatter/line/hist/surface/wireframe) drawn from a
+// single Catalog's own key columns -- the kindle-layer counterpart to
+// DataFramePlot3DAccessor. Compare to Archive::plot(), which visualizes a
+// *stack* of catalogs rather than one catalog's own columns.
+class CatalogPlot3DAccessor {
+public:
+  explicit CatalogPlot3DAccessor(Catalog base, pluss::table::DataFramePlotOptions options = {});
+
+  pluss::pl::Studio scatter(std::string_view x_key,
+                            std::string_view y_key,
+                            std::string_view z_key,
+                            std::optional<std::string_view> size_key = std::nullopt,
+                            std::optional<std::string_view> color_key = std::nullopt,
+                            const pluss::table::Scatter3DPlotOptions& options = {}) const;
+  pluss::pl::Studio scatter(std::string_view x_key,
+                            std::string_view y_key,
+                            std::string_view z_key,
+                            std::optional<std::string_view> size_key,
+                            std::optional<std::string_view> color_key,
+                            const CatalogScatter3DPlotOptions& options) const;
+  pluss::pl::Studio line(std::string_view x_key,
+                         std::string_view y_key,
+                         std::string_view z_key,
+                         const pluss::table::Line3DPlotOptions& options = {}) const;
+  pluss::pl::Studio line(std::string_view x_key,
+                         std::string_view y_key,
+                         std::string_view z_key,
+                         const CatalogLine3DPlotOptions& options) const;
+  pluss::pl::Studio hist(std::string_view x_key,
+                         std::string_view y_key,
+                         const pluss::table::Hist3DPlotOptions& options = {}) const;
+  pluss::pl::Studio hist(std::string_view x_key,
+                         std::string_view y_key,
+                         const CatalogHist3DPlotOptions& options) const;
+  pluss::pl::Studio surface(std::string_view x_key,
+                            std::string_view y_key,
+                            std::string_view z_key,
+                            pluss::table::DataFrame::GroupOp op = pluss::table::DataFrame::GroupOp::Mean,
+                            const pluss::table::Surface3DPlotOptions& options = {}) const;
+  pluss::pl::Studio wireframe(std::string_view x_key,
+                              std::string_view y_key,
+                              std::string_view z_key,
+                              pluss::table::DataFrame::GroupOp op = pluss::table::DataFrame::GroupOp::Mean,
+                              const pluss::table::Wireframe3DPlotOptions& options = {}) const;
+
+private:
+  void apply_figure_options(pluss::pl::Studio& figure) const;
+
+  Catalog base_{};
+  pluss::table::DataFramePlotOptions options_{};
+};
+
 class CatalogGroupBuilder {
 public:
   explicit CatalogGroupBuilder(Catalog base);
@@ -734,7 +813,7 @@ template <class Fn>
 Catalog CatalogKeyAccessor::map_selected_(Fn&& fn) const {
   Catalog out = base_;
   for (const auto& key : keys_) {
-    out.set_(key, std::forward<Fn>(fn)(base_.at(key)));
+    out.set_(key, std::forward<Fn>(fn)(base_.keys(key)));
   }
   return out;
 }

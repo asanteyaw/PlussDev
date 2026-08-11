@@ -22,7 +22,7 @@ SlotNoteAccessor::SlotNoteAccessor(Slot base) : base_(std::move(base)) {}
 #define PLUSS_SLOT_NT_STREAM() slot_family_stream(base_, SlotKind::Note, "Slot::nt")
 #define PLUSS_SLOT_NT_UNARY(method) \
   Slot SlotNoteAccessor::method() const { \
-    return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().method()); \
+    return PLUSS_SLOT_NT_STREAM().nt().method().bundelize(); \
   }
 
 PLUSS_SLOT_NT_UNARY(strip)
@@ -37,45 +37,45 @@ PLUSS_SLOT_NT_UNARY(length)
 #undef PLUSS_SLOT_NT_UNARY
 
 Slot SlotNoteAccessor::strip(std::string_view chars) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().strip(chars));
+  return PLUSS_SLOT_NT_STREAM().nt().strip(chars).bundelize();
 }
 
 Slot SlotNoteAccessor::lstrip(std::string_view chars) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().lstrip(chars));
+  return PLUSS_SLOT_NT_STREAM().nt().lstrip(chars).bundelize();
 }
 
 Slot SlotNoteAccessor::rstrip(std::string_view chars) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().rstrip(chars));
+  return PLUSS_SLOT_NT_STREAM().nt().rstrip(chars).bundelize();
 }
 
 Slot SlotNoteAccessor::starts(std::string_view prefix) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().starts(prefix));
+  return PLUSS_SLOT_NT_STREAM().nt().starts(prefix).bundelize();
 }
 
 Slot SlotNoteAccessor::ends(std::string_view suffix) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().ends(suffix));
+  return PLUSS_SLOT_NT_STREAM().nt().ends(suffix).bundelize();
 }
 
 Slot SlotNoteAccessor::has(std::string_view needle,
                            const pluss::table::TextOptions& options) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().has(needle, options));
+  return PLUSS_SLOT_NT_STREAM().nt().has(needle, options).bundelize();
 }
 
 Slot SlotNoteAccessor::count(std::string_view pattern) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().count(pattern));
+  return PLUSS_SLOT_NT_STREAM().nt().count(pattern).bundelize();
 }
 
 Slot SlotNoteAccessor::count(std::string_view pattern,
                              const pluss::table::TextOptions& options) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().count(pattern, options));
+  return PLUSS_SLOT_NT_STREAM().nt().count(pattern, options).bundelize();
 }
 
 Slot SlotNoteAccessor::matches(std::string_view pattern, bool full) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().matches(pattern, full));
+  return PLUSS_SLOT_NT_STREAM().nt().matches(pattern, full).bundelize();
 }
 
 Slot SlotNoteAccessor::fullmatch(std::string_view pattern) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().fullmatch(pattern));
+  return PLUSS_SLOT_NT_STREAM().nt().fullmatch(pattern).bundelize();
 }
 
 pluss::table::DataFrame SlotNoteAccessor::findall(std::string_view pattern) const {
@@ -106,21 +106,21 @@ pluss::table::DataFrame SlotNoteAccessor::partition(std::string_view separator,
 Slot SlotNoteAccessor::pad(std::int64_t width,
                            pluss::table::TextAlign align,
                            char fill) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().pad(width, align, fill));
+  return PLUSS_SLOT_NT_STREAM().nt().pad(width, align, fill).bundelize();
 }
 
 Slot SlotNoteAccessor::chars(std::int64_t start,
                              std::optional<std::int64_t> stop,
                              std::int64_t step) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().chars(start, stop, step));
+  return PLUSS_SLOT_NT_STREAM().nt().chars(start, stop, step).bundelize();
 }
 
 Slot SlotNoteAccessor::normalize(pluss::table::UnicodeForm form) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().normalize(form));
+  return PLUSS_SLOT_NT_STREAM().nt().normalize(form).bundelize();
 }
 
 Slot SlotNoteAccessor::encode(std::string_view encoding) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().encode(encoding));
+  return PLUSS_SLOT_NT_STREAM().nt().encode(encoding).bundelize();
 }
 
 pluss::table::DataFrame SlotNoteAccessor::indicate(std::string_view delimiter,
@@ -129,13 +129,13 @@ pluss::table::DataFrame SlotNoteAccessor::indicate(std::string_view delimiter,
 }
 
 Slot SlotNoteAccessor::replace(std::string_view from, std::string_view to) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().replace(from, to));
+  return PLUSS_SLOT_NT_STREAM().nt().replace(from, to).bundelize();
 }
 
 Slot SlotNoteAccessor::replace(std::string_view from,
                                std::string_view to,
                                const pluss::table::TextOptions& options) const {
-  return Slot::from_kindle(PLUSS_SLOT_NT_STREAM().nt().replace(from, to, options));
+  return PLUSS_SLOT_NT_STREAM().nt().replace(from, to, options).bundelize();
 }
 
 #undef PLUSS_SLOT_NT_STREAM
@@ -145,7 +145,7 @@ SlotTimelineAccessor::SlotTimelineAccessor(Slot base) : base_(std::move(base)) {
 #define PLUSS_SLOT_TL_STREAM() slot_family_stream(base_, SlotKind::Timeline, "Slot::tl")
 #define PLUSS_SLOT_TL_UNARY(method) \
   Slot SlotTimelineAccessor::method() const { \
-    return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().method()); \
+    return PLUSS_SLOT_TL_STREAM().tl().method().bundelize(); \
   }
 
 PLUSS_SLOT_TL_UNARY(isnat)
@@ -174,43 +174,43 @@ PLUSS_SLOT_TL_UNARY(utc)
 #undef PLUSS_SLOT_TL_UNARY
 
 Slot SlotTimelineAccessor::fmt(std::string_view pattern) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().fmt(pattern));
+  return PLUSS_SLOT_TL_STREAM().tl().fmt(pattern).bundelize();
 }
 
 Slot SlotTimelineAccessor::epoch(pluss::table::TimeUnit unit) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().epoch(unit));
+  return PLUSS_SLOT_TL_STREAM().tl().epoch(unit).bundelize();
 }
 
 Slot SlotTimelineAccessor::floor(std::string_view unit) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().floor(unit));
+  return PLUSS_SLOT_TL_STREAM().tl().floor(unit).bundelize();
 }
 
 Slot SlotTimelineAccessor::ceil(std::string_view unit) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().ceil(unit));
+  return PLUSS_SLOT_TL_STREAM().tl().ceil(unit).bundelize();
 }
 
 Slot SlotTimelineAccessor::round(std::string_view unit) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().round(unit));
+  return PLUSS_SLOT_TL_STREAM().tl().round(unit).bundelize();
 }
 
 Slot SlotTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().shift(periods, freq));
+  return PLUSS_SLOT_TL_STREAM().tl().shift(periods, freq).bundelize();
 }
 
 Slot SlotTimelineAccessor::period(std::string_view freq) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().period(freq));
+  return PLUSS_SLOT_TL_STREAM().tl().period(freq).bundelize();
 }
 
 Slot SlotTimelineAccessor::tz(std::string_view name) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().tz(name));
+  return PLUSS_SLOT_TL_STREAM().tl().tz(name).bundelize();
 }
 
 Slot SlotTimelineAccessor::localize(const pluss::table::TimelineLocalizeOptions& options) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().localize(options));
+  return PLUSS_SLOT_TL_STREAM().tl().localize(options).bundelize();
 }
 
 Slot SlotTimelineAccessor::index(bool require_sorted) const {
-  return Slot::from_kindle(PLUSS_SLOT_TL_STREAM().tl().index(require_sorted));
+  return PLUSS_SLOT_TL_STREAM().tl().index(require_sorted).bundelize();
 }
 
 #undef PLUSS_SLOT_TL_STREAM

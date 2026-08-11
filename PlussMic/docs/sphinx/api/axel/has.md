@@ -75,9 +75,9 @@ both report `true` — `has()` only needs a single matching frame.
   this method loops over internally.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="from_kindle.html">
+  <a class="prev-link" href="freq.html">
     <span class="label">Previous</span>
-    <span class="title">from_kindle</span>
+    <span class="title">freq</span>
   </a>
   <a class="next-link" href="head.html">
     <span class="label">Next</span>

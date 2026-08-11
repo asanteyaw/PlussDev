@@ -116,6 +116,10 @@ bool run_builder_checks(std::ostream* err) {
     if (err) *err << "a freshly-built Builder should be empty\n";
     return false;
   }
+  if (builder.benchmarked()) {
+    if (err) *err << "a freshly-built Builder should not report benchmarked()\n";
+    return false;
+  }
 
   // Prvalues built directly at the call site -- zero std::move needed.
   builder.inject("logreg", models::logistic_regression({.fit_intercept = true}))
@@ -169,6 +173,17 @@ bool run_builder_checks(std::ostream* err) {
     return false;
   }
 
+  bool threw_unbenchmarked = false;
+  try {
+    (void)builder.best();
+  } catch (const std::exception&) {
+    threw_unbenchmarked = true;
+  }
+  if (!threw_unbenchmarked) {
+    if (err) *err << "best() should require a previous benchmark()\n";
+    return false;
+  }
+
   // eject() removes and hands back ownership.
   Model ejected = builder.eject("nb");
   if (builder.size() != 3 || builder.has("nb")) {
@@ -202,6 +217,14 @@ bool run_builder_checks(std::ostream* err) {
   }
   if (!result.best().trained()) {
     if (err) *err << "benchmark()'s best() model should be trained\n";
+    return false;
+  }
+  if (!result.worst().trained()) {
+    if (err) *err << "benchmark()'s worst() model should be trained\n";
+    return false;
+  }
+  if (!builder.benchmarked() || !builder.best().trained() || !builder.worst().trained()) {
+    if (err) *err << "Builder should remember the trained best() and worst() models from its last benchmark()\n";
     return false;
   }
   const std::vector<std::pair<std::string, Model>> top2 = result.top(2);

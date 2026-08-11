@@ -73,7 +73,7 @@ int main() {
   for (const auto& key : catalog.keys()) {
     std::cout << key << "\n";
   }
-  std::cout << "\nKINDELIZE_STREAM\n" << catalog.at("city").head(2).to_string() << "\n\n";
+  std::cout << "\nKINDELIZE_STREAM\n" << catalog.keys("city").head(2).to_string() << "\n\n";
 
   KindelizePolicy policy;
   policy.materialize_label = true;
@@ -84,7 +84,7 @@ int main() {
     std::cout << key << "\n";
   }
   std::cout << "\nKINDELIZE_WITH_POLICY_STREAM\n"
-            << catalog_with_cases.at("row_id").head(3).to_string() << "\n";
+            << catalog_with_cases.keys("row_id").head(3).to_string() << "\n";
 
   return 0;
 }
