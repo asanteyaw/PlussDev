@@ -7,14 +7,6 @@
 ## Signature
 
 ```cpp
-struct FromFrameOptions {
-  std::vector<std::string> features{};
-  bool include_series{true};
-  bool include_text{true};
-  bool include_timeline{true};
-  bool include_timeindex_as_timeline{true};
-};
-
 static flash::Dataset flash::Dataset::from_frame(
     const pluss::table::DataFrame& frame,
     const FromFrameOptions& options = {})
@@ -323,3 +315,14 @@ saved /tmp/dataset_from_frame_jointplot.svg
 - [`flash::Dataset::frame`](dataset_frame.md): rebuilds a rectangular `DataFrame` from
   a flash dataset.
 - [`flash::load_dataset`](load_dataset.md): loads a persisted flash dataset directly.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Dataset.html">
+    <span class="label">Previous</span>
+    <span class="title">Dataset<br>overview</span>
+  </a>
+  <a class="next-link" href="dataset_frame.html">
+    <span class="label">Next</span>
+    <span class="title">Dataset<br>frame</span>
+  </a>
+</div>

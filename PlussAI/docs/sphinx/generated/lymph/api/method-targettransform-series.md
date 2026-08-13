@@ -20,15 +20,7 @@ Instance method on `self`.
 
 ## Options
 
-Option semantics used by this method:
-
-- `TargetTransform` (`struct`):
-  - `std::string name = "target_transform"`
-    Option field used by this method.
-  - `bool check_inverse = true`
-    Controls fold/trial/count sizing.
-  - `double check_inverse_tolerance = 1e-3`
-    Controls fold/trial/count sizing.
+No explicit option struct/enum parameters were detected for this method.
 
 ## Examples
 

@@ -1,23 +1,15 @@
-# `Workflow::on`
+# `workflow::on`
 
 ## API Signature
 
-- `Workflow::on(router: ColumnRouter) -> WorkflowRoute`
-- `Workflow::on(predicate: std::function<bool(std::string_view feature_name, std::string_view dtype)>) -> WorkflowRoute`
-- `Workflow::on(names: std::initializer_list<std::string>) -> WorkflowRoute`
-- `Workflow::on(name: std::string, router: ColumnRouter) -> WorkflowRoute`
-- `Workflow::on(name: std::string, predicate: std::function<bool(std::string_view feature_name, std::string_view dtype)>) -> WorkflowRoute`
-- `Workflow::on(name: std::string, names: std::initializer_list<std::string>) -> WorkflowRoute`
-- `Workflow::on(name: std::string, names: std::vector<std::string>) -> WorkflowRoute`
-- `Workflow::on(names: std::vector<std::string>) -> WorkflowRoute`
-- `Workflow::on(router: ColumnRouter) -> WorkflowRoute`
-- `Workflow::on(predicate: std::function<bool(std::string_view feature_name, std::string_view dtype)>) -> WorkflowRoute`
-- `Workflow::on(names: std::initializer_list<std::string>) -> WorkflowRoute`
-- `Workflow::on(name: std::string, router: ColumnRouter) -> WorkflowRoute`
-- `Workflow::on(name: std::string, predicate: std::function<bool(std::string_view feature_name, std::string_view dtype)>) -> WorkflowRoute`
-- `Workflow::on(name: std::string, names: std::initializer_list<std::string>) -> WorkflowRoute`
-- `Workflow::on(name: std::string, names: std::vector<std::string>) -> WorkflowRoute`
-- `Workflow::on(names: std::vector<std::string>) -> WorkflowRoute`
+- `workflow::on(router: ColumnRouter) -> WorkflowRoute`
+- `workflow::on(predicate: std::function<bool(std::string_view feature_name, std::string_view dtype)>) -> WorkflowRoute`
+- `workflow::on(names: std::initializer_list<std::string>) -> WorkflowRoute`
+- `workflow::on(name: std::string, router: ColumnRouter) -> WorkflowRoute`
+- `workflow::on(name: std::string, predicate: std::function<bool(std::string_view feature_name, std::string_view dtype)>) -> WorkflowRoute`
+- `workflow::on(name: std::string, names: std::initializer_list<std::string>) -> WorkflowRoute`
+- `workflow::on(name: std::string, names: std::vector<std::string>) -> WorkflowRoute`
+- `workflow::on(names: std::vector<std::string>) -> WorkflowRoute`
 
 ## Notes
 
@@ -48,7 +40,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::on(/* router */);
+auto value = workflow::on(/* router */);
 out.info("on", value);
 ```
 

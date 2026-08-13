@@ -138,11 +138,53 @@ void test_ragged_dataset_requires_policy_or_pads() {
          "PadNull should set false validity on padded temporal rows");
 }
 
+void test_dataset_row_and_column_surface() {
+  const auto frame = DataFrame({
+      {"student", pluss::make_note({"Ada", "Bo", "Cy"})},
+      {"observed_at", timeline_with_nat({"2026-01-01", "2026-01-02", "2026-01-03"},
+                                         {true, true, true})},
+      {"score", pluss::make_series(std::vector<double>{91.5, 84.0, 88.0})},
+  });
+
+  const auto data = pluss::pl::flash::Dataset::from_frame(frame);
+  expect(data.nrows() == 3, "flash::Dataset::nrows should report the shared row count");
+  expect(data.ncols() == 3, "flash::Dataset::ncols should report the feature count");
+  expect(data.size() == std::pair<std::int64_t, std::int64_t>{3, 3},
+         "flash::Dataset::size should return {nrows, ncols}");
+}
+
+void test_dataset_nrows_rejects_ragged_shapes() {
+  pluss::pl::flash::Dataset data;
+  data.feature_order = pluss::make_note({"time", "value", "label"});
+  data.feature_kinds = pluss::make_note({"temporal", "numeric", "text"});
+  data.temporal_names = pluss::make_note({"time"});
+  data.temporal_values.push_back(
+      timeline_with_nat({"2026-01-01", "2026-01-02"}, {true, true}));
+  data.temporal_validity.push_back(std::nullopt);
+  data.numeric_names = pluss::make_note({"value"});
+  data.numeric_values.push_back(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}));
+  data.numeric_validity.push_back(std::nullopt);
+  data.text_names = pluss::make_note({"label"});
+  data.text_values.push_back(pluss::make_note({"alpha", "beta"}));
+  data.text_validity.push_back(std::nullopt);
+
+  bool threw = false;
+  try {
+    (void)data.nrows();
+  } catch (...) {
+    threw = true;
+  }
+  expect(threw, "flash::Dataset::nrows should reject ragged datasets");
+  expect(data.ncols() == 3, "flash::Dataset::ncols should still report feature count for ragged datasets");
+}
+
 } // namespace
 
 int main() {
   test_from_frame_preserves_order_kinds_and_masks();
   test_round_trip_rebuilds_frame();
   test_ragged_dataset_requires_policy_or_pads();
+  test_dataset_row_and_column_surface();
+  test_dataset_nrows_rejects_ragged_shapes();
   return 0;
 }

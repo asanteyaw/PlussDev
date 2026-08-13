@@ -1,8 +1,8 @@
-# `Workflow::model_spec`
+# `workflow::model_spec`
 
 ## API Signature
 
-- `Workflow::model_spec() -> const std::optional<ModelSpec>&`
+- `workflow::model_spec() -> const std::optional<ModelSpec>&`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::model_spec();
+auto value = workflow::model_spec();
 out.info("model_spec", value);
 ```
 

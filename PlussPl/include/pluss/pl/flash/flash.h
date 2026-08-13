@@ -1290,6 +1290,51 @@ private:
 
 public:
 
+  [[nodiscard]] std::int64_t ncols() const {
+    const auto actual =
+        static_cast<std::int64_t>(numeric_values.size() + text_values.size() + temporal_values.size());
+    if (feature_order.has_value()) {
+      PLUSS_CHECK(
+          feature_order->numel() == actual,
+          "flash::Dataset::ncols: feature_order count does not match stored features");
+    }
+    if (feature_kinds.has_value()) {
+      PLUSS_CHECK(
+          feature_kinds->numel() == actual,
+          "flash::Dataset::ncols: feature_kinds count does not match stored features");
+    }
+    return actual;
+  }
+
+  [[nodiscard]] std::int64_t nrows() const {
+    std::optional<std::int64_t> rows;
+    auto consider = [&](std::int64_t count) {
+      if (!rows.has_value()) {
+        rows = count;
+        return;
+      }
+      PLUSS_CHECK(
+          *rows == count,
+          "flash::Dataset::nrows: dataset is ragged; use frame({.policy = FramePolicy::PadNull}) to rectangularize");
+    };
+
+    for (const auto& values : numeric_values) {
+      consider(values.numel());
+    }
+    for (const auto& values : text_values) {
+      consider(values.numel());
+    }
+    for (const auto& values : temporal_values) {
+      consider(values.numel());
+    }
+
+    return rows.value_or(0);
+  }
+
+  [[nodiscard]] std::pair<std::int64_t, std::int64_t> size() const {
+    return {nrows(), ncols()};
+  }
+
   [[nodiscard]] std::optional<Series> numeric(std::string_view name) const {
     return lookup_named_(numeric_names, numeric_values, name);
   }

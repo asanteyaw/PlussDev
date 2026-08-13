@@ -13,15 +13,15 @@ Series::squeeze(std::int64_t dim) const -> Series
 
 ## What It Does
 
-Removes size-`1` axes from a series and returns the result as a view.
+Removes size-`1` axes from a `Series` and returns the result as a view.
 
 The zero-argument overload removes every singleton axis. The one-argument
-overload targets only one axis, which is the safer choice when you want to be
-explicit about exactly which layout change is allowed to happen.
+overload removes at most one specific axis, which is the better choice when you
+want the layout change to stay explicit and narrow.
 
 `squeeze()` is the natural counterpart to [`unsqueeze()`](unsqueeze.md): one
-makes singleton axes explicit, the other removes them once they are no longer
-needed.
+introduces singleton axes for alignment, the other removes them once they are
+no longer needed.
 
 ## Parameters
 
@@ -50,11 +50,21 @@ are merged, averaged, or duplicated.
 
 ## Examples
 
+The examples on this page build incrementally.
+
 Example 1. Remove every singleton axis.
 
 ```cpp
-auto singleton = pluss::make_series(
-    std::vector<double>{10, 20, 30, 40, 50, 60}, {1, 2, 1, 3, 1});
+auto singleton = pluss::make_series({
+    {
+        {
+            {10.0, 20.0, 30.0},
+        },
+        {
+            {40.0, 50.0, 60.0},
+        },
+    },
+}).unsqueeze(-1);
 std::cout << singleton.squeeze();
 ```
 
@@ -89,7 +99,22 @@ data=[[[[10],
 Only axis `2` was removed. The leading and trailing singleton axes remain,
 because this overload is intentionally surgical.
 
-Example 3. Targeting a non-singleton axis is a no-op, not an error.
+Example 3. Negative dimensions work the same way as elsewhere on the `Series`
+surface.
+
+```cpp
+std::cout << singleton.squeeze(-1);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[1,2,1,3], strides=[6,3,3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[[[10, 20, 30]],
+  [[40, 50, 60]]]]
+```
+
+Example 4. Targeting a non-singleton axis is a no-op, not an error.
 
 ```cpp
 std::cout << singleton.squeeze(1);
@@ -111,10 +136,11 @@ Axis `1` has length `2`, so there is nothing to remove. Returning `self`
 unchanged makes it safe to call the dimension-specific overload in pipelines
 where the axis is expected to be singleton but may already have been normalized.
 
-Example 4. When every axis is singleton, `squeeze()` produces a true scalar.
+Example 5. When every axis is singleton, `squeeze()` produces a true scalar.
 
 ```cpp
-auto all_singletons = pluss::make_series(std::vector<double>{42.0}, {1, 1});
+auto scalar = pluss::make_series(42.0);
+auto all_singletons = scalar.unsqueeze(0).unsqueeze(0);
 std::cout << all_singletons.squeeze();
 ```
 

@@ -52,14 +52,14 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Collapses a contiguous range of axes into one axis.</p>
 <p><code class="docutils literal notranslate"><span class="pre">flatten()</span></code> is a shape-composition helper, not a data-dependent transform. It
-is implemented by building the target shape and delegating to
-<a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a>, which means it inherits <code class="docutils literal notranslate"><span class="pre">reshape()</span></code>’s policy:</p>
+computes a destination shape and then delegates to <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a>,
+which means it inherits reshape’s layout policy:</p>
 <ul class="simple">
 <li><p>if the current layout can be reinterpreted directly, the result is a view</p></li>
 <li><p>if not, a contiguous materialization happens first</p></li>
 </ul>
-<p>That is why <code class="docutils literal notranslate"><span class="pre">flatten()</span></code> works on both contiguous and non-contiguous inputs while
-still preserving the logical value order of the input it was given.</p>
+<p>That is why <code class="docutils literal notranslate"><span class="pre">flatten()</span></code> works on both contiguous and non-contiguous inputs
+while still preserving the logical value order of the input it was given.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -73,6 +73,7 @@ last axis.</p>
 <li><p>both must be valid axis indices</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">start_dim</span></code> must be less than or equal to <code class="docutils literal notranslate"><span class="pre">end_dim</span></code></p></li>
 </ul>
+<p>For scalars, <code class="docutils literal notranslate"><span class="pre">flatten()</span></code> now produces a length-<code class="docutils literal notranslate"><span class="pre">1</span></code> vector.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -89,9 +90,18 @@ same element ordering, just expressed again under the original rank.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. The zero-argument overload flattens the whole series.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<p>The examples on this page build incrementally.</p>
+<p>Example 1. The zero-argument overload flattens the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">flatten</span><span class="p">();</span>
 </pre></div>
 </div>
@@ -117,14 +127,31 @@ data=[[1, 2, 3, 4],
 </div>
 <p>Axis <code class="docutils literal notranslate"><span class="pre">0</span></code> stays intact. Axes <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> are multiplied together into one axis
 of length <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p>
-<p>Example 3. On a non-contiguous input, <code class="docutils literal notranslate"><span class="pre">flatten()</span></code> preserves logical order, not
-the parent’s original physical layout.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<p>Example 3. The two-argument overload lets you flatten only a selected axis
+window.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[4,2], strides=[2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]]
+</pre></div>
+</div>
+<p>Here axes <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> collapse into one axis of length <code class="docutils literal notranslate"><span class="pre">4</span></code>, while the final
+axis is preserved.</p>
+<p>Example 4. On a non-contiguous input, <code class="docutils literal notranslate"><span class="pre">flatten()</span></code> preserves logical order, not
+the parent’s original physical layout.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
 data=[[1, 2, 5, 6],
   [3, 4, 7, 8]]
@@ -134,6 +161,33 @@ data=[[1, 2, 5, 6],
 is the practical consequence of <code class="docutils literal notranslate"><span class="pre">flatten()</span></code> delegating through
 <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a>: if a copy is needed, the copy is made from the
 current logical ordering of the input, not from some earlier parent layout.</p>
+<p>Example 5. Flattening a scalar produces a length-<code class="docutils literal notranslate"><span class="pre">1</span></code> vector.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">42.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scalar</span><span class="p">.</span><span class="n">flatten</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[42]
+</pre></div>
+</div>
+<p>Example 6. Invalid dimension windows are rejected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>flatten: start_dim must be &lt;= end_dim
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">

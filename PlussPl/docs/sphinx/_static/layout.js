@@ -155,13 +155,11 @@
     sidebar.appendChild(nav);
 
     let activeLink = null;
+    const openStateKeyPrefix = `pluss-api-open:${page.key}:`;
 
     const sidebarLabelFor = (slug, name) => {
-      if (slug === "flash" && name === "dataset_from_frame") {
-        return "from_frame";
-      }
-      if (slug === "flash" && name === "dataset_frame") {
-        return "frame";
+      if (slug === "flash" && name.startsWith("dataset_")) {
+        return name.slice("dataset_".length);
       }
       return name;
     };
@@ -175,19 +173,80 @@
         activeLink = link;
       }
       nav.appendChild(link);
+      return link;
+    };
+
+    const branchContainsActive = (branch) => {
+      const ownMethods = Array.isArray(branch.methods) ? branch.methods : [];
+      if (!page.landing && ownMethods.includes(page.method)) {
+        return true;
+      }
+      const subgroups = Array.isArray(branch.subgroups) ? branch.subgroups : [];
+      return subgroups.some(branchContainsActive);
+    };
+
+    const renderBranch = (container, branch, depth = 0) => {
+      const wrap = document.createElement("div");
+      wrap.className = depth === 0 ? "method-branch" : "method-subbranch";
+
+      const header = document.createElement("button");
+      header.type = "button";
+      header.className = depth === 0 ? "method-group method-toggle" : "method-subgroup method-toggle";
+
+      const headerTitle = document.createElement("span");
+      headerTitle.className = "title";
+      headerTitle.textContent = branch.title;
+      header.appendChild(headerTitle);
+
+      const glyph = document.createElement("span");
+      glyph.className = "toggle-glyph";
+      header.appendChild(glyph);
+
+      const body = document.createElement("div");
+      body.className = depth === 0 ? "method-group-body" : "method-subgroup-body";
+
+      const storageKey = `${openStateKeyPrefix}${branch.title}`;
+      const defaultOpen = branchContainsActive(branch);
+      let isOpen = defaultOpen;
+      try {
+        const saved = window.localStorage.getItem(storageKey);
+        if (saved === "open") {
+          isOpen = true;
+        } else if (saved === "closed") {
+          isOpen = false;
+        }
+      } catch (_) {}
+
+      const applyOpen = () => {
+        wrap.classList.toggle("open", isOpen);
+        header.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        glyph.textContent = isOpen ? "−" : "+";
+        body.style.display = isOpen ? "block" : "none";
+      };
+
+      header.addEventListener("click", () => {
+        isOpen = !isOpen;
+        applyOpen();
+        try {
+          window.localStorage.setItem(storageKey, isOpen ? "open" : "closed");
+        } catch (_) {}
+      });
+
+      wrap.appendChild(header);
+      wrap.appendChild(body);
+      container.appendChild(wrap);
+
+      (branch.methods || []).forEach((name) => {
+        addLink(name);
+        body.appendChild(nav.lastChild);
+      });
+      (branch.subgroups || []).forEach((subgroup) => renderBranch(body, subgroup, depth + 1));
+      applyOpen();
     };
 
     if (Array.isArray(entry.groups)) {
-      // Explicit, ordered, conceptual grouping (e.g. flash's Relational /
-      // Distribution / Categorical / ... families) instead of a first-letter
-      // split -- the group order and membership are exactly what
-      // generate_api_nav.py's FLASH_FAMILIES declares, not re-derived here.
       entry.groups.forEach((group) => {
-        const groupHeader = document.createElement("div");
-        groupHeader.className = "method-group";
-        groupHeader.textContent = group.title;
-        nav.appendChild(groupHeader);
-        group.methods.forEach(addLink);
+        renderBranch(nav, group, 0);
       });
     } else {
       let currentLetter = "";

@@ -1,9 +1,9 @@
-# `Workflow::workers`
+# `workflow::workers`
 
 ## API Signature
 
-- `Workflow::workers() -> std::int64_t`
-- `Workflow::workers(value: std::int64_t) -> Workflow&`
+- `workflow::workers() -> std::int64_t`
+- `workflow::workers(value: std::int64_t) -> Workflow&`
 
 ## Notes
 
@@ -29,7 +29,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::workers();
+auto value = workflow::workers();
 out.info("workers", value);
 ```
 

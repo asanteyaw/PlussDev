@@ -1,8 +1,8 @@
-# `Workflow::with`
+# `workflow::with`
 
 ## API Signature
 
-- `Workflow::with(model: Model) -> Workflow`
+- `workflow::with(model: Model) -> Workflow`
 
 ## Notes
 
@@ -27,7 +27,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::with(/* model */);
+auto value = workflow::with(/* model */);
 out.info("with", value);
 ```
 

@@ -2,7 +2,7 @@
 
 ## API Signature
 
-- `HoldoutPlan::options() -> const HoldoutSplitOptions&`
+- `HoldoutPlan::options() -> const prep::HoldoutSplitOptions&`
 
 ## Notes
 
@@ -14,7 +14,7 @@ None.
 
 ## Output
 
-- Returns `const HoldoutSplitOptions&`.
+- Returns `const prep::HoldoutSplitOptions&`.
 
 ## Options
 
@@ -33,7 +33,7 @@ out.info("options", value);
 **Expected output**
 
 ```text
-options returned const HoldoutSplitOptions&
+options returned const prep::HoldoutSplitOptions&
 ```
 
 ### Example 2 (Demo Pattern)

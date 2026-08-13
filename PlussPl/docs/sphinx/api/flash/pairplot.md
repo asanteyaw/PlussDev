@@ -307,45 +307,24 @@ or `std::initializer_list<std::string_view>`, three matrix overloads)
 
 ## `Dataset` and `make_dataset`
 
-`Dataset` is a small, pre-existing feature bundle used by the Dataset-overloads across
-several `flash::` grid functions:
+`Dataset` is flash's grouped, name-aware bundle for dataset-driven plotting overloads.
+
+The two simplest constructors are:
 
 ```cpp
-struct Dataset {
-  std::optional<Note> feature_order{};
-  std::optional<Note> feature_kinds{};
-  std::optional<Note> numeric_names{};
-  std::vector<Series> numeric_values{};
-  std::vector<std::optional<Series>> numeric_validity{};
-  std::optional<Note> text_names{};
-  std::vector<Note> text_values{};
-  std::vector<std::optional<Series>> text_validity{};
-  std::optional<Note> temporal_names{};
-  std::vector<Timeline> temporal_values{};
-  std::vector<std::optional<Series>> temporal_validity{};
+flash::Dataset flash::make_dataset(
+    std::vector<Series> numeric_values,
+    std::vector<std::string> numeric_names = {});
 
-  std::optional<Series> numeric(std::string_view name) const;
-  std::optional<Note> text(std::string_view name) const;
-  std::optional<Timeline> temporal(std::string_view name) const;
-  std::optional<Series> continuous(std::string_view name) const;
-
-  static Dataset from_frame(const pluss::table::DataFrame& frame,
-                            const FromFrameOptions& options = {});
-  pluss::table::DataFrame frame(const ToFrameOptions& options = {}) const;
-};
-
-Dataset flash::make_dataset(std::vector<Series> numeric_values,
-                             std::vector<std::string> numeric_names = {});
-Dataset flash::make_dataset(const Series& matrix,
-                             std::vector<std::string> feature_names = {},
-                             Axis feature_axis = Axis::Cols);
+flash::Dataset flash::make_dataset(
+    const Series& matrix,
+    std::vector<std::string> feature_names = {},
+    Axis feature_axis = Axis::Cols);
 ```
 
-The simplest way to build one is `flash::make_dataset(columns, names)` — see Example 3
-below.
-
-When PlussMic is also present, this same `Dataset` surface is the bridge target for
-[`flash::Dataset::from_frame`](dataset_from_frame.md) and the reconstruction source for
+See [`flash::Dataset`](Dataset.md) for the grouped surface itself. When PlussMic is
+present, the same dataset type also supports
+[`flash::Dataset::from_frame`](dataset_from_frame.md) and
 [`flash::Dataset::frame`](dataset_frame.md).
 
 ## Examples

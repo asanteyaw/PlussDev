@@ -49,13 +49,14 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Swaps exactly two axes and returns the result as a view.</p>
-<p>That last point matters: <code class="docutils literal notranslate"><span class="pre">transpose()</span></code> does not reorder the underlying values in
-storage. It only changes how the same storage is interpreted, by swapping the
-two selected sizes and strides. That is why a transposed result is usually
-non-contiguous, and why downstream calls like <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a> may reject it
-while <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> may materialize a contiguous copy.</p>
+<p>That last point is the real contract. <code class="docutils literal notranslate"><span class="pre">transpose()</span></code> does not numerically
+reorder values in storage. It swaps the selected sizes and strides, so the same
+storage is reread under a different axis interpretation. That is why the result
+is usually non-contiguous, and why downstream calls such as <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>
+may reject it while <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> may need to materialize a
+contiguous copy.</p>
 <p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is the narrow, explicit two-axis operation. If you need to reorder
-more than two axes at once, use <a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permute()</span></code></span></a>.</p>
+an entire rank at once, use <a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permute()</span></code></span></a>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -87,8 +88,12 @@ its gradient back through the inverse layout change in the backward pass.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>The examples on this page build incrementally.</p>
 <p>Example 1. Transpose a <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> matrix by swapping rows and columns.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -100,19 +105,23 @@ data=[[1, 4],
   [3, 6]]
 </pre></div>
 </div>
-<p>The values are not copied into a new contiguous <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">2]</span></code> buffer. The original
-storage is being reread through swapped strides, which is why the output is
+<p>The values are not copied into a fresh contiguous <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">2]</span></code> buffer. The original
+storage is being reread through swapped strides, which is why the result is
 non-contiguous.</p>
 <p>Example 2. Negative dimensions are normalized from the end.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">        </span><span class="mi">1</span><span class="p">,</span><span class="w">  </span><span class="mi">2</span><span class="p">,</span><span class="w">  </span><span class="mi">3</span><span class="p">,</span><span class="w">  </span><span class="mi">4</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">5</span><span class="p">,</span><span class="w">  </span><span class="mi">6</span><span class="p">,</span><span class="w">  </span><span class="mi">7</span><span class="p">,</span><span class="w">  </span><span class="mi">8</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">9</span><span class="p">,</span><span class="w">  </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="p">{</span><span class="mf">13.0</span><span class="p">,</span><span class="w"> </span><span class="mf">14.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span><span class="mf">17.0</span><span class="p">,</span><span class="w"> </span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">,</span><span class="w"> </span><span class="mf">24.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-2</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -134,8 +143,10 @@ data=[[[1, 5, 9],
 <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">4]</span></code> layout into <code class="docutils literal notranslate"><span class="pre">[4,</span> <span class="pre">3]</span></code> without touching the leading axis.</p>
 <p>Example 3. Backpropagating through a transpose routes sensitivity back to the
 corresponding source positions.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="p">});</span>
 <span class="n">tracked</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tracked</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>

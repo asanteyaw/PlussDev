@@ -1,8 +1,8 @@
-# `Workflow::policy`
+# `workflow::policy`
 
 ## API Signature
 
-- `Workflow::policy() -> const Policy&`
+- `workflow::policy() -> const Policy&`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::policy();
+auto value = workflow::policy();
 out.info("policy", value);
 ```
 

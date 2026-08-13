@@ -628,7 +628,25 @@ Implemented so far:
 - Add demos covering Lymph, Ice, NodeB, raw Series functions, branching, joins,
   persistence, and failure cases.
 
-### Phase 9: Optional Substrate Extraction
+Implemented so far:
+
+- Hardened Procedure bundles with manifest producer metadata, schema checks,
+  persistence policy summaries, step contract records, artifact checksum tables,
+  lineage output, and audit summaries under `audit/`.
+- Added custom persistence contracts with schema/component compatibility gates
+  and registry-backed callable reloads for external-code steps.
+- Preserved Phase 7 safety contracts through save/load: required columns, time
+  requirements, future-data declarations, and row-count-change declarations.
+- Added Procedure demos under `PlussAI/examples/Procedure` covering raw Series
+  graphs, local parallelism, safety failures, registry persistence, Lymph
+  policy/payload, Lymph workflow deployment, NodeK/Ice coordination, NodeB text
+  workflow, and bundle audit inspection.
+- Added Catch2 coverage in `procedure_phase8_test.cpp` for richer manifest
+  metadata, audit files, custom contract reload, registry-backed callable reload,
+  unsupported manifest schema rejection, checksum protection, and custom
+  compatibility-gate failures.
+
+### Deferred: Optional Substrate Extraction
 
 - If non-AI Pluss modules need the same graph/runtime substrate, extract only
   generic pieces into PlussTils:
@@ -637,6 +655,8 @@ Implemented so far:
   - artifact id/status containers;
   - local scheduler primitive.
 - Keep AI semantics in PlussAI.
+- Do not extract this merely for clean architecture. Keep Procedure in PlussAI
+  until real non-AI duplication proves a stable generic substrate exists.
 
 ## Definition Of Done
 

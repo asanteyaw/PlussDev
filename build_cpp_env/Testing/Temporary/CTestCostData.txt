@@ -1939,5 +1939,12 @@ lymph_shape_test 1 15.7118
 lymph_unsupervised_test 1 0.035186
 lymph_validate_test 1 201.779
 plussmic_table_flash_dataset_bridge 0 0
+procedure_phase1_test 4 0.00935943
+procedure_phase3_test 4 0.0115559
+procedure_phase4_test 4 0.0106536
+procedure_phase5_test 4 0.0620761
+procedure_phase6_test 4 10.107
+procedure_phase7_test 4 14.4268
+procedure_phase8_test 4 12.9469
+procedure_system_test 2 9.11693
 ---
-plussmic_table_flash_dataset_bridge

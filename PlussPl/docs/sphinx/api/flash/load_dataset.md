@@ -7,38 +7,7 @@
 ## Signature
 
 ```cpp
-struct Dataset {
-  std::optional<Note> feature_order{};
-  std::optional<Note> feature_kinds{};
-
-  std::optional<Note> numeric_names{};
-  std::vector<Series> numeric_values{};
-  std::vector<std::optional<Series>> numeric_validity{};
-
-  std::optional<Note> text_names{};
-  std::vector<Note> text_values{};
-  std::vector<std::optional<Series>> text_validity{};
-
-  std::optional<Note> temporal_names{};
-  std::vector<Timeline> temporal_values{};
-  std::vector<std::optional<Series>> temporal_validity{};
-
-  std::optional<Series> numeric(std::string_view name) const;
-  std::optional<Note> text(std::string_view name) const;
-  std::optional<Timeline> temporal(std::string_view name) const;
-
-  std::optional<Series> numeric_validity_mask(std::string_view name) const;
-  std::optional<Series> text_validity_mask(std::string_view name) const;
-  std::optional<Series> temporal_validity_mask(std::string_view name) const;
-
-  std::optional<Series> continuous(std::string_view name) const;
-
-  static Dataset from_frame(const pluss::table::DataFrame& frame,
-                            const FromFrameOptions& options = {});
-  pluss::table::DataFrame frame(const ToFrameOptions& options = {}) const;
-};
-
-std::optional<Dataset> flash::load_dataset(std::string_view name)
+std::optional<flash::Dataset> flash::load_dataset(std::string_view name)
 ```
 
 ## What It Does
@@ -82,6 +51,47 @@ interop such as [`flash::Dataset::frame`](dataset_frame.md) when PlussMic is pre
 
 `std::optional<Dataset>`
     The loaded dataset when `name` is recognized, otherwise `std::nullopt`.
+
+## Dataset Surface
+
+`load_dataset(...)` returns a `flash::Dataset`, which is flash's grouped container for
+numeric, text, and temporal feature families.
+
+Stored attributes:
+
+- `feature_order`
+  Logical feature order across all stored families.
+- `feature_kinds`
+  Per-feature family labels such as `"numeric"`, `"text"`, and `"temporal"`.
+- `numeric_names`, `numeric_values`, `numeric_validity`
+  Numeric feature names, payloads, and optional validity masks.
+- `text_names`, `text_values`, `text_validity`
+  Text feature names, payloads, and optional validity masks.
+- `temporal_names`, `temporal_values`, `temporal_validity`
+  Temporal feature names, payloads, and optional validity masks.
+
+Named accessors:
+
+- `numeric(name)`
+  Returns one numeric feature by name when it exists.
+- `text(name)`
+  Returns one text feature by name when it exists.
+- `temporal(name)`
+  Returns one temporal feature by name when it exists.
+- `numeric_validity_mask(name)`, `text_validity_mask(name)`, `temporal_validity_mask(name)`
+  Return the stored validity mask for one named feature when a mask exists.
+- `continuous(name)`
+  Returns a plotting-oriented numeric view of a numeric or temporal feature, with
+  invalid rows surfaced as `NaN`.
+
+Related pages:
+
+- [`flash::Dataset`](Dataset.md)
+- [`flash::Dataset::from_frame`](dataset_from_frame.md)
+- [`flash::Dataset::frame`](dataset_frame.md)
+- [`flash::Dataset::nrows`](dataset_nrows.md)
+- [`flash::Dataset::ncols`](dataset_ncols.md)
+- [`flash::Dataset::size`](dataset_size.md)
 
 ## Curated Dataset Family
 
@@ -270,8 +280,8 @@ Output plot:
     <span class="label">Previous</span>
     <span class="title">get_dataset_names</span>
   </a>
-  <a class="next-link" href="../../flash_api_reference.html">
+  <a class="next-link" href="Dataset.html">
     <span class="label">Next</span>
-    <span class="title">Back to flash API Reference</span>
+    <span class="title">Dataset<br>overview</span>
   </a>
 </div>

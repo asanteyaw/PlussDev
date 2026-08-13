@@ -1,6 +1,6 @@
 # Lymph Full API Reference: Method Index
 
-Total method pages: **372**
+Total method pages: **377**
 Total data-type pages: **39**
 
 ## Data Types
@@ -8,29 +8,29 @@ Total data-type pages: **39**
 ```{toctree}
 :maxdepth: 1
 
-api/type-bayes-factory
+api/type-bayes
 api/type-branch
 api/type-candidate
 api/type-categoryindexersummary
-api/type-cluster-factory
+api/type-cluster
 api/type-comparereport
 api/type-compareresult
 api/type-crossvalidationreport
 api/type-customstage
-api/type-decompose-factory
-api/type-detect-factory
-api/type-ensemble-factory
+api/type-decompose
+api/type-detect
+api/type-ensemble
 api/type-foldbatchpair
 api/type-gridaxis
 api/type-holdoutsplit
-api/type-kernel-factory
-api/type-linear-factory
+api/type-kernel
+api/type-linear
 api/type-linearparameters
 api/type-metricreport
 api/type-modelimpl
-api/type-neighbor-factory
+api/type-neighbor
 api/type-outlierisolatorsummary
-api/type-searchresult
+api/type-search
 api/type-seriescomparereport
 api/type-simpleimputersummary
 api/type-spectuneresult
@@ -40,7 +40,7 @@ api/type-targettransform
 api/type-timeseriessplit
 api/type-transformcontract
 api/type-transformersummary
-api/type-tree-factory
+api/type-tree
 api/type-trial
 api/type-workflowbranchinfo
 api/type-workflowbranchspec
@@ -77,6 +77,7 @@ api/method-builder-names
 api/method-builder-report
 api/method-builder-size
 api/method-builder-worst
+api/method-callable-contract
 api/method-candidate-candidate
 api/method-categoryindexer-features
 api/method-categoryindexer-learned
@@ -86,6 +87,7 @@ api/method-classification-options
 api/method-classification-prediction
 api/method-classification-summary
 api/method-classification-truth
+api/method-classification-summary
 api/method-columnrouter-with-remainder
 api/method-compare-series
 api/method-comparereport-board
@@ -98,6 +100,7 @@ api/method-compareresult-objective-series
 api/method-compareresult-top
 api/method-compareresult-tune-ledger
 api/method-compareresult-worst
+api/method-confusion-table
 api/method-copy-feature-route
 api/method-copy-range-values
 api/method-crossvalidationreport-board
@@ -106,7 +109,7 @@ api/method-data
 api/method-days
 api/method-dependence-curve
 api/method-dependence-surface
-api/method-detect-factory-isolation-detector
+api/method-detect-isolation-detector
 api/method-encoded-param-table
 api/method-equalize-blend-neighbors
 api/method-equalize-reuse-rows
@@ -140,10 +143,12 @@ api/method-load-policy
 api/method-log1p
 api/method-make
 api/method-make-branch-transformer
+api/method-make-cross-validation-split-options
 api/method-make-feature-transformer
-api/method-make-holdout-indices
 api/method-make-triplet
 api/method-max-abs-diff
+api/method-metrics-as-stratify-series
+api/method-metrics-crossvalidationreport-board
 api/method-model
 api/method-model-add
 api/method-model-append
@@ -224,9 +229,6 @@ api/method-modelreports-model
 api/method-modelreports-modelreports
 api/method-modelrunner-model
 api/method-modelrunner-modelrunner
-api/method-models
-api/method-models-models
-api/method-models-strategy
 api/method-multilinearmodel-class-count
 api/method-multilinearmodel-dump-state
 api/method-multilinearmodel-feature-count
@@ -247,7 +249,6 @@ api/method-onlinelinearregressor-trained
 api/method-outlierisolator-features
 api/method-outlierisolator-learned
 api/method-outlierisolator-summary
-api/method-output-render
 api/method-payload
 api/method-payload-data
 api/method-payload-feature-batch
@@ -302,6 +303,7 @@ api/method-regression-prediction
 api/method-regression-regression
 api/method-regression-truth
 api/method-remaining-of
+api/method-resolve-training-weights
 api/method-restore
 api/method-result-board
 api/method-result-centers
@@ -348,24 +350,25 @@ api/method-runner-model
 api/method-runner-runner
 api/method-save-policy
 api/method-search
+api/method-search-best
+api/method-search-build
+api/method-search-grid
+api/method-search-random
 api/method-search-run
-api/method-searchresult-best
-api/method-searchresult-build
-api/method-searchresult-grid
-api/method-searchresult-random
-api/method-searchresult-top
-api/method-simple-imputer-strategy-name
+api/method-search-run
+api/method-search-top
 api/method-simpleimputer-features
 api/method-simpleimputer-learned
 api/method-simpleimputer-summary
 api/method-sqrt
-api/method-stage-callable-contract
 api/method-stage-contract
-api/method-stage-custom
 api/method-standardscaler-features
 api/method-standardscaler-learned
 api/method-standardscaler-summary
 api/method-steps
+api/method-suite
+api/method-suite-strategy
+api/method-suite-suite
 api/method-take-features
 api/method-targettransform-series
 api/method-temporal-features
@@ -376,14 +379,13 @@ api/method-threshold-labels
 api/method-threshold-scores
 api/method-threshold-threshold
 api/method-timeseriessplit-as-stratify-series
-api/method-timeseriessplit-class-mix
-api/method-timeseriessplit-classification-summary
-api/method-timeseriessplit-confusion-table
 api/method-timeseriessplit-has-batch
 api/method-timeseriessplit-has-frame
-api/method-timeseriessplit-make-cross-validation-split-options
+api/method-timeseriessplit-make-holdout-indices
 api/method-timeseriessplit-make-holdout-split-options
-api/method-timeseriessplit-resolve-training-weights
+api/method-timeseriessplit-make-time-series-split-options
+api/method-timeseriessplit-output-render
+api/method-timeseriessplit-simple-imputer-strategy-name
 api/method-to-csr
 api/method-tune-ledger
 api/method-tune-specs
@@ -392,6 +394,7 @@ api/method-variance-prune
 api/method-where
 api/method-workflow
 api/method-workflow-add
+api/method-workflow-branch
 api/method-workflow-branch
 api/method-workflow-branch-count
 api/method-workflow-branches
@@ -407,9 +410,12 @@ api/method-workflow-model-spec
 api/method-workflow-nested-param
 api/method-workflow-nested-param-keys
 api/method-workflow-on
+api/method-workflow-on
 api/method-workflow-options
 api/method-workflow-policy
 api/method-workflow-prep
+api/method-workflow-route
+api/method-workflow-save
 api/method-workflow-save
 api/method-workflow-save-blueprint
 api/method-workflow-stage-count
@@ -421,9 +427,8 @@ api/method-workflow-trained
 api/method-workflow-transform-specs
 api/method-workflow-with
 api/method-workflow-workers
+api/method-workflow-workflowbranch
+api/method-workflow-workflowroute
 api/method-workflowbranch-route
-api/method-workflowbranch-workflowbranch
-api/method-workflowroute-add
-api/method-workflowroute-workflowroute
 api/method-workflowsteprecord-workflowsteprecord
 ```

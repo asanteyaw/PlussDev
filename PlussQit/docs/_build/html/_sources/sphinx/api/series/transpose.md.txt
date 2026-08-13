@@ -14,14 +14,15 @@ Series::transpose(std::int64_t d0, std::int64_t d1) const -> Series
 
 Swaps exactly two axes and returns the result as a view.
 
-That last point matters: `transpose()` does not reorder the underlying values in
-storage. It only changes how the same storage is interpreted, by swapping the
-two selected sizes and strides. That is why a transposed result is usually
-non-contiguous, and why downstream calls like [`view()`](view.md) may reject it
-while [`reshape()`](reshape.md) may materialize a contiguous copy.
+That last point is the real contract. `transpose()` does not numerically
+reorder values in storage. It swaps the selected sizes and strides, so the same
+storage is reread under a different axis interpretation. That is why the result
+is usually non-contiguous, and why downstream calls such as [`view()`](view.md)
+may reject it while [`reshape()`](reshape.md) may need to materialize a
+contiguous copy.
 
 `transpose()` is the narrow, explicit two-axis operation. If you need to reorder
-more than two axes at once, use [`permute()`](permute.md).
+an entire rank at once, use [`permute()`](permute.md).
 
 ## Parameters
 
@@ -60,10 +61,15 @@ its gradient back through the inverse layout change in the backward pass.
 
 ## Examples
 
+The examples on this page build incrementally.
+
 Example 1. Transpose a `2 x 3` matrix by swapping rows and columns.
 
 ```cpp
-auto mat = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
+auto mat = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+});
 std::cout << mat.transpose(0, 1);
 ```
 
@@ -76,22 +82,26 @@ data=[[1, 4],
   [3, 6]]
 ```
 
-The values are not copied into a new contiguous `[3, 2]` buffer. The original
-storage is being reread through swapped strides, which is why the output is
+The values are not copied into a fresh contiguous `[3, 2]` buffer. The original
+storage is being reread through swapped strides, which is why the result is
 non-contiguous.
 
 Example 2. Negative dimensions are normalized from the end.
 
 ```cpp
 auto cube = pluss::make_series(
-    std::vector<double>{
-        1,  2,  3,  4,
-        5,  6,  7,  8,
-        9,  10, 11, 12,
-        13, 14, 15, 16,
-        17, 18, 19, 20,
-        21, 22, 23, 24},
-    {2, 3, 4});
+    {
+        {
+            {1.0, 2.0, 3.0, 4.0},
+            {5.0, 6.0, 7.0, 8.0},
+            {9.0, 10.0, 11.0, 12.0},
+        },
+        {
+            {13.0, 14.0, 15.0, 16.0},
+            {17.0, 18.0, 19.0, 20.0},
+            {21.0, 22.0, 23.0, 24.0},
+        },
+    });
 std::cout << cube.transpose(-1, -2);
 ```
 
@@ -116,8 +126,10 @@ Example 3. Backpropagating through a transpose routes sensitivity back to the
 corresponding source positions.
 
 ```cpp
-auto tracked = pluss::make_series(
-    std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {2, 3});
+auto tracked = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+});
 tracked.tracks_slope_(true);
 
 auto t = tracked.transpose(0, 1);

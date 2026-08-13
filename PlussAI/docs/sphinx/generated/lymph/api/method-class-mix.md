@@ -3,6 +3,7 @@
 ## API Signature
 
 - `class_mix(frame: const pluss::table::DataFrame&, label_feature: std::string_view) -> ClassMix`
+- `class_mix(labels: const Series&) -> ClassMix`
 
 ## Notes
 
@@ -14,6 +15,8 @@ Summarizes class labels, class counts, class proportions, inverse-frequency weig
   Input feature data used by this call.
 - `label_feature` (`std::string_view`)
   Input feature data used by this call.
+- `labels` (`const Series&`)
+  Target values aligned to input observations.
 
 ## Output
 

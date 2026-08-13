@@ -48,26 +48,25 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Changes shape with a <strong>view if possible, contiguous copy if necessary</strong> policy.</p>
-<p>This is the high-level “I need this logical shape” API. <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> first checks
-whether the current <code class="docutils literal notranslate"><span class="pre">Series</span></code> can be reinterpreted directly. If yes, it routes to
-<a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>. If not, it materializes a contiguous copy, then views that
-contiguous buffer under the requested shape.</p>
-<p>So the difference is not cosmetic:</p>
+<p>Changes shape with a view-if-possible, contiguous-copy-if-necessary policy.</p>
+<p>This is the high-level “I need this logical shape” API. <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> first asks
+whether the current <code class="docutils literal notranslate"><span class="pre">Series</span></code> can be reinterpreted directly. If yes, it behaves
+like <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>. If not, it materializes a contiguous layout for the
+current logical values and then produces the requested shape from that.</p>
+<p>That difference is not cosmetic:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">view()</span></code> means “fail unless this is a true no-copy alias”</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> means “give me the requested shape, even if you must normalize
-layout first”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">view()</span></code> means “fail unless this can stay a true alias”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> means “give me the requested logical shape, even if layout must
+be normalized first”</p></li>
 </ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>new_sizes</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Int</span></code>)</p>
 <p>The desired output shape.</p>
-<p>Like <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>, this is shape-like rather than container-specific, so
-it can come from spans, arrays, vectors, or another tensor’s <a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes()</span></code></span></a>
-view.</p>
-<p>The shape must preserve the total number of elements.</p>
+<p>In ordinary use you can pass brace literals such as <code class="docutils literal notranslate"><span class="pre">{3,</span> <span class="pre">2}</span></code> directly, or reuse
+another tensor’s <a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes()</span></code></span></a> result. The requested shape must
+preserve total <code class="docutils literal notranslate"><span class="pre">numel()</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -89,12 +88,14 @@ materialized temporary.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>The examples on this page build incrementally.</p>
 <p>Example 1. On a contiguous source, <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">view()</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
-<span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">shape_3x2</span><span class="p">{{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}};</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="p">});</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">reshape</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">shape_3x2</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">shape_3x2</span><span class="p">.</span><span class="n">size</span><span class="p">()));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">reshape</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
 </pre></div>
 </div>
 <section id="output">
@@ -107,8 +108,7 @@ data=[[1, 2],
 </div>
 <p>Example 2. On a non-contiguous transpose, <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> succeeds by materializing
 the transposed logical order first, then reshaping that order.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="n">reshape</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">shape_3x2</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">shape_3x2</span><span class="p">.</span><span class="n">size</span><span class="p">()));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="n">reshape</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
 </pre></div>
 </div>
 </section>
@@ -124,12 +124,14 @@ data=[[1, 4],
 <code class="docutils literal notranslate"><span class="pre">mat</span></code>’s original row-major reading order. It preserved the transposed logical
 values, made <em>that</em> layout contiguous, and then reshaped the result.</p>
 <p>Example 3. Gradients still flow back through that non-contiguous fallback path.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_mat</span><span class="w"> </span><span class="o">=</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="p">});</span>
 <span class="n">tracked_mat</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
 <span class="n">tracked_mat</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">shape_3x2</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">shape_3x2</span><span class="p">.</span><span class="n">size</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">reshape</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">})</span>
 <span class="w">    </span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">sum</span><span class="p">()</span>
 <span class="w">    </span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
@@ -158,8 +160,7 @@ connected for reverse-mode autodiff.</p>
 more than whether the operation stays a true alias.</p></li>
 <li><p>Equal <code class="docutils literal notranslate"><span class="pre">numel()</span></code> is still required; <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> is flexible about layout, not
 about element count.</p></li>
-<li><p>On already contiguous inputs, it does not pay an unnecessary copy tax; it
-routes straight to <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>.</p></li>
+<li><p>On already contiguous inputs, it routes straight to <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>.</p></li>
 </ul>
 </section>
 <section id="see-also">

@@ -15,6 +15,10 @@ if(TARGET pluss)
     add_subdirectory(Ice)
   endif()
 
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Procedure")
+    add_subdirectory(Procedure)
+  endif()
+
   add_executable(plussai_minimax_demo
     minimax_demo.cpp
   )

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/io.h"
 #include "pluss/ai/ice.h"
 #include "pluss/ai/lymph/workflow.h"
 #include "pluss/ai/nodeb/workflow.h"
@@ -952,11 +953,38 @@ using StepLoader =
                        StepOptions,
                        std::string_view,
                        const std::vector<std::pair<std::string, std::string>>&)>;
+using IceFactory = std::function<std::shared_ptr<ice::Model>()>;
+using CompatibilityGate =
+    std::function<std::optional<std::string>(std::int64_t,
+                                             std::int64_t,
+                                             const std::vector<std::pair<std::string, std::string>>&)>;
+
+struct CustomContract {
+  std::string key{};
+  std::int64_t persist_schema_version = 1;
+  std::int64_t component_schema_version = 1;
+  bool frozen = false;
+  StepLoader load{};
+  CompatibilityGate compatible{};
+};
+
+struct CustomPersist {
+  std::string key{};
+  bool reloadable = true;
+  bool frozen = false;
+  std::vector<std::pair<std::string, std::string>> fields{};
+  StepPersistSpec::Saver save{};
+};
+
+[[nodiscard]] inline std::unordered_map<std::string, CustomContract>& custom_contracts_();
+[[nodiscard]] inline std::unordered_map<std::string, StepLoader>& step_loaders_();
 
 namespace detail {
 
 inline constexpr std::int64_t kCurrentProcedureSchemaVersion = 1;
 inline constexpr std::int64_t kMinLoadableProcedureSchemaVersion = 1;
+inline constexpr std::string_view kProcedureProducer = "pluss::ai::Procedure";
+inline constexpr std::string_view kProcedureProducerVersion = "unversioned";
 
 template <class Fn>
 concept SeriesStepCallable = requires(Fn& fn, const ::pluss::Series& x) {
@@ -972,50 +1000,6 @@ template <class Module>
 concept SeriesForwardModule = requires(Module& module, const ::pluss::Series& x) {
   { module.forward(x) } -> std::convertible_to<::pluss::Series>;
 };
-
-[[nodiscard]] inline bool default_lymph_train_options_(const lymph::TrainOptions& options) {
-  return options.layout == lymph::ObservationLayout::Rows &&
-         options.missing == lymph::MissingPolicy::Reject &&
-         options.unknown_categorical == lymph::UnknownCategoryPolicy::Error &&
-         options.max_iterations == 1000 &&
-         options.tolerance == 1e-6 &&
-         !options.warm_start &&
-         options.track_diagnostics &&
-         options.random.seed == 0 &&
-         options.random.deterministic &&
-         !options.sample_weights.defined() &&
-         options.class_weight == lymph::ClassWeightMode::None &&
-         !options.class_weights.defined() &&
-         options.calibration == lymph::ScoreCalibration::None &&
-         options.calibration_iterations == 400 &&
-         options.calibration_tolerance == 1e-6 &&
-         !options.parameter_lower_bounds.defined() &&
-         !options.parameter_upper_bounds.defined() &&
-         options.balance.kind == lymph::BalanceTargetKind::Keep &&
-         options.balance.ratio == 1.0 &&
-         !options.balance.counts.defined() &&
-         options.balance.growth == lymph::BalanceGrowthKind::ReuseRows &&
-         options.balance.neighbors == 5 &&
-         options.balance.clean == lymph::BalanceCleanKind::None &&
-         options.balance.clean_neighbors == 3 &&
-         options.balance.clean_vote == lymph::BalanceCleanVote::AnyDisagreement &&
-         options.balance.protect_small_classes;
-}
-
-[[nodiscard]] inline bool default_lymph_infer_options_(const lymph::InferOptions& options) {
-  return options.layout == lymph::ObservationLayout::Rows &&
-         options.missing == lymph::MissingPolicy::Reject &&
-         options.unknown_categorical == lymph::UnknownCategoryPolicy::Error &&
-         options.positive_threshold == 0.5;
-}
-
-[[nodiscard]] inline bool default_lymph_assess_options_(const lymph::AssessOptions& options) {
-  return options.layout == lymph::ObservationLayout::Rows &&
-         options.metrics.empty() &&
-         !options.sample_weights.defined() &&
-         options.positive_threshold == 0.5 &&
-         options.regression_quantile == 0.5;
-}
 
 [[nodiscard]] inline std::string sanitize_step_name_(std::string_view name) {
   std::string out{};
@@ -1063,6 +1047,31 @@ inline void write_line_(std::ostream& out, std::string_view key, std::string_vie
   return value ? "1" : "0";
 }
 
+[[nodiscard]] inline std::string f64_text_(double value) {
+  std::ostringstream out;
+  out.precision(17);
+  out << value;
+  return out.str();
+}
+
+[[nodiscard]] inline double parse_f64_(std::string_view text, const char* where) {
+  try {
+    return std::stod(std::string(text));
+  } catch (...) {
+    ::pluss::throw_error(std::string(where) + ": expected floating-point value, got \"" + std::string(text) + "\".");
+  }
+}
+
+template <class Enum>
+[[nodiscard]] inline std::string enum_text_(Enum value) {
+  return std::to_string(static_cast<std::int64_t>(value));
+}
+
+template <class Enum>
+[[nodiscard]] inline Enum parse_enum_(std::string_view text, const char* where) {
+  return static_cast<Enum>(parse_i64_(text, where));
+}
+
 [[nodiscard]] inline std::string join_capabilities_(const std::vector<StepCapability>& capabilities) {
   std::ostringstream out;
   for (std::size_t i = 0; i < capabilities.size(); ++i) {
@@ -1087,6 +1096,34 @@ inline void write_line_(std::ostream& out, std::string_view key, std::string_vie
   }
   if (!current.empty()) {
     out.push_back(static_cast<StepCapability>(parse_i64_(current, "pluss::ai::procedure::load(capabilities)")));
+  }
+  return out;
+}
+
+[[nodiscard]] inline std::string join_metric_kinds_(const std::vector<lymph::MetricKind>& metrics) {
+  std::ostringstream out;
+  for (std::size_t i = 0; i < metrics.size(); ++i) {
+    if (i != 0) out << ",";
+    out << static_cast<std::int64_t>(metrics[i]);
+  }
+  return out.str();
+}
+
+[[nodiscard]] inline std::vector<lymph::MetricKind> split_metric_kinds_(std::string_view text) {
+  std::vector<lymph::MetricKind> out{};
+  std::string current{};
+  for (const char ch : text) {
+    if (ch == ',') {
+      if (!current.empty()) {
+        out.push_back(parse_enum_<lymph::MetricKind>(current, "pluss::ai::procedure::load(metrics)"));
+        current.clear();
+      }
+      continue;
+    }
+    current.push_back(ch);
+  }
+  if (!current.empty()) {
+    out.push_back(parse_enum_<lymph::MetricKind>(current, "pluss::ai::procedure::load(metrics)"));
   }
   return out;
 }
@@ -1156,6 +1193,556 @@ inline void write_line_(std::ostream& out, std::string_view key, std::string_vie
   return default_value;
 }
 
+inline void push_field_(std::vector<std::pair<std::string, std::string>>& fields,
+                        std::string key,
+                        std::string value) {
+  fields.emplace_back(std::move(key), std::move(value));
+}
+
+[[nodiscard]] inline std::filesystem::path sidecar_path_(std::string_view base, std::string_view suffix) {
+  return std::filesystem::path(std::string(base) + std::string(suffix));
+}
+
+inline void sync_series_sidecar_(std::string_view base, std::string_view suffix, const Series& value) {
+  const std::filesystem::path path = sidecar_path_(base, suffix);
+  if (value.defined()) {
+    ::pluss::io::save(value, path.string());
+    return;
+  }
+  std::error_code ec;
+  std::filesystem::remove(path, ec);
+}
+
+[[nodiscard]] inline Series load_series_sidecar_(const std::vector<std::pair<std::string, std::string>>& fields,
+                                                 std::string_view present_key,
+                                                 std::string_view base,
+                                                 std::string_view suffix) {
+  if (!parse_bool_(field_or_(fields, present_key, "0"), "pluss::ai::procedure::load(series_sidecar)")) {
+    return Series::undefined();
+  }
+  return ::pluss::io::load<Series>(sidecar_path_(base, suffix).string());
+}
+
+[[nodiscard]] inline std::vector<std::pair<std::string, std::string>> lymph_train_fields_(
+    const lymph::TrainOptions& options) {
+  std::vector<std::pair<std::string, std::string>> fields{};
+  fields.reserve(26);
+  push_field_(fields, "train.layout", enum_text_(options.layout));
+  push_field_(fields, "train.missing", enum_text_(options.missing));
+  push_field_(fields, "train.unknown_categorical", enum_text_(options.unknown_categorical));
+  push_field_(fields, "train.max_iterations", std::to_string(options.max_iterations));
+  push_field_(fields, "train.tolerance", f64_text_(options.tolerance));
+  push_field_(fields, "train.warm_start", bool_text_(options.warm_start));
+  push_field_(fields, "train.track_diagnostics", bool_text_(options.track_diagnostics));
+  push_field_(fields, "train.random.seed", std::to_string(options.random.seed));
+  push_field_(fields, "train.random.deterministic", bool_text_(options.random.deterministic));
+  push_field_(fields, "train.sample_weights", bool_text_(options.sample_weights.defined()));
+  push_field_(fields, "train.class_weight", enum_text_(options.class_weight));
+  push_field_(fields, "train.class_weights", bool_text_(options.class_weights.defined()));
+  push_field_(fields, "train.calibration", enum_text_(options.calibration));
+  push_field_(fields, "train.calibration_iterations", std::to_string(options.calibration_iterations));
+  push_field_(fields, "train.calibration_tolerance", f64_text_(options.calibration_tolerance));
+  push_field_(fields, "train.parameter_lower_bounds", bool_text_(options.parameter_lower_bounds.defined()));
+  push_field_(fields, "train.parameter_upper_bounds", bool_text_(options.parameter_upper_bounds.defined()));
+  push_field_(fields, "train.balance.kind", enum_text_(options.balance.kind));
+  push_field_(fields, "train.balance.ratio", f64_text_(options.balance.ratio));
+  push_field_(fields, "train.balance.counts", bool_text_(options.balance.counts.defined()));
+  push_field_(fields, "train.balance.growth", enum_text_(options.balance.growth));
+  push_field_(fields, "train.balance.neighbors", std::to_string(options.balance.neighbors));
+  push_field_(fields, "train.balance.clean", enum_text_(options.balance.clean));
+  push_field_(fields, "train.balance.clean_neighbors", std::to_string(options.balance.clean_neighbors));
+  push_field_(fields, "train.balance.clean_vote", enum_text_(options.balance.clean_vote));
+  push_field_(fields, "train.balance.protect_small_classes", bool_text_(options.balance.protect_small_classes));
+  return fields;
+}
+
+[[nodiscard]] inline std::vector<std::pair<std::string, std::string>> lymph_infer_fields_(
+    const lymph::InferOptions& options) {
+  return {
+      {"infer.layout", enum_text_(options.layout)},
+      {"infer.missing", enum_text_(options.missing)},
+      {"infer.unknown_categorical", enum_text_(options.unknown_categorical)},
+      {"infer.positive_threshold", f64_text_(options.positive_threshold)},
+  };
+}
+
+[[nodiscard]] inline std::vector<std::pair<std::string, std::string>> lymph_assess_fields_(
+    const lymph::AssessOptions& options) {
+  return {
+      {"assess.layout", enum_text_(options.layout)},
+      {"assess.metrics", join_metric_kinds_(options.metrics)},
+      {"assess.sample_weights", bool_text_(options.sample_weights.defined())},
+      {"assess.positive_threshold", f64_text_(options.positive_threshold)},
+      {"assess.regression_quantile", f64_text_(options.regression_quantile)},
+  };
+}
+
+[[nodiscard]] inline lymph::TrainOptions load_lymph_train_options_(
+    const std::vector<std::pair<std::string, std::string>>& fields,
+    std::string_view base) {
+  lymph::TrainOptions options{};
+  options.layout = parse_enum_<lymph::ObservationLayout>(
+      field_or_(fields, "train.layout", enum_text_(lymph::ObservationLayout::Rows)),
+      "pluss::ai::procedure::load(train.layout)");
+  options.missing = parse_enum_<lymph::MissingPolicy>(
+      field_or_(fields, "train.missing", enum_text_(lymph::MissingPolicy::Reject)),
+      "pluss::ai::procedure::load(train.missing)");
+  options.unknown_categorical = parse_enum_<lymph::UnknownCategoryPolicy>(
+      field_or_(fields, "train.unknown_categorical", enum_text_(lymph::UnknownCategoryPolicy::Error)),
+      "pluss::ai::procedure::load(train.unknown_categorical)");
+  options.max_iterations = parse_i64_(
+      field_or_(fields, "train.max_iterations", "1000"),
+      "pluss::ai::procedure::load(train.max_iterations)");
+  options.tolerance = parse_f64_(
+      field_or_(fields, "train.tolerance", "1e-06"),
+      "pluss::ai::procedure::load(train.tolerance)");
+  options.warm_start = parse_bool_(
+      field_or_(fields, "train.warm_start", "0"),
+      "pluss::ai::procedure::load(train.warm_start)");
+  options.track_diagnostics = parse_bool_(
+      field_or_(fields, "train.track_diagnostics", "1"),
+      "pluss::ai::procedure::load(train.track_diagnostics)");
+  options.random.seed = static_cast<std::uint64_t>(parse_i64_(
+      field_or_(fields, "train.random.seed", "0"),
+      "pluss::ai::procedure::load(train.random.seed)"));
+  options.random.deterministic = parse_bool_(
+      field_or_(fields, "train.random.deterministic", "1"),
+      "pluss::ai::procedure::load(train.random.deterministic)");
+  options.sample_weights = load_series_sidecar_(fields, "train.sample_weights", base, ".train_sample_weights.bin");
+  options.class_weight = parse_enum_<lymph::ClassWeightMode>(
+      field_or_(fields, "train.class_weight", enum_text_(lymph::ClassWeightMode::None)),
+      "pluss::ai::procedure::load(train.class_weight)");
+  options.class_weights = load_series_sidecar_(fields, "train.class_weights", base, ".train_class_weights.bin");
+  options.calibration = parse_enum_<lymph::ScoreCalibration>(
+      field_or_(fields, "train.calibration", enum_text_(lymph::ScoreCalibration::None)),
+      "pluss::ai::procedure::load(train.calibration)");
+  options.calibration_iterations = parse_i64_(
+      field_or_(fields, "train.calibration_iterations", "400"),
+      "pluss::ai::procedure::load(train.calibration_iterations)");
+  options.calibration_tolerance = parse_f64_(
+      field_or_(fields, "train.calibration_tolerance", "1e-06"),
+      "pluss::ai::procedure::load(train.calibration_tolerance)");
+  options.parameter_lower_bounds =
+      load_series_sidecar_(fields, "train.parameter_lower_bounds", base, ".train_parameter_lower_bounds.bin");
+  options.parameter_upper_bounds =
+      load_series_sidecar_(fields, "train.parameter_upper_bounds", base, ".train_parameter_upper_bounds.bin");
+  options.balance.kind = parse_enum_<lymph::BalanceTargetKind>(
+      field_or_(fields, "train.balance.kind", enum_text_(lymph::BalanceTargetKind::Keep)),
+      "pluss::ai::procedure::load(train.balance.kind)");
+  options.balance.ratio = parse_f64_(
+      field_or_(fields, "train.balance.ratio", "1"),
+      "pluss::ai::procedure::load(train.balance.ratio)");
+  options.balance.counts = load_series_sidecar_(fields, "train.balance.counts", base, ".train_balance_counts.bin");
+  options.balance.growth = parse_enum_<lymph::BalanceGrowthKind>(
+      field_or_(fields, "train.balance.growth", enum_text_(lymph::BalanceGrowthKind::ReuseRows)),
+      "pluss::ai::procedure::load(train.balance.growth)");
+  options.balance.neighbors = parse_i64_(
+      field_or_(fields, "train.balance.neighbors", "5"),
+      "pluss::ai::procedure::load(train.balance.neighbors)");
+  options.balance.clean = parse_enum_<lymph::BalanceCleanKind>(
+      field_or_(fields, "train.balance.clean", enum_text_(lymph::BalanceCleanKind::None)),
+      "pluss::ai::procedure::load(train.balance.clean)");
+  options.balance.clean_neighbors = parse_i64_(
+      field_or_(fields, "train.balance.clean_neighbors", "3"),
+      "pluss::ai::procedure::load(train.balance.clean_neighbors)");
+  options.balance.clean_vote = parse_enum_<lymph::BalanceCleanVote>(
+      field_or_(fields, "train.balance.clean_vote", enum_text_(lymph::BalanceCleanVote::AnyDisagreement)),
+      "pluss::ai::procedure::load(train.balance.clean_vote)");
+  options.balance.protect_small_classes = parse_bool_(
+      field_or_(fields, "train.balance.protect_small_classes", "1"),
+      "pluss::ai::procedure::load(train.balance.protect_small_classes)");
+  return options;
+}
+
+[[nodiscard]] inline lymph::InferOptions load_lymph_infer_options_(
+    const std::vector<std::pair<std::string, std::string>>& fields) {
+  lymph::InferOptions options{};
+  options.layout = parse_enum_<lymph::ObservationLayout>(
+      field_or_(fields, "infer.layout", enum_text_(lymph::ObservationLayout::Rows)),
+      "pluss::ai::procedure::load(infer.layout)");
+  options.missing = parse_enum_<lymph::MissingPolicy>(
+      field_or_(fields, "infer.missing", enum_text_(lymph::MissingPolicy::Reject)),
+      "pluss::ai::procedure::load(infer.missing)");
+  options.unknown_categorical = parse_enum_<lymph::UnknownCategoryPolicy>(
+      field_or_(fields, "infer.unknown_categorical", enum_text_(lymph::UnknownCategoryPolicy::Error)),
+      "pluss::ai::procedure::load(infer.unknown_categorical)");
+  options.positive_threshold = parse_f64_(
+      field_or_(fields, "infer.positive_threshold", "0.5"),
+      "pluss::ai::procedure::load(infer.positive_threshold)");
+  return options;
+}
+
+[[nodiscard]] inline lymph::AssessOptions load_lymph_assess_options_(
+    const std::vector<std::pair<std::string, std::string>>& fields,
+    std::string_view base) {
+  lymph::AssessOptions options{};
+  options.layout = parse_enum_<lymph::ObservationLayout>(
+      field_or_(fields, "assess.layout", enum_text_(lymph::ObservationLayout::Rows)),
+      "pluss::ai::procedure::load(assess.layout)");
+  options.metrics = split_metric_kinds_(field_or_(fields, "assess.metrics", ""));
+  options.sample_weights = load_series_sidecar_(fields, "assess.sample_weights", base, ".assess_sample_weights.bin");
+  options.positive_threshold = parse_f64_(
+      field_or_(fields, "assess.positive_threshold", "0.5"),
+      "pluss::ai::procedure::load(assess.positive_threshold)");
+  options.regression_quantile = parse_f64_(
+      field_or_(fields, "assess.regression_quantile", "0.5"),
+      "pluss::ai::procedure::load(assess.regression_quantile)");
+  return options;
+}
+
+[[nodiscard]] inline std::vector<std::pair<std::string, std::string>> ice_train_fields_(
+    const ice::TrainOptions& options) {
+  std::vector<std::pair<std::string, std::string>> fields{};
+  fields.reserve(42);
+  push_field_(fields, "train.batch_size", std::to_string(options.batch_size));
+  push_field_(fields, "train.learning_rate", f64_text_(options.learning_rate));
+  push_field_(fields, "train.optimizer", enum_text_(options.optimizer));
+  push_field_(fields, "train.loss", enum_text_(options.loss));
+  push_field_(fields, "train.shuffle", bool_text_(options.shuffle));
+  push_field_(fields, "train.seed", std::to_string(options.seed));
+  push_field_(fields, "train.standardize", bool_text_(options.standardize));
+  push_field_(fields, "train.validation.split_ratio", f64_text_(options.validation.split_ratio));
+  push_field_(fields, "train.validation.every_n_epochs", std::to_string(options.validation.every_n_epochs));
+  push_field_(fields, "train.validation.start_from_epoch", std::to_string(options.validation.start_from_epoch));
+  push_field_(fields, "train.validation.monitor", options.validation.monitor);
+  push_field_(fields, "train.validation.direction", enum_text_(options.validation.direction));
+  push_field_(fields, "train.arch.dropout", f64_text_(options.architecture_regularization.dropout));
+  push_field_(fields, "train.objective.weight_decay", f64_text_(options.objective_regularization.weight_decay));
+  push_field_(fields, "train.objective.decoupled_weight_decay", bool_text_(options.objective_regularization.decoupled_weight_decay));
+  push_field_(fields, "train.objective.l1_penalty", f64_text_(options.objective_regularization.l1_penalty));
+  push_field_(fields, "train.objective.l2_penalty", f64_text_(options.objective_regularization.l2_penalty));
+  push_field_(fields, "train.objective.label_smoothing", f64_text_(options.objective_regularization.label_smoothing));
+  push_field_(fields, "train.loop.early_stopping", bool_text_(options.loop_regularization.early_stopping));
+  push_field_(fields, "train.loop.patience", std::to_string(options.loop_regularization.patience));
+  push_field_(fields, "train.loop.min_delta", f64_text_(options.loop_regularization.min_delta));
+  push_field_(fields, "train.loop.restore_best_weights", bool_text_(options.loop_regularization.restore_best_weights));
+  push_field_(fields, "train.checkpoint.enabled", bool_text_(options.checkpoint.enabled));
+  push_field_(fields, "train.checkpoint.save_last", bool_text_(options.checkpoint.save_last));
+  push_field_(fields, "train.checkpoint.save_best", bool_text_(options.checkpoint.save_best));
+  push_field_(fields, "train.checkpoint.save_weights_only", bool_text_(options.checkpoint.save_weights_only));
+  push_field_(fields, "train.checkpoint.save_on_exception", bool_text_(options.checkpoint.save_on_exception));
+  push_field_(fields, "train.checkpoint.every_n_epochs", std::to_string(options.checkpoint.every_n_epochs));
+  push_field_(fields, "train.checkpoint.dirpath", options.checkpoint.dirpath);
+  push_field_(fields, "train.checkpoint.filename", options.checkpoint.filename);
+  push_field_(fields, "train.checkpoint.resume_from", options.checkpoint.resume_from);
+  push_field_(fields, "train.execution.grad_clip.mode", enum_text_(options.execution.grad_clip.mode));
+  push_field_(fields, "train.execution.grad_clip.threshold", f64_text_(options.execution.grad_clip.threshold));
+  push_field_(fields, "train.execution.max_epochs", std::to_string(options.execution.max_epochs));
+  push_field_(fields, "train.execution.accumulation_steps", std::to_string(options.execution.accumulation_steps));
+  push_field_(fields, "train.execution.fast_dev_batches", std::to_string(options.execution.fast_dev_batches));
+  push_field_(fields, "train.execution.max_train_batches", std::to_string(options.execution.max_train_batches));
+  push_field_(fields, "train.execution.max_valid_batches", std::to_string(options.execution.max_valid_batches));
+  push_field_(fields, "train.execution.fail_on_non_finite", bool_text_(options.execution.fail_on_non_finite));
+  push_field_(fields, "train.execution.deterministic", bool_text_(options.execution.deterministic));
+  push_field_(fields, "train.execution.precision", enum_text_(options.execution.precision));
+  push_field_(fields, "train.execution.platform", enum_text_(options.execution.platform));
+  return fields;
+}
+
+[[nodiscard]] inline ice::TrainOptions load_ice_train_options_(
+    const std::vector<std::pair<std::string, std::string>>& fields) {
+  ice::TrainOptions options{};
+  options.batch_size = parse_i64_(field_or_(fields, "train.batch_size", "32"),
+                                  "pluss::ai::procedure::load(train.batch_size)");
+  options.learning_rate = parse_f64_(field_or_(fields, "train.learning_rate", "0.001"),
+                                     "pluss::ai::procedure::load(train.learning_rate)");
+  options.optimizer = parse_enum_<ice::OptimizerKind>(
+      field_or_(fields, "train.optimizer", enum_text_(ice::OptimizerKind::Adam)),
+      "pluss::ai::procedure::load(train.optimizer)");
+  options.loss = parse_enum_<ice::LossKind>(
+      field_or_(fields, "train.loss", enum_text_(ice::LossKind::MSE)),
+      "pluss::ai::procedure::load(train.loss)");
+  options.shuffle = parse_bool_(field_or_(fields, "train.shuffle", "1"),
+                                "pluss::ai::procedure::load(train.shuffle)");
+  options.seed = static_cast<std::uint64_t>(parse_i64_(field_or_(fields, "train.seed", "0"),
+                                                       "pluss::ai::procedure::load(train.seed)"));
+  options.standardize = parse_bool_(field_or_(fields, "train.standardize", "0"),
+                                    "pluss::ai::procedure::load(train.standardize)");
+  options.validation.split_ratio = parse_f64_(
+      field_or_(fields, "train.validation.split_ratio", "0.1"),
+      "pluss::ai::procedure::load(train.validation.split_ratio)");
+  options.validation.every_n_epochs = parse_i64_(
+      field_or_(fields, "train.validation.every_n_epochs", "1"),
+      "pluss::ai::procedure::load(train.validation.every_n_epochs)");
+  options.validation.start_from_epoch = parse_i64_(
+      field_or_(fields, "train.validation.start_from_epoch", "0"),
+      "pluss::ai::procedure::load(train.validation.start_from_epoch)");
+  options.validation.monitor = field_or_(fields, "train.validation.monitor", "val_loss");
+  options.validation.direction = parse_enum_<ice::MonitorDirection>(
+      field_or_(fields, "train.validation.direction", enum_text_(ice::MonitorDirection::Auto)),
+      "pluss::ai::procedure::load(train.validation.direction)");
+  options.architecture_regularization.dropout = parse_f64_(
+      field_or_(fields, "train.arch.dropout", "0"),
+      "pluss::ai::procedure::load(train.arch.dropout)");
+  options.objective_regularization.weight_decay = parse_f64_(
+      field_or_(fields, "train.objective.weight_decay", "0"),
+      "pluss::ai::procedure::load(train.objective.weight_decay)");
+  options.objective_regularization.decoupled_weight_decay = parse_bool_(
+      field_or_(fields, "train.objective.decoupled_weight_decay", "0"),
+      "pluss::ai::procedure::load(train.objective.decoupled_weight_decay)");
+  options.objective_regularization.l1_penalty = parse_f64_(
+      field_or_(fields, "train.objective.l1_penalty", "0"),
+      "pluss::ai::procedure::load(train.objective.l1_penalty)");
+  options.objective_regularization.l2_penalty = parse_f64_(
+      field_or_(fields, "train.objective.l2_penalty", "0"),
+      "pluss::ai::procedure::load(train.objective.l2_penalty)");
+  options.objective_regularization.label_smoothing = parse_f64_(
+      field_or_(fields, "train.objective.label_smoothing", "0"),
+      "pluss::ai::procedure::load(train.objective.label_smoothing)");
+  options.loop_regularization.early_stopping = parse_bool_(
+      field_or_(fields, "train.loop.early_stopping", "1"),
+      "pluss::ai::procedure::load(train.loop.early_stopping)");
+  options.loop_regularization.patience = parse_i64_(
+      field_or_(fields, "train.loop.patience", "10"),
+      "pluss::ai::procedure::load(train.loop.patience)");
+  options.loop_regularization.min_delta = parse_f64_(
+      field_or_(fields, "train.loop.min_delta", "1e-06"),
+      "pluss::ai::procedure::load(train.loop.min_delta)");
+  options.loop_regularization.restore_best_weights = parse_bool_(
+      field_or_(fields, "train.loop.restore_best_weights", "0"),
+      "pluss::ai::procedure::load(train.loop.restore_best_weights)");
+  options.checkpoint.enabled = parse_bool_(field_or_(fields, "train.checkpoint.enabled", "0"),
+                                           "pluss::ai::procedure::load(train.checkpoint.enabled)");
+  options.checkpoint.save_last = parse_bool_(field_or_(fields, "train.checkpoint.save_last", "0"),
+                                             "pluss::ai::procedure::load(train.checkpoint.save_last)");
+  options.checkpoint.save_best = parse_bool_(field_or_(fields, "train.checkpoint.save_best", "0"),
+                                             "pluss::ai::procedure::load(train.checkpoint.save_best)");
+  options.checkpoint.save_weights_only = parse_bool_(
+      field_or_(fields, "train.checkpoint.save_weights_only", "0"),
+      "pluss::ai::procedure::load(train.checkpoint.save_weights_only)");
+  options.checkpoint.save_on_exception = parse_bool_(
+      field_or_(fields, "train.checkpoint.save_on_exception", "0"),
+      "pluss::ai::procedure::load(train.checkpoint.save_on_exception)");
+  options.checkpoint.every_n_epochs = parse_i64_(
+      field_or_(fields, "train.checkpoint.every_n_epochs", "1"),
+      "pluss::ai::procedure::load(train.checkpoint.every_n_epochs)");
+  options.checkpoint.dirpath = field_or_(fields, "train.checkpoint.dirpath", {});
+  options.checkpoint.filename = field_or_(fields, "train.checkpoint.filename", {});
+  options.checkpoint.resume_from = field_or_(fields, "train.checkpoint.resume_from", {});
+  options.execution.grad_clip.mode = parse_enum_<pluss::nn::optim::GradientClipMode>(
+      field_or_(fields, "train.execution.grad_clip.mode", enum_text_(pluss::nn::optim::GradientClipMode::ByNorm)),
+      "pluss::ai::procedure::load(train.execution.grad_clip.mode)");
+  options.execution.grad_clip.threshold = parse_f64_(
+      field_or_(fields, "train.execution.grad_clip.threshold", "1"),
+      "pluss::ai::procedure::load(train.execution.grad_clip.threshold)");
+  options.execution.max_epochs = parse_i64_(field_or_(fields, "train.execution.max_epochs", "60"),
+                                            "pluss::ai::procedure::load(train.execution.max_epochs)");
+  options.execution.accumulation_steps = parse_i64_(
+      field_or_(fields, "train.execution.accumulation_steps", "1"),
+      "pluss::ai::procedure::load(train.execution.accumulation_steps)");
+  options.execution.fast_dev_batches = parse_i64_(
+      field_or_(fields, "train.execution.fast_dev_batches", "0"),
+      "pluss::ai::procedure::load(train.execution.fast_dev_batches)");
+  options.execution.max_train_batches = parse_i64_(
+      field_or_(fields, "train.execution.max_train_batches", "0"),
+      "pluss::ai::procedure::load(train.execution.max_train_batches)");
+  options.execution.max_valid_batches = parse_i64_(
+      field_or_(fields, "train.execution.max_valid_batches", "0"),
+      "pluss::ai::procedure::load(train.execution.max_valid_batches)");
+  options.execution.fail_on_non_finite = parse_bool_(
+      field_or_(fields, "train.execution.fail_on_non_finite", "1"),
+      "pluss::ai::procedure::load(train.execution.fail_on_non_finite)");
+  options.execution.deterministic = parse_bool_(
+      field_or_(fields, "train.execution.deterministic", "0"),
+      "pluss::ai::procedure::load(train.execution.deterministic)");
+  options.execution.precision = parse_enum_<ScalarType>(
+      field_or_(fields, "train.execution.precision", enum_text_(ScalarType::Float32)),
+      "pluss::ai::procedure::load(train.execution.precision)");
+  options.execution.platform = parse_enum_<ice::TrainPlatform>(
+      field_or_(fields, "train.execution.platform", enum_text_(ice::TrainPlatform::CPU)),
+      "pluss::ai::procedure::load(train.execution.platform)");
+  return options;
+}
+
+[[nodiscard]] inline Step::Runner make_ice_runner_(std::shared_ptr<ice::Model> state,
+                                                   ice::LossKind assess_loss,
+                                                   ice::TrainOptions train_options,
+                                                   std::string output) {
+  return [state = std::move(state),
+          assess_loss,
+          train_options = std::move(train_options),
+          output = std::move(output)](
+             const std::vector<Artifact>& inputs, const RunOptions& run_options) mutable -> Artifact {
+    if (inputs.size() != 1) {
+      ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): expected exactly one input artifact.");
+    }
+    const Artifact& input = inputs.front();
+    if (run_options.mode == ProcedureMode::Learn) {
+      if (input.is<lymph::LabeledBatch>()) {
+        const lymph::LabeledBatch& batch = input.get<lymph::LabeledBatch>();
+        state->learn(batch.features.x, batch.y, train_options);
+        return Artifact(output, Artifact::Value(true));
+      }
+      if (input.is<ice::Batch>()) {
+        const ice::Batch& batch = input.get<ice::Batch>();
+        if (!batch.has_inputs() || !batch.has_targets()) {
+          ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Ice Batch learn input needs inputs and targets.");
+        }
+        state->learn(batch.inputs(), batch.targets(), train_options);
+        return Artifact(output, Artifact::Value(true));
+      }
+      ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Learn mode expects LabeledBatch or ice::Batch input.");
+    }
+    if (run_options.mode == ProcedureMode::Assess) {
+      if (input.is<lymph::LabeledBatch>()) {
+        const lymph::LabeledBatch& batch = input.get<lymph::LabeledBatch>();
+        return Artifact(output, Artifact::Value(state->assess(batch.features.x, batch.y, assess_loss)));
+      }
+      if (input.is<ice::Batch>()) {
+        const ice::Batch& batch = input.get<ice::Batch>();
+        if (!batch.has_inputs() || !batch.has_targets()) {
+          ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Ice Batch assess input needs inputs and targets.");
+        }
+        return Artifact(output, Artifact::Value(state->assess(batch.inputs(), batch.targets(), assess_loss)));
+      }
+      ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Assess mode expects LabeledBatch or ice::Batch input.");
+    }
+    if (input.is<::pluss::Series>()) {
+      return Artifact(output, Artifact::Value(state->infer(input.get<::pluss::Series>())));
+    }
+    if (input.is<lymph::FeatureBatch>()) {
+      return Artifact(output, Artifact::Value(state->infer(input.get<lymph::FeatureBatch>().x)));
+    }
+    if (input.is<ice::Batch>()) {
+      const ice::Batch& batch = input.get<ice::Batch>();
+      if (!batch.has_inputs()) {
+        ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Ice Batch infer input needs inputs.");
+      }
+      return Artifact(output, Artifact::Value(state->infer(batch.inputs())));
+    }
+    ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Infer mode expects Series, FeatureBatch, or ice::Batch input.");
+  };
+}
+
+template <class Fn>
+requires (!SeriesForwardModule<Fn> &&
+          (SeriesStepCallable<Fn> || DataFrameStepCallable<Fn>))
+[[nodiscard]] inline Step::Runner make_callable_runner_(Fn fn, std::string output) {
+  return [fn = std::move(fn), output = std::move(output)](
+             const std::vector<Artifact>& inputs, const RunOptions&) mutable -> Artifact {
+    if (inputs.size() != 1) {
+      ::pluss::throw_error("pluss::ai::procedure::step: callable steps require exactly one input artifact.");
+    }
+    const Artifact& input = inputs.front();
+    if constexpr (SeriesStepCallable<Fn>) {
+      if (input.is<::pluss::Series>()) {
+        using Return = decltype(fn(input.get<::pluss::Series>()));
+        if constexpr (std::is_same_v<std::decay_t<Return>, Artifact>) {
+          Artifact artifact = fn(input.get<::pluss::Series>());
+          if (!artifact.named()) return Artifact(output, artifact.value());
+          return artifact;
+        } else {
+          return Artifact(output, Artifact::Value(fn(input.get<::pluss::Series>())));
+        }
+      }
+    }
+    if constexpr (DataFrameStepCallable<Fn>) {
+      if (input.is<pluss::table::DataFrame>()) {
+        using Return = decltype(fn(input.get<pluss::table::DataFrame>()));
+        if constexpr (std::is_same_v<std::decay_t<Return>, Artifact>) {
+          Artifact artifact = fn(input.get<pluss::table::DataFrame>());
+          if (!artifact.named()) return Artifact(output, artifact.value());
+          return artifact;
+        } else {
+          return Artifact(output, Artifact::Value(fn(input.get<pluss::table::DataFrame>())));
+        }
+      }
+    }
+    ::pluss::throw_error("pluss::ai::procedure::step: input artifact type is incompatible with callable step.");
+  };
+}
+
+[[nodiscard]] inline Step make_ice_step_(std::string name,
+                                         std::string input_name,
+                                         std::string output_name,
+                                         std::shared_ptr<ice::Model> state,
+                                         std::string restore_key,
+                                         ice::LossKind assess_loss,
+                                         ice::TrainOptions train_options) {
+  if (input_name.empty() || output_name.empty()) {
+    ::pluss::throw_error("pluss::ai::procedure::step: input and output names must not be empty.");
+  }
+  if (!state) {
+    ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): state must not be null.");
+  }
+  StepOptions options{};
+  options.capabilities = {StepCapability::Learn, StepCapability::Infer, StepCapability::Assess};
+  options.inputs = {std::move(input_name)};
+  options.outputs = {output_name};
+  options.persistable = !restore_key.empty();
+  options.trained = state->ready();
+  options.component = "ice::Model";
+
+  StepPersistSpec persist{};
+  if (!restore_key.empty()) {
+    persist.key = "ice::Model";
+    persist.schema_version = 1;
+    persist.component_schema_version = 1;
+    persist.reloadable = true;
+    persist.fields = ice_train_fields_(train_options);
+    push_field_(persist.fields, "ice.restore", restore_key);
+    push_field_(persist.fields, "ice.assess_loss", enum_text_(assess_loss));
+    persist.save = [state](std::string_view path) {
+      state->save(path);
+    };
+  }
+
+  Step::Runner runner = make_ice_runner_(std::move(state), assess_loss, std::move(train_options), std::move(output_name));
+  if (options.persistable) {
+    if (name.empty()) {
+      ::pluss::throw_error("pluss::ai::procedure::step: name must not be empty.");
+    }
+    if (!runner) {
+      ::pluss::throw_error("pluss::ai::procedure::step: runner must be callable.");
+    }
+    if (persist.key.empty()) {
+      ::pluss::throw_error("pluss::ai::procedure::step: persistable steps need a persistence key.");
+    }
+    return Step(std::move(name), std::move(options), std::move(persist), std::move(runner));
+  }
+  if (name.empty()) {
+    ::pluss::throw_error("pluss::ai::procedure::step: name must not be empty.");
+  }
+  if (!runner) {
+    ::pluss::throw_error("pluss::ai::procedure::step: runner must be callable.");
+  }
+  return Step(std::move(name), std::move(options), std::move(runner));
+}
+
+inline void validate_loaded_contract_(const Step& loaded,
+                                      const StepOptions& manifest_options,
+                                      std::string_view persist_key,
+                                      std::int64_t persist_schema,
+                                      std::int64_t component_schema,
+                                      bool reloadable,
+                                      bool frozen,
+                                      bool custom) {
+  if (loaded.component() != manifest_options.component) {
+    ::pluss::throw_error("pluss::ai::procedure::load: component mismatch for step \"" + loaded.name() + "\".");
+  }
+  if (loaded.persistable() != manifest_options.persistable) {
+    ::pluss::throw_error("pluss::ai::procedure::load: persistable contract mismatch for step \"" + loaded.name() + "\".");
+  }
+  if (loaded.persist_key() != persist_key) {
+    ::pluss::throw_error("pluss::ai::procedure::load: persistence key mismatch for step \"" + loaded.name() + "\".");
+  }
+  if (loaded.persist_schema_version() != persist_schema) {
+    ::pluss::throw_error("pluss::ai::procedure::load: persistence schema mismatch for step \"" + loaded.name() + "\".");
+  }
+  if (loaded.component_schema_version() != component_schema) {
+    ::pluss::throw_error("pluss::ai::procedure::load: component schema mismatch for step \"" + loaded.name() + "\".");
+  }
+  if (loaded.reloadable() != reloadable) {
+    ::pluss::throw_error("pluss::ai::procedure::load: reloadable contract mismatch for step \"" + loaded.name() + "\".");
+  }
+  if (loaded.frozen() != frozen) {
+    ::pluss::throw_error("pluss::ai::procedure::load: frozen contract mismatch for step \"" + loaded.name() + "\".");
+  }
+  if (loaded.custom() != custom) {
+    ::pluss::throw_error("pluss::ai::procedure::load: custom contract mismatch for step \"" + loaded.name() + "\".");
+  }
+}
+
 } // namespace detail
 
 [[nodiscard]] inline Step step(std::string name, StepOptions options = {}) {
@@ -1186,6 +1773,27 @@ inline void write_line_(std::ostream& out, std::string_view key, std::string_vie
     ::pluss::throw_error("pluss::ai::procedure::step: persistable steps need a persistence key.");
   }
   return Step(std::move(name), std::move(options), std::move(persist), std::move(runner));
+}
+
+[[nodiscard]] inline Step step(std::string name, StepOptions options, CustomPersist persist, Step::Runner runner) {
+  const auto found = custom_contracts_().find(persist.key);
+  if (found == custom_contracts_().end()) {
+    ::pluss::throw_error("pluss::ai::procedure::step(custom): no bound contract for key \"" + persist.key + "\".");
+  }
+  options.persistable = true;
+  if (options.component.empty()) {
+    options.component = persist.key;
+  }
+  StepPersistSpec spec{};
+  spec.key = found->second.key;
+  spec.schema_version = found->second.persist_schema_version;
+  spec.component_schema_version = found->second.component_schema_version;
+  spec.reloadable = persist.reloadable;
+  spec.frozen = persist.frozen || found->second.frozen;
+  spec.custom = true;
+  spec.fields = std::move(persist.fields);
+  spec.save = std::move(persist.save);
+  return step(std::move(name), std::move(options), std::move(spec), std::move(runner));
 }
 
 template <class Module>
@@ -1231,39 +1839,65 @@ requires (!detail::SeriesForwardModule<Fn> &&
   options.inputs = {std::move(input_name)};
   options.outputs = {output_name};
   options.component = "callable";
-  Step::Runner runner = [fn = std::move(fn), output = std::move(output_name)](
-                            const std::vector<Artifact>& inputs, const RunOptions&) mutable -> Artifact {
-    if (inputs.size() != 1) {
-      ::pluss::throw_error("pluss::ai::procedure::step: callable steps require exactly one input artifact.");
-    }
-    const Artifact& input = inputs.front();
-    if constexpr (detail::SeriesStepCallable<Fn>) {
-      if (input.is<::pluss::Series>()) {
-        using Return = decltype(fn(input.get<::pluss::Series>()));
-        if constexpr (std::is_same_v<std::decay_t<Return>, Artifact>) {
-          Artifact artifact = fn(input.get<::pluss::Series>());
-          if (!artifact.named()) return Artifact(output, artifact.value());
-          return artifact;
-        } else {
-          return Artifact(output, Artifact::Value(fn(input.get<::pluss::Series>())));
-        }
-      }
-    }
-    if constexpr (detail::DataFrameStepCallable<Fn>) {
-      if (input.is<pluss::table::DataFrame>()) {
-        using Return = decltype(fn(input.get<pluss::table::DataFrame>()));
-        if constexpr (std::is_same_v<std::decay_t<Return>, Artifact>) {
-          Artifact artifact = fn(input.get<pluss::table::DataFrame>());
-          if (!artifact.named()) return Artifact(output, artifact.value());
-          return artifact;
-        } else {
-          return Artifact(output, Artifact::Value(fn(input.get<pluss::table::DataFrame>())));
-        }
-      }
-    }
-    ::pluss::throw_error("pluss::ai::procedure::step: input artifact type is incompatible with callable step.");
-  };
+  Step::Runner runner = detail::make_callable_runner_(std::move(fn), std::move(output_name));
   return step(std::move(name), std::move(options), std::move(runner));
+}
+
+template <class Fn>
+requires (!detail::SeriesForwardModule<Fn> &&
+          (detail::SeriesStepCallable<Fn> || detail::DataFrameStepCallable<Fn>))
+[[nodiscard]] inline Step step(std::string name,
+                               std::string input_name,
+                               std::string output_name,
+                               Fn fn,
+                               std::string key) {
+  if (input_name.empty() || output_name.empty()) {
+    ::pluss::throw_error("pluss::ai::procedure::step: input and output names must not be empty.");
+  }
+  StepOptions options{};
+  options.capabilities = {StepCapability::Map};
+  options.inputs = {std::move(input_name)};
+  options.outputs = {output_name};
+  options.component = key;
+  auto runner = detail::make_callable_runner_(std::move(fn), std::move(output_name));
+  return step(
+      std::move(name),
+      std::move(options),
+      CustomPersist{
+          .key = std::move(key),
+          .fields = {{"external_ref", "registry"}},
+      },
+      std::move(runner));
+}
+
+template <class Fn>
+requires (!detail::SeriesForwardModule<Fn> &&
+          (detail::SeriesStepCallable<Fn> || detail::DataFrameStepCallable<Fn>))
+inline void bind(std::string key, Fn fn) {
+  if (key.empty()) {
+    ::pluss::throw_error("pluss::ai::procedure::bind: key must not be empty.");
+  }
+  if (step_loaders_().contains(key) || custom_contracts_().contains(key)) {
+    ::pluss::throw_error("pluss::ai::procedure::bind: duplicate contract key \"" + key + "\".");
+  }
+  const std::string bound_key = key;
+  CustomContract contract{
+      .key = bound_key,
+      .load = [fn = std::move(fn), bound_key](std::string name,
+                                              StepOptions options,
+                                              std::string_view,
+                                              const std::vector<std::pair<std::string, std::string>>&) mutable -> Step {
+        if (options.inputs.size() != 1 || options.outputs.size() != 1) {
+          ::pluss::throw_error("pluss::ai::procedure::bind(callable): expected exactly one input and one output.");
+        }
+        return step(std::move(name),
+                    options.inputs.front(),
+                    options.outputs.front(),
+                    fn,
+                    bound_key);
+      },
+  };
+  custom_contracts_().emplace(bound_key, std::move(contract));
 }
 
 [[nodiscard]] inline Step step(std::string name,
@@ -1326,19 +1960,28 @@ requires (!detail::SeriesForwardModule<Fn> &&
   options.persistable = true;
   options.trained = model.trained();
   options.component = "lymph::Model";
-  const bool reloadable = detail::default_lymph_train_options_(train_options) &&
-                          detail::default_lymph_infer_options_(infer_options) &&
-                          detail::default_lymph_assess_options_(assess_options);
   auto state = std::make_shared<lymph::Model>(std::move(model));
   StepPersistSpec persist{};
   persist.key = "lymph::Model";
   persist.schema_version = 1;
-  persist.reloadable = reloadable;
-  if (reloadable) {
-    persist.save = [state](std::string_view path) {
-      state->save(std::string(path));
-    };
+  persist.component_schema_version = 1;
+  persist.reloadable = true;
+  persist.fields = detail::lymph_train_fields_(train_options);
+  {
+    const auto infer_fields = detail::lymph_infer_fields_(infer_options);
+    persist.fields.insert(persist.fields.end(), infer_fields.begin(), infer_fields.end());
+    const auto assess_fields = detail::lymph_assess_fields_(assess_options);
+    persist.fields.insert(persist.fields.end(), assess_fields.begin(), assess_fields.end());
   }
+  persist.save = [state, train_options, assess_options](std::string_view path) {
+    state->save(std::string(path));
+    detail::sync_series_sidecar_(path, ".train_sample_weights.bin", train_options.sample_weights);
+    detail::sync_series_sidecar_(path, ".train_class_weights.bin", train_options.class_weights);
+    detail::sync_series_sidecar_(path, ".train_parameter_lower_bounds.bin", train_options.parameter_lower_bounds);
+    detail::sync_series_sidecar_(path, ".train_parameter_upper_bounds.bin", train_options.parameter_upper_bounds);
+    detail::sync_series_sidecar_(path, ".train_balance_counts.bin", train_options.balance.counts);
+    detail::sync_series_sidecar_(path, ".assess_sample_weights.bin", assess_options.sample_weights);
+  };
   Step::Runner runner = [state = std::move(state),
                          train_options = std::move(train_options),
                          infer_options = std::move(infer_options),
@@ -1399,19 +2042,28 @@ requires (!detail::SeriesForwardModule<Fn> &&
   options.persistable = true;
   options.trained = workflow.trained();
   options.component = "lymph::Workflow";
-  const bool reloadable = detail::default_lymph_train_options_(train_options) &&
-                          detail::default_lymph_infer_options_(infer_options) &&
-                          detail::default_lymph_assess_options_(assess_options);
   auto state = std::make_shared<lymph::Workflow>(std::move(workflow));
   StepPersistSpec persist{};
   persist.key = "lymph::Workflow";
   persist.schema_version = 1;
-  persist.reloadable = reloadable;
-  if (reloadable) {
-    persist.save = [state](std::string_view path) {
-      state->save(std::string(path));
-    };
+  persist.component_schema_version = 1;
+  persist.reloadable = true;
+  persist.fields = detail::lymph_train_fields_(train_options);
+  {
+    const auto infer_fields = detail::lymph_infer_fields_(infer_options);
+    persist.fields.insert(persist.fields.end(), infer_fields.begin(), infer_fields.end());
+    const auto assess_fields = detail::lymph_assess_fields_(assess_options);
+    persist.fields.insert(persist.fields.end(), assess_fields.begin(), assess_fields.end());
   }
+  persist.save = [state, train_options, assess_options](std::string_view path) {
+    state->save(std::string(path));
+    detail::sync_series_sidecar_(path, ".train_sample_weights.bin", train_options.sample_weights);
+    detail::sync_series_sidecar_(path, ".train_class_weights.bin", train_options.class_weights);
+    detail::sync_series_sidecar_(path, ".train_parameter_lower_bounds.bin", train_options.parameter_lower_bounds);
+    detail::sync_series_sidecar_(path, ".train_parameter_upper_bounds.bin", train_options.parameter_upper_bounds);
+    detail::sync_series_sidecar_(path, ".train_balance_counts.bin", train_options.balance.counts);
+    detail::sync_series_sidecar_(path, ".assess_sample_weights.bin", assess_options.sample_weights);
+  };
   Step::Runner runner = [state = std::move(state),
                          train_options = std::move(train_options),
                          infer_options = std::move(infer_options),
@@ -1461,71 +2113,35 @@ requires (!detail::SeriesForwardModule<Fn> &&
                                ice::Model& model,
                                ice::LossKind assess_loss = ice::LossKind::MSE,
                                ice::TrainOptions train_options = {}) {
-  if (input_name.empty() || output_name.empty()) {
-    ::pluss::throw_error("pluss::ai::procedure::step: input and output names must not be empty.");
-  }
-  StepOptions options{};
-  options.capabilities = {StepCapability::Learn, StepCapability::Infer, StepCapability::Assess};
-  options.inputs = {std::move(input_name)};
-  options.outputs = {output_name};
-  options.persistable = false;
-  options.trained = model.ready();
-  options.component = "ice::Model";
-  Step::Runner runner = [&model,
-                         assess_loss,
-                         train_options = std::move(train_options),
-                         output = std::move(output_name)](
-                            const std::vector<Artifact>& inputs, const RunOptions& run_options) mutable -> Artifact {
-    if (inputs.size() != 1) {
-      ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): expected exactly one input artifact.");
-    }
-    const Artifact& input = inputs.front();
-    if (run_options.mode == ProcedureMode::Learn) {
-      if (input.is<lymph::LabeledBatch>()) {
-        const lymph::LabeledBatch& batch = input.get<lymph::LabeledBatch>();
-        model.learn(batch.features.x, batch.y, train_options);
-        return Artifact(output, Artifact::Value(true));
-      }
-      if (input.is<ice::Batch>()) {
-        const ice::Batch& batch = input.get<ice::Batch>();
-        if (!batch.has_inputs() || !batch.has_targets()) {
-          ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Ice Batch learn input needs inputs and targets.");
-        }
-        model.learn(batch.inputs(), batch.targets(), train_options);
-        return Artifact(output, Artifact::Value(true));
-      }
-      ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Learn mode expects LabeledBatch or ice::Batch input.");
-    }
-    if (run_options.mode == ProcedureMode::Assess) {
-      if (input.is<lymph::LabeledBatch>()) {
-        const lymph::LabeledBatch& batch = input.get<lymph::LabeledBatch>();
-        return Artifact(output, Artifact::Value(model.assess(batch.features.x, batch.y, assess_loss)));
-      }
-      if (input.is<ice::Batch>()) {
-        const ice::Batch& batch = input.get<ice::Batch>();
-        if (!batch.has_inputs() || !batch.has_targets()) {
-          ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Ice Batch assess input needs inputs and targets.");
-        }
-        return Artifact(output, Artifact::Value(model.assess(batch.inputs(), batch.targets(), assess_loss)));
-      }
-      ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Assess mode expects LabeledBatch or ice::Batch input.");
-    }
-    if (input.is<::pluss::Series>()) {
-      return Artifact(output, Artifact::Value(model.infer(input.get<::pluss::Series>())));
-    }
-    if (input.is<lymph::FeatureBatch>()) {
-      return Artifact(output, Artifact::Value(model.infer(input.get<lymph::FeatureBatch>().x)));
-    }
-    if (input.is<ice::Batch>()) {
-      const ice::Batch& batch = input.get<ice::Batch>();
-      if (!batch.has_inputs()) {
-        ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Ice Batch infer input needs inputs.");
-      }
-      return Artifact(output, Artifact::Value(model.infer(batch.inputs())));
-    }
-    ::pluss::throw_error("pluss::ai::procedure::step(ice::Model): Infer mode expects Series, FeatureBatch, or ice::Batch input.");
-  };
-  return step(std::move(name), std::move(options), std::move(runner));
+  auto state = std::shared_ptr<ice::Model>(&model, [](ice::Model*) {});
+  return detail::make_ice_step_(
+      std::move(name),
+      std::move(input_name),
+      std::move(output_name),
+      std::move(state),
+      {},
+      assess_loss,
+      std::move(train_options));
+}
+
+template <class IceModel>
+requires std::derived_from<std::remove_cvref_t<IceModel>, ice::Model>
+[[nodiscard]] inline Step step(std::string name,
+                               std::string input_name,
+                               std::string output_name,
+                               IceModel model,
+                               std::string restore_key,
+                               ice::LossKind assess_loss = ice::LossKind::MSE,
+                               ice::TrainOptions train_options = {}) {
+  auto state = std::make_shared<std::remove_cvref_t<IceModel>>(std::move(model));
+  return detail::make_ice_step_(
+      std::move(name),
+      std::move(input_name),
+      std::move(output_name),
+      std::static_pointer_cast<ice::Model>(std::move(state)),
+      std::move(restore_key),
+      assess_loss,
+      std::move(train_options));
 }
 
 [[nodiscard]] inline Step step(std::string name,
@@ -1669,22 +2285,78 @@ template <class T>
 }
 
 [[nodiscard]] inline std::unordered_map<std::string, StepLoader>& step_loaders_();
-[[nodiscard]] inline std::unordered_map<std::string, StepLoader>& custom_step_loaders_() {
-  static std::unordered_map<std::string, StepLoader> loaders{};
-  return loaders;
+[[nodiscard]] inline std::unordered_map<std::string, CustomContract>& custom_contracts_() {
+  static std::unordered_map<std::string, CustomContract> contracts{};
+  return contracts;
+}
+
+[[nodiscard]] inline std::unordered_map<std::string, IceFactory>& ice_factories_() {
+  static std::unordered_map<std::string, IceFactory> factories{};
+  return factories;
+}
+
+inline void bind(CustomContract contract) {
+  if (contract.key.empty()) {
+    ::pluss::throw_error("pluss::ai::procedure::bind: key must not be empty.");
+  }
+  if (!contract.load) {
+    ::pluss::throw_error("pluss::ai::procedure::bind: load hook must be callable.");
+  }
+  if (step_loaders_().contains(contract.key) || custom_contracts_().contains(contract.key)) {
+    ::pluss::throw_error("pluss::ai::procedure::bind: duplicate contract key \"" + contract.key + "\".");
+  }
+  custom_contracts_().emplace(contract.key, std::move(contract));
 }
 
 inline void bind(std::string key, StepLoader loader) {
+  bind(CustomContract{
+      .key = std::move(key),
+      .load = std::move(loader),
+  });
+}
+
+inline void check_custom_contract_(std::string_view key,
+                                   std::int64_t persist_schema,
+                                   std::int64_t component_schema,
+                                   const std::vector<std::pair<std::string, std::string>>& fields) {
+  const auto found = custom_contracts_().find(std::string(key));
+  if (found == custom_contracts_().end()) {
+    ::pluss::throw_error("pluss::ai::procedure::load: no custom contract bound for key \"" + std::string(key) + "\".");
+  }
+  if (found->second.compatible) {
+    if (const std::optional<std::string> why =
+            found->second.compatible(persist_schema, component_schema, fields);
+        why.has_value()) {
+      ::pluss::throw_error("pluss::ai::procedure::load: custom contract \"" + found->second.key +
+                           "\" rejected persisted step: " + *why);
+    }
+    return;
+  }
+  if (persist_schema != found->second.persist_schema_version) {
+    ::pluss::throw_error("pluss::ai::procedure::load: custom contract \"" + found->second.key +
+                         "\" persist schema mismatch.");
+  }
+  if (component_schema != found->second.component_schema_version) {
+    ::pluss::throw_error("pluss::ai::procedure::load: custom contract \"" + found->second.key +
+                         "\" component schema mismatch.");
+  }
+}
+
+template <class Factory>
+requires std::derived_from<std::remove_cvref_t<std::invoke_result_t<Factory&>>, ice::Model>
+inline void bind_ice(std::string key, Factory factory) {
   if (key.empty()) {
-    ::pluss::throw_error("pluss::ai::procedure::bind: key must not be empty.");
+    ::pluss::throw_error("pluss::ai::procedure::bind_ice: key must not be empty.");
   }
-  if (!loader) {
-    ::pluss::throw_error("pluss::ai::procedure::bind: loader must be callable.");
+  if (ice_factories_().contains(key)) {
+    ::pluss::throw_error("pluss::ai::procedure::bind_ice: duplicate key \"" + key + "\".");
   }
-  if (step_loaders_().contains(key) || custom_step_loaders_().contains(key)) {
-    ::pluss::throw_error("pluss::ai::procedure::bind: duplicate loader key \"" + key + "\".");
-  }
-  custom_step_loaders_().emplace(std::move(key), std::move(loader));
+  ice_factories_().emplace(
+      std::move(key),
+      [factory = std::move(factory)]() mutable -> std::shared_ptr<ice::Model> {
+        using Model = std::remove_cvref_t<std::invoke_result_t<Factory&>>;
+        return std::make_shared<Model>(factory());
+      });
 }
 
 [[nodiscard]] inline std::unordered_map<std::string, StepLoader>& step_loaders_() {
@@ -1703,21 +2375,33 @@ inline void bind(std::string key, StepLoader loader) {
        [](std::string name,
           StepOptions options,
           std::string_view path,
-          const std::vector<std::pair<std::string, std::string>>&) -> Step {
+          const std::vector<std::pair<std::string, std::string>>& fields) -> Step {
+         lymph::TrainOptions train = detail::load_lymph_train_options_(fields, path);
+         lymph::InferOptions infer = detail::load_lymph_infer_options_(fields);
+         lymph::AssessOptions assess = detail::load_lymph_assess_options_(fields, path);
          return step(std::move(name),
                      options.inputs.at(0),
                      options.outputs.at(0),
-                     lymph::Model::load(std::string(path)));
+                     lymph::Model::load(std::string(path)),
+                     std::move(train),
+                     std::move(infer),
+                     std::move(assess));
        }},
       {"lymph::Workflow",
        [](std::string name,
           StepOptions options,
           std::string_view path,
-          const std::vector<std::pair<std::string, std::string>>&) -> Step {
+          const std::vector<std::pair<std::string, std::string>>& fields) -> Step {
+         lymph::TrainOptions train = detail::load_lymph_train_options_(fields, path);
+         lymph::InferOptions infer = detail::load_lymph_infer_options_(fields);
+         lymph::AssessOptions assess = detail::load_lymph_assess_options_(fields, path);
          return step(std::move(name),
                      options.inputs.at(0),
                      options.outputs.at(0),
-                     lymph::workflow::load(std::string(path)));
+                     lymph::workflow::load(std::string(path)),
+                     std::move(train),
+                     std::move(infer),
+                     std::move(assess));
        }},
       {"nodeb::Workflow",
        [](std::string name,
@@ -1744,6 +2428,35 @@ inline void bind(std::string key, StepLoader loader) {
                      nodeb::Workflow::load(path),
                      train,
                      assess);
+       }},
+      {"ice::Model",
+       [](std::string name,
+          StepOptions options,
+          std::string_view path,
+          const std::vector<std::pair<std::string, std::string>>& fields) -> Step {
+         const std::string restore_key = detail::field_or_(fields, "ice.restore", {});
+         if (restore_key.empty()) {
+           ::pluss::throw_error("pluss::ai::procedure::load(ice::Model): missing restore key.");
+         }
+         const auto found = ice_factories_().find(restore_key);
+         if (found == ice_factories_().end()) {
+           ::pluss::throw_error("pluss::ai::procedure::load(ice::Model): no factory bound for key \"" + restore_key + "\".");
+         }
+         std::shared_ptr<ice::Model> state = found->second();
+         if (!state) {
+           ::pluss::throw_error("pluss::ai::procedure::load(ice::Model): bound factory returned null.");
+         }
+         state->load(path);
+         return detail::make_ice_step_(
+             std::move(name),
+             options.inputs.at(0),
+             options.outputs.at(0),
+             std::move(state),
+             restore_key,
+             detail::parse_enum_<ice::LossKind>(
+                 detail::field_or_(fields, "ice.assess_loss", detail::enum_text_(ice::LossKind::MSE)),
+                 "pluss::ai::procedure::load(ice.assess_loss)"),
+             detail::load_ice_train_options_(fields));
        }},
       {"procedure::Sink",
        [](std::string name,
@@ -1775,7 +2488,12 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
 
   manifest << "PLUSS_PROCEDURE_V1\n";
   detail::write_line_(manifest, "schema", std::to_string(detail::kCurrentProcedureSchemaVersion));
-  detail::write_line_(manifest, "producer", "pluss::ai::Procedure");
+  detail::write_line_(manifest, "producer", detail::kProcedureProducer);
+  detail::write_line_(manifest, "producer_version", detail::kProcedureProducerVersion);
+  detail::write_line_(manifest, "saved_at_epoch_us",
+                      std::to_string(static_cast<std::int64_t>(
+                          std::chrono::duration_cast<std::chrono::microseconds>(
+                              std::chrono::system_clock::now().time_since_epoch()).count())));
   detail::write_line_(manifest, "workers", std::to_string(proc.options().workers));
   detail::write_line_(manifest, "schedule", std::to_string(static_cast<std::int64_t>(proc.options().schedule)));
   detail::write_line_(manifest, "cache", std::to_string(static_cast<std::int64_t>(proc.options().cache)));
@@ -1783,8 +2501,37 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
   detail::write_line_(manifest, "validate_on_make", detail::bool_text_(proc.options().validate_on_make));
   detail::write_line_(manifest, "step_count", std::to_string(proc.steps().size()));
 
+  std::int64_t persistable_count = 0;
+  std::int64_t reloadable_count = 0;
+  std::int64_t custom_count = 0;
+  std::int64_t external_ref_count = 0;
+  std::int64_t time_contract_count = 0;
+  std::int64_t future_contract_count = 0;
+  for (const Step& step_ref : proc.steps()) {
+    persistable_count += step_ref.persistable() ? 1 : 0;
+    reloadable_count += step_ref.reloadable() ? 1 : 0;
+    custom_count += step_ref.custom() ? 1 : 0;
+    external_ref_count += (step_ref.custom() && !step_ref.can_save_component()) ? 1 : 0;
+    time_contract_count += (step_ref.options().requires_time || !step_ref.options().time_feature.empty()) ? 1 : 0;
+    future_contract_count += step_ref.options().learns_from_future ? 1 : 0;
+  }
+  const std::string external_code_policy = external_ref_count > 0 ? "registry" : "reject";
+  detail::write_line_(manifest, "external_code_policy", external_code_policy);
+  detail::write_line_(manifest, "persistable_steps", std::to_string(persistable_count));
+  detail::write_line_(manifest, "reloadable_steps", std::to_string(reloadable_count));
+  detail::write_line_(manifest, "custom_steps", std::to_string(custom_count));
+  detail::write_line_(manifest, "external_ref_steps", std::to_string(external_ref_count));
+  detail::write_line_(manifest, "time_contract_steps", std::to_string(time_contract_count));
+  detail::write_line_(manifest, "future_contract_steps", std::to_string(future_contract_count));
+
   std::vector<std::string> checksum_lines{};
   checksum_lines.reserve(proc.steps().size());
+  std::vector<std::string> contract_lines{};
+  contract_lines.reserve(proc.steps().size() + 1);
+  contract_lines.push_back("step\tcomponent\tpersist_key\tpersist_schema\tcomponent_schema\treloadable\tcustom\tfrozen\trequires_time\ttime_feature\tlearns_from_future\tcan_change_row_count");
+  std::vector<std::string> artifact_lines{};
+  artifact_lines.reserve(proc.steps().size() + 1);
+  artifact_lines.push_back("step\tartifact\tchecksum\ttrained\tcapabilities");
   for (std::size_t i = 0; i < proc.steps().size(); ++i) {
     const Step& current = proc.steps()[i];
     if (!current.persistable()) {
@@ -1844,6 +2591,23 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
     manifest << "endstep\n";
 
     checksum_lines.push_back(current.name() + "\t" + checksum);
+    contract_lines.push_back(current.name() + "\t" +
+                             current.component() + "\t" +
+                             current.persist_key() + "\t" +
+                             std::to_string(current.persist_schema_version()) + "\t" +
+                             std::to_string(current.component_schema_version()) + "\t" +
+                             detail::bool_text_(current.reloadable()) + "\t" +
+                             detail::bool_text_(current.custom()) + "\t" +
+                             detail::bool_text_(current.frozen()) + "\t" +
+                             detail::bool_text_(current.options().requires_time) + "\t" +
+                             current.options().time_feature + "\t" +
+                             detail::bool_text_(current.options().learns_from_future) + "\t" +
+                             detail::bool_text_(current.can_change_row_count()));
+    artifact_lines.push_back(current.name() + "\t" +
+                             artifact_rel + "\t" +
+                             checksum + "\t" +
+                             detail::bool_text_(current.trained()) + "\t" +
+                             detail::join_capabilities_(current.options().capabilities));
   }
 
   detail::write_line_(manifest, "link_count", std::to_string(proc.links().size()));
@@ -1865,6 +2629,32 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
     lineage << link_ref.from << "\t" << link_ref.to << "\t"
             << link_ref.from_output << "\t" << link_ref.to_input << "\n";
   }
+  std::ofstream contracts(bundle / "audit" / "contracts.txt", std::ios::trunc);
+  for (const std::string& line : contract_lines) {
+    contracts << line << "\n";
+  }
+  std::ofstream artifacts(bundle / "audit" / "artifacts.txt", std::ios::trunc);
+  for (const std::string& line : artifact_lines) {
+    artifacts << line << "\n";
+  }
+  std::ofstream summary(bundle / "audit" / "summary.txt", std::ios::trunc);
+  summary << "producer=" << detail::kProcedureProducer << "\n";
+  summary << "producer_version=" << detail::kProcedureProducerVersion << "\n";
+  summary << "schema=" << detail::kCurrentProcedureSchemaVersion << "\n";
+  summary << "steps=" << proc.steps().size() << "\n";
+  summary << "links=" << proc.links().size() << "\n";
+  summary << "persistable_steps=" << persistable_count << "\n";
+  summary << "reloadable_steps=" << reloadable_count << "\n";
+  summary << "custom_steps=" << custom_count << "\n";
+  summary << "external_ref_steps=" << external_ref_count << "\n";
+  summary << "time_contract_steps=" << time_contract_count << "\n";
+  summary << "future_contract_steps=" << future_contract_count << "\n";
+  summary << "workers=" << proc.options().workers << "\n";
+  summary << "schedule=" << static_cast<std::int64_t>(proc.options().schedule) << "\n";
+  summary << "cache=" << static_cast<std::int64_t>(proc.options().cache) << "\n";
+  summary << "fail_fast=" << detail::bool_text_(proc.options().fail_fast) << "\n";
+  summary << "validate_on_make=" << detail::bool_text_(proc.options().validate_on_make) << "\n";
+  summary << "external_code_policy=" << external_code_policy << "\n";
 }
 
 [[nodiscard]] inline Procedure load(const std::string& path) {
@@ -1887,6 +2677,7 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
   std::vector<Link> links{};
   std::int64_t expected_steps = -1;
   std::int64_t expected_links = -1;
+  bool saw_schema = false;
 
   while (std::getline(manifest, line)) {
     if (line.empty()) continue;
@@ -1894,6 +2685,11 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
       std::string name{};
       StepOptions step_options{};
       std::string persist_key{};
+      std::int64_t persist_schema = 1;
+      std::int64_t component_schema = 0;
+      bool reloadable = false;
+      bool frozen = false;
+      bool custom = false;
       std::string artifact_rel{};
       std::string checksum{};
       std::vector<std::pair<std::string, std::string>> fields{};
@@ -1909,6 +2705,11 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
         else if (key == "requires_time") step_options.requires_time = detail::parse_bool_(value, "pluss::ai::procedure::load(requires_time)");
         else if (key == "learns_from_future") step_options.learns_from_future = detail::parse_bool_(value, "pluss::ai::procedure::load(learns_from_future)");
         else if (key == "persist_key") persist_key = value;
+        else if (key == "persist_schema") persist_schema = detail::parse_i64_(value, "pluss::ai::procedure::load(persist_schema)");
+        else if (key == "component_schema") component_schema = detail::parse_i64_(value, "pluss::ai::procedure::load(component_schema)");
+        else if (key == "reloadable") reloadable = detail::parse_bool_(value, "pluss::ai::procedure::load(reloadable)");
+        else if (key == "frozen") frozen = detail::parse_bool_(value, "pluss::ai::procedure::load(frozen)");
+        else if (key == "custom") custom = detail::parse_bool_(value, "pluss::ai::procedure::load(custom)");
         else if (key == "artifact") artifact_rel = value;
         else if (key == "checksum") checksum = value;
         else if (key == "input") step_options.inputs.push_back(value);
@@ -1939,12 +2740,21 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
       StepLoader loader{};
       if (const auto found = step_loaders_().find(persist_key); found != step_loaders_().end()) {
         loader = found->second;
-      } else if (const auto found = custom_step_loaders_().find(persist_key); found != custom_step_loaders_().end()) {
-        loader = found->second;
+      } else if (const auto found = custom_contracts_().find(persist_key); found != custom_contracts_().end()) {
+        check_custom_contract_(persist_key, persist_schema, component_schema, fields);
+        loader = found->second.load;
       } else {
         ::pluss::throw_error("pluss::ai::procedure::load: no loader registered for step key \"" + persist_key + "\".");
       }
       Step loaded = loader(name, step_options, (bundle / artifact_rel).string(), fields);
+      detail::validate_loaded_contract_(loaded,
+                                        step_options,
+                                        persist_key,
+                                        persist_schema,
+                                        component_schema,
+                                        reloadable,
+                                        frozen,
+                                        custom);
       loaded.options().require_columns = step_options.require_columns;
       loaded.options().time_feature = step_options.time_feature;
       loaded.options().requires_time = step_options.requires_time;
@@ -1968,6 +2778,7 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
 
     const auto [key, value] = detail::split_line_(line, "pluss::ai::procedure::load");
     if (key == "schema") {
+      saw_schema = true;
       const std::int64_t schema = detail::parse_i64_(value, "pluss::ai::procedure::load(schema)");
       if (schema < detail::kMinLoadableProcedureSchemaVersion ||
           schema > detail::kCurrentProcedureSchemaVersion) {
@@ -1990,6 +2801,10 @@ inline void save_bundle_(const Procedure& proc, std::string_view path) {
     } else if (key == "link_count") {
       expected_links = detail::parse_i64_(value, "pluss::ai::procedure::load(link_count)");
     }
+  }
+
+  if (!saw_schema) {
+    ::pluss::throw_error("pluss::ai::procedure::load: manifest schema is missing.");
   }
 
   if (expected_steps >= 0 && expected_steps != static_cast<std::int64_t>(steps.size())) {

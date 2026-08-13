@@ -6,10 +6,6 @@
 - `WorkflowBranch::route(predicate: std::function<bool(std::string_view feature_name, std::string_view dtype)>) -> WorkflowRoute`
 - `WorkflowBranch::route(names: std::initializer_list<std::string>) -> WorkflowRoute`
 - `WorkflowBranch::route(names: std::vector<std::string>) -> WorkflowRoute`
-- `WorkflowBranch::route(router: ColumnRouter) -> WorkflowRoute`
-- `WorkflowBranch::route(predicate: std::function<bool(std::string_view feature_name, std::string_view dtype)>) -> WorkflowRoute`
-- `WorkflowBranch::route(names: std::initializer_list<std::string>) -> WorkflowRoute`
-- `WorkflowBranch::route(names: std::vector<std::string>) -> WorkflowRoute`
 
 ## Notes
 

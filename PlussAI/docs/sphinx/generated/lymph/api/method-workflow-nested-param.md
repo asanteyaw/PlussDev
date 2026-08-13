@@ -1,8 +1,8 @@
-# `Workflow::nested_param`
+# `workflow::nested_param`
 
 ## API Signature
 
-- `Workflow::nested_param(path: std::string_view) -> double`
+- `workflow::nested_param(path: std::string_view) -> double`
 
 ## Notes
 
@@ -27,7 +27,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::nested_param(/* path */);
+auto value = workflow::nested_param(/* path */);
 out.info("nested_param", value);
 ```
 

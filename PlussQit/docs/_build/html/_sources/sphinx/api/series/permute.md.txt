@@ -14,14 +14,13 @@ Series::permute(pluss::msharp::RangeView::Int dims) const -> Series
 
 Reorders all axes at once according to `dims` and returns the result as a view.
 
-Where [`transpose()`](transpose.md) swaps exactly two axes, `permute()` lets you
-state the entire destination axis order in one shot. The underlying storage is
-still shared; only shape and stride interpretation change, so the result is
-usually non-contiguous.
+Where [`transpose()`](transpose.md) swaps one pair of axes, `permute()` lets you
+state the entire destination order in a single call. The storage is still
+shared; only shape and stride interpretation change, so the result is usually
+non-contiguous.
 
-This is the method you reach for when the intent is "make channels first",
-"bring time to the front", or "rotate the whole axis order", not just swap one
-pair of axes.
+This is the right method when the intent is "move the last axis to the front",
+"make channels first", or "rotate the whole rank", not just swap one pair.
 
 ## Parameters
 
@@ -55,18 +54,24 @@ values.
 
 ## Examples
 
+The examples on this page build incrementally.
+
 Example 1. Reorder a `2 x 3 x 4` series into `[4, 2, 3]`.
 
 ```cpp
 auto cube = pluss::make_series(
-    std::vector<double>{
-        1,  2,  3,  4,
-        5,  6,  7,  8,
-        9,  10, 11, 12,
-        13, 14, 15, 16,
-        17, 18, 19, 20,
-        21, 22, 23, 24},
-    {2, 3, 4});
+    {
+        {
+            {1.0, 2.0, 3.0, 4.0},
+            {5.0, 6.0, 7.0, 8.0},
+            {9.0, 10.0, 11.0, 12.0},
+        },
+        {
+            {13.0, 14.0, 15.0, 16.0},
+            {17.0, 18.0, 19.0, 20.0},
+            {21.0, 22.0, 23.0, 24.0},
+        },
+    });
 std::cout << cube.permute({2, 0, 1});
 ```
 
@@ -88,7 +93,31 @@ Axis `2` becomes axis `0`, axis `0` becomes axis `1`, and axis `1` becomes
 axis `2`. The result is a view, so it preserves the original storage and
 becomes non-contiguous.
 
-Example 2. A duplicate axis is rejected.
+Example 2. Negative dimensions are normalized from the back before the
+permutation is checked.
+
+```cpp
+std::cout << cube.permute({-1, 0, 1});
+```
+
+### Output
+
+```text
+pluss::Series(shape=[4,2,3], strides=[1,12,4], dtype=float64, platform=cpu, numel=24, contiguous=false)
+data=[[[1, 5, 9],
+  [13, 17, 21]],
+  [[2, 6, 10],
+  [14, 18, 22]],
+  [[3, 7, 11],
+  [15, 19, 23]],
+  [[4, 8, 12],
+  [16, 20, 24]]]
+```
+
+`{-1, 0, 1}` normalizes to `{2, 0, 1}`, so it produces the same result as
+Example 1.
+
+Example 3. A duplicate axis is rejected.
 
 ```cpp
 try {
@@ -114,6 +143,7 @@ integers.
 - `permute()` always describes the full destination order.
 - The result is typically non-contiguous because no physical reorder is
   performed.
+- Duplicate axes and rank-mismatched axis lists are invalid.
 - If all you need is one pairwise swap, [`transpose()`](transpose.md) is
   simpler and clearer.
 

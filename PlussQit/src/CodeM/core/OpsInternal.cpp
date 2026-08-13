@@ -6696,6 +6696,13 @@ Series Series::squeeze(std::int64_t dim_) const {
 Series Series::flatten(std::int64_t start_dim, std::int64_t end_dim) const {
   if (!defined()) PLUSS_FAIL("flatten: undefined");
   const auto nd = dim();
+  if (nd == 0) {
+    const bool start_ok = (start_dim == 0 || start_dim == -1);
+    const bool end_ok = (end_dim == 0 || end_dim == -1);
+    PLUSS_CHECK(start_ok, "flatten: start_dim out of range");
+    PLUSS_CHECK(end_ok, "flatten: end_dim out of range");
+    return reshape({1});
+  }
   if (start_dim < 0) start_dim += nd;
   if (end_dim < 0) end_dim += nd;
   PLUSS_CHECK(start_dim >= 0 && start_dim < nd, "flatten: start_dim out of range");

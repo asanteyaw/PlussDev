@@ -1,8 +1,8 @@
-# `Workflow::options`
+# `workflow::options`
 
 ## API Signature
 
-- `Workflow::options() -> const WorkflowOptions&`
+- `workflow::options() -> const WorkflowOptions&`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::options();
+auto value = workflow::options();
 out.info("options", value);
 ```
 

@@ -19,19 +19,7 @@ Instance method on `self`.
 
 ## Options
 
-Option semantics used by this method:
-
-- `CustomStage` (`struct`):
-  - `std::string name{}`
-    Option field used by this method.
-  - `SeriesMapFn map_fn{}`
-    Option field used by this method.
-  - `prep::FunctionTransformerOptions options{}`
-    Family-specific options payload used by the selected model/transform family.
-  - `TransformContract contract{}`
-    Option field used by this method.
-  - `bool persistable = false`
-    Option field used by this method.
+No explicit option struct/enum parameters were detected for this method.
 
 ## Examples
 

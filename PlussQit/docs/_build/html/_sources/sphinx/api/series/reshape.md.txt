@@ -12,18 +12,18 @@ Series::reshape(pluss::msharp::RangeView::Int new_sizes) const -> Series
 
 ## What It Does
 
-Changes shape with a **view if possible, contiguous copy if necessary** policy.
+Changes shape with a view-if-possible, contiguous-copy-if-necessary policy.
 
-This is the high-level "I need this logical shape" API. `reshape()` first checks
-whether the current `Series` can be reinterpreted directly. If yes, it routes to
-[`view()`](view.md). If not, it materializes a contiguous copy, then views that
-contiguous buffer under the requested shape.
+This is the high-level "I need this logical shape" API. `reshape()` first asks
+whether the current `Series` can be reinterpreted directly. If yes, it behaves
+like [`view()`](view.md). If not, it materializes a contiguous layout for the
+current logical values and then produces the requested shape from that.
 
-So the difference is not cosmetic:
+That difference is not cosmetic:
 
-- `view()` means "fail unless this is a true no-copy alias"
-- `reshape()` means "give me the requested shape, even if you must normalize
-  layout first"
+- `view()` means "fail unless this can stay a true alias"
+- `reshape()` means "give me the requested logical shape, even if layout must
+  be normalized first"
 
 ## Parameters
 
@@ -31,11 +31,9 @@ So the difference is not cosmetic:
 
 The desired output shape.
 
-Like [`view()`](view.md), this is shape-like rather than container-specific, so
-it can come from spans, arrays, vectors, or another tensor's [`sizes()`](sizes.md)
-view.
-
-The shape must preserve the total number of elements.
+In ordinary use you can pass brace literals such as `{3, 2}` directly, or reuse
+another tensor’s [`sizes()`](sizes.md) result. The requested shape must
+preserve total `numel()`.
 
 ## Returns
 
@@ -57,14 +55,17 @@ materialized temporary.
 
 ## Examples
 
+The examples on this page build incrementally.
+
 Example 1. On a contiguous source, `reshape()` behaves like `view()`.
 
 ```cpp
-auto mat = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
-const std::array<std::int64_t, 2> shape_3x2{{3, 2}};
+auto mat = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+});
 
-std::cout << mat.reshape(
-    std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));
+std::cout << mat.reshape({3, 2});
 ```
 
 ### Output
@@ -80,8 +81,7 @@ Example 2. On a non-contiguous transpose, `reshape()` succeeds by materializing
 the transposed logical order first, then reshaping that order.
 
 ```cpp
-std::cout << mat.transpose(0, 1).reshape(
-    std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));
+std::cout << mat.transpose(0, 1).reshape({3, 2});
 ```
 
 ### Output
@@ -100,12 +100,14 @@ values, made *that* layout contiguous, and then reshaped the result.
 Example 3. Gradients still flow back through that non-contiguous fallback path.
 
 ```cpp
-auto tracked_mat =
-    pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {2, 3});
+auto tracked_mat = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+});
 tracked_mat.tracks_slope_(true);
 
 tracked_mat.transpose(0, 1)
-    .reshape(std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()))
+    .reshape({3, 2})
     .select(0, 1)
     .sum()
     .reverse();
@@ -132,8 +134,7 @@ connected for reverse-mode autodiff.
   more than whether the operation stays a true alias.
 - Equal `numel()` is still required; `reshape()` is flexible about layout, not
   about element count.
-- On already contiguous inputs, it does not pay an unnecessary copy tax; it
-  routes straight to [`view()`](view.md).
+- On already contiguous inputs, it routes straight to [`view()`](view.md).
 
 ## See Also
 

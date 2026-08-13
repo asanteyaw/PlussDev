@@ -1,8 +1,8 @@
-# `ColumnRouter::with_remainder`
+# `columnrouter::with_remainder`
 
 ## API Signature
 
-- `ColumnRouter::with_remainder(policy: RouteRemainderPolicy) -> ColumnRouter&`
+- `columnrouter::with_remainder(policy: RouteRemainderPolicy) -> ColumnRouter&`
 
 ## Notes
 
@@ -27,7 +27,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = ColumnRouter::with_remainder(/* policy */);
+auto value = columnrouter::with_remainder(/* policy */);
 out.info("with_remainder", value);
 ```
 

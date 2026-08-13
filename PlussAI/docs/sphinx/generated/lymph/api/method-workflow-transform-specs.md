@@ -1,8 +1,8 @@
-# `Workflow::transform_specs`
+# `workflow::transform_specs`
 
 ## API Signature
 
-- `Workflow::transform_specs() -> const std::vector<TransformSpec>&`
+- `workflow::transform_specs() -> const std::vector<TransformSpec>&`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::transform_specs();
+auto value = workflow::transform_specs();
 out.info("transform_specs", value);
 ```
 

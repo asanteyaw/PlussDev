@@ -14,10 +14,11 @@ Series::unsqueeze(std::int64_t dim) const -> Series
 
 Inserts a size-`1` axis at `dim` and returns the result as a view.
 
-`unsqueeze()` does not change which values exist or how many values there are.
-It changes only rank and indexing structure. This is the standard shape-alignment
-tool for broadcasting: if one operand is missing an axis that another operand
-expects, `unsqueeze()` is how you make that axis explicit without copying data.
+`unsqueeze()` does not change the values in the `Series` and does not change
+`numel()`. It only changes rank and indexing structure. In practice this makes
+it one of the main broadcasting-preparation tools: if another operation expects
+an axis that your current `Series` does not explicitly have, `unsqueeze()` is
+how you add it without copying data.
 
 ## Parameters
 
@@ -48,10 +49,15 @@ pure shape bookkeeping, not a numerical transformation.
 
 ## Examples
 
+The examples on this page build incrementally.
+
 Example 1. Insert a leading axis.
 
 ```cpp
-auto mat = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
+auto mat = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+});
 std::cout << mat.unsqueeze(0);
 ```
 
@@ -63,10 +69,27 @@ data=[[[1, 2, 3],
   [4, 5, 6]]]
 ```
 
-Nothing numerical changed; the same `2 x 3` payload is now wrapped in an outer
-batch-like axis of length `1`.
+Nothing numerical changed. The same `2 x 3` payload is now wrapped in an outer
+axis of length `1`.
 
-Example 2. Negative indexing can be used to append the axis at the end.
+Example 2. Inserting in the middle is often the most useful form for
+broadcast-alignment code.
+
+```cpp
+std::cout << mat.unsqueeze(1);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,1,3], strides=[3,3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[[1, 2, 3]],
+  [[4, 5, 6]]]
+```
+
+This turns each row into a length-`1` group containing a `3`-element lane.
+
+Example 3. Negative indexing can be used to append the axis at the end.
 
 ```cpp
 std::cout << mat.unsqueeze(-1);

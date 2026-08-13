@@ -44,46 +44,62 @@ ALPHABETICAL_CLASSES = {
 # decision, not something derivable from the files themselves.
 # ---------------------------------------------------------------------------
 
-FLASH_FAMILIES: list[tuple[str, list[str]]] = [
-    ("Relational", ["scatterplot", "lineplot", "stepplot", "relplot"]),
-    ("Distribution", ["histplot", "displot", "kdeplot", "ecdfplot", "areaplot", "rugplot"]),
-    ("Categorical", [
+FLASH_FAMILIES = [
+    {"title": "Relational", "methods": ["scatterplot", "lineplot", "stepplot", "relplot"]},
+    {"title": "Distribution", "methods": ["histplot", "displot", "kdeplot", "ecdfplot", "areaplot", "rugplot"]},
+    {"title": "Categorical", "methods": [
         "stripplot", "swarmplot", "boxplot", "violinplot", "boxenplot",
         "pointplot", "whiskplot", "barplot", "countplot", "pieplot", "catplot",
-    ]),
-    ("Regression / Residual Diagnostics", ["regplot", "lmplot", "residplot", "qqplot", "resid_histplot"]),
-    ("Matrix", ["heatmap", "clustermap"]),
-    ("Grid Constructors / Fill Helpers", [
+    ]},
+    {"title": "Regression and Residual Diagnostics", "methods": ["regplot", "lmplot", "residplot", "qqplot", "resid_histplot"]},
+    {"title": "Matrix", "methods": ["heatmap", "clustermap"]},
+    {"title": "Grid Constructors and Fill Helpers", "methods": [
         "FacetGrid", "PairGrid", "JointGrid", "relgridplot", "catgridplot", "disgridplot",
         "facet_map_plot", "pairgrid_map_plot", "jointgrid_map_plot",
-    ]),
-    ("Multivariate Grid Views", ["pairplot", "triplot"]),
-    ("Multivariate Curve / Glyph Views", ["parallelplot", "andrews_curves", "radviz"]),
-    ("Jointplot", ["jointplot"]),
-    ("Summaryplot", ["summaryplot"]),
-    ("Time-Series Diagnostics", [
+    ]},
+    {"title": "Multivariate Grid Views", "methods": ["pairplot", "triplot"]},
+    {"title": "Multivariate Curve and Glyph Views", "methods": ["parallelplot", "andrews_curves", "radviz"]},
+    {"title": "Jointplot", "methods": ["jointplot"]},
+    {"title": "Summaryplot", "methods": ["summaryplot"]},
+    {"title": "Time-Series Diagnostics", "methods": [
         "lagplot", "acfplot", "pacfplot", "ccfplot", "actplot", "resid_acfplot", "bootstrapplot",
-    ]),
-    ("3D Native", ["path3", "cloud3", "sheet", "lattice", "spire3", "ridge3", "isoshell"]),
-    ("3D Convenience Aliases", [
+    ]},
+    {"title": "3D Native", "methods": ["path3", "cloud3", "sheet", "lattice", "spire3", "ridge3", "isoshell"]},
+    {"title": "3D Convenience Aliases", "methods": [
         "plot3D", "scatter3D", "plot_surface", "plot_wireframe", "contour3D", "bar3d", "hist3d",
-    ]),
-    ("3D/4D Scene, Camera, Lighting & Animation", [
+    ]},
+    {"title": "3D and 4D Scene, Camera, Lighting, Animation", "methods": [
         "camera3d", "camera_preset3d", "lighting3d", "theme_preset3d", "scene_preset3d",
         "scene3d", "trace_preset3d", "trace3d", "path4", "cloud4",
         "hyper_animation_sequence", "animate3", "animate4", "export4_frames",
-    ]),
-    ("Theming / Context", ["set_theme", "set_style", "set_context"]),
-    ("Legend / Grid / Layout / Export", [
+    ]},
+    {"title": "Theming and Context", "methods": ["set_theme", "set_style", "set_context"]},
+    {"title": "Legend, Grid, Layout, Export", "methods": [
         "move_legend", "legend_frame", "tight_layout", "despine", "tickless",
         "horizontal_grid", "show", "save_png",
-    ]),
-    ("Palette Generation", [
+    ]},
+    {"title": "Palette Generation", "methods": [
         "flash_palette", "color_palette", "flash_theme", "blend_palette", "hls_palette",
         "husl_palette", "cubehelix_palette", "light_palette", "dark_palette",
         "diverging_palette", "mpl_palette", "xkcd_palette", "crayon_palette",
-    ]),
-    ("Bundled Datasets", ["get_dataset_names", "load_dataset", "dataset_from_frame", "dataset_frame"]),
+    ]},
+    {
+        "title": "Bundled Datasets",
+        "methods": ["get_dataset_names", "load_dataset"],
+        "subgroups": [
+            {
+                "title": "Dataset",
+                "methods": [
+                    "Dataset",
+                    "dataset_from_frame",
+                    "dataset_frame",
+                    "dataset_nrows",
+                    "dataset_ncols",
+                    "dataset_size",
+                ],
+            },
+        ],
+    },
 ]
 
 
@@ -102,7 +118,9 @@ def build_flash_entry() -> dict:
     on_disk = set(page_names("flash"))
     grouped: set[str] = set()
     groups = []
-    for family_title, names in FLASH_FAMILIES:
+    for family in FLASH_FAMILIES:
+        family_title = family["title"]
+        names = family.get("methods", [])
         present = [n for n in names if n in on_disk]
         for n in names:
             if n not in on_disk:
@@ -111,7 +129,24 @@ def build_flash_entry() -> dict:
                     f"but api/flash/{n}.md does not exist on disk. Fix the family map."
                 )
         grouped.update(present)
-        groups.append({"title": family_title, "methods": present})
+        group_entry = {"title": family_title, "methods": present}
+
+        subgroups = []
+        for subgroup in family.get("subgroups", []):
+            subgroup_title = subgroup["title"]
+            subgroup_names = subgroup.get("methods", [])
+            subgroup_present = [n for n in subgroup_names if n in on_disk]
+            for n in subgroup_names:
+                if n not in on_disk:
+                    raise SystemExit(
+                        f"generate_api_nav: FLASH_FAMILIES subgroup '{subgroup_title}' "
+                        f"(family '{family_title}') lists '{n}' but api/flash/{n}.md does not exist on disk."
+                    )
+            grouped.update(subgroup_present)
+            subgroups.append({"title": subgroup_title, "methods": subgroup_present})
+        if subgroups:
+            group_entry["subgroups"] = subgroups
+        groups.append(group_entry)
 
     missing = sorted(on_disk - grouped)
     if missing:
@@ -139,9 +174,16 @@ def main() -> None:
     body = json.dumps(nav, indent=2, ensure_ascii=False)
     out_path.write_text(f"window.PLUSS_API_NAV = {body};\n", encoding="utf-8")
 
+    def flash_group_count(group: dict) -> int:
+        return len(group.get("methods", [])) + sum(
+            len(subgroup.get("methods", []))
+            for subgroup in group.get("subgroups", [])
+        )
+
     counts = ", ".join(
-        f"{k}={len(v['methods'])}" if "methods" in v else
-        f"{k}={sum(len(g['methods']) for g in v['groups'])}"
+        f"{k}={len(v['methods'])}"
+        if "methods" in v
+        else f"{k}={sum(flash_group_count(g) for g in v['groups'])}"
         for k, v in nav.items()
     )
     print(f"[generate_api_nav] wrote {out_path} ({counts})")

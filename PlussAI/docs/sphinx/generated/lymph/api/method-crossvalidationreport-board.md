@@ -3,7 +3,6 @@
 ## API Signature
 
 - `CrossValidationReport::board() -> pluss::table::DataFrame`
-- `CrossValidationReport::board() -> pluss::table::DataFrame`
 
 ## Notes
 
@@ -19,15 +18,7 @@ None.
 
 ## Options
 
-Option semantics used by this method:
-
-- `CrossValidationReport` (`struct`):
-  - `CrossAssessReport report{}`
-    Option field used by this method.
-  - `MetricReport mean{}`
-    Selects optimization or evaluation objective.
-  - `MetricReport stdev{}`
-    Selects optimization or evaluation objective.
+No explicit option struct/enum parameters were detected for this method.
 
 ## Examples
 

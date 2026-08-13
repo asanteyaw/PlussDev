@@ -1,8 +1,8 @@
-# `Workflow::join`
+# `workflow::join`
 
 ## API Signature
 
-- `Workflow::join() -> Workflow&`
+- `workflow::join() -> Workflow&`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::join();
+auto value = workflow::join();
 out.info("join", value);
 ```
 

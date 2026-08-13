@@ -2013,6 +2013,318 @@ plussai_ice_autoregressive_forecaster_demo/fast:
 .PHONY : plussai_ice_autoregressive_forecaster_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussai_procedure_serial_series_demo
+
+# Build rule for target.
+plussai_procedure_serial_series_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_serial_series_demo
+.PHONY : plussai_procedure_serial_series_demo
+
+# fast build rule for target.
+plussai_procedure_serial_series_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_serial_series_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_serial_series_demo.dir/build
+.PHONY : plussai_procedure_serial_series_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_soft_failure_demo
+
+# Build rule for target.
+plussai_procedure_soft_failure_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_soft_failure_demo
+.PHONY : plussai_procedure_soft_failure_demo
+
+# fast build rule for target.
+plussai_procedure_soft_failure_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_soft_failure_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_soft_failure_demo.dir/build
+.PHONY : plussai_procedure_soft_failure_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_row_guard_demo
+
+# Build rule for target.
+plussai_procedure_row_guard_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_row_guard_demo
+.PHONY : plussai_procedure_row_guard_demo
+
+# fast build rule for target.
+plussai_procedure_row_guard_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_row_guard_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_row_guard_demo.dir/build
+.PHONY : plussai_procedure_row_guard_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_future_guard_demo
+
+# Build rule for target.
+plussai_procedure_future_guard_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_future_guard_demo
+.PHONY : plussai_procedure_future_guard_demo
+
+# fast build rule for target.
+plussai_procedure_future_guard_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_future_guard_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_future_guard_demo.dir/build
+.PHONY : plussai_procedure_future_guard_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_custom_module_demo
+
+# Build rule for target.
+plussai_procedure_custom_module_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_custom_module_demo
+.PHONY : plussai_procedure_custom_module_demo
+
+# fast build rule for target.
+plussai_procedure_custom_module_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_custom_module_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_custom_module_demo.dir/build
+.PHONY : plussai_procedure_custom_module_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_dataframe_callable_demo
+
+# Build rule for target.
+plussai_procedure_dataframe_callable_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_dataframe_callable_demo
+.PHONY : plussai_procedure_dataframe_callable_demo
+
+# fast build rule for target.
+plussai_procedure_dataframe_callable_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_dataframe_callable_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_dataframe_callable_demo.dir/build
+.PHONY : plussai_procedure_dataframe_callable_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_labeled_model_demo
+
+# Build rule for target.
+plussai_procedure_labeled_model_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_labeled_model_demo
+.PHONY : plussai_procedure_labeled_model_demo
+
+# fast build rule for target.
+plussai_procedure_labeled_model_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_labeled_model_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_labeled_model_demo.dir/build
+.PHONY : plussai_procedure_labeled_model_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_sink_chain_demo
+
+# Build rule for target.
+plussai_procedure_sink_chain_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_sink_chain_demo
+.PHONY : plussai_procedure_sink_chain_demo
+
+# fast build rule for target.
+plussai_procedure_sink_chain_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_sink_chain_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_sink_chain_demo.dir/build
+.PHONY : plussai_procedure_sink_chain_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_result_artifact_demo
+
+# Build rule for target.
+plussai_procedure_result_artifact_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_result_artifact_demo
+.PHONY : plussai_procedure_result_artifact_demo
+
+# fast build rule for target.
+plussai_procedure_result_artifact_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_result_artifact_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_result_artifact_demo.dir/build
+.PHONY : plussai_procedure_result_artifact_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_disable_audit_demo
+
+# Build rule for target.
+plussai_procedure_disable_audit_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_disable_audit_demo
+.PHONY : plussai_procedure_disable_audit_demo
+
+# fast build rule for target.
+plussai_procedure_disable_audit_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_disable_audit_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_disable_audit_demo.dir/build
+.PHONY : plussai_procedure_disable_audit_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_explicit_ports_demo
+
+# Build rule for target.
+plussai_procedure_explicit_ports_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_explicit_ports_demo
+.PHONY : plussai_procedure_explicit_ports_demo
+
+# fast build rule for target.
+plussai_procedure_explicit_ports_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_explicit_ports_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_explicit_ports_demo.dir/build
+.PHONY : plussai_procedure_explicit_ports_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_vector_text_artifact_demo
+
+# Build rule for target.
+plussai_procedure_vector_text_artifact_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_vector_text_artifact_demo
+.PHONY : plussai_procedure_vector_text_artifact_demo
+
+# fast build rule for target.
+plussai_procedure_vector_text_artifact_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_vector_text_artifact_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_vector_text_artifact_demo.dir/build
+.PHONY : plussai_procedure_vector_text_artifact_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_scalar_artifact_demo
+
+# Build rule for target.
+plussai_procedure_scalar_artifact_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_scalar_artifact_demo
+.PHONY : plussai_procedure_scalar_artifact_demo
+
+# fast build rule for target.
+plussai_procedure_scalar_artifact_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_scalar_artifact_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_scalar_artifact_demo.dir/build
+.PHONY : plussai_procedure_scalar_artifact_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_empty_sink_demo
+
+# Build rule for target.
+plussai_procedure_empty_sink_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_empty_sink_demo
+.PHONY : plussai_procedure_empty_sink_demo
+
+# fast build rule for target.
+plussai_procedure_empty_sink_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_empty_sink_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_empty_sink_demo.dir/build
+.PHONY : plussai_procedure_empty_sink_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_options_metadata_demo
+
+# Build rule for target.
+plussai_procedure_options_metadata_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_options_metadata_demo
+.PHONY : plussai_procedure_options_metadata_demo
+
+# fast build rule for target.
+plussai_procedure_options_metadata_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_options_metadata_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_options_metadata_demo.dir/build
+.PHONY : plussai_procedure_options_metadata_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_multi_artifact_join_demo
+
+# Build rule for target.
+plussai_procedure_multi_artifact_join_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_multi_artifact_join_demo
+.PHONY : plussai_procedure_multi_artifact_join_demo
+
+# fast build rule for target.
+plussai_procedure_multi_artifact_join_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_multi_artifact_join_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_multi_artifact_join_demo.dir/build
+.PHONY : plussai_procedure_multi_artifact_join_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_raw_series_parallel_demo
+
+# Build rule for target.
+plussai_procedure_raw_series_parallel_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_raw_series_parallel_demo
+.PHONY : plussai_procedure_raw_series_parallel_demo
+
+# fast build rule for target.
+plussai_procedure_raw_series_parallel_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_raw_series_parallel_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_raw_series_parallel_demo.dir/build
+.PHONY : plussai_procedure_raw_series_parallel_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_safety_contract_demo
+
+# Build rule for target.
+plussai_procedure_safety_contract_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_safety_contract_demo
+.PHONY : plussai_procedure_safety_contract_demo
+
+# fast build rule for target.
+plussai_procedure_safety_contract_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_safety_contract_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_safety_contract_demo.dir/build
+.PHONY : plussai_procedure_safety_contract_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_registry_persistence_demo
+
+# Build rule for target.
+plussai_procedure_registry_persistence_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_registry_persistence_demo
+.PHONY : plussai_procedure_registry_persistence_demo
+
+# fast build rule for target.
+plussai_procedure_registry_persistence_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_registry_persistence_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_registry_persistence_demo.dir/build
+.PHONY : plussai_procedure_registry_persistence_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_lymph_policy_payload_demo
+
+# Build rule for target.
+plussai_procedure_lymph_policy_payload_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_lymph_policy_payload_demo
+.PHONY : plussai_procedure_lymph_policy_payload_demo
+
+# fast build rule for target.
+plussai_procedure_lymph_policy_payload_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_lymph_policy_payload_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_lymph_policy_payload_demo.dir/build
+.PHONY : plussai_procedure_lymph_policy_payload_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_lymph_model_workflow_demo
+
+# Build rule for target.
+plussai_procedure_lymph_model_workflow_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_lymph_model_workflow_demo
+.PHONY : plussai_procedure_lymph_model_workflow_demo
+
+# fast build rule for target.
+plussai_procedure_lymph_model_workflow_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_lymph_model_workflow_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_lymph_model_workflow_demo.dir/build
+.PHONY : plussai_procedure_lymph_model_workflow_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_nodek_ice_demo
+
+# Build rule for target.
+plussai_procedure_nodek_ice_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_nodek_ice_demo
+.PHONY : plussai_procedure_nodek_ice_demo
+
+# fast build rule for target.
+plussai_procedure_nodek_ice_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_nodek_ice_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_nodek_ice_demo.dir/build
+.PHONY : plussai_procedure_nodek_ice_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_nodeb_text_demo
+
+# Build rule for target.
+plussai_procedure_nodeb_text_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_nodeb_text_demo
+.PHONY : plussai_procedure_nodeb_text_demo
+
+# fast build rule for target.
+plussai_procedure_nodeb_text_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_nodeb_text_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_nodeb_text_demo.dir/build
+.PHONY : plussai_procedure_nodeb_text_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_procedure_bundle_audit_demo
+
+# Build rule for target.
+plussai_procedure_bundle_audit_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_procedure_bundle_audit_demo
+.PHONY : plussai_procedure_bundle_audit_demo
+
+# fast build rule for target.
+plussai_procedure_bundle_audit_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_bundle_audit_demo.dir/build.make PlussAI/examples/Procedure/CMakeFiles/plussai_procedure_bundle_audit_demo.dir/build
+.PHONY : plussai_procedure_bundle_audit_demo/fast
+
+#=============================================================================
 # Target rules for targets named attention_transformer_test
 
 # Build rule for target.
@@ -2999,6 +3311,32 @@ procedure_phase7_test: cmake_check_build_system
 procedure_phase7_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build
 .PHONY : procedure_phase7_test/fast
+
+#=============================================================================
+# Target rules for targets named procedure_phase8_test
+
+# Build rule for target.
+procedure_phase8_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedure_phase8_test
+.PHONY : procedure_phase8_test
+
+# fast build rule for target.
+procedure_phase8_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase8_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase8_test.dir/build
+.PHONY : procedure_phase8_test/fast
+
+#=============================================================================
+# Target rules for targets named procedure_system_test
+
+# Build rule for target.
+procedure_system_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedure_system_test
+.PHONY : procedure_system_test
+
+# fast build rule for target.
+procedure_system_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_system_test.dir/build.make PlussAI/test/CMakeFiles/procedure_system_test.dir/build
+.PHONY : procedure_system_test/fast
 
 #=============================================================================
 # Target rules for targets named rnn_fusion_test
@@ -10420,6 +10758,30 @@ help:
 	@echo "... plussai_nodej_unsupervised_demo"
 	@echo "... plussai_nodej_workflow_tuning_demo"
 	@echo "... plussai_outlier_holdout_parity_probe"
+	@echo "... plussai_procedure_bundle_audit_demo"
+	@echo "... plussai_procedure_custom_module_demo"
+	@echo "... plussai_procedure_dataframe_callable_demo"
+	@echo "... plussai_procedure_disable_audit_demo"
+	@echo "... plussai_procedure_empty_sink_demo"
+	@echo "... plussai_procedure_explicit_ports_demo"
+	@echo "... plussai_procedure_future_guard_demo"
+	@echo "... plussai_procedure_labeled_model_demo"
+	@echo "... plussai_procedure_lymph_model_workflow_demo"
+	@echo "... plussai_procedure_lymph_policy_payload_demo"
+	@echo "... plussai_procedure_multi_artifact_join_demo"
+	@echo "... plussai_procedure_nodeb_text_demo"
+	@echo "... plussai_procedure_nodek_ice_demo"
+	@echo "... plussai_procedure_options_metadata_demo"
+	@echo "... plussai_procedure_raw_series_parallel_demo"
+	@echo "... plussai_procedure_registry_persistence_demo"
+	@echo "... plussai_procedure_result_artifact_demo"
+	@echo "... plussai_procedure_row_guard_demo"
+	@echo "... plussai_procedure_safety_contract_demo"
+	@echo "... plussai_procedure_scalar_artifact_demo"
+	@echo "... plussai_procedure_serial_series_demo"
+	@echo "... plussai_procedure_sink_chain_demo"
+	@echo "... plussai_procedure_soft_failure_demo"
+	@echo "... plussai_procedure_vector_text_artifact_demo"
 	@echo "... plussai_real_abalone_mixed_regression"
 	@echo "... plussai_real_accidents_severity_workflow"
 	@echo "... plussai_real_amsterdam_price_regression"
@@ -10666,6 +11028,8 @@ help:
 	@echo "... procedure_phase5_test"
 	@echo "... procedure_phase6_test"
 	@echo "... procedure_phase7_test"
+	@echo "... procedure_phase8_test"
+	@echo "... procedure_system_test"
 	@echo "... quantile_regression_test"
 	@echo "... rate_models_test"
 	@echo "... rates_paths_test"

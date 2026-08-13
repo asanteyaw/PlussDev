@@ -2,6 +2,7 @@
 
 ## API Signature
 
+- `custom(name: std::string, map_fn: Fn, contract: TransformContract = callable_contract() -> CustomStage`
 - `custom(name: std::string, forward: std::function<Series(const Series&)>, inverse: std::function<Series(const Series&)>, check_inverse: bool = true, check_inverse_tolerance: double = 1e-3) -> TargetTransform`
 
 ## Notes
@@ -14,15 +15,20 @@ Namespace-level API function.
   Algorithm-size/count argument used to shape fit or split behavior.
 - `check_inverse_tolerance` (`double`), default: `1e-3`
   Algorithm-size/count argument used to shape fit or split behavior.
+- `contract` (`TransformContract`), default: `callable_contract(`
+  Method argument; see signature type for accepted form.
 - `forward` (`std::function<Series(const Series&)>`)
   Pluss numeric vector/tensor input.
 - `inverse` (`std::function<Series(const Series&)>`)
   Pluss numeric vector/tensor input.
+- `map_fn` (`Fn`)
+  Method argument; see signature type for accepted form.
 - `name` (`std::string`)
   Method argument; see signature type for accepted form.
 
 ## Output
 
+- Returns `CustomStage`.
 - Returns `TargetTransform`.
 
 ## Options
@@ -35,12 +41,12 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = custom(/* name */, /* forward */, /* inverse */, /* check_inverse */, /* check_inverse_tolerance */);
+auto value = custom(/* name */, /* map_fn */, /* contract */);
 out.info("custom", value);
 ```
 
 **Expected output**
 
 ```text
-custom returned TargetTransform
+custom returned CustomStage
 ```

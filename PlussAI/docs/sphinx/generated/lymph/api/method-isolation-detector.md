@@ -3,6 +3,7 @@
 ## API Signature
 
 - `isolation_detector(options: prep::OutlierIsolatorOptions) -> Model`
+- `isolation_detector(options: prep::OutlierIsolatorOptions) -> Model`
 
 ## Notes
 

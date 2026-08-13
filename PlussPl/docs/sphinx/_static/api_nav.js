@@ -227,7 +227,7 @@ window.PLUSS_API_NAV = {
         ]
       },
       {
-        "title": "Regression / Residual Diagnostics",
+        "title": "Regression and Residual Diagnostics",
         "methods": [
           "regplot",
           "lmplot",
@@ -244,7 +244,7 @@ window.PLUSS_API_NAV = {
         ]
       },
       {
-        "title": "Grid Constructors / Fill Helpers",
+        "title": "Grid Constructors and Fill Helpers",
         "methods": [
           "FacetGrid",
           "PairGrid",
@@ -265,7 +265,7 @@ window.PLUSS_API_NAV = {
         ]
       },
       {
-        "title": "Multivariate Curve / Glyph Views",
+        "title": "Multivariate Curve and Glyph Views",
         "methods": [
           "parallelplot",
           "andrews_curves",
@@ -321,7 +321,7 @@ window.PLUSS_API_NAV = {
         ]
       },
       {
-        "title": "3D/4D Scene, Camera, Lighting & Animation",
+        "title": "3D and 4D Scene, Camera, Lighting, Animation",
         "methods": [
           "camera3d",
           "camera_preset3d",
@@ -340,7 +340,7 @@ window.PLUSS_API_NAV = {
         ]
       },
       {
-        "title": "Theming / Context",
+        "title": "Theming and Context",
         "methods": [
           "set_theme",
           "set_style",
@@ -348,7 +348,7 @@ window.PLUSS_API_NAV = {
         ]
       },
       {
-        "title": "Legend / Grid / Layout / Export",
+        "title": "Legend, Grid, Layout, Export",
         "methods": [
           "move_legend",
           "legend_frame",
@@ -382,9 +382,20 @@ window.PLUSS_API_NAV = {
         "title": "Bundled Datasets",
         "methods": [
           "get_dataset_names",
-          "load_dataset",
-          "dataset_from_frame",
-          "dataset_frame"
+          "load_dataset"
+        ],
+        "subgroups": [
+          {
+            "title": "Dataset",
+            "methods": [
+              "Dataset",
+              "dataset_from_frame",
+              "dataset_frame",
+              "dataset_nrows",
+              "dataset_ncols",
+              "dataset_size"
+            ]
+          }
         ]
       }
     ]

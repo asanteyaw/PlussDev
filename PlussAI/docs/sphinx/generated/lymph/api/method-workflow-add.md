@@ -1,8 +1,9 @@
-# `Workflow::add`
+# `workflow::add`
 
 ## API Signature
 
-- `Workflow::add(stage: const CustomStage&) -> Workflow&`
+- `workflow::add(stage: const CustomStage&) -> Workflow&`
+- `workflow::add(stage: Stage) -> WorkflowRoute&`
 
 ## Notes
 
@@ -10,28 +11,17 @@ Instance method on `self`.
 
 ## Inputs
 
-- `stage` (`const CustomStage&`)
+- `stage` (`Stage | const CustomStage&`)
   Method argument; see signature type for accepted form.
 
 ## Output
 
 - Returns `Workflow&`.
+- Returns `WorkflowRoute&`.
 
 ## Options
 
-Option semantics used by this method:
-
-- `CustomStage` (`struct`):
-  - `std::string name{}`
-    Option field used by this method.
-  - `SeriesMapFn map_fn{}`
-    Option field used by this method.
-  - `prep::FunctionTransformerOptions options{}`
-    Family-specific options payload used by the selected model/transform family.
-  - `TransformContract contract{}`
-    Option field used by this method.
-  - `bool persistable = false`
-    Option field used by this method.
+No explicit option struct/enum parameters were detected for this method.
 
 ## Examples
 
@@ -39,7 +29,7 @@ Option semantics used by this method:
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::add(/* stage */);
+auto value = workflow::add(/* stage */);
 out.info("add", value);
 ```
 

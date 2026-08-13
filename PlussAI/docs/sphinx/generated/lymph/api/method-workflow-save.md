@@ -1,10 +1,9 @@
-# `Workflow::save`
+# `workflow::save`
 
 ## API Signature
 
-- `Workflow::save(path: const std::string&, payload: const Payload&, train_options: const TrainOptions&, metadata: io::FlowBundleMetadata) -> void`
-- `Workflow::save(path: const std::string&) -> void`
-- `Workflow::save(path: const std::string&, metadata: io::FlowBundleMetadata) -> void`
+- `workflow::save(path: const std::string&) -> void`
+- `workflow::save(path: const std::string&, metadata: io::FlowBundleMetadata) -> void`
 
 ## Notes
 
@@ -16,10 +15,6 @@ Persists the current fitted artifact so it can be loaded for inference later.
   Input feature data used by this call.
 - `path` (`const std::string&`)
   Path to persisted model/data artifact.
-- `payload` (`const Payload&`)
-  Target values aligned to input observations.
-- `train_options` (`const TrainOptions&`)
-  Configuration object controlling algorithm behavior and safety defaults.
 
 ## Output
 
@@ -35,7 +30,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-Workflow::save(/* path */, /* payload */, /* train_options */, /* metadata */);
+workflow::save(/* path */);
 out.info("save completed");
 ```
 

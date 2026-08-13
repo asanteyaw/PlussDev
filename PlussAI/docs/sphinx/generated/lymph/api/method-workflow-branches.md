@@ -1,8 +1,8 @@
-# `Workflow::branches`
+# `workflow::branches`
 
 ## API Signature
 
-- `Workflow::branches() -> const std::vector<WorkflowBranchInfo>&`
+- `workflow::branches() -> const std::vector<WorkflowBranchInfo>&`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::branches();
+auto value = workflow::branches();
 out.info("branches", value);
 ```
 

@@ -1,9 +1,8 @@
-# `Workflow::branch`
+# `workflow::branch`
 
 ## API Signature
 
-- `Workflow::branch(name: std::string) -> WorkflowBranch`
-- `Workflow::branch(name: std::string) -> WorkflowBranch`
+- `workflow::branch(name: std::string) -> WorkflowBranch`
 
 ## Notes
 
@@ -28,7 +27,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::branch(/* name */);
+auto value = workflow::branch(/* name */);
 out.info("branch", value);
 ```
 

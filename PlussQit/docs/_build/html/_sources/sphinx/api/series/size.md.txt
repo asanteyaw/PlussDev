@@ -13,19 +13,19 @@ Series::size(std::int64_t dim) const -> std::int64_t
 
 ## What It Does
 
-Returns the length of one axis in the **current logical shape**.
+Returns the length of one axis in the current logical shape.
 
-That wording matters. `size()` is not reporting how the tensor was originally
-created, and it is not reporting anything about memory order. It answers a much
-more immediate question: "if I index this `Series` right now, how long is axis
-`dim`?"
+This is a small method, but it sits on an important distinction: `size()` is
+about how the `Series` is being interpreted now, not about how it was first
+constructed and not about how values happen to be laid out in storage.
 
-So if you transpose, unsqueeze, squeeze, slice, or reshape the tensor first,
-`size()` reflects that new logical view.
+If you transpose, permute, squeeze, unsqueeze, or reshape first, `size()`
+reports the post-transform shape immediately. That makes it the right method
+for branch logic, guard checks, and shape-driven code paths that operate on the
+current view rather than the source object’s history.
 
-The two overloads are only an ergonomics detail. The `int` form exists so plain
-C++ literals like `0` and `-1` resolve naturally; both overloads normalize and
-validate the dimension the same way and both return `std::int64_t`.
+The `int` and `std::int64_t` overloads behave the same. The `int` form simply
+lets literals such as `0` and `-1` resolve without friction.
 
 ## Parameters
 
@@ -40,8 +40,8 @@ The axis to inspect.
 - `-1` means the last axis
 - `-2` means the second-to-last axis
 
-Negative dimensions are normalized against the current rank first, then checked.
-If the normalized dimension still falls outside `[0, rank)`, the call throws.
+Negative dimensions are normalized against the current rank before validation.
+If the normalized dimension is still outside `[0, dim())`, the call throws.
 
 ## Returns
 
@@ -50,18 +50,24 @@ If the normalized dimension still falls outside `[0, rank)`, the call throws.
 
 ## Examples
 
-Example 1. Query the leading axis of a rank-3 `Series`.
+The examples on this page build incrementally.
+
+Example 1. Read the leading axis from a rank-3 `Series`.
 
 ```cpp
 auto cube = pluss::make_series(
-    std::vector<double>{
-        1,  2,  3,  4,
-        5,  6,  7,  8,
-        9,  10, 11, 12,
-        13, 14, 15, 16,
-        17, 18, 19, 20,
-        21, 22, 23, 24},
-    {2, 3, 4});
+    {
+        {
+            {1.0, 2.0, 3.0, 4.0},
+            {5.0, 6.0, 7.0, 8.0},
+            {9.0, 10.0, 11.0, 12.0},
+        },
+        {
+            {13.0, 14.0, 15.0, 16.0},
+            {17.0, 18.0, 19.0, 20.0},
+            {21.0, 22.0, 23.0, 24.0},
+        },
+    });
 
 std::cout << cube.size(0);
 ```
@@ -85,8 +91,7 @@ std::cout << cube.size(-1);
 4
 ```
 
-Example 3. `size()` follows the current logical view, not the original factory
-shape.
+Example 3. `size()` follows the current logical view after a layout transform.
 
 ```cpp
 std::cout << cube.transpose(0, 2).size(1);
@@ -98,15 +103,34 @@ std::cout << cube.transpose(0, 2).size(1);
 3
 ```
 
-The original shape was `[2, 3, 4]`. After `transpose(0, 2)`, the logical shape
-becomes `[4, 3, 2]`, so axis `1` is now `3`.
+The original shape is `[2, 3, 4]`. After `transpose(0, 2)`, the logical shape
+becomes `[4, 3, 2]`, so axis `1` is `3`.
+
+Example 4. Scalars have rank `0`, so there is no valid dimension to query.
+
+```cpp
+auto scalar = pluss::make_series(42.0);
+
+try {
+  std::cout << scalar.size(0);
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+SeriesBase::size: dim out of range
+```
 
 ## Notes
 
 - `size()` answers one axis at a time. Use [`sizes()`](sizes.md) when you need
   the full shape in one call.
 - The answer is about logical shape, not about contiguity or strides.
-- Scalars have rank `0`, so they have no valid `dim` to query.
+- Negative dimensions are supported.
 
 ## See Also
 

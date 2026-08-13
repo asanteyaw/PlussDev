@@ -1,8 +1,8 @@
-# `Workflow::save_blueprint`
+# `workflow::save_blueprint`
 
 ## API Signature
 
-- `Workflow::save_blueprint() -> std::string`
+- `workflow::save_blueprint() -> std::string`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::save_blueprint();
+auto value = workflow::save_blueprint();
 out.info("save_blueprint", value);
 ```
 

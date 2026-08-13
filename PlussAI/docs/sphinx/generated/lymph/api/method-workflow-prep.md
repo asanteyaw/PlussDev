@@ -1,8 +1,8 @@
-# `Workflow::prep`
+# `workflow::prep`
 
 ## API Signature
 
-- `Workflow::prep() -> ModelPrep`
+- `workflow::prep() -> ModelPrep`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::prep();
+auto value = workflow::prep();
 out.info("prep", value);
 ```
 

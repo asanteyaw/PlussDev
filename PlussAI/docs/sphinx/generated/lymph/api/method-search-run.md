@@ -1,18 +1,17 @@
-# `Search::run`
+# `search::run`
 
 ## API Signature
 
-- `Search::run(make_model: const std::function<Model(const GridPoint&)>&, batch: const LabeledBatch&, split_options: const SplitOptions&, train_options: const TrainOptions&, assess_options_in: const AssessOptions&, objective_metric: MetricKind, objective_policy: TuneObjectivePolicy, fit_options: selection::FitOptions) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
-- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
+- `search::run(arg2: const std::function<Model(const GridPoint&) -> Result`
 
 ## Notes
 
@@ -22,35 +21,21 @@ Instance method on `self`.
 
 - `arg2` (`const std::function<Model(const GridPoint&`)
   Method argument; see signature type for accepted form.
-- `assess_options_in` (`const AssessOptions&`)
-  Configuration object controlling algorithm behavior and safety defaults.
-- `batch` (`const LabeledBatch&`)
-  Input feature data used by this call.
-- `fit_options` (`selection::FitOptions`)
-  Configuration object controlling algorithm behavior and safety defaults.
-- `make_model` (`const std::function<Model(const GridPoint&)>&`)
-  Algorithm-size/count argument used to shape fit or split behavior.
-- `objective_metric` (`MetricKind`)
-  Metric selection or score-control argument for evaluation/tuning.
-- `objective_policy` (`TuneObjectivePolicy`)
-  Target values aligned to input observations.
-- `split_options` (`const SplitOptions&`)
-  Configuration object controlling algorithm behavior and safety defaults.
-- `train_options` (`const TrainOptions&`)
-  Configuration object controlling algorithm behavior and safety defaults.
 
 ## Output
 
-- Returns `SearchResult`.
+- Returns `Result`.
 
 ## Options
 
 Option semantics used by this method:
 
-- `FitOptions` (`struct`):
-  - `std::int64_t fit_top = 0`
+- `search` (`struct`):
+  - `selection::CompareReport report{}`
     Option field used by this method.
-  - `std::int64_t fit_bottom = 0`
+  - `std::optional<Model> best_model{}`
+    Option field used by this method.
+  - `std::vector<Model> fitted{}`
     Option field used by this method.
 
 ## Examples
@@ -59,14 +44,14 @@ Option semantics used by this method:
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Search::run(/* make_model */, /* batch */, /* split_options */, /* train_options */, /* assess_options_in */, /* objective_metric */, /* objective_policy */, /* fit_options */);
+auto value = search::run(/* arg2 */);
 out.info("run", value);
 ```
 
 **Expected output**
 
 ```text
-run returned SearchResult
+run returned Result
 ```
 
 ### Example 2 (Demo Pattern)
@@ -98,5 +83,5 @@ run returned SearchResult
 **Expected output**
 
 ```text
-run returned SearchResult
+run returned Result
 ```

@@ -1,8 +1,8 @@
-# `Workflow::time_aware`
+# `workflow::time_aware`
 
 ## API Signature
 
-- `Workflow::time_aware() -> bool`
+- `workflow::time_aware() -> bool`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::time_aware();
+auto value = workflow::time_aware();
 out.info("time_aware", value);
 ```
 

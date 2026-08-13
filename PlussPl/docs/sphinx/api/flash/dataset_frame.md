@@ -7,16 +7,6 @@
 ## Signature
 
 ```cpp
-enum class FramePolicy : std::uint8_t {
-  Strict = 0,
-  PadNull = 1,
-};
-
-struct ToFrameOptions {
-  FramePolicy policy{FramePolicy::Strict};
-  std::optional<std::string> title{};
-};
-
 pluss::table::DataFrame flash::Dataset::frame(
     const ToFrameOptions& options = {}) const
 ```
@@ -225,4 +215,19 @@ error=flash::Dataset::frame: dataset is ragged; use FramePolicy::PadNull to rect
 
 - [`flash::Dataset::from_frame`](dataset_from_frame.md): exports a `DataFrame` into a
   flash dataset.
+- [`flash::Dataset::nrows`](dataset_nrows.md): reports the shared row count for
+  rectangular datasets.
+- [`flash::Dataset::size`](dataset_size.md): returns `{nrows, ncols}` for rectangular
+  datasets.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="dataset_from_frame.html">
+    <span class="label">Previous</span>
+    <span class="title">Dataset<br>from_frame</span>
+  </a>
+  <a class="next-link" href="dataset_nrows.html">
+    <span class="label">Next</span>
+    <span class="title">Dataset<br>nrows</span>
+  </a>
+</div>
 - [`flash::load_dataset`](load_dataset.md): loads a persisted flash dataset directly.

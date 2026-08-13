@@ -18,13 +18,7 @@ None.
 
 ## Options
 
-Option semantics used by this method:
-
-- `Stage` (`struct`):
-  - `TransformKind kind = TransformKind::StandardScaler`
-    Option field used by this method.
-  - `TransformOptions options = prep::StandardScalerOptions{}`
-    Family-specific options payload used by the selected model/transform family.
+No explicit option struct/enum parameters were detected for this method.
 
 ## Examples
 

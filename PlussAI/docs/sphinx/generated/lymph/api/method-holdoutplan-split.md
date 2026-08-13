@@ -2,8 +2,8 @@
 
 ## API Signature
 
-- `HoldoutPlan::split(batch: const LabeledBatch&) -> HoldoutSplit`
-- `HoldoutPlan::split(frame: const pluss::table::DataFrame&) -> HoldoutSplit`
+- `HoldoutPlan::split(batch: const LabeledBatch&) -> prep::HoldoutSplit`
+- `HoldoutPlan::split(frame: const pluss::table::DataFrame&) -> prep::HoldoutSplit`
 
 ## Notes
 
@@ -18,7 +18,7 @@ Builds train/test index partitions according to split-plan options.
 
 ## Output
 
-- Returns `HoldoutSplit`.
+- Returns `prep::HoldoutSplit`.
 
 ## Options
 

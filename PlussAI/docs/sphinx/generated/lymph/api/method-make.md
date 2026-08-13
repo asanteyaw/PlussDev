@@ -60,14 +60,6 @@ Option semantics used by this method:
   - `bool drop_only_if_all_null = false`
     Option field used by this method.
 
-- `WorkflowOptions` (`struct`):
-  - `std::int64_t workers = 1`
-    Option field used by this method.
-  - `WorkflowSchedule schedule = WorkflowSchedule::Deterministic`
-    Option field used by this method.
-  - `WorkflowCache cache = WorkflowCache::Off`
-    Option field used by this method.
-
 ## Examples
 
 ### Example 1 (Minimal Usage)

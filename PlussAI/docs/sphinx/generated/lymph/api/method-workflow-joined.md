@@ -1,8 +1,8 @@
-# `Workflow::joined`
+# `workflow::joined`
 
 ## API Signature
 
-- `Workflow::joined() -> bool`
+- `workflow::joined() -> bool`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::joined();
+auto value = workflow::joined();
 out.info("joined", value);
 ```
 

@@ -12,21 +12,20 @@ Series::view(pluss::msharp::RangeView::Int new_sizes) const -> Series
 
 ## What It Does
 
-Reinterprets the same underlying storage under a new shape **without copying**.
+Reinterprets the same underlying storage under a new shape without copying.
 
-`view()` is the strict shape-reinterpretation surface. It is for the case where
-you do not want "reshape semantics" in the abstract; you want a genuine no-copy
-alias over the same storage, and you want the call to fail if that is not
-possible.
+`view()` is the strict shape-reinterpretation surface. You use it when the
+no-copy property is part of the contract, not just a performance preference.
+If the requested shape cannot be expressed as a direct alias, `view()` fails
+instead of quietly allocating a normalized copy.
 
-In the current implementation, that strictness is intentionally conservative:
+In the current implementation that strictness is intentionally conservative:
 
 - the source must be contiguous
-- the requested shape must have the same total `numel()`
+- the requested shape must preserve total `numel()`
 
-If either condition fails, `view()` throws instead of silently materializing a
-contiguous buffer. That boundary is the entire point of the method. If you want
-"same logical result, copy if needed," use [`reshape()`](reshape.md) instead.
+If you want "give me this shape, copy if needed," the right method is
+[`reshape()`](reshape.md), not `view()`.
 
 ## Parameters
 
@@ -34,16 +33,14 @@ contiguous buffer. That boundary is the entire point of the method. If you want
 
 The desired output shape.
 
-This parameter is shape-like rather than container-specific. In practice that
-means you can feed it from a `std::span<const std::int64_t>`, a `std::array`, a
-`std::vector`, or another `Series`'s [`sizes()`](sizes.md) view, as long as the
-borrowed range stays valid for the call.
+In ordinary use you can pass brace literals such as `{3, 2}` directly, or reuse
+another `Series`’s [`sizes()`](sizes.md) result.
 
 ## Returns
 
 `Series`
-    A new `Series` handle over the same storage, with `new_sizes` and
-    contiguous strides computed for that new logical shape.
+    A new `Series` handle over the same storage, with the requested logical
+    shape.
 
 ## Autograd Behavior
 
@@ -55,14 +52,17 @@ indexed, so the backward path only has to restore the original shape metadata.
 
 ## Examples
 
+The examples on this page build incrementally.
+
 Example 1. Reinterpret a contiguous `2 x 3` series as `3 x 2`.
 
 ```cpp
-auto mat = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
-const std::array<std::int64_t, 2> shape_3x2{{3, 2}};
+auto mat = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+});
 
-std::cout << mat.view(
-    std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));
+std::cout << mat.view({3, 2});
 ```
 
 ### Output
@@ -75,14 +75,17 @@ data=[[1, 2],
 ```
 
 This is not a transpose. The flat storage order stayed `[1, 2, 3, 4, 5, 6]`;
-you simply asked to read that same sequence as `3 x 2` instead of `2 x 3`.
+you simply asked to reread that same sequence under a different shape.
 
 Example 2. `new_sizes` can be borrowed from another tensor's shape metadata, not
 just spelled out manually.
 
 ```cpp
-auto shape_template =
-    pluss::make_series(std::vector<double>{10, 20, 30, 40, 50, 60}, {3, 2});
+auto shape_template = pluss::make_series({
+    {10.0, 20.0},
+    {30.0, 40.0},
+    {50.0, 60.0},
+});
 
 std::cout << mat.view(shape_template.sizes());
 ```
@@ -96,17 +99,15 @@ data=[[1, 2],
   [5, 6]]
 ```
 
-The important contract is not "borrowed from another tensor"; it is "same
-number of elements." `shape_template.sizes()` works here because `[3, 2]` still
-has `6` elements.
+What matters is not that the shape came from another tensor. What matters is
+that `[3, 2]` still has the same `numel()` as `mat`.
 
 Example 3. A non-contiguous input is rejected instead of being copied.
 
 ```cpp
 try {
   auto transposed = mat.transpose(0, 1);
-  std::cout << transposed.view(
-      std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));
+  std::cout << transposed.view({3, 2});
 } catch (const std::exception& e) {
   std::string msg = e.what();
   std::cout << msg.substr(0, msg.find('\n'));
@@ -120,15 +121,36 @@ view: requires contiguous in v0
 ```
 
 That failure is deliberate. Once the source stops being directly viewable,
-`view()` stays strict and forces you to choose [`reshape()`](reshape.md) if you
-actually want fallback materialization.
+`view()` forces you to make an explicit choice to use [`reshape()`](reshape.md)
+instead.
+
+Example 4. A `numel()` mismatch also fails.
+
+```cpp
+try {
+  std::cout << mat.view({4, 2});
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+view: requires contiguous in v0
+```
+
+This is a current implementation quirk worth knowing: contiguity failure and
+shape incompatibility collapse to the same top-line error text because both are
+checked through the same view-eligibility gate.
 
 ## Notes
 
 - `view()` is the no-copy contract, not the forgiving one.
 - Shape compatibility still requires equal total `numel()`.
 - In the current implementation, contiguity is mandatory even if a more general
-  stride reinterpretation might theoretically exist.
+  stride reinterpretation could theoretically exist.
 
 ## See Also
 

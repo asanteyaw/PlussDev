@@ -1,8 +1,8 @@
-# `Workflow::time_options`
+# `workflow::time_options`
 
 ## API Signature
 
-- `Workflow::time_options() -> const std::optional<TimeOptions>&`
+- `workflow::time_options() -> const std::optional<TimeOptions>&`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::time_options();
+auto value = workflow::time_options();
 out.info("time_options", value);
 ```
 

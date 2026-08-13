@@ -19,25 +19,7 @@ Boolean introspection helper that reports whether a capability/state is availabl
 
 ## Options
 
-Option semantics used by this method:
-
-- `TimeOptions` (`struct`):
-  - `std::string index{}`
-    Option field used by this method.
-  - `std::string observed_at{}`
-    Option field used by this method.
-  - `std::string target_at{}`
-    Option field used by this method.
-  - `TimeOffset horizon = 0`
-    Option field used by this method.
-  - `TimeOffset gap = 0`
-    Option field used by this method.
-  - `TimeOffset lookback = 0`
-    Option field used by this method.
-  - `bool require_ordered = true`
-    Option field used by this method.
-  - `bool reject_missing_index = true`
-    Option field used by this method.
+No explicit option struct/enum parameters were detected for this method.
 
 ## Examples
 
