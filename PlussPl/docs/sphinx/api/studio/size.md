@@ -60,7 +60,7 @@ using namespace pluss::pl;
 
 auto fig = studio("size_default");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.extent().width << "x" << fig.extent().height << "\n";
@@ -83,7 +83,7 @@ auto fig = studio("size_explicit");
 fig.size(900.0, 500.0);
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.extent().width << "x" << fig.extent().height << "\n";
@@ -106,7 +106,7 @@ using namespace pluss::pl;
 
 auto fig = studio("size_after_pane");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.size(900.0, 500.0);
 fig.show();
 ```

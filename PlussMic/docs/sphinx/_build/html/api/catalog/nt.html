@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,18 +36,36 @@
 
           <div class="body" role="main">
             
-  <section id="catalog-nt">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 55eed3954cb5 -->
+<section id="catalog-nt">
 <h1>Catalog::nt<a class="headerlink" href="#catalog-nt" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">nt</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogNoteAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">CatalogNoteAccessor</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">nt</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>The entry point into text-processing operations on the catalog’s <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind streams.
+<code class="docutils literal notranslate"><span class="pre">nt()</span></code> binds the current catalog and hands back a <code class="docutils literal notranslate"><span class="pre">CatalogNoteAccessor</span></code>, which exposes
+23 text-transformation methods (trimming, case conversion, length/substring queries,
+pattern matching, splitting, padding, encoding, and replacement) — see the
+<a class="reference internal" href="../../catalog_note_accessor_api_reference.html"><span class="doc std std-doc">CatalogNoteAccessor API Reference</span></a> for
+every method’s own dedicated page.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>nt() binds EVERY key in the catalog, not just the Note-kind ones
+Unlike Registry’s <code class="docutils literal notranslate"><span class="pre">fields(keys).nt()</span></code> (which lets you pre-select a subset of fields
+before binding), Catalog has no equivalent narrowing step – <code class="docutils literal notranslate"><span class="pre">Catalog::nt()</span></code> takes no
+arguments and always binds every key currently in the catalog. Calling any
+CatalogNoteAccessor method on a catalog that has even one non-Note-kind key throws –
+see the edge case example below. To operate on only your text columns, pre-filter with
+<a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys(names)</span></code></span></a> or <a class="reference internal" href="keyaxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keyaxis().note()</span></code></span></a> before
+calling <code class="docutils literal notranslate"><span class="pre">.nt()</span></code>.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,27 +74,80 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">CatalogNoteAccessor</span></code>
-Value produced by this call.</p>
+A binder for the current catalog — call one of its 23 methods to transform every
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind key’s text.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">nt()</span></code> binds a catalog and exposes text-processing methods — see
+<a class="reference internal" href="../catalog-note/strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogNoteAccessor::strip</span></code></span></a> for this specific method’s own
+page.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Accra  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;  Tema  &quot;</span><span class="p">})),</span>
 <span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">nt</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">strip</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Catalog  keys=1
+keys: [city]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+city                     | Note         | Note             | 2       | [Accra, Tema]                                    
+========================================================================================================================
 </pre></div>
 </div>
+<p>Example 2 (edge case). Calling any <code class="docutils literal notranslate"><span class="pre">CatalogNoteAccessor</span></code> method on a catalog with a
+non-<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind key throws, since <code class="docutils literal notranslate"><span class="pre">nt()</span></code> binds every key unconditionally.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">})),</span>
+<span class="p">});</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">strip</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::strip is only valid for Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Not <code class="docutils literal notranslate"><span class="pre">noexcept</span></code>; the returned accessor itself does no work, but every method it
+exposes eagerly re-checks every bound key’s kind.</p></li>
+<li><p>See the important callout above — every one of the 23 methods on the returned
+accessor shares this every-key-bound, no-narrowing behavior.</p></li>
+<li><p>Requires a defined catalog; throws <code class="docutils literal notranslate"><span class="pre">&quot;Catalog:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> otherwise (checked
+when a method is actually called, not by <code class="docutils literal notranslate"><span class="pre">nt()</span></code> itself).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../catalog_note_accessor_api_reference.html"><span class="doc std std-doc">CatalogNoteAccessor API Reference</span></a>: the
+full list of 23 methods this accessor exposes.</p></li>
+<li><p><a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tl</span></code></span></a> / <a class="reference internal" href="ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::ts</span></code></span></a>: the sibling accessors for
+timestamp-feature and time-series operations.</p></li>
+<li><p><a class="reference internal" href="keyaxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keyaxis</span></code></span></a>: filter down to just the <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind keys first, via
+<code class="docutils literal notranslate"><span class="pre">.note()</span></code>, before falling back to per-key operations if you need to mix text and
+non-text processing in one pipeline.</p></li>
+<li><p><a class="reference internal" href="../registry/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fields(keys).nt()</span></code></span></a>: the bundle-model equivalent,
+which <em>does</em> let you narrow to a key subset before binding.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nrows.html">
     <span class="label">Previous</span>
@@ -87,7 +158,6 @@ Value produced by this call.</p>
     <span class="title">plot</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

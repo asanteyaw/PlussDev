@@ -110,9 +110,10 @@ labeled has(): 1
 after reset has(): 0
 ```
 
-Example 3. `range()` returns a fresh `Stream` holding the default positional labels
-(`0..n-1`) — the same values `values()` synthesizes when unlabeled, but as an independent
-value you can inspect or reuse, rather than a display fallback tied to `this` stream.
+Example 3. `range()` keeps the bound stream's *values* unchanged and instead replaces its
+*label* with the default positional range (`0..n-1`) — the inverse framing of `values()`,
+which discards the values and extracts the label's content instead. Note this is **not** a
+display fallback: `has()` on the result reports `true`, a real label was set.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -124,16 +125,21 @@ std::cout << stream.lbl().range();
 
 ```text
 ========================================================================================================================
-kindle::Stream  kind=Series  dtype=Series[int64]  records=3
-label=no  mask=no  meta=0
+kindle::Stream  kind=Series  dtype=Series[float64]  records=3
+label=yes  mask=no  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | 0                                                                                                        
-1            | 1                                                                                                        
-2            | 2                                                                                                        
+0            | 10                                                                                                       
+1            | 20                                                                                                       
+2            | 30                                                                                                       
 ========================================================================================================================
 ```
+
+The `0`/`1`/`2` here is the **label** column; the `value` column (`10`/`20`/`30`) is the
+original stream's own data, untouched. See
+[`StreamLabelAccessor::range`](../stream-lbl/range.md) for the full breakdown, including how
+`range()` overwrites an *existing custom* label too, not just an absent one.
 
 Example 4. `align(target_labels, options)` reorders/relabels by case label under
 `AlignBy::Caselbl`. An unmatched target label produces `NULL` unless `options.fill` is set
@@ -233,9 +239,12 @@ c            | 30
 
 - `lbl()` alone does no work — it only binds the stream; call one of its methods to
   actually inspect, set, reset, or align.
-- `values()`/`range()` never throw and never return "nothing" — they synthesize a
-  positional range when no label is set. `has()` is the accurate existence check; don't
-  infer "has a label" from `values()` alone.
+- `values()` and `range()` are inverse extractions, not variations of the same thing:
+  `values()` discards the stream's values and returns the label's own content instead
+  (synthesizing a positional range if unlabeled); `range()` keeps the stream's values
+  unchanged and replaces the label with the default positional range, unconditionally —
+  even overwriting an existing custom label. `has()` is the accurate existence check for
+  the *original* stream; don't infer it from either method's result.
 - `set()`/`align()` both overload on `Stream` vs `Thread` — see the second important
   callout above for the `make_note(...)` ambiguity gotcha.
 - `align()` follows exactly the same `AlignBy`/`AlignOptions` rules as

@@ -45,7 +45,7 @@ for (const auto& [group, text] : fig.x_captions()) {
 }
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
 fig.show();
 ```
 
@@ -57,6 +57,8 @@ fig.show();
 group_a => Time (s)
 group_b => Distance (m)
 ```
+
+![Output of Example 1](img/x_captions-1-check.svg)
 
 ## Notes
 

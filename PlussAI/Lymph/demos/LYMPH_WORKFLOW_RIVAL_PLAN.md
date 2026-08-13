@@ -160,13 +160,13 @@ carry the rest.
 admission/schema layer that runs before Workflow stages:
 
 ```cpp
-lymph::Policy raw = lymph::policy({
+lymph::Policy raw{
     .drop_columns = {"loan_id", "audit_flag"},
     .require_columns = {"income", "debt", "region", "target"},
     .forbid_columns = {"future_status"},
     .reject_missing = {"target"},
     .allow_missing = {"income", "debt", "region"},
-});
+};
 ```
 
 Policy owns:
@@ -377,7 +377,7 @@ lymph::WorkflowOptions flow{};
 flow.workers = 4;
 
 lymph::Workflow wf = lymph::workflow::make(
-    lymph::policy({.reject_missing = {"target"}}),
+    lymph::Policy{.reject_missing = {"target"}},
     std::vector<lymph::WorkflowBranchSpec>{
         lymph::workflow::branch("num", {"x1", "x2"}, {
             {"fill", lymph::stage::simple_imputer()},
@@ -468,7 +468,7 @@ auto split = lymph::validate::cross()
     .folds(5)
     .workers(5);                          // fold workers
 
-auto ranked = lymph::spotcheck::models(candidates)
+auto ranked = lymph::spotcheck::suite(candidates)
     .workers(3)                            // candidate/strategy workers
     .run(design, data, split, assess);
 
@@ -538,11 +538,11 @@ namespace lymph = pluss::ai::lymph;
 
 DataFrame raw = DataFrame::load_csv("energy_demand.csv");
 
-lymph::Policy raw_gate = lymph::policy({
+lymph::Policy raw_gate{
     .require_columns = {"timestamp", "region", "temperature", "humidity", "demand"},
     .reject_missing = {"timestamp", "demand"},
     .allow_missing = {"temperature", "humidity", "region"},
-});
+};
 
 lymph::Payload data = lymph::payload::make(raw)
     .features({"temperature", "humidity", "region"})
@@ -585,7 +585,7 @@ auto split = lymph::validate::time()
     .gap(lymph::days(1))
     .horizon(lymph::days(7));
 
-auto ranked = lymph::spotcheck::models(candidates)
+auto ranked = lymph::spotcheck::suite(candidates)
     .run(design, data, split, {
         .metrics = {lymph::Metric::MAE, lymph::Metric::RMSE, lymph::Metric::R2},
         .rank_by = lymph::Metric::RMSE,
@@ -632,7 +632,7 @@ auto folds = lymph::validate::stratified().folds(5).workers(4);
 
 auto cv = folds.run(design.with(lymph::models::logistic_regression()), data, train, assess);
 
-auto ranked = lymph::spotcheck::models(candidates)
+auto ranked = lymph::spotcheck::suite(candidates)
     .strategy("plain", train)
     .run(design, data, folds.options(), assess, lymph::MetricKind::RocAuc);
 

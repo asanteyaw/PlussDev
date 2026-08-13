@@ -394,10 +394,10 @@ op.schedule = ai::ProcedureSchedule::Deterministic;
 op.cache = ai::ProcedureCache::ReadyArtifacts;
 
 ai::Procedure proc = ai::procedure::make({
-    ai::procedure::step("gate", lymph::policy({
+    ai::procedure::step("gate", lymph::Policy{
         .require_columns = {"timestamp", "region", "risk_score"},
         .reject_missing = {"timestamp"},
-    })),
+    }),
     ai::procedure::step("risk", risk),
     ai::procedure::step("forecast", forecaster),
     ai::procedure::step("store", ai::procedure::sink("risk_forecast.out")),
@@ -458,7 +458,29 @@ must not absorb Lymph's experimentation families into its root API.
 
 ## Implementation Phases
 
+Recommended count: **9 phases**.
+
+```text
+Phases 1-4
+  Bring Procedure into existence and prove cross-family execution:
+  graph/value scaffold, local executor, Lymph adapter, Ice/NodeK/NodeB adapters.
+
+Phases 5-8
+  Turn the core into a deployment-grade system:
+  parallel runtime, persistence, safety/observability, production hardening.
+
+Phase 9
+  Optional extraction only if the graph/runtime substrate is useful outside
+  PlussAI. This phase should not block Procedure being usable inside PlussAI.
+```
+
+The first practically useful Procedure should exist after Phase 4. The design is
+not complete until Phase 8. Phase 9 is a cleanup/extraction decision, not a
+required feature phase.
+
 ### Phase 1: Design Scaffold
+
+Status: started/implemented.
 
 - Add `PlussAI/PROCEDURE_DESIGN.md`.
 - Create `PlussAI/Procedure/` and public include skeletons.
@@ -467,14 +489,39 @@ must not absorb Lymph's experimentation families into its root API.
 - Implement construction validation: duplicate names, missing endpoints, cycles,
   empty graph, invalid contracts.
 
+Implemented so far:
+
+- Added public `pluss/ai/procedure.h`.
+- Added `ProcedureOptions`, `RunOptions`, `StepOptions`, `StepCapability`,
+  `Artifact`, `Step`, `Link`, `Procedure`, and `ProcedureResult`.
+- Added `procedure::make(...)`, `procedure::step(...)`, `procedure::link(...)`,
+  `procedure::input(...)`, `procedure::sink(...)`, and placeholder
+  `procedure::load(...)`.
+- Added `Procedure::check()` plus non-throwing `Procedure::check_message()` for
+  fast graph audits and tests.
+- Wired `<pluss/ai.h>` to include Procedure.
+
 ### Phase 2: Local Sequential Executor
+
+Status: started/implemented for local callable map steps.
 
 - Implement deterministic topological execution.
 - Add artifact table and typed lookup.
 - Add `Procedure::run(...)`, `Procedure::check()`, and `ProcedureResult::trace()`.
 - Support raw `Series` and `DataFrame` map steps first.
 
+Implemented so far:
+
+- Added deterministic topological local execution.
+- Added named artifact table, typed `ProcedureResult::get<T>(name)`, and run
+  trace records.
+- Added callable `procedure::step(name, input, output, fn)` for vectorized
+  `Series` and `DataFrame` map steps.
+- Added sink pass-through behavior for deployable graph terminals.
+
 ### Phase 3: Lymph Adapter
+
+Status: started/implemented for the first public Lymph bridge.
 
 - Adapt `lymph::Policy`, `lymph::Payload`, `lymph::Workflow`, and trained
   `lymph::Model`.
@@ -482,7 +529,25 @@ must not absorb Lymph's experimentation families into its root API.
 - Reuse `Workflow::save/load` and NodeJ bundle writers.
 - Add tests for inference-only and learn-then-infer procedures.
 
+Implemented so far:
+
+- Added `procedure::step(name, input, output, lymph::Policy)` for raw admission
+  over `DataFrame` and `Payload`. Payload time roles are preserved when the
+  frame is replaced.
+- Added `procedure::step(name, input, output, lymph::Model, ...)` with
+  mode-based Learn/Infer/Assess behavior over `LabeledBatch`, `FeatureBatch`,
+  `Payload`, and `DataFrame` where the underlying Lymph object supports it.
+- Added `procedure::step(name, input, output, lymph::Workflow, ...)` with
+  mode-based Learn/Infer/Assess behavior. This keeps Procedure as coordinator;
+  feature composition and ML-local persistence remain owned by Lymph Workflow.
+- Added Catch2 coverage in `procedure_phase3_test.cpp` for policy admission,
+  payload time-role preservation, model learn/infer/assess, workflow
+  learn/infer, and sink pass-through.
+
 ### Phase 4: Ice, NodeK, And NodeB Adapters
+
+Status: started/implemented for Ice-as-NodeK bridge, direct Series-forward
+NodeK modules, and NodeB workflows.
 
 - Adapt `ice::Model`/`ice::Outline` for Series/DataFrame inference and optional
   learning jobs.
@@ -495,12 +560,49 @@ must not absorb Lymph's experimentation families into its root API.
 - For Ice custom subclasses, require explicit restoration policy before
   Procedure save is allowed.
 
+Implemented so far:
+
+- Added `procedure::step(name, input, output, ice::Model&, ...)` as a
+  non-owning adapter. Learn mode mutates the caller-owned Ice model and returns
+  a boolean completion artifact; Infer and Assess return `Series` and
+  `ice::AssessReport` respectively.
+- Preserved Ice's trained-state safety rule: Procedure inference goes through
+  `ice::Model::infer`, so untrained Ice models are rejected by Ice instead of
+  being run through raw `forward()`.
+- Added a direct raw NodeK escape hatch for modules that expose
+  `forward(Series) -> Series`. This remains a vectorized map/infer step, is not
+  a training API, and does not introduce a new Procedure subfamily.
+- Tightened generic callable detection so NodeK modules with templated call
+  operators are not misclassified as arbitrary DataFrame callables.
+- Added `procedure::step(name, input, output, nodeb::Workflow, ...)` with
+  mode-based Learn/Infer/Assess over text vectors, single strings, `Note`, and
+  `Doc` vectors where the underlying NodeB workflow supports them.
+- Added Catch2 coverage in `procedure_phase4_test.cpp` for Ice learn/infer/
+  assess, raw NodeK module forwarding, NodeB single-doc and doc-vector
+  inference, NodeB assessment, NodeB learned workflow output, sink pass-through,
+  and adapter metadata.
+
 ### Phase 5: Parallel Local Runtime
 
 - Add ready-step parallel execution with deterministic output ordering.
 - Add cache policies for ready artifacts and frozen component outputs.
 - Ensure parallel Procedure execution does not fight Lymph/NodeJ/Ice internal
   worker settings.
+
+Implemented so far:
+
+- Added a deterministic wave planner for local Procedure execution. Steps with
+  satisfied dependencies are grouped into execution waves, and each wave is
+  committed in graph order so traces and artifacts remain reproducible.
+- Added bounded ready-step parallelism for `ProcedureOptions::workers > 1`.
+  Independent steps are launched in worker-capped chunks; `workers == 1`
+  preserves the original serial runtime.
+- Kept Procedure parallelism at the orchestration layer only. Numerical work
+  remains inside Series/DataFrame, Lymph, NodeJ, Ice, NodeB, or user-provided
+  vectorized components.
+- Added Catch2 coverage in `procedure_phase5_test.cpp` for invalid worker
+  counts, independent branch concurrency, worker cap enforcement, deterministic
+  trace/artifact ordering, dependency joins, and serial fallback behavior.
 
 ### Phase 6: Persistence And Registry Hooks
 

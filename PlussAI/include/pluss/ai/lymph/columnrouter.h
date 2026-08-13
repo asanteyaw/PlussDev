@@ -22,13 +22,13 @@
 
 namespace pluss::ai::lymph {
 
-class ColumnRouter;
-
 // Forward-declared here (ColumnRouter is still incomplete at this point,
 // which is fine for a function declaration -- only a definition or a call
 // needs the complete type) so ColumnRouter's own friend declarations below
 // can name them.
 namespace columnrouter {
+
+class ColumnRouter;
 
 [[nodiscard]] ColumnRouter names(std::vector<std::string> names);
 [[nodiscard]] ColumnRouter where(std::function<bool(std::string_view feature_name, std::string_view dtype)> predicate);
@@ -36,6 +36,8 @@ namespace columnrouter {
 [[nodiscard]] ColumnRouter remaining_of(ColumnRouter other);
 
 } // namespace columnrouter
+
+using ColumnRouter = columnrouter::ColumnRouter;
 
 // A real object unifying route()/route_where()/route_remaining() + a
 // remainder policy into one reusable, declarative column selection, closing
@@ -49,8 +51,8 @@ namespace columnrouter {
 // is visible to a where(...) router the same way the two-argument
 // route_where(frame, ordered_names, predicate) overload in common.h already
 // fixed -- this class has no independent Note-blind code path.
-class ColumnRouter final {
-public:
+class columnrouter::ColumnRouter final {
+ public:
   ColumnRouter& with_remainder(RouteRemainderPolicy policy) noexcept {
     remainder = policy;
     return *this;
@@ -115,10 +117,10 @@ private:
   std::function<bool(std::string_view, std::string_view)> predicate_{};
   std::shared_ptr<ColumnRouter> remaining_of_{};
 
-  friend ColumnRouter columnrouter::names(std::vector<std::string> names);
-  friend ColumnRouter columnrouter::where(std::function<bool(std::string_view, std::string_view)> predicate);
-  friend ColumnRouter columnrouter::remaining_of(std::vector<std::string> names);
-  friend ColumnRouter columnrouter::remaining_of(ColumnRouter other);
+  friend ColumnRouter names(std::vector<std::string> names);
+  friend ColumnRouter where(std::function<bool(std::string_view, std::string_view)> predicate);
+  friend ColumnRouter remaining_of(std::vector<std::string> names);
+  friend ColumnRouter remaining_of(ColumnRouter other);
 };
 
 namespace columnrouter {

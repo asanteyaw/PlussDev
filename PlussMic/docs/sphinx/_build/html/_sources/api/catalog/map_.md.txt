@@ -28,10 +28,8 @@ Example 1. Use the overload whose parameter combination matches the data you alr
 
 ```cpp
 using namespace pluss::kindle::literals;
-
 auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 

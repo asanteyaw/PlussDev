@@ -39,6 +39,161 @@ using FeatureRemainderPolicy = ::pluss::ai::nodej::prep::FeatureRemainderPolicy;
 using FunctionTransformer = ::pluss::ai::nodej::prep::FunctionTransformer;
 using FeatureTransformer = ::pluss::ai::nodej::prep::FeatureTransformer;
 
+struct HoldoutSplitOptions {
+  double test_size = 0.2;
+  Series stratify = Series::undefined();
+  std::string stratify_feature{};
+  std::uint64_t random_state = 0;
+  bool deterministic = true;
+  bool shuffle = true;
+};
+
+struct TimeSeriesSplitOptions {
+  std::int64_t folds = 5;
+  std::int64_t gap = 0;
+  std::int64_t test_size = 0;
+  std::int64_t max_train_size = 0;
+  std::uint64_t random_state = 0;
+  bool deterministic = true;
+};
+
+struct HoldoutSplit {
+  pluss::table::DataFrame train_set{};
+  pluss::table::DataFrame test_set{};
+  LabeledBatch train_batch{};
+  LabeledBatch test_batch{};
+  IndexSplit indices{};
+
+  [[nodiscard]] bool has_frame() const noexcept { return train_set.defined() || test_set.defined(); }
+  [[nodiscard]] bool has_batch() const noexcept {
+    return train_batch.features.x.defined() || test_batch.features.x.defined();
+  }
+};
+
+struct TimeSeriesSplit {
+  pluss::table::DataFrame train_set{};
+  pluss::table::DataFrame test_set{};
+  LabeledBatch train_batch{};
+  LabeledBatch test_batch{};
+  IndexSplit indices{};
+
+  [[nodiscard]] bool has_frame() const noexcept { return train_set.defined() || test_set.defined(); }
+  [[nodiscard]] bool has_batch() const noexcept {
+    return train_batch.features.x.defined() || test_batch.features.x.defined();
+  }
+};
+
+[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread) {
+  if (thread.kind() == pluss::table::ThreadKind::Series) return thread.as_series();
+  return thread.cast({.series_dtype = ScalarType::Float64}).series().as_series();
+}
+
+[[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options) {
+  SplitOptions split{};
+  split.plan = CVPlanKind::Holdout;
+  split.holdout_fraction = options.test_size;
+  split.shuffle = options.shuffle;
+  split.random.seed = options.random_state;
+  split.random.deterministic = options.deterministic;
+  return split;
+}
+
+[[nodiscard]] inline SplitOptions make_time_series_split_options(const TimeSeriesSplitOptions& options) {
+  SplitOptions split{};
+  split.plan = CVPlanKind::TSCrossVal;
+  split.folds = options.folds;
+  split.time_gap = options.gap;
+  split.time_test_size = options.test_size;
+  split.time_max_train_size = options.max_train_size;
+  split.shuffle = false;
+  split.random.seed = options.random_state;
+  split.random.deterministic = options.deterministic;
+  return split;
+}
+
+[[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame,
+                                                     const HoldoutSplitOptions& options) {
+  const SplitOptions split = make_holdout_split_options(options);
+  Series stratify = options.stratify;
+  if (!stratify.defined() && !options.stratify_feature.empty()) {
+    stratify = as_stratify_series(frame.features(options.stratify_feature));
+  }
+  if (stratify.defined()) {
+    return resolve(pluss::ai::nodej::strat_holdout_split(stratify, split), "strat_holdout_split");
+  }
+  return resolve(pluss::ai::nodej::holdout_split(frame.ncases(), split), "holdout_split");
+}
+
+[[nodiscard]] inline HoldoutSplit holdout_split(const pluss::table::DataFrame& frame,
+                                                HoldoutSplitOptions options = {}) {
+  const IndexSplit indices = make_holdout_indices(frame, options);
+  const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
+                                                   .reshape({indices.train_indices.numel()})
+                                                   .to_vec<std::int64_t>();
+  const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
+                                                 .reshape({indices.test_indices.numel()})
+                                                 .to_vec<std::int64_t>();
+  return HoldoutSplit{
+      .train_set = frame.take(train_idx),
+      .test_set = frame.take(test_idx),
+      .indices = indices,
+  };
+}
+
+[[nodiscard]] inline HoldoutSplit holdout_split(const LabeledBatch& batch,
+                                                HoldoutSplitOptions options = {}) {
+  const SplitOptions split = make_holdout_split_options(options);
+  const bool use_stratify = options.stratify.defined();
+  const IndexSplit indices = use_stratify
+                                 ? resolve(pluss::ai::nodej::strat_holdout_split(options.stratify, split), "strat_holdout_split")
+                                 : resolve(pluss::ai::nodej::holdout_split(batch.features.sample_count(), split), "holdout_split");
+  return HoldoutSplit{
+      .train_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.train_indices), "slice_labeled_batch(train)"),
+      .test_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.test_indices), "slice_labeled_batch(test)"),
+      .indices = indices,
+  };
+}
+
+[[nodiscard]] inline std::vector<TimeSeriesSplit> timeseries_split(const pluss::table::DataFrame& frame,
+                                                                   TimeSeriesSplitOptions options = {}) {
+  const SplitOptions split = make_time_series_split_options(options);
+  const SplitPlan plan = resolve(pluss::ai::nodej::ts_crossval_plan(frame.ncases(), split), "ts_crossval_plan");
+  std::vector<TimeSeriesSplit> out{};
+  out.reserve(plan.folds.size());
+  for (const IndexSplit& indices : plan.folds) {
+    const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
+                                                    .reshape({indices.train_indices.numel()})
+                                                    .to_vec<std::int64_t>();
+    const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
+                                                   .reshape({indices.test_indices.numel()})
+                                                   .to_vec<std::int64_t>();
+    out.push_back(TimeSeriesSplit{
+        .train_set = frame.take(train_idx),
+        .test_set = frame.take(test_idx),
+        .indices = indices,
+    });
+  }
+  return out;
+}
+
+[[nodiscard]] inline std::vector<TimeSeriesSplit> timeseries_split(const LabeledBatch& batch,
+                                                                   TimeSeriesSplitOptions options = {}) {
+  const SplitOptions split = make_time_series_split_options(options);
+  const SplitPlan plan = resolve(pluss::ai::nodej::ts_crossval_plan(batch.features.sample_count(), split), "ts_crossval_plan");
+  std::vector<TimeSeriesSplit> out{};
+  out.reserve(plan.folds.size());
+  for (const IndexSplit& indices : plan.folds) {
+    out.push_back(TimeSeriesSplit{
+        .train_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.train_indices),
+                               "slice_labeled_batch(train)"),
+        .test_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.test_indices),
+                              "slice_labeled_batch(test)"),
+        .indices = indices,
+    });
+  }
+  return out;
+}
+
 template <class WrapperT>
 inline void prep_refresh_encoder_attrs_(WrapperT&) {}
 
@@ -645,5 +800,51 @@ private:
 }
 
 } // namespace prep
+
+using StandardScalerOptions = prep::StandardScalerOptions;
+using MinMaxScalerOptions = prep::MinMaxScalerOptions;
+using RobustScalerOptions = prep::RobustScalerOptions;
+using SimpleImputerStrategy = prep::SimpleImputerStrategy;
+using SimpleImputerOptions = prep::SimpleImputerOptions;
+using CategoryOverflowPolicy = prep::CategoryOverflowPolicy;
+using OneHotEncoderOptions = prep::OneHotEncoderOptions;
+using FrequencyEncoderOptions = prep::FrequencyEncoderOptions;
+using OrdinalEncoderOptions = prep::OrdinalEncoderOptions;
+using LabelEncoderOptions = prep::LabelEncoderOptions;
+using NeighborImputerWeighting = prep::NeighborImputerWeighting;
+using NeighborImputerOptions = prep::NeighborImputerOptions;
+using IterativeImputerOptions = prep::IterativeImputerOptions;
+using VectorNorm = prep::VectorNorm;
+using VectorNormalizerOptions = prep::VectorNormalizerOptions;
+using MaxAbsScalerOptions = prep::MaxAbsScalerOptions;
+using QuantileMapOutput = prep::QuantileMapOutput;
+using QuantileMapOptions = prep::QuantileMapOptions;
+using PowerMapMode = prep::PowerMapMode;
+using PowerMapOptions = prep::PowerMapOptions;
+using ThresholdBinarizerOptions = prep::ThresholdBinarizerOptions;
+using PolynomialLiftOptions = prep::PolynomialLiftOptions;
+using OutlierIsolatorOptions = prep::OutlierIsolatorOptions;
+using FunctionTransformerOptions = prep::FunctionTransformerOptions;
+using FeatureRemainderPolicy = prep::FeatureRemainderPolicy;
+using FunctionTransformer = prep::FunctionTransformer;
+using FeatureTransformer = prep::FeatureTransformer;
+using HoldoutSplitOptions = prep::HoldoutSplitOptions;
+using TimeSeriesSplitOptions = prep::TimeSeriesSplitOptions;
+using HoldoutSplit = prep::HoldoutSplit;
+using TimeSeriesSplit = prep::TimeSeriesSplit;
+using SimpleImputerSummary = prep::SimpleImputerSummary;
+using StandardScalerSummary = prep::StandardScalerSummary;
+using TransformerSummary = prep::TransformerSummary;
+using OutlierIsolatorSummary = prep::OutlierIsolatorSummary;
+using CategoryIndexerOptions = prep::CategoryIndexerOptions;
+using CategoryIndexerSummary = prep::CategoryIndexerSummary;
+using OneHotEncoder = prep::OneHotEncoder;
+using FrequencyEncoder = prep::FrequencyEncoder;
+using OrdinalEncoder = prep::OrdinalEncoder;
+using LabelEncoder = prep::LabelEncoder;
+using SimpleImputer = prep::SimpleImputer;
+using StandardScaler = prep::StandardScaler;
+using OutlierIsolator = prep::OutlierIsolator;
+using CategoryIndexer = prep::CategoryIndexer;
 
 } // namespace pluss::ai::lymph

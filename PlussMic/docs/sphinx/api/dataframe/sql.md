@@ -122,9 +122,9 @@ runs, matching only case `1`. `SELECT *` keeps every column this time, unlike Ex
   when a full SQL statement is more machinery than the task needs.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sort_values.html">
+  <a class="prev-link" href="sort.html">
     <span class="label">Previous</span>
-    <span class="title">sort_values</span>
+    <span class="title">sort</span>
   </a>
   <a class="next-link" href="stack.html">
     <span class="label">Next</span>

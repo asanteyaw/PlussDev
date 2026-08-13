@@ -49,7 +49,7 @@ using namespace pluss::pl;
 
 auto fig = studio("to_pdf_check");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 std::string pdf = fig.to_pdf();
 std::cout << (pdf.rfind("%PDF-", 0) == 0) << "\n";

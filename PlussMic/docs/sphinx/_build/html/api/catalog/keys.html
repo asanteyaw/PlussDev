@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,49 +37,60 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3fa4bfc478f -->
+<!-- pluss-signature-hash: 3d8e652e477d -->
 <section id="catalog-keys">
 <h1>Catalog::keys<a class="headerlink" href="#catalog-keys" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">keys</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&amp;</span>
-<span class="n">Catalog</span><span class="o">::</span><span class="n">keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
-<span class="n">Catalog</span><span class="o">::</span><span class="n">keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">field_names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
-<span class="n">Catalog</span><span class="o">::</span><span class="n">keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">field_names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">keys</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Stream</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Catalog</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">field_names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Catalog</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">field_names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Two genuinely different operations share this one overloaded name:</p>
+<p>Three genuinely different operations share this one overloaded name:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">keys()</span></code></strong> (no arguments) returns the catalog’s stream names as a plain
-<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code> — a read-only view, in the catalog’s own key order.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">keys(key)</span></code></strong> / <strong><code class="docutils literal notranslate"><span class="pre">keys(field_names)</span></code></strong> projects the catalog down to the named
-streams and returns that smaller <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> directly.</p></li>
+<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code> — a read-only view, in the catalog’s own
+key order.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">keys(key)</span></code></strong> (a single name) extracts <strong>one stream directly</strong> and
+returns it as a <code class="docutils literal notranslate"><span class="pre">Stream</span></code> — not a one-key catalog.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">keys(field_names)</span></code></strong> (a span or initializer list of several names)
+projects the catalog down to those streams and returns that smaller
+<code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p></li>
 </ul>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>keys(names) is now direct projection
-<code class="docutils literal notranslate"><span class="pre">ct.keys({&quot;score&quot;,</span> <span class="pre">&quot;city&quot;})</span></code> returns a smaller catalog containing exactly those streams, in
-the requested order. Chained operations then run on that projected catalog.</p>
+<p>The single-key overload returns a Stream, not a one-key Catalog
+<code class="docutils literal notranslate"><span class="pre">ct.keys(&quot;score&quot;)</span></code> returns <code class="docutils literal notranslate"><span class="pre">Stream</span></code>, so chaining continues on the <code class="docutils literal notranslate"><span class="pre">Stream</span></code>
+surface (<code class="docutils literal notranslate"><span class="pre">.fillnull()</span></code>, <code class="docutils literal notranslate"><span class="pre">.nt()</span></code>, <code class="docutils literal notranslate"><span class="pre">.tl()</span></code>, …), not the <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> surface.
+This is easy to get backwards from the multi-name overloads, which <em>do</em>
+return a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> — pass an <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>/<code class="docutils literal notranslate"><span class="pre">span</span></code> (even of one name,
+<code class="docutils literal notranslate"><span class="pre">ct.keys({&quot;score&quot;})</span></code>) if you specifically want a one-key <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> back
+instead of a bare <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>key</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
-A single stream name to select.</p>
+A single stream name to extract as a <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p>
 <p><strong>field_names</strong> (<code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">std::string_view&gt;</span></code> or
 <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>)
-Several stream names to select at once.</p>
+Several stream names to project down to, returned as a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code> (no-argument overload)
 A read-only reference to the catalog’s stream names, in key order.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code> (name-argument overloads)
-A smaller catalog containing exactly the requested streams, in the requested order.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Stream</span></code> (single-key overload)
+The named stream, extracted directly.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code> (multi-name overloads)
+A smaller catalog containing exactly the requested streams, in the
+requested order.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -102,9 +113,11 @@ A smaller catalog containing exactly the requested streams, in the requested ord
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id metric city 
 </pre></div>
 </div>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">keys(key)</span></code> projects to one stream, and the result behaves like any other
-catalog.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">keys(key)</span></code> extracts a single stream directly — see the important
+callout above.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;score&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}),</span>
 <span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})),</span>
 <span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
@@ -118,17 +131,24 @@ catalog.</p>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
-kindle::Catalog  keys=1
-keys: [score]
+kindle::Stream  kind=Series  dtype=Series[float64]  records=3
+label=no  mask=no  meta=0
 ------------------------------------------------------------------------------------------------------------------------
-key                      | kind         | dtype            | cs      | preview                                          
+label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-score                    | Series       | Series[float64]  | 3       | [1, 0, 3]                                        
+0            | 1                                                                                                        
+1            | 0                                                                                                        
+2            | 3                                                                                                        
 ========================================================================================================================
 </pre></div>
 </div>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">keys({...})</span></code> with an <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code> selects several streams at once.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<p><code class="docutils literal notranslate"><span class="pre">.fillnull(0.0)</span></code> is a <code class="docutils literal notranslate"><span class="pre">Stream</span></code> method here — <code class="docutils literal notranslate"><span class="pre">keys(&quot;score&quot;)</span></code> handed back a
+bare <code class="docutils literal notranslate"><span class="pre">Stream</span></code>, not a catalog to keep projecting.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">keys({...})</span></code> with an <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code> selects several streams
+at once, returning a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;score&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}),</span>
 <span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})),</span>
 <span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
@@ -149,8 +169,36 @@ keys: [city, score]
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
 city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
-score                    | Series       | Series[float64]  | 3       | [1, NULL, 3]                                     
+score                    | Series       | Series[float64]  | 3       | [1, NA, 3]                                       
 ========================================================================================================================
+</pre></div>
+</div>
+<p>Example 4 (edge case). Selecting an unknown key throws — with a different
+message on the single-key overload than on the multi-name overloads.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">})),</span>
+<span class="p">});</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">keys</span><span class="p">(</span><span class="s">&quot;nope&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;single: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">keys</span><span class="p">({</span><span class="s">&quot;nope&quot;</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;multi: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>single: Catalog: key &#39;nope&#39; not found
+multi: Catalog::keys: unknown key &#39;nope&#39;
 </pre></div>
 </div>
 </section>
@@ -158,9 +206,17 @@ score                    | Series       | Series[float64]  | 3       | [1, NULL,
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The no-argument overload returns a reference into the catalog’s own storage — no copy.</p></li>
-<li><p>The name-argument overloads return a projected <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>, not an accessor shell.</p></li>
-<li><p>Selecting an unknown key name throws — see <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> to check first.</p></li>
+<li><p>See the important callout above — the single-key overload’s return type is
+the most common source of confusion on this method.</p></li>
+<li><p>The no-argument overload returns a reference into the catalog’s own
+storage — no copy.</p></li>
+<li><p>The multi-name overloads return a projected <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>; pass a
+single-element list (<code class="docutils literal notranslate"><span class="pre">ct.keys({&quot;score&quot;})</span></code>) if you want a one-key <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
+instead of the single-key overload’s bare <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p></li>
+<li><p>Selecting an unknown key name throws, with a different message on the
+single-key overload (<code class="docutils literal notranslate"><span class="pre">&quot;Catalog:</span> <span class="pre">key</span> <span class="pre">'nope'</span> <span class="pre">not</span> <span class="pre">found&quot;</span></code>) than the multi-name
+overloads (<code class="docutils literal notranslate"><span class="pre">&quot;Catalog::keys:</span> <span class="pre">unknown</span> <span class="pre">key</span> <span class="pre">'nope'&quot;</span></code>) — see
+<a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> to check first.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -168,10 +224,10 @@ score                    | Series       | Series[float64]  | 3       | [1, NULL,
 <ul class="simple">
 <li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::has</span></code></span></a>: check whether a key exists before selecting it.</p></li>
 <li><p><a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::drop</span></code></span></a>: remove names instead of projecting them.</p></li>
-<li><p><a class="reference internal" href="at.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::at</span></code></span></a> / <a class="reference internal" href="get.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::get</span></code></span></a>: fetch a single stream directly as a
-<code class="docutils literal notranslate"><span class="pre">Stream</span></code> instead of keeping it inside a catalog.</p></li>
-<li><p><a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::select</span></code></span></a>: static row-wise conditional choose between whole
-catalogs.</p></li>
+<li><p><a class="reference internal" href="at.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::at</span></code></span></a> / <a class="reference internal" href="get.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::get</span></code></span></a>: other single-stream
+extraction paths.</p></li>
+<li><p><a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::select</span></code></span></a>: static row-wise conditional choose between
+whole catalogs.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="keyaxis.html">

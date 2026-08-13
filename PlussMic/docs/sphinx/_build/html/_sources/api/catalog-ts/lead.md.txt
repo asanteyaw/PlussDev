@@ -1,0 +1,93 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9908f7643ce0 -->
+
+# CatalogTimeSeriesAccessor::lead
+
+[Back to CatalogTimeSeriesAccessor API Reference](../../catalog_ts_accessor_api_reference)
+
+## Signature
+
+```cpp
+Catalog CatalogTimeSeriesAccessor::lead(std::int64_t periods = 1) const
+```
+
+## What It Does
+
+Shifts every bound key `periods` positions backward: `out[i] = x[i + periods]`
+where that index is in bounds, `NULL` otherwise. A negative `periods` behaves
+as [`lag(-periods)`](lag.md) — `lead(-periods)` and `lag(periods)` are the same
+operation.
+
+```{important} CatalogTimeSeriesAccessor requires every bound key to be numeric Series-kind
+Same precondition as every method on this accessor — see
+[`CatalogTimeSeriesAccessor::diff`](diff.md)'s own important callout for the
+full explanation and how to project down to numeric keys first.
+```
+
+## Parameters
+
+**periods** (`std::int64_t`, default `1`)
+    The number of positions to shift backward. Negative values behave as
+    [`lag(-periods)`](lag.md) instead.
+
+## Returns
+
+`Catalog`
+    A new catalog with every bound key led by `periods` positions.
+
+## Examples
+
+Example 1. Lead a numeric key by one position.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 15.0, 30.0})),
+});
+auto out = ct.ts().lead(1);
+std::cout << out;
+```
+
+### Output
+
+```text
+========================================================================================================================
+kindle::Catalog  keys=1
+keys: [metric]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+metric                   | Series       | Series[float64]  | 4       | [20, 15, 30, nan]                                
+========================================================================================================================
+```
+
+Each position now shows the next position's value; position `3` has no
+successor, so it's `nan` — the `nan` lands at the opposite end from
+[`lag()`](lag.md).
+
+## Notes
+
+- `lead(periods)` with a negative `periods` is exactly `lag(-periods)` — the
+  two methods share one implementation, differing only in shift direction.
+- A pre-existing missing entry in a bound key is honored, not just the `NULL`s
+  the shift itself introduces.
+- See the important callout above.
+
+## See Also
+
+- [`CatalogTimeSeriesAccessor::lag`](lag.md): the mirror-image shift.
+- [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
+- [`TimeSeriesAccessor::lead`](../thread-ts/lead.md): the underlying
+  single-thread engine this method delegates to.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lag.html">
+    <span class="label">Previous</span>
+    <span class="title">lag</span>
+  </a>
+  <a class="next-link" href="log_returns.html">
+    <span class="label">Next</span>
+    <span class="title">log_returns</span>
+  </a>
+</div>

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,43 +34,96 @@
 
           <div class="body" role="main">
             
-  <section id="dataframesortbuilder-tail">
+  <!-- pluss-hand-authored -->
+<section id="dataframesortbuilder-tail">
 <h1>DataFrameSortBuilder::tail<a class="headerlink" href="#dataframesortbuilder-tail" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_sort_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameSortBuilder API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">tail</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">tail</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Executes the plan and returns only the bottom-ranked <code class="docutils literal notranslate"><span class="pre">n</span></code> rows.</p>
+<p>Executes the plan and returns only the bottom-ranked <code class="docutils literal notranslate"><span class="pre">n</span></code> rows — the mirror
+image of <a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head(n)</span></code></span></a>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>A terminal method — unknown-feature validation fires here
+Same as <a class="reference internal" href="yield.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">yield()</span></code></span></a>/<a class="reference internal" href="order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">order()</span></code></span></a>/<a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a> —
+calling <code class="docutils literal notranslate"><span class="pre">tail()</span></code> is what actually executes the plan. See <a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by()</span></code></span></a>’s
+own edge-case example.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>n</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+How many bottom-ranked rows to return. Must be non-negative.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 The last <code class="docutils literal notranslate"><span class="pre">n</span></code> rows under the planned ordering.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">bottom3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">desc</span><span class="p">().</span><span class="n">tail</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. The two lowest-ranked rows under a <code class="docutils literal notranslate"><span class="pre">&quot;sales&quot;</span></code>-descending plan —
+i.e. the two smallest <code class="docutils literal notranslate"><span class="pre">sales</span></code> values.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">bot2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">desc</span><span class="p">().</span><span class="n">tail</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">bot2</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   sales
+-------------------
+1    | Accra  100  
+2    | Accra  90   
+-------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tail(2)</span></code> here uses the <em>descending</em> plan, so it returns the last two rows
+under that ordering — the two smallest <code class="docutils literal notranslate"><span class="pre">sales</span></code> values, not the two largest.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p>See the important callout above.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> must be non-negative.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tail(n)</span></code> uses the planned ordering; it is not equivalent to unsorted frame tail.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tail(n)</span></code> reflects the planned ordering; it is not equivalent to the
+unsorted frame’s own trailing rows.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::head</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="yield.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::yield</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::head</span></code></span></a>: the top-ranked counterpart.</p></li>
+<li><p><a class="reference internal" href="yield.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::yield</span></code></span></a>: the full sorted frame, with no
+row limit.</p></li>
+<li><p><a class="reference internal" href="../dataframe/sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort</span></code></span></a>: the entry point this builder is
+reached from.</p></li>
 </ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="order.html">
+    <span class="label">Previous</span>
+    <span class="title">order</span>
+  </a>
+  <a class="next-link" href="then.html">
+    <span class="label">Next</span>
+    <span class="title">then</span>
+  </a>
+</div>
 </section>
 </section>
 

@@ -19,11 +19,11 @@ int main() {
       {"y", Thread(y)},
   });
 
-  lymph::Policy gate = lymph::policy({
+  lymph::Policy gate{
       .drop_columns = {"record_id"},
       .require_columns = {"x", "sqrt_x", "y"},
       .reject_missing = {"y"},
-  });
+  };
   lymph::Payload data = lymph::payload::make(raw).features({"x", "sqrt_x"}).label("y");
 
   lymph::Workflow wf = lymph::workflow::make(

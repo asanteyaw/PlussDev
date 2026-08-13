@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -141,9 +141,10 @@ label        | value
 after reset has(): 0
 </pre></div>
 </div>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">range()</span></code> returns a fresh <code class="docutils literal notranslate"><span class="pre">Stream</span></code> holding the default positional labels
-(<code class="docutils literal notranslate"><span class="pre">0..n-1</span></code>) — the same values <code class="docutils literal notranslate"><span class="pre">values()</span></code> synthesizes when unlabeled, but as an independent
-value you can inspect or reuse, rather than a display fallback tied to <code class="docutils literal notranslate"><span class="pre">this</span></code> stream.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">range()</span></code> keeps the bound stream’s <em>values</em> unchanged and instead replaces its
+<em>label</em> with the default positional range (<code class="docutils literal notranslate"><span class="pre">0..n-1</span></code>) — the inverse framing of <code class="docutils literal notranslate"><span class="pre">values()</span></code>,
+which discards the values and extracts the label’s content instead. Note this is <strong>not</strong> a
+display fallback: <code class="docutils literal notranslate"><span class="pre">has()</span></code> on the result reports <code class="docutils literal notranslate"><span class="pre">true</span></code>, a real label was set.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">range</span><span class="p">();</span>
@@ -153,17 +154,21 @@ value you can inspect or reuse, rather than a display fallback tied to <code cla
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
-kindle::Stream  kind=Series  dtype=Series[int64]  records=3
-label=no  mask=no  meta=0
+kindle::Stream  kind=Series  dtype=Series[float64]  records=3
+label=yes  mask=no  meta=0
 ------------------------------------------------------------------------------------------------------------------------
 label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-0            | 0                                                                                                        
-1            | 1                                                                                                        
-2            | 2                                                                                                        
+0            | 10                                                                                                       
+1            | 20                                                                                                       
+2            | 30                                                                                                       
 ========================================================================================================================
 </pre></div>
 </div>
+<p>The <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code>/<code class="docutils literal notranslate"><span class="pre">2</span></code> here is the <strong>label</strong> column; the <code class="docutils literal notranslate"><span class="pre">value</span></code> column (<code class="docutils literal notranslate"><span class="pre">10</span></code>/<code class="docutils literal notranslate"><span class="pre">20</span></code>/<code class="docutils literal notranslate"><span class="pre">30</span></code>) is the
+original stream’s own data, untouched. See
+<a class="reference internal" href="../stream-lbl/range.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamLabelAccessor::range</span></code></span></a> for the full breakdown, including how
+<code class="docutils literal notranslate"><span class="pre">range()</span></code> overwrites an <em>existing custom</em> label too, not just an absent one.</p>
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">align(target_labels,</span> <span class="pre">options)</span></code> reorders/relabels by case label under
 <code class="docutils literal notranslate"><span class="pre">AlignBy::Caselbl</span></code>. An unmatched target label produces <code class="docutils literal notranslate"><span class="pre">NULL</span></code> unless <code class="docutils literal notranslate"><span class="pre">options.fill</span></code> is set
 — identical rules to <a class="reference internal" href="../thread/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::align</span></code></span></a>, applied through the label
@@ -259,9 +264,12 @@ c            | 30
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">lbl()</span></code> alone does no work — it only binds the stream; call one of its methods to
 actually inspect, set, reset, or align.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">values()</span></code>/<code class="docutils literal notranslate"><span class="pre">range()</span></code> never throw and never return “nothing” — they synthesize a
-positional range when no label is set. <code class="docutils literal notranslate"><span class="pre">has()</span></code> is the accurate existence check; don’t
-infer “has a label” from <code class="docutils literal notranslate"><span class="pre">values()</span></code> alone.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">values()</span></code> and <code class="docutils literal notranslate"><span class="pre">range()</span></code> are inverse extractions, not variations of the same thing:
+<code class="docutils literal notranslate"><span class="pre">values()</span></code> discards the stream’s values and returns the label’s own content instead
+(synthesizing a positional range if unlabeled); <code class="docutils literal notranslate"><span class="pre">range()</span></code> keeps the stream’s values
+unchanged and replaces the label with the default positional range, unconditionally —
+even overwriting an existing custom label. <code class="docutils literal notranslate"><span class="pre">has()</span></code> is the accurate existence check for
+the <em>original</em> stream; don’t infer it from either method’s result.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">set()</span></code>/<code class="docutils literal notranslate"><span class="pre">align()</span></code> both overload on <code class="docutils literal notranslate"><span class="pre">Stream</span></code> vs <code class="docutils literal notranslate"><span class="pre">Thread</span></code> — see the second important
 callout above for the <code class="docutils literal notranslate"><span class="pre">make_note(...)</span></code> ambiguity gotcha.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">align()</span></code> follows exactly the same <code class="docutils literal notranslate"><span class="pre">AlignBy</span></code>/<code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code> rules as

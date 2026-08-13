@@ -15,10 +15,10 @@ int main() {
   enc.max_categories = 64;
   enc.include_unknown_bucket = true;
 
-  lymph::Policy gate = lymph::policy({
+  lymph::Policy gate{
       .drop_columns = {"FIRST_NAME", "LAST_NAME", "Combo Name", "DATE_STARTED", "ORIG_START", "DATE_TERM"},
       .reject_missing = {" GROSS_PAY "},
-  });
+  };
   lymph::Payload data = lymph::payload::make(raw)
       .features({"DEPARTMENT", "JOB_TITLE", "ELECTED_OFFICIAL", "SEX", "ETHNICITY", "PAY_STATUS",
                  " ANNUAL_SALARY ", " REGULAR_PAY ", " OVERTIME_PAY ", " INCENTIVE_PAY "})

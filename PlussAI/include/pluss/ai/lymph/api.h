@@ -19,23 +19,23 @@
 //   feature_select.h - pluss::ai::lymph::feature (ranking/selection)
 //   detail/model_core.h - internal Model implementation, included through model.h
 //   workflow_dsl.h      - workflow::feature/stage branch DSL, FeatureTransformer builders
-//   policy.h            - Policy + lymph::policy(...) raw-frame admission/schema rules
+//   policy.h            - Policy + lymph::policy::Policy raw-frame admission/schema rules
 //   time.h              - TimeOptions + row-step duration helpers for temporal Workflow safety
 //   payload.h           - Payload + lymph::payload::make(...) typed data/metadata carrier
 //   workflow.h          - Workflow + lymph::workflow::make/load composition object
 //   factories.h         - internal detail::*_factory construction tags for model.h
-//   online.h            - OnlineLinearClassifier/Regressor + models::online_linear_*
+//   online.h            - OnlineLinearClassifier/Regressor + lymph::online::linear_*
 //   selection.h         - pluss::ai::lymph::selection (model/hyperparameter tuning)
-//   model.h             - public Model handle + lymph::models:: (consolidated factories)
+//   model.h             - public Model handle + lymph::model:: grouped factories
 //   reports.h           - pluss::ai::lymph::reports (model-backed report builders)
 //   builder.h           - Builder (Nexus-inspired named model coordinator) + lymph::builder::
 //   validate.h          - validate::cross/stratified/grouped/time_ordered validation plans
-//   spotcheck.h         - spotcheck::models(Builder) strategy x model comparison
+//   spotcheck.h         - spotcheck::suite(Builder) strategy x model comparison
 //   unsupervised.h      - cluster/embed result families over transform-style models
 //   shape.h             - distribution profile/plan family for feature shape transforms
 //   detect.h            - anomaly/outlier detection result family
 //   semi.h              - semi-supervised result family over classification models
-//   search.h            - Search/SearchResult (Model-aware hyperparameter search) + lymph::search::
+//   search.h            - Search/search::Result (Model-aware hyperparameter search) + lymph::search::
 //
 // workflow.h note: this file used to hold a lazy `class Workflow` facade
 // (Candidate/CompareResult's optional model-holding wrapper); that facade was

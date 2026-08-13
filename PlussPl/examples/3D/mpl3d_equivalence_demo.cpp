@@ -78,7 +78,7 @@ int main() {
   p4.place(1, 0).grid(pl::GridStyle::Major).caption("contour3D -> ridge3");
   p4.ridge3(gx, gy, gz, std::vector<double>{-5.0, -3.0, -1.0, 0.5, 2.0, 4.5, 7.0})
       .label("ax.contour3D")
-      .annotate_levels();
+      .annotate_levels(true);
 
   auto& p5 = studio.pane3("ax.bar3d");
   p5.place(1, 1).grid(pl::GridStyle::Major).caption("bar3d -> spire3");
@@ -116,7 +116,7 @@ int main() {
   }
   p6.isoshell(vx, vy, vz, pluss::make_series(field, {22, 22, 22}), std::vector<double>{0.26, 0.42, 0.58})
       .label("isoshell")
-      .transparent()
+      .transparent(true)
       .shade(pl::ShadeMode::Smooth);
 
   studio.save_svg((root / "outputs" / "svg" / "plusspl_mpl3d_equivalence.svg").string());

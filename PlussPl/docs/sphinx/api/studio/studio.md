@@ -28,7 +28,7 @@ every `Studio` it builds starts on `Theme::paper()` and is themed afterward via
 [`to_svg()`](to_svg.md)/[`show()`](show.md) on a pane-less `Studio` still succeeds, just
 producing an essentially blank canvas. A real chart needs at least one
 [`pane2()`](pane2.md)/[`pane3()`](pane3.md) call, followed by a `flash::` plotting function
-(e.g. `flash::lineplot(pane, x, y)`) drawing into that pane.
+(e.g. `pane.trend(x, y)`) drawing into that pane.
 ```
 
 ## Parameters
@@ -60,7 +60,7 @@ using namespace pluss::pl;
 
 auto fig = studio();
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
 fig.show();
 ```
 
@@ -76,7 +76,7 @@ using namespace pluss::pl;
 
 auto fig = studio("revenue");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
 fig.show();
 ```
 
@@ -95,7 +95,7 @@ using namespace pluss::pl;
 
 Studio fig("revenue", Theme::ocean());
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
 fig.show();
 ```
 
@@ -114,11 +114,11 @@ using namespace pluss::pl;
 
 auto via_factory = studio("revenue");
 auto& p1 = via_factory.pane2();
-flash::lineplot(p1, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
+p1.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
 
 Studio via_ctor("revenue");
 auto& p2 = via_ctor.pane2();
-flash::lineplot(p2, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
+p2.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
 
 via_factory.show();
 ```

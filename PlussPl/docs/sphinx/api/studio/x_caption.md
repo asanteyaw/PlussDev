@@ -61,10 +61,10 @@ using namespace pluss::pl;
 auto fig = studio("caption_none");
 fig.mosaic(2, 1);
 auto& top = fig.pane2("top");
-flash::lineplot(top, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+top.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 top.align_x("shared_x");
 auto& bottom = fig.pane2("bottom");
-flash::lineplot(bottom, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+bottom.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 bottom.align_x("shared_x");
 fig.show();
 ```
@@ -82,10 +82,10 @@ auto fig = studio("caption_x");
 fig.mosaic(2, 1);
 fig.x_caption("shared_x", "Elapsed time (s)");
 auto& top = fig.pane2("top");
-flash::lineplot(top, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+top.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 top.align_x("shared_x");
 auto& bottom = fig.pane2("bottom");
-flash::lineplot(bottom, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+bottom.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 bottom.align_x("shared_x");
 fig.show();
 
@@ -112,7 +112,7 @@ using namespace pluss::pl;
 auto fig = studio("caption_control");
 fig.x_caption("nonexistent_group", "Never Shown");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 fig.show();
 ```
 

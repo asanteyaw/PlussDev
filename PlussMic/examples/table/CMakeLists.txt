@@ -93,6 +93,9 @@ add_executable(plussmic_native_gap_api_demo
 add_executable(plussmic_hierarchical_cases_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/hierarchical_cases_demo.cpp
 )
+add_executable(plussmic_flash_dataset_bridge_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/flash_dataset_bridge_demo.cpp
+)
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_ab_reference_demo PRIVATE PlussMic)
@@ -124,6 +127,7 @@ target_link_libraries(plussmic_dataframe_tl_batched_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_csv_engine_bench PRIVATE PlussMic)
 target_link_libraries(plussmic_native_gap_api_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_hierarchical_cases_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_flash_dataset_bridge_demo PRIVATE PlussMic)
 
 target_compile_definitions(plussmic_dataframe_initial_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
@@ -211,5 +215,8 @@ target_compile_definitions(plussmic_csv_engine_bench PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_native_gap_api_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_flash_dataset_bridge_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )

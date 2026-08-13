@@ -23,7 +23,7 @@
 //     data_options, cv_options, ...) -> SelectionResult.
 //   - class SelectionResult -- .board() -> DataFrame; .top(k) ->
 //     vector<pair<string, Model>>; .best() -> Model. Same shape as
-//     search.h's SearchResult -- learn one, know both.
+//     search.h's search::Result -- learn one, know both.
 //   - namespace lymph::select { Comparison candidates(vector<Candidate>); }
 //
 // Depends on: model.h (Model), the existing selection.h compare_batch_

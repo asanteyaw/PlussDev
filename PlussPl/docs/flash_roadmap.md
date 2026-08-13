@@ -1,4 +1,4 @@
-# Flash Roadmap (Seaborn-Style)
+# Flash Roadmap
 
 ## Naming Doctrine
 
@@ -31,9 +31,10 @@ Already present in `flash`:
 - Matrix/Grid: `heatmap`, `clustermap`, `pairplot`, `jointplot`, `FacetGrid`, `PairGrid`, `JointGrid`
 - Multivariate extras: `parallelplot`, `andrews_curves`, `radviz`, `lagplot`, `actplot`, `summaryplot`
 
-What is still shallow vs Seaborn behavior:
+What is still shallow in the current plotting surface:
 - Many APIs are thin wrappers (good coverage, limited semantic depth/options).
-- Faceting/semantic mapping is not yet as automatic as seaborn wide/long-data behavior.
+- Faceting and semantic mapping are not yet as automatic as the long-form workflows we
+  ultimately want to support.
 - Several “advanced” variants are currently composed manually instead of first-class workflows.
 
 ## Priority Roadmap

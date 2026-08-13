@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,18 +36,40 @@
 
           <div class="body" role="main">
             
-  <section id="catalog-bundelize">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6f34d82c41c5 -->
+<section id="catalog-bundelize">
 <h1>Catalog::bundelize<a class="headerlink" href="#catalog-bundelize" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">bundelize</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">bundelize</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Converts the catalog into a <code class="docutils literal notranslate"><span class="pre">pluss::bundle::Registry</span></code> — the reverse direction of
+<a class="reference internal" href="../registry/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::kindelize</span></code></span></a>. Every stream the catalog holds is
+converted to a <code class="docutils literal notranslate"><span class="pre">pluss::bundle::Slot</span></code> (via <a class="reference internal" href="../stream/bundelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::bundelize</span></code></span></a>)
+and reassembled into a registry field, in exactly the catalog’s own
+<a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keys()</span></code></span></a> order. Nothing about the values themselves changes shape or
+count — only the model they live in: a catalog is a named collection of typed,
+columnar <code class="docutils literal notranslate"><span class="pre">Stream</span></code>s, while a registry is a named collection of <code class="docutils literal notranslate"><span class="pre">Slot</span></code>s, each a
+heterogeneous, per-element <code class="docutils literal notranslate"><span class="pre">std::variant</span></code> sequence. The two models are designed to
+round-trip: <code class="docutils literal notranslate"><span class="pre">catalog.bundelize().kindelize()</span></code> reproduces the same key set (though not
+necessarily byte-identical internals — see the important callout below).</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>bundelize() is per-stream conversion, not a single bulk pass
+Catalog::bundelize() does not touch the catalog’s underlying storage directly – it
+calls keys(key).bundelize() once per key, which itself dispatches on that stream’s own
+kind() (Series/Note/Timeline/TimeIndex) and, within Series, further dispatches on
+scalar_type() (Bool/Int64/other, the last cast through Float64). A catalog with a
+Series-typed key and a Note-typed key is converted through two different code paths
+internally, even though this method’s own signature looks uniform. See
+Stream::bundelize’s own page for the full per-kind conversion table.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,11 +78,12 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::bundle::Registry</span></code>
-Value produced by this call.</p>
+A new registry with one <code class="docutils literal notranslate"><span class="pre">Slot</span></code> field per catalog key, in catalog key order.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
+<p>Example 1. A three-key catalog (<code class="docutils literal notranslate"><span class="pre">Series</span></code> numeric, <code class="docutils literal notranslate"><span class="pre">Series</span></code> float, <code class="docutils literal notranslate"><span class="pre">Note</span></code> text) —
+<code class="docutils literal notranslate"><span class="pre">bundelize()</span></code> produces a registry with the same field count and key order.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
@@ -68,15 +91,84 @@ Value produced by this call.</p>
 <span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
 <span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
 <span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reg</span><span class="p">.</span><span class="n">nfields</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reg</span><span class="p">.</span><span class="n">fields</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reg</span><span class="p">.</span><span class="n">fields</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reg</span><span class="p">.</span><span class="n">fields</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reg</span><span class="p">.</span><span class="n">fields</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3
+id,metric,city
+3
 </pre></div>
 </div>
+<p>Example 2 (round trip, not a distinct rendering). Converting back with
+<a class="reference internal" href="../registry/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::kindelize</span></code></span></a> reproduces the same key count —
+confirming the two directions are genuinely inverse operations for this data.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ct2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ct2</span><span class="p">.</span><span class="n">nkeys</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2
+</pre></div>
+</div>
+<p>Example 3 (edge case). An undefined catalog throws before any key is touched.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="w"> </span><span class="n">undefined_catalog</span><span class="p">;</span>
+<span class="w">  </span><span class="n">undefined_catalog</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Catalog::bundelize: catalog undefined
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires <code class="docutils literal notranslate"><span class="pre">defined()</span></code> — an undefined catalog throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Catalog::bundelize:</span> <span class="pre">catalog</span> <span class="pre">undefined&quot;</span></code> immediately, before any key is visited.</p></li>
+<li><p>Field order in the resulting <code class="docutils literal notranslate"><span class="pre">Registry</span></code> always matches
+<a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys()</span></code></span></a>’s own order — <code class="docutils literal notranslate"><span class="pre">bundelize()</span></code> performs no reordering,
+sorting, or deduplication of its own.</p></li>
+<li><p>An empty catalog (zero keys, but still <code class="docutils literal notranslate"><span class="pre">defined()</span></code>) produces a registry with zero
+fields, not a throw.</p></li>
+<li><p>Every value in every stream — including null positions, when a stream carries a
+validity mask — round-trips through the per-stream conversion; see
+<a class="reference internal" href="../stream/bundelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::bundelize</span></code></span></a>’s own page for exactly how nulls are
+represented on the <code class="docutils literal notranslate"><span class="pre">Slot</span></code> side (<code class="docutils literal notranslate"><span class="pre">std::monostate</span></code>).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../registry/kindelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::kindelize</span></code></span></a>: the reverse bridge, from the
+bundle model back into Kindle.</p></li>
+<li><p><a class="reference internal" href="../stream/bundelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::bundelize</span></code></span></a>: what this method calls once per key —
+read that page for the full per-<code class="docutils literal notranslate"><span class="pre">StreamKind</span></code> conversion behavior.</p></li>
+<li><p><a class="reference internal" href="../archive/bundelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::bundelize</span></code></span></a>: the depth-stacked sibling of this
+method, converting a whole <code class="docutils literal notranslate"><span class="pre">Archive</span></code> (a stack of catalogs) into an <code class="docutils literal notranslate"><span class="pre">Axel</span></code>.</p></li>
+<li><p><a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys</span></code></span></a>: what determines the field order this method preserves.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bfill.html">
     <span class="label">Previous</span>
@@ -87,7 +179,6 @@ Value produced by this call.</p>
     <span class="title">cast</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

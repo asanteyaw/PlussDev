@@ -90,7 +90,7 @@ int main() {
   pane2.ridge3(xs, ys, zz, std::vector<double>{-5.0, -3.0, -1.0, 0.5, 2.0, 4.0, 6.0})
       .label("ridge3")
       .palette(pl::PaletteRamp::thermal())
-      .annotate_levels();
+      .annotate_levels(true);
 
   auto& pane3 = gallery.pane3("path3 + cloud3");
   pane3.place(0, 2).grid(pl::GridStyle::Major).caption("trajectory and point-cloud families");
@@ -151,7 +151,7 @@ int main() {
       .palette(pl::PaletteRamp::thermal())
       .shade(pl::ShadeMode::Smooth)
       .lighting(pl::LightingMode::Gouraud)
-      .transparent();
+      .transparent(true);
 
   auto& pane6 = gallery.pane3("volume cues");
   pane6.place(1, 2).grid(pl::GridStyle::Major).caption("annotation and alignment controls");

@@ -53,9 +53,9 @@ using namespace pluss::pl;
 
 auto fig = studio("legend_none");
 auto& pane_a = fig.pane2("A");
-flash::lineplot(pane_a, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+pane_a.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 auto& pane_b = fig.pane2("B");
-flash::lineplot(pane_b, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+pane_b.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 fig.mosaic(1, 2);
 fig.show();
 ```
@@ -72,9 +72,9 @@ using namespace pluss::pl;
 auto fig = studio("legend_east");
 fig.legend(KeyDock::East);
 auto& pane_a = fig.pane2("Group A");
-flash::lineplot(pane_a, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+pane_a.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 auto& pane_b = fig.pane2("Group B");
-flash::lineplot(pane_b, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+pane_b.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 fig.mosaic(1, 2);
 fig.show();
 
@@ -98,9 +98,9 @@ using namespace pluss::pl;
 auto fig = studio("legend_south");
 fig.legend(KeyDock::South);
 auto& pane_a = fig.pane2("Group A");
-flash::lineplot(pane_a, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+pane_a.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 auto& pane_b = fig.pane2("Group B");
-flash::lineplot(pane_b, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+pane_b.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 fig.mosaic(1, 2);
 fig.show();
 ```
@@ -117,8 +117,8 @@ using namespace pluss::pl;
 auto fig = studio("legend_east_single");
 fig.legend(KeyDock::East);
 auto& pane = fig.pane2("Ignored Title");
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 fig.show();
 ```
 
@@ -134,9 +134,9 @@ fig.show();
   be "refreshed."
 - Traces without a `label()` never contribute an entry, whether the legend is docked or not.
 - Pane-title prefixes appear only when more than one pane is visible in the figure at
-  render time; hiding panes down to one (via [`Pane::hide()`](../pane/hide.md) /
-  [`visible(false)`](../pane/visible.md)) drops the prefix even if the figure was
-  originally built with more.
+  render time; hiding panes down to one (via [`Pane::hide()`](../pane/visible.md), or
+  equivalently `Pane::visible(false)`) drops the prefix even if the figure was originally
+  built with more.
 
 ## See Also
 

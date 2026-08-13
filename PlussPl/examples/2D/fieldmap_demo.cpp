@@ -52,7 +52,7 @@ int main() {
   pane.contour(x, y, z, std::vector<double>{-1.5, -0.5, 0.5, 1.5})
       .label("ridges")
       .width(1.0F)
-      .annotate_levels();
+      .annotate_levels(true);
 
   studio.save_svg((root / "outputs" / "svg" / "plusspl_fieldmap.svg").string());
   studio.save_pdf((root / "outputs" / "pdf" / "plusspl_fieldmap.pdf").string());

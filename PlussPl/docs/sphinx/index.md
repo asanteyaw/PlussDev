@@ -2,7 +2,7 @@
 <div class="pluss-hero">
 <div class="kicker">Pluss &middot; Space</div>
 <h1>PlussPl</h1>
-<p class="tagline">The plotting and visualization layer of Pluss: the Flash scene, theme, control, and animation surface used to render tables and series to screen.</p>
+<p class="tagline">The plotting and visualization layer of Pluss: a Studio owns Panes, each holding Traces drawn by the flash:: convenience layer, with a Theme/PaletteRamp/LightRig surface controlling how it all renders.</p>
 <div class="pluss-hero-actions">
 <a class="primary" href="api_reference.html">API Reference</a>
 </div>
@@ -10,32 +10,32 @@
 
 <div class="pluss-section">
 <h2>What's in this space</h2>
-<p class="section-sub">PlussPl is organized around the Flash scene object and the surfaces that configure how it renders.</p>
+<p class="section-sub">PlussPl is organized around three core object-model classes and the flash:: convenience layer built on top of them.</p>
 <div class="pluss-package-grid">
 
 <div class="pluss-card">
-<span class="card-name">Flash Core</span>
-<span class="card-model">Scene &middot; Controls &middot; Object Model</span>
-<p class="card-desc">The core Flash scene object, its interactive controls, and the object model everything else in this space builds on.</p>
+<span class="card-name">Studio, Pane, Trace</span>
+<span class="card-model">Core Object Model</span>
+<p class="card-desc">The figure (Studio), its plotting areas (Pane), and the individual drawn series/elements inside each pane (Trace).</p>
 </div>
 
 <div class="pluss-card">
-<span class="card-name">Flash Theme</span>
-<span class="card-model">Colors &middot; Fonts &middot; Styling</span>
-<p class="card-desc">Theme surfaces controlling how a Flash scene's colors, fonts, and general styling are configured.</p>
+<span class="card-name">flash::</span>
+<span class="card-model">High-level Convenience Layer</span>
+<p class="card-desc">~65 functions covering relational, distribution, categorical, regression, matrix, and multivariate plots — the surface most users reach for directly.</p>
 </div>
 
 <div class="pluss-card">
-<span class="card-name">Flash Animation</span>
-<span class="card-model">Scene Animation &middot; Presets</span>
-<p class="card-desc">Animating a scene over time, plus ready-made presets for common animated transitions.</p>
+<span class="card-name">Theme &amp; Styling</span>
+<span class="card-model">Theme &middot; PaletteRamp &middot; LightRig</span>
+<p class="card-desc">Colors, fonts, palettes, and 3D lighting configuration shared across a Studio's panes and traces.</p>
 </div>
 
 </div>
 </div>
 </div>
 
-## API Reference
+# API Reference
 
 This set follows the same usage-first API pattern used across the other Pluss docs: practical signatures, short behavioral notes, runnable examples, and concrete output artifacts (plots/frames).
 
@@ -45,25 +45,15 @@ This set follows the same usage-first API pattern used across the other Pluss do
 
 api_reference
 studio_api_reference
-plusspl_core_api
-plusspl_core_controls_api
-plusspl_object_model_api
-plusspl_core_full_overloads_api
-flash_api
-flash_theme_api
-flash_helpers_expanded_api
-flash_scene_animation_api
-flash_scene_presets_api
-flash_full_overloads_api
+pane_api_reference
+trace_api_reference
+flash_api_reference
 build_outputs
 ```
 
 ```{toctree}
-:glob:
 :maxdepth: 2
 :hidden:
 
-_local/*/*
-_local/*/*/*
-_local/*/*/*/*
+_local/MANIFEST
 ```

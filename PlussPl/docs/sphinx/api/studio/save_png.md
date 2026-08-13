@@ -52,7 +52,7 @@ using namespace pluss::pl;
 
 auto fig = studio("save_png_default");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 fig.save_png("demo.png");
 ```
@@ -67,7 +67,7 @@ using namespace pluss::pl;
 
 auto fig = studio("save_png_hi_dpi");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 fig.save_png("demo_144.png", 144);
 fig.save_png("demo_300.png", 300);
@@ -80,7 +80,7 @@ using namespace pluss::pl;
 
 auto fig = studio("save_png_bad_dpi");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 try {
   fig.save_png("demo.png", 0);
@@ -109,7 +109,7 @@ using namespace pluss::pl;
 
 auto fig = studio("save_png_wrong_ext");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 try {
   fig.save_png("demo.svg");

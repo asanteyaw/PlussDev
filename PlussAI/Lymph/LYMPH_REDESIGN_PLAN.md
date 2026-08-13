@@ -56,7 +56,7 @@ document is the target shape and the plan to get there.
    consume an existing object through a free factory only when that call creates a new object
    of the consuming family. `lymph::workflow::make(champion, policy)` consumes a `Model` and
    `Policy` to create a new `Workflow`; after that, `workflow.save(...)` and
-   `workflow.infer(...)` are methods. `lymph::spotcheck::models(builder)` consumes a
+   `workflow.infer(...)` are methods. `lymph::spotcheck::suite(builder)` consumes a
    `Builder` to create a `SpotCheck`; after that, `spotcheck.run(...)` is a method.
    Therefore: `prep_policy.apply(frame)` and `spotcheck.run(...)` express existing-object work
    through methods.
@@ -80,7 +80,7 @@ document is the target shape and the plan to get there.
    implementation already has them.
 1.3. **Interop does not erase ownership boundaries.** A family may consume another family's
    value only to do its own line of work: `workflow::make(model, policy)` creates a deployable
-   `Workflow`; `spotcheck::models(builder)` creates a comparison object; `validate::cross(...)`
+   `Workflow`; `spotcheck::suite(builder)` creates a comparison object; `validate::cross(...)`
    creates a validation plan that can run against a `Model`; a reporting family may consume
    predictions, labels, or a model to produce report values. That consumption does not make
    the consumed family responsible for the consuming family's methods.
@@ -91,7 +91,7 @@ document is the target shape and the plan to get there.
    `lymph::columnrouter::names(...)` / `where(...)` / `remaining_of(...)`; `Workflow::load(...)`
    becomes `lymph::workflow::load(...)`, sibling to `lymph::workflow::make(...)`. No
    exceptions — every constructible lymph type gets a matching lowercase namespace, even ones
-   with only one construction shape (`lymph::policy(...)` for the one-shape `Policy` type,
+   with only one construction shape (`lymph::Policy{...}` for the one-shape `Policy` type,
    `lymph::random::seeded(...)` if that ends up worth having at all).
 3. **Types named `*Options` are exempt from the factory requirement** — designated-init
    (`{.field = value}`) or default-then-mutate are both fine, no namespace needed
@@ -121,7 +121,7 @@ document is the target shape and the plan to get there.
    out — `const lymph::FrameHoldoutSplit split = lymph::holdout_split(...)`, not
    `const auto split = ...`.
 6. **`Policy`** is the single-shape raw-frame admission/schema type:
-   `lymph::Policy raw = lymph::policy({.drop_columns = {...}, .require_columns = {...}, .reject_missing = {"target"}});`.
+   `lymph::Policy raw{.drop_columns = {...}, .require_columns = {...}, .reject_missing = {"target"}};`.
    It owns raw column admission, required/forbidden checks, explicit row rejection, and
    missingness pass-through for downstream imputers. It does not own imputation, scaling,
    encoding, feature engineering, or balancing. The legacy `filter_nulls` field remains for
@@ -200,11 +200,11 @@ pluss::ai::lymph::
   Workflow         -- the raw-frame-in/prediction-out deployable artifact: Policy + Model.
                        This is the object the earlier "final stage that stacks everything"
                        question was actually asking about.
-  SpotCheckResult  -- returned by SpotCheck::run(...). .board(), .top(k) ->
+  spotcheck::Result  -- returned by SpotCheck::run(...). .board(), .top(k) ->
                        vector<pair<name, Model>> ranked, .best() -> Model
                        (= top(1).front().second).
-  SearchResult     -- returned by Search::run(...). .report, .top(k)/.best() -- same shape as
-                       SpotCheckResult, .top(k)'s name is the winning GridPoint's .label().
+  search::Result   -- returned by Search::run(...). .report, .top(k)/.best() -- same shape as
+                       spotcheck::Result, .top(k)'s name is the winning GridPoint's .label().
 
   models::          -- factories, replacing public linear_factory::/tree_factory::/
                        ensemble_factory::/neighbor_factory::/kernel_factory::/bayes_factory::
@@ -255,7 +255,7 @@ pluss::ai::lymph::
                        the ColumnRouter class; moved to a real namespace per §2.0 rule 2
                        (Type::factory() can never be lowercased -- the type name after `::`
                        has to match the class exactly).
-  policy::         -- lymph::policy({...}) -- Policy's one construction shape.
+  policy::         -- lymph::Policy{...} -- Policy's one construction shape.
   balance::        -- keep(), equalize_reuse_rows(n), equalize_blend_neighbors(n) -- guards
                        BalanceTarget's kind/growth/neighbors correlation the way a flat
                        struct literal can't.
@@ -341,7 +341,7 @@ cv.shuffle = true;
 cv.random_state = 20260721ULL;
 
 lymph::Search search = lymph::search::grid(axes, cv);
-lymph::SearchResult tuned = search.run(
+lymph::search::Result tuned = search.run(
     make_model,
     train_batch,
     lymph::TrainOptions{},
@@ -381,8 +381,8 @@ lymph::ValidationPlan cv = lymph::validate::stratified({
     .random_state = 7,
 });
 
-lymph::SpotCheck check = lymph::spotcheck::models(built);
-lymph::SpotCheckResult compared = check.run(
+lymph::SpotCheck check = lymph::spotcheck::suite(built);
+lymph::spotcheck::Result compared = check.run(
     train_batch, data_options, cv, train_options, assess_options,
     lymph::MetricKind::RocAuc, lymph::RankGoal::High);
 
@@ -587,8 +587,8 @@ to the next; nothing lands half-working.
   no longer the public Lymph construction spelling. New user code calls
   `lymph::models::random_forest_regressor(...)`, `lymph::models::knn_regressor(...)`,
   `lymph::models::pca(...)`, and the online factories
-  `lymph::models::online_linear_classifier(...)` /
-  `lymph::models::online_linear_regressor(...)`. The temporary singular
+  `lymph::online::linear_classifier(...)` /
+  `lymph::online::linear_regressor(...)`. The temporary singular
   `lymph::model::` alias has been removed.
 - **Phase 3 public-surface cleanup started.** `Model` is no longer exported as the
   user-facing estimator type: the old implementation header moved under
@@ -596,7 +596,7 @@ to the next; nothing lands half-working.
   construction/loading is through `lymph::Model`. Model-backed classification reports and
   threshold helpers moved behind the `lymph::reports::` family so `Model` stays focused on
   model behavior and reporting does not become another set of scattered public free functions.
-- **Phase 4 result API direction corrected.** `selection::CompareResult` and `SearchResult`
+- **Phase 4 result API direction corrected.** `selection::CompareResult` and `search::Result`
   already hold public `Model`s directly after the earlier Workflow-facade retirement. The
   public result surface should stay lean: `.best()` for the leading model and `.top(k)` for
   the top-k models practitioners may want to keep exploring before choosing a champion. Do
@@ -669,7 +669,7 @@ Full regression: 26/26 AI tests pass, plus a full rebuild of every touched examp
    `(GridPoint) -> Model` factory and supports task-aware split/CV resolution.
 6. **Consolidate factory structs into `lymph::models::`. Completed.** Batch model construction
    now goes through `lymph::models::`, online model construction uses
-   `models::online_linear_*`, old factory structs are internal `detail` tags, and the singular
+   `online::linear_*`, old factory structs are internal `detail` tags, and the singular
    `lymph::model` alias is gone.
 7. **Fold `TargetTransform` into `Model`. Completed.** `Model::target_transform(...)` owns the
    target-space transform; the wrapper class is gone.
@@ -728,14 +728,14 @@ Removed from the roadmap rather than kept as a future phase. Two reasons:
    the winners" workflow is already fully reachable by composing Phases 1-6 as they stand:
    run `Search` once per family *outside* the comparison (five small searches, each picking
    that family's own best hyperparameter), then hand the five resulting tuned `Model`s into
-   a `Builder` and let `spotcheck::models(builder)` compare them as ordinary fixed
+   a `Builder` and let `spotcheck::suite(builder)` compare them as ordinary fixed
    candidates. No nested Builder-entry/Search type is required — this is the same "compose
    small, single-purpose objects" principle already chosen over one mega-object for the
    `Model`/`Stage`/`Search`/`Workflow` split itself.
 2. **The real cost is combinatorial, and the data model doesn't fit today's shape.** A
    comparison where even a few of 15 candidates are themselves full searches multiplies out
    to candidates x folds x trials, which is exactly the "heavy, takes time" concern flagged
-   before any of this GridAxis work started. `.board()`/`SpotCheckResult` are shaped around
+   before any of this GridAxis work started. `.board()`/`spotcheck::Result` are shaped around
    one score per (candidate, fold) today; scoring nested searches would need a third axis,
    a bigger change than anything else in this plan. Not worth taking on speculatively.
 

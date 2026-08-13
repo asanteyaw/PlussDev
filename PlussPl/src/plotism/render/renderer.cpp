@@ -2502,8 +2502,21 @@ struct FiniteMinMax {
             const auto xy = normalize_pairs(payload.x, payload.y);
             const double half_width = 0.5 * payload.width;
             for (std::size_t i = 0; i < xy.first.size(); ++i) {
-              bounds.include(xy.first[i] - half_width, payload.base);
-              bounds.include(xy.first[i] + half_width, xy.second[i]);
+              if (payload.horizontal) {
+                const double x0 = std::min(payload.base, xy.first[i]);
+                const double x1 = std::max(payload.base, xy.first[i]);
+                const double y0 = xy.second[i] - half_width;
+                const double y1 = xy.second[i] + half_width;
+                bounds.include(x0, y0);
+                bounds.include(x1, y1);
+              } else {
+                const double x0 = xy.first[i] - half_width;
+                const double x1 = xy.first[i] + half_width;
+                const double y0 = std::min(payload.base, xy.second[i]);
+                const double y1 = std::max(payload.base, xy.second[i]);
+                bounds.include(x0, y0);
+                bounds.include(x1, y1);
+              }
             }
           } else if constexpr (std::is_same_v<Payload, BucketData>) {
             only_radial = false;
@@ -5213,28 +5226,36 @@ void render_planar_traces(
             const double half_width = 0.5 * payload.width;
             const Rgba fill = trace.palette_ramp().sample(0.62);
             for (std::size_t i = 0; i < xy.first.size(); ++i) {
-              Point2d base_left{};
-              Point2d base_right{};
-              Point2d top_left{};
-              Point2d top_right{};
+              Point2d p00{};
+              Point2d p10{};
+              Point2d p11{};
+              Point2d p01{};
               if (payload.horizontal) {
-                base_left = map_planar_point(payload.base, xy.second[i] - half_width, pane, bounds, layout.plot, false);
-                base_right = map_planar_point(payload.base, xy.second[i] + half_width, pane, bounds, layout.plot, false);
-                top_left = map_planar_point(xy.first[i], xy.second[i] - half_width, pane, bounds, layout.plot, false);
-                top_right = map_planar_point(xy.first[i], xy.second[i] + half_width, pane, bounds, layout.plot, false);
+                const double x0 = std::min(payload.base, xy.first[i]);
+                const double x1 = std::max(payload.base, xy.first[i]);
+                const double y0 = xy.second[i] - half_width;
+                const double y1 = xy.second[i] + half_width;
+                p00 = map_planar_point(x0, y0, pane, bounds, layout.plot, false);
+                p10 = map_planar_point(x1, y0, pane, bounds, layout.plot, false);
+                p11 = map_planar_point(x1, y1, pane, bounds, layout.plot, false);
+                p01 = map_planar_point(x0, y1, pane, bounds, layout.plot, false);
               } else {
-                base_left = map_planar_point(xy.first[i] - half_width, payload.base, pane, bounds, layout.plot, false);
-                base_right = map_planar_point(xy.first[i] + half_width, payload.base, pane, bounds, layout.plot, false);
-                top_left = map_planar_point(xy.first[i] - half_width, xy.second[i], pane, bounds, layout.plot, false);
-                top_right = map_planar_point(xy.first[i] + half_width, xy.second[i], pane, bounds, layout.plot, false);
+                const double x0 = xy.first[i] - half_width;
+                const double x1 = xy.first[i] + half_width;
+                const double y0 = std::min(payload.base, xy.second[i]);
+                const double y1 = std::max(payload.base, xy.second[i]);
+                p00 = map_planar_point(x0, y0, pane, bounds, layout.plot, false);
+                p10 = map_planar_point(x1, y0, pane, bounds, layout.plot, false);
+                p11 = map_planar_point(x1, y1, pane, bounds, layout.plot, false);
+                p01 = map_planar_point(x0, y1, pane, bounds, layout.plot, false);
               }
               add_path(
                   list,
                   {
-                      {base_left.x, base_left.y},
-                      {base_right.x, base_right.y},
-                      {top_right.x, top_right.y},
-                      {top_left.x, top_left.y},
+                      {p00.x, p00.y},
+                      {p10.x, p10.y},
+                      {p11.x, p11.y},
+                      {p01.x, p01.y},
                   },
                   FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.8},
                   true);

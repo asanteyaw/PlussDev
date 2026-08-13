@@ -30,6 +30,8 @@
 
 namespace pluss::ai::lymph {
 
+namespace stage {
+
 struct TransformContract {
   bool reversible = false;
   bool inverse_available = false;
@@ -116,6 +118,11 @@ struct CustomStage {
   TransformContract contract{};
   bool persistable = false;
 };
+} // namespace stage
+
+using TransformContract = stage::TransformContract;
+using Stage = stage::Stage;
+using CustomStage = stage::CustomStage;
 
 namespace stage {
 

@@ -467,8 +467,8 @@ class Trace {
   Trace& shade(ShadeMode mode) noexcept;
   Trace& lighting(LightingMode mode) noexcept;
   Trace& material(MaterialProfile profile) noexcept;
-  Trace& transparent(bool enable = true) noexcept;
-  Trace& annotate_levels(bool enable = true) noexcept;
+  Trace& transparent(bool enable) noexcept;
+  Trace& annotate_levels(bool enable) noexcept;
   Trace& hide() noexcept;
   Trace& show() noexcept;
 
@@ -721,9 +721,9 @@ class Pane {
   Pane& align_z(std::string group);
   Pane& align_xy(std::string group);
   Pane& align_xyz(std::string group);
-  Pane& parallel_xy_labels(bool enable = true) noexcept;
-  Pane& visible(bool enable = true) noexcept;
-  Pane& axes_visible(bool enable = true) noexcept;
+  Pane& parallel_xy_labels(bool enable) noexcept;
+  Pane& visible(bool enable) noexcept;
+  Pane& axes_visible(bool enable) noexcept;
   Pane& hide() noexcept;
   Pane& show() noexcept;
   Pane& clear_x_align() noexcept;

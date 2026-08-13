@@ -44,7 +44,7 @@ using namespace pluss::pl;
 
 auto fig = studio("to_svg_check");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 std::string svg = fig.to_svg();
 std::cout << (svg.rfind("<?xml", 0) == 0 || svg.rfind("<svg", 0) == 0) << "\n";
@@ -68,7 +68,7 @@ using namespace pluss::pl;
 
 auto fig = studio("to_svg_live");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 std::string svg_before = fig.to_svg();
 fig.headline("Now With A Headline");

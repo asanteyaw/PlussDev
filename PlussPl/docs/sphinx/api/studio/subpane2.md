@@ -90,13 +90,13 @@ using namespace pluss::pl;
 auto fig = studio("subpane2_basic");
 fig.pane2("parent");  // index 0 -- a placeholder container for the subgrid
 auto& top_left = fig.subpane2(0, 2, 2, 0, 0);
-flash::lineplot(top_left, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+top_left.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 auto& top_right = fig.subpane2(0, 2, 2, 0, 1);
-flash::lineplot(top_right, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
+top_right.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
 auto& bottom_left = fig.subpane2(0, 2, 2, 1, 0);
-flash::lineplot(bottom_left, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{4.0, 6.0, 5.0});
+bottom_left.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{4.0, 6.0, 5.0});
 auto& bottom_right = fig.subpane2(0, 2, 2, 1, 1, 1, 1, "quadrant 4");
-flash::lineplot(bottom_right, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{5.0, 7.0, 6.0});
+bottom_right.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{5.0, 7.0, 6.0});
 fig.show();
 
 std::cout << fig.pane_count() << "\n";  // parent + 4 subpanes
@@ -119,11 +119,11 @@ using namespace pluss::pl;
 auto fig = studio("subpane2_span");
 fig.pane2("parent");  // index 0
 auto& tall = fig.subpane2(0, 2, 3, 0, 0, 2, 1, "spans both rows");
-flash::lineplot(tall, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+tall.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 auto& top = fig.subpane2(0, 2, 3, 0, 1, 1, 2, "spans two cols, row 0");
-flash::lineplot(top, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
+top.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
 auto& bottom = fig.subpane2(0, 2, 3, 1, 1, 1, 2, "spans two cols, row 1");
-flash::lineplot(bottom, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{4.0, 6.0, 5.0});
+bottom.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{4.0, 6.0, 5.0});
 fig.show();
 ```
 

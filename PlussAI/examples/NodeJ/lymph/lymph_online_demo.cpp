@@ -80,7 +80,7 @@ int main() {
     TrainOptions warm_opts{};
     warm_opts.max_iterations = 80;
 
-    OnlineLinearClassifier model = pluss::ai::lymph::models::online_linear_classifier(online_options);
+    OnlineLinearClassifier model = pluss::ai::lymph::online::linear_classifier(online_options);
     model.learn_(warm, warm_opts).advance_(stream);
 
     const auto metrics = model.assess(full);

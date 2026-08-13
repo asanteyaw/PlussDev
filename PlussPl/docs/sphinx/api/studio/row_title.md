@@ -56,9 +56,9 @@ using namespace pluss::pl;
 auto fig = studio("row_titles_none");
 fig.mosaic(2, 1);
 auto& top = fig.pane2("top");
-flash::lineplot(top, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+top.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 auto& bottom = fig.pane2("bottom");
-flash::lineplot(bottom, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+bottom.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 fig.show();
 
 std::cout << fig.row_titles().empty() << "\n";
@@ -82,9 +82,9 @@ auto fig = studio("row_titles_set");
 fig.mosaic(2, 1);
 fig.row_title(0, "Q1 Results").row_title(1, "Q2 Results");
 auto& top = fig.pane2("top");
-flash::lineplot(top, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+top.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 auto& bottom = fig.pane2("bottom");
-flash::lineplot(bottom, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+bottom.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 fig.show();
 
 std::cout << fig.row_titles().size() << "\n";
@@ -110,7 +110,7 @@ using namespace pluss::pl;
 auto fig = studio("row_titles_overwrite");
 fig.row_title(0, "First Draft").row_title(0, "Final Version");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
 fig.show();
 
 std::cout << fig.row_titles().at(0) << "\n";
@@ -121,6 +121,8 @@ std::cout << fig.row_titles().at(0) << "\n";
 ```text
 Final Version
 ```
+
+![Output of Example 3](img/row_title-5-overwrite.svg)
 
 Example 4. A negative row index throws immediately.
 

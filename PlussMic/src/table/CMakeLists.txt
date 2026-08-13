@@ -22,6 +22,7 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/Thread.h
   ${CMAKE_CURRENT_SOURCE_DIR}/DataFrame.h
   ${CMAKE_CURRENT_SOURCE_DIR}/DFDataset.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/FlashDatasetInterop.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Atlas.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Nexus.h
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/DataFramePlot.h

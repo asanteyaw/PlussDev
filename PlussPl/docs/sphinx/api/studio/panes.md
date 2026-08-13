@@ -47,9 +47,9 @@ auto fig = studio("panes_check");
 std::cout << fig.panes().empty() << "\n";
 
 auto& first = fig.pane2("first");
-flash::lineplot(first, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+first.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 auto& second = fig.pane3("second");
-flash::path3(second, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
+second.path3(std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
 
 std::cout << fig.panes().size() << "\n";
 std::cout << fig.panes()[0].title_text() << "\n";
@@ -67,6 +67,8 @@ fig.show();
 first
 1
 ```
+
+![Output of Example 1](img/panes-1-check.svg)
 
 Example 2. Iterating with a range-`for` loop — the common way to inspect every pane
 without tracking indices by hand.

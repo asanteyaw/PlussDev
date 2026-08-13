@@ -44,6 +44,7 @@ LabeledBatch batch() {
 
 DataFrame frame() {
   return DataFrame({
+      {"timestamp", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {8}, f64()))},
       {"x0", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 7.0, 8.0, 9.0, 10.0}, {8}, f64()))},
       {"x1", Thread(pluss::make_series(std::vector<double>{1.0, 1.0, 2.0, 2.0, 8.0, 8.0, 9.0, 9.0}, {8}, f64()))},
       {"y", Thread(pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64()))},
@@ -61,7 +62,7 @@ bool run_spotcheck_checks(std::ostream* err) {
   cv.shuffle = false;
   cv.max_parallel = 1;
 
-  const SpotCheckResult ranked = spotcheck::models(registry)
+  const spotcheck::Result ranked = spotcheck::suite(registry)
                                      .strategy("plain", TrainOptions{})
                                      .run(batch(),
                                           cv,
@@ -88,8 +89,8 @@ bool run_spotcheck_checks(std::ostream* err) {
   }
 
   const Payload raw_payload = payload::make(frame()).features({"x0", "x1"}).label("y");
-  const Workflow design = workflow::make(policy({}));
-  const SpotCheckResult workflow_ranked = spotcheck::models(registry)
+  const Workflow design = workflow::make(Policy{});
+  const spotcheck::Result workflow_ranked = spotcheck::suite(registry)
                                               .strategy("plain", TrainOptions{})
                                               .run(design,
                                                    raw_payload,
@@ -100,6 +101,31 @@ bool run_spotcheck_checks(std::ostream* err) {
                                                    selection::FitOptions{.fit_top = 1});
   if (workflow_ranked.report.trials.size() != 2 || !workflow_ranked.best().trained()) {
     if (err) *err << "spotcheck should consume Workflow + Payload without changing the ranked result shape\n";
+    return false;
+  }
+
+  CrossValidationOptions time_cv{};
+  time_cv.plan = CVPlanKind::TSCrossVal;
+  time_cv.folds = 2;
+  time_cv.shuffle = false;
+  time_cv.max_parallel = 1;
+
+  Payload time_payload = payload::make(frame())
+      .features({"x0", "x1"})
+      .label("y")
+      .time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
+  Workflow time_design = workflow::make(Policy{});
+  time_design.time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
+
+  const CrossValidationOptions effective_time =
+      validate::detail::effective_time_options_(time_cv, time_design);
+  if (effective_time.time_gap != 1 || effective_time.time_test_size != 1 || effective_time.time_max_train_size != 4) {
+    if (err) *err << "spotcheck should use the shared Workflow/Payload time option merge\n";
+    return false;
+  }
+
+  if (!time_payload.has_time() || raw_payload.has_time()) {
+    if (err) *err << "spotcheck time regression should distinguish payloads with and without explicit time roles\n";
     return false;
   }
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,18 +36,37 @@
 
           <div class="body" role="main">
             
-  <section id="catalog-tl">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 27e79b76df2e -->
+<section id="catalog-tl">
 <h1>Catalog::tl<a class="headerlink" href="#catalog-tl" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">tl</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogTimelineAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">CatalogTimelineAccessor</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">tl</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+<p>The entry point into timestamp-feature extraction on the catalog’s <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind
+(and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind, for the applicable methods) streams. <code class="docutils literal notranslate"><span class="pre">tl()</span></code> binds the current
+catalog and hands back a <code class="docutils literal notranslate"><span class="pre">CatalogTimelineAccessor</span></code>, which exposes 32 methods: calendar
+field extraction (<code class="docutils literal notranslate"><span class="pre">year</span></code>, <code class="docutils literal notranslate"><span class="pre">month</span></code>, <code class="docutils literal notranslate"><span class="pre">day</span></code>, <code class="docutils literal notranslate"><span class="pre">hour</span></code>, …), boolean predicates (<code class="docutils literal notranslate"><span class="pre">isnat</span></code>,
+<code class="docutils literal notranslate"><span class="pre">valid</span></code>, <code class="docutils literal notranslate"><span class="pre">weekend</span></code>, <code class="docutils literal notranslate"><span class="pre">leap</span></code>), formatting/conversion (<code class="docutils literal notranslate"><span class="pre">fmt</span></code>, <code class="docutils literal notranslate"><span class="pre">iso</span></code>, <code class="docutils literal notranslate"><span class="pre">epoch</span></code>, <code class="docutils literal notranslate"><span class="pre">date</span></code>,
+<code class="docutils literal notranslate"><span class="pre">time</span></code>), rounding (<code class="docutils literal notranslate"><span class="pre">floor</span></code>, <code class="docutils literal notranslate"><span class="pre">ceil</span></code>, <code class="docutils literal notranslate"><span class="pre">round</span></code>), and timezone/shift operations (<code class="docutils literal notranslate"><span class="pre">shift</span></code>,
+<code class="docutils literal notranslate"><span class="pre">period</span></code>, <code class="docutils literal notranslate"><span class="pre">tz</span></code>, <code class="docutils literal notranslate"><span class="pre">localize</span></code>, <code class="docutils literal notranslate"><span class="pre">utc</span></code>, <code class="docutils literal notranslate"><span class="pre">index</span></code>) — see the
+<a class="reference internal" href="../../catalog_timeline_accessor_api_reference.html"><span class="doc std std-doc">CatalogTimelineAccessor API Reference</span></a>
+for every method’s own dedicated page.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>tl() binds EVERY key in the catalog, not just the Timeline-kind ones
+Same as <a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nt()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">tl()</span></code> takes no arguments and always binds every
+key currently in the catalog. Calling any CatalogTimelineAccessor method on a catalog
+that has even one key that isn’t <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind throws. Pre-filter
+with <a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys(names)</span></code></span></a> or <a class="reference internal" href="keyaxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keyaxis().timeline()</span></code></span></a>
+first if you need to mix timestamp and non-timestamp processing.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,27 +75,62 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">CatalogTimelineAccessor</span></code>
-Value produced by this call.</p>
+A binder for the current catalog — call one of its 32 methods to extract a
+calendar feature, reformat, or shift every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind key.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Call the simplest overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;id&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;city&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})),</span>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">tl().year()</span></code> extracts the calendar year from every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind key —
+see <a class="reference internal" href="../catalog-timeline/year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogTimelineAccessor::year</span></code></span></a> for this specific
+method’s own page.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;ts&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T09:10:00Z&quot;</span><span class="p">})),</span>
 <span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Catalog  keys=1
+keys: [ts]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+ts                       | Series       | Series[int32]    | 2       | [2024, 2024]                                     
+========================================================================================================================
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Not <code class="docutils literal notranslate"><span class="pre">noexcept</span></code>; the returned accessor itself does no work, but every method it
+exposes eagerly re-checks every bound key’s kind.</p></li>
+<li><p>See the important callout above — every one of the 32 methods on the returned
+accessor shares this every-key-bound, no-narrowing behavior.</p></li>
+<li><p>Requires a defined catalog; throws <code class="docutils literal notranslate"><span class="pre">&quot;Catalog:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> otherwise (checked
+when a method is actually called, not by <code class="docutils literal notranslate"><span class="pre">tl()</span></code> itself).</p></li>
+<li><p>Calendar-field-extraction methods (<code class="docutils literal notranslate"><span class="pre">year</span></code>, <code class="docutils literal notranslate"><span class="pre">month</span></code>, <code class="docutils literal notranslate"><span class="pre">day</span></code>, …) return a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind
+key in place of the original <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind key, per the output above — the
+catalog’s key set and order are unchanged, only each bound key’s own payload kind
+changes.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../catalog_timeline_accessor_api_reference.html"><span class="doc std std-doc">CatalogTimelineAccessor API Reference</span></a>:
+the full list of 32 methods this accessor exposes.</p></li>
+<li><p><a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nt</span></code></span></a> / <a class="reference internal" href="ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::ts</span></code></span></a>: the sibling accessors for
+text-processing and time-series operations.</p></li>
+<li><p><a class="reference internal" href="keyaxis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keyaxis</span></code></span></a>: filter down to just the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind keys first,
+via <code class="docutils literal notranslate"><span class="pre">.timeline()</span></code>.</p></li>
+<li><p><a class="reference internal" href="../registry/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fields(keys).tl()</span></code></span></a>: the bundle-model equivalent,
+which <em>does</em> let you narrow to a key subset before binding.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tfidf.html">
     <span class="label">Previous</span>
@@ -87,7 +141,6 @@ Value produced by this call.</p>
     <span class="title">to_json</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

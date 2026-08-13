@@ -32,7 +32,7 @@ int main() {
   cv.plan = lymph::CVPlanKind::CrossVal;
   cv.folds = 3;
 
-  const lymph::SearchResult tuned = lymph::search::grid(space, cv)
+  const lymph::search::Result tuned = lymph::search::grid(space, cv)
       .run([](const lymph::GridPoint& point) {
              return lymph::models::linear_regression({
                  .regularization_strength = point.at("regularization_strength"),

@@ -29,6 +29,12 @@ PER_METHOD_CLASSES = {
     'RegistryNoteAccessor', 'RegistryTimelineAccessor',
     'AxelFieldAxisAccessor', 'AxelCastAccessor',
     'AxelNoteAccessor', 'AxelTimelineAccessor',
+    'CatalogNoteAccessor', 'CatalogTimelineAccessor', 'CatalogTimeSeriesAccessor',
+    'CatalogCastAccessor', 'CatalogKeyAxisAccessor',
+    'StreamCastAccessor', 'StreamNoteAccessor', 'StreamTimelineAccessor',
+    'StreamTimeSeriesAccessor', 'StreamLabelAccessor',
+    'ArchiveLabelAccessor', 'ArchiveKeyAxisAccessor', 'ArchiveCastAccessor',
+    'ArchiveTimelineAccessor', 'ArchiveTimeSeriesAccessor',
 }
 GENERIC_CSV_PATH = "path/to/data.csv"
 GENERIC_XLSX_PATH = "path/to/data.xlsx"
@@ -420,6 +426,126 @@ CLASS_CONFIG = {
         'intro': 'This page documents the public timestamp-feature accessor returned by `Axel::fields(keys).tl()`, applied across the depth stack.',
         'binder': 'fields(keys).tl()',
     },
+    'CatalogNoteAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/catalog.h',
+        'output': DOCS / 'catalog_note_accessor_api_reference.md',
+        'title': 'CatalogNoteAccessor API Reference',
+        'subtitle': 'Practical CatalogNoteAccessor API Reference',
+        'intro': 'This page documents the public text-processing accessor returned by `Catalog::nt()`, applied across every key in the catalog.',
+        'binder': 'nt()',
+    },
+    'CatalogTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/catalog.h',
+        'output': DOCS / 'catalog_timeline_accessor_api_reference.md',
+        'title': 'CatalogTimelineAccessor API Reference',
+        'subtitle': 'Practical CatalogTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-feature accessor returned by `Catalog::tl()`, applied across every key in the catalog.',
+        'binder': 'tl()',
+    },
+    'CatalogTimeSeriesAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/catalog.h',
+        'output': DOCS / 'catalog_ts_accessor_api_reference.md',
+        'title': 'CatalogTimeSeriesAccessor API Reference',
+        'subtitle': 'Practical CatalogTimeSeriesAccessor API Reference',
+        'intro': 'This page documents the public time-series accessor returned by `Catalog::ts()`, applied across every key in the catalog.',
+        'binder': 'ts()',
+    },
+    'CatalogCastAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/catalog.h',
+        'output': DOCS / 'catalog_cast_accessor_api_reference.md',
+        'title': 'CatalogCastAccessor API Reference',
+        'subtitle': 'Practical CatalogCastAccessor API Reference',
+        'intro': 'This page documents the public casting accessor returned by `Catalog::cast()`, applied across every key in the catalog.',
+        'binder': 'cast()',
+    },
+    'CatalogKeyAxisAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/catalog.h',
+        'output': DOCS / 'catalog_keyaxis_accessor_api_reference.md',
+        'title': 'CatalogKeyAxisAccessor API Reference',
+        'subtitle': 'Practical CatalogKeyAxisAccessor API Reference',
+        'intro': 'This page documents the public key-name-matching accessor returned by `Catalog::keyaxis()`.',
+        'binder': 'keyaxis()',
+    },
+    'StreamCastAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Stream.h',
+        'output': DOCS / 'stream_cast_accessor_api_reference.md',
+        'title': 'StreamCastAccessor API Reference',
+        'subtitle': 'Practical StreamCastAccessor API Reference',
+        'intro': 'This page documents the public casting accessor returned by `Stream::cast()`.',
+        'binder': 'cast()',
+    },
+    'StreamNoteAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Stream.h',
+        'output': DOCS / 'stream_note_accessor_api_reference.md',
+        'title': 'StreamNoteAccessor API Reference',
+        'subtitle': 'Practical StreamNoteAccessor API Reference',
+        'intro': 'This page documents the public text-processing accessor returned by `Stream::nt()`.',
+        'binder': 'nt()',
+    },
+    'StreamTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Stream.h',
+        'output': DOCS / 'stream_timeline_accessor_api_reference.md',
+        'title': 'StreamTimelineAccessor API Reference',
+        'subtitle': 'Practical StreamTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-feature accessor returned by `Stream::tl()`.',
+        'binder': 'tl()',
+    },
+    'StreamTimeSeriesAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Stream.h',
+        'output': DOCS / 'stream_ts_accessor_api_reference.md',
+        'title': 'StreamTimeSeriesAccessor API Reference',
+        'subtitle': 'Practical StreamTimeSeriesAccessor API Reference',
+        'intro': 'This page documents the public time-series accessor returned by `Stream::ts()`.',
+        'binder': 'ts()',
+    },
+    'StreamLabelAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Stream.h',
+        'output': DOCS / 'stream_lbl_accessor_api_reference.md',
+        'title': 'StreamLabelAccessor API Reference',
+        'subtitle': 'Practical StreamLabelAccessor API Reference',
+        'intro': 'This page documents the public label accessor returned by `Stream::lbl()`.',
+        'binder': 'lbl()',
+    },
+    'ArchiveLabelAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Archive.h',
+        'output': DOCS / 'archive_label_accessor_api_reference.md',
+        'title': 'ArchiveLabelAccessor API Reference',
+        'subtitle': 'Practical ArchiveLabelAccessor API Reference',
+        'intro': 'This page documents the public depth-label accessor returned by `Archive::label()`.',
+        'binder': 'label()',
+    },
+    'ArchiveKeyAxisAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Archive.h',
+        'output': DOCS / 'archive_keyaxis_accessor_api_reference.md',
+        'title': 'ArchiveKeyAxisAccessor API Reference',
+        'subtitle': 'Practical ArchiveKeyAxisAccessor API Reference',
+        'intro': 'This page documents the public key-name-matching accessor returned by `Archive::keyaxis()`.',
+        'binder': 'keyaxis()',
+    },
+    'ArchiveCastAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Archive.h',
+        'output': DOCS / 'archive_cast_accessor_api_reference.md',
+        'title': 'ArchiveCastAccessor API Reference',
+        'subtitle': 'Practical ArchiveCastAccessor API Reference',
+        'intro': 'This page documents the public casting accessor returned by `Archive::cast()`, applied across every depth level.',
+        'binder': 'cast()',
+    },
+    'ArchiveTimelineAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Archive.h',
+        'output': DOCS / 'archive_timeline_accessor_api_reference.md',
+        'title': 'ArchiveTimelineAccessor API Reference',
+        'subtitle': 'Practical ArchiveTimelineAccessor API Reference',
+        'intro': 'This page documents the public timestamp-feature accessor returned by `Archive::tl()`, applied across every depth level.',
+        'binder': 'tl()',
+    },
+    'ArchiveTimeSeriesAccessor': {
+        'header': ROOT / 'PlussMic/src/kindle/Archive.h',
+        'output': DOCS / 'archive_ts_accessor_api_reference.md',
+        'title': 'ArchiveTimeSeriesAccessor API Reference',
+        'subtitle': 'Practical ArchiveTimeSeriesAccessor API Reference',
+        'intro': 'This page documents the public time-series accessor returned by `Archive::ts()`, applied across every depth level.',
+        'binder': 'ts()',
+    },
 }
 
 METHOD_PAGE_DIR = {
@@ -464,6 +590,21 @@ METHOD_PAGE_DIR = {
     'AxelCastAccessor': 'axel-cast',
     'AxelNoteAccessor': 'axel-note',
     'AxelTimelineAccessor': 'axel-timeline',
+    'CatalogNoteAccessor': 'catalog-note',
+    'CatalogTimelineAccessor': 'catalog-timeline',
+    'CatalogTimeSeriesAccessor': 'catalog-ts',
+    'CatalogCastAccessor': 'catalog-cast',
+    'CatalogKeyAxisAccessor': 'catalog-keyaxis',
+    'StreamCastAccessor': 'stream-cast',
+    'StreamNoteAccessor': 'stream-note',
+    'StreamTimelineAccessor': 'stream-timeline',
+    'StreamTimeSeriesAccessor': 'stream-ts',
+    'StreamLabelAccessor': 'stream-lbl',
+    'ArchiveLabelAccessor': 'archive-label',
+    'ArchiveKeyAxisAccessor': 'archive-keyaxis',
+    'ArchiveCastAccessor': 'archive-cast',
+    'ArchiveTimelineAccessor': 'archive-timeline',
+    'ArchiveTimeSeriesAccessor': 'archive-ts',
 }
 
 # Maps a class to the accessor classes it exposes, so their landing pages can
@@ -500,12 +641,27 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
     'Catalog': [
         'CatalogPlotAccessor',
         'CatalogPlot3DAccessor',
+        'CatalogNoteAccessor',
+        'CatalogTimelineAccessor',
+        'CatalogTimeSeriesAccessor',
+        'CatalogCastAccessor',
+        'CatalogKeyAxisAccessor',
     ],
     'Stream': [
         'StreamPlotAccessor',
+        'StreamCastAccessor',
+        'StreamNoteAccessor',
+        'StreamTimelineAccessor',
+        'StreamTimeSeriesAccessor',
+        'StreamLabelAccessor',
     ],
     'Archive': [
         'ArchivePlotAccessor',
+        'ArchiveLabelAccessor',
+        'ArchiveKeyAxisAccessor',
+        'ArchiveCastAccessor',
+        'ArchiveTimelineAccessor',
+        'ArchiveTimeSeriesAccessor',
     ],
     'Slot': [
         'SlotCastAccessor',
@@ -6518,6 +6674,118 @@ auto axel = pluss::bundle::Axel({r0, r1});
 auto timelines = axel.fields({\"ts\"}).tl();"""
 
 
+def catalog_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto ct = pluss::kindle::Catalog({
+    \"id\"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    \"city\"_k = pluss::kindle::Stream(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"})),
+});"""
+
+
+def catalog_note_accessor_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto ct = pluss::kindle::Catalog({
+    \"city\"_k = pluss::kindle::Stream(pluss::make_note({\"Accra\", \"Tema\"})),
+});
+auto notes = ct.nt();"""
+
+
+def catalog_timeline_accessor_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto ct = pluss::kindle::Catalog({
+    \"ts\"_k = pluss::kindle::Stream(pluss::make_timeline(\"2024-01-01T09:10:00Z\")),
+});
+auto timelines = ct.tl();"""
+
+
+def catalog_ts_accessor_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto ct = pluss::kindle::Catalog({
+    \"metric\"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+});
+auto ts = ct.ts();"""
+
+
+def catalog_cast_accessor_base() -> str:
+    return catalog_base() + '\n' + 'auto cast = ct.cast();'
+
+
+def catalog_keyaxis_accessor_base() -> str:
+    return catalog_base() + '\n' + 'auto keyaxis = ct.keyaxis();'
+
+
+def stream_cast_accessor_base() -> str:
+    return """auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+auto cast = stream.cast();"""
+
+
+def stream_note_accessor_base() -> str:
+    return """auto stream = pluss::kindle::Stream(pluss::make_note({\"Accra\", \"Tema\"}));
+auto notes = stream.nt();"""
+
+
+def stream_timeline_accessor_base() -> str:
+    return """auto stream = pluss::kindle::Stream(pluss::make_timeline(\"2024-01-01T09:10:00Z\"));
+auto timelines = stream.tl();"""
+
+
+def stream_ts_accessor_base() -> str:
+    return """auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+auto ts = stream.ts();"""
+
+
+def stream_lbl_accessor_base() -> str:
+    return """auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}));
+auto lbl = stream.lbl();"""
+
+
+def archive_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto c0 = pluss::kindle::Catalog({
+    \"metric\"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    \"metric\"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1});"""
+
+
+def archive_label_accessor_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto c0 = pluss::kindle::Catalog({
+    \"metric\"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    \"metric\"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({\"train\", \"test\"})));
+auto label = archive.label();"""
+
+
+def archive_keyaxis_accessor_base() -> str:
+    return archive_base() + '\n' + 'auto keyaxis = archive.keyaxis();'
+
+
+def archive_cast_accessor_base() -> str:
+    return archive_base() + '\n' + 'auto cast = archive.cast();'
+
+
+def archive_timeline_accessor_base() -> str:
+    return """using namespace pluss::kindle::literals;
+auto c0 = pluss::kindle::Catalog({
+    \"ts\"_k = pluss::kindle::Stream(pluss::make_timeline(\"2024-01-01T09:10:00Z\")),
+});
+auto c1 = pluss::kindle::Catalog({
+    \"ts\"_k = pluss::kindle::Stream(pluss::make_timeline(\"2024-01-02T09:10:00Z\")),
+});
+auto archive = pluss::kindle::Archive({c0, c1});
+auto timelines = archive.tl();"""
+
+
+def archive_ts_accessor_base() -> str:
+    return archive_base() + '\n' + 'auto ts = archive.ts();'
+
+
 ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'DataFrameNoteAccessor': note_accessor_base,
     'DataFrameTimelineAccessor': timeline_accessor_base,
@@ -6548,6 +6816,21 @@ ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'AxelCastAccessor': axel_cast_accessor_base,
     'AxelNoteAccessor': axel_note_accessor_base,
     'AxelTimelineAccessor': axel_timeline_accessor_base,
+    'CatalogNoteAccessor': catalog_note_accessor_base,
+    'CatalogTimelineAccessor': catalog_timeline_accessor_base,
+    'CatalogTimeSeriesAccessor': catalog_ts_accessor_base,
+    'CatalogCastAccessor': catalog_cast_accessor_base,
+    'CatalogKeyAxisAccessor': catalog_keyaxis_accessor_base,
+    'StreamCastAccessor': stream_cast_accessor_base,
+    'StreamNoteAccessor': stream_note_accessor_base,
+    'StreamTimelineAccessor': stream_timeline_accessor_base,
+    'StreamTimeSeriesAccessor': stream_ts_accessor_base,
+    'StreamLabelAccessor': stream_lbl_accessor_base,
+    'ArchiveLabelAccessor': archive_label_accessor_base,
+    'ArchiveKeyAxisAccessor': archive_keyaxis_accessor_base,
+    'ArchiveCastAccessor': archive_cast_accessor_base,
+    'ArchiveTimelineAccessor': archive_timeline_accessor_base,
+    'ArchiveTimeSeriesAccessor': archive_ts_accessor_base,
 }
 
 ACCESSOR_STUB_VAR: dict[str, str] = {
@@ -6580,6 +6863,21 @@ ACCESSOR_STUB_VAR: dict[str, str] = {
     'AxelCastAccessor': 'cast',
     'AxelNoteAccessor': 'notes',
     'AxelTimelineAccessor': 'timelines',
+    'CatalogNoteAccessor': 'notes',
+    'CatalogTimelineAccessor': 'timelines',
+    'CatalogTimeSeriesAccessor': 'ts',
+    'CatalogCastAccessor': 'cast',
+    'CatalogKeyAxisAccessor': 'keyaxis',
+    'StreamCastAccessor': 'cast',
+    'StreamNoteAccessor': 'notes',
+    'StreamTimelineAccessor': 'timelines',
+    'StreamTimeSeriesAccessor': 'ts',
+    'StreamLabelAccessor': 'lbl',
+    'ArchiveLabelAccessor': 'label',
+    'ArchiveKeyAxisAccessor': 'keyaxis',
+    'ArchiveCastAccessor': 'cast',
+    'ArchiveTimelineAccessor': 'timelines',
+    'ArchiveTimeSeriesAccessor': 'ts',
 }
 
 
@@ -9913,18 +10211,6 @@ def main(argv: list[str] | None = None) -> int:
             skipped_classes.add(class_name)
             continue
         methods = [m for m in methods if m.name not in {'begin', 'end'} or class_name in {'Catalog', 'Registry'}]
-        if class_name == 'Stream':
-            # nt()/tl()/ts() are entry points into StreamNoteAccessor/
-            # StreamTimelineAccessor/StreamTimeSeriesAccessor -- each too large
-            # to document in this phase. Deliberately out of scope, same as
-            # Catalog's equivalent CatalogNoteAccessor/CatalogTimelineAccessor/
-            # CatalogTimeSeriesAccessor entry points never getting pages at all.
-            # plot() *was* in this exclusion set too (each chart's Studio return
-            # isn't verifiable via plain stdout capture, unlike this generator's
-            # other stub examples) until it was hand-authored directly -- see
-            # api/stream/plot.md and the StreamPlotAccessor pages under
-            # api/stream-plot/.
-            methods = [m for m in methods if m.name not in {'nt', 'tl', 'ts'}]
         extracted[class_name] = methods
 
     write_api_nav_manifest(extracted)

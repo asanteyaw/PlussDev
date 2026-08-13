@@ -18,6 +18,11 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 - `plot()` -> [`CatalogPlotAccessor`](catalog_plot_accessor_api_reference.md)
 - `plot3d()` -> [`CatalogPlot3DAccessor`](catalog_plot3d_accessor_api_reference.md)
+- `nt()` -> [`CatalogNoteAccessor`](catalog_note_accessor_api_reference.md)
+- `tl()` -> [`CatalogTimelineAccessor`](catalog_timeline_accessor_api_reference.md)
+- `ts()` -> [`CatalogTimeSeriesAccessor`](catalog_ts_accessor_api_reference.md)
+- `cast()` -> [`CatalogCastAccessor`](catalog_cast_accessor_api_reference.md)
+- `keyaxis()` -> [`CatalogKeyAxisAccessor`](catalog_keyaxis_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:

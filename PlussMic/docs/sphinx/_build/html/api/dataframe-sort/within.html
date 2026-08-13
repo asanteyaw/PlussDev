@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,51 +34,108 @@
 
           <div class="body" role="main">
             
-  <section id="dataframesortbuilder-within">
+  <!-- pluss-hand-authored -->
+<section id="dataframesortbuilder-within">
 <h1>DataFrameSortBuilder::within<a class="headerlink" href="#dataframesortbuilder-within" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_sort_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameSortBuilder API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">within</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span>
-<span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">within</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span>
-<span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">within</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">within</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">within</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">within</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Adds grouping keys that partition the frame before sorting. Group order stays
-first-seen; rows are reordered only inside each group.</p>
+<p>Adds grouping key(s) that partition the frame <strong>before</strong> the
+<a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by(...)</span></code></span></a> value keys are applied — rows are only ever reordered
+<em>within</em> a group, never across group boundaries. Groups themselves keep
+their first-seen relative order in the source frame; only the row order
+inside each group changes.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>within() only partitions — it doesn’t sort by itself
+<code class="docutils literal notranslate"><span class="pre">within(...)</span></code> alone defines no value ordering; pair it with
+<a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by(...)</span></code></span></a> for the actual sort key(s) applied inside each group.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>feature</strong> / <strong>features</strong>
+One or more feature names to group by, in priority order. Any feature
+kind works; groups are compared by value.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder</span></code>
-A new builder with the within-group partition set.</p>
+A new builder with the group partition set. The value-key plan (set via
+<code class="docutils literal notranslate"><span class="pre">by()</span></code>/<code class="docutils literal notranslate"><span class="pre">then()</span></code>) is unaffected and still required for an actual sort.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">()</span>
-<span class="w">    </span><span class="p">.</span><span class="n">within</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
-<span class="w">    </span><span class="p">.</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">desc</span><span class="p">()</span>
-<span class="w">    </span><span class="p">.</span><span class="n">yield</span><span class="p">();</span>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Partition by <code class="docutils literal notranslate"><span class="pre">&quot;city&quot;</span></code>, then sort each city’s rows by <code class="docutils literal notranslate"><span class="pre">&quot;sales&quot;</span></code>
+descending — city groups stay in first-seen order (<code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> appears first at
+row <code class="docutils literal notranslate"><span class="pre">0</span></code>), but rows <em>within</em> each city are reordered.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">within</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">desc</span><span class="p">().</span><span class="n">yield</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   sales
+-------------------
+3    | Tema   200  
+0    | Tema   120  
+1    | Accra  100  
+2    | Accra  90   
+-------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> is first because row <code class="docutils literal notranslate"><span class="pre">0</span></code> (the first <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> row) appears before
+row <code class="docutils literal notranslate"><span class="pre">1</span></code> (the first <code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> row) in the source frame — group order is
+preserved from the original frame, independent of the <code class="docutils literal notranslate"><span class="pre">&quot;sales&quot;</span></code> values.
+Within <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">200</span></code> (row <code class="docutils literal notranslate"><span class="pre">3</span></code>) sorts before <code class="docutils literal notranslate"><span class="pre">120</span></code> (row <code class="docutils literal notranslate"><span class="pre">0</span></code>); within
+<code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">100</span></code> sorts before <code class="docutils literal notranslate"><span class="pre">90</span></code> — both descending, per <code class="docutils literal notranslate"><span class="pre">.desc()</span></code>.</p>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">within(...)</span></code> does not define the value sort keys by itself; pair it with
-<code class="docutils literal notranslate"><span class="pre">.by(...)</span></code>.</p></li>
-<li><p>Group order is preserved from the original frame.</p></li>
+<li><p>See the important callout above.</p></li>
+<li><p>Group order is taken from the source frame’s first occurrence of each
+distinct group value, not sorted alphabetically or by any other criterion.</p></li>
+<li><p>Can be combined with <a class="reference internal" href="then.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">then(...)</span></code></span></a> for multi-key tie-breaking
+inside each group, exactly as without <code class="docutils literal notranslate"><span class="pre">within(...)</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::by</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="yield.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::yield</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::by</span></code></span></a>: supplies the value key(s) applied
+inside each group.</p></li>
+<li><p><a class="reference internal" href="../dataframe/sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort</span></code></span></a>: the entry point this builder is
+reached from.</p></li>
 </ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="then.html">
+    <span class="label">Previous</span>
+    <span class="title">then</span>
+  </a>
+  <a class="next-link" href="yield.html">
+    <span class="label">Next</span>
+    <span class="title">yield</span>
+  </a>
+</div>
 </section>
 </section>
 

@@ -291,6 +291,20 @@ plussmic_table_statistics_window_tests/fast:
 .PHONY : plussmic_table_statistics_window_tests/fast
 
 # Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/rule
+
+# Convenience name for target.
+plussmic_table_flash_dataset_bridge_tests: PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/rule
+.PHONY : plussmic_table_flash_dataset_bridge_tests
+
+# fast build rule for target.
+plussmic_table_flash_dataset_bridge_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/build
+.PHONY : plussmic_table_flash_dataset_bridge_tests/fast
+
+# Convenience name for target.
 PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule
 .PHONY : PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule
@@ -462,6 +476,30 @@ table_dataframe_plot_api_tests.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_dataframe_plot_api_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_dataframe_plot_api_tests.dir/table_dataframe_plot_api_tests.cpp.s
 .PHONY : table_dataframe_plot_api_tests.cpp.s
 
+table_flash_dataset_bridge_tests.o: table_flash_dataset_bridge_tests.cpp.o
+.PHONY : table_flash_dataset_bridge_tests.o
+
+# target to build an object file
+table_flash_dataset_bridge_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/table_flash_dataset_bridge_tests.cpp.o
+.PHONY : table_flash_dataset_bridge_tests.cpp.o
+
+table_flash_dataset_bridge_tests.i: table_flash_dataset_bridge_tests.cpp.i
+.PHONY : table_flash_dataset_bridge_tests.i
+
+# target to preprocess a source file
+table_flash_dataset_bridge_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/table_flash_dataset_bridge_tests.cpp.i
+.PHONY : table_flash_dataset_bridge_tests.cpp.i
+
+table_flash_dataset_bridge_tests.s: table_flash_dataset_bridge_tests.cpp.s
+.PHONY : table_flash_dataset_bridge_tests.s
+
+# target to generate assembly for a file
+table_flash_dataset_bridge_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/table_flash_dataset_bridge_tests.cpp.s
+.PHONY : table_flash_dataset_bridge_tests.cpp.s
+
 table_gap_benchmark.o: table_gap_benchmark.cpp.o
 .PHONY : table_gap_benchmark.o
 
@@ -555,6 +593,7 @@ help:
 	@echo "... plussmic_table_axis_match_tests"
 	@echo "... plussmic_table_csv_tests"
 	@echo "... plussmic_table_dataframe_plot_api_tests"
+	@echo "... plussmic_table_flash_dataset_bridge_tests"
 	@echo "... plussmic_table_gap_benchmark"
 	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
@@ -576,6 +615,9 @@ help:
 	@echo "... table_dataframe_plot_api_tests.o"
 	@echo "... table_dataframe_plot_api_tests.i"
 	@echo "... table_dataframe_plot_api_tests.s"
+	@echo "... table_flash_dataset_bridge_tests.o"
+	@echo "... table_flash_dataset_bridge_tests.i"
+	@echo "... table_flash_dataset_bridge_tests.s"
 	@echo "... table_gap_benchmark.o"
 	@echo "... table_gap_benchmark.i"
 	@echo "... table_gap_benchmark.s"

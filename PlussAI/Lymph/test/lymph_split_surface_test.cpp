@@ -40,7 +40,7 @@ bool run_split_checks(std::ostream* err) {
   const DataFrame data = frame();
   const LabeledBatch labeled = batch();
 
-  const HoldoutSplit frame_holdout = holdout_split(data, HoldoutSplitOptions{.test_size = 0.25});
+  const prep::HoldoutSplit frame_holdout = prep::holdout_split(data, prep::HoldoutSplitOptions{.test_size = 0.25});
   if (!frame_holdout.has_frame() || frame_holdout.has_batch()
       || frame_holdout.train_set.ncases() != 6
       || frame_holdout.test_set.ncases() != 2) {
@@ -48,10 +48,10 @@ bool run_split_checks(std::ostream* err) {
     return false;
   }
 
-  HoldoutSplitOptions batch_options{};
+  prep::HoldoutSplitOptions batch_options{};
   batch_options.test_size = 0.25;
   batch_options.stratify = labeled.y;
-  const HoldoutSplit batch_holdout = holdout_split(labeled, batch_options);
+  const prep::HoldoutSplit batch_holdout = prep::holdout_split(labeled, batch_options);
   if (batch_holdout.has_frame() || !batch_holdout.has_batch()
       || batch_holdout.train_batch.features.sample_count() != 6
       || batch_holdout.test_batch.features.sample_count() != 2) {
@@ -59,13 +59,12 @@ bool run_split_checks(std::ostream* err) {
     return false;
   }
 
-  CrossValidationOptions ts{};
+  prep::TimeSeriesSplitOptions ts{};
   ts.folds = 2;
-  ts.time_test_size = 2;
-  ts.time_gap = 0;
-  ts.shuffle = false;
-  const std::vector<TimeSeriesSplit> frame_ts = time_series_split(data, ts);
-  const std::vector<TimeSeriesSplit> batch_ts = time_series_split(labeled, ts);
+  ts.test_size = 2;
+  ts.gap = 0;
+  const std::vector<prep::TimeSeriesSplit> frame_ts = prep::timeseries_split(data, ts);
+  const std::vector<prep::TimeSeriesSplit> batch_ts = prep::timeseries_split(labeled, ts);
   if (frame_ts.size() != 2 || batch_ts.size() != 2
       || !frame_ts.front().has_frame() || frame_ts.front().has_batch()
       || batch_ts.front().has_frame() || !batch_ts.front().has_batch()

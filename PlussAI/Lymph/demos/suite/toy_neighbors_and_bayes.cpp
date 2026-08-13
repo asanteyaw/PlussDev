@@ -26,7 +26,7 @@ int main() {
   lymph::CrossValidationOptions cv{};
   cv.plan = lymph::CVPlanKind::StratifiedCrossVal;
   cv.folds = 3;
-  const lymph::SpotCheckResult ranked = lymph::spotcheck::models(models)
+  const lymph::spotcheck::Result ranked = lymph::spotcheck::suite(models)
       .strategy("plain")
       .run(raw, data.data(), cv, {}, lymph::MetricKind::Accuracy,
            lymph::TuneObjectivePolicy::Maximize, {.fit_top = 2, .fit_bottom = 1});

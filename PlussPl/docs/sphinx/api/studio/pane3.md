@@ -47,7 +47,7 @@ using namespace pluss::pl;
 
 auto fig = studio("pane3_default_title");
 auto& pane = fig.pane3();
-flash::path3(pane, std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
+pane.path3(std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
 fig.show();
 
 std::cout << pane.title_text().empty() << "\n";
@@ -70,7 +70,7 @@ using namespace pluss::pl;
 
 auto fig = studio("pane3_with_title");
 auto& pane = fig.pane3("Trajectory");
-flash::path3(pane, std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
+pane.path3(std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
 fig.show();
 
 std::cout << pane.title_text() << "\n";
@@ -92,9 +92,9 @@ using namespace pluss::pl;
 
 auto fig = studio("pane2_and_pane3_mixed");
 auto& planar = fig.pane2("2D View");
-flash::lineplot(planar, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+planar.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 auto& volumetric = fig.pane3("3D View");
-flash::path3(volumetric, std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
+volumetric.path3(std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
 fig.mosaic(1, 2);
 fig.show();
 ```

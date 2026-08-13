@@ -82,7 +82,7 @@ int main() {
       .label("ridge stack")
       .width(1.2F)
       .palette(pl::PaletteRamp::thermal())
-      .annotate_levels();
+      .annotate_levels(true);
   ridge.pin("ridge focus", pl::Vec3d{0.35, -0.45, 1.5}, 42.0, -24.0);
 
   auto& orbit = gallery.pane3("Orbital trace");

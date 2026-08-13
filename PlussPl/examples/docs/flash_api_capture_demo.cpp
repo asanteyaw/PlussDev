@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include "../../../PlussMic/src/table/DataFrame.h"
 
 #include <array>
 #include <cmath>
@@ -57,6 +58,24 @@ std::vector<Series> matrix_columns(const Series& matrix) {
 
 Dataset make_demo_dataset(const Series& matrix) {
   return make_dataset(matrix, {"f1", "f2", "f3", "f4", "f5"}, Axis::Cols);
+}
+
+struct HyperCurveData {
+  Series hx;
+  Series hy;
+  Series hz;
+  Series hw;
+};
+
+HyperCurveData make_hyper_curve(std::int64_t points = 480) {
+  constexpr double kPi = 3.14159265358979323846;
+  const auto t = series::linspace(0.0, 2.0 * kPi, points, ScalarType::Float64);
+  return HyperCurveData{
+      .hx = t.cos(),
+      .hy = t.sin(),
+      .hz = t.mul(2.0).cos().mul(0.72),
+      .hw = t.mul(3.0).sin().mul(0.58),
+  };
 }
 
 bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
@@ -219,6 +238,32 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     barplot(pane,
             make_note({"infra", "models", "data", "ops"}),
             make_series({21.0, 28.0, 24.0, 19.0}))
+        .label("barplot");
+    save(fig);
+    return true;
+  }
+  if (key == "barplot_note_horizontal") {
+    Studio fig("barplot_note_horizontal", Theme::paper());
+    auto& pane = fig.pane2("barplot_note_horizontal");
+    BarPlotOptions options;
+    options.horizontal = true;
+    barplot(pane,
+            make_note({"a", "b", "c"}),
+            make_series({4.0, 7.0, 3.0}),
+            options)
+        .label("barplot");
+    save(fig);
+    return true;
+  }
+  if (key == "barplot_numeric_horizontal") {
+    Studio fig("barplot_numeric_horizontal", Theme::paper());
+    auto& pane = fig.pane2("barplot_numeric_horizontal");
+    BarPlotOptions options;
+    options.horizontal = true;
+    barplot(pane,
+            make_series({4.0, 7.0, 3.0}),
+            make_series({0.0, 1.0, 2.0}),
+            options)
         .label("barplot");
     save(fig);
     return true;
@@ -522,8 +567,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     const auto gy = series::linspace(-3.0, 3.0, 40, ScalarType::Float64);
     const auto gz = make_grid_surface(40, 40);
     auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
-    const auto palette_kind = flash_palette_kind("colorblind");
-    trace.palette(flash_palette(palette_kind));
+    trace.palette(flash_palette(FlashPalette::Colorblind));
     save(fig);
     return true;
   }
@@ -704,6 +748,44 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     save(fig);
     return true;
   }
+  if (key == "dataset_from_frame_pairplot") {
+    using namespace pluss::table;
+
+    auto frame = DataFrame({
+        {"city", make_note({"Accra", "Tema", "Kumasi", "Tamale", "Takoradi", "Cape Coast"})},
+        {"units", make_series(std::vector<double>{14.0, 9.0, 17.0, 6.0, 11.0, 13.0})},
+        {"price", make_series(std::vector<double>{3.2, 4.1, 2.8, 5.0, 3.6, 3.9})},
+        {"margin", make_series(std::vector<double>{1.1, 1.5, 0.9, 1.9, 1.3, 1.4})},
+    }).title("sales");
+
+    auto data = Dataset::from_frame(
+        frame,
+        {.features = {"units", "price", "margin", "city"}});
+
+    Studio fig("dataset_from_frame_pairplot", Theme::paper());
+    pairplot(fig, data);
+    save(fig);
+    return true;
+  }
+  if (key == "dataset_from_frame_jointplot") {
+    using namespace pluss::table;
+
+    auto frame = DataFrame({
+        {"city", make_note({"Accra", "Tema", "Kumasi", "Tamale", "Takoradi", "Cape Coast"})},
+        {"units", make_series(std::vector<double>{14.0, 9.0, 17.0, 6.0, 11.0, 13.0})},
+        {"price", make_series(std::vector<double>{3.2, 4.1, 2.8, 5.0, 3.6, 3.9})},
+        {"margin", make_series(std::vector<double>{1.1, 1.5, 0.9, 1.9, 1.3, 1.4})},
+    }).title("sales");
+
+    auto data = Dataset::from_frame(
+        frame,
+        {.features = {"units", "price", "margin", "city"}});
+
+    Studio fig("dataset_from_frame_jointplot", Theme::paper());
+    jointplot(fig, data, "units", "margin", "reg");
+    save(fig);
+    return true;
+  }
   if (key == "get_dataset_names") {
     Studio fig("get_dataset_names", Theme::paper());
     auto& pane = fig.pane2("get_dataset_names");
@@ -717,7 +799,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     Studio fig("catplot_kind", Theme::paper());
     auto& pane = fig.pane2("catplot_kind");
     CatPlotOptions options;
-    options.kind = catplot_kind("bar");
+    options.kind = CatPlotKind::Bar;
     options.errorbar = CatErrorBar::SE;
     catplot(
         pane,
@@ -731,7 +813,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "relgrid_kind") {
     Studio fig("relgrid_kind", Theme::paper());
     RelGridPlotOptions options;
-    options.kind = relgrid_kind("line");
+    options.kind = RelGridKind::Line;
     relgridplot(
         fig,
         {x, x, x},
@@ -743,7 +825,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "disgrid_kind") {
     Studio fig("disgrid_kind", Theme::paper());
     DisGridPlotOptions options;
-    options.kind = disgrid_kind("ecdf");
+    options.kind = DisGridKind::Ecdf;
     disgridplot(fig, {y, y.add(0.25), y.sub(0.3)}, options);
     save(fig);
     return true;
@@ -754,6 +836,47 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
       pairplot(fig, *data);
     } else {
       auto& pane = fig.pane2("fallback");
+      lineplot(pane, x, y).label("fallback");
+    }
+    save(fig);
+    return true;
+  }
+  if (key == "load_dataset_weather_hourly") {
+    Studio fig("load_dataset_weather_hourly", Theme::paper());
+    auto& pane = fig.pane2("weather_hourly");
+    if (auto data = load_dataset("weather_hourly")) {
+      auto time = data->continuous("timestamp");
+      auto demand = data->numeric("demand_mw");
+      if (time && demand) {
+        lineplot(
+            pane,
+            time->slice(0, 0, 336),
+            demand->slice(0, 0, 336))
+            .label("demand_mw");
+      } else {
+        lineplot(pane, x, y).label("fallback");
+      }
+    } else {
+      lineplot(pane, x, y).label("fallback");
+    }
+    save(fig);
+    return true;
+  }
+  if (key == "load_dataset_options_chain") {
+    Studio fig("load_dataset_options_chain", Theme::paper());
+    auto& pane = fig.pane2("options_chain");
+    if (auto data = load_dataset("options_chain")) {
+      auto strike = data->numeric("strike");
+      auto iv = data->numeric("iv");
+      if (strike && iv) {
+        scatterplot(
+            pane,
+            strike->slice(0, 0, 240),
+            iv->slice(0, 0, 240));
+      } else {
+        lineplot(pane, x, y).label("fallback");
+      }
+    } else {
       lineplot(pane, x, y).label("fallback");
     }
     save(fig);
@@ -791,6 +914,18 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     save(fig);
     return true;
   }
+  if (key == "camera3d_topdown") {
+    Studio fig("camera3d_topdown", Theme::paper());
+    auto& pane = fig.pane3("camera3d_topdown");
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    camera3d(pane, 0.0, 90.0, ProjectionKind::Orthographic, 30.0);
+    auto& tr = sheet(pane, gx, gy, gz).label("camera3d_topdown");
+    trace_preset3d(tr, TracePreset3D::Surface);
+    save(fig);
+    return true;
+  }
   if (key == "camera_preset3d") {
     Studio fig("camera_preset3d", Theme::paper());
     auto& pane = fig.pane3("camera_preset3d");
@@ -821,6 +956,27 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     save(fig);
     return true;
   }
+  if (key == "lighting3d_rig") {
+    Studio fig("lighting3d_rig", Theme::paper());
+    auto& pane = fig.pane3("lighting3d_rig");
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    auto& tr = sheet(pane, gx, gy, gz).label("lighting3d_rig");
+    trace_preset3d(tr, TracePreset3D::Surface);
+    lighting3d(
+        pane,
+        Lighting3DOptions{
+            .clear_first = true,
+            .headlight = false,
+            .lamp_left = true,
+            .lamp_right = true,
+            .sun_key = true,
+        });
+    camera_preset3d(pane, CameraPreset3D::Isometric);
+    save(fig);
+    return true;
+  }
   if (key == "theme_preset3d") {
     Studio fig("theme_preset3d", Theme::paper());
     auto& pane = fig.pane3("theme_preset3d");
@@ -829,6 +985,18 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     const auto gz = make_grid_surface(24, 24);
     theme_preset3d(pane, ThemePreset3D::Slate);
     sheet(pane, gx, gy, gz).label("theme_preset3d");
+    save(fig);
+    return true;
+  }
+  if (key == "theme_preset3d_mist") {
+    Studio fig("theme_preset3d_mist", Theme::paper());
+    auto& pane = fig.pane3("theme_preset3d_mist");
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    theme_preset3d(pane, ThemePreset3D::Mist);
+    auto& tr = sheet(pane, gx, gy, gz).label("theme_preset3d_mist");
+    trace_preset3d(tr, TracePreset3D::Surface);
     save(fig);
     return true;
   }
@@ -843,6 +1011,47 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     save(fig);
     return true;
   }
+  if (key == "scene_preset3d_presentation") {
+    Studio fig("scene_preset3d_presentation", Theme::paper());
+    auto& pane = fig.pane3("scene_preset3d_presentation");
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    scene_preset3d(pane, ScenePreset3D::Presentation);
+    auto& tr = sheet(pane, gx, gy, gz).label("scene_preset3d_presentation");
+    trace_preset3d(tr, TracePreset3D::Surface);
+    save(fig);
+    return true;
+  }
+  if (key == "scene3d_custom") {
+    Studio fig("scene3d_custom", Theme::paper());
+    auto& pane = fig.pane3("scene3d_custom");
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    Scene3DOptions opts;
+    opts.preset = ScenePreset3D::Studio;
+    opts.theme = ThemePreset3D::Mist;
+    opts.camera = Camera3DOptions{
+        .azimuth_deg = -18.0,
+        .elevation_deg = 52.0,
+        .view_angle_deg = 30.0,
+        .projection = ProjectionKind::Perspective,
+    };
+    opts.grid_style = GridStyle::Major;
+    opts.lighting = Lighting3DOptions{
+        .clear_first = true,
+        .headlight = false,
+        .lamp_left = true,
+        .lamp_right = true,
+        .sun_key = true,
+    };
+    scene3d(pane, opts);
+    auto& tr = sheet(pane, gx, gy, gz).label("scene3d_custom");
+    trace3d(tr, Trace3DOptions{.preset = TracePreset3D::Surface});
+    save(fig);
+    return true;
+  }
   if (key == "trace3d") {
     Studio fig("trace3d", Theme::paper());
     auto& pane = fig.pane3("trace3d");
@@ -854,6 +1063,37 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     save(fig);
     return true;
   }
+  if (key == "trace3d_custom") {
+    Studio fig("trace3d_custom", Theme::paper());
+    auto& pane = fig.pane3("trace3d_custom");
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    scene_preset3d(pane, ScenePreset3D::Presentation);
+    auto& tr = sheet(pane, gx, gy, gz).label("trace3d_custom");
+    Trace3DOptions opts;
+    opts.preset = TracePreset3D::Surface;
+    opts.material = MaterialProfile::Metal;
+    opts.transparent = true;
+    trace3d(tr, opts);
+    save(fig);
+    return true;
+  }
+  if (key == "trace3d_wireframe") {
+    Studio fig("trace3d_wireframe", Theme::paper());
+    auto& pane = fig.pane3("trace3d_wireframe");
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    scene_preset3d(pane, ScenePreset3D::Survey);
+    auto& tr = lattice(pane, gx, gy, gz).label("trace3d_wireframe");
+    Trace3DOptions opts;
+    opts.preset = TracePreset3D::Wireframe;
+    opts.line_width = 2.2F;
+    trace3d(tr, opts);
+    save(fig);
+    return true;
+  }
   if (key == "trace_preset3d") {
     Studio fig("trace_preset3d", Theme::paper());
     auto& pane = fig.pane3("trace_preset3d");
@@ -862,6 +1102,18 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     const auto gz = make_grid_surface(24, 24);
     auto& tr = sheet(pane, gx, gy, gz).label("sheet");
     trace_preset3d(tr, TracePreset3D::Surface);
+    save(fig);
+    return true;
+  }
+  if (key == "trace_preset3d_volume") {
+    Studio fig("trace_preset3d_volume", Theme::paper());
+    auto& pane = fig.pane3("trace_preset3d_volume");
+    const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    scene_preset3d(pane, ScenePreset3D::Presentation);
+    auto& tr = sheet(pane, gx, gy, gz).label("trace_preset3d_volume");
+    trace_preset3d(tr, TracePreset3D::Volume);
     save(fig);
     return true;
   }
@@ -952,29 +1204,21 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
   if (key == "path4") {
     Studio fig("path4", Theme::paper());
     auto& pane = fig.pane3("path4");
-    const auto t = series::linspace(0.0, 2.0 * kPi, 480, ScalarType::Float64);
-    const auto hx = t.cos();
-    const auto hy = t.sin();
-    const auto hz = t.mul(2.0).cos().mul(0.72);
-    const auto hw = t.mul(3.0).sin().mul(0.58);
+    const auto hyper = make_hyper_curve(480);
     HyperPlotOptions opts;
     opts.projection = HyperProjection::PerspectiveW;
     opts.rot_xw_deg = 30.0;
     opts.rot_yz_deg = 15.0;
     opts.rot_zw_deg = 22.0;
     opts.w_perspective_distance = 3.4;
-    path4(pane, hx, hy, hz, hw, opts).label("path4");
+    path4(pane, hyper.hx, hyper.hy, hyper.hz, hyper.hw, opts).label("path4");
     save(fig);
     return true;
   }
   if (key == "cloud4") {
     Studio fig("cloud4", Theme::paper());
     auto& pane = fig.pane3("cloud4");
-    const auto t = series::linspace(0.0, 2.0 * kPi, 480, ScalarType::Float64);
-    const auto hx = t.cos();
-    const auto hy = t.sin();
-    const auto hz = t.mul(2.0).cos().mul(0.72);
-    const auto hw = t.mul(3.0).sin().mul(0.58);
+    const auto hyper = make_hyper_curve(480);
     HyperPlotOptions opts;
     opts.projection = HyperProjection::PerspectiveW;
     opts.rot_xy_deg = 12.0;
@@ -984,16 +1228,97 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     opts.w_perspective_distance = 3.8;
     opts.w_slice = Range1d{-0.55, 0.55};
     opts.point_size = 14.0;
-    cloud4(pane, hx, hy, hz, hw, opts).label("cloud4");
+    cloud4(pane, hyper.hx, hyper.hy, hyper.hz, hyper.hw, opts).label("cloud4");
+    save(fig);
+    return true;
+  }
+  if (key == "hyper_animation_sequence_preview") {
+    Studio fig("hyper_animation_sequence_preview", Theme::paper());
+    auto& pane = fig.pane3("hyper_animation_sequence_preview");
+    const auto hyper = make_hyper_curve(480);
+    HyperPlotOptions base;
+    base.projection = HyperProjection::PerspectiveW;
+    base.rot_yz_deg = 15.0;
+    base.rot_zw_deg = 24.0;
+    base.w_perspective_distance = 3.6;
+    HyperSweepOptions sweep;
+    sweep.frames = 5;
+    sweep.plane = HyperSweepPlane::XW;
+    sweep.start_deg = 0.0;
+    sweep.end_deg = 60.0;
+    sweep.include_endpoint = true;
+    const auto frames = hyper_animation_sequence(base, sweep);
+    cloud4(pane, hyper.hx, hyper.hy, hyper.hz, hyper.hw, frames.at(2)).label("hyper_animation_sequence_preview");
+    save(fig);
+    return true;
+  }
+  if (key == "animate3_example1_companion") {
+    Studio fig("animate3_example1_companion", Theme::paper());
+    auto& pane = fig.pane3("animate3_example1_companion");
+    camera3d(
+        pane,
+        Camera3DOptions{
+            .azimuth_deg = 30.0,
+            .elevation_deg = -14.0,
+            .view_angle_deg = 30.0,
+            .projection = ProjectionKind::Perspective,
+        });
+    auto& tr = path3(pane, x, y, z).label("animate3_example1_companion");
+    trace_preset3d(tr, TracePreset3D::Path);
+    save(fig);
+    return true;
+  }
+  if (key == "animate3_example2_companion") {
+    Studio fig("animate3_example2_companion", Theme::paper());
+    auto& pane = fig.pane3("animate3_example2_companion");
+    camera3d(
+        pane,
+        Camera3DOptions{
+            .azimuth_deg = 30.0,
+            .elevation_deg = -14.0,
+            .view_angle_deg = 30.0,
+            .projection = ProjectionKind::Perspective,
+        });
+    auto sizes = Series::full({x.numel()}, 7.0, ScalarType::Float64);
+    auto colors = series::linspace(0.15, 0.95, x.numel(), ScalarType::Float64);
+    auto& tr = cloud3(pane, x, y, z, sizes, colors).label("animate3_example2_companion");
+    trace_preset3d(tr, TracePreset3D::Cloud);
+    save(fig);
+    return true;
+  }
+  if (key == "animate4_example1_companion") {
+    Studio fig("animate4_example1_companion", Theme::paper());
+    auto& pane = fig.pane3("animate4_example1_companion");
+    const auto hyper = make_hyper_curve(480);
+    HyperPlotOptions opts;
+    opts.projection = HyperProjection::PerspectiveW;
+    opts.rot_xy_deg = 8.0;
+    opts.rot_yz_deg = 15.0;
+    opts.rot_zw_deg = 24.0;
+    opts.w_perspective_distance = 3.6;
+    path4(pane, hyper.hx, hyper.hy, hyper.hz, hyper.hw, opts).label("animate4_example1_companion");
+    save(fig);
+    return true;
+  }
+  if (key == "animate4_example2_companion") {
+    Studio fig("animate4_example2_companion", Theme::paper());
+    auto& pane = fig.pane3("animate4_example2_companion");
+    const auto hyper = make_hyper_curve(480);
+    HyperPlotOptions opts;
+    opts.projection = HyperProjection::PerspectiveW;
+    opts.rot_xy_deg = 8.0;
+    opts.rot_xw_deg = 20.0;
+    opts.rot_yz_deg = 15.0;
+    opts.rot_zw_deg = 24.0;
+    opts.w_perspective_distance = 3.6;
+    opts.w_slice = Range1d{-0.42, 0.42};
+    opts.point_size = 10.0;
+    cloud4(pane, hyper.hx, hyper.hy, hyper.hz, hyper.hw, opts).label("animate4_example2_companion");
     save(fig);
     return true;
   }
   if (key == "export4_frames") {
-    const auto t = series::linspace(0.0, 2.0 * kPi, 360, ScalarType::Float64);
-    const auto hx = t.cos();
-    const auto hy = t.sin();
-    const auto hz = t.mul(2.0).cos().mul(0.72);
-    const auto hw = t.mul(3.0).sin().mul(0.58);
+    const auto hyper = make_hyper_curve(360);
 
     const auto out_dir = out_svg.parent_path() / "export4_frames_tmp";
     HyperFrameExportOptions opts;
@@ -1007,7 +1332,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     opts.sweep.start_deg = 0.0;
     opts.sweep.end_deg = 45.0;
     opts.sweep.include_endpoint = true;
-    const auto n = export4_frames(hx, hy, hz, hw, opts);
+    const auto n = export4_frames(hyper.hx, hyper.hy, hyper.hz, hyper.hw, opts);
     if (n <= 0) {
       return false;
     }
@@ -1017,6 +1342,32 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     }
     std::error_code ec;
     std::filesystem::copy_file(frame0, out_svg, std::filesystem::copy_options::overwrite_existing, ec);
+    return !ec;
+  }
+  if (key == "export4_frames_frame2") {
+    const auto hyper = make_hyper_curve(360);
+    const auto out_dir = out_svg.parent_path() / "export4_frames_tmp_frame2";
+    HyperFrameExportOptions opts;
+    opts.output_dir = out_dir;
+    opts.file_prefix = "frame";
+    opts.format = AnimationFrameFormat::Svg;
+    opts.width = 960;
+    opts.height = 620;
+    opts.sweep.frames = 4;
+    opts.sweep.plane = HyperSweepPlane::YW;
+    opts.sweep.start_deg = -30.0;
+    opts.sweep.end_deg = 30.0;
+    opts.sweep.include_endpoint = true;
+    const auto n = export4_frames(hyper.hx, hyper.hy, hyper.hz, hyper.hw, opts);
+    if (n <= 0) {
+      return false;
+    }
+    const auto frame2 = out_dir / "frame_2.svg";
+    if (!std::filesystem::exists(frame2)) {
+      return false;
+    }
+    std::error_code ec;
+    std::filesystem::copy_file(frame2, out_svg, std::filesystem::copy_options::overwrite_existing, ec);
     return !ec;
   }
   if (key == "plot3D") {

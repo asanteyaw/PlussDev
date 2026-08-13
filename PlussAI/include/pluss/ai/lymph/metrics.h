@@ -1,8 +1,11 @@
 #pragma once
 
 #include "pluss/ai/lymph/common.h"
+#include "pluss/ai/lymph/prep.h"
 
 namespace pluss::ai::lymph {
+
+namespace metrics {
 
 struct MetricReport {
   std::vector<MetricKind> requested{};
@@ -55,41 +58,6 @@ struct LinearParameters {
   bool fit_intercept = false;
 };
 
-struct HoldoutSplitOptions {
-  double test_size = 0.2;
-  Series stratify = Series::undefined();
-  std::string stratify_feature{};
-  std::uint64_t random_state = 0;
-  bool deterministic = true;
-  bool shuffle = true;
-};
-
-struct HoldoutSplit {
-  pluss::table::DataFrame train_set{};
-  pluss::table::DataFrame test_set{};
-  LabeledBatch train_batch{};
-  LabeledBatch test_batch{};
-  IndexSplit indices{};
-
-  [[nodiscard]] bool has_frame() const noexcept { return train_set.defined() || test_set.defined(); }
-  [[nodiscard]] bool has_batch() const noexcept {
-    return train_batch.features.x.defined() || test_batch.features.x.defined();
-  }
-};
-
-struct TimeSeriesSplit {
-  pluss::table::DataFrame train_set{};
-  pluss::table::DataFrame test_set{};
-  LabeledBatch train_batch{};
-  LabeledBatch test_batch{};
-  IndexSplit indices{};
-
-  [[nodiscard]] bool has_frame() const noexcept { return train_set.defined() || test_set.defined(); }
-  [[nodiscard]] bool has_batch() const noexcept {
-    return train_batch.features.x.defined() || test_batch.features.x.defined();
-  }
-};
-
 [[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);
 
 struct CrossValidationOptions {
@@ -127,6 +95,18 @@ struct FoldBatchPair {
   LabeledBatch train{};
   LabeledBatch test{};
 };
+
+} // namespace metrics
+
+using MetricReport = metrics::MetricReport;
+using SeriesCompareReport = metrics::SeriesCompareReport;
+using LinearParameters = metrics::LinearParameters;
+using CrossValidationOptions = metrics::CrossValidationOptions;
+using CrossValidationReport = metrics::CrossValidationReport;
+using FoldBatchPair = metrics::FoldBatchPair;
+using metrics::as_stratify_series;
+using metrics::compare_series;
+using metrics::max_abs_diff;
 
 [[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
                                                   const LabeledBatch& batch,
@@ -302,15 +282,6 @@ struct FoldBatchPair {
                                                      const Series& prediction,
                                                      const std::vector<MetricKind>& metrics = {}) {
   return resolve(::pluss::ai::nodej::regression_metrics(truth, prediction, metrics), "regression_metric_series");
-}
-
-[[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options) {
-  SplitOptions split{};
-  split.holdout_fraction = options.test_size;
-  split.shuffle = options.shuffle;
-  split.random.seed = options.random_state;
-  split.random.deterministic = options.deterministic;
-  return split;
 }
 
 [[nodiscard]] inline SplitOptions make_cross_validation_split_options(const CrossValidationOptions& options) {
@@ -528,7 +499,7 @@ class Threshold final {
   return "metric";
 }
 
-[[nodiscard]] inline pluss::table::DataFrame CrossValidationReport::board() const {
+[[nodiscard]] inline pluss::table::DataFrame metrics::CrossValidationReport::board() const {
   std::vector<std::string> metric_names{};
   std::vector<double> mean_values{};
   std::vector<double> stdev_values{};
@@ -730,102 +701,8 @@ class Threshold final {
   return cross_validate_score(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
 }
 
-[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread) {
-  if (thread.kind() == pluss::table::ThreadKind::Series) return thread.as_series();
-  return thread.cast({.series_dtype = ScalarType::Float64}).series().as_series();
-}
-
-[[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame, const HoldoutSplitOptions& options) {
-  const SplitOptions split = make_holdout_split_options(options);
-  Series stratify = options.stratify;
-  if (!stratify.defined() && !options.stratify_feature.empty()) {
-    stratify = as_stratify_series(frame.features(options.stratify_feature));
-  }
-  if (stratify.defined()) {
-    return resolve(pluss::ai::nodej::strat_holdout_split(stratify, split), "strat_holdout_split");
-  }
-  return resolve(pluss::ai::nodej::holdout_split(frame.ncases(), split), "holdout_split");
-}
-
-[[nodiscard]] inline HoldoutSplit holdout_split(const pluss::table::DataFrame& frame,
-                                                     HoldoutSplitOptions options = {}) {
-  const IndexSplit indices = make_holdout_indices(frame, options);
-  const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
-                                                   .reshape({indices.train_indices.numel()})
-                                                   .to_vec<std::int64_t>();
-  const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
-                                                 .reshape({indices.test_indices.numel()})
-                                                 .to_vec<std::int64_t>();
-  return HoldoutSplit{
-      .train_set = frame.take(train_idx),
-      .test_set = frame.take(test_idx),
-      .indices = indices,
-  };
-}
-
-[[nodiscard]] inline HoldoutSplit holdout_split(const LabeledBatch& batch,
-                                                HoldoutSplitOptions options = {}) {
-  const SplitOptions split = make_holdout_split_options(options);
-  const bool use_stratify = options.stratify.defined();
-  const IndexSplit indices = use_stratify
-                                 ? resolve(pluss::ai::nodej::strat_holdout_split(options.stratify, split), "strat_holdout_split")
-                                 : resolve(pluss::ai::nodej::holdout_split(batch.features.sample_count(), split), "holdout_split");
-  return HoldoutSplit{
-      .train_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.train_indices), "slice_labeled_batch(train)"),
-      .test_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.test_indices), "slice_labeled_batch(test)"),
-      .indices = indices,
-  };
-}
-
-[[nodiscard]] inline std::vector<TimeSeriesSplit> time_series_split(const pluss::table::DataFrame& frame,
-                                                                    CrossValidationOptions options = {}) {
-  options.plan = CVPlanKind::TSCrossVal;
-  options.shuffle = false;
-  const SplitOptions split = make_cross_validation_split_options(options);
-  const SplitPlan plan = resolve(pluss::ai::nodej::ts_crossval_plan(frame.ncases(), split), "ts_crossval_plan");
-  std::vector<TimeSeriesSplit> out{};
-  out.reserve(plan.folds.size());
-  for (const IndexSplit& indices : plan.folds) {
-    const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
-                                                    .reshape({indices.train_indices.numel()})
-                                                    .to_vec<std::int64_t>();
-    const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
-                                                   .reshape({indices.test_indices.numel()})
-                                                   .to_vec<std::int64_t>();
-    out.push_back(TimeSeriesSplit{
-        .train_set = frame.take(train_idx),
-        .test_set = frame.take(test_idx),
-        .indices = indices,
-    });
-  }
-  return out;
-}
-
-[[nodiscard]] inline std::vector<TimeSeriesSplit> time_series_split(const LabeledBatch& batch,
-                                                                    CrossValidationOptions options = {}) {
-  options.plan = CVPlanKind::TSCrossVal;
-  options.shuffle = false;
-  const SplitOptions split = make_cross_validation_split_options(options);
-  const SplitPlan plan = resolve(pluss::ai::nodej::ts_crossval_plan(batch.features.sample_count(), split), "ts_crossval_plan");
-  std::vector<TimeSeriesSplit> out{};
-  out.reserve(plan.folds.size());
-  for (const IndexSplit& indices : plan.folds) {
-    out.push_back(TimeSeriesSplit{
-        .train_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.train_indices),
-                               "slice_labeled_batch(train)"),
-        .test_batch = resolve(pluss::ai::nodej::slice_labeled_batch(batch, indices.test_indices),
-                              "slice_labeled_batch(test)"),
-        .indices = indices,
-    });
-  }
-  return out;
-}
-
-[[nodiscard]] inline std::pair<pluss::table::DataFrame, pluss::table::DataFrame> hold_out_split(
-    const pluss::table::DataFrame& frame,
-    HoldoutSplitOptions options = {}) {
-  auto split = holdout_split(frame, std::move(options));
-  return std::pair<pluss::table::DataFrame, pluss::table::DataFrame>(std::move(split.train_set), std::move(split.test_set));
+[[nodiscard]] inline Series metrics::as_stratify_series(const pluss::table::Thread& thread) {
+  return ::pluss::ai::lymph::prep::as_stratify_series(thread);
 }
 
 } // namespace pluss::ai::lymph

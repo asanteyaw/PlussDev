@@ -313,6 +313,12 @@ class ModelReports final {
 
 namespace pluss::ai::lymph {
 
+using ModelReports = reports::ModelReports;
+
+} // namespace pluss::ai::lymph
+
+namespace pluss::ai::lymph {
+
 [[nodiscard]] inline reports::ModelReports Model::reports() const {
   return reports::ModelReports(*this);
 }

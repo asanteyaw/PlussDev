@@ -57,7 +57,7 @@ auto fig = studio("chain");
 fig.rename("chained").headline("Chained calls");
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.name() << " / " << fig.headline_text() << "\n";
@@ -68,6 +68,8 @@ std::cout << fig.name() << " / " << fig.headline_text() << "\n";
 ```text
 chained / Chained calls
 ```
+
+![Output of Example 2](img/rename-2-chain.svg)
 
 ## Notes
 

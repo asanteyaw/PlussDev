@@ -42,7 +42,7 @@ fig.legend(KeyDock::South);
 std::cout << static_cast<int>(fig.legend_dock()) << "\n";  // South == 2
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
 fig.show();
 ```
 
@@ -53,6 +53,8 @@ fig.show();
 1
 2
 ```
+
+![Output of Example 1](img/legend_dock-1-check.svg)
 
 ## Notes
 

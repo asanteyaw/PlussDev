@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-// search.h -- Search / SearchResult (LYMPH_REDESIGN_PLAN.md phase 5).
+// search.h -- Search / search::Result (LYMPH_REDESIGN_PLAN.md phase 5).
 //
 // A reusable hyperparameter-search configuration wrapping today's old
 // GridAxis/TuneOptions pair behind an object. The deliberate improvement:
@@ -56,8 +56,8 @@
 // GridPoint` read the way LYMPH_REDESIGN_PLAN.md 2's top-level type map
 // describes them, with nothing physically duplicated or moved.
 //
-// SearchResult reuses selection::CompareReport/Trial/FitOptions the same
-// way -- SearchResult itself lands at the top level per the plan's target
+// search::Result reuses selection::CompareReport/Trial/FitOptions the same
+// way -- search::Result itself lives inside the family namespace
 // shape, its .report field's *type* stays selection::CompareReport under
 // the hood until select.h's own Comparison/SelectionResult promotion lands
 // (not yet started), at which point the qualification just drops.
@@ -76,9 +76,9 @@ namespace pluss::ai::lymph {
 using selection::GridAxis;
 using selection::GridPoint;
 
-class Search;
-
 namespace search {
+struct Result;
+class Search;
 [[nodiscard]] Search grid(std::vector<GridAxis> axes, SplitOptions split = {});
 [[nodiscard]] Search grid(std::vector<GridAxis> axes, CrossValidationOptions cv);
 [[nodiscard]] Search random(std::vector<GridAxis> axes,
@@ -95,9 +95,11 @@ namespace search {
 [[nodiscard]] Search build(std::vector<GridAxis> axes, TuneOptions options);
 } // namespace search
 
+using Search = search::Search;
+
 // Returned by Search::run(...). .top(k) hands back cheap-copy Models, so the
 // result does not have to outlive what the caller keeps.
-struct SearchResult {
+struct search::Result {
   selection::CompareReport report{};
   std::optional<Model> best_model{};
   std::vector<Model> fitted{};
@@ -133,12 +135,12 @@ struct SearchResult {
   }
 };
 
-class Search final {
+class search::Search final {
  public:
   // Direct LabeledBatch entry point -- see selection::compare's own
   // LabeledBatch overload for why this exists (GPU-resident Series data has
   // nowhere to go through DataFrame, which is deliberately CPU-only).
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const LabeledBatch& batch,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
@@ -149,7 +151,7 @@ class Search final {
     return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const LabeledBatch& batch,
                                  const SplitOptions& split,
                                  const TrainOptions& train_options = {},
@@ -158,7 +160,7 @@ class Search final {
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  selection::FitOptions fit_options = {}) const;
 
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& x,
                                  const Series& y,
                                  const TrainOptions& train_options = {},
@@ -170,7 +172,7 @@ class Search final {
     return run(make_model, x, y, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& x,
                                  const Series& y,
                                  const SplitOptions& split,
@@ -184,7 +186,7 @@ class Search final {
     return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& x,
                                  const pluss::table::Thread& y,
                                  const TrainOptions& train_options = {},
@@ -196,7 +198,7 @@ class Search final {
                objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& x,
                                  const pluss::table::Thread& y,
                                  const SplitOptions& split,
@@ -211,7 +213,7 @@ class Search final {
 
   // (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin in
   // detail/model_core.h for why this exists alongside the (x, y) form.
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& frame,
                                  const DataFrameBatchOptions& data_options,
                                  const TrainOptions& train_options = {},
@@ -223,7 +225,7 @@ class Search final {
     return run(make_model, frame, data_options, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const pluss::table::DataFrame& frame,
                                  const DataFrameBatchOptions& data_options,
                                  const SplitOptions& split,
@@ -237,7 +239,7 @@ class Search final {
     return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const Workflow& design,
                                  const Payload& payload,
                                  const TrainOptions& train_options = {},
@@ -254,7 +256,7 @@ class Search final {
                objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] SearchResult run(const std::function<Model(const GridPoint&)>& make_model,
+  [[nodiscard]] Result run(const std::function<Model(const GridPoint&)>& make_model,
                                  const Workflow& design,
                                  const Payload& payload,
                                  const SplitOptions& split,
@@ -321,7 +323,7 @@ class Search final {
   return detail::effective_workflow_split_options_(*cv_, task);
 }
 
-[[nodiscard]] inline SearchResult Search::run(const std::function<Model(const GridPoint&)>& make_model,
+[[nodiscard]] inline search::Result Search::run(const std::function<Model(const GridPoint&)>& make_model,
                                               const LabeledBatch& batch,
                                               const SplitOptions& split_options,
                                               const TrainOptions& train_options,
@@ -418,7 +420,7 @@ class Search final {
   }
   const std::vector<FoldAssessResult> cell_results = pluss::aux::transmit(evaluate_cell, cells, topts);
 
-  SearchResult result{};
+  Result result{};
   result.report.objective_metric = objective_metric;
   result.report.objective_policy = objective_policy;
   result.report.trials.reserve(point_n);

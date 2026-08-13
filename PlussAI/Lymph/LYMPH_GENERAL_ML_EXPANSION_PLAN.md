@@ -842,7 +842,7 @@ NodeJ requirements:
 Lymph requirements:
 
 - Keep inspection outside `Model`.
-- Inspection consumes trained `Model`, `Workflow`, or `SpotCheckResult`.
+- Inspection consumes trained `Model`, `Workflow`, or `spotcheck::Result`.
 
 ### 11. `feature` Family
 

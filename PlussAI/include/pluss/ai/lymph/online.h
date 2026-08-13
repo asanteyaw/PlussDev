@@ -5,9 +5,10 @@
 
 namespace pluss::ai::lymph {
 
+namespace online {
 
 class OnlineLinearClassifier final {
-public:
+ public:
   explicit OnlineLinearClassifier(OnlineLinearOptions options = {})
       : core_(resolve(::pluss::ai::nodej::online::make_online_linear_classifier(options), "online.make_online_linear_classifier")) {}
 
@@ -160,7 +161,7 @@ private:
 };
 
 class OnlineLinearRegressor final {
-public:
+ public:
   explicit OnlineLinearRegressor(OnlineLinearOptions options = {})
       : core_(resolve(::pluss::ai::nodej::online::make_online_linear_regressor(options), "online.make_online_linear_regressor")) {}
 
@@ -301,16 +302,17 @@ private:
   std::vector<std::string> feature_names_{};
 };
 
-namespace models {
-
-[[nodiscard]] inline OnlineLinearClassifier online_linear_classifier(OnlineLinearOptions options = {}) {
+[[nodiscard]] inline OnlineLinearClassifier linear_classifier(OnlineLinearOptions options = {}) {
   return OnlineLinearClassifier(options);
 }
 
-[[nodiscard]] inline OnlineLinearRegressor online_linear_regressor(OnlineLinearOptions options = {}) {
+[[nodiscard]] inline OnlineLinearRegressor linear_regressor(OnlineLinearOptions options = {}) {
   return OnlineLinearRegressor(options);
 }
 
-} // namespace models
+} // namespace online
+
+using OnlineLinearClassifier = online::OnlineLinearClassifier;
+using OnlineLinearRegressor = online::OnlineLinearRegressor;
 
 } // namespace pluss::ai::lymph

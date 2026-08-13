@@ -47,6 +47,8 @@
 
 namespace pluss::ai::lymph {
 
+namespace workflow {
+
 struct WorkflowBranchInfo {
   std::string name{};
   bool named = false;
@@ -82,6 +84,19 @@ struct WorkflowBranchSpec {
 
 class WorkflowBranch;
 class WorkflowRoute;
+class Workflow;
+
+} // namespace workflow
+
+using WorkflowBranchInfo = workflow::WorkflowBranchInfo;
+using WorkflowSchedule = workflow::WorkflowSchedule;
+using WorkflowCache = workflow::WorkflowCache;
+using WorkflowOptions = workflow::WorkflowOptions;
+using WorkflowStepSpec = workflow::WorkflowStepSpec;
+using WorkflowBranchSpec = workflow::WorkflowBranchSpec;
+using WorkflowBranch = workflow::WorkflowBranch;
+using WorkflowRoute = workflow::WorkflowRoute;
+using Workflow = workflow::Workflow;
 
 namespace detail {
 
@@ -190,8 +205,6 @@ inline void save_policy(const std::string& bundle_path, const Policy& policy) {
   return policy;
 }
 
-class Workflow;
-
 namespace workflow {
 [[nodiscard]] Workflow make(Policy policy);
 [[nodiscard]] Workflow make(Model model, Policy policy = {});
@@ -225,7 +238,7 @@ namespace workflow {
 [[nodiscard]] Workflow load(const std::string& path);
 } // namespace workflow
 
-class Workflow final {
+class workflow::Workflow final {
  public:
   Workflow(Workflow&&) noexcept = default;
   Workflow& operator=(Workflow&&) noexcept = default;
@@ -598,7 +611,7 @@ class Workflow final {
   std::optional<TimeOptions> time_options_{};
 };
 
-class WorkflowBranch final {
+class workflow::WorkflowBranch final {
  public:
   WorkflowBranch(Workflow& workflow, std::string name)
       : workflow_(&workflow), name_(std::move(name)) {
@@ -621,7 +634,7 @@ class WorkflowBranch final {
   std::string name_;
 };
 
-class WorkflowRoute final {
+class workflow::WorkflowRoute final {
  public:
   WorkflowRoute(Workflow& workflow, ColumnRouter router, std::int64_t branch_index)
       : workflow_(&workflow), router_(std::move(router)), branch_index_(branch_index) {}
@@ -830,7 +843,7 @@ inline void apply_workflow_branches_(Workflow& workflow, const std::vector<Workf
 [[nodiscard]] inline Workflow make(Policy policy,
                                    std::vector<WorkflowBranchSpec> branches,
                                    WorkflowOptions options) {
-  Workflow workflow = make(std::move(policy));
+  Workflow workflow = workflow::make(std::move(policy));
   detail::apply_workflow_options_(workflow, options);
   detail::apply_workflow_branches_(workflow, branches);
   return workflow;

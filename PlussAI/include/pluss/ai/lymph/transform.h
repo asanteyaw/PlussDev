@@ -20,6 +20,8 @@
 
 namespace pluss::ai::lymph {
 
+namespace transform {
+
 struct TargetTransform {
   std::string name = "target_transform";
   std::function<Series(const Series&)> forward;
@@ -33,6 +35,9 @@ struct TargetTransform {
   bool check_inverse = true;
   double check_inverse_tolerance = 1e-3;
 };
+} // namespace transform
+
+using TargetTransform = transform::TargetTransform;
 
 namespace transform {
 

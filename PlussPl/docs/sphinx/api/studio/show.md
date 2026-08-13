@@ -32,16 +32,16 @@ Both overloads return `bool`: `true` if a window was launched (or, with `launch=
 if the fallback HTML file was written successfully), `false` if launching failed and even
 the fallback write couldn't complete.
 
-```{important} launch=false writes a file but opens no window -- useful for testing, not typical usage
-Every example on this page passes `launch=false` explicitly. This is **not** how `show()`
-is normally called — ordinary usage omits `launch` entirely (it defaults to `true`) and
-lets a real window open, exactly like every other `.show()` call throughout this
-documentation set. `launch=false` exists here purely so this page's own examples can be
-compiled and verified in an automated, non-interactive environment without popping up a
-window: even with `launch=false`, `show()` still renders the figure and writes a fallback
-HTML file to a temp directory — it just skips the final step of actually opening it in a
-viewer. In real interactive code, simply write `fig.show();` or `fig.show("My Title");`
-and a window opens.
+```{important} Examples 2-4 pass launch=false -- useful for testing the return value, not typical usage
+Examples 2, 3, and 4 below pass `launch=false` explicitly, specifically to make
+`show()`'s `bool` return value and its second (`HtmlWindowOptions`) overload
+demonstrable in an automated, non-interactive environment without popping up a
+window. This is **not** how `show()` is normally called — ordinary usage (Example
+1) omits `launch` entirely (it defaults to `true`) and lets a real window open,
+exactly like every other `.show()` call throughout this documentation set. Even
+with `launch=false`, `show()` still renders the figure and writes a fallback HTML
+file to a temp directory — it just skips the final step of actually opening it in
+a viewer.
 ```
 
 ## Parameters
@@ -79,15 +79,20 @@ and a window opens.
 
 ## Examples
 
-Example 1. Typical usage — this is what real, interactive code looks like (though this
-page's own compiled examples all pass `launch=false`; see the important callout above).
+Example 1. Typical usage — this is what real, interactive code looks like: bare
+`fig.show();`, `launch` left at its default `true`, exactly like every other `.show()`
+call throughout this documentation set.
 
-```text
+```cpp
+using namespace pluss::pl;
+
 auto fig = studio("my_figure");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 ```
+
+![Output of Example 1](img/to_svg-1-basic.svg)
 
 Example 2. The first overload with an explicit title and size, `launch=false` for
 automated verification.
@@ -97,7 +102,7 @@ using namespace pluss::pl;
 
 auto fig = studio("show_check");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 bool result = fig.show("Custom Title", 1600, 900, /*launch=*/false);
 std::cout << result << "\n";
@@ -118,7 +123,7 @@ using namespace pluss::pl;
 
 auto fig = studio("show_check");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 bool result = fig.show(/*title=*/{}, 1280, 820, /*launch=*/false);
 std::cout << result << "\n";
@@ -130,6 +135,8 @@ std::cout << result << "\n";
 1
 ```
 
+![Output of Example 3](img/to_svg-1-basic.svg)
+
 Example 4. The `HtmlWindowOptions` overload, for finer-grained window configuration.
 
 ```cpp
@@ -137,7 +144,7 @@ using namespace pluss::pl;
 
 auto fig = studio("show_check");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 pluss::view::HtmlWindowOptions options;
 options.title = "Advanced Window";
@@ -154,6 +161,8 @@ std::cout << result << "\n";
 1
 ```
 
+![Output of Example 4](img/to_svg-1-basic.svg)
+
 ## Notes
 
 - Not `noexcept`.
@@ -162,7 +171,9 @@ std::cout << result << "\n";
 - `launch=false` is a testing/automation affordance, not typical usage — see the important
   callout above.
 - Renders via `to_svg()` internally, so `show()` always reflects the figure's current
-  state at call time, same as `to_svg()` itself.
+  state at call time, same as `to_svg()` itself. `title`/`width`/`height`/`options` only
+  affect the *wrapping* HTML page, never the SVG payload itself — directly verified: all
+  four examples above render byte-identical SVGs despite differing titles/sizes/overloads.
 - Unlike `save_svg()`/`save_pdf()`/`save_png()`, `show()` never writes a *permanent* file
   the caller chose the path for — any HTML file it writes (for the fallback path, or as
   part of `launch=true`'s window-hosting machinery) lives in a temp directory.

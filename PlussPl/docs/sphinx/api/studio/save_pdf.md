@@ -61,7 +61,7 @@ using namespace pluss::pl;
 
 auto fig = studio("save_pdf_auto");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 fig.save_pdf("demo_auto.pdf");
 ```
@@ -75,7 +75,7 @@ using namespace pluss::pl;
 
 auto fig = studio("save_pdf_internal");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 fig.save_pdf("demo_internal.pdf", PdfEngine::Internal);
 ```
@@ -88,7 +88,7 @@ using namespace pluss::pl;
 
 auto fig = studio("save_pdf_wrong_ext");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 try {
   fig.save_pdf("demo.svg");

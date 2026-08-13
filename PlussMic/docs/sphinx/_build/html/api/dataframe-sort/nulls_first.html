@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,36 +34,108 @@
 
           <div class="body" role="main">
             
-  <section id="dataframesortbuilder-nulls-first">
+  <!-- pluss-hand-authored -->
+<section id="dataframesortbuilder-nulls-first">
 <h1>DataFrameSortBuilder::nulls_first<a class="headerlink" href="#dataframesortbuilder-nulls-first" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_sort_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameSortBuilder API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">nulls_first</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">nulls_first</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Moves null values to the front for the active key.</p>
+<p>Moves missing values to the <strong>front</strong> of the result for the active key —
+the most recently added key via <a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by(...)</span></code></span></a>/<a class="reference internal" href="then.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">then(...)</span></code></span></a>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>nulls_first() mutates only the active key
+Same scoping rule as <a class="reference internal" href="asc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">asc()</span></code></span></a>/<a class="reference internal" href="desc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">desc()</span></code></span></a> — this changes
+only the most recently added key’s null placement, not every key in the
+plan.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder</span></code>
 A new builder with the active key’s null placement set to front.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">nulls_first</span><span class="p">().</span><span class="n">yield</span><span class="p">();</span>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A missing <code class="docutils literal notranslate"><span class="pre">&quot;sales&quot;</span></code> value sorts first instead of the default
+last.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}),</span>
+<span class="w">                     </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">default_out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">yield</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;default (nulls_last):</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">default_out</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">nulls_first</span><span class="p">().</span><span class="n">yield</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;nulls_first:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>default (nulls_last):
+============
+     | sales
+------------
+2    | 90   
+0    | 120  
+1    | NULL 
+------------
+[3 cs x 1 feat]
+nulls_first:
+============
+     | sales
+------------
+1    | NULL 
+2    | 90   
+0    | 120  
+------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>The missing row (<code class="docutils literal notranslate"><span class="pre">1</span></code>) moves from last to first; the two real values (<code class="docutils literal notranslate"><span class="pre">90</span></code>,
+<code class="docutils literal notranslate"><span class="pre">120</span></code>) keep their relative ascending order in both cases.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callout above.</p></li>
+<li><p>Requires an active key to exist — call <code class="docutils literal notranslate"><span class="pre">.by(...)</span></code>/<code class="docutils literal notranslate"><span class="pre">.then(...)</span></code> first.</p></li>
+<li><p>Overrides whatever <code class="docutils literal notranslate"><span class="pre">nulls_last</span></code> default <a class="reference internal" href="../dataframe/sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort(ascending,</span> <span class="pre">nulls_last)</span></code></span></a> set, for this key only.</p></li>
+</ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="nulls_last.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::nulls_last</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::by</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="nulls_last.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::nulls_last</span></code></span></a>: the opposite
+placement, and the builder’s own default.</p></li>
+<li><p><a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::by</span></code></span></a>: supplies the key this method mutates.</p></li>
+<li><p><a class="reference internal" href="../dataframe/sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort</span></code></span></a>: the entry point this builder is
+reached from, whose <code class="docutils literal notranslate"><span class="pre">nulls_last</span></code> parameter sets every key’s default.</p></li>
 </ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="head.html">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
+  <a class="next-link" href="nulls_last.html">
+    <span class="label">Next</span>
+    <span class="title">nulls_last</span>
+  </a>
+</div>
 </section>
 </section>
 

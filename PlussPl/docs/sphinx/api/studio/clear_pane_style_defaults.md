@@ -48,12 +48,12 @@ auto fig = studio("style_defaults_cleared");
 fig.pane_style_defaults(style_template);
 
 auto& styled = fig.pane2("styled");
-flash::lineplot(styled, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+styled.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 fig.clear_pane_style_defaults();
 
 auto& unstyled = fig.pane2("unstyled");
-flash::lineplot(unstyled, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0});
+unstyled.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0});
 fig.show();
 
 std::cout << static_cast<int>(styled.grid_style()) << " " << static_cast<int>(unstyled.grid_style()) << "\n";

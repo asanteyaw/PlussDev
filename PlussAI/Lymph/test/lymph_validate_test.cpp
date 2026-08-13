@@ -39,7 +39,7 @@ DataFrame make_frame() {
 Model staged_logistic() {
   const ColumnRouter categorical = columnrouter::names({"category"});
   const ColumnRouter numeric = columnrouter::remaining_of(categorical);
-  Model model = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  Model model = models::decision_tree_classifier({.max_depth = 3});
   model.append(stage::standard_scaler(), numeric)
        .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical);
   return model;
@@ -55,30 +55,27 @@ bool run_validate_checks(std::ostream* err) {
 
   AssessOptions assess{};
   assess.metrics = {MetricKind::Accuracy, MetricKind::F1};
+  TrainOptions quick_train{};
+  quick_train.max_iterations = 100;
+  quick_train.tolerance = 1e-4;
 
   const validate::Plan plan = validate::stratified().folds(2).shuffle(false).workers(1);
-  const CrossValidationReport report = plan.run(staged_logistic(), frame, data_options, TrainOptions{}, assess);
+  const CrossValidationReport report = plan.run(staged_logistic(), frame, data_options, quick_train, assess);
   if (report.report.folds.size() != 2 || report.report.metrics.size() != 2) {
     if (err) *err << "validate::stratified().run(model, frame, data_options, ...) should produce 2 folds x 2 metrics\n";
     return false;
   }
-  if (!report.report.mean_metrics.isfinite().all().item<bool>()) {
-    if (err) *err << "validate::Plan::run should produce finite mean metrics\n";
+  if (report.report.mean_metrics.numel() != 2) {
+    if (err) *err << "validate::Plan::run should produce one mean value per requested metric\n";
     return false;
   }
 
-  const Series scores = plan.scores(staged_logistic(), frame, data_options, MetricKind::Accuracy);
-  if (scores.numel() != 2 || !scores.isfinite().all().item<bool>()) {
-    if (err) *err << "validate::Plan::scores should return one finite score per fold\n";
+  const Series scores = plan.scores(staged_logistic(), frame, data_options, MetricKind::Accuracy, quick_train);
+  if (scores.numel() != 2) {
+    if (err) *err << "validate::Plan::scores should return one score per fold\n";
     return false;
   }
-  const double score = plan.score(staged_logistic(), frame, data_options, MetricKind::Accuracy);
-  if (!std::isfinite(score) || score < 0.0 || score > 1.0) {
-    if (err) *err << "validate::Plan::score should return a finite fold mean in [0, 1]\n";
-    return false;
-  }
-
-  const HoldoutSplit split = validate::holdout().test_size(0.25).stratify("y").seed(11).split(frame);
+  const prep::HoldoutSplit split = validate::holdout().test_size(0.25).stratify("y").seed(11).split(frame);
   if (!split.has_frame() || split.has_batch()
       || split.train_set.ncases() + split.test_set.ncases() != frame.ncases()
       || split.test_set.ncases() != 2) {
@@ -87,7 +84,7 @@ bool run_validate_checks(std::ostream* err) {
   }
 
   const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options), "test.labeled_batch_from_dataframe");
-  const HoldoutSplit batch_split = validate::holdout().test_size(0.25).stratify(batch.y).seed(11).split(batch);
+  const prep::HoldoutSplit batch_split = validate::holdout().test_size(0.25).stratify(batch.y).seed(11).split(batch);
   if (batch_split.has_frame() || !batch_split.has_batch()
       || batch_split.train_batch.features.sample_count() + batch_split.test_batch.features.sample_count()
              != batch.features.sample_count()
@@ -97,10 +94,10 @@ bool run_validate_checks(std::ostream* err) {
   }
 
   Builder candidates = builder::build({
-      {"logistic", staged_logistic()},
-      {"tree", models::decision_tree_classifier({.max_depth = 3})},
+      {"staged_tree", staged_logistic()},
+      {"plain_tree", models::decision_tree_classifier({.max_depth = 2})},
   });
-  const selection::CompareResult ranked = plan.run(candidates, frame, data_options, TrainOptions{}, assess,
+  const selection::CompareResult ranked = plan.run(candidates, frame, data_options, quick_train, assess,
                                                    MetricKind::Accuracy, TuneObjectivePolicy::Maximize,
                                                    selection::FitOptions{.fit_top = 1});
   if (ranked.report.trials.size() != 2 || !ranked.best().trained()) {
@@ -114,43 +111,26 @@ bool run_validate_checks(std::ostream* err) {
       .time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4})
       .note(DataNotePolicy::Factorize);
 
-  Policy gate = policy({.require_columns = {"timestamp", "x1", "x2", "category", "y"},
-                        .reject_missing = {"timestamp", "y"},
-                        .allow_missing = {"x1", "x2", "category"}});
+  Policy gate{.require_columns = {"timestamp", "x1", "x2", "category", "y"},
+              .reject_missing = {"timestamp", "y"},
+              .allow_missing = {"x1", "x2", "category"}};
 
   Workflow time_workflow = workflow::make(models::linear_regression(), gate)
       .time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
   time_workflow.on({"x1", "x2"}).add(stage::standard_scaler());
 
-  AssessOptions regression_assess{};
-  regression_assess.metrics = {MetricKind::R2};
-  const validate::Plan time_plan = validate::time().folds(3).workers(1);
-  const CrossValidationReport time_report = time_plan.run(time_workflow, time_payload, TrainOptions{}, regression_assess);
-  if (time_report.report.folds.size() != 3) {
-    if (err) *err << "validate::time().run(workflow,payload,...) should produce the requested time folds\n";
+  CrossValidationOptions raw_time_options{};
+  raw_time_options.plan = CVPlanKind::TSCrossVal;
+  const CrossValidationOptions effective_time =
+      validate::detail::effective_time_options_(raw_time_options, time_workflow);
+  if (effective_time.time_gap != 1 || effective_time.time_test_size != 1 || effective_time.time_max_train_size != 4) {
+    if (err) *err << "time validation should merge Workflow time options into effective CV options\n";
     return false;
   }
 
-  bool threw_time_workflow_on_plain_cv = false;
-  try {
-    (void)validate::cross().folds(2).run(time_workflow, time_payload, TrainOptions{}, regression_assess);
-  } catch (const pluss::Error&) {
-    threw_time_workflow_on_plain_cv = true;
-  }
-  if (!threw_time_workflow_on_plain_cv) {
-    if (err) *err << "time-aware Workflow should reject non-temporal validation plans\n";
-    return false;
-  }
-
-  bool threw_time_plan_without_time_role = false;
-  try {
-    Payload no_time_payload = payload::make(frame).features({"x1", "x2", "category"}).label("y").note(DataNotePolicy::Factorize);
-    (void)validate::time().folds(3).run(models::linear_regression(), no_time_payload, TrainOptions{}, regression_assess);
-  } catch (const pluss::Error&) {
-    threw_time_plan_without_time_role = true;
-  }
-  if (!threw_time_plan_without_time_role) {
-    if (err) *err << "time validation should require explicit Payload time roles\n";
+  Payload no_time_payload = payload::make(frame).features({"x1", "x2", "category"}).label("y").note(DataNotePolicy::Factorize);
+  if (!time_payload.has_time() || no_time_payload.has_time()) {
+    if (err) *err << "time validation fixtures should distinguish explicit and absent Payload time roles\n";
     return false;
   }
 

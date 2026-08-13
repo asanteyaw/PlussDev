@@ -1,0 +1,124 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: dc1a059e1e97 -->
+
+# StreamTimeSeriesAccessor::grouped
+
+[Back to StreamTimeSeriesAccessor API Reference](../../stream_ts_accessor_api_reference)
+
+## Signature
+
+```cpp
+Stream StreamTimeSeriesAccessor::grouped(
+    const Stream& groups, std::int64_t window,
+    pluss::table::WindowStatistic statistic = pluss::table::WindowStatistic::Mean,
+    const pluss::table::WindowOptions& options = {}) const
+```
+
+## What It Does
+
+Computes the same fixed-row-count rolling window [`rolling()`](rolling.md)
+does, but **restarted independently within each group** — positions are
+partitioned by `groups` (compared by value, any stream kind), and within each
+group the rolling window only ever sees that group's own positions, in their
+original relative order, never crossing a group boundary.
+
+Every position whose `groups` entry is **missing** is treated as belonging to
+one single, shared "ungrouped" bucket — not its own separate group, and not
+excluded from the result.
+
+```{important} StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
+Same precondition as every method on this accessor — see
+[`Stream::ts`](../stream/ts.md)'s own important callout for the exact throw
+message pattern.
+```
+
+## Parameters
+
+**groups** (`const Stream&`)
+    The grouping key, one entry per position, same length as the bound
+    stream. Any stream kind; compared by value.
+
+**window** (`std::int64_t`)
+    The trailing window size, in positions, applied independently within
+    each group.
+
+**statistic** (`pluss::table::WindowStatistic`, default `Mean`)
+    The statistic computed over each window — same set `rolling()` supports.
+
+**options** (`const pluss::table::WindowOptions&`)
+    Same meaning as [`rolling()`](rolling.md)'s fixed-window overload.
+
+## Returns
+
+`Stream`
+    A new stream, same length as the bound source, holding the per-group
+    rolling statistic at each position.
+
+## Examples
+
+Example 1. Two groups, each windowed independently — the window restarts at
+each group's own first position, not the stream's.
+
+```cpp
+auto values = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0, 60.0}));
+auto groups = pluss::kindle::Stream(pluss::make_note({"A", "A", "B", "B", "A", "B"}));
+auto out = values.ts().grouped(groups, 2);
+std::cout << out;
+```
+
+### Output
+
+```text
+========================================================================================================================
+kindle::Stream  kind=Series  dtype=Series[float64]  records=6
+label=no  mask=yes  meta=0
+------------------------------------------------------------------------------------------------------------------------
+label        | value                                                                                                    
+------------------------------------------------------------------------------------------------------------------------
+0            | 10                                                                                                       
+1            | 15                                                                                                       
+2            | 30                                                                                                       
+3            | 35                                                                                                       
+4            | 35                                                                                                       
+5            | 50                                                                                                       
+========================================================================================================================
+```
+
+Group `"A"` is positions `0, 1, 4` (values `10, 20, 50`): its own rolling
+mean(2) is `10`, `15`, `35` — landing back at positions `0`, `1`, and `4`
+respectively. Group `"B"` is positions `2, 3, 5` (values `30, 40, 60`): its
+rolling mean(2) is `30`, `35`, `50`.
+
+## Notes
+
+- Groups are compared by value, not identity — any stream kind works as
+  `groups`.
+- Every position with a missing `groups` entry shares one common bucket,
+  windowed together in original relative order.
+- `groups` must be the same length as the bound stream, or it throws
+  `"Thread::grouped: group length mismatch"`.
+- A pre-existing missing entry in the values stream (as opposed to `groups`)
+  is skipped within any window that contains it, the same as
+  [`rolling()`](rolling.md).
+- See the important callout above.
+
+## See Also
+
+- [`StreamTimeSeriesAccessor::rolling`](rolling.md): the same fixed-window
+  engine, applied to the whole stream instead of independently per group.
+- [`StreamTimeSeriesAccessor::expanding`](expanding.md): a growing (not
+  fixed-width) window, applied to the whole stream.
+- [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
+- [`TimeSeriesAccessor::grouped`](../thread-ts/grouped.md): the underlying
+  single-thread engine, with additional edge-case examples.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fill_gaps.html">
+    <span class="label">Previous</span>
+    <span class="title">fill_gaps</span>
+  </a>
+  <a class="next-link" href="lag.html">
+    <span class="label">Next</span>
+    <span class="title">lag</span>
+  </a>
+</div>

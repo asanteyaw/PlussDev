@@ -79,7 +79,7 @@ bool run_workflow_checks(std::ostream* err) {
   const DataFrame raw = make_raw_frame(12);
 
   // 1) Policy alone: "id" gone, NaN rows gone, "x"/"y" untouched.
-  Policy cleanup = policy({.drop_columns = {"id"}, .filter_nulls = true, .null_filter_columns = {"x"}});
+  Policy cleanup{.drop_columns = {"id"}, .filter_nulls = true, .null_filter_columns = {"x"}};
   const DataFrame cleaned = cleanup.apply(raw);
   if (cleaned.ncases() != 10) {
     if (err) *err << "Policy::apply should drop exactly the 2 NaN-x rows, got " << cleaned.ncases() << " rows\n";
@@ -93,10 +93,10 @@ bool run_workflow_checks(std::ostream* err) {
     }
   }
 
-  Policy admission = policy({.drop_columns = {"id"},
-                             .require_columns = {"id", "x", "y"},
-                             .reject_missing = {"y"},
-                             .allow_missing = {"x"}});
+  Policy admission{.drop_columns = {"id"},
+                   .require_columns = {"id", "x", "y"},
+                   .reject_missing = {"y"},
+                   .allow_missing = {"x"}};
   admission.forbid({"status"}).reject({"y"}).allow({"x"});
   const DataFrame admitted = admission.apply(raw);
   if (admitted.ncases() != 12 || admitted.features().size() != 2) {
@@ -104,7 +104,7 @@ bool run_workflow_checks(std::ostream* err) {
     return false;
   }
 
-  Policy legacy_guard = policy({.drop_columns = {"id"}, .allow_missing = {"x"}, .filter_nulls = true});
+  Policy legacy_guard{.drop_columns = {"id"}, .allow_missing = {"x"}, .filter_nulls = true};
   const DataFrame legacy_guarded = legacy_guard.apply(raw);
   if (legacy_guarded.ncases() != 12) {
     if (err) *err << "Policy allow_missing should exempt imputer-owned feature columns from broad legacy filtering\n";
@@ -113,7 +113,7 @@ bool run_workflow_checks(std::ostream* err) {
 
   bool threw_required = false;
   try {
-    (void)policy({.require_columns = {"missing_raw_column"}}).apply(raw);
+    (void)Policy{.require_columns = {"missing_raw_column"}}.apply(raw);
   } catch (const pluss::Error&) {
     threw_required = true;
   }
@@ -124,7 +124,7 @@ bool run_workflow_checks(std::ostream* err) {
 
   bool threw_forbidden = false;
   try {
-    (void)policy({.forbid_columns = {"id"}}).apply(raw);
+    (void)Policy{.forbid_columns = {"id"}}.apply(raw);
   } catch (const pluss::Error&) {
     threw_forbidden = true;
   }

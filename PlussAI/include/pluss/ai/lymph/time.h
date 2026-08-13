@@ -15,6 +15,8 @@
 
 namespace pluss::ai::lymph {
 
+namespace time {
+
 using TimeOffset = std::int64_t;
 
 [[nodiscard]] constexpr TimeOffset steps(std::int64_t value) noexcept { return value; }
@@ -49,5 +51,14 @@ inline void validate_time_options(const TimeOptions& options, const char* where)
     ::pluss::throw_error(std::string(where) + ": time index cannot be empty when reject_missing_index is true.");
   }
 }
+
+} // namespace time
+
+using TimeOffset = time::TimeOffset;
+using TimeOptions = time::TimeOptions;
+using time::days;
+using time::has_time_index;
+using time::steps;
+using time::validate_time_options;
 
 } // namespace pluss::ai::lymph

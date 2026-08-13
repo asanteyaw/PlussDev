@@ -66,7 +66,7 @@ using namespace pluss::pl;
 
 auto fig = studio("style_defaults_before");
 auto& pane = fig.pane2("first");
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 ```
 
@@ -85,7 +85,7 @@ auto fig = studio("style_defaults_after");
 fig.pane_style_defaults(style_template);
 
 auto& pane = fig.pane2("first");
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << static_cast<int>(pane.grid_style()) << "\n";  // GridStyle::MajorMinor == 2
@@ -110,12 +110,12 @@ style_template.grid(GridStyle::MajorMinor).legend(KeyPlace::OutsideEast);
 
 auto fig = studio("style_defaults_too_late");
 auto& first = fig.pane2("first");
-flash::lineplot(first, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+first.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 
 fig.pane_style_defaults(style_template);
 
 auto& second = fig.pane2("second");
-flash::lineplot(second, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0});
+second.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0});
 fig.show();
 
 std::cout << static_cast<int>(first.grid_style()) << " " << static_cast<int>(second.grid_style()) << "\n";

@@ -55,7 +55,7 @@ using namespace pluss::pl;
 
 auto fig = studio("tight_off");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.tight_layout_enabled() << "\n";
@@ -80,7 +80,7 @@ auto fig = studio("tight_on");
 fig.tight_layout(true);
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.tight_layout_enabled() << " " << fig.tight_layout_padding() << "\n";
@@ -104,7 +104,7 @@ auto fig = studio("tight_custom_padding");
 fig.tight_layout(true, 20.0);
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.tight_layout_padding() << "\n";
@@ -129,7 +129,7 @@ auto fig = studio("tight_reenabled_default_true");
 fig.tight_layout();
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.tight_layout_enabled() << "\n";

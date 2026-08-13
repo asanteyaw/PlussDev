@@ -41,7 +41,7 @@ std::cout << fig.y_captions().size() << "\n";
 std::cout << fig.y_captions().at("shared_y") << "\n";
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
 fig.show();
 ```
 
@@ -52,6 +52,8 @@ fig.show();
 1
 Temperature (C)
 ```
+
+![Output of Example 1](img/y_captions-1-check.svg)
 
 ## Notes
 

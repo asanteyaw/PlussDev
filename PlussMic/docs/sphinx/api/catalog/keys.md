@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3fa4bfc478f -->
+<!-- pluss-signature-hash: 3d8e652e477d -->
 
 # Catalog::keys
 
@@ -8,42 +8,54 @@
 ## Signatures
 
 ```cpp
-Catalog::keys() const -> const std::vector<std::string>&
-Catalog::keys(std::string_view key) const -> Catalog
-Catalog::keys(std::span<const std::string_view> field_names) const -> Catalog
-Catalog::keys(std::initializer_list<std::string_view> field_names) const -> Catalog
+const std::vector<std::string>& Catalog::keys() const
+Stream Catalog::keys(std::string_view key) const
+Catalog Catalog::keys(std::span<const std::string_view> field_names) const
+Catalog Catalog::keys(std::initializer_list<std::string_view> field_names) const
 ```
 
 ## What It Does
 
-Two genuinely different operations share this one overloaded name:
+Three genuinely different operations share this one overloaded name:
 
 - **`keys()`** (no arguments) returns the catalog's stream names as a plain
-  `const std::vector<std::string>&` — a read-only view, in the catalog's own key order.
-- **`keys(key)`** / **`keys(field_names)`** projects the catalog down to the named
-  streams and returns that smaller `Catalog` directly.
+  `const std::vector<std::string>&` — a read-only view, in the catalog's own
+  key order.
+- **`keys(key)`** (a single name) extracts **one stream directly** and
+  returns it as a `Stream` — not a one-key catalog.
+- **`keys(field_names)`** (a span or initializer list of several names)
+  projects the catalog down to those streams and returns that smaller
+  `Catalog`.
 
-```{important} keys(names) is now direct projection
-`ct.keys({"score", "city"})` returns a smaller catalog containing exactly those streams, in
-the requested order. Chained operations then run on that projected catalog.
+```{important} The single-key overload returns a Stream, not a one-key Catalog
+`ct.keys("score")` returns `Stream`, so chaining continues on the `Stream`
+surface (`.fillnull()`, `.nt()`, `.tl()`, ...), not the `Catalog` surface.
+This is easy to get backwards from the multi-name overloads, which *do*
+return a `Catalog` — pass an `initializer_list`/`span` (even of one name,
+`ct.keys({"score"})`) if you specifically want a one-key `Catalog` back
+instead of a bare `Stream`.
 ```
 
 ## Parameters
 
 **key** (`std::string_view`)
-    A single stream name to select.
+    A single stream name to extract as a `Stream`.
 
 **field_names** (`std::span<const std::string_view>` or
 `std::initializer_list<std::string_view>`)
-    Several stream names to select at once.
+    Several stream names to project down to, returned as a `Catalog`.
 
 ## Returns
 
 `const std::vector<std::string>&` (no-argument overload)
     A read-only reference to the catalog's stream names, in key order.
 
-`Catalog` (name-argument overloads)
-    A smaller catalog containing exactly the requested streams, in the requested order.
+`Stream` (single-key overload)
+    The named stream, extracted directly.
+
+`Catalog` (multi-name overloads)
+    A smaller catalog containing exactly the requested streams, in the
+    requested order.
 
 ## Examples
 
@@ -69,10 +81,12 @@ for (const auto& name : ct.keys()) {
 id metric city 
 ```
 
-Example 2. `keys(key)` projects to one stream, and the result behaves like any other
-catalog.
+Example 2. `keys(key)` extracts a single stream directly — see the important
+callout above.
 
 ```cpp
+using namespace pluss::kindle::literals;
+
 auto ct = pluss::kindle::Catalog({
     "score"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0}),
         pluss::make_series(std::vector<bool>{true, false, true})),
@@ -87,18 +101,26 @@ std::cout << out;
 
 ```text
 ========================================================================================================================
-kindle::Catalog  keys=1
-keys: [score]
+kindle::Stream  kind=Series  dtype=Series[float64]  records=3
+label=no  mask=no  meta=0
 ------------------------------------------------------------------------------------------------------------------------
-key                      | kind         | dtype            | cs      | preview                                          
+label        | value                                                                                                    
 ------------------------------------------------------------------------------------------------------------------------
-score                    | Series       | Series[float64]  | 3       | [1, 0, 3]                                        
+0            | 1                                                                                                        
+1            | 0                                                                                                        
+2            | 3                                                                                                        
 ========================================================================================================================
 ```
 
-Example 3. `keys({...})` with an `initializer_list` selects several streams at once.
+`.fillnull(0.0)` is a `Stream` method here — `keys("score")` handed back a
+bare `Stream`, not a catalog to keep projecting.
+
+Example 3. `keys({...})` with an `initializer_list` selects several streams
+at once, returning a `Catalog`.
 
 ```cpp
+using namespace pluss::kindle::literals;
+
 auto ct = pluss::kindle::Catalog({
     "score"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0}),
         pluss::make_series(std::vector<bool>{true, false, true})),
@@ -120,24 +142,62 @@ keys: [city, score]
 key                      | kind         | dtype            | cs      | preview                                          
 ------------------------------------------------------------------------------------------------------------------------
 city                     | Note         | Note             | 3       | [Accra, Tema, Kumasi]                            
-score                    | Series       | Series[float64]  | 3       | [1, NULL, 3]                                     
+score                    | Series       | Series[float64]  | 3       | [1, NA, 3]                                       
 ========================================================================================================================
+```
+
+Example 4 (edge case). Selecting an unknown key throws — with a different
+message on the single-key overload than on the multi-name overloads.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1.0})),
+});
+try {
+  auto bad = ct.keys("nope");
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << "single: " << msg.substr(0, msg.find('\n')) << "\n";
+}
+try {
+  auto bad = ct.keys({"nope"});
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << "multi: " << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+single: Catalog: key 'nope' not found
+multi: Catalog::keys: unknown key 'nope'
 ```
 
 ## Notes
 
-- The no-argument overload returns a reference into the catalog's own storage — no copy.
-- The name-argument overloads return a projected `Catalog`, not an accessor shell.
-- Selecting an unknown key name throws — see [`has()`](has.md) to check first.
+- See the important callout above — the single-key overload's return type is
+  the most common source of confusion on this method.
+- The no-argument overload returns a reference into the catalog's own
+  storage — no copy.
+- The multi-name overloads return a projected `Catalog`; pass a
+  single-element list (`ct.keys({"score"})`) if you want a one-key `Catalog`
+  instead of the single-key overload's bare `Stream`.
+- Selecting an unknown key name throws, with a different message on the
+  single-key overload (`"Catalog: key 'nope' not found"`) than the multi-name
+  overloads (`"Catalog::keys: unknown key 'nope'"`) — see
+  [`has()`](has.md) to check first.
 
 ## See Also
 
 - [`Catalog::has`](has.md): check whether a key exists before selecting it.
 - [`Catalog::drop`](drop.md): remove names instead of projecting them.
-- [`Catalog::at`](at.md) / [`Catalog::get`](get.md): fetch a single stream directly as a
-  `Stream` instead of keeping it inside a catalog.
-- [`Catalog::select`](select.md): static row-wise conditional choose between whole
-  catalogs.
+- [`Catalog::at`](at.md) / [`Catalog::get`](get.md): other single-stream
+  extraction paths.
+- [`Catalog::select`](select.md): static row-wise conditional choose between
+  whole catalogs.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="keyaxis.html">

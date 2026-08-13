@@ -17,10 +17,10 @@ int main() {
   enc.max_categories = 96;
   enc.include_unknown_bucket = true;
 
-  lymph::Policy gate = lymph::policy({
+  lymph::Policy gate{
       .drop_columns = {"VIN (1-10)", "DOL Vehicle ID", "Vehicle Location", "Electric Utility", "2020 Census Tract"},
       .reject_missing = {"Electric Range"},
-  });
+  };
   lymph::Payload data = lymph::payload::make(raw)
       .features({"Model Year", "Make", "Model", "Electric Vehicle Type",
                  "Clean Alternative Fuel Vehicle (CAFV) Eligibility", "Base MSRP"})

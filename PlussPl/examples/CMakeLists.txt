@@ -52,6 +52,7 @@ plusspl_add_example(plusspl_3d_mpl3d_equivalence_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/mpl3d_equivalence_demo.cpp)
 plusspl_add_example(plusspl_flash_api_capture_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/docs/flash_api_capture_demo.cpp)
+target_link_libraries(plusspl_flash_api_capture_demo PRIVATE PlussMic)
 
 # Backward-compatible build target names for previously used flash demo invocations.
 add_custom_target(plusspl_3d_flash_3d_demo DEPENDS plusspl_3d_flash_demo)

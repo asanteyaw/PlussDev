@@ -15,27 +15,23 @@
 // cost, preserving the old "do not accidentally mutate somebody else's
 // model" semantics without forcing std::move into normal user code.
 //
-// Phase 6 (consolidate factories): `lymph::models::` exposes the internal
-// detail::*_factory construction paths through one public namespace.
-// Attempted this as bare `using detail::linear_factory::linear_regression;`
-// using-declarations first -- C++ does not allow a using-declaration at namespace scope to
-// name a class's static member ("using declaration cannot refer to class
-// member"; that form is only valid inside another class body, for
-// inheritance). One-line forwarding wrapper functions below instead: each
-// just calls straight through to the existing detail::*_factory static method,
-// so there is still nothing to keep in sync by hand beyond the function
-// name itself. Where several families already share a name
-// (`regressor`/`classifier`/`transformer`, each taking a different
-// *FamilyOptions type), the wrappers become ordinary overloads resolved by
-// argument type -- exactly the behavior a caller already gets today spread
-// across seven different struct names, just reachable from one namespace
-// instead of seven. The old singular `lymph::model` namespace alias is gone;
-// public code should spell the model-construction family as `lymph::models`.
+// Public factories live under `lymph::model`, grouped by model family:
+// `model::linear::linear_regression(...)`, `model::tree::...`, etc. The
+// family-root shortcuts (`model::linear_regression(...)`) and older plural
+// compatibility shortcuts (`models::linear_regression(...)`) forward to those
+// grouped factories. `lymph::Model` remains the ergonomic type shortcut;
+// `lymph::model::Model` is the explicit family-local spelling of the same
+// handle type.
 
 namespace pluss::ai::lymph {
 
+namespace model {
 class Model;
 class ModelPrep;
+} // namespace model
+
+using Model = model::Model;
+using ModelPrep = model::ModelPrep;
 
 namespace reports {
 class ModelReports;
@@ -52,6 +48,8 @@ struct ModelImpl final : pluss::msharp::RefCounted {
 [[nodiscard]] inline const ModelCore& model_core(const Model& model) noexcept;
 
 } // namespace detail
+
+namespace model {
 
 class Model final {
   friend const detail::ModelCore& detail::model_core(const Model& model) noexcept;
@@ -660,6 +658,8 @@ class ModelPrep final {
   return ModelPrep(*this);
 }
 
+} // namespace model
+
 namespace detail {
 
 [[nodiscard]] inline const ModelCore& model_core(const Model& model) noexcept {
@@ -668,74 +668,201 @@ namespace detail {
 
 } // namespace detail
 
-namespace models {
+namespace model {
 
-[[nodiscard]] inline Model linear_regression(LinearFamilyOptions options = {}) { return detail::linear_factory::linear_regression(options); }
-[[nodiscard]] inline Model logistic_regression(LinearFamilyOptions options = {}) { return detail::linear_factory::logistic_regression(options); }
-[[nodiscard]] inline Model hinge_classifier(LinearFamilyOptions options = {}) { return detail::linear_factory::hinge_classifier(options); }
+namespace linear {
+[[nodiscard]] inline Model linear_regression(LinearFamilyOptions options = {}) { return detail::linear::linear_regression(options); }
+[[nodiscard]] inline Model logistic_regression(LinearFamilyOptions options = {}) { return detail::linear::logistic_regression(options); }
+[[nodiscard]] inline Model hinge_classifier(LinearFamilyOptions options = {}) { return detail::linear::hinge_classifier(options); }
+} // namespace linear
 
-[[nodiscard]] inline Model decision_tree_regressor(TreeFamilyOptions options = {}) { return detail::tree_factory::decision_tree_regressor(options); }
-[[nodiscard]] inline Model decision_tree_classifier(TreeFamilyOptions options = {}) { return detail::tree_factory::decision_tree_classifier(options); }
+namespace tree {
+[[nodiscard]] inline Model decision_tree_regressor(TreeFamilyOptions options = {}) { return detail::tree::decision_tree_regressor(options); }
+[[nodiscard]] inline Model decision_tree_classifier(TreeFamilyOptions options = {}) { return detail::tree::decision_tree_classifier(options); }
+} // namespace tree
 
-[[nodiscard]] inline Model bagging_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::bagging_regressor(options); }
-[[nodiscard]] inline Model random_forest_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::random_forest_regressor(options); }
-[[nodiscard]] inline Model bagging_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::bagging_classifier(options); }
-[[nodiscard]] inline Model random_forest_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::random_forest_classifier(options); }
-[[nodiscard]] inline Model gradient_boost_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::gradient_boost_regressor(options); }
-[[nodiscard]] inline Model gradient_boost_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::gradient_boost_classifier(options); }
+namespace ensemble {
+[[nodiscard]] inline Model bagging_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble::bagging_regressor(options); }
+[[nodiscard]] inline Model random_forest_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble::random_forest_regressor(options); }
+[[nodiscard]] inline Model bagging_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble::bagging_classifier(options); }
+[[nodiscard]] inline Model random_forest_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble::random_forest_classifier(options); }
+[[nodiscard]] inline Model gradient_boost_regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble::gradient_boost_regressor(options); }
+[[nodiscard]] inline Model gradient_boost_classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble::gradient_boost_classifier(options); }
 [[nodiscard]] inline Model adaboost_classifier(EnsembleFamilyOptions options = {}) {
   options.method = EnsembleMethod::AdaBoost;
-  return detail::ensemble_factory::classifier(options);
+  return detail::ensemble::classifier(options);
 }
-[[nodiscard]] inline Model regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::regressor(options); }
-[[nodiscard]] inline Model classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble_factory::classifier(options); }
+[[nodiscard]] inline Model regressor(EnsembleFamilyOptions options = {}) { return detail::ensemble::regressor(options); }
+[[nodiscard]] inline Model classifier(EnsembleFamilyOptions options = {}) { return detail::ensemble::classifier(options); }
+} // namespace ensemble
 
-[[nodiscard]] inline Model knn_regressor(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::knn_regressor(options); }
-[[nodiscard]] inline Model knn_classifier(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::knn_classifier(options); }
-[[nodiscard]] inline Model radius_neighbors_regressor(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::radius_neighbors_regressor(options); }
-[[nodiscard]] inline Model radius_neighbors_classifier(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::radius_neighbors_classifier(options); }
-[[nodiscard]] inline Model regressor(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::regressor(options); }
-[[nodiscard]] inline Model classifier(NeighborFamilyOptions options = {}) { return detail::neighbor_factory::classifier(options); }
+namespace neighbor {
+[[nodiscard]] inline Model knn_regressor(NeighborFamilyOptions options = {}) { return detail::neighbor::knn_regressor(options); }
+[[nodiscard]] inline Model knn_classifier(NeighborFamilyOptions options = {}) { return detail::neighbor::knn_classifier(options); }
+[[nodiscard]] inline Model radius_neighbors_regressor(NeighborFamilyOptions options = {}) { return detail::neighbor::radius_neighbors_regressor(options); }
+[[nodiscard]] inline Model radius_neighbors_classifier(NeighborFamilyOptions options = {}) { return detail::neighbor::radius_neighbors_classifier(options); }
+[[nodiscard]] inline Model regressor(NeighborFamilyOptions options = {}) { return detail::neighbor::regressor(options); }
+[[nodiscard]] inline Model classifier(NeighborFamilyOptions options = {}) { return detail::neighbor::classifier(options); }
+} // namespace neighbor
 
-[[nodiscard]] inline Model svm_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::svm_regressor(options); }
-[[nodiscard]] inline Model svm_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::svm_classifier(options); }
-[[nodiscard]] inline Model nu_svm_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::nu_svm_regressor(options); }
-[[nodiscard]] inline Model nu_svm_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::nu_svm_classifier(options); }
-[[nodiscard]] inline Model one_class_svm(KernelFamilyOptions options = {}) { return detail::kernel_factory::one_class_svm(options); }
-[[nodiscard]] inline Model linear_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::linear_kernel_regressor(options); }
-[[nodiscard]] inline Model rbf_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::rbf_kernel_regressor(options); }
-[[nodiscard]] inline Model polynomial_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::polynomial_kernel_regressor(options); }
-[[nodiscard]] inline Model sigmoid_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::sigmoid_kernel_regressor(options); }
-[[nodiscard]] inline Model linear_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::linear_kernel_classifier(options); }
-[[nodiscard]] inline Model rbf_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::rbf_kernel_classifier(options); }
-[[nodiscard]] inline Model polynomial_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::polynomial_kernel_classifier(options); }
-[[nodiscard]] inline Model sigmoid_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::sigmoid_kernel_classifier(options); }
-[[nodiscard]] inline Model regressor(KernelFamilyOptions options = {}) { return detail::kernel_factory::regressor(options); }
-[[nodiscard]] inline Model classifier(KernelFamilyOptions options = {}) { return detail::kernel_factory::classifier(options); }
-[[nodiscard]] inline Model transformer(KernelFamilyOptions options = {}) { return detail::kernel_factory::transformer(options); }
+namespace kernel {
+[[nodiscard]] inline Model svm_regressor(KernelFamilyOptions options = {}) { return detail::kernel::svm_regressor(options); }
+[[nodiscard]] inline Model svm_classifier(KernelFamilyOptions options = {}) { return detail::kernel::svm_classifier(options); }
+[[nodiscard]] inline Model nu_svm_regressor(KernelFamilyOptions options = {}) { return detail::kernel::nu_svm_regressor(options); }
+[[nodiscard]] inline Model nu_svm_classifier(KernelFamilyOptions options = {}) { return detail::kernel::nu_svm_classifier(options); }
+[[nodiscard]] inline Model one_class_svm(KernelFamilyOptions options = {}) { return detail::kernel::one_class_svm(options); }
+[[nodiscard]] inline Model linear_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel::linear_kernel_regressor(options); }
+[[nodiscard]] inline Model rbf_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel::rbf_kernel_regressor(options); }
+[[nodiscard]] inline Model polynomial_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel::polynomial_kernel_regressor(options); }
+[[nodiscard]] inline Model sigmoid_kernel_regressor(KernelFamilyOptions options = {}) { return detail::kernel::sigmoid_kernel_regressor(options); }
+[[nodiscard]] inline Model linear_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel::linear_kernel_classifier(options); }
+[[nodiscard]] inline Model rbf_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel::rbf_kernel_classifier(options); }
+[[nodiscard]] inline Model polynomial_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel::polynomial_kernel_classifier(options); }
+[[nodiscard]] inline Model sigmoid_kernel_classifier(KernelFamilyOptions options = {}) { return detail::kernel::sigmoid_kernel_classifier(options); }
+[[nodiscard]] inline Model regressor(KernelFamilyOptions options = {}) { return detail::kernel::regressor(options); }
+[[nodiscard]] inline Model classifier(KernelFamilyOptions options = {}) { return detail::kernel::classifier(options); }
+[[nodiscard]] inline Model transformer(KernelFamilyOptions options = {}) { return detail::kernel::transformer(options); }
+} // namespace kernel
 
-[[nodiscard]] inline Model gaussian_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::gaussian_nb_classifier(options); }
-[[nodiscard]] inline Model gaussian_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes_factory::gaussian_nb_regressor(options); }
-[[nodiscard]] inline Model bernoulli_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::bernoulli_nb_classifier(options); }
-[[nodiscard]] inline Model bernoulli_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes_factory::bernoulli_nb_regressor(options); }
-[[nodiscard]] inline Model multinomial_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::multinomial_nb_classifier(options); }
-[[nodiscard]] inline Model complement_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::complement_nb_classifier(options); }
-[[nodiscard]] inline Model multinomial_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes_factory::multinomial_nb_regressor(options); }
-[[nodiscard]] inline Model regressor(BayesFamilyOptions options = {}) { return detail::bayes_factory::regressor(options); }
-[[nodiscard]] inline Model classifier(BayesFamilyOptions options = {}) { return detail::bayes_factory::classifier(options); }
+namespace bayes {
+[[nodiscard]] inline Model gaussian_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes::gaussian_nb_classifier(options); }
+[[nodiscard]] inline Model gaussian_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes::gaussian_nb_regressor(options); }
+[[nodiscard]] inline Model bernoulli_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes::bernoulli_nb_classifier(options); }
+[[nodiscard]] inline Model bernoulli_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes::bernoulli_nb_regressor(options); }
+[[nodiscard]] inline Model multinomial_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes::multinomial_nb_classifier(options); }
+[[nodiscard]] inline Model complement_nb_classifier(BayesFamilyOptions options = {}) { return detail::bayes::complement_nb_classifier(options); }
+[[nodiscard]] inline Model multinomial_nb_regressor(BayesFamilyOptions options = {}) { return detail::bayes::multinomial_nb_regressor(options); }
+[[nodiscard]] inline Model regressor(BayesFamilyOptions options = {}) { return detail::bayes::regressor(options); }
+[[nodiscard]] inline Model classifier(BayesFamilyOptions options = {}) { return detail::bayes::classifier(options); }
+} // namespace bayes
 
-[[nodiscard]] inline Model kmeans(ClusterFamilyOptions options = {}) { return detail::cluster_factory::kmeans(options); }
-[[nodiscard]] inline Model transformer(ClusterFamilyOptions options = {}) { return detail::cluster_factory::transformer(options); }
+namespace cluster {
+[[nodiscard]] inline Model kmeans(ClusterFamilyOptions options = {}) { return detail::cluster::kmeans(options); }
+[[nodiscard]] inline Model transformer(ClusterFamilyOptions options = {}) { return detail::cluster::transformer(options); }
+} // namespace cluster
 
+namespace decompose {
 // PCA (and friends) as a standalone model in its own right -- distinct from
 // the (not yet built) lymph::stage::pca(...) planned for attaching PCA as
 // one step inside a larger pipeline (LYMPH_REDESIGN_PLAN.md 7.4).
-[[nodiscard]] inline Model pca(DecomposeFamilyOptions options = {}) { return detail::decompose_factory::pca(options); }
-[[nodiscard]] inline Model transformer(DecomposeFamilyOptions options = {}) { return detail::decompose_factory::transformer(options); }
+[[nodiscard]] inline Model pca(DecomposeFamilyOptions options = {}) { return detail::decompose::pca(options); }
+[[nodiscard]] inline Model transformer(DecomposeFamilyOptions options = {}) { return detail::decompose::transformer(options); }
+} // namespace decompose
 
-[[nodiscard]] inline Model isolation_detector(DetectFamilyOptions options = {}) { return detail::detect_factory::isolation_detector(options); }
-[[nodiscard]] inline Model isolation_detector(prep::OutlierIsolatorOptions options) { return detail::detect_factory::isolation_detector(options); }
-[[nodiscard]] inline Model transformer(DetectFamilyOptions options = {}) { return detail::detect_factory::transformer(options); }
+namespace detect {
+[[nodiscard]] inline Model isolation_detector(DetectFamilyOptions options = {}) { return detail::detect::isolation_detector(options); }
+[[nodiscard]] inline Model isolation_detector(prep::OutlierIsolatorOptions options) { return detail::detect::isolation_detector(options); }
+[[nodiscard]] inline Model transformer(DetectFamilyOptions options = {}) { return detail::detect::transformer(options); }
+} // namespace detect
+
+[[nodiscard]] inline Model linear_regression(LinearFamilyOptions options = {}) { return linear::linear_regression(options); }
+[[nodiscard]] inline Model logistic_regression(LinearFamilyOptions options = {}) { return linear::logistic_regression(options); }
+[[nodiscard]] inline Model hinge_classifier(LinearFamilyOptions options = {}) { return linear::hinge_classifier(options); }
+
+[[nodiscard]] inline Model decision_tree_regressor(TreeFamilyOptions options = {}) { return tree::decision_tree_regressor(options); }
+[[nodiscard]] inline Model decision_tree_classifier(TreeFamilyOptions options = {}) { return tree::decision_tree_classifier(options); }
+
+[[nodiscard]] inline Model bagging_regressor(EnsembleFamilyOptions options = {}) { return ensemble::bagging_regressor(options); }
+[[nodiscard]] inline Model random_forest_regressor(EnsembleFamilyOptions options = {}) { return ensemble::random_forest_regressor(options); }
+[[nodiscard]] inline Model bagging_classifier(EnsembleFamilyOptions options = {}) { return ensemble::bagging_classifier(options); }
+[[nodiscard]] inline Model random_forest_classifier(EnsembleFamilyOptions options = {}) { return ensemble::random_forest_classifier(options); }
+[[nodiscard]] inline Model gradient_boost_regressor(EnsembleFamilyOptions options = {}) { return ensemble::gradient_boost_regressor(options); }
+[[nodiscard]] inline Model gradient_boost_classifier(EnsembleFamilyOptions options = {}) { return ensemble::gradient_boost_classifier(options); }
+[[nodiscard]] inline Model adaboost_classifier(EnsembleFamilyOptions options = {}) { return ensemble::adaboost_classifier(options); }
+[[nodiscard]] inline Model regressor(EnsembleFamilyOptions options = {}) { return ensemble::regressor(options); }
+[[nodiscard]] inline Model classifier(EnsembleFamilyOptions options = {}) { return ensemble::classifier(options); }
+
+[[nodiscard]] inline Model knn_regressor(NeighborFamilyOptions options = {}) { return neighbor::knn_regressor(options); }
+[[nodiscard]] inline Model knn_classifier(NeighborFamilyOptions options = {}) { return neighbor::knn_classifier(options); }
+[[nodiscard]] inline Model radius_neighbors_regressor(NeighborFamilyOptions options = {}) { return neighbor::radius_neighbors_regressor(options); }
+[[nodiscard]] inline Model radius_neighbors_classifier(NeighborFamilyOptions options = {}) { return neighbor::radius_neighbors_classifier(options); }
+[[nodiscard]] inline Model regressor(NeighborFamilyOptions options = {}) { return neighbor::regressor(options); }
+[[nodiscard]] inline Model classifier(NeighborFamilyOptions options = {}) { return neighbor::classifier(options); }
+
+[[nodiscard]] inline Model svm_regressor(KernelFamilyOptions options = {}) { return kernel::svm_regressor(options); }
+[[nodiscard]] inline Model svm_classifier(KernelFamilyOptions options = {}) { return kernel::svm_classifier(options); }
+[[nodiscard]] inline Model nu_svm_regressor(KernelFamilyOptions options = {}) { return kernel::nu_svm_regressor(options); }
+[[nodiscard]] inline Model nu_svm_classifier(KernelFamilyOptions options = {}) { return kernel::nu_svm_classifier(options); }
+[[nodiscard]] inline Model one_class_svm(KernelFamilyOptions options = {}) { return kernel::one_class_svm(options); }
+[[nodiscard]] inline Model linear_kernel_regressor(KernelFamilyOptions options = {}) { return kernel::linear_kernel_regressor(options); }
+[[nodiscard]] inline Model rbf_kernel_regressor(KernelFamilyOptions options = {}) { return kernel::rbf_kernel_regressor(options); }
+[[nodiscard]] inline Model polynomial_kernel_regressor(KernelFamilyOptions options = {}) { return kernel::polynomial_kernel_regressor(options); }
+[[nodiscard]] inline Model sigmoid_kernel_regressor(KernelFamilyOptions options = {}) { return kernel::sigmoid_kernel_regressor(options); }
+[[nodiscard]] inline Model linear_kernel_classifier(KernelFamilyOptions options = {}) { return kernel::linear_kernel_classifier(options); }
+[[nodiscard]] inline Model rbf_kernel_classifier(KernelFamilyOptions options = {}) { return kernel::rbf_kernel_classifier(options); }
+[[nodiscard]] inline Model polynomial_kernel_classifier(KernelFamilyOptions options = {}) { return kernel::polynomial_kernel_classifier(options); }
+[[nodiscard]] inline Model sigmoid_kernel_classifier(KernelFamilyOptions options = {}) { return kernel::sigmoid_kernel_classifier(options); }
+[[nodiscard]] inline Model regressor(KernelFamilyOptions options = {}) { return kernel::regressor(options); }
+[[nodiscard]] inline Model classifier(KernelFamilyOptions options = {}) { return kernel::classifier(options); }
+[[nodiscard]] inline Model transformer(KernelFamilyOptions options = {}) { return kernel::transformer(options); }
+
+[[nodiscard]] inline Model gaussian_nb_classifier(BayesFamilyOptions options = {}) { return bayes::gaussian_nb_classifier(options); }
+[[nodiscard]] inline Model gaussian_nb_regressor(BayesFamilyOptions options = {}) { return bayes::gaussian_nb_regressor(options); }
+[[nodiscard]] inline Model bernoulli_nb_classifier(BayesFamilyOptions options = {}) { return bayes::bernoulli_nb_classifier(options); }
+[[nodiscard]] inline Model bernoulli_nb_regressor(BayesFamilyOptions options = {}) { return bayes::bernoulli_nb_regressor(options); }
+[[nodiscard]] inline Model multinomial_nb_classifier(BayesFamilyOptions options = {}) { return bayes::multinomial_nb_classifier(options); }
+[[nodiscard]] inline Model complement_nb_classifier(BayesFamilyOptions options = {}) { return bayes::complement_nb_classifier(options); }
+[[nodiscard]] inline Model multinomial_nb_regressor(BayesFamilyOptions options = {}) { return bayes::multinomial_nb_regressor(options); }
+[[nodiscard]] inline Model regressor(BayesFamilyOptions options = {}) { return bayes::regressor(options); }
+[[nodiscard]] inline Model classifier(BayesFamilyOptions options = {}) { return bayes::classifier(options); }
+
+[[nodiscard]] inline Model kmeans(ClusterFamilyOptions options = {}) { return cluster::kmeans(options); }
+[[nodiscard]] inline Model transformer(ClusterFamilyOptions options = {}) { return cluster::transformer(options); }
+
+[[nodiscard]] inline Model pca(DecomposeFamilyOptions options = {}) { return decompose::pca(options); }
+[[nodiscard]] inline Model transformer(DecomposeFamilyOptions options = {}) { return decompose::transformer(options); }
+
+[[nodiscard]] inline Model isolation_detector(DetectFamilyOptions options = {}) { return detect::isolation_detector(options); }
+[[nodiscard]] inline Model isolation_detector(prep::OutlierIsolatorOptions options) { return detect::isolation_detector(options); }
+[[nodiscard]] inline Model transformer(DetectFamilyOptions options = {}) { return detect::transformer(options); }
+
+} // namespace model
+
+namespace models {
+
+using model::Model;
+using model::adaboost_classifier;
+using model::bagging_classifier;
+using model::bagging_regressor;
+using model::bernoulli_nb_classifier;
+using model::bernoulli_nb_regressor;
+using model::classifier;
+using model::complement_nb_classifier;
+using model::decision_tree_classifier;
+using model::decision_tree_regressor;
+using model::gaussian_nb_classifier;
+using model::gaussian_nb_regressor;
+using model::gradient_boost_classifier;
+using model::gradient_boost_regressor;
+using model::hinge_classifier;
+using model::isolation_detector;
+using model::kmeans;
+using model::knn_classifier;
+using model::knn_regressor;
+using model::linear_kernel_classifier;
+using model::linear_kernel_regressor;
+using model::linear_regression;
+using model::logistic_regression;
+using model::multinomial_nb_classifier;
+using model::multinomial_nb_regressor;
+using model::nu_svm_classifier;
+using model::nu_svm_regressor;
+using model::one_class_svm;
+using model::pca;
+using model::polynomial_kernel_classifier;
+using model::polynomial_kernel_regressor;
+using model::radius_neighbors_classifier;
+using model::radius_neighbors_regressor;
+using model::random_forest_classifier;
+using model::random_forest_regressor;
+using model::rbf_kernel_classifier;
+using model::rbf_kernel_regressor;
+using model::regressor;
+using model::sigmoid_kernel_classifier;
+using model::sigmoid_kernel_regressor;
+using model::svm_classifier;
+using model::svm_regressor;
+using model::transformer;
 
 } // namespace models
 

@@ -24,7 +24,7 @@ int main() {
       {"bad", Thread(pluss::make_series(std::vector<double>{0, 0, 1, 0, 1, 0, 0, 0}, {8}, f64))},
   });
 
-  const lymph::Policy cleanup = lymph::policy({.drop_columns = {"loan_id"}});
+  const lymph::Policy cleanup{.drop_columns = {"loan_id"}};
 
   lymph::DataFrameBatchOptions data{};
   data.feature_names = {"income", "debt", "age", "region"};

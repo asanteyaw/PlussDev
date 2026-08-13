@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -36,51 +36,148 @@
 
           <div class="body" role="main">
             
-  <section id="dataframe-sort">
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8b097d0a101e -->
+<section id="dataframe-sort">
 <h1>DataFrame::sort<a class="headerlink" href="#dataframe-sort" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">nulls_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">nulls_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>The entry point into the frame’s reusable sort-planning workflow. <code class="docutils literal notranslate"><span class="pre">sort()</span></code>
+binds the current frame — along with the <em>default</em> direction and null
+placement every subsequently-added key inherits unless overridden — and
+hands back a <code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DataFrameSortBuilder</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="n">by</span><span class="p">(...)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">      </span><span class="c1">// plan the primary key(s)</span>
+<span class="w">  </span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="nf">then</span><span class="p">(...)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">    </span><span class="c1">// append tie-break key(s)</span>
+<span class="w">  </span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="nf">within</span><span class="p">(...)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">  </span><span class="c1">// partition into groups first</span>
+<span class="w">  </span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="nf">asc</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">        </span><span class="c1">// mark the active key ascending</span>
+<span class="w">  </span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="nf">desc</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">       </span><span class="c1">// mark the active key descending</span>
+<span class="w">  </span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="nf">nulls_first</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="nf">nulls_last</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Thread</span><span class="w"> </span><span class="nf">order</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w">    </span><span class="c1">// materialize the row permutation</span>
+<span class="w">  </span><span class="n">DataFrame</span><span class="w"> </span><span class="nf">yield</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span><span class="w"> </span><span class="c1">// execute and return the sorted frame</span>
+<span class="w">  </span><span class="n">DataFrame</span><span class="w"> </span><span class="nf">head</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">DataFrame</span><span class="w"> </span><span class="nf">tail</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>sort() alone plans nothing — no key is set until by()
+<code class="docutils literal notranslate"><span class="pre">sort()</span></code> only records the default direction/null-placement and binds the
+frame; calling a terminal (<code class="docutils literal notranslate"><span class="pre">yield()</span></code>/<code class="docutils literal notranslate"><span class="pre">order()</span></code>/<code class="docutils literal notranslate"><span class="pre">head()</span></code>/<code class="docutils literal notranslate"><span class="pre">tail()</span></code>) before any
+<code class="docutils literal notranslate"><span class="pre">.by(...)</span></code> throws — see <a class="reference internal" href="../dataframe-sort/by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::by</span></code></span></a>’s
+own edge-case example.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Validation is lazy — unknown feature names surface at the terminal, not at by()/then()
+<code class="docutils literal notranslate"><span class="pre">.by(&quot;nope&quot;)</span></code> itself never checks whether <code class="docutils literal notranslate"><span class="pre">&quot;nope&quot;</span></code> exists on the frame — the
+unknown-feature throw only fires when a terminal method
+(<code class="docutils literal notranslate"><span class="pre">yield()</span></code>/<code class="docutils literal notranslate"><span class="pre">order()</span></code>/<code class="docutils literal notranslate"><span class="pre">head()</span></code>/<code class="docutils literal notranslate"><span class="pre">tail()</span></code>) actually executes the plan. You can
+chain several <code class="docutils literal notranslate"><span class="pre">.by(...)</span></code>/<code class="docutils literal notranslate"><span class="pre">.then(...)</span></code> calls referencing features that don’t
+exist yet without any of them throwing, right up until you call a terminal.</p>
+</div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>ascending</strong>
-Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-<p><strong>nulls_last</strong>
-Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p><strong>ascending</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+The default sort direction every key added via <code class="docutils literal notranslate"><span class="pre">.by(...)</span></code>/<code class="docutils literal notranslate"><span class="pre">.then(...)</span></code>
+inherits, unless that key overrides it (e.g. via an <code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code>, or a
+later <code class="docutils literal notranslate"><span class="pre">.desc()</span></code> call).</p>
+<p><strong>nulls_last</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+The default null placement every key inherits, unless overridden.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder</span></code>
-Value produced by this call.</p>
+A binder for the current frame — call <code class="docutils literal notranslate"><span class="pre">.by(...)</span></code> to start planning value
+keys, <code class="docutils literal notranslate"><span class="pre">.within(...)</span></code> to partition into groups first, then a terminal
+method to execute.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<p>Example 1. The simplest plan: one key, default ascending direction, executed
+with <code class="docutils literal notranslate"><span class="pre">.yield()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">yield</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   sales
+-------------------
+2    | Accra  90   
+1    | Accra  100  
+0    | Tema   120  
+3    | Tema   200  
+-------------------
+[4 cs x 2 feat]
 </pre></div>
 </div>
+<p>Example 2 (edge case). Pass <code class="docutils literal notranslate"><span class="pre">ascending</span> <span class="pre">=</span> <span class="pre">false</span></code> to <code class="docutils literal notranslate"><span class="pre">sort()</span></code> itself to change
+the <em>default</em> every subsequently-planned key inherits, rather than calling
+<code class="docutils literal notranslate"><span class="pre">.desc()</span></code> afterward.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">(</span><span class="nb">false</span><span class="p">).</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">yield</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   sales
+-------------------
+3    | Tema   200  
+0    | Tema   120  
+1    | Accra  100  
+2    | Accra  90   
+-------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callouts above — <code class="docutils literal notranslate"><span class="pre">sort()</span></code> alone plans nothing, and
+feature-name validation is deferred to the terminal call.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ascending</span></code>/<code class="docutils literal notranslate"><span class="pre">nulls_last</span></code> set the <em>builder’s</em> defaults; any per-key override
+(an explicit <code class="docutils literal notranslate"><span class="pre">.asc()</span></code>/<code class="docutils literal notranslate"><span class="pre">.desc()</span></code>/<code class="docutils literal notranslate"><span class="pre">.nulls_first()</span></code>/<code class="docutils literal notranslate"><span class="pre">.nulls_last()</span></code> call, or an
+<code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code> with its own fields set) wins for that key specifically.</p></li>
+<li><p>Not <code class="docutils literal notranslate"><span class="pre">noexcept</span></code>; <code class="docutils literal notranslate"><span class="pre">sort()</span></code> itself does no validation work — every check is
+deferred to the terminal.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../dataframe_sort_accessor_api_reference.html"><span class="doc std std-doc">DataFrameSortBuilder API Reference</span></a>:
+the full method list this builder exposes.</p></li>
+<li><p><a class="reference internal" href="../dataframe-sort/by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::by</span></code></span></a>: the method that
+actually starts the key plan.</p></li>
+<li><p><a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::arrange</span></code></span></a>: the direct execute-now sorter, for when
+you don’t need a reusable plan.</p></li>
+<li><p><a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::take</span></code></span></a>: the row-selection primitive
+<a class="reference internal" href="../dataframe-sort/order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">order()</span></code></span></a>’s materialized permutation feeds into.</p></li>
+</ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="slice.html">
     <span class="label">Previous</span>
@@ -91,7 +188,6 @@ Value produced by this call.</p>
     <span class="title">sql</span>
   </a>
 </div>
-</section>
 </section>
 </section>
 

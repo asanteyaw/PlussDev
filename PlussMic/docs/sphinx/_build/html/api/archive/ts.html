@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Archive::ts &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Archive::unique" href="unique.html" />
+    <link rel="prev" title="Archive::to_string" href="to_string.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e987523bf266 -->
+<section id="archive-ts">
+<h1>Archive::ts<a class="headerlink" href="#archive-ts" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../archive_api_reference.html"><span class="doc std std-doc">Back to Archive API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ArchiveTimeSeriesAccessor</span><span class="w"> </span><span class="n">Archive</span><span class="o">::</span><span class="n">ts</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>The entry point into time-series transformations across the whole depth stack. <code class="docutils literal notranslate"><span class="pre">ts()</span></code>
+binds the current archive and hands back an <code class="docutils literal notranslate"><span class="pre">ArchiveTimeSeriesAccessor</span></code>, which exposes
+the same 6 methods as <a class="reference internal" href="../catalog/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogTimeSeriesAccessor</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">returns</span></code>,
+<code class="docutils literal notranslate"><span class="pre">log_returns</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">lag</span></code>, <code class="docutils literal notranslate"><span class="pre">lead</span></code> (all period-shift-based transforms), and <code class="docutils literal notranslate"><span class="pre">rolling</span></code>
+(windowed statistics) — see the
+<a class="reference internal" href="../../archive_ts_accessor_api_reference.html"><span class="doc std std-doc">ArchiveTimeSeriesAccessor API Reference</span></a> for
+every method’s own dedicated page. Every method broadcasts across <strong>every catalog</strong> in
+the stack independently, returning a new <code class="docutils literal notranslate"><span class="pre">Archive</span></code> of the same depth.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>ts() binds catalog(0)’s key set — not each catalog’s own keys
+Same rule as <a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tl()</span></code></span></a>: the working key set comes from <strong>the first
+catalog in the stack</strong> (<code class="docutils literal notranslate"><span class="pre">catalog(0).keys()</span></code>), and every other catalog must carry each
+of those exact key names or <code class="docutils literal notranslate"><span class="pre">ts()</span></code> itself throws immediately, with
+<code class="docutils literal notranslate"><span class="pre">&quot;Archive::keys:</span> <span class="pre">unknown</span> <span class="pre">key</span> <span class="pre">'...'&quot;</span></code>. Whether each bound key is actually numeric is
+checked lazily, the moment you call a specific method on the returned accessor — not by
+<code class="docutils literal notranslate"><span class="pre">ts()</span></code> itself.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Each catalog’s series is shifted/windowed independently
+Time-series transforms operate strictly within a single catalog’s own rows — there is
+no cross-catalog (cross-depth) shifting or windowing here. <code class="docutils literal notranslate"><span class="pre">ts().lag(1)</span></code> shifts each
+catalog’s own values by one row <em>within that catalog</em>; catalog 1’s leading row does not
+pull in a trailing value from catalog 0. If you need a shift across the <em>depth</em> axis
+itself, there is no direct equivalent — <a class="reference internal" href="slice_depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::slice_depth</span></code></span></a> and
+manual catalog indexing are the closest tools.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ArchiveTimeSeriesAccessor</span></code>
+A binder for the current archive’s stack — call one of its 6 methods to shift or
+window-aggregate every catalog’s copy of the bound keys.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">ts().returns()</span></code> computes simple percent returns independently within each
+catalog — the leading <code class="docutils literal notranslate"><span class="pre">NaN</span></code> appears in <em>every</em> catalog, not just the first.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">c0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;px&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">121.0</span><span class="p">})),</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;px&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.5</span><span class="p">})),</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Archive</span><span class="p">({</span><span class="n">c0</span><span class="p">,</span><span class="w"> </span><span class="n">c1</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">catalog</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">catalog</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Catalog  keys=1
+keys: [px]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+px                       | Series       | Series[float64]  | 3       | [nan, 0.1, 0.1]                                  
+========================================================================================================================
+========================================================================================================================
+kindle::Catalog  keys=1
+keys: [px]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+px                       | Series       | Series[float64]  | 3       | [nan, 0.1, 0.1]                                  
+========================================================================================================================
+</pre></div>
+</div>
+<p>Both catalogs happen to have a constant 10%-per-step growth rate here, which is why
+their <code class="docutils literal notranslate"><span class="pre">returns()</span></code> outputs look identical — each was computed independently from that
+catalog’s own three rows, per the second important callout above.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See both important callouts above — the key-set binding is eager and stack-wide,
+numeric-kind checking is lazy and per-method, and every transform stays within its
+own catalog’s rows.</p></li>
+<li><p>Requires a defined archive; throws <code class="docutils literal notranslate"><span class="pre">&quot;Archive:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> otherwise (checked
+when a method is actually called, not by <code class="docutils literal notranslate"><span class="pre">ts()</span></code> itself).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ArchiveTimeSeriesAccessor</span></code>’s 6-method surface mirrors
+<a class="reference internal" href="../catalog/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogTimeSeriesAccessor</span></code></span></a> exactly — it does not expose
+<code class="docutils literal notranslate"><span class="pre">Stream::ts()</span></code>’s richer surface (<code class="docutils literal notranslate"><span class="pre">expanding</span></code>, <code class="docutils literal notranslate"><span class="pre">ewm</span></code>, <code class="docutils literal notranslate"><span class="pre">align_to</span></code>, …) for the same
+reason <code class="docutils literal notranslate"><span class="pre">Catalog::ts()</span></code> doesn’t: those operations need a single, unambiguous time axis
+that a multi-key catalog (or a stack of them) doesn’t have implicitly.</p></li>
+<li><p>On an empty archive (<code class="docutils literal notranslate"><span class="pre">depth()</span> <span class="pre">==</span> <span class="pre">0</span></code>), <code class="docutils literal notranslate"><span class="pre">ts()</span></code> binds an empty key set and never throws;
+every method on the returned accessor is a no-op that returns another empty archive.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../archive_ts_accessor_api_reference.html"><span class="doc std std-doc">ArchiveTimeSeriesAccessor API Reference</span></a>:
+the full list of 6 methods this accessor exposes.</p></li>
+<li><p><a class="reference internal" href="../catalog/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::ts</span></code></span></a>: the single-catalog equivalent this method’s
+per-catalog broadcast delegates to.</p></li>
+<li><p><a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tl</span></code></span></a>: the sibling accessor for timestamp-feature extraction, with
+the same catalog(0)-keys binding rule.</p></li>
+<li><p><a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::keys</span></code></span></a>: narrow the archive to a uniform key subset first if your
+stack is ragged and you only need a subset of catalogs’ shared keys.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="to_string.html">
+    <span class="label">Previous</span>
+    <span class="title">to_string</span>
+  </a>
+  <a class="next-link" href="unique.html">
+    <span class="label">Next</span>
+    <span class="title">unique</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../archive_api_reference.html">Archive API Reference</a><ul>
+      <li>Previous: <a href="to_string.html" title="previous chapter">Archive::to_string</a></li>
+      <li>Next: <a href="unique.html" title="next chapter">Archive::unique</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/archive/ts.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

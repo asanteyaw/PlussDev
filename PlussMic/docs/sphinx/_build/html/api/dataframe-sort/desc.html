@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=5bdb4faa"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -34,43 +34,94 @@
 
           <div class="body" role="main">
             
-  <section id="dataframesortbuilder-desc">
+  <!-- pluss-hand-authored -->
+<section id="dataframesortbuilder-desc">
 <h1>DataFrameSortBuilder::desc<a class="headerlink" href="#dataframesortbuilder-desc" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_sort_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameSortBuilder API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">desc</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSortBuilder</span><span class="w"> </span><span class="n">DataFrameSortBuilder</span><span class="o">::</span><span class="n">desc</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Marks the active key as descending.</p>
+<p>Marks the <strong>active key</strong> — the most recently added key via
+<a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by(...)</span></code></span></a> or <a class="reference internal" href="then.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">then(...)</span></code></span></a> — as descending.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>desc() mutates only the active key, not the whole plan
+Same scoping as <a class="reference internal" href="asc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">asc()</span></code></span></a> — see that page’s own important callout.
+Call <code class="docutils literal notranslate"><span class="pre">.then(...)</span></code> before <code class="docutils literal notranslate"><span class="pre">.desc()</span></code> when you want the newly-appended
+tie-break key to be the one flipped, not the primary key.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder</span></code>
-A new builder with the active key direction set to descending.</p>
+A new builder with the active key’s direction set to descending.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">desc</span><span class="p">().</span><span class="n">yield</span><span class="p">();</span>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Sort by <code class="docutils literal notranslate"><span class="pre">&quot;sales&quot;</span></code> descending.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">().</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">).</span><span class="n">desc</span><span class="p">().</span><span class="n">yield</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   sales
+-------------------
+3    | Tema   200  
+0    | Tema   120  
+1    | Accra  100  
+2    | Accra  90   
+-------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+</section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Like <code class="docutils literal notranslate"><span class="pre">asc()</span></code>, this changes only the active key.</p></li>
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">.then(...)</span></code> before <code class="docutils literal notranslate"><span class="pre">.desc()</span></code> when you want the later tie-break key to be the one modified.</p></li>
+<li><p>See the important callout above.</p></li>
+<li><p>Requires an active key to exist — call <code class="docutils literal notranslate"><span class="pre">.by(...)</span></code>/<code class="docutils literal notranslate"><span class="pre">.then(...)</span></code> first.</p></li>
+<li><p>Equivalent to supplying an <code class="docutils literal notranslate"><span class="pre">ArrangeSpec{feature,</span> <span class="pre">/*ascending=*/false,</span> <span class="pre">...}</span></code>
+directly to <code class="docutils literal notranslate"><span class="pre">by()</span></code>/<code class="docutils literal notranslate"><span class="pre">then()</span></code>, just expressed as a follow-up mutation.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="asc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::asc</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="then.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::then</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="asc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::asc</span></code></span></a>: the opposite direction.</p></li>
+<li><p><a class="reference internal" href="then.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder::then</span></code></span></a>: append a new key before flipping
+its direction, per the important callout above.</p></li>
+<li><p><a class="reference internal" href="../dataframe/sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort</span></code></span></a>: the entry point this builder is
+reached from.</p></li>
 </ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="by.html">
+    <span class="label">Previous</span>
+    <span class="title">by</span>
+  </a>
+  <a class="next-link" href="head.html">
+    <span class="label">Next</span>
+    <span class="title">head</span>
+  </a>
+</div>
 </section>
 </section>
 

@@ -18,15 +18,13 @@
 // admissible before ML transformations begin.
 //
 // What lands here:
-//   - struct Policy: drop_columns, require_columns, forbid_columns,
+//   - policy::Policy: drop_columns, require_columns, forbid_columns,
 //     reject_missing, allow_missing, and the legacy filter_nulls fields.
 //   - Policy::apply(DataFrame) -> DataFrame.
 //   - Policy method surface: drop(...), require(...), forbid(...),
 //     reject_missing(...), allow_missing(...), reject_any_missing().
-//   - lymph::policy({...}) -- a single free function, not a
-//     lymph::policy:: namespace: Policy has only one construction shape, no
-//     sub-variants to distinguish (unlike ColumnRouter/Model/Search, which
-//     each have several named factories).
+//   - lymph::Policy remains the ergonomic root alias; lymph::policy::Policy is
+//     the explicit family-local spelling.
 //
 // What does NOT live here: save_policy/load_policy (the bundle sidecar
 // persistence) -- those are Workflow concerns, since only Workflow::save/load
@@ -39,6 +37,8 @@
 // Consumed by: workflow.h (Workflow = Model + Policy).
 
 namespace pluss::ai::lymph {
+
+namespace policy {
 
 struct Policy {
   // Columns stripped before modeling. Use for IDs, leakage columns, audit-only
@@ -211,8 +211,12 @@ struct Policy {
   }
 };
 
-[[nodiscard]] inline Policy policy(Policy options = {}) {
+[[nodiscard]] inline Policy make(Policy options = {}) {
   return std::move(options);
 }
+
+} // namespace policy
+
+using Policy = policy::Policy;
 
 } // namespace pluss::ai::lymph

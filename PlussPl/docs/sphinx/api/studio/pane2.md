@@ -61,7 +61,7 @@ using namespace pluss::pl;
 
 auto fig = studio("pane2_default_title");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << pane.title_text().empty() << "\n";
@@ -82,7 +82,7 @@ using namespace pluss::pl;
 
 auto fig = studio("pane2_with_title");
 auto& pane = fig.pane2("Revenue by Quarter");
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << pane.title_text() << "\n";
@@ -104,11 +104,11 @@ using namespace pluss::pl;
 
 auto fig = studio("pane2_multiple");
 auto& first = fig.pane2("first");
-flash::lineplot(first, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+first.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 auto& second = fig.pane2("second");
-flash::lineplot(second, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
+second.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
 auto& third = fig.pane2("third");
-flash::lineplot(third, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{4.0, 6.0, 5.0});
+third.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{4.0, 6.0, 5.0});
 fig.mosaic(1, 3);
 fig.show();
 
@@ -135,7 +135,7 @@ style_template.grid(GridStyle::MajorMinor);
 auto fig = studio("pane2_with_style_defaults");
 fig.pane_style_defaults(style_template);
 auto& styled = fig.pane2("styled");
-flash::lineplot(styled, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+styled.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 fig.show();
 
 std::cout << static_cast<int>(styled.grid_style()) << "\n";  // GridStyle::MajorMinor == 2

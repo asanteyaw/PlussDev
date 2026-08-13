@@ -612,6 +612,20 @@ plussmic_hierarchical_cases_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build
 .PHONY : plussmic_hierarchical_cases_demo/fast
 
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/rule
+
+# Convenience name for target.
+plussmic_flash_dataset_bridge_demo: PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/rule
+.PHONY : plussmic_flash_dataset_bridge_demo
+
+# fast build rule for target.
+plussmic_flash_dataset_bridge_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build
+.PHONY : plussmic_flash_dataset_bridge_demo/fast
+
 atlas_plot_demo.o: atlas_plot_demo.cpp.o
 .PHONY : atlas_plot_demo.o
 
@@ -1092,6 +1106,30 @@ eda_us_accidents.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_eda_us_accidents_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_eda_us_accidents_demo.dir/eda_us_accidents.cpp.s
 .PHONY : eda_us_accidents.cpp.s
 
+flash_dataset_bridge_demo.o: flash_dataset_bridge_demo.cpp.o
+.PHONY : flash_dataset_bridge_demo.o
+
+# target to build an object file
+flash_dataset_bridge_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/flash_dataset_bridge_demo.cpp.o
+.PHONY : flash_dataset_bridge_demo.cpp.o
+
+flash_dataset_bridge_demo.i: flash_dataset_bridge_demo.cpp.i
+.PHONY : flash_dataset_bridge_demo.i
+
+# target to preprocess a source file
+flash_dataset_bridge_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/flash_dataset_bridge_demo.cpp.i
+.PHONY : flash_dataset_bridge_demo.cpp.i
+
+flash_dataset_bridge_demo.s: flash_dataset_bridge_demo.cpp.s
+.PHONY : flash_dataset_bridge_demo.s
+
+# target to generate assembly for a file
+flash_dataset_bridge_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/flash_dataset_bridge_demo.cpp.s
+.PHONY : flash_dataset_bridge_demo.cpp.s
+
 hierarchical_cases_demo.o: hierarchical_cases_demo.cpp.o
 .PHONY : hierarchical_cases_demo.o
 
@@ -1367,6 +1405,7 @@ help:
 	@echo "... plussmic_df_ex_demo"
 	@echo "... plussmic_display_policy_demo"
 	@echo "... plussmic_eda_us_accidents_demo"
+	@echo "... plussmic_flash_dataset_bridge_demo"
 	@echo "... plussmic_hierarchical_cases_demo"
 	@echo "... plussmic_loader_saver_parity_demo"
 	@echo "... plussmic_native_gap_api_demo"
@@ -1437,6 +1476,9 @@ help:
 	@echo "... eda_us_accidents.o"
 	@echo "... eda_us_accidents.i"
 	@echo "... eda_us_accidents.s"
+	@echo "... flash_dataset_bridge_demo.o"
+	@echo "... flash_dataset_bridge_demo.i"
+	@echo "... flash_dataset_bridge_demo.s"
 	@echo "... hierarchical_cases_demo.o"
 	@echo "... hierarchical_cases_demo.i"
 	@echo "... hierarchical_cases_demo.s"

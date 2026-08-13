@@ -49,10 +49,10 @@ auto fig = studio("caption_y");
 fig.mosaic(1, 2);
 fig.y_caption("shared_y", "Temperature (C)");
 auto& left = fig.pane2("left");
-flash::lineplot(left, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+left.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 left.align_y("shared_y");
 auto& right = fig.pane2("right");
-flash::lineplot(right, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+right.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 right.align_y("shared_y");
 fig.show();
 

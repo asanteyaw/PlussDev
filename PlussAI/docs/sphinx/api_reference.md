@@ -8,5 +8,5 @@
 ## Coverage Snapshot
 
 - NodeJ pages: **230** (methods: 186, data-types: 44)
-- Lymph pages: **405** (methods: 369, data-types: 36)
-- Combined pages: **635**
+- Lymph pages: **411** (methods: 372, data-types: 39)
+- Combined pages: **641**

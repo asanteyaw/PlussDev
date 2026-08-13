@@ -49,6 +49,11 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
     PATTERN ".DS_Store" EXCLUDE
 )
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data/flash_datasets
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/pluss/plusspl
+    PATTERN ".DS_Store" EXCLUDE
+)
+
 if(BUILD_TESTING)
     add_subdirectory(test)
 endif()

@@ -30,7 +30,10 @@ public:
   [[nodiscard]] bool has_model_spec() const noexcept { return workflow_.has_model_spec(); }
   [[nodiscard]] bool has_opaque_transforms() const noexcept { return workflow_.has_opaque_transforms(); }
   [[nodiscard]] std::int64_t stage_count() const noexcept { return workflow_.stage_count(); }
-  [[nodiscard]] TaskKind task_kind() const noexcept { return workflow_.task_kind(); }
+  [[nodiscard]] TaskKind task_kind() const noexcept {
+    const std::optional<ModelSpec>& spec = workflow_.model_spec();
+    return spec.has_value() ? spec->task : workflow_.task_kind();
+  }
   [[nodiscard]] const std::optional<ModelSpec>& model_spec() const noexcept { return workflow_.model_spec(); }
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const noexcept { return workflow_.transform_specs(); }
   [[nodiscard]] const CategoryMaps& category_maps() const noexcept { return category_maps_; }
@@ -835,14 +838,13 @@ private:
   void refresh_linear_summary_() {
     coeff = Series::undefined();
     intercept = Series::undefined();
-    // linear_parameters() throws for every non-linear model spec (tree,
-    // ensemble, kernel, bayes, neighbor, cluster, decompose...) — the common
-    // case, and this runs on every single learn() call, including once per
-    // fold/candidate inside cross-validation and hyperparameter tuning. Check
-    // the cheap, deterministic precondition ourselves first so that common
-    // case is a plain early return instead of a thrown-and-caught exception.
+    // linear_parameters() also throws before a linear model has been trained
+    // because there is no coefficient state yet. This helper runs during
+    // construction, cloning, learn/save transitions, and CV/search fan-out, so
+    // the common "untrained linear spec" case must be a plain early return,
+    // not a thrown-and-caught diagnostic path.
     const auto& spec_opt = workflow_.model_spec();
-    if (!spec_opt.has_value() || spec_opt->family != ModelFamily::Linear) return;
+    if (!spec_opt.has_value() || spec_opt->family != ModelFamily::Linear || !workflow_.trained()) return;
     try {
       const LinearParameters p = linear_parameters();
       coeff = p.coeff;
@@ -1213,7 +1215,8 @@ struct FoldFramePair_ {
   if (!model.workflow().model_spec().has_value()) {
     ::pluss::throw_error("cross_validate_scores(model,...): workflow model has no model specification.");
   }
-  return cross_validate_scores(*model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
+  return ::pluss::ai::lymph::cross_validate_scores(
+      *model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline double cross_validate_score(const ModelCore& model,
@@ -1225,7 +1228,8 @@ struct FoldFramePair_ {
   if (!model.workflow().model_spec().has_value()) {
     ::pluss::throw_error("cross_validate_score(model,...): workflow model has no model specification.");
   }
-  return cross_validate_score(*model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
+  return ::pluss::ai::lymph::cross_validate_score(
+      *model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline Series cross_validate_scores(const ModelCore& model,
@@ -1238,7 +1242,8 @@ struct FoldFramePair_ {
   if (!model.workflow().model_spec().has_value()) {
     ::pluss::throw_error("cross_validate_scores(model,x,y): workflow model has no model specification.");
   }
-  return cross_validate_scores(*model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
+  return ::pluss::ai::lymph::cross_validate_scores(
+      *model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline double cross_validate_score(const ModelCore& model,
@@ -1251,7 +1256,8 @@ struct FoldFramePair_ {
   if (!model.workflow().model_spec().has_value()) {
     ::pluss::throw_error("cross_validate_score(model,x,y): workflow model has no model specification.");
   }
-  return cross_validate_score(*model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
+  return ::pluss::ai::lymph::cross_validate_score(
+      *model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline ConfusionTable confusion_table(const ModelCore& model,

@@ -1,7 +1,7 @@
 # Lymph Full API Reference: Method Index
 
-Total method pages: **369**
-Total data-type pages: **36**
+Total method pages: **372**
+Total data-type pages: **39**
 
 ## Data Types
 
@@ -43,7 +43,10 @@ api/type-transformersummary
 api/type-tree-factory
 api/type-trial
 api/type-workflowbranchinfo
+api/type-workflowbranchspec
+api/type-workflowlabeledinput
 api/type-workflowsteprecord
+api/type-workflowstepspec
 ```
 
 ## Methods
@@ -58,6 +61,7 @@ api/method-binarylinearmodel-feature-count
 api/method-binarylinearmodel-infer-scores
 api/method-binarylinearmodel-trained
 api/method-bool
+api/method-branch
 api/method-branch-transformer
 api/method-build
 api/method-builder-benchmarked
@@ -179,6 +183,7 @@ api/method-model-transform-specs
 api/method-model-workflow
 api/method-model-core
 api/method-modelcore-append
+api/method-modelcore-category-maps
 api/method-modelcore-clone
 api/method-modelcore-coefficients
 api/method-modelcore-dependence-curve
@@ -402,6 +407,7 @@ api/method-workflow-model-spec
 api/method-workflow-nested-param
 api/method-workflow-nested-param-keys
 api/method-workflow-on
+api/method-workflow-options
 api/method-workflow-policy
 api/method-workflow-prep
 api/method-workflow-save

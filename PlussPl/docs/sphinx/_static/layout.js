@@ -98,6 +98,135 @@
     document.body.insertBefore(topbar, document.body.firstChild);
   }
 
+  function currentApiPage() {
+    // Generalized to work for any class registered in PLUSS_API_NAV (written
+    // by generate_api_nav.py), not just Pane/Studio/Trace/flash. Adding a
+    // new one-page-per-function family never requires touching this
+    // function -- it only needs an entry in ALPHABETICAL_CLASSES (or
+    // FLASH_FAMILIES) on the Python side, since `slug` and `landing` for
+    // every entry arrive here already computed from that same config.
+    const path = window.location.pathname || "";
+    const navData = window.PLUSS_API_NAV || {};
+
+    for (const key of Object.keys(navData)) {
+      const entry = navData[key];
+      if (entry.landing && (path === entry.landing || path.endsWith("/" + entry.landing))) {
+        return { key, slug: entry.slug, landing: true };
+      }
+    }
+
+    const methodMatch = path.match(/\/api\/([a-z0-9][a-z0-9-]*)\/([A-Za-z_][A-Za-z0-9_]*)\.html$/);
+    if (!methodMatch) {
+      return null;
+    }
+    const slug = methodMatch[1];
+    const key = Object.keys(navData).find((k) => navData[k].slug === slug);
+    if (!key) {
+      return null;
+    }
+    return { key, slug, landing: false, method: methodMatch[2] };
+  }
+
+  function buildApiMethodSidebar() {
+    const page = currentApiPage();
+    const navData = window.PLUSS_API_NAV || {};
+    if (!page || !navData[page.key]) {
+      return null;
+    }
+    const entry = navData[page.key];
+
+    const documentRoot = document.querySelector("div.document");
+    if (!documentRoot) {
+      return null;
+    }
+
+    document.body.classList.add("has-method-sidebar");
+
+    const sidebar = document.createElement("aside");
+    sidebar.id = "pluss-method-sidebar";
+
+    const title = document.createElement("div");
+    title.className = "sidebar-title";
+    title.textContent = `${entry.title} Methods`;
+    sidebar.appendChild(title);
+
+    const nav = document.createElement("nav");
+    nav.className = "method-nav";
+    sidebar.appendChild(nav);
+
+    let activeLink = null;
+
+    const sidebarLabelFor = (slug, name) => {
+      if (slug === "flash" && name === "dataset_from_frame") {
+        return "from_frame";
+      }
+      if (slug === "flash" && name === "dataset_frame") {
+        return "frame";
+      }
+      return name;
+    };
+
+    const addLink = (name) => {
+      const link = document.createElement("a");
+      link.textContent = sidebarLabelFor(page.slug, name);
+      link.href = page.landing ? `api/${page.slug}/${name}.html` : `${name}.html`;
+      if (!page.landing && page.method === name) {
+        link.classList.add("active");
+        activeLink = link;
+      }
+      nav.appendChild(link);
+    };
+
+    if (Array.isArray(entry.groups)) {
+      // Explicit, ordered, conceptual grouping (e.g. flash's Relational /
+      // Distribution / Categorical / ... families) instead of a first-letter
+      // split -- the group order and membership are exactly what
+      // generate_api_nav.py's FLASH_FAMILIES declares, not re-derived here.
+      entry.groups.forEach((group) => {
+        const groupHeader = document.createElement("div");
+        groupHeader.className = "method-group";
+        groupHeader.textContent = group.title;
+        nav.appendChild(groupHeader);
+        group.methods.forEach(addLink);
+      });
+    } else {
+      let currentLetter = "";
+      (entry.methods || []).forEach((name) => {
+        const letter = (name[0] || "#").toUpperCase();
+        if (letter !== currentLetter) {
+          currentLetter = letter;
+          const groupHeader = document.createElement("div");
+          groupHeader.className = "method-group";
+          groupHeader.textContent = currentLetter;
+          nav.appendChild(groupHeader);
+        }
+        addLink(name);
+      });
+    }
+
+    documentRoot.appendChild(sidebar);
+
+    // Every method click is a full page navigation, so this sidebar is torn
+    // down and rebuilt from scratch on each new page -- without this, it
+    // always renders scrolled to the top no matter where you clicked from.
+    // Jump the freshly built sidebar straight to the active method instead,
+    // keeping it roughly centered in the scrollable rail.
+    if (activeLink) {
+      const scrollActiveIntoView = () => {
+        const railRect = sidebar.getBoundingClientRect();
+        const linkRect = activeLink.getBoundingClientRect();
+        const offset = (linkRect.top - railRect.top) - sidebar.clientHeight / 2 + linkRect.height / 2;
+        sidebar.scrollTop = Math.max(0, sidebar.scrollTop + offset);
+      };
+      // Run after layout has settled so getBoundingClientRect reflects the
+      // real, final sidebar height (fonts/CSS can still be applying at the
+      // moment this function first runs).
+      requestAnimationFrame(scrollActiveIntoView);
+    }
+
+    return { apiSidebar: true };
+  }
+
   function buildMethodSidebar() {
     const apiRoots = Array.from(document.querySelectorAll("section")).filter((section) => {
       const h2 = section.querySelector(":scope > h2");
@@ -568,8 +697,9 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     buildTopbar();
-    const methodNav = buildMethodSidebar();
-    const sectionNav = methodNav ? null : buildSectionSidebar();
+    const apiMethodSidebar = buildApiMethodSidebar();
+    const methodNav = apiMethodSidebar ? null : buildMethodSidebar();
+    const sectionNav = apiMethodSidebar || methodNav ? null : buildSectionSidebar();
 
     // Safety fallback: never leave the left rail empty.
     if (document.body.classList.contains("has-method-sidebar")) {
@@ -583,6 +713,12 @@
       }
     }
 
-    buildPrevNext(methodNav || sectionNav);
+    // API pages (Pane/Studio/Trace/flash) already carry their own hand-authored
+    // Previous/Next footer at the bottom of the page content -- skip the
+    // generic buildPrevNext bar entirely rather than showing a redundant,
+    // unlabeled second one underneath it.
+    if (!apiMethodSidebar) {
+      buildPrevNext(methodNav || sectionNav);
+    }
   });
 })();

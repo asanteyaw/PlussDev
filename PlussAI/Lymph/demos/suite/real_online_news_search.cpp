@@ -13,7 +13,7 @@ int main() {
   csv.ncases = 3000;
   const DataFrame raw = DataFrame::load_csv((root / "data/OnlineNewsPopularity.csv").string(), csv);
 
-  lymph::Policy gate = lymph::policy({.drop_columns = {"url"}, .reject_missing = {"shares"}});
+  lymph::Policy gate{.drop_columns = {"url"}, .reject_missing = {"shares"}};
   lymph::Payload data = lymph::payload::make(raw)
       .features({" timedelta", " n_tokens_title", " n_tokens_content", " n_unique_tokens",
                  " num_hrefs", " num_imgs", " num_videos", " average_token_length",
@@ -38,7 +38,7 @@ int main() {
   cv.plan = lymph::CVPlanKind::CrossVal;
   cv.folds = 3;
 
-  const lymph::SearchResult tuned = lymph::search::grid(space, cv)
+  const lymph::search::Result tuned = lymph::search::grid(space, cv)
       .run([](const lymph::GridPoint& point) {
              return lymph::models::linear_regression({
                  .regularization_strength = point.at("regularization_strength"),

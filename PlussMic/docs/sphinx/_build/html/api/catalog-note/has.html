@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>CatalogNoteAccessor::has &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="CatalogNoteAccessor::indicate" href="indicate.html" />
+    <link rel="prev" title="CatalogNoteAccessor::fullmatch" href="fullmatch.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9b620d8e83aa -->
+<section id="catalognoteaccessor-has">
+<h1>CatalogNoteAccessor::has<a class="headerlink" href="#catalognoteaccessor-has" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../catalog_note_accessor_api_reference.html"><span class="doc std std-doc">Back to CatalogNoteAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">CatalogNoteAccessor</span><span class="o">::</span><span class="n">has</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">needle</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Tests whether <code class="docutils literal notranslate"><span class="pre">needle</span></code> appears anywhere within every bound key’s text, replacing each
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind key with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind key of results. Whether <code class="docutils literal notranslate"><span class="pre">needle</span></code> is treated
+literally or as a regex pattern is switched between via <code class="docutils literal notranslate"><span class="pre">options</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>CatalogNoteAccessor requires every bound key to be Note-kind
+Same precondition as every method on this accessor — see
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogNoteAccessor::strip</span></code></span></a>’s own important callout for the full
+explanation and the exact throw message.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>has() defaults to LITERAL matching – the opposite default from count()
+<code class="docutils literal notranslate"><span class="pre">has(needle)</span></code> with no <code class="docutils literal notranslate"><span class="pre">options</span></code> treats <code class="docutils literal notranslate"><span class="pre">needle</span></code> as literal text, not a regex pattern –
+regex metacharacters (<code class="docutils literal notranslate"><span class="pre">.</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">?</span></code>, <code class="docutils literal notranslate"><span class="pre">(</span></code>, <code class="docutils literal notranslate"><span class="pre">)</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, <code class="docutils literal notranslate"><span class="pre">[</span></code>, <code class="docutils literal notranslate"><span class="pre">]</span></code>) match themselves
+literally by default. This is the opposite default from
+<a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count(pattern)</span></code></span></a>’s single-argument overload, which defaults to regex mode.
+Pass <code class="docutils literal notranslate"><span class="pre">TextOptions{.regex</span> <span class="pre">=</span> <span class="pre">true}</span></code> explicitly to search by pattern instead. See the
+example below for a direct comparison.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> has four fields, though only two matter to <code class="docutils literal notranslate"><span class="pre">has()</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">TextOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">regex</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">case_sensitive</span><span class="p">{</span><span class="nb">true</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="p">{</span><span class="mi">-1</span><span class="p">};</span><span class="w">      </span><span class="c1">// unused by has()</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="p">{};</span><span class="w">        </span><span class="c1">// unused by has()</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>needle</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The text to search for — literal text by default, or a regular expression pattern
+when <code class="docutils literal notranslate"><span class="pre">options.regex</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::TextOptions</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
+<code class="docutils literal notranslate"><span class="pre">options.regex</span></code> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>): treat <code class="docutils literal notranslate"><span class="pre">needle</span></code> as a regex pattern instead of
+literal text. <code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>): when <code class="docutils literal notranslate"><span class="pre">false</span></code>, the search
+ignores case.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
+A new catalog with every bound key replaced by a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> of per-value
+substring-presence results.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default (literal) matching: a <code class="docutils literal notranslate"><span class="pre">.</span></code> in <code class="docutils literal notranslate"><span class="pre">needle</span></code> matches only a literal dot,
+not “any character” — confirming the opposite default from
+<a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a>’s single-argument overload.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;txt&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a.b.c&quot;</span><span class="p">})),</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">litHas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;literal: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">litHas</span><span class="p">;</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TextOptions</span><span class="w"> </span><span class="n">regexOpt</span><span class="p">;</span>
+<span class="n">regexOpt</span><span class="p">.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">regexHas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">regexOpt</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;regex: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">regexHas</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>literal: ========================================================================================================================
+kindle::Catalog  keys=1
+keys: [txt]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+txt                      | Series       | Series[bool]     | 2       | [false, true]                                    
+========================================================================================================================
+regex: ========================================================================================================================
+kindle::Catalog  keys=1
+keys: [txt]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+txt                      | Series       | Series[bool]     | 2       | [true, true]                                     
+========================================================================================================================
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;banana&quot;</span></code> has no literal dot (<code class="docutils literal notranslate"><span class="pre">false</span></code>), while <code class="docutils literal notranslate"><span class="pre">&quot;a.b.c&quot;</span></code> does (<code class="docutils literal notranslate"><span class="pre">true</span></code>) — under literal
+matching. Under <code class="docutils literal notranslate"><span class="pre">{.regex</span> <span class="pre">=</span> <span class="pre">true}</span></code>, <code class="docutils literal notranslate"><span class="pre">.</span></code> matches any character, so both values contain
+at least one match.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>See the important callouts above — the default-literal behavior is specific to
+<code class="docutils literal notranslate"><span class="pre">has()</span></code>; <a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a>’s single-argument overload defaults the opposite way.</p></li>
+<li><p>Changes each bound key’s kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.limit</span></code>/<code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> are part of <code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> but have no effect on
+<code class="docutils literal notranslate"><span class="pre">has()</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogNoteAccessor::count</span></code></span></a>: a related pattern-search method whose
+single-argument default is regex — the mirror image of this gotcha.</p></li>
+<li><p><a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogNoteAccessor::matches</span></code></span></a> / <a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a>:
+always-regex boolean pattern tests, with different anchoring than <code class="docutils literal notranslate"><span class="pre">has()</span></code>.</p></li>
+<li><p><a class="reference internal" href="starts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogNoteAccessor::starts</span></code></span></a> / <a class="reference internal" href="ends.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ends()</span></code></span></a>: position-anchored,
+always-literal substring tests.</p></li>
+<li><p><a class="reference internal" href="../catalog/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::nt</span></code></span></a>: the entry point this accessor is reached from.</p></li>
+<li><p><a class="reference internal" href="../registry-note/has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">RegistryNoteAccessor::has</span></code></span></a>: the bundle-model equivalent.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fullmatch.html">
+    <span class="label">Previous</span>
+    <span class="title">fullmatch</span>
+  </a>
+  <a class="next-link" href="indicate.html">
+    <span class="label">Next</span>
+    <span class="title">indicate</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../catalog_note_accessor_api_reference.html">CatalogNoteAccessor API Reference</a><ul>
+      <li>Previous: <a href="fullmatch.html" title="previous chapter">CatalogNoteAccessor::fullmatch</a></li>
+      <li>Next: <a href="indicate.html" title="next chapter">CatalogNoteAccessor::indicate</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/catalog-note/has.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

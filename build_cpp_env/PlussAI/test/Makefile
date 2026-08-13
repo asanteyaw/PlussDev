@@ -1173,6 +1173,90 @@ nodej_weighted_family_test/fast:
 .PHONY : nodej_weighted_family_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/procedure_phase1_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/procedure_phase1_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/procedure_phase1_test.dir/rule
+
+# Convenience name for target.
+procedure_phase1_test: PlussAI/test/CMakeFiles/procedure_phase1_test.dir/rule
+.PHONY : procedure_phase1_test
+
+# fast build rule for target.
+procedure_phase1_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase1_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase1_test.dir/build
+.PHONY : procedure_phase1_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/procedure_phase3_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/procedure_phase3_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/procedure_phase3_test.dir/rule
+
+# Convenience name for target.
+procedure_phase3_test: PlussAI/test/CMakeFiles/procedure_phase3_test.dir/rule
+.PHONY : procedure_phase3_test
+
+# fast build rule for target.
+procedure_phase3_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase3_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase3_test.dir/build
+.PHONY : procedure_phase3_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/procedure_phase4_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/procedure_phase4_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/procedure_phase4_test.dir/rule
+
+# Convenience name for target.
+procedure_phase4_test: PlussAI/test/CMakeFiles/procedure_phase4_test.dir/rule
+.PHONY : procedure_phase4_test
+
+# fast build rule for target.
+procedure_phase4_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase4_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase4_test.dir/build
+.PHONY : procedure_phase4_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/procedure_phase5_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/procedure_phase5_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/procedure_phase5_test.dir/rule
+
+# Convenience name for target.
+procedure_phase5_test: PlussAI/test/CMakeFiles/procedure_phase5_test.dir/rule
+.PHONY : procedure_phase5_test
+
+# fast build rule for target.
+procedure_phase5_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase5_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase5_test.dir/build
+.PHONY : procedure_phase5_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/procedure_phase6_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/procedure_phase6_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/procedure_phase6_test.dir/rule
+
+# Convenience name for target.
+procedure_phase6_test: PlussAI/test/CMakeFiles/procedure_phase6_test.dir/rule
+.PHONY : procedure_phase6_test
+
+# fast build rule for target.
+procedure_phase6_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase6_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase6_test.dir/build
+.PHONY : procedure_phase6_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/procedure_phase7_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/procedure_phase7_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/procedure_phase7_test.dir/rule
+
+# Convenience name for target.
+procedure_phase7_test: PlussAI/test/CMakeFiles/procedure_phase7_test.dir/rule
+.PHONY : procedure_phase7_test
+
+# fast build rule for target.
+procedure_phase7_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build
+.PHONY : procedure_phase7_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/rnn_fusion_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/rnn_fusion_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/rnn_fusion_test.dir/rule
@@ -2880,6 +2964,150 @@ nodej_weighted_family_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build.make PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/nodej_weighted_family_test.cpp.s
 .PHONY : nodej_weighted_family_test.cpp.s
 
+procedure_phase1_test.o: procedure_phase1_test.cpp.o
+.PHONY : procedure_phase1_test.o
+
+# target to build an object file
+procedure_phase1_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase1_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase1_test.dir/procedure_phase1_test.cpp.o
+.PHONY : procedure_phase1_test.cpp.o
+
+procedure_phase1_test.i: procedure_phase1_test.cpp.i
+.PHONY : procedure_phase1_test.i
+
+# target to preprocess a source file
+procedure_phase1_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase1_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase1_test.dir/procedure_phase1_test.cpp.i
+.PHONY : procedure_phase1_test.cpp.i
+
+procedure_phase1_test.s: procedure_phase1_test.cpp.s
+.PHONY : procedure_phase1_test.s
+
+# target to generate assembly for a file
+procedure_phase1_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase1_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase1_test.dir/procedure_phase1_test.cpp.s
+.PHONY : procedure_phase1_test.cpp.s
+
+procedure_phase3_test.o: procedure_phase3_test.cpp.o
+.PHONY : procedure_phase3_test.o
+
+# target to build an object file
+procedure_phase3_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase3_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase3_test.dir/procedure_phase3_test.cpp.o
+.PHONY : procedure_phase3_test.cpp.o
+
+procedure_phase3_test.i: procedure_phase3_test.cpp.i
+.PHONY : procedure_phase3_test.i
+
+# target to preprocess a source file
+procedure_phase3_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase3_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase3_test.dir/procedure_phase3_test.cpp.i
+.PHONY : procedure_phase3_test.cpp.i
+
+procedure_phase3_test.s: procedure_phase3_test.cpp.s
+.PHONY : procedure_phase3_test.s
+
+# target to generate assembly for a file
+procedure_phase3_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase3_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase3_test.dir/procedure_phase3_test.cpp.s
+.PHONY : procedure_phase3_test.cpp.s
+
+procedure_phase4_test.o: procedure_phase4_test.cpp.o
+.PHONY : procedure_phase4_test.o
+
+# target to build an object file
+procedure_phase4_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase4_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase4_test.dir/procedure_phase4_test.cpp.o
+.PHONY : procedure_phase4_test.cpp.o
+
+procedure_phase4_test.i: procedure_phase4_test.cpp.i
+.PHONY : procedure_phase4_test.i
+
+# target to preprocess a source file
+procedure_phase4_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase4_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase4_test.dir/procedure_phase4_test.cpp.i
+.PHONY : procedure_phase4_test.cpp.i
+
+procedure_phase4_test.s: procedure_phase4_test.cpp.s
+.PHONY : procedure_phase4_test.s
+
+# target to generate assembly for a file
+procedure_phase4_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase4_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase4_test.dir/procedure_phase4_test.cpp.s
+.PHONY : procedure_phase4_test.cpp.s
+
+procedure_phase5_test.o: procedure_phase5_test.cpp.o
+.PHONY : procedure_phase5_test.o
+
+# target to build an object file
+procedure_phase5_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase5_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase5_test.dir/procedure_phase5_test.cpp.o
+.PHONY : procedure_phase5_test.cpp.o
+
+procedure_phase5_test.i: procedure_phase5_test.cpp.i
+.PHONY : procedure_phase5_test.i
+
+# target to preprocess a source file
+procedure_phase5_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase5_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase5_test.dir/procedure_phase5_test.cpp.i
+.PHONY : procedure_phase5_test.cpp.i
+
+procedure_phase5_test.s: procedure_phase5_test.cpp.s
+.PHONY : procedure_phase5_test.s
+
+# target to generate assembly for a file
+procedure_phase5_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase5_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase5_test.dir/procedure_phase5_test.cpp.s
+.PHONY : procedure_phase5_test.cpp.s
+
+procedure_phase6_test.o: procedure_phase6_test.cpp.o
+.PHONY : procedure_phase6_test.o
+
+# target to build an object file
+procedure_phase6_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase6_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase6_test.dir/procedure_phase6_test.cpp.o
+.PHONY : procedure_phase6_test.cpp.o
+
+procedure_phase6_test.i: procedure_phase6_test.cpp.i
+.PHONY : procedure_phase6_test.i
+
+# target to preprocess a source file
+procedure_phase6_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase6_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase6_test.dir/procedure_phase6_test.cpp.i
+.PHONY : procedure_phase6_test.cpp.i
+
+procedure_phase6_test.s: procedure_phase6_test.cpp.s
+.PHONY : procedure_phase6_test.s
+
+# target to generate assembly for a file
+procedure_phase6_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase6_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase6_test.dir/procedure_phase6_test.cpp.s
+.PHONY : procedure_phase6_test.cpp.s
+
+procedure_phase7_test.o: procedure_phase7_test.cpp.o
+.PHONY : procedure_phase7_test.o
+
+# target to build an object file
+procedure_phase7_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase7_test.dir/procedure_phase7_test.cpp.o
+.PHONY : procedure_phase7_test.cpp.o
+
+procedure_phase7_test.i: procedure_phase7_test.cpp.i
+.PHONY : procedure_phase7_test.i
+
+# target to preprocess a source file
+procedure_phase7_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase7_test.dir/procedure_phase7_test.cpp.i
+.PHONY : procedure_phase7_test.cpp.i
+
+procedure_phase7_test.s: procedure_phase7_test.cpp.s
+.PHONY : procedure_phase7_test.s
+
+# target to generate assembly for a file
+procedure_phase7_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase7_test.dir/procedure_phase7_test.cpp.s
+.PHONY : procedure_phase7_test.cpp.s
+
 rnn_fusion_test.o: rnn_fusion_test.cpp.o
 .PHONY : rnn_fusion_test.o
 
@@ -3013,6 +3241,12 @@ help:
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
 	@echo "... nodej_weighted_family_test"
+	@echo "... procedure_phase1_test"
+	@echo "... procedure_phase3_test"
+	@echo "... procedure_phase4_test"
+	@echo "... procedure_phase5_test"
+	@echo "... procedure_phase6_test"
+	@echo "... procedure_phase7_test"
 	@echo "... rnn_fusion_test"
 	@echo "... schedule_test"
 	@echo "... attention_transformer_test.o"
@@ -3225,6 +3459,24 @@ help:
 	@echo "... nodej_weighted_family_test.o"
 	@echo "... nodej_weighted_family_test.i"
 	@echo "... nodej_weighted_family_test.s"
+	@echo "... procedure_phase1_test.o"
+	@echo "... procedure_phase1_test.i"
+	@echo "... procedure_phase1_test.s"
+	@echo "... procedure_phase3_test.o"
+	@echo "... procedure_phase3_test.i"
+	@echo "... procedure_phase3_test.s"
+	@echo "... procedure_phase4_test.o"
+	@echo "... procedure_phase4_test.i"
+	@echo "... procedure_phase4_test.s"
+	@echo "... procedure_phase5_test.o"
+	@echo "... procedure_phase5_test.i"
+	@echo "... procedure_phase5_test.s"
+	@echo "... procedure_phase6_test.o"
+	@echo "... procedure_phase6_test.i"
+	@echo "... procedure_phase6_test.s"
+	@echo "... procedure_phase7_test.o"
+	@echo "... procedure_phase7_test.i"
+	@echo "... procedure_phase7_test.s"
 	@echo "... rnn_fusion_test.o"
 	@echo "... rnn_fusion_test.i"
 	@echo "... rnn_fusion_test.s"

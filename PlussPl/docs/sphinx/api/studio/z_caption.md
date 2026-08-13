@@ -51,7 +51,7 @@ auto& pane = fig.pane3();
 std::vector<double> x{0.0, 1.0, 2.0};
 std::vector<double> y{0.0, 1.0, 2.0};
 std::vector<double> z{0.0, 1.0, 2.0};
-flash::path3(pane, x, y, z);
+pane.path3(x, y, z);
 pane.align_z("shared_z");
 fig.show();
 

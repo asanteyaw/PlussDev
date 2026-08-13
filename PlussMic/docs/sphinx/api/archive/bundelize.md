@@ -1,3 +1,6 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ad9b6df462f4 -->
+
 # Archive::bundelize
 
 [Back to Archive API Reference](../../archive_api_reference)
@@ -5,12 +8,20 @@
 ## Signature
 
 ```cpp
-Archive::bundelize() -> pluss::bundle::Axel
+pluss::bundle::Axel Archive::bundelize() const
 ```
 
 ## What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Converts the archive into a `pluss::bundle::Axel` — the reverse direction of
+[`Axel::kindelize`](../axel/kindelize.md). An `Archive` is a depth-stack of
+`Catalog`s plus an optional per-depth-level labels stream; an `Axel` is the bundle
+model's equivalent depth-stack of `Registry`s plus an optional per-level labels
+`Slot`. `bundelize()` converts each level via
+[`Catalog::bundelize`](../catalog/bundelize.md) (in depth order, level `0` first) and,
+if the archive carries depth labels, converts those too via
+[`Stream::bundelize`](../stream/bundelize.md) — otherwise the resulting `Axel`'s
+labels are left empty.
 
 ## Parameters
 
@@ -19,11 +30,14 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 ## Returns
 
 `pluss::bundle::Axel`
-    Value produced by this call.
+    A new axel with one `Registry` per archive depth level, in depth order, and depth
+    labels present if and only if the source archive's own
+    [`label().has()`](label.md) was `true`.
 
 ## Examples
 
-Example 1. Call the simplest overload.
+Example 1. A two-level archive with depth labels — `bundelize()` preserves both the
+depth count and the labels.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -35,16 +49,84 @@ auto c1 = pluss::kindle::Catalog({
     "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
 });
 auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.bundelize();
+auto axel = archive.bundelize();
+std::cout << axel.depth() << "\n";
+std::cout << axel.labels().has_value() << "\n";
+std::cout << axel.labels()->size() << "\n";
 ```
 
 ### Output
 
 ```text
-The call completes and returns the contract described under Output.
+2
+1
+2
 ```
 
+Example 2 (edge case). An archive constructed **without** depth labels produces an
+`Axel` whose `labels()` is empty, not a default-constructed placeholder `Slot`.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive_no_labels = pluss::kindle::Archive({c0, c1});
+auto axel_no_labels = archive_no_labels.bundelize();
+std::cout << axel_no_labels.labels().has_value() << "\n";
+```
+
+### Output
+
+```text
+0
+```
+
+Example 3 (edge case). An undefined archive throws before any level is touched.
+
+```cpp
+try {
+  pluss::kindle::Archive undefined_archive;
+  undefined_archive.bundelize();
+} catch (const pluss::Error& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+Archive::bundelize: archive undefined
+```
+
+## Notes
+
+- Requires `defined()` — an undefined archive throws
+  `"Archive::bundelize: archive undefined"` immediately, before any level is visited.
+- Depth-level order is always preserved: level `i` of the source archive
+  ([`catalog(i)`](catalog.md)) becomes registry `i` of the resulting axel.
+- Depth labels are converted through the exact same
+  [`Stream::bundelize`](../stream/bundelize.md) path as any other stream — including
+  its null-preservation behavior (masked-out label positions become
+  `std::monostate{}` in the resulting `Slot`), not a special label-only code path.
+- An empty archive (zero depth levels, but still `defined()`) produces an axel with
+  zero registries.
+
+## See Also
+
+- [`Axel::kindelize`](../axel/kindelize.md): the reverse bridge, from the bundle model
+  back into Kindle.
+- [`Catalog::bundelize`](../catalog/bundelize.md): what this method calls once per
+  depth level.
+- [`Stream::bundelize`](../stream/bundelize.md): what this method calls on the depth
+  labels, when present.
+- [`Archive::label`](label.md): what determines whether the resulting axel carries
+  labels.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bfill.html">

@@ -81,9 +81,9 @@ using namespace pluss::pl;
 auto fig = studio("subpane3_basic");
 fig.pane2("parent");  // a 2D pane used purely as the subgrid's container
 auto& left = fig.subpane3(0, 1, 2, 0, 0);
-flash::path3(left, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
+left.path3(std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
 auto& right = fig.subpane3(0, 1, 2, 0, 1, 1, 1, "3D quadrant");
-flash::path3(right, std::vector<double>{0.0, 1.0}, std::vector<double>{1.0, 0.0}, std::vector<double>{1.0, 0.0});
+right.path3(std::vector<double>{0.0, 1.0}, std::vector<double>{1.0, 0.0}, std::vector<double>{1.0, 0.0});
 fig.show();
 
 std::cout << fig.pane_count() << "\n";  // parent + 2 subpanes

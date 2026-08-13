@@ -58,11 +58,11 @@ using namespace pluss::pl;
 
 auto fig = studio("pane_index_check");
 auto& first = fig.pane2("first");
-flash::lineplot(first, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+first.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 std::size_t first_index = fig.pane_index(first);
 
 auto& second = fig.pane2("second");
-flash::lineplot(second, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
+second.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
 std::size_t second_index = fig.pane_index(second);
 
 fig.show();
@@ -78,6 +78,8 @@ index of first: 0
 index of second: 1
 ```
 
+![Output of Examples 1 and 2](img/pane_index-1-check.svg)
+
 Example 3. A `Pane` built standalone, never added to any `Studio` — throws.
 
 ```cpp
@@ -85,7 +87,7 @@ using namespace pluss::pl;
 
 auto fig = studio("pane_index_orphan");
 auto& real_pane = fig.pane2();
-flash::lineplot(real_pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+real_pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 
 Pane orphan(PaneKind::Planar, Theme::paper());
 try {
@@ -109,7 +111,7 @@ using namespace pluss::pl;
 
 auto fig = studio("pane_index_cross_studio");
 auto& real_pane = fig.pane2();
-flash::lineplot(real_pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
+real_pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
 
 auto other_fig = studio("other_studio");
 auto& other_pane = other_fig.pane2("belongs elsewhere");

@@ -18,6 +18,8 @@
 
 namespace pluss::ai::lymph {
 
+namespace payload {
+
 class Payload final {
  public:
   Payload() = default;
@@ -205,6 +207,11 @@ class Payload final {
   friend Payload payload_make_(FeatureBatch features);
   friend Payload payload_make_(LabeledBatch labeled);
 };
+} // namespace payload
+
+using Payload = payload::Payload;
+
+namespace payload {
 
 [[nodiscard]] inline Payload payload_make_(pluss::table::DataFrame frame, DataFrameBatchOptions options) {
   return Payload(std::move(frame), std::move(options));
@@ -217,8 +224,6 @@ class Payload final {
 [[nodiscard]] inline Payload payload_make_(LabeledBatch labeled) {
   return Payload(std::move(labeled));
 }
-
-namespace payload {
 
 [[nodiscard]] inline Payload make(pluss::table::DataFrame frame, DataFrameBatchOptions options = {}) {
   return payload_make_(std::move(frame), std::move(options));

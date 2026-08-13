@@ -152,8 +152,8 @@ having to know or compute the frame's exact length first.
     <span class="label">Previous</span>
     <span class="title">skew</span>
   </a>
-  <a class="next-link" href="sort_values.html">
+  <a class="next-link" href="sort.html">
     <span class="label">Next</span>
-    <span class="title">sort_values</span>
+    <span class="title">sort</span>
   </a>
 </div>

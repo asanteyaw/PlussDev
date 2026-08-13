@@ -59,7 +59,7 @@ using namespace pluss::pl;
 auto fig = studio("legend_frame_soft");
 fig.legend(KeyDock::East);
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 fig.show();
 
 std::cout << static_cast<int>(fig.legend_frame()) << "\n";  // Soft == 1
@@ -81,7 +81,7 @@ using namespace pluss::pl;
 auto fig = studio("legend_frame_framed");
 fig.legend(KeyDock::East).legend_frame(KeyFrame::Framed);
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 fig.show();
 
 std::cout << static_cast<int>(fig.legend_frame()) << "\n";  // Framed == 0
@@ -103,7 +103,7 @@ using namespace pluss::pl;
 auto fig = studio("legend_frame_none");
 fig.legend(KeyDock::East).legend_frame(KeyFrame::None);
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 fig.show();
 ```
 

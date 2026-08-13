@@ -46,9 +46,9 @@ std::cout << fig.row_titles().size() << "\n";
 std::cout << fig.row_titles().count(0) << "\n";
 
 auto& top = fig.pane2("top");
-flash::lineplot(top, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series a");
+top.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series a");
 auto& bottom = fig.pane2("bottom");
-flash::lineplot(bottom, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0}).label("series b");
+bottom.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0}).label("series b");
 fig.show();
 ```
 

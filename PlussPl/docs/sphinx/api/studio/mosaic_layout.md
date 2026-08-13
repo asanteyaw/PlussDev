@@ -47,7 +47,7 @@ using namespace pluss::pl;
 
 auto fig = studio("mosaic_single");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
 
 std::cout << fig.mosaic_layout().active << "\n";
 ```

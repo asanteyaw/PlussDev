@@ -41,7 +41,7 @@ std::cout << fig.z_captions().size() << "\n";
 std::cout << fig.z_captions().at("shared_z") << "\n";
 
 auto& pane = fig.pane3();
-flash::path3(pane, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
+pane.path3(std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
 fig.show();
 ```
 
@@ -52,6 +52,8 @@ fig.show();
 1
 Depth (m)
 ```
+
+![Output of Example 1](img/z_captions-1-check.svg)
 
 ## Notes
 

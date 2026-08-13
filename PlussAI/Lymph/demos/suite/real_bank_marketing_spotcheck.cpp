@@ -49,7 +49,7 @@ int main() {
   lymph::AssessOptions assess{};
   assess.metrics = {lymph::MetricKind::RocAuc, lymph::MetricKind::F1, lymph::MetricKind::BalancedAccuracy};
 
-  lymph::SpotCheckResult ranked = lymph::spotcheck::models(models)
+  lymph::spotcheck::Result ranked = lymph::spotcheck::suite(models)
       .strategy("plain", lymph::TrainOptions{})
       .run(design, data, cv, assess, lymph::MetricKind::RocAuc,
            lymph::TuneObjectivePolicy::Maximize, {.fit_top = 2, .fit_bottom = 1});

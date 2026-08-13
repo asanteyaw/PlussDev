@@ -6,41 +6,36 @@ This hub is organized by surface area.
 
 - [Studio API Reference](studio_api_reference.md)
   `Studio`, the top-level figure object — one method page per method, with verified
-  examples and real rendered output for every overload and option. This is actively being
-  expanded to cover `Pane` and `Trace` the same way; until then, see "Core plotting engine"
-  below for broader (but less granular) coverage of those two classes.
+  examples and real rendered output for every overload and option.
+- [Pane API Reference](pane_api_reference.md)
+  `Pane`, the 2D/3D plotting area — one method page per method (108 pages), with verified
+  examples and real rendered output for every overload and option, covering axis
+  scale/limits/ticks/labels/grid, legend/caption/cues, alignment/visibility/placement, and
+  every 2D and 3D trace-creation method.
+- [Trace API Reference](trace_api_reference.md)
+  `Trace`, one drawn series/element inside a `Pane` — one method page per method
+  (13 pages), covering per-trace styling (`label`, `width`, `stroke`, `palette`,
+  `color_limits`, `shade`, `lighting`, `material`, `transparent`, `annotate_levels`) and
+  visibility (`visible`/`hide`/`show`).
 
-## Core plotting engine
+## flash:: high-level plotting
 
-- [PlussPl Core API](plusspl_core_api.md)
-  `Studio`, `Pane`, and `Trace` orchestration and export.
-- [PlussPl Core Controls API](plusspl_core_controls_api.md)
-  expanded per-method controls for axis/layout/legend/ticks/visibility and studio wiring.
-- [PlussPl Object/State API](plusspl_object_model_api.md)
-  accessors + state-manipulation methods for `Studio`, `Pane`, `Trace`, `Theme`, `PaletteRamp`, `Lens`, and `LightRig`.
-- [PlussPl Core Full Overload Reference](plusspl_core_full_overloads_api.md)
-  exhaustive one-section-per-overload catalog for all documented core call forms.
+- [flash API Reference](flash_api_reference.md)
+  `pluss::pl::flash`, the ~65-function high-level convenience layer — one method page
+  per function (relational, distribution, categorical, regression, matrix, and more to
+  come), with verified examples and real rendered output for every overload and option.
+  28 of ~65 functions are live in the sidebar today; see that page's Coverage section for
+  exactly what's written so far and what's still pending.
 
-## Flash high-level plotting
-
-- [Flash Plotting API](flash_api.md)
-  2D/3D plotting families, matrix/dataset helpers, diagnostics.
-- [Flash Full Overload Reference](flash_full_overloads_api.md)
-  exhaustive one-section-per-overload catalog for flash plotting/style/scene call forms.
-
-## Flash style and context
-
-- [Flash Theming API](flash_theme_api.md)
-  context scaling, style presets, palette/theme application.
-- [Flash Helper and Utility API](flash_helpers_expanded_api.md)
-  palette builders, dataset utilities, kind parsers, and extra style/navigation helpers.
-
-## Flash 3D and 4D motion + frame export
-
-- [Flash 3D and 4D API](flash_scene_animation_api.md)
-  scene presets, trace presets, live simulation, frame export.
-- [Flash Scene Presets and 3D Controls API](flash_scene_presets_api.md)
-  explicit camera, lighting, theme, scene, and trace preset helpers.
+```{note}
+An earlier generation of this hub linked several auto-generated, single-giant-page
+references (`plusspl_core_api`, `flash_api`, `flash_full_overloads_api`, and others)
+that used a fictional pseudo-Python signature style not matching the real C++ API. Those
+have been removed as stale duplicates of the per-method references above; `flash::`'s 3D
+scene/camera/lighting preset helpers and 4D animation/frame-export helpers they described
+(`camera3d`, `scene_preset3d`, `trace_preset3d`, and the `hyper4d` family) are real and
+still need their own hand-authored pages — tracked as follow-up work, not dropped.
+```
 
 ## Header entry points
 

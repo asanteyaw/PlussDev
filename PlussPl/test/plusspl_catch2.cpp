@@ -107,7 +107,7 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
                 std::array<double, 3>{-0.25, 0.5, 1.0})
       .label("topography")
       .width(1.1F)
-      .annotate_levels();
+      .annotate_levels(true);
   pane2.isoband(std::array<double, 3>{-1.0, 0.0, 1.0},
                 std::array<double, 3>{-1.0, 0.0, 1.0},
                 contour_z,
@@ -162,7 +162,7 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
                z,
                std::array<double, 2>{0.75, 2.25})
       .label("ridge")
-      .annotate_levels();
+      .annotate_levels(true);
   auto iso = pluss::make_series(
       std::vector<double>{
           0.0, 0.1, 0.2, 0.1, 0.5, 0.8, 0.2, 0.8, 1.2,
@@ -177,7 +177,7 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
                  std::array<double, 2>{0.85, 1.45})
       .label("isoshell")
       .shade(ShadeMode::Smooth)
-      .transparent();
+      .transparent(true);
   pane3.pin("focus", Vec3d{1.0, 1.0, 3.0});
 
   const std::string svg = book.to_svg();
@@ -529,10 +529,22 @@ TEST_CASE("PlussPl flash facade maps flash-like names to PlussPl traces", "[plus
 
   const auto names = get_dataset_names();
   REQUIRE(names.numel() > 0);
+  REQUIRE(names.numel() == 13);
   const auto tips = load_dataset("tips");
   REQUIRE(tips.has_value());
   REQUIRE(tips->numeric("tip").has_value());
   REQUIRE(tips->note("day").has_value());
+  REQUIRE(tips->feature_order.has_value());
+  REQUIRE(tips->feature_kinds.has_value());
+  REQUIRE(tips->feature_order->numel() == 9);
+  REQUIRE(tips->feature_order->at(0) == "total_bill");
+  REQUIRE(tips->feature_order->at(5) == "day");
+
+  const auto weather = load_dataset("weather_hourly");
+  REQUIRE(weather.has_value());
+  REQUIRE(weather->temporal("timestamp").has_value());
+  REQUIRE(weather->continuous("timestamp").has_value());
+  REQUIRE(weather->continuous("temp_c").has_value());
 }
 
 TEST_CASE("PlussPl flash exposes direct 3D wrappers and aliases", "[plusspl][flash][3d]") {

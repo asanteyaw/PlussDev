@@ -1,6 +1,6 @@
-# Seaborn -> PlussPl Parity Map
+# Flash Capability Crosswalk
 
-| Seaborn | PlussPl |
+| External concept | PlussPl |
 |---|---|
 | `sns.relplot` | `Studio::mosaic(...)` + `Pane::trend(...)` / `Pane::cloud(...)` |
 | `sns.scatterplot` | `Pane::cloud(...)` |
@@ -29,7 +29,7 @@
 | `sns.JointGrid` | Composed `Studio::mosaic(...)` with joint + marginal panes |
 | `sns.pairplot` | Composed PairGrid with `cloud`/`bucket`/`trend` |
 | `sns.jointplot` | Composed JointGrid with `cloud`/`trend` + marginals |
-| No direct seaborn equivalent | `flash::path4` / `flash::cloud4` as **geometric 4D projection rendering** (`R^4` rotation + `R^4 -> R^3` projection) |
+| No direct external counterpart | `flash::path4` / `flash::cloud4` as **geometric 4D projection rendering** (`R^4` rotation + `R^4 -> R^3` projection) |
 | `sns.color_palette` | `PaletteRamp` (custom stops) |
 | `sns.hls_palette` | `PaletteRamp` (manual/custom) |
 | `sns.husl_palette` | `PaletteRamp` (manual/custom) |

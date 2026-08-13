@@ -49,7 +49,7 @@ int main() {
                            lymph::MetricKind::Accuracy, lymph::TuneObjectivePolicy::Maximize,
                            lymph::selection::FitOptions{.fit_top = 1, .fit_bottom = 1});
 
-  lymph::SpotCheckResult checked = lymph::spotcheck::models(candidates)
+  lymph::spotcheck::Result checked = lymph::spotcheck::suite(candidates)
                                        .strategy("plain", lymph::TrainOptions{})
                                        .strategy("weighted", lymph::TrainOptions{
                                                                  .class_weight = lymph::ClassWeightMode::Balanced,
@@ -70,7 +70,7 @@ int main() {
     return model;
   };
 
-  lymph::SearchResult tuned = lymph::search::grid(axes, cv)
+  lymph::search::Result tuned = lymph::search::grid(axes, cv)
                                   .run(make_model, batch, lymph::TrainOptions{}, assess,
                                        lymph::MetricKind::Accuracy,
                                        lymph::TuneObjectivePolicy::Maximize,

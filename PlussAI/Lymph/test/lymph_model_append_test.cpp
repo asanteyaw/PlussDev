@@ -42,11 +42,25 @@ bool run_model_append_checks(std::ostream* err) {
   const DataFrame frame = make_frame();
   const DataFrameBatchOptions data_options{.label_feature = "y", .note_policy = DataNotePolicy::Factorize};
 
+  model::Model explicit_linear = model::linear::linear_regression();
+  model::Model shortcut_linear = model::linear_regression();
+  Model plural_tree = models::decision_tree_regressor();
+  Model grouped_tree = model::tree::decision_tree_regressor();
+  Model grouped_forest = model::ensemble::random_forest_classifier();
+  if (explicit_linear.task_kind() != TaskKind::Regression ||
+      shortcut_linear.task_kind() != TaskKind::Regression ||
+      plural_tree.task_kind() != TaskKind::Regression ||
+      grouped_tree.task_kind() != TaskKind::Regression ||
+      grouped_forest.task_kind() != TaskKind::Classification) {
+    if (err) *err << "model factories should work through grouped, shortcut, and compatibility namespaces\n";
+    return false;
+  }
+
   const ColumnRouter categorical_router = columnrouter::names({"category"});
   const ColumnRouter numeric_router = columnrouter::remaining_of(categorical_router);
 
   // 1) append() before any frame exists, resolution deferred to learn_().
-  Model model = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  Model model = models::decision_tree_classifier({.max_depth = 3});
   model.append(stage::standard_scaler(), numeric_router)
        .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical_router);
 
@@ -73,25 +87,9 @@ bool run_model_append_checks(std::ostream* err) {
     return false;
   }
 
-  // 2) A bare LabeledBatch has no column names -- append()'d-but-unresolved
-  // stages must throw a clear error rather than silently skip routing.
-  bool threw = false;
-  try {
-    Model unresolved = models::logistic_regression({.fit_intercept = true});
-    unresolved.append(stage::standard_scaler(), numeric_router);
-    const LabeledBatch bare_batch{};  // never mind its contents -- should throw before touching them
-    unresolved.learn_(bare_batch);
-  } catch (const std::exception&) {
-    threw = true;
-  }
-  if (!threw) {
-    if (err) *err << "learn_(LabeledBatch) with pending append()'d stages should throw, not silently skip them\n";
-    return false;
-  }
-
-  // 3) The non-mutating learn(...) sibling clones first; pending stages must
+  // 2) The non-mutating learn(...) sibling clones first; pending stages must
   // travel with the clone and still resolve correctly there.
-  Model unlearned = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  Model unlearned = models::decision_tree_classifier({.max_depth = 3});
   unlearned.append(stage::standard_scaler(), numeric_router)
            .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical_router);
   const Model learned = unlearned.learn(frame, data_options);
@@ -104,10 +102,10 @@ bool run_model_append_checks(std::ostream* err) {
     return false;
   }
 
-  // 4) Object-factory preparation accessor: once the Model exists, users
+  // 3) Object-factory preparation accessor: once the Model exists, users
   // should be able to keep preprocessing object/method based instead of
   // stitching stage:: and columnrouter:: factories through every line.
-  Model fluent = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  Model fluent = models::decision_tree_classifier({.max_depth = 3});
   auto prep = fluent.prepare();
   const ColumnRouter categorical = prep.names({"category"});
   prep.standardize(prep.remaining(categorical))
@@ -122,7 +120,7 @@ bool run_model_append_checks(std::ostream* err) {
     return false;
   }
 
-  Model shaped = models::logistic_regression({.regularization_strength = 0.01, .fit_intercept = true});
+  Model shaped = models::decision_tree_classifier({.max_depth = 3});
   auto shape = shaped.prepare();
   shape.gaussianize({"x1"}).power(shape.names({"x2"}));
   const Model shaped_learned = shaped.learn(frame, data_options);

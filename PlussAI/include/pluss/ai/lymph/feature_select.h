@@ -12,7 +12,7 @@ using FeatureScoreMode = ::pluss::ai::nodej::FeatureScoreMode;
 using FeatureRankOptions = ::pluss::ai::nodej::FeatureRankOptions;
 using FeaturePickOptions = ::pluss::ai::nodej::FeaturePickOptions;
 using FeatureRankReport = ::pluss::ai::nodej::FeatureRankReport;
-using FeaturePickResult = ::pluss::ai::nodej::FeaturePickResult;
+using Result = ::pluss::ai::nodej::FeaturePickResult;
 
 [[nodiscard]] inline FeatureBatch take_features(const FeatureBatch& batch,
                                                 pluss::msharp::RangeView::Int feature_indices) {
@@ -33,7 +33,7 @@ using FeaturePickResult = ::pluss::ai::nodej::FeaturePickResult;
   return resolve(::pluss::ai::nodej::rank_features(batch, options), "feature::rank_features");
 }
 
-[[nodiscard]] inline FeaturePickResult pick_features(const LabeledBatch& batch, const FeaturePickOptions& options = {}) {
+[[nodiscard]] inline Result pick_features(const LabeledBatch& batch, const FeaturePickOptions& options = {}) {
   return resolve(::pluss::ai::nodej::pick_features(batch, options), "feature::pick_features");
 }
 

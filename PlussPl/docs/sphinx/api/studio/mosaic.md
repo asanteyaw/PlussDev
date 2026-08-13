@@ -73,7 +73,7 @@ using namespace pluss::pl;
 
 auto fig = studio("mosaic_single");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.mosaic_layout().active << "\n";
@@ -102,7 +102,7 @@ for (int i = 0; i < 4; ++i) {
   std::vector<double> y{static_cast<double>(i) + 2.0, static_cast<double>(i) + 4.0,
                          static_cast<double>(i) + 3.0, static_cast<double>(i) + 5.0,
                          static_cast<double>(i) + 6.0};
-  flash::lineplot(pane, x, y);
+  pane.trend(x, y);
 }
 fig.show();
 
@@ -131,7 +131,7 @@ for (int i = 0; i < 3; ++i) {
   std::vector<double> y{static_cast<double>(i) + 2.0, static_cast<double>(i) + 4.0,
                          static_cast<double>(i) + 3.0, static_cast<double>(i) + 5.0,
                          static_cast<double>(i) + 6.0};
-  flash::lineplot(pane, x, y);
+  pane.trend(x, y);
 }
 fig.show();
 ```
@@ -189,7 +189,7 @@ for (int i = 0; i < 5; ++i) {
   auto& pane = fig.pane2();
   std::vector<double> x{1.0, 2.0, 3.0};
   std::vector<double> y{1.0, 2.0, 3.0};
-  flash::lineplot(pane, x, y);
+  pane.trend(x, y);
 }
 
 try {

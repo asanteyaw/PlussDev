@@ -63,6 +63,8 @@ namespace pluss::ai::lymph {
   return "task";
 }
 
+namespace builder {
+
 class Builder final {
  public:
   Builder() = default;
@@ -247,6 +249,11 @@ class Builder final {
   std::vector<std::pair<std::string, Model>> items_{};
   mutable std::optional<selection::CompareResult> last_result_{};
 };
+} // namespace builder
+
+using Builder = builder::Builder;
+
+namespace builder {
 
 [[nodiscard]] inline pluss::table::DataFrame Builder::report(std::int64_t n) const {
   const std::int64_t count = (n < 0 || n > size()) ? size() : n;
@@ -279,8 +286,6 @@ class Builder final {
 
   return pluss::table::DataFrame(std::move(columns)).title("Builder");
 }
-
-namespace builder {
 
 [[nodiscard]] inline Builder build() { return Builder(); }
 

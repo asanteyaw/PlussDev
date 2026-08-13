@@ -7,7 +7,7 @@ namespace pluss::ai::lymph {
 
 namespace detail {
 
-struct linear_factory {
+struct linear {
   [[nodiscard]] static detail::ModelCore linear_regression(LinearFamilyOptions options = {}) {
     options.objective = LinearObjective::LeastSquares;
     return detail::ModelCore(ModelSpec{
@@ -36,7 +36,7 @@ struct linear_factory {
   }
 };
 
-struct tree_factory {
+struct tree {
   [[nodiscard]] static detail::ModelCore decision_tree_regressor(TreeFamilyOptions options = {}) {
     if (options.criterion == TreeCriterion::Gini || options.criterion == TreeCriterion::Entropy) {
       options.criterion = TreeCriterion::Mse;
@@ -60,7 +60,7 @@ struct tree_factory {
   }
 };
 
-struct ensemble_factory {
+struct ensemble {
   [[nodiscard]] static detail::ModelCore bagging_regressor(EnsembleFamilyOptions options = {}) {
     options.method = EnsembleMethod::Bagging;
     return regressor(options);
@@ -108,7 +108,7 @@ struct ensemble_factory {
   }
 };
 
-struct neighbor_factory {
+struct neighbor {
   [[nodiscard]] static detail::ModelCore knn_regressor(NeighborFamilyOptions options = {}) {
     return regressor(options);
   }
@@ -144,7 +144,7 @@ struct neighbor_factory {
   }
 };
 
-struct kernel_factory {
+struct kernel {
   [[nodiscard]] static detail::ModelCore svm_regressor(KernelFamilyOptions options = {}) {
     options.form = KernelForm::C;
     return regressor(options);
@@ -235,7 +235,7 @@ struct kernel_factory {
   }
 };
 
-struct bayes_factory {
+struct bayes {
   [[nodiscard]] static detail::ModelCore gaussian_nb_classifier(BayesFamilyOptions options = {}) {
     options.likelihood = BayesLikelihood::Gaussian;
     options.use_gaussian = true;
@@ -295,7 +295,7 @@ struct bayes_factory {
   }
 };
 
-struct cluster_factory {
+struct cluster {
   [[nodiscard]] static detail::ModelCore kmeans(ClusterFamilyOptions options = {}) {
     options.method = ClusterMethod::KMeans;
     return transformer(options);
@@ -310,7 +310,7 @@ struct cluster_factory {
   }
 };
 
-struct decompose_factory {
+struct decompose {
   [[nodiscard]] static detail::ModelCore pca(DecomposeFamilyOptions options = {}) {
     options.method = DecomposeMethod::Pca;
     return transformer(options);
@@ -325,7 +325,7 @@ struct decompose_factory {
   }
 };
 
-struct detect_factory {
+struct detect {
   [[nodiscard]] static detail::ModelCore isolation_detector(DetectFamilyOptions options = {}) {
     options.method = DetectMethod::Isolation;
     return transformer(options);

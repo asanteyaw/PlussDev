@@ -18,6 +18,8 @@ add_test([=[lymph_metrics_test]=] "/Users/yawasante/software/cxx/PlussDev/build_
 set_tests_properties([=[lymph_metrics_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/Lymph/test/CMakeLists.txt;35;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/Lymph/test/CMakeLists.txt;0;")
 add_test([=[lymph_model_append_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/Lymph/test/lymph_model_append_test")
 set_tests_properties([=[lymph_model_append_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/Lymph/test/CMakeLists.txt;35;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/Lymph/test/CMakeLists.txt;0;")
+add_test([=[lymph_namespace_surface_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/Lymph/test/lymph_namespace_surface_test")
+set_tests_properties([=[lymph_namespace_surface_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/Lymph/test/CMakeLists.txt;35;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/Lymph/test/CMakeLists.txt;0;")
 add_test([=[lymph_search_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/Lymph/test/lymph_search_test")
 set_tests_properties([=[lymph_search_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/Lymph/test/CMakeLists.txt;35;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/Lymph/test/CMakeLists.txt;0;")
 add_test([=[lymph_shape_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/Lymph/test/lymph_shape_test")

@@ -106,7 +106,7 @@ int main() {
   pane8.place(2, 1).grid(pl::GridStyle::Major).caption("iso-line family");
   pane8.contour(gx, gy, gz, std::vector<double>{-4.0, -2.0, -1.0, 0.0, 1.0, 2.0, 4.0})
       .label("contour")
-      .annotate_levels();
+      .annotate_levels(true);
 
   auto& pane9 = studio.pane2("isoband");
   pane9.place(2, 2).grid(pl::GridStyle::Major).caption("filled contour family");

@@ -11,6 +11,8 @@
 - `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
 - `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
 - `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
+- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
+- `Search::run(arg2: const std::function<Model(const GridPoint&) -> SearchResult`
 
 ## Notes
 

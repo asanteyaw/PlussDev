@@ -40,9 +40,9 @@ fig.mosaic(2, 1);
 fig.row_title(0, "Q1 Results").row_title(1, "Q2 Results");
 fig.clear_row_title(0);
 auto& top = fig.pane2("top");
-flash::lineplot(top, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
+top.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
 auto& bottom = fig.pane2("bottom");
-flash::lineplot(bottom, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
+bottom.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
 fig.show();
 
 std::cout << fig.row_titles().size() << "\n";
@@ -68,7 +68,7 @@ fig.clear_row_title(5);  // no-op: row 5 was never titled
 std::cout << fig.row_titles().empty() << "\n";
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
+pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
 fig.show();
 ```
 
@@ -77,6 +77,8 @@ fig.show();
 ```text
 1
 ```
+
+![Output of Example 2](img/clear_row_title-2-never-set.svg)
 
 ## Notes
 

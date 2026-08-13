@@ -75,7 +75,7 @@ bool run_search_checks(std::ostream* err) {
   train_options.tolerance = 1e-5;
 
   Search search = search::grid(axes, cv);
-  SearchResult tuned = search.run(make_model, batch, train_options, AssessOptions{},
+  search::Result tuned = search.run(make_model, batch, train_options, AssessOptions{},
                                   MetricKind::Accuracy, TuneObjectivePolicy::Maximize,
                                   selection::FitOptions{.fit_top = 2});
 
@@ -122,7 +122,7 @@ bool run_search_checks(std::ostream* err) {
   tune_options.max_parallel = 2;
   tune_options.random = RandomState{.seed = 7, .deterministic = true};
   Search random_search = search::build(axes, tune_options);
-  SearchResult random_tuned = random_search.run(make_model, batch, train_options);
+  search::Result random_tuned = random_search.run(make_model, batch, train_options);
   if (random_tuned.report.trials.size() != 1 || !random_tuned.best().trained()) {
     if (err) *err << "search::build(axes, TuneOptions) should preserve random trial count and stored split policy\n";
     return false;
@@ -134,8 +134,8 @@ bool run_search_checks(std::ostream* err) {
       {"y", pluss::table::Thread(frame.y)},
   });
   const Payload raw_payload = payload::make(raw).features({"x1", "x2"}).label("y");
-  const Workflow design = workflow::make(policy({}));
-  SearchResult workflow_tuned = search.run(make_model,
+  const Workflow design = workflow::make(Policy{});
+  search::Result workflow_tuned = search.run(make_model,
                                            design,
                                            raw_payload,
                                            train_options,

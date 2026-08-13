@@ -250,6 +250,32 @@ class Plan final {
                              objective_metric, objective_policy, fit_options);
   }
 
+  [[nodiscard]] selection::CompareResult run(const Builder& builder,
+                                             const Payload& payload,
+                                             TrainOptions train_options = {},
+                                             AssessOptions assess_options = {},
+                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                                             selection::FitOptions fit_options = {}) const {
+    detail::require_time_safe_payload_(options_, payload, "validate::Plan::run(builder,payload)");
+    if (payload.has_frame()) {
+      if (payload.has_external_weights() && !payload.has_weight_feature()) {
+        ::pluss::throw_error(
+            "validate::Plan::run(builder,payload): DataFrame-backed Payload with Series weights must use weights(\"column\") so row filtering stays aligned.");
+      }
+      if (payload.has_label_feature()) {
+        return run(builder, payload.frame(), payload.data(), std::move(train_options), std::move(assess_options),
+                   objective_metric, objective_policy, fit_options);
+      }
+      if (payload.has_label()) {
+        return builder.benchmark(payload.frame(), payload.label(), options_, std::move(train_options),
+                                 std::move(assess_options), objective_metric, objective_policy, fit_options);
+      }
+    }
+    return run(builder, payload.labeled_batch(), std::move(train_options), std::move(assess_options),
+               objective_metric, objective_policy, fit_options);
+  }
+
   [[nodiscard]] Series scores(const Model& model,
                               const LabeledBatch& batch,
                               MetricKind metric,
@@ -334,9 +360,9 @@ class Plan final {
 
 class HoldoutPlan final {
  public:
-  explicit HoldoutPlan(HoldoutSplitOptions options = {}) : options_(std::move(options)) {}
+  explicit HoldoutPlan(prep::HoldoutSplitOptions options = {}) : options_(std::move(options)) {}
 
-  [[nodiscard]] const HoldoutSplitOptions& options() const noexcept { return options_; }
+  [[nodiscard]] const prep::HoldoutSplitOptions& options() const noexcept { return options_; }
 
   HoldoutPlan& test_size(double value) {
     if (!(value > 0.0 && value < 1.0)) {
@@ -369,16 +395,16 @@ class HoldoutPlan final {
     return *this;
   }
 
-  [[nodiscard]] HoldoutSplit split(const pluss::table::DataFrame& frame) const {
-    return ::pluss::ai::lymph::holdout_split(frame, options_);
+  [[nodiscard]] prep::HoldoutSplit split(const pluss::table::DataFrame& frame) const {
+    return prep::holdout_split(frame, options_);
   }
 
-  [[nodiscard]] HoldoutSplit split(const LabeledBatch& batch) const {
-    return ::pluss::ai::lymph::holdout_split(batch, options_);
+  [[nodiscard]] prep::HoldoutSplit split(const LabeledBatch& batch) const {
+    return prep::holdout_split(batch, options_);
   }
 
  private:
-  HoldoutSplitOptions options_{};
+  prep::HoldoutSplitOptions options_{};
 };
 
 [[nodiscard]] inline Plan cross(CrossValidationOptions options = {}) {
@@ -408,7 +434,7 @@ class HoldoutPlan final {
   return time_ordered(std::move(options));
 }
 
-[[nodiscard]] inline HoldoutPlan holdout(HoldoutSplitOptions options = {}) {
+[[nodiscard]] inline HoldoutPlan holdout(prep::HoldoutSplitOptions options = {}) {
   return HoldoutPlan(std::move(options));
 }
 

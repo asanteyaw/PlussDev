@@ -43,7 +43,7 @@ using namespace pluss::pl;
 
 auto fig = studio("paper_theme");
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.theme_tokens().name() << "\n";
@@ -54,6 +54,8 @@ std::cout << fig.theme_tokens().name() << "\n";
 ```text
 paper
 ```
+
+![Output of Example 1](img/theme_tokens-1-default.svg)
 
 Example 2. Mutating in place through the non-`const` overload — assigning a whole new
 `Theme` value via the returned mutable reference, called before adding the pane so it
@@ -66,7 +68,7 @@ auto fig = studio("mutated_theme");
 fig.theme_tokens() = Theme::ocean();
 
 auto& pane = fig.pane2();
-flash::lineplot(pane, std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
 fig.show();
 
 std::cout << fig.theme_tokens().name() << "\n";

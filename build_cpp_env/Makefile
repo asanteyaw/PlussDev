@@ -713,6 +713,19 @@ lymph_model_append_test/fast:
 .PHONY : lymph_model_append_test/fast
 
 #=============================================================================
+# Target rules for targets named lymph_namespace_surface_test
+
+# Build rule for target.
+lymph_namespace_surface_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_namespace_surface_test
+.PHONY : lymph_namespace_surface_test
+
+# fast build rule for target.
+lymph_namespace_surface_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_namespace_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_namespace_surface_test.dir/build
+.PHONY : lymph_namespace_surface_test/fast
+
+#=============================================================================
 # Target rules for targets named lymph_search_test
 
 # Build rule for target.
@@ -2908,6 +2921,84 @@ nodej_weighted_family_test: cmake_check_build_system
 nodej_weighted_family_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build.make PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build
 .PHONY : nodej_weighted_family_test/fast
+
+#=============================================================================
+# Target rules for targets named procedure_phase1_test
+
+# Build rule for target.
+procedure_phase1_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedure_phase1_test
+.PHONY : procedure_phase1_test
+
+# fast build rule for target.
+procedure_phase1_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase1_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase1_test.dir/build
+.PHONY : procedure_phase1_test/fast
+
+#=============================================================================
+# Target rules for targets named procedure_phase3_test
+
+# Build rule for target.
+procedure_phase3_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedure_phase3_test
+.PHONY : procedure_phase3_test
+
+# fast build rule for target.
+procedure_phase3_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase3_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase3_test.dir/build
+.PHONY : procedure_phase3_test/fast
+
+#=============================================================================
+# Target rules for targets named procedure_phase4_test
+
+# Build rule for target.
+procedure_phase4_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedure_phase4_test
+.PHONY : procedure_phase4_test
+
+# fast build rule for target.
+procedure_phase4_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase4_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase4_test.dir/build
+.PHONY : procedure_phase4_test/fast
+
+#=============================================================================
+# Target rules for targets named procedure_phase5_test
+
+# Build rule for target.
+procedure_phase5_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedure_phase5_test
+.PHONY : procedure_phase5_test
+
+# fast build rule for target.
+procedure_phase5_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase5_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase5_test.dir/build
+.PHONY : procedure_phase5_test/fast
+
+#=============================================================================
+# Target rules for targets named procedure_phase6_test
+
+# Build rule for target.
+procedure_phase6_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedure_phase6_test
+.PHONY : procedure_phase6_test
+
+# fast build rule for target.
+procedure_phase6_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase6_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase6_test.dir/build
+.PHONY : procedure_phase6_test/fast
+
+#=============================================================================
+# Target rules for targets named procedure_phase7_test
+
+# Build rule for target.
+procedure_phase7_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedure_phase7_test
+.PHONY : procedure_phase7_test
+
+# fast build rule for target.
+procedure_phase7_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build.make PlussAI/test/CMakeFiles/procedure_phase7_test.dir/build
+.PHONY : procedure_phase7_test/fast
 
 #=============================================================================
 # Target rules for targets named rnn_fusion_test
@@ -6420,6 +6511,19 @@ plussmic_hierarchical_cases_demo/fast:
 .PHONY : plussmic_hierarchical_cases_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_flash_dataset_bridge_demo
+
+# Build rule for target.
+plussmic_flash_dataset_bridge_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_flash_dataset_bridge_demo
+.PHONY : plussmic_flash_dataset_bridge_demo
+
+# fast build rule for target.
+plussmic_flash_dataset_bridge_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build
+.PHONY : plussmic_flash_dataset_bridge_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_kindle_model_demo
 
 # Build rule for target.
@@ -6561,6 +6665,19 @@ plussmic_table_statistics_window_tests: cmake_check_build_system
 plussmic_table_statistics_window_tests/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build
 .PHONY : plussmic_table_statistics_window_tests/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_table_flash_dataset_bridge_tests
+
+# Build rule for target.
+plussmic_table_flash_dataset_bridge_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_table_flash_dataset_bridge_tests
+.PHONY : plussmic_table_flash_dataset_bridge_tests
+
+# fast build rule for target.
+plussmic_table_flash_dataset_bridge_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_flash_dataset_bridge_tests.dir/build
+.PHONY : plussmic_table_flash_dataset_bridge_tests/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_table_gap_benchmark
@@ -10178,6 +10295,7 @@ help:
 	@echo "... lymph_expansion_surface_test"
 	@echo "... lymph_metrics_test"
 	@echo "... lymph_model_append_test"
+	@echo "... lymph_namespace_surface_test"
 	@echo "... lymph_search_test"
 	@echo "... lymph_shape_test"
 	@echo "... lymph_split_surface_test"
@@ -10430,6 +10548,7 @@ help:
 	@echo "... plussmic_df_ex_demo"
 	@echo "... plussmic_display_policy_demo"
 	@echo "... plussmic_eda_us_accidents_demo"
+	@echo "... plussmic_flash_dataset_bridge_demo"
 	@echo "... plussmic_hierarchical_cases_demo"
 	@echo "... plussmic_kindle_catalog_plot_demo"
 	@echo "... plussmic_kindle_catalog_tests"
@@ -10441,6 +10560,7 @@ help:
 	@echo "... plussmic_table_axis_match_tests"
 	@echo "... plussmic_table_csv_tests"
 	@echo "... plussmic_table_dataframe_plot_api_tests"
+	@echo "... plussmic_table_flash_dataset_bridge_tests"
 	@echo "... plussmic_table_gap_benchmark"
 	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
@@ -10540,6 +10660,12 @@ help:
 	@echo "... plussview_macos_input_driver"
 	@echo "... poly_regression_test"
 	@echo "... population_test"
+	@echo "... procedure_phase1_test"
+	@echo "... procedure_phase3_test"
+	@echo "... procedure_phase4_test"
+	@echo "... procedure_phase5_test"
+	@echo "... procedure_phase6_test"
+	@echo "... procedure_phase7_test"
 	@echo "... quantile_regression_test"
 	@echo "... rate_models_test"
 	@echo "... rates_paths_test"

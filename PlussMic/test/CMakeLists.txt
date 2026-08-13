@@ -24,6 +24,9 @@ add_executable(plussmic_table_axis_match_tests
 add_executable(plussmic_table_statistics_window_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/table_statistics_window_tests.cpp
 )
+add_executable(plussmic_table_flash_dataset_bridge_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/table_flash_dataset_bridge_tests.cpp
+)
 add_executable(plussmic_table_gap_benchmark
   ${CMAKE_CURRENT_SOURCE_DIR}/table_gap_benchmark.cpp
 )
@@ -38,6 +41,7 @@ target_link_libraries(plussmic_table_dataframe_plot_api_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_ts_accessor_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_axis_match_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_statistics_window_tests PRIVATE PlussMic)
+target_link_libraries(plussmic_table_flash_dataset_bridge_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_gap_benchmark PRIVATE PlussMic)
 target_link_libraries(plussmic_bundle_gap_benchmark PRIVATE PlussMic)
 target_compile_definitions(plussmic_table_csv_tests PRIVATE
@@ -64,6 +68,10 @@ target_compile_definitions(plussmic_table_statistics_window_tests PRIVATE
   FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
+target_compile_definitions(plussmic_table_flash_dataset_bridge_tests PRIVATE
+  FMT_HEADER_ONLY=1
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
 
 add_test(NAME plussmic_table_csv COMMAND plussmic_table_csv_tests)
 add_test(NAME plussmic_kindle_catalog COMMAND plussmic_kindle_catalog_tests)
@@ -72,3 +80,4 @@ add_test(NAME plussmic_table_dataframe_plot_api COMMAND plussmic_table_dataframe
 add_test(NAME plussmic_table_ts_accessor COMMAND plussmic_table_ts_accessor_tests)
 add_test(NAME plussmic_table_axis_match COMMAND plussmic_table_axis_match_tests)
 add_test(NAME plussmic_table_statistics_window COMMAND plussmic_table_statistics_window_tests)
+add_test(NAME plussmic_table_flash_dataset_bridge COMMAND plussmic_table_flash_dataset_bridge_tests)

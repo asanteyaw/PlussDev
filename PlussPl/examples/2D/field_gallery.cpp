@@ -93,7 +93,7 @@ int main() {
       .label("iso-ridges")
       .width(1.2F)
       .palette(pl::PaletteRamp::thermal())
-      .annotate_levels();
+      .annotate_levels(true);
   terrain.pin("summit", 0.15, 1.35, 34.0, -22.0);
 
   auto& marks = gallery.pane2("Mark cloud");

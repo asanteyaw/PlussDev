@@ -44,7 +44,7 @@ int main() {
   lymph::TrainOptions weighted{};
   weighted.class_weight = lymph::ClassWeightMode::Balanced;
 
-  lymph::SpotCheckResult ranked = lymph::spotcheck::models(models)
+  lymph::spotcheck::Result ranked = lymph::spotcheck::suite(models)
       .strategy("plain", plain)
       .strategy("weighted", weighted)
       .run(design, data, cv, assess, lymph::MetricKind::F1,

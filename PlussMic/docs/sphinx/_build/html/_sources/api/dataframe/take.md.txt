@@ -1,14 +1,15 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 51b5f33183c3 -->
+<!-- pluss-signature-hash: 7fc65cf6281f -->
 
 # DataFrame::take
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-DataFrame::take(pluss::RangeView<std::int64_t> indices) const -> DataFrame
+DataFrame::take(pluss::msharp::RangeView::Int indices) const -> DataFrame
+DataFrame::take(const Thread& indices) const -> DataFrame
 ```
 
 ## What It Does
@@ -27,13 +28,24 @@ position (after negative normalization) is a validation error here, not silently
 clamped. Case labels on the result follow the same positions and order as `indices`:
 row `5` keeps its original label `5` even if it now appears first in the result.
 
+The second overload accepts the positions as a numeric `Thread` instead of a
+`RangeView` — convenient when the indices already exist as a computed `Thread`
+(the output of another selection or a boolean-to-position conversion) rather
+than a literal list. A non-numeric `Thread` (e.g. `Note`-kind) throws.
+
 ## Parameters
 
-**indices** (`pluss::RangeView<std::int64_t>`)
+**indices** (`pluss::msharp::RangeView::Int`, first overload)
 
 The case positions to select, in the exact order the result should have. Negative
 values are interpreted relative to the end of the frame. The same position may appear
 more than once — the corresponding row is duplicated once per occurrence.
+
+**indices** (`const Thread&`, second overload)
+
+The same case positions, supplied as a numeric `Series`-kind `Thread` instead of a
+`RangeView`. Same negative-index and repetition rules apply. A non-numeric `Thread`
+throws `"DataFrame::take: indices thread must be a Series"`.
 
 ## Returns
 
@@ -68,10 +80,10 @@ std::cout << picked;
 =============================================================
      | order_id  city    product  units  unit_price  discount
 -------------------------------------------------------------
-5    | 106       Kumasi  Monitor  2      NULL        0.12    
+5    | 106       Kumasi  Monitor  2      nan         0.12    
 0    | 101       Accra   Laptop   2      1200        0.1     
 0    | 101       Accra   Laptop   2      1200        0.1     
-2    | 103       Tema    Laptop   1      1150        NULL    
+2    | 103       Tema    Laptop   1      1150        nan     
 -------------------------------------------------------------
 [4 cs x 6 feat]
 ```
@@ -94,10 +106,10 @@ std::cout << reversed;
 ================================================================
      | order_id  city    product     units  unit_price  discount
 ----------------------------------------------------------------
-5    | 106       Kumasi  Monitor     2      NULL        0.12    
+5    | 106       Kumasi  Monitor     2      nan         0.12    
 4    | 105       Kumasi  Headphones  4      42          0.05    
 3    | 104       Tema    Monitor     3      320         0.08    
-2    | 103       Tema    Laptop      1      1150        NULL    
+2    | 103       Tema    Laptop      1      1150        nan     
 1    | 102       Accra   Headphones  5      45.5        0.05    
 0    | 101       Accra   Laptop      2      1200        0.1     
 ----------------------------------------------------------------
@@ -106,6 +118,52 @@ std::cout << reversed;
 
 Every row is present exactly once, but the case order — and the case labels — run
 from `5` down to `0`.
+
+Example 3. The second overload accepts the positions as a `Thread` instead
+of a `RangeView` — the same selection as Example 1, expressed with an
+already-existing numeric `Thread` of indices.
+
+```cpp
+auto idx = Thread(pluss::make_series({5, 0, 0, 2}));
+auto picked2 = orders.take(idx);
+std::cout << picked2;
+```
+
+### Output
+
+```text
+=============================================================
+     | order_id  city    product  units  unit_price  discount
+-------------------------------------------------------------
+5    | 106       Kumasi  Monitor  2      nan         0.12    
+0    | 101       Accra   Laptop   2      1200        0.1     
+0    | 101       Accra   Laptop   2      1200        0.1     
+2    | 103       Tema    Laptop   1      1150        nan     
+-------------------------------------------------------------
+[4 cs x 6 feat]
+```
+
+Same result as Example 1 — the `Thread` overload is a drop-in alternative
+when the indices are already wrapped in a `Thread` rather than a bare
+`RangeView`/`std::vector`.
+
+Example 4 (edge case). A non-numeric `Thread` throws.
+
+```cpp
+auto bad_idx = Thread(pluss::make_note({"a", "b"}));
+try {
+  auto bad = orders.take(bad_idx);
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+DataFrame::take: indices thread must be a Series
+```
 
 ## Notes
 
@@ -117,6 +175,9 @@ from `5` down to `0`.
 - Repeating a position produces a row-level duplicate in the result, including a
   duplicated case label — useful for bootstrapped resampling or building a synthetic
   frame from an existing one's rows.
+- The `Thread`-indices overload requires a numeric (`Series`-kind) `Thread`; a
+  `Note`/`Timeline`/`TimeIndex` thread throws `"DataFrame::take: indices thread
+  must be a Series"` — see Example 4.
 
 ## See Also
 

@@ -1,6 +1,6 @@
 // search.cpp -- placeholder, intentionally empty.
 //
-// Search/SearchResult (LYMPH_REDESIGN_PLAN.md phase 5) landed fully inline
+// Search/search::Result (LYMPH_REDESIGN_PLAN.md phase 5) landed fully inline
 // in search.h instead of here -- matching the convention every other
 // substantial header this session actually used (stage.h, balance.h,
 // columnrouter.h, selection.h, builder.h are all header-only too, despite
