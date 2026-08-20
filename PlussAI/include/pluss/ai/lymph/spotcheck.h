@@ -50,7 +50,7 @@ class Suite final {
 
   [[nodiscard]] Result run(const pluss::table::DataFrame& frame,
                            const DataFrameBatchOptions& data_options,
-                           CrossValidationOptions cv = {},
+                           metrics::ValidationOptions cv = {},
                            AssessOptions assess_options = {},
                            MetricKind objective_metric = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
@@ -60,7 +60,7 @@ class Suite final {
   }
 
   [[nodiscard]] Result run(const LabeledBatch& batch,
-                           CrossValidationOptions cv = {},
+                           metrics::ValidationOptions cv = {},
                            AssessOptions assess_options = {},
                            MetricKind objective_metric = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
@@ -71,14 +71,14 @@ class Suite final {
 
   [[nodiscard]] Result run(const Workflow& design,
                            const Payload& payload,
-                           CrossValidationOptions cv = {},
+                           metrics::ValidationOptions cv = {},
                            AssessOptions assess_options = {},
                            MetricKind objective_metric = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                            selection::FitOptions fit_options = {}) const {
     validate::detail::require_workflow_time_compatible_(
         cv, design, payload, "lymph::spotcheck::Suite::run(workflow,payload)");
-    const CrossValidationOptions effective_cv = validate::detail::effective_time_options_(cv, design);
+    const metrics::ValidationOptions effective_cv = validate::detail::effective_time_options_(cv, design);
     const detail::WorkflowLabeledInput input =
         detail::workflow_labeled_input_(design, payload, "lymph::spotcheck::Suite::run(workflow,payload)");
     if (input.frame.has_value()) {

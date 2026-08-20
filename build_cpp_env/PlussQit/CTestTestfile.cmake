@@ -10,3 +10,4 @@ include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_
 include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_codem_cuda_gate_tests-b12d07c_include.cmake")
 include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_codem_optim_tests-b12d07c_include.cmake")
 include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_coden_tests-b12d07c_include.cmake")
+include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_codeh_tests-b12d07c_include.cmake")

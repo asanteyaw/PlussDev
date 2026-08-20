@@ -24,7 +24,7 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::linear_regression({.regularization_strength = 0.001}));
+      lymph::model::linear_regression({.regularization_strength = 0.001}));
 
   lymph::TimeOptions time{};
   time.index = "date";
@@ -33,7 +33,7 @@ int main() {
   time.lookback = 180;
   wf.time(time);
 
-  const lymph::CrossValidationReport cv = lymph::validate::time().folds(4).gap(1).horizon(20).lookback(180).run(wf, data);
+  const auto cv = lymph::validate::time().folds(4).gap(1).horizon(20).lookback(180).run(wf, data);
   wf.learn_(data);
   std::cout << "stock-project folds: " << cv.report.folds.size() << "\n";
   std::cout << "stock-project rmse: " << wf.assess(data).rmse.item<double>() << "\n";

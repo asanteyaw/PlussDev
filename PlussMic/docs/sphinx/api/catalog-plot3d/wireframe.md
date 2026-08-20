@@ -33,7 +33,7 @@ drawn as an open mesh (a lattice of connecting lines) instead of a filled sheet.
 **op** (`pluss::table::DataFrame::GroupOp`, default `Mean`)
     The aggregation applied per grid cell — see
     [`surface()`](surface.md)/[`DataFramePlot3DAccessor::surface`](../dataframe-plot3d/surface.md)
-    for which of `GroupOp`'s ten values are actually supported.
+    for the remaining numeric-rendering constraints after pivoting.
 
 **options** (`const Wireframe3DPlotOptions&`)
     Same `scene`/`trace` shape documented on

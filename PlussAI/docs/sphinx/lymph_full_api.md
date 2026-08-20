@@ -4,9 +4,9 @@ Lymph method-centric reference generated from public headers.
 Each page follows **API Signature -> Inputs -> Output -> Options -> Examples (with expected outputs)**.
 Options/enums are documented under the methods that consume them.
 
-- Method pages: **377**
+- Method pages: **380**
 - Data-type pages: **39**
-- Overloads covered: **558**
+- Overloads covered: **561**
 
 ## Function and Method Reference
 

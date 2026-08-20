@@ -142,6 +142,10 @@ std::vector<std::string> split_display_token_(std::string_view text,
 }
 
 std::string scalar_at(const pluss::Series& s, std::int64_t row) {
+  const auto format_float = [](double value, std::string_view spec) {
+    return std::isnan(value) ? std::string("NULL")
+                             : fmt::format(fmt::runtime(std::string(spec)), value);
+  };
   const auto st = s.scalar_type();
   const auto* base = s.raw_data();
   switch (st) {
@@ -164,13 +168,17 @@ std::string scalar_at(const pluss::Series& s, std::int64_t row) {
     case pluss::codem::ScalarType::UInt64:
       return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16:
-      return fmt::format("{:.6g}", pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
+      return format_float(
+          pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]),
+          "{:.6g}");
     case pluss::codem::ScalarType::BFloat16:
-      return fmt::format("{:.6g}", pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
+      return format_float(
+          pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]),
+          "{:.6g}");
     case pluss::codem::ScalarType::Float32:
-      return fmt::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
+      return format_float(reinterpret_cast<const float*>(base)[row], "{:.8g}");
     case pluss::codem::ScalarType::Float64:
-      return fmt::format("{:.10g}", reinterpret_cast<const double*>(base)[row]);
+      return format_float(reinterpret_cast<const double*>(base)[row], "{:.10g}");
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
       return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());

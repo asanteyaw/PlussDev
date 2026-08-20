@@ -24,6 +24,10 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+axel_fieldaxis_accessor_api_reference
+axel_cast_accessor_api_reference
+axel_note_accessor_api_reference
+axel_timeline_accessor_api_reference
 api/axel/cast
 api/axel/concat_depth
 api/axel/defined

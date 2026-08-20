@@ -28,6 +28,13 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+catalog_plot_accessor_api_reference
+catalog_plot3d_accessor_api_reference
+catalog_note_accessor_api_reference
+catalog_timeline_accessor_api_reference
+catalog_ts_accessor_api_reference
+catalog_cast_accessor_api_reference
+catalog_keyaxis_accessor_api_reference
 api/catalog/astype
 api/catalog/begin
 api/catalog/bfill

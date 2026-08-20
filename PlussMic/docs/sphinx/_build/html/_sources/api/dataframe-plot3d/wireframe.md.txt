@@ -30,9 +30,10 @@ See [`surface()`](surface.md) for the full explanation of how the grid is built,
 [`line()`](line.md) for the shared `Studio`-return / no-`cout` mechanics and the full
 `Plot3DSceneOptions`/`Plot3DTraceOptions` layering explanation.
 
-```{important} Same op restriction as surface()
-`op` accepts the same 7 of `DataFrame::GroupOp`'s 10 values that `surface()` does —
-`Std`, `Var`, and `Mode` throw `"DataFrame::pivot_table: unsupported aggregation op"`. See
+```{important} Same numeric-grid constraint as surface()
+`wireframe()` now inherits the broadened `pivot_table()` aggregations too, including
+`Std`, `Var`, and `Mode`. The real restriction is the same one `surface()` has: once the
+table is pivoted, the z-grid still has to be numeric so it can be rendered in 3D. See
 [`surface()`](surface.md)'s important callout for the full explanation.
 ```
 
@@ -126,27 +127,25 @@ chart.show();
 
 ![Output of Example 4](img/wireframe-4.svg)
 
-Example 5. An unsupported aggregation op throws, identically to `surface()`.
+Example 5. `Var` is now supported, producing a sample-variance mesh.
 
 ```cpp
-try {
-  auto bad = readings.plot3d().wireframe("hour", "depth_m", "temp_c", DataFrame::GroupOp::Mode);
-} catch (const std::exception& e) {
-  std::cout << e.what();
-}
-```
+auto repeated = DataFrame({
+    {"depth_m", Thread(pluss::make_series({10.0, 10.0, 10.0, 10.0}))},
+    {"hour",    Thread(pluss::make_series({0.0, 0.0, 12.0, 12.0}))},
+    {"temp_c",  Thread(pluss::make_series({18.0, 20.0, 15.0, 19.0}))},
+});
 
-### Output
-
-```text
-DataFrame::pivot_table: unsupported aggregation op
+auto chart = repeated.plot3d().wireframe("hour", "depth_m", "temp_c", DataFrame::GroupOp::Var);
+chart.show();
 ```
 
 ## Notes
 
 - Every construction detail is shared with [`surface()`](surface.md) — only the final
   trace shape differs (mesh edges vs. a filled surface).
-- Only 7 of `DataFrame::GroupOp`'s 10 values are supported; `Std`/`Var`/`Mode` throw.
+- The pivot step supports the broader grouped op set now too; the remaining practical
+  constraint is still numeric convertibility of the rendered z-grid.
 - Returns a `pluss::pl::Studio` — see [`line()`](line.md)'s important callout for how to
   view or save the result.
 

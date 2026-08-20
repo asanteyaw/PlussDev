@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0d4fbeada958 -->
 
 # DataFrameGrouped::agg
 

@@ -1,8 +1,8 @@
-# `Workflow::flow_summary`
+# `workflow::flow_summary`
 
 ## API Signature
 
-- `Workflow::flow_summary() -> std::string`
+- `workflow::flow_summary() -> std::string`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::flow_summary();
+auto value = workflow::flow_summary();
 out.info("flow_summary", value);
 ```
 

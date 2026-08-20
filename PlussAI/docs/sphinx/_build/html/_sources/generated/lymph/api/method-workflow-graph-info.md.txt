@@ -1,8 +1,8 @@
-# `Workflow::graph_info`
+# `workflow::graph_info`
 
 ## API Signature
 
-- `Workflow::graph_info() -> FlowGraphInfo`
+- `workflow::graph_info() -> FlowGraphInfo`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::graph_info();
+auto value = workflow::graph_info();
 out.info("graph_info", value);
 ```
 

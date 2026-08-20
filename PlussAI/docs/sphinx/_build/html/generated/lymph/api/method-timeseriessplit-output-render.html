@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>TimeSeriesSplit::output_render &#8212; PlussAI  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="TimeSeriesSplit::simple_imputer_strategy_name" href="method-timeseriessplit-simple-imputer-strategy-name.html" />
+    <link rel="prev" title="TimeSeriesSplit::make_time_series_split_options" href="method-timeseriessplit-make-time-series-split-options.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="timeseriessplit-output-render">
+<h1><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit::output_render</span></code><a class="headerlink" href="#timeseriessplit-output-render" title="Link to this heading">¶</a></h1>
+<section id="api-signature">
+<h2>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit::output_render(os:</span> <span class="pre">std::ostream&amp;,</span> <span class="pre">summary:</span> <span class="pre">const</span> <span class="pre">CategoryIndexerSummary&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">void</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit::output_render(os:</span> <span class="pre">std::ostream&amp;,</span> <span class="pre">summary:</span> <span class="pre">const</span> <span class="pre">OutlierIsolatorSummary&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">void</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit::output_render(os:</span> <span class="pre">std::ostream&amp;,</span> <span class="pre">summary:</span> <span class="pre">const</span> <span class="pre">SimpleImputerSummary&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">void</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit::output_render(os:</span> <span class="pre">std::ostream&amp;,</span> <span class="pre">summary:</span> <span class="pre">const</span> <span class="pre">StandardScalerSummary&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">void</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit::output_render(os:</span> <span class="pre">std::ostream&amp;,</span> <span class="pre">summary:</span> <span class="pre">const</span> <span class="pre">TransformerSummary&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">void</span></code></p></li>
+</ul>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<p>Instance method on <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+</section>
+<section id="inputs">
+<h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code> (<code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>)
+Method argument; see signature type for accepted form.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary</span></code> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">CategoryIndexerSummary&amp;</span> <span class="pre">|</span> <span class="pre">const</span> <span class="pre">OutlierIsolatorSummary&amp;</span> <span class="pre">|</span> <span class="pre">const</span> <span class="pre">SimpleImputerSummary&amp;</span> <span class="pre">|</span> <span class="pre">const</span> <span class="pre">StandardScalerSummary&amp;</span> <span class="pre">|</span> <span class="pre">const</span> <span class="pre">TransformerSummary&amp;</span></code>)
+Target values aligned to input observations.</p></li>
+</ul>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>No direct return value; operation applies side effects to object state.</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h2>
+<p>Option semantics used by this method:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CategoryIndexerSummary</span></code> (<code class="docutils literal notranslate"><span class="pre">struct</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">learned</span> <span class="pre">=</span> <span class="pre">false</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span> <span class="pre">feature_count</span> <span class="pre">=</span> <span class="pre">0</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">include_unknown_bucket</span> <span class="pre">=</span> <span class="pre">true</span></code>
+Controls fold/trial/count sizing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">one_based</span> <span class="pre">=</span> <span class="pre">true</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span> <span class="pre">feature_names{}</span></code>
+Explicit list of feature columns to read from the input frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span> <span class="pre">mapped_names{}</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::vector&lt;std::string&gt;&gt;</span> <span class="pre">categories{}</span></code>
+Option field used by this method.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OutlierIsolatorSummary</span></code> (<code class="docutils literal notranslate"><span class="pre">struct</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">learned</span> <span class="pre">=</span> <span class="pre">false</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span> <span class="pre">feature_count</span> <span class="pre">=</span> <span class="pre">0</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span> <span class="pre">estimators</span> <span class="pre">=</span> <span class="pre">0</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span> <span class="pre">max_samples</span> <span class="pre">=</span> <span class="pre">0</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span> <span class="pre">max_features</span> <span class="pre">=</span> <span class="pre">0</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">bootstrap</span> <span class="pre">=</span> <span class="pre">false</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">contamination_auto</span> <span class="pre">=</span> <span class="pre">true</span></code>
+Controls fold/trial/count sizing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">contamination</span> <span class="pre">=</span> <span class="pre">0.1</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">offset</span> <span class="pre">=</span> <span class="pre">-0.5</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span> <span class="pre">feature_names{}</span></code>
+Explicit list of feature columns to read from the input frame.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SimpleImputerSummary</span></code> (<code class="docutils literal notranslate"><span class="pre">struct</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">SimpleImputerStrategy</span> <span class="pre">strategy</span> <span class="pre">=</span> <span class="pre">SimpleImputerStrategy::Mean</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">learned</span> <span class="pre">=</span> <span class="pre">false</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span> <span class="pre">feature_count</span> <span class="pre">=</span> <span class="pre">0</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">constant_value</span> <span class="pre">=</span> <span class="pre">0.0</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">empty_feature_fallback</span> <span class="pre">=</span> <span class="pre">0.0</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span> <span class="pre">feature_names{}</span></code>
+Explicit list of feature columns to read from the input frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Series</span> <span class="pre">statistics</span> <span class="pre">=</span> <span class="pre">Series::undefined()</span></code>
+Option field used by this method.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">StandardScalerSummary</span></code> (<code class="docutils literal notranslate"><span class="pre">struct</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span> <span class="pre">feature_names{}</span></code>
+Explicit list of feature columns to read from the input frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Series</span> <span class="pre">mean</span> <span class="pre">=</span> <span class="pre">Series::undefined()</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Series</span> <span class="pre">scale</span> <span class="pre">=</span> <span class="pre">Series::undefined()</span></code>
+Option field used by this method.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code> (<code class="docutils literal notranslate"><span class="pre">struct</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::table::DataFrame</span> <span class="pre">train_set{}</span></code>
+Controls fold/trial/count sizing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::table::DataFrame</span> <span class="pre">test_set{}</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LabeledBatch</span> <span class="pre">train_batch{}</span></code>
+Controls fold/trial/count sizing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LabeledBatch</span> <span class="pre">test_batch{}</span></code>
+Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IndexSplit</span> <span class="pre">indices{}</span></code>
+Option field used by this method.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TransformerSummary</span></code> (<code class="docutils literal notranslate"><span class="pre">struct</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span> <span class="pre">feature_names{}</span></code>
+Explicit list of feature columns to read from the input frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;Series&gt;</span> <span class="pre">state{}</span></code>
+Option field used by this method.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="example-1-minimal-usage">
+<h3>Example 1 (Minimal Usage)<a class="headerlink" href="#example-1-minimal-usage" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="n">TimeSeriesSplit</span><span class="o">::</span><span class="n">output_render</span><span class="p">(</span><span class="cm">/* os */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* summary */</span><span class="p">);</span>
+<span class="n">out</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;output_render completed&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Expected output</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>output_render completed
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussAI</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nodej_overview.html">NodeJ Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../lymph_overview.html">Lymph Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nodej_full_api.html">NodeJ Full API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../lymph_full_api.html">Lymph Full API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../lymph_full_api.html#function-and-method-reference">Function and Method Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_local/NodeB/README.html">docs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../lymph_full_api.html">Lymph Full API Reference</a><ul>
+  <li><a href="../api_index.html">Lymph Full API Reference: Method Index</a><ul>
+      <li>Previous: <a href="method-timeseriessplit-make-time-series-split-options.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit::make_time_series_split_options</span></code></a></li>
+      <li>Next: <a href="method-timeseriessplit-simple-imputer-strategy-name.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit::simple_imputer_strategy_name</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/generated/lymph/api/method-timeseriessplit-output-render.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

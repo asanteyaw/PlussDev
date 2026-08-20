@@ -14,17 +14,17 @@ The full method-by-method surface is documented in [Lymph Full API Reference](ly
 
 ### API Signature
 
-- `cross_validate(model: WorkflowModel|Workflow|ModelSpec, x: DataFrame, y: Series|Thread, cv: CrossValidationOptions = {}, train_options: TrainOptions = {}, assess_options: AssessOptions = {}) -> CrossValidationReport`
+- `validate::cross(options: ValidationOptions = {}).run(model: WorkflowModel|Workflow|ModelSpec, x: DataFrame, y: Series|Thread, train_options: TrainOptions = {}, assess_options: AssessOptions = {}) -> CrossValidationReport`
 
 ### Notes
 
-`CrossValidationOptions` now forwards `StratifiedCrossVal` and `repeats` into the NodeJ splitter layer. Use it for classification workflows when a single stratified cross-validation pass is too sensitive to one shuffled partition.
+`ValidationOptions` now carries the validation-plan settings for cross, time-ordered, and holdout evaluation. It still forwards stratified/repeated cross-validation settings into the NodeJ splitter layer when you use `validate::cross(...)`.
 
 ### Inputs
 
 - classification workflow or model spec
 - feature frame and classification labels
-- `CrossValidationOptions` with `plan = StratifiedCrossVal`
+- `ValidationOptions` with `plan = StratifiedCrossVal`
 
 ### Output
 
@@ -32,11 +32,11 @@ The full method-by-method surface is documented in [Lymph Full API Reference](ly
 
 ### Options
 
-- `CrossValidationOptions::folds`
-- `CrossValidationOptions::repeats`
-- `CrossValidationOptions::shuffle`
-- `CrossValidationOptions::random_state`
-- `CrossValidationOptions::deterministic`
+- `ValidationOptions::folds`
+- `ValidationOptions::repeats`
+- `ValidationOptions::shuffle`
+- `ValidationOptions::random_state`
+- `ValidationOptions::deterministic`
 
 ### Examples
 
@@ -44,15 +44,14 @@ The full method-by-method surface is documented in [Lymph Full API Reference](ly
 namespace lym = pluss::ai::lymph;
 namespace nje = pluss::ai::nodej;
 
-auto report = lym::cross_validate(
-    classifier, x_class, y_class,
-    lym::CrossValidationOptions{
+auto report = lym::validate::cross(
+    lym::metrics::ValidationOptions{
         .plan = nje::CVPlanKind::StratifiedCrossVal,
         .folds = 5,
         .repeats = 3,
         .random_state = 31,
         .deterministic = true,
-    });
+    }).run(classifier, x_class, y_class);
 ```
 
 ### Expected output

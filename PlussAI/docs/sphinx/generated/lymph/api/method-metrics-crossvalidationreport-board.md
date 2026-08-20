@@ -18,7 +18,15 @@ None.
 
 ## Options
 
-No explicit option struct/enum parameters were detected for this method.
+Option semantics used by this method:
+
+- `CrossValidationReport` (`struct`):
+  - `CrossAssessReport report{}`
+    Option field used by this method.
+  - `MetricReport mean{}`
+    Selects optimization or evaluation objective.
+  - `MetricReport stdev{}`
+    Selects optimization or evaluation objective.
 
 ## Examples
 

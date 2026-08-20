@@ -33,7 +33,7 @@ int main() {
   options.max_rounds = 2;
 
   const lymph::semi::Result result =
-      lymph::semi::model(lymph::models::gaussian_nb_classifier())
+      lymph::semi::model(lymph::model::gaussian_nb_classifier())
           .run(lymph::LabeledBatch{
                    .features = lymph::FeatureBatch{
                        .x = pluss::make_series(x, {40, 2}, f64),

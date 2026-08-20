@@ -30,7 +30,7 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::random_forest_regressor({.learners = 75, .subsample = 0.85}));
+      lymph::model::random_forest_regressor({.learners = 75, .subsample = 0.85}));
 
   wf.learn_(data);
   std::cout << "abalone r2: " << wf.assess(data).r2.item<double>() << "\n";

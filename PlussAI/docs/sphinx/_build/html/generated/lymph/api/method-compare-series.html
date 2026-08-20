@@ -15,8 +15,8 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="confusion_table" href="method-confusion-table.html" />
-    <link rel="prev" title="classification_summary" href="method-classification-summary.html" />
+    <link rel="next" title="CompareReport::board" href="method-comparereport-board.html" />
+    <link rel="prev" title="columnrouter::with_remainder" href="method-columnrouter-with-remainder.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -88,7 +88,7 @@ evaluation completed
 <span class="w">  </span><span class="c1">//========== Cell 15: Save, Load, Re-Infer ========</span>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">fs</span><span class="o">::</span><span class="n">path</span><span class="w"> </span><span class="n">final_model_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model_dir</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s">&quot;lymph_housing_ch2_best.bin&quot;</span><span class="p">;</span>
 <span class="w">  </span><span class="n">final_workflow</span><span class="p">.</span><span class="n">save</span><span class="p">(</span><span class="n">final_model_path</span><span class="p">.</span><span class="n">string</span><span class="p">(),</span><span class="w"> </span><span class="n">train_prepared</span><span class="p">,</span><span class="w"> </span><span class="n">train_y</span><span class="p">,</span><span class="w"> </span><span class="n">train_options</span><span class="p">);</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">restored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">Workflow</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="n">final_model_path</span><span class="p">.</span><span class="n">string</span><span class="p">());</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">restored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">Model</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="n">final_model_path</span><span class="p">.</span><span class="n">string</span><span class="p">());</span>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">restored_pred</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">restored</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">test_prepared</span><span class="p">);</span>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">parity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">compare_series</span><span class="p">(</span><span class="n">final_pred</span><span class="p">,</span><span class="w"> </span><span class="n">restored_pred</span><span class="p">);</span>
 <span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;restored parity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">parity</span><span class="p">.</span><span class="n">max_abs_diff</span><span class="p">,</span><span class="w"> </span><span class="n">parity</span><span class="p">.</span><span class="n">mae</span><span class="p">);</span>
@@ -160,8 +160,8 @@ evaluation completed
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../lymph_full_api.html">Lymph Full API Reference</a><ul>
   <li><a href="../api_index.html">Lymph Full API Reference: Method Index</a><ul>
-      <li>Previous: <a href="method-classification-summary.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">classification_summary</span></code></a></li>
-      <li>Next: <a href="method-confusion-table.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">confusion_table</span></code></a></li>
+      <li>Previous: <a href="method-columnrouter-with-remainder.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">columnrouter::with_remainder</span></code></a></li>
+      <li>Next: <a href="method-comparereport-board.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">CompareReport::board</span></code></a></li>
   </ul></li>
   </ul></li>
   </ul></li>

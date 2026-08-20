@@ -2,7 +2,7 @@
 
 ## API Signature
 
-- `name(arg1: std::move(in_name)), arg2: workflow(std::move(in_workflow)) -> Candidate(std::string in_name, Workflow in_workflow) :`
+- `name(arg1: std::move(in_name)), arg2: model(std::move(in_model)), arg3: train_options(std::move(in_train_options)) -> Candidate(std::string in_name, Model in_model, std::optional<TrainOptions> in_train_options = std::nullopt) :`
 
 ## Notes
 
@@ -12,12 +12,14 @@ Instance method on `self`.
 
 - `arg1` (`std::move(in_name))`)
   Method argument; see signature type for accepted form.
-- `arg2` (`workflow(std::move(in_workflow)`)
+- `arg2` (`model(std::move(in_model))`)
+  Method argument; see signature type for accepted form.
+- `arg3` (`train_options(std::move(in_train_options)`)
   Method argument; see signature type for accepted form.
 
 ## Output
 
-- Returns `Candidate(std::string in_name, Workflow in_workflow) :`.
+- Returns `Candidate(std::string in_name, Model in_model, std::optional<TrainOptions> in_train_options = std::nullopt) :`.
 
 ## Options
 
@@ -26,11 +28,13 @@ Option semantics used by this method:
 - `Candidate` (`struct`):
   - `std::string name{}`
     Option field used by this method.
-  - `Workflow workflow{}`
+  - `Model model`
     Option field used by this method.
+  - `std::optional<TrainOptions> train_options{}`
+    Controls fold/trial/count sizing.
   - `Candidate& operator=(Candidate&&) noexcept = default`
     Option field used by this method.
-  - `Candidate& operator=(const Candidate&) = delete`
+  - `Candidate& operator=(const Candidate&) noexcept = default`
     Option field used by this method.
 
 ## Examples
@@ -39,20 +43,20 @@ Option semantics used by this method:
 
 ```cpp
 pluss::OutputEngine out;
-auto value = name(/* arg1 */, /* arg2 */);
+auto value = name(/* arg1 */, /* arg2 */, /* arg3 */);
 out.info("Candidate", value);
 ```
 
 **Expected output**
 
 ```text
-Candidate returned Candidate(std::string in_name, Workflow in_workflow) :
+Candidate returned Candidate(std::string in_name, Model in_model, std::optional<TrainOptions> in_train_options = std::nullopt) :
 ```
 
 ### Example 2 (Demo Pattern)
 
 ```cpp
-    nja::CrossValidationOptions cv_options{};
+    nja::metrics::CrossValidationOptions cv_options{};
     cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
     cv_options.shuffle = true;
@@ -61,17 +65,17 @@ Candidate returned Candidate(std::string in_name, Workflow in_workflow) :
 
     std::vector<nja::selection::Candidate> candidates{};
     {
-      auto wf = nja::Workflow{
-          .model = nja::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
+      nja::Model wf = nja::models::linear_regression(LinearFamilyOptions{
+          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
           .fit_intercept = true,
-      }),
-          .stages = {
-              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
-              nja::workflow::stage::standard_scaler(),
-          },
-      };
+      });
+      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
+      wf.standard_scaler();
+      candidates.emplace_back("linear_ridge", wf);
+    }
+    {
 ```
 
 **Expected output**

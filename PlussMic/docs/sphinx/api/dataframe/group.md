@@ -24,7 +24,9 @@ through `GroupOptions`, after which you choose:
 - `.transform({...})` for broadcasted grouped values back to original row order
 - `.filter(keep)` for keeping or dropping whole groups
 - grouped convenience terminals such as `.count()`, `.sum()`, `.mean()`, `.median()`,
-  `.min()`, `.max()`, `.std()`, `.var()`, `.mode()`, and `.ndistinct()`
+  `.min()`, `.max()`, `.std()`, `.var()`, `.mode()`, and `.ndistinct()`, each
+  available either as a no-argument "all remaining value features" form or a
+  targeted selected-feature form
 
 The mental model is:
 
@@ -193,7 +195,10 @@ std::cout << only_large;
 - Explicit `.agg({...})` is the most precise form when you want mixed operations or
   custom output names.
 - Convenience terminals such as `.mean()` and `.sum()` operate on the current frame's
-  non-key value features.
+  non-key value features by default.
+- Those same convenience terminals also accept one or more feature names when you want
+  to aggregate only a targeted subset, for example
+  ``group().by({"city"}).mean({"price"})``.
 - Convenience `.count()` counts non-null values for the current non-key value features.
   Use `.agg({{"count", "", DataFrame::GroupOp::Count}})` when you want row count per
   group as an explicit aggregate.

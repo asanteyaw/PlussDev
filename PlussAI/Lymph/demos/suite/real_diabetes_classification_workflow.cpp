@@ -25,7 +25,7 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::logistic_regression({.regularization_strength = 0.01}));
+      lymph::model::logistic_regression({.regularization_strength = 0.01}));
 
   wf.learn_(data);
   std::cout << "diabetes f1: " << wf.assess(data).f1.item<double>() << "\n";

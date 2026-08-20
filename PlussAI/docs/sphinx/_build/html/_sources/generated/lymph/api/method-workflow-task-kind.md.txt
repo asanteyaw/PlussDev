@@ -1,8 +1,8 @@
-# `Workflow::task_kind`
+# `workflow::task_kind`
 
 ## API Signature
 
-- `Workflow::task_kind() -> TaskKind`
+- `workflow::task_kind() -> TaskKind`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::task_kind();
+auto value = workflow::task_kind();
 out.info("task_kind", value);
 ```
 

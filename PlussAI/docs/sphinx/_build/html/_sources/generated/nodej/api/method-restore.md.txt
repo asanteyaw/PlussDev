@@ -40,6 +40,8 @@ Option semantics used by this method:
     Controls fold/trial/count sizing.
   - `LabeledBatch train_batch{}`
     Controls fold/trial/count sizing.
+  - `CategoryMaps category_maps{}`
+    Option field used by this method.
 
 ## Examples
 

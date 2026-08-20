@@ -1,0 +1,73 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 690e9c53a602 -->
+
+# DataFrameContingencyTableBuilder::max
+
+[Back to DataFrame contingency accessor API Reference](../../dataframe_contingency_accessor_api_reference)
+
+## Signature
+
+```cpp
+DataFrameContingencyTableBuilder::max(std::string_view feature) const -> DataFrame
+```
+
+## What It Does
+
+Computes the per-cell maximum of a numeric value feature inside the contingency
+layout.
+
+## Parameters
+
+**feature** (`std::string_view`)
+    The numeric value feature to reduce per crossed cell.
+
+## Returns
+
+`DataFrame`
+    A contingency table whose numeric cells are maxima for the selected value
+    feature.
+
+## Examples
+
+Example 1. Maximum `amount` in each crossed cell.
+
+```cpp
+using namespace pluss::table;
+
+auto df = DataFrame({
+    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+});
+
+auto out = df.contingency("city", "channel").max("amount");
+std::cout << out;
+```
+
+### Output
+
+```text
+=======================
+     | city  Card  Cash
+-----------------------
+0    | A     20    10
+1    | B     50    40
+-----------------------
+[2 cs x 3 feat]
+```
+
+## See Also
+
+- [`DataFrameContingencyTableBuilder::min`](min.md)
+- [`DataFrameContingencyTableBuilder::mean`](mean.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="keepnull.html">
+    <span class="label">Previous</span>
+    <span class="title">keepnull</span>
+  </a>
+  <a class="next-link" href="mean.html">
+    <span class="label">Next</span>
+    <span class="title">mean</span>
+  </a>
+</div>

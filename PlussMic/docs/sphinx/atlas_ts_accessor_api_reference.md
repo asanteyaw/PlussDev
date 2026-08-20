@@ -22,6 +22,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+atlas_ts_resampler_api_reference
 api/atlas-ts/asfreq
 api/atlas-ts/diff
 api/atlas-ts/ewm

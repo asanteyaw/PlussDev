@@ -1,0 +1,81 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1f729b8b239a -->
+
+# DataFrameContingencyTableBuilder::sum
+
+[Back to DataFrame contingency accessor API Reference](../../dataframe_contingency_accessor_api_reference)
+
+## Signature
+
+```cpp
+DataFrameContingencyTableBuilder::sum(std::string_view feature) const -> DataFrame
+```
+
+## What It Does
+
+Aggregates a numeric value feature by sum inside each crossed contingency cell.
+
+## Parameters
+
+**feature** (`std::string_view`)
+    The numeric value feature to sum per cell.
+
+## Returns
+
+`DataFrame`
+    A contingency table whose numeric cells are sums for the selected value
+    feature.
+
+## Examples
+
+Example 1. Sum `amount` inside each crossed cell.
+
+```cpp
+using namespace pluss::table;
+
+auto df = DataFrame({
+    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+});
+
+auto out = df.contingency("city", "channel").sum("amount");
+std::cout << out;
+```
+
+### Output
+
+```text
+=======================
+     | city  Card  Cash
+-----------------------
+0    | A     20    10
+1    | B     50    70
+-----------------------
+[2 cs x 3 feat]
+```
+
+The `"B"` and `"Cash"` cell sums `30 + 40 = 70`.
+
+## Notes
+
+- Reducers such as `sum()` are cell-wise over the contingency grid. They are
+  not `axis=0` or `axis=1` reductions over the rendered output.
+- Numeric contingency reducers require the named feature to be a numeric
+  `Series`.
+
+## See Also
+
+- [`DataFrameContingencyTableBuilder::mean`](mean.md)
+- [`DataFrameContingencyTableBuilder::median`](median.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="std.html">
+    <span class="label">Previous</span>
+    <span class="title">std</span>
+  </a>
+  <a class="next-link" href="totals.html">
+    <span class="label">Next</span>
+    <span class="title">totals</span>
+  </a>
+</div>

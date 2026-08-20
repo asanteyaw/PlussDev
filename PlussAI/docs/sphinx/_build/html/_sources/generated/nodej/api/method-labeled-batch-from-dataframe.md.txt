@@ -2,7 +2,7 @@
 
 ## API Signature
 
-- `labeled_batch_from_dataframe(frame: const pluss::table::DataFrame&, options: const DataFrameBatchOptions&) -> StatusOr<LabeledBatch>`
+- `labeled_batch_from_dataframe(frame: const pluss::table::DataFrame&, options: const DataFrameBatchOptions&, existing_categories: const CategoryMaps* = nullptr, fitted_categories_out: CategoryMaps* = nullptr) -> StatusOr<LabeledBatch>`
 
 ## Notes
 
@@ -10,6 +10,10 @@ Builds a supervised `LabeledBatch` from a DataFrame. Use `options` to pick featu
 
 ## Inputs
 
+- `existing_categories` (`const CategoryMaps*`), default: `nullptr`
+  Input feature data used by this call.
+- `fitted_categories_out` (`CategoryMaps*`), default: `nullptr`
+  Method argument; see signature type for accepted form.
 - `frame` (`const pluss::table::DataFrame&`)
   Input feature data used by this call.
 - `options` (`const DataFrameBatchOptions&`)
@@ -38,6 +42,8 @@ Option semantics used by this method:
     Controls how note/categorical columns are handled during adaptation.
   - `std::uint64_t note_hash_seed{1469598103934665603ULL}`
     Random seed for reproducible behavior.
+  - `UnknownCategoryPolicy factorize_unknown_categorical{UnknownCategoryPolicy::MissingBucket}`
+    Controls fold/trial/count sizing.
 
 ## Examples
 
@@ -45,7 +51,7 @@ Option semantics used by this method:
 
 ```cpp
 pluss::OutputEngine out;
-auto res = labeled_batch_from_dataframe(/* frame */, /* options */);
+auto res = labeled_batch_from_dataframe(/* frame */, /* options */, /* existing_categories */, /* fitted_categories_out */);
 if (!res.ok()) {
   out.error("labeled_batch_from_dataframe failed", res.status().message);
 } else {

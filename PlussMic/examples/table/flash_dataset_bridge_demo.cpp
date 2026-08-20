@@ -73,7 +73,7 @@ void example_from_frame_basic() {
       }), mask)},
   }).title("grades");
 
-  const auto data = Dataset::from_frame(frame);
+  const auto data = Dataset::from_table(frame);
   print_note_csv("order", *data.feature_order);
   print_note_csv("kinds", *data.feature_kinds);
   std::cout << "counts="
@@ -98,7 +98,7 @@ void example_from_frame_subset() {
       })},
   });
 
-  const auto data = Dataset::from_frame(
+  const auto data = Dataset::from_table(
       frame,
       {.features = {"stamp", "city"}, .include_series = false});
   print_note_csv("order", *data.feature_order);
@@ -120,7 +120,7 @@ void example_from_frame_timeindex() {
       })},
   });
 
-  const auto data = Dataset::from_frame(frame);
+  const auto data = Dataset::from_table(frame);
   print_note_csv("order", *data.feature_order);
   print_note_csv("kinds", *data.feature_kinds);
   std::cout << "temporal_present=" << data.temporal("event_idx").has_value() << "\n";
@@ -137,7 +137,7 @@ void example_from_frame_timeindex_disabled() {
   });
 
   try {
-    (void)Dataset::from_frame(frame, {.include_timeindex_as_timeline = false});
+    (void)Dataset::from_table(frame, {.include_timeindex_as_timeline = false});
   } catch (const pluss::Error& err) {
     std::cout << "error=" << first_line(err) << "\n";
   }
@@ -152,7 +152,7 @@ void example_from_frame_text_disabled() {
   });
 
   try {
-    (void)Dataset::from_frame(frame, {.include_text = false});
+    (void)Dataset::from_table(frame, {.include_text = false});
   } catch (const pluss::Error& err) {
     std::cout << "error=" << first_line(err) << "\n";
   }
@@ -171,7 +171,7 @@ void example_frame_rectangular() {
       })},
   }).title("grades");
 
-  const auto data = Dataset::from_frame(frame);
+  const auto data = Dataset::from_table(frame);
   const auto rebuilt = data.frame({.title = "rebuilt"});
   std::cout << rebuilt << "\n";
   std::cout << "title=" << rebuilt.title() << "\n";

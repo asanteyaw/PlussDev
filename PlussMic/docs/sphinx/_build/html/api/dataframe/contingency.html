@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::contingency &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::copy" href="copy.html" />
+    <link rel="prev" title="DataFrame::conform" href="conform.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9e4f0d84257f -->
+<section id="dataframe-contingency">
+<h1>DataFrame::contingency<a class="headerlink" href="#dataframe-contingency" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">row_feature</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">column_feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">row_feature</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">column_feature</span><span class="p">,</span>
+<span class="w">                                        </span><span class="k">const</span><span class="w"> </span><span class="n">ContingencyOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span>
+<span class="w">                                        </span><span class="k">const</span><span class="w"> </span><span class="n">ContingencyOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">row_features</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">column_features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">row_features</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">column_features</span><span class="p">,</span>
+<span class="w">                                        </span><span class="k">const</span><span class="w"> </span><span class="n">ContingencyOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span>
+<span class="w">                                        </span><span class="k">const</span><span class="w"> </span><span class="n">ContingencyOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">row_features</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">column_features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">ContingencyTable</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">contingency</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">row_features</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">column_features</span><span class="p">,</span>
+<span class="w">                                        </span><span class="k">const</span><span class="w"> </span><span class="n">ContingencyOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Constructs a retained contingency table from one or more categorical dimensions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">contingency(...)</span></code> is now frequency/distribution-first:</p>
+<ul class="simple">
+<li><p>it cross-classifies the requested dimensions once</p></li>
+<li><p>keeps the result as an N-dimensional <code class="docutils literal notranslate"><span class="pre">ContingencyTable</span></code></p></li>
+<li><p>lets you transform that object mathematically before any 2D rendering step</p></li>
+</ul>
+<p>That makes it broader than a plain crosstab render:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">df.contingency({&quot;gender&quot;,</span> <span class="pre">&quot;age&quot;,</span> <span class="pre">&quot;region&quot;,</span> <span class="pre">&quot;outcome&quot;})</span></code> keeps a 4D table</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slice(...)</span></code> fixes levels and removes those dimensions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">marginalize(...)</span></code> sums dimensions out</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">condition(...)</span></code> turns counts into conditional shares</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code> is the explicit 2D projection step</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> renders the remaining dimensions as several 2D frames</p></li>
+</ul>
+<p>The two calling styles serve different defaults:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">contingency({&quot;city&quot;,</span> <span class="pre">&quot;channel&quot;,</span> <span class="pre">&quot;weekend&quot;})</span></code> keeps those three dimensions and,
+by default, renders the first one on rows and the rest on columns</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">contingency({&quot;city&quot;},</span> <span class="pre">{&quot;channel&quot;,</span> <span class="pre">&quot;weekend&quot;})</span></code> keeps the same dimensions, but
+remembers <code class="docutils literal notranslate"><span class="pre">&quot;city&quot;</span></code> as the default row side and <code class="docutils literal notranslate"><span class="pre">{&quot;channel&quot;,</span> <span class="pre">&quot;weekend&quot;}</span></code> as the
+default column side</p></li>
+</ul>
+<p>Use the <a class="reference internal" href="../../dataframe_contingency_accessor_api_reference.html"><span class="doc std std-doc">ContingencyTable API Reference</span></a>
+for the retained object itself.</p>
+<p>The intended retained-object surface is deliberately compact:</p>
+<ul class="simple">
+<li><p>inspect with <code class="docutils literal notranslate"><span class="pre">ndim()</span></code>, <code class="docutils literal notranslate"><span class="pre">shape()</span></code>, <code class="docutils literal notranslate"><span class="pre">dims()</span></code></p></li>
+<li><p>stay in count-space with <code class="docutils literal notranslate"><span class="pre">freq()</span></code></p></li>
+<li><p>move to global shares with <code class="docutils literal notranslate"><span class="pre">share()</span></code></p></li>
+<li><p>move to conditional shares with <code class="docutils literal notranslate"><span class="pre">condition(...)</span></code></p></li>
+<li><p>slice away fixed levels with <code class="docutils literal notranslate"><span class="pre">slice(...)</span></code></p></li>
+<li><p>sum dimensions out with <code class="docutils literal notranslate"><span class="pre">marginalize(...)</span></code></p></li>
+<li><p>export as N-D data with <code class="docutils literal notranslate"><span class="pre">to_array()</span></code></p></li>
+<li><p>render one 2D table with <code class="docutils literal notranslate"><span class="pre">to_frame()</span></code></p></li>
+<li><p>render several 2D tables with <code class="docutils literal notranslate"><span class="pre">facet()</span></code></p></li>
+</ul>
+<p>That means the old builder-style methods such as <code class="docutils literal notranslate"><span class="pre">count()</span></code>, <code class="docutils literal notranslate"><span class="pre">rowshare()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">colshare()</span></code>, <code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">mean()</span></code>, and friends are intentionally gone from this
+surface. The retained table itself is the object now; rendering is explicit.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>features</strong></p>
+<p>One or more dimensions to cross-classify and retain.</p>
+<p><strong>row_feature / row_features</strong></p>
+<p>Dimensions that should become the default row side when you later call
+<code class="docutils literal notranslate"><span class="pre">to_frame()</span></code> or <code class="docutils literal notranslate"><span class="pre">facet()</span></code> without supplying explicit row/column dimensions.</p>
+<p><strong>column_feature / column_features</strong></p>
+<p>Dimensions that should become the default column side for later rendering.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">ContingencyOptions</span></code>, optional)</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span></code>: whether rows with null contingency dimensions are excluded at
+construction time</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sort</span></code>: whether each retained dimension’s levels are sorted instead of kept in
+first-seen order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">totals</span></code>: a render-time hint used by <code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code> / <code class="docutils literal notranslate"><span class="pre">facet(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">separator</span></code>: how multi-dimension rendered column/facet labels are flattened</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null_label</span></code>: the text used when retained null levels are rendered</p></li>
+</ul>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ContingencyTable</span></code>
+A retained N-dimensional contingency object.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Build a classic two-way table, then render it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Cash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Card&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Card&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">to_frame</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
+     | city  Card  Cash
+-----------------------
+0    | A     1     1   
+1    | B     1     2   
+-----------------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p>Example 2. Keep three dimensions, then choose a projection later.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Cash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Card&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Card&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;weekend&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;no&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;weekend&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">to_frame</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================================================
+     | city  channel=Card | weekend=no  channel=Card | weekend=yes  channel=Cash | weekend=no  channel=Cash | weekend=yes
+-------------------------------------------------------------------------------------------------------------------------------
+0    | A     1                          0                           1                          0                         
+1    | B     0                          1                           1                          1                         
+-------------------------------------------------------------------------------------------------------------------------------
+[2 cs x 5 feat]
+</pre></div>
+</div>
+<p>Example 3. The row/column overload remembers a default projection.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;weekend&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">to_frame</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================================================
+     | city  channel=Card | weekend=no  channel=Card | weekend=yes  channel=Cash | weekend=no  channel=Cash | weekend=yes
+-------------------------------------------------------------------------------------------------------------------------------
+0    | A     1                          0                           1                          0
+1    | B     0                          1                           1                          1
+-------------------------------------------------------------------------------------------------------------------------------
+[2 cs x 5 feat]
+</pre></div>
+</div>
+<p>Because <code class="docutils literal notranslate"><span class="pre">&quot;city&quot;</span></code> was supplied on the row side and <code class="docutils literal notranslate"><span class="pre">{&quot;channel&quot;,</span> <span class="pre">&quot;weekend&quot;}</span></code>
+were supplied on the column side at construction time, plain <code class="docutils literal notranslate"><span class="pre">to_frame()</span></code>
+reuses that remembered layout.</p>
+<p>Example 4. Transform the retained object before rendering.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;weekend&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">slice</span><span class="p">({{</span><span class="s">&quot;weekend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="p">}})</span>
+<span class="w">               </span><span class="p">.</span><span class="n">condition</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
+<span class="w">               </span><span class="p">.</span><span class="n">to_frame</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
+     | city  Card  Cash
+-----------------------
+0    | A     0     0   
+1    | B     0.5   0.5 
+-----------------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">ContingencyOptions</span></code> affect construction and later rendering, not
+the retained method surface.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ContingencyOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">totals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">to_frame</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==============================
+     | city   Card  Cash  Total
+------------------------------
+0    | A      1     1     2
+1    | B      1     2     3
+2    | Total  2     3     5
+------------------------------
+[3 cs x 4 feat]
+</pre></div>
+</div>
+<p>That is the architectural difference from a plain crosstab: the object stays
+N-dimensional until you decide what 2D view you want, and options like totals
+are applied at render time rather than through a separate builder method.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Sorting is lexicographic by full tuple within each rendered side. With
+<code class="docutils literal notranslate"><span class="pre">{&quot;channel&quot;,</span> <span class="pre">&quot;weekend&quot;}</span></code>, <code class="docutils literal notranslate"><span class="pre">channel</span></code> is the primary key and <code class="docutils literal notranslate"><span class="pre">weekend</span></code> is the
+tie-breaker.</p></li>
+<li><p>The one-list overload remembers the first dimension as the default row side
+and the remaining dimensions as the default column side.</p></li>
+<li><p>The row/column overload remembers exactly the supplied row and column sides
+for later <code class="docutils literal notranslate"><span class="pre">to_frame()</span></code> / <code class="docutils literal notranslate"><span class="pre">facet()</span></code> calls.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">share()</span></code> is the global-table share.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">condition({...})</span></code> is the targeted conditional share surface. When you later
+render <code class="docutils literal notranslate"><span class="pre">to_frame({&quot;city&quot;},</span> <span class="pre">{&quot;channel&quot;})</span></code>, <code class="docutils literal notranslate"><span class="pre">condition({&quot;city&quot;})</span></code> is the
+retained-object equivalent of a row-normalized contingency table.</p></li>
+<li><p>This surface is intentionally focused on joint frequencies/distributions.
+For arbitrary numeric value aggregation, use <code class="docutils literal notranslate"><span class="pre">group(...).agg(...)</span></code> or
+<code class="docutils literal notranslate"><span class="pre">pivot_table(...)</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../dataframe_contingency_accessor_api_reference.html"><span class="doc std std-doc">ContingencyTable API Reference</span></a></p></li>
+<li><p><a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::pivot_table</span></code></span></a></p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="conform.html">
+    <span class="label">Previous</span>
+    <span class="title">conform</span>
+  </a>
+  <a class="next-link" href="copy.html">
+    <span class="label">Next</span>
+    <span class="title">copy</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="conform.html" title="previous chapter">DataFrame::conform</a></li>
+      <li>Next: <a href="copy.html" title="next chapter">DataFrame::copy</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/contingency.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

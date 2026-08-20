@@ -2,7 +2,7 @@
 
 ## API Signature
 
-- `Plan::options() -> const CrossValidationOptions&`
+- `Plan::options() -> const metrics::ValidationOptions&`
 - `Plan::options() -> const prep::QuantileMapOptions&`
 
 ## Notes
@@ -15,7 +15,7 @@ None.
 
 ## Output
 
-- Returns `const CrossValidationOptions&`.
+- Returns `const metrics::ValidationOptions&`.
 - Returns `const prep::QuantileMapOptions&`.
 
 ## Options
@@ -35,7 +35,7 @@ out.info("options", value);
 **Expected output**
 
 ```text
-options returned const CrossValidationOptions&
+options returned const metrics::ValidationOptions&
 ```
 
 ### Example 2 (Demo Pattern)

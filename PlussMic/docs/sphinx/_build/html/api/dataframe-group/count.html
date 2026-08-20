@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,12 +37,16 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 259b0b36e375 -->
 <section id="dataframegrouped-count">
 <h1>DataFrameGrouped::count<a class="headerlink" href="#dataframegrouped-count" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_group_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameGroupBuilder API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">count</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">count</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">count</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">count</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -52,10 +56,15 @@
 <p>This is the grouped convenience terminal for “how many observed entries does each
 value feature contribute inside each group?” — a shortcut for calling
 <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> with a <code class="docutils literal notranslate"><span class="pre">GroupOp::Count</span></code> spec for every remaining value feature.</p>
+<p>When you pass one or more feature names, <code class="docutils literal notranslate"><span class="pre">count(...)</span></code> only counts those selected
+value features instead of every remaining non-key feature.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p>This method takes no parameters.</p>
+<p><strong>feature</strong> / <strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">initializer_list&lt;string_view&gt;</span></code> /
+<code class="docutils literal notranslate"><span class="pre">RangeView&lt;string_view&gt;</span></code>, optional)</p>
+<p>Select one or more non-key value features to count. Omit them to count every
+remaining non-key value feature on the current frame.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -112,6 +121,25 @@ or, if no value features remain, a single column literally named <code class="do
 <p><code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> has two rows, but one <code class="docutils literal notranslate"><span class="pre">amount</span></code> value is <code class="docutils literal notranslate"><span class="pre">NaN</span></code> (missing), so
 <code class="docutils literal notranslate"><span class="pre">amount_count</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, not <code class="docutils literal notranslate"><span class="pre">2</span></code>. <code class="docutils literal notranslate"><span class="pre">units_count</span></code> is unaffected because neither of
 <code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>’s <code class="docutils literal notranslate"><span class="pre">units</span></code> values is missing.</p>
+<p>Example 2. Count only one selected value feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
+<span class="w">                </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
+<span class="w">                </span><span class="p">.</span><span class="n">count</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-out2">
+<h3>Output (out2)<a class="headerlink" href="#output-out2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================
+     | city   amount_count
+------------------------
+0    | Accra  1
+1    | Tema   2
+------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">
@@ -120,6 +148,8 @@ or, if no value features remain, a single column literally named <code class="do
 <li><p>Convenience terminals exclude ordinary grouping keys from the value side before
 aggregating — narrow with <a class="reference internal" href="../dataframe/features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a> first
 if the source frame has columns you do not want counted.</p></li>
+<li><p>Passing <code class="docutils literal notranslate"><span class="pre">count({&quot;amount&quot;})</span></code> or <code class="docutils literal notranslate"><span class="pre">count(&quot;amount&quot;)</span></code> is the more direct targeted form
+when you only want a subset of the value side.</p></li>
 <li><p>If no non-key value features remain, <code class="docutils literal notranslate"><span class="pre">.count()</span></code> still returns an explicit row-count
 column named <code class="docutils literal notranslate"><span class="pre">count</span></code>, counting rows rather than any particular feature’s non-null
 entries.</p></li>

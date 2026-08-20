@@ -9,6 +9,7 @@ namespace {
 
 using pluss::table::DataFrame;
 using pluss::table::Thread;
+using pluss::table::Atlas;
 
 [[noreturn]] void fail(std::string_view message) {
   throw std::runtime_error(std::string(message));
@@ -55,7 +56,7 @@ pluss::Timeline timeline_with_nat(std::initializer_list<std::string_view> values
       ticks, shape);
 }
 
-void test_from_frame_preserves_order_kinds_and_masks() {
+void test_from_table_preserves_order_kinds_and_masks() {
   const auto mask = bool_mask({true, false, true});
   const auto frame = DataFrame({
       {"student", Thread(pluss::make_note({"Ada", "", "Cy"}), mask)},
@@ -65,9 +66,9 @@ void test_from_frame_preserves_order_kinds_and_masks() {
       {"score", Thread(pluss::make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
   });
 
-  const auto data = pluss::pl::flash::Dataset::from_frame(frame);
-  expect(data.feature_order.has_value(), "flash::Dataset::from_frame should populate feature_order");
-  expect(data.feature_kinds.has_value(), "flash::Dataset::from_frame should populate feature_kinds");
+  const auto data = pluss::pl::flash::Dataset::from_table(frame);
+  expect(data.feature_order.has_value(), "flash::Dataset::from_table should populate feature_order");
+  expect(data.feature_kinds.has_value(), "flash::Dataset::from_table should populate feature_kinds");
   expect(data.feature_order->at(0) == "student", "feature order should preserve the DataFrame order");
   expect(data.feature_order->at(1) == "observed_at", "feature order should preserve the DataFrame order");
   expect(data.feature_order->at(2) == "score", "feature order should preserve the DataFrame order");
@@ -87,7 +88,7 @@ void test_round_trip_rebuilds_frame() {
       {"score", pluss::make_series(std::vector<double>{91.5, 84.0, 88.0})},
   }).title("grades");
 
-  const auto data = pluss::pl::flash::Dataset::from_frame(frame);
+  const auto data = pluss::pl::flash::Dataset::from_table(frame);
   const auto rebuilt = data.frame({.title = "rebuilt"});
 
   expect(rebuilt.features() == std::vector<std::string>({"student", "observed_at", "score"}),
@@ -146,7 +147,7 @@ void test_dataset_row_and_column_surface() {
       {"score", pluss::make_series(std::vector<double>{91.5, 84.0, 88.0})},
   });
 
-  const auto data = pluss::pl::flash::Dataset::from_frame(frame);
+  const auto data = pluss::pl::flash::Dataset::from_table(frame);
   expect(data.nrows() == 3, "flash::Dataset::nrows should report the shared row count");
   expect(data.ncols() == 3, "flash::Dataset::ncols should report the feature count");
   expect(data.size() == std::pair<std::int64_t, std::int64_t>{3, 3},
@@ -178,13 +179,206 @@ void test_dataset_nrows_rejects_ragged_shapes() {
   expect(data.ncols() == 3, "flash::Dataset::ncols should still report feature count for ragged datasets");
 }
 
+void test_lineplot_dataframe_auto_select_and_explicit_select() {
+  const auto frame = DataFrame({
+      {"day", timeline_with_nat({"2026-01-01", "2026-01-02", "2026-01-03"},
+                                 {true, true, true})},
+      {"sales", pluss::make_series(std::vector<double>{10.0, 12.5, 11.0})},
+  });
+
+  pluss::pl::Studio fig("lineplot_dataframe_auto_select");
+  auto& pane = fig.pane2("line");
+  (void)pluss::pl::flash::lineplot(pane, frame);
+  expect(pane.x_axis().label == "day",
+         "flash::lineplot(DataFrame) should auto-label x with the first feature name");
+  expect(pane.y_axis().label == "sales",
+         "flash::lineplot(DataFrame) should auto-label y with the second feature name");
+
+  const auto wider = DataFrame({
+      {"day", timeline_with_nat({"2026-01-01", "2026-01-02", "2026-01-03"},
+                                 {true, true, true})},
+      {"sales", pluss::make_series(std::vector<double>{10.0, 12.5, 11.0})},
+      {"margin", pluss::make_series(std::vector<double>{2.0, 3.0, 2.5})},
+  });
+
+  bool threw = false;
+  try {
+    pluss::pl::Studio bad_fig("lineplot_dataframe_missing_columns");
+    auto& bad = bad_fig.pane2("bad");
+    (void)pluss::pl::flash::lineplot(bad, wider);
+  } catch (const std::exception& e) {
+    threw = std::string(e.what()).find("explicit x_feature/y_feature") != std::string::npos;
+  }
+  expect(threw,
+         "flash::lineplot(DataFrame) should require explicit x_feature/y_feature when the frame does not have exactly two features");
+
+  pluss::pl::Studio explicit_fig("lineplot_dataframe_explicit_columns");
+  auto& explicit_pane = explicit_fig.pane2("explicit");
+  (void)pluss::pl::flash::lineplot(
+      explicit_pane,
+      wider,
+      {.x_feature = "day", .y_feature = "margin"});
+  expect(explicit_pane.y_axis().label == "margin",
+         "flash::lineplot(DataFrame) should accept explicit x/y feature selection");
+}
+
+void test_histplot_dataframe_requires_single_feature_or_explicit_feature() {
+  const auto single = DataFrame({
+      {"score", pluss::make_series(std::vector<double>{91.5, 84.0, 88.0})},
+  });
+
+  pluss::pl::Studio fig("histplot_dataframe_single_feature");
+  auto& pane = fig.pane2("hist");
+  (void)pluss::pl::flash::histplot(pane, single);
+  expect(pane.x_axis().label == "score",
+         "flash::histplot(DataFrame) should use the lone feature name as the x label");
+  expect(pane.y_axis().label == "count",
+         "flash::histplot(DataFrame) should label the count axis");
+
+  const auto multi = DataFrame({
+      {"score", pluss::make_series(std::vector<double>{91.5, 84.0, 88.0})},
+      {"bonus", pluss::make_series(std::vector<double>{1.0, 0.0, 2.0})},
+  });
+
+  bool threw = false;
+  try {
+    pluss::pl::Studio bad_fig("histplot_dataframe_missing_feature");
+    auto& bad = bad_fig.pane2("bad");
+    (void)pluss::pl::flash::histplot(bad, multi);
+  } catch (const std::exception& e) {
+    threw = std::string(e.what()).find("exactly 1 feature") != std::string::npos;
+  }
+  expect(threw,
+         "flash::histplot(DataFrame) should require a single feature or an explicit feature selection");
+
+  pluss::pl::Studio explicit_fig("histplot_dataframe_explicit_feature");
+  auto& explicit_pane = explicit_fig.pane2("explicit");
+  (void)pluss::pl::flash::histplot(explicit_pane, multi, {.feature = "bonus"});
+  expect(explicit_pane.x_axis().label == "bonus",
+         "flash::histplot(DataFrame) should accept explicit feature selection");
+}
+
+void test_barplot_thread_and_atlas_depth_gate() {
+  pluss::pl::Studio thread_fig("barplot_thread_horizontal");
+  auto& thread_pane = thread_fig.pane2("thread");
+  (void)pluss::pl::flash::barplot(
+      thread_pane,
+      Thread(pluss::make_series(std::vector<double>{3.0, 7.0, 4.0})),
+      {.horizontal = true});
+  expect(thread_pane.x_axis().label == "value",
+         "flash::barplot(Thread) should label the value axis for horizontal bars");
+  expect(thread_pane.y_axis().label == "y",
+         "flash::barplot(Thread) should label the implicit position axis for horizontal bars");
+
+  const auto frame = DataFrame({
+      {"x", pluss::make_series(std::vector<double>{1.0, 2.0, 3.0})},
+      {"y", pluss::make_series(std::vector<double>{4.0, 5.0, 6.0})},
+      {"z", pluss::make_series(std::vector<double>{7.0, 8.0, 9.0})},
+  });
+
+  const Atlas one_frame({frame});
+  pluss::pl::Studio ok_fig("plot3d_atlas_depth_one");
+  auto& ok = ok_fig.pane3("ok");
+  (void)pluss::pl::flash::plot3D(ok, one_frame);
+  expect(ok.z_axis().label == "z",
+         "flash::plot3D(Atlas) should proxy a depth-1 Atlas through its single frame");
+
+  const Atlas two_frames({frame, frame});
+  bool threw = false;
+  try {
+    pluss::pl::Studio bad_fig("plot3d_atlas_depth_two");
+    auto& bad = bad_fig.pane3("bad");
+    (void)pluss::pl::flash::plot3D(bad, two_frames);
+  } catch (const std::exception& e) {
+    threw = std::string(e.what()).find("depth == 1") != std::string::npos;
+  }
+  expect(threw,
+         "flash direct Atlas plotting should reject depth > 1 so the user selects a frame intentionally");
+}
+
+void test_relplot_dataframe_supports_explicit_hue() {
+  const auto frame = DataFrame({
+      {"day", pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0})},
+      {"sales", pluss::make_series(std::vector<double>{10.0, 12.5, 11.0, 13.0})},
+      {"desk", pluss::make_note({"north", "south", "north", "south"})},
+  });
+
+  pluss::pl::Studio fig("relplot_dataframe_hue");
+  auto& pane = fig.pane2("rel");
+  (void)pluss::pl::flash::relplot(
+      pane,
+      frame,
+      {.x_feature = "day", .y_feature = "sales", .hue_feature = "desk"},
+      "line");
+  expect(pane.x_axis().label == "day",
+         "flash::relplot(DataFrame) should label the x axis from x_feature");
+  expect(pane.y_axis().label == "sales",
+         "flash::relplot(DataFrame) should label the y axis from y_feature");
+}
+
+void test_boxenplot_dataframe_accepts_single_numeric_feature() {
+  const auto frame = DataFrame({
+      {"score", pluss::make_series(std::vector<double>{91.5, 84.0, 88.0, 79.5})},
+  });
+
+  pluss::pl::Studio fig("boxenplot_dataframe_single_feature");
+  auto& pane = fig.pane2("boxen");
+  (void)pluss::pl::flash::boxenplot(pane, frame);
+  expect(pane.x_axis().label == "score",
+         "flash::boxenplot(DataFrame) should use the selected feature name on the data axis");
+  expect(pane.y_axis().label == "value",
+         "flash::boxenplot(DataFrame) should label the measure axis as value");
+}
+
+void test_parallel_family_dataframe_accepts_class_feature() {
+  const auto frame = DataFrame({
+      {"sepal", pluss::make_series(std::vector<double>{5.1, 4.9, 6.3, 6.5})},
+      {"petal", pluss::make_series(std::vector<double>{1.4, 1.4, 5.6, 5.8})},
+      {"width", pluss::make_series(std::vector<double>{0.2, 0.2, 2.4, 2.2})},
+      {"species", pluss::make_note({"setosa", "setosa", "virginica", "virginica"})},
+  });
+
+  {
+    pluss::pl::Studio fig("parallelplot_dataframe_class_feature");
+    (void)pluss::pl::flash::parallelplot(
+        fig,
+        frame,
+        {.class_feature = "species"});
+  }
+
+  {
+    pluss::pl::Studio fig("andrews_dataframe_class_feature");
+    (void)pluss::pl::flash::andrews_curves(
+        fig,
+        frame,
+        {.class_feature = "species"});
+  }
+
+  {
+    pluss::pl::Studio fig("radviz_dataframe_class_feature");
+    (void)pluss::pl::flash::radviz(
+        fig,
+        frame,
+        {.class_feature = "species"});
+  }
+
+  expect(true,
+         "flash parallelplot/andrews_curves/radviz should accept a DataFrame plus class_feature without throwing");
+}
+
 } // namespace
 
 int main() {
-  test_from_frame_preserves_order_kinds_and_masks();
+  test_from_table_preserves_order_kinds_and_masks();
   test_round_trip_rebuilds_frame();
   test_ragged_dataset_requires_policy_or_pads();
   test_dataset_row_and_column_surface();
   test_dataset_nrows_rejects_ragged_shapes();
+  test_lineplot_dataframe_auto_select_and_explicit_select();
+  test_histplot_dataframe_requires_single_feature_or_explicit_feature();
+  test_barplot_thread_and_atlas_depth_gate();
+  test_relplot_dataframe_supports_explicit_hue();
+  test_boxenplot_dataframe_accepts_single_numeric_feature();
+  test_parallel_family_dataframe_accepts_class_feature();
   return 0;
 }

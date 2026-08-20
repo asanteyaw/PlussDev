@@ -4028,6 +4028,19 @@ plussqit_coden_tests/fast:
 .PHONY : plussqit_coden_tests/fast
 
 #=============================================================================
+# Target rules for targets named plussqit_codeh_tests
+
+# Build rule for target.
+plussqit_codeh_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_tests
+.PHONY : plussqit_codeh_tests
+
+# fast build rule for target.
+plussqit_codeh_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build
+.PHONY : plussqit_codeh_tests/fast
+
+#=============================================================================
 # Target rules for targets named PlussTilsCore
 
 # Build rule for target.
@@ -10956,6 +10969,7 @@ help:
 	@echo "... plusspl_flash_api_capture_demo"
 	@echo "... plussqit_codeh"
 	@echo "... plussqit_codeh_duration_docverify_demo"
+	@echo "... plussqit_codeh_tests"
 	@echo "... plussqit_codeh_timeindex_docverify_demo"
 	@echo "... plussqit_codeh_timeline_dataframe_timeindex_methods_demo"
 	@echo "... plussqit_codeh_timeline_docverify_demo"

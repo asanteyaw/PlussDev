@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 259b0b36e375 -->
 
 # DataFrameGrouped::count
 
@@ -8,6 +9,9 @@
 
 ```cpp
 DataFrameGrouped::count() const -> DataFrame
+DataFrameGrouped::count(std::string_view feature) const -> DataFrame
+DataFrameGrouped::count(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::count(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -18,9 +22,16 @@ This is the grouped convenience terminal for "how many observed entries does eac
 value feature contribute inside each group?" — a shortcut for calling
 [`agg()`](agg.md) with a `GroupOp::Count` spec for every remaining value feature.
 
+When you pass one or more feature names, `count(...)` only counts those selected
+value features instead of every remaining non-key feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to count. Omit them to count every
+remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -81,11 +92,34 @@ std::cout << out;
 `amount_count` is `1`, not `2`. `units_count` is unaffected because neither of
 `"Accra"`'s `units` values is missing.
 
+Example 2. Count only one selected value feature.
+
+```cpp
+auto out2 = sales.group()
+                .by({"city"})
+                .count({"amount"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+========================
+     | city   amount_count
+------------------------
+0    | Accra  1
+1    | Tema   2
+------------------------
+[2 cs x 2 feat]
+```
+
 ## Notes
 
 - Convenience terminals exclude ordinary grouping keys from the value side before
   aggregating — narrow with [`DataFrame::features`](../dataframe/features.md) first
   if the source frame has columns you do not want counted.
+- Passing `count({"amount"})` or `count("amount")` is the more direct targeted form
+  when you only want a subset of the value side.
 - If no non-key value features remain, `.count()` still returns an explicit row-count
   column named `count`, counting rows rather than any particular feature's non-null
   entries.

@@ -906,6 +906,20 @@ plussqit_coden_tests/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/build
 .PHONY : plussqit_coden_tests/fast
 
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_tests.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_tests.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_tests: PlussQit/CMakeFiles/plussqit_codeh_tests.dir/rule
+.PHONY : plussqit_codeh_tests
+
+# fast build rule for target.
+plussqit_codeh_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build
+.PHONY : plussqit_codeh_tests/fast
+
 __/generated/CodeM/ops/ops_generated.o: __/generated/CodeM/ops/ops_generated.cpp.o
 .PHONY : __/generated/CodeM/ops/ops_generated.o
 
@@ -4073,6 +4087,30 @@ src/CodeN/native/cpu/TextKernels.s: src/CodeN/native/cpu/TextKernels.cpp.s
 src/CodeN/native/cpu/TextKernels.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/native/cpu/TextKernels.cpp.s
 .PHONY : src/CodeN/native/cpu/TextKernels.cpp.s
+
+tests/CodeH/test_codeh_patch01_timeline_factory_extended.o: tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.o
+.PHONY : tests/CodeH/test_codeh_patch01_timeline_factory_extended.o
+
+# target to build an object file
+tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.o
+.PHONY : tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.o
+
+tests/CodeH/test_codeh_patch01_timeline_factory_extended.i: tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.i
+.PHONY : tests/CodeH/test_codeh_patch01_timeline_factory_extended.i
+
+# target to preprocess a source file
+tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.i
+.PHONY : tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.i
+
+tests/CodeH/test_codeh_patch01_timeline_factory_extended.s: tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s
+.PHONY : tests/CodeH/test_codeh_patch01_timeline_factory_extended.s
+
+# target to generate assembly for a file
+tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s
+.PHONY : tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s
 
 tests/CodeM/test_advanced_indexing.o: tests/CodeM/test_advanced_indexing.cpp.o
 .PHONY : tests/CodeM/test_advanced_indexing.o
@@ -8745,6 +8783,30 @@ tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.s
 .PHONY : tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.s
 
+tests/CodeN/test_coden_patch23_note_factory_extended.o: tests/CodeN/test_coden_patch23_note_factory_extended.cpp.o
+.PHONY : tests/CodeN/test_coden_patch23_note_factory_extended.o
+
+# target to build an object file
+tests/CodeN/test_coden_patch23_note_factory_extended.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch23_note_factory_extended.cpp.o
+.PHONY : tests/CodeN/test_coden_patch23_note_factory_extended.cpp.o
+
+tests/CodeN/test_coden_patch23_note_factory_extended.i: tests/CodeN/test_coden_patch23_note_factory_extended.cpp.i
+.PHONY : tests/CodeN/test_coden_patch23_note_factory_extended.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_patch23_note_factory_extended.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch23_note_factory_extended.cpp.i
+.PHONY : tests/CodeN/test_coden_patch23_note_factory_extended.cpp.i
+
+tests/CodeN/test_coden_patch23_note_factory_extended.s: tests/CodeN/test_coden_patch23_note_factory_extended.cpp.s
+.PHONY : tests/CodeN/test_coden_patch23_note_factory_extended.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_patch23_note_factory_extended.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch23_note_factory_extended.cpp.s
+.PHONY : tests/CodeN/test_coden_patch23_note_factory_extended.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -8762,6 +8824,7 @@ help:
 	@echo "... test"
 	@echo "... plussqit_codeh"
 	@echo "... plussqit_codeh_duration_docverify_demo"
+	@echo "... plussqit_codeh_tests"
 	@echo "... plussqit_codeh_timeindex_docverify_demo"
 	@echo "... plussqit_codeh_timeline_dataframe_timeindex_methods_demo"
 	@echo "... plussqit_codeh_timeline_docverify_demo"
@@ -9207,6 +9270,9 @@ help:
 	@echo "... src/CodeN/native/cpu/TextKernels.o"
 	@echo "... src/CodeN/native/cpu/TextKernels.i"
 	@echo "... src/CodeN/native/cpu/TextKernels.s"
+	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.o"
+	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.i"
+	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.s"
 	@echo "... tests/CodeM/test_advanced_indexing.o"
 	@echo "... tests/CodeM/test_advanced_indexing.i"
 	@echo "... tests/CodeM/test_advanced_indexing.s"
@@ -9756,6 +9822,9 @@ help:
 	@echo "... tests/CodeN/test_coden_patch22_perf_regression_corpus.o"
 	@echo "... tests/CodeN/test_coden_patch22_perf_regression_corpus.i"
 	@echo "... tests/CodeN/test_coden_patch22_perf_regression_corpus.s"
+	@echo "... tests/CodeN/test_coden_patch23_note_factory_extended.o"
+	@echo "... tests/CodeN/test_coden_patch23_note_factory_extended.i"
+	@echo "... tests/CodeN/test_coden_patch23_note_factory_extended.s"
 .PHONY : help
 
 

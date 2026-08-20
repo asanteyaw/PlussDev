@@ -18,12 +18,12 @@ int main() {
   lymph::NeighborFamilyOptions knn{};
   knn.k = 5;
   lymph::Builder models = lymph::builder::build({
-      {"neighbor", lymph::models::knn_classifier(knn)},
-      {"gauss", lymph::models::gaussian_nb_classifier()},
-      {"tree", lymph::models::decision_tree_classifier({.max_depth = 4})},
+      {"neighbor", lymph::model::knn_classifier(knn)},
+      {"gauss", lymph::model::gaussian_nb_classifier()},
+      {"tree", lymph::model::decision_tree_classifier({.max_depth = 4})},
   });
 
-  lymph::CrossValidationOptions cv{};
+  lymph::metrics::CrossValidationOptions cv{};
   cv.plan = lymph::CVPlanKind::StratifiedCrossVal;
   cv.folds = 3;
   const lymph::spotcheck::Result ranked = lymph::spotcheck::suite(models)

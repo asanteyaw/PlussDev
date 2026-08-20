@@ -2,6 +2,8 @@
 
 #include "pluss/ai/lymph/common.h"
 
+#include <array>
+
 namespace pluss::ai::lymph {
 
 namespace prep {
@@ -176,6 +178,23 @@ struct TimeSeriesSplit {
   return out;
 }
 
+[[nodiscard]] inline std::vector<TimeSeriesSplit> timeseries_split(const pluss::table::DataFrame& frame,
+                                                                   std::string_view time_feature,
+                                                                   TimeSeriesSplitOptions options) {
+  const auto axis = frame.get(time_feature);
+  if (!axis.has_value()) {
+    ::pluss::throw_error("prep::timeseries_split(frame,time_feature): missing time feature \"" + std::string(time_feature) + "\".");
+  }
+  if (axis->kind() != pluss::table::ThreadKind::Timeline &&
+      axis->kind() != pluss::table::ThreadKind::TimeIndex) {
+    ::pluss::throw_error(
+        "prep::timeseries_split(frame,time_feature): time feature \"" + std::string(time_feature) +
+        "\" must be timeline/timeindex. Cast it first.");
+  }
+  const pluss::table::DataFrame ordered = frame.arrange(std::array<std::string_view, 1>{time_feature}, true, true);
+  return timeseries_split(ordered, options);
+}
+
 [[nodiscard]] inline std::vector<TimeSeriesSplit> timeseries_split(const LabeledBatch& batch,
                                                                    TimeSeriesSplitOptions options = {}) {
   const SplitOptions split = make_time_series_split_options(options);
@@ -192,6 +211,16 @@ struct TimeSeriesSplit {
     });
   }
   return out;
+}
+
+[[nodiscard]] inline TimeSeriesSplit time_holdout(const pluss::table::DataFrame& frame,
+                                                  std::string_view time_feature,
+                                                  TimeSeriesSplitOptions options = {}) {
+  std::vector<TimeSeriesSplit> splits = timeseries_split(frame, time_feature, options);
+  if (splits.empty()) {
+    ::pluss::throw_error("prep::time_holdout: no chronological folds were produced.");
+  }
+  return std::move(splits.back());
 }
 
 template <class WrapperT>

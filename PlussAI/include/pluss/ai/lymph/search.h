@@ -80,18 +80,18 @@ namespace search {
 struct Result;
 class Search;
 [[nodiscard]] Search grid(std::vector<GridAxis> axes, SplitOptions split = {});
-[[nodiscard]] Search grid(std::vector<GridAxis> axes, CrossValidationOptions cv);
+[[nodiscard]] Search grid(std::vector<GridAxis> axes, metrics::ValidationOptions cv);
 [[nodiscard]] Search random(std::vector<GridAxis> axes,
                             std::int64_t trials,
                             RandomState random = {},
                             SplitOptions split = {});
 [[nodiscard]] Search random(std::vector<GridAxis> axes,
                             std::int64_t trials,
-                            CrossValidationOptions cv);
+                            metrics::ValidationOptions cv);
 [[nodiscard]] Search random(std::vector<GridAxis> axes,
                             std::int64_t trials,
                             RandomState random,
-                            CrossValidationOptions cv);
+                            metrics::ValidationOptions cv);
 [[nodiscard]] Search build(std::vector<GridAxis> axes, TuneOptions options);
 } // namespace search
 
@@ -281,24 +281,24 @@ class search::Search final {
 
  private:
   friend Search search::grid(std::vector<GridAxis> axes, SplitOptions split);
-  friend Search search::grid(std::vector<GridAxis> axes, CrossValidationOptions cv);
+  friend Search search::grid(std::vector<GridAxis> axes, metrics::ValidationOptions cv);
   friend Search search::random(std::vector<GridAxis> axes, std::int64_t trials, RandomState random, SplitOptions split);
-  friend Search search::random(std::vector<GridAxis> axes, std::int64_t trials, CrossValidationOptions cv);
+  friend Search search::random(std::vector<GridAxis> axes, std::int64_t trials, metrics::ValidationOptions cv);
   friend Search search::random(std::vector<GridAxis> axes,
                                std::int64_t trials,
                                RandomState random,
-                               CrossValidationOptions cv);
+                               metrics::ValidationOptions cv);
   friend Search search::build(std::vector<GridAxis> axes, TuneOptions options);
 
   Search(std::vector<GridAxis> axes, SearchKind kind, std::int64_t trials, RandomState random, SplitOptions split)
       : axes_(std::move(axes)), kind_(kind), trials_(trials), random_(random), split_(std::move(split)) {}
 
-  Search(std::vector<GridAxis> axes, SearchKind kind, std::int64_t trials, RandomState random, CrossValidationOptions cv)
+  Search(std::vector<GridAxis> axes, SearchKind kind, std::int64_t trials, RandomState random, metrics::ValidationOptions cv)
       : axes_(std::move(axes)),
         kind_(kind),
         trials_(trials),
         random_(random),
-        split_(make_cross_validation_split_options(cv)),
+        split_(make_validation_split_options(cv)),
         cv_(std::move(cv)) {}
 
   [[nodiscard]] SplitOptions default_split_for_(const std::function<Model(const GridPoint&)>& make_model) const;
@@ -308,7 +308,7 @@ class search::Search final {
   std::int64_t trials_ = 0;
   RandomState random_{};
   SplitOptions split_{};
-  std::optional<CrossValidationOptions> cv_{};
+  std::optional<metrics::ValidationOptions> cv_{};
 };
 
 [[nodiscard]] inline SplitOptions Search::default_split_for_(const std::function<Model(const GridPoint&)>& make_model) const {
@@ -376,7 +376,7 @@ class search::Search final {
   const TaskKind task = make_model(points.front()).task_kind();
 
   const SplitPlan plan = detail::workflow_split_plan_(batch, split_options, task, "Search::run");
-  const std::vector<FoldBatchPair> fold_batches = detail::materialize_fold_batches_(batch, plan, "Search::run");
+  const std::vector<metrics::FoldBatchPair> fold_batches = detail::materialize_fold_batches_(batch, plan, "Search::run");
 
   struct GridCell_ {
     std::size_t point_index;
@@ -399,7 +399,7 @@ class search::Search final {
     // special-casing any one point.
     Model trial_model = make_model(points[cell.point_index]);
     const auto& fold = plan.folds[cell.fold_index];
-    const FoldBatchPair& fold_batch = fold_batches[cell.fold_index];
+    const metrics::FoldBatchPair& fold_batch = fold_batches[cell.fold_index];
     const Model trained = trial_model.learn(fold_batch.train, train_options);
     const Series fold_metrics =
         trained.assess_series(fold_batch.test, assess_options).to(ScalarType::Float64).reshape({metric_count});
@@ -434,7 +434,7 @@ class search::Search final {
     for (std::size_t fi = 0; fi < fold_n; ++fi) {
       cross_report.folds[fi] = cell_results[pi * fold_n + fi];
     }
-    CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(cross_report));
+    metrics::CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(cross_report));
     const double objective = selection::scalar_metric_(cv_report.mean, objective_metric);
     result.report.trials.push_back(selection::Trial{
         .name = points[pi].label(),
@@ -491,7 +491,7 @@ namespace search {
   return Search(std::move(axes), SearchKind::Grid, 0, RandomState{}, std::move(split));
 }
 
-[[nodiscard]] inline Search grid(std::vector<GridAxis> axes, CrossValidationOptions cv) {
+[[nodiscard]] inline Search grid(std::vector<GridAxis> axes, metrics::ValidationOptions cv) {
   return Search(std::move(axes), SearchKind::Grid, 0, RandomState{}, std::move(cv));
 }
 
@@ -504,7 +504,7 @@ namespace search {
 
 [[nodiscard]] inline Search random(std::vector<GridAxis> axes,
                                    std::int64_t trials,
-                                   CrossValidationOptions cv) {
+                                   metrics::ValidationOptions cv) {
   return Search(std::move(axes), SearchKind::Random, trials,
                 RandomState{.seed = cv.random_state, .deterministic = cv.deterministic},
                 std::move(cv));
@@ -513,7 +513,7 @@ namespace search {
 [[nodiscard]] inline Search random(std::vector<GridAxis> axes,
                                    std::int64_t trials,
                                    RandomState random,
-                                   CrossValidationOptions cv) {
+                                   metrics::ValidationOptions cv) {
   return Search(std::move(axes), SearchKind::Random, trials, random, std::move(cv));
 }
 

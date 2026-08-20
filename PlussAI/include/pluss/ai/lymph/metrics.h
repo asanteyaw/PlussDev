@@ -60,7 +60,7 @@ struct LinearParameters {
 
 [[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);
 
-struct CrossValidationOptions {
+struct ValidationOptions {
   CVPlanKind plan = CVPlanKind::CrossVal;
   double holdout_fraction = 0.2;
   std::int64_t folds = 5;
@@ -101,17 +101,16 @@ struct FoldBatchPair {
 using MetricReport = metrics::MetricReport;
 using SeriesCompareReport = metrics::SeriesCompareReport;
 using LinearParameters = metrics::LinearParameters;
-using CrossValidationOptions = metrics::CrossValidationOptions;
-using CrossValidationReport = metrics::CrossValidationReport;
-using FoldBatchPair = metrics::FoldBatchPair;
 using metrics::as_stratify_series;
 using metrics::compare_series;
 using metrics::max_abs_diff;
 
+namespace metrics::detail {
+
 [[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
                                                   const LabeledBatch& batch,
                                                   MetricKind metric,
-                                                  CrossValidationOptions cv = {},
+                                                  ValidationOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   SplitOptions split{};
@@ -135,7 +134,7 @@ using metrics::max_abs_diff;
 [[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
                                                  const LabeledBatch& batch,
                                                  MetricKind metric,
-                                                 CrossValidationOptions cv = {},
+                                                 ValidationOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   SplitOptions split{};
@@ -160,7 +159,7 @@ using metrics::max_abs_diff;
                                                   const pluss::table::DataFrame& frame,
                                                   const DataFrameBatchOptions& data_options,
                                                   MetricKind metric,
-                                                  CrossValidationOptions cv = {},
+                                                  ValidationOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   const LabeledBatch batch =
@@ -172,13 +171,15 @@ using metrics::max_abs_diff;
                                                  const pluss::table::DataFrame& frame,
                                                  const DataFrameBatchOptions& data_options,
                                                  MetricKind metric,
-                                                 CrossValidationOptions cv = {},
+                                                 ValidationOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   const LabeledBatch batch =
       resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate_score.labeled_batch_from_dataframe");
   return cross_validate_score(spec, batch, metric, cv, train_options, assess_options);
 }
+
+} // namespace metrics::detail
 
 [[nodiscard]] inline ClassMix class_mix(const Series& labels) {
   return resolve(::pluss::ai::nodej::class_mix(labels), "class_mix");
@@ -284,7 +285,7 @@ using metrics::max_abs_diff;
   return resolve(::pluss::ai::nodej::regression_metrics(truth, prediction, metrics), "regression_metric_series");
 }
 
-[[nodiscard]] inline SplitOptions make_cross_validation_split_options(const CrossValidationOptions& options) {
+[[nodiscard]] inline SplitOptions make_validation_split_options(const metrics::ValidationOptions& options) {
   SplitOptions split{};
   split.plan = options.plan;
   split.holdout_fraction = options.holdout_fraction;
@@ -611,12 +612,14 @@ class Threshold final {
   return ::pluss::ai::lymph::class_mix(frame.features(label_feature).as_series().reshape({frame.ncases()}));
 }
 
+namespace metrics::detail {
+
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const LabeledBatch& batch,
-                                                          CrossValidationOptions cv = {},
+                                                          ValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
-  const SplitOptions split = make_cross_validation_split_options(cv);
+  const SplitOptions split = make_validation_split_options(cv);
   CrossAssessReport report =
       resolve(pluss::ai::nodej::cross_assess(spec, batch, split, train_options, assess_options), "cross_assess");
   const auto metrics = default_assess_metrics_(spec.task, assess_options);
@@ -630,7 +633,7 @@ class Threshold final {
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const pluss::table::DataFrame& frame,
                                                           const DataFrameBatchOptions& data_options,
-                                                          CrossValidationOptions cv = {},
+                                                          ValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate.labeled_batch_from_dataframe");
@@ -640,7 +643,7 @@ class Threshold final {
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const pluss::table::DataFrame& x,
                                                           const Series& y,
-                                                          CrossValidationOptions cv = {},
+                                                          ValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "cross_validate(x,y)");
@@ -651,7 +654,7 @@ class Threshold final {
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const pluss::table::DataFrame& x,
                                                           const pluss::table::Thread& y,
-                                                          CrossValidationOptions cv = {},
+                                                          ValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   return cross_validate(spec, x, as_stratify_series(y), cv, train_options, assess_options);
@@ -661,7 +664,7 @@ class Threshold final {
                                                   const pluss::table::DataFrame& x,
                                                   const Series& y,
                                                   MetricKind metric,
-                                                  CrossValidationOptions cv = {},
+                                                  ValidationOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "cross_validate_scores(x,y)");
@@ -673,7 +676,7 @@ class Threshold final {
                                                  const pluss::table::DataFrame& x,
                                                  const Series& y,
                                                  MetricKind metric,
-                                                 CrossValidationOptions cv = {},
+                                                 ValidationOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "cross_validate_score(x,y)");
@@ -685,7 +688,7 @@ class Threshold final {
                                                   const pluss::table::DataFrame& x,
                                                   const pluss::table::Thread& y,
                                                   MetricKind metric,
-                                                  CrossValidationOptions cv = {},
+                                                  ValidationOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   return cross_validate_scores(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
@@ -695,11 +698,13 @@ class Threshold final {
                                                  const pluss::table::DataFrame& x,
                                                  const pluss::table::Thread& y,
                                                  MetricKind metric,
-                                                 CrossValidationOptions cv = {},
+                                                 ValidationOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   return cross_validate_score(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
 }
+
+} // namespace metrics::detail
 
 [[nodiscard]] inline Series metrics::as_stratify_series(const pluss::table::Thread& thread) {
   return ::pluss::ai::lymph::prep::as_stratify_series(thread);

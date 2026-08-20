@@ -57,7 +57,7 @@ policy returned const Policy&
     AssessOptions assess_options{};
     assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
 
-    lymph::CrossValidationOptions cv_options{};
+    lymph::metrics::CrossValidationOptions cv_options{};
     cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
 ```

@@ -58,6 +58,57 @@ inline pluss::Timeline make(pluss::msharp::RangeView::Of<std::string> flat,
   return make(pluss::codeh::detail::TimelineTextReader(flat, sizes));
 }
 
+inline pluss::Timeline date(pluss::codeh::detail::TimelineTextReader data) {
+  return pluss::codeh::factory_detail::from_date_textspan(data.flat(), data.shape());
+}
+inline pluss::Timeline date(pluss::msharp::RangeView::Of<std::string_view> flat,
+                            pluss::msharp::RangeView::Of<std::int64_t> sizes) {
+  return date(pluss::codeh::detail::TimelineTextReader(flat, sizes));
+}
+inline pluss::Timeline date(pluss::msharp::RangeView::Of<std::string> flat,
+                            pluss::msharp::RangeView::Of<std::int64_t> sizes) {
+  return date(pluss::codeh::detail::TimelineTextReader(flat, sizes));
+}
+
+inline pluss::Timeline time(pluss::codeh::detail::TimelineTextReader data) {
+  return pluss::codeh::factory_detail::from_time_textspan(data.flat(), data.shape());
+}
+inline pluss::Timeline time(pluss::msharp::RangeView::Of<std::string_view> flat,
+                            pluss::msharp::RangeView::Of<std::int64_t> sizes) {
+  return time(pluss::codeh::detail::TimelineTextReader(flat, sizes));
+}
+inline pluss::Timeline time(pluss::msharp::RangeView::Of<std::string> flat,
+                            pluss::msharp::RangeView::Of<std::int64_t> sizes) {
+  return time(pluss::codeh::detail::TimelineTextReader(flat, sizes));
+}
+
+// pluss::timeline::datetime(date_part, time_part) -> compose a calendar date
+// from one Timeline with the clock time from another. The output timezone is
+// taken from `date_part`; `time_part` contributes only wall-clock fields
+// (hour/minute/second/subsecond), not its stored epoch day.
+inline pluss::Timeline datetime(const pluss::Timeline& date_part,
+                                const pluss::Timeline& time_part) {
+  CODEM_CHECK(date_part.defined() && time_part.defined(),
+              "pluss::timeline::datetime: both operands must be defined");
+  auto out = pluss::Timeline::from_ymdhms(
+      date_part.year(),
+      date_part.month(),
+      date_part.day(),
+      time_part.hour(),
+      time_part.minute(),
+      time_part.second(),
+      date_part.tz());
+  auto fractional_ns = time_part.nanosecond().to(pluss::codem::ScalarType::Int64);
+  if (fractional_ns.numel() == 0) {
+    return out;
+  }
+  return out + pluss::codeh::ops_internal::duration_from_series(std::move(fractional_ns));
+}
+inline pluss::Timeline datetime(std::string_view date_part,
+                                std::string_view time_part) {
+  return datetime(date(date_part), time(time_part));
+}
+
 // Same Int64FlatReader as Duration's unit factories (see int64_flat_reader.h
 // for why this is NOT built on Series' DataReader -- precision). Two
 // overloads, not one, for the same reason Duration's unit factories need
@@ -170,6 +221,26 @@ inline pluss::Timeline full_like(const pluss::Timeline& like, const pluss::Timel
   return full(like.sizes(), fill_value);
 }
 
+inline pluss::Timeline rep(const pluss::Timeline& fill_value, pluss::msharp::RangeView::Int sizes) {
+  return full(sizes, fill_value);
+}
+inline pluss::Timeline rep(const pluss::Timeline& fill_value, std::initializer_list<std::int64_t> sizes) {
+  return rep(fill_value, pluss::msharp::RangeView::Int(sizes));
+}
+inline pluss::Timeline rep(std::string_view value, pluss::msharp::RangeView::Int sizes) {
+  const auto kind = pluss::codeh::factory_detail::classify_text(value);
+  if (kind == pluss::codeh::factory_detail::TimelineTextKind::DateOnly) {
+    return rep(date(value), sizes);
+  }
+  if (kind == pluss::codeh::factory_detail::TimelineTextKind::TimeOnly) {
+    return rep(time(value), sizes);
+  }
+  return rep(make(value), sizes);
+}
+inline pluss::Timeline rep(std::string_view value, std::initializer_list<std::int64_t> sizes) {
+  return rep(value, pluss::msharp::RangeView::Int(sizes));
+}
+
 // pluss::timeline::random(sizes, lo, hi, seed) -> uniform-random instants in
 // [lo, hi) -- e.g. synthetic timestamp generation for test/demo data. Built
 // on a real 64-bit RNG + std::uniform_int_distribution<int64_t> (the same
@@ -199,6 +270,102 @@ inline pluss::Timeline random(std::initializer_list<std::int64_t> sizes,
                               const pluss::Timeline& hi,
                               std::uint64_t seed = 0) {
   return random(pluss::msharp::RangeView::Int(sizes), lo, hi, seed);
+}
+
+inline pluss::Timeline rand_between(pluss::msharp::RangeView::Int sizes,
+                                    const pluss::Timeline& lo,
+                                    const pluss::Timeline& hi,
+                                    std::uint64_t seed = 0) {
+  return pluss::codeh::factory_detail::random_between_inclusive(sizes, lo, hi, seed);
+}
+inline pluss::Timeline rand_between(std::initializer_list<std::int64_t> sizes,
+                                    const pluss::Timeline& lo,
+                                    const pluss::Timeline& hi,
+                                    std::uint64_t seed = 0) {
+  return rand_between(pluss::msharp::RangeView::Int(sizes), lo, hi, seed);
+}
+inline pluss::Timeline rand_between(std::string_view lo,
+                                    std::string_view hi,
+                                    pluss::msharp::RangeView::Int sizes,
+                                    std::uint64_t seed = 0) {
+  const auto lo_kind = pluss::codeh::factory_detail::classify_text(lo);
+  const auto hi_kind = pluss::codeh::factory_detail::classify_text(hi);
+  CODEM_CHECK(lo_kind == hi_kind, "pluss::timeline::rand_between: endpoints must use the same text kind");
+  if (lo_kind == pluss::codeh::factory_detail::TimelineTextKind::DateOnly) {
+    return rand_between(sizes, date(lo), date(hi), seed);
+  }
+  if (lo_kind == pluss::codeh::factory_detail::TimelineTextKind::TimeOnly) {
+    return rand_between(sizes, time(lo), time(hi), seed);
+  }
+  return rand_between(sizes, make(lo), make(hi), seed);
+}
+inline pluss::Timeline rand_between(std::string_view lo,
+                                    std::string_view hi,
+                                    std::initializer_list<std::int64_t> sizes,
+                                    std::uint64_t seed = 0) {
+  return rand_between(lo, hi, pluss::msharp::RangeView::Int(sizes), seed);
+}
+
+inline pluss::Timeline arange(const pluss::Timeline& start,
+                              const pluss::Timeline& end,
+                              const pluss::Duration& step,
+                              bool inclusive = true) {
+  CODEM_CHECK(start.dim() == 0 && end.dim() == 0 && step.dim() == 0,
+              "pluss::timeline::arange: start, end, and step must be scalar");
+  const auto s = pluss::codeh::detail::impl_to_epoch_nanos_flat(start)[0];
+  const auto e = pluss::codeh::detail::impl_to_epoch_nanos_flat(end)[0];
+  const auto delta = pluss::codeh::detail::impl_to_nanos_flat(step)[0];
+  CODEM_CHECK(delta != 0, "pluss::timeline::arange: step cannot be 0");
+  CODEM_CHECK(s != pluss::Timeline::kNaT && e != pluss::Timeline::kNaT,
+              "pluss::timeline::arange: NaT endpoints are unsupported");
+
+  std::vector<std::int64_t> out;
+  if (delta > 0) {
+    for (std::int64_t v = s; inclusive ? (v <= e) : (v < e); v += delta) {
+      out.push_back(v);
+    }
+  } else {
+    for (std::int64_t v = s; inclusive ? (v >= e) : (v > e); v += delta) {
+      out.push_back(v);
+    }
+  }
+
+  const std::array<std::int64_t, 1> shape{
+      static_cast<std::int64_t>(out.size())};
+  auto base = pluss::codeh::ops_internal::timeline_from_epoch_nanos(out, shape);
+  return pluss::codeh::ops_internal::timeline_from_series(base.unsafe_ticks().clone(), std::string(start.tz()));
+}
+
+inline pluss::Timeline arange(std::string_view start,
+                              std::string_view end,
+                              const pluss::Duration& step,
+                              bool inclusive = true) {
+  const auto start_kind = pluss::codeh::factory_detail::classify_text(start);
+  const auto end_kind = pluss::codeh::factory_detail::classify_text(end);
+  CODEM_CHECK(start_kind == end_kind, "pluss::timeline::arange: endpoints must use the same text kind");
+  if (start_kind == pluss::codeh::factory_detail::TimelineTextKind::DateOnly) {
+    return arange(date(start), date(end), step, inclusive);
+  }
+  if (start_kind == pluss::codeh::factory_detail::TimelineTextKind::TimeOnly) {
+    return arange(time(start), time(end), step, inclusive);
+  }
+  return arange(make(start), make(end), step, inclusive);
+}
+
+inline pluss::Timeline arange(std::string_view start,
+                              std::string_view end,
+                              std::int64_t step = 1,
+                              bool inclusive = true) {
+  const auto start_kind = pluss::codeh::factory_detail::classify_text(start);
+  const auto end_kind = pluss::codeh::factory_detail::classify_text(end);
+  CODEM_CHECK(start_kind == end_kind, "pluss::timeline::arange: endpoints must use the same text kind");
+  if (start_kind == pluss::codeh::factory_detail::TimelineTextKind::DateOnly) {
+    return arange(date(start), date(end), pluss::duration::days(step), inclusive);
+  }
+  if (start_kind == pluss::codeh::factory_detail::TimelineTextKind::TimeOnly) {
+    return arange(time(start), time(end), pluss::duration::seconds(step), inclusive);
+  }
+  CODEM_FAIL("pluss::timeline::arange(start, end, step): datetime endpoints require an explicit Duration step");
 }
 
 } // namespace pluss::timeline

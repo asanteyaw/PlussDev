@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=3dd29194"></script>
+    <script src="_static/api_nav.js?v=052b4a34"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -38,9 +38,7 @@
             
   <section id="dataframegroupbuilder-api-reference">
 <h1>DataFrameGroupBuilder API Reference<a class="headerlink" href="#dataframegroupbuilder-api-reference" title="Link to this heading">¶</a></h1>
-<p>This page documents the public grouped-workflow surface entered via
-<code class="docutils literal notranslate"><span class="pre">DataFrame::group()</span></code> — the <code class="docutils literal notranslate"><span class="pre">DataFrameGroupBuilder</span></code> returned by <code class="docutils literal notranslate"><span class="pre">group()</span></code> itself,
-and the <code class="docutils literal notranslate"><span class="pre">DataFrameGrouped</span></code> handle returned by its <code class="docutils literal notranslate"><span class="pre">.by(...)</span></code>.</p>
+<p>This page documents the public grouped-workflow surface entered via <code class="docutils literal notranslate"><span class="pre">DataFrame::group()</span></code> – the <code class="docutils literal notranslate"><span class="pre">DataFrameGroupBuilder</span></code> returned by <code class="docutils literal notranslate"><span class="pre">group()</span></code> itself, and the <code class="docutils literal notranslate"><span class="pre">DataFrameGrouped</span></code> handle returned by its <code class="docutils literal notranslate"><span class="pre">.by(...)</span></code>.</p>
 <section id="using-this-reference">
 <h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
 <ul class="simple">
@@ -52,13 +50,12 @@ and the <code class="docutils literal notranslate"><span class="pre">DataFrameGr
 <section id="method-pages">
 <h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
 <p>The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.</p>
-<p><code class="docutils literal notranslate"><span class="pre">by()</span></code> (on <code class="docutils literal notranslate"><span class="pre">DataFrameGroupBuilder</span></code>) fixes the grouping keys and returns
-<code class="docutils literal notranslate"><span class="pre">DataFrameGrouped</span></code>. Every other method here (<code class="docutils literal notranslate"><span class="pre">agg</span></code>, <code class="docutils literal notranslate"><span class="pre">transform</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, and the
-grouped convenience terminals <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">mode</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ndistinct</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">var</span></code>) is a <code class="docutils literal notranslate"><span class="pre">DataFrameGrouped</span></code> method that actually
-executes the grouped work. <code class="docutils literal notranslate"><span class="pre">mode_ties</span></code> is a standalone companion to <code class="docutils literal notranslate"><span class="pre">mode</span></code> — it
-takes an explicit feature argument and can return more than one row per group, so
-it does not fit the zero-argument convenience-terminal pattern the others share.</p>
+<p><code class="docutils literal notranslate"><span class="pre">by()</span></code> fixes the grouping keys, then <code class="docutils literal notranslate"><span class="pre">DataFrameGrouped</span></code> executes the grouped work:</p>
+<ul class="simple">
+<li><p>Plan grouping keys: <a class="reference internal" href="api/dataframe-group/by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by()</span></code></span></a></p></li>
+<li><p>Explicit grouped reductions: <a class="reference internal" href="api/dataframe-group/agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/yield.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">yield()</span></code></span></a></p></li>
+<li><p>Uniform grouped reducers: <a class="reference internal" href="api/dataframe-group/count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">median()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">min()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">std()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/mode_ties.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode_ties()</span></code></span></a></p></li>
+</ul>
 <div class="toctree-wrapper compound">
 </div>
 </section>

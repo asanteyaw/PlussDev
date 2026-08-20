@@ -30,6 +30,23 @@ DataFrame frame() {
   });
 }
 
+DataFrame timed_frame() {
+  const Series value = pluss::make_series(std::vector<double>{40, 10, 80, 20, 60, 30, 70, 50}, {8}, f64());
+  return DataFrame({
+      {"stamp", Thread(pluss::make_timeline({
+                    "2024-01-04T00:00:00Z",
+                    "2024-01-01T00:00:00Z",
+                    "2024-01-08T00:00:00Z",
+                    "2024-01-02T00:00:00Z",
+                    "2024-01-06T00:00:00Z",
+                    "2024-01-03T00:00:00Z",
+                    "2024-01-07T00:00:00Z",
+                    "2024-01-05T00:00:00Z",
+                }))},
+      {"value", Thread(value)},
+  });
+}
+
 LabeledBatch batch() {
   const DataFrame data = frame();
   return resolve(labeled_batch_from_dataframe(data, DataFrameBatchOptions{.label_feature = "y"}),
@@ -71,6 +88,24 @@ bool run_split_checks(std::ostream* err) {
       || frame_ts.back().test_set.ncases() != 2
       || batch_ts.back().test_batch.features.sample_count() != 2) {
     if (err) *err << "time_series_split should materialize frame and labeled-batch temporal folds\n";
+    return false;
+  }
+
+  const DataFrame timed = timed_frame();
+  const std::vector<prep::TimeSeriesSplit> ordered_ts = prep::timeseries_split(timed, "stamp", ts);
+  if (ordered_ts.size() != 2 || ordered_ts.back().test_set.ncases() != 2) {
+    if (err) *err << "timeseries_split(frame,time_feature,...) should produce the requested number of ordered folds\n";
+    return false;
+  }
+  const auto ordered_values = ordered_ts.back().test_set.features("value").as_series().to_vec<double>();
+  if (ordered_values.size() != 2 || ordered_values[0] != 70.0 || ordered_values[1] != 80.0) {
+    if (err) *err << "timeseries_split(frame,time_feature,...) should sort by the temporal feature before taking the last fold\n";
+    return false;
+  }
+  const prep::TimeSeriesSplit ordered_holdout = prep::time_holdout(timed, "stamp", ts);
+  const auto holdout_values = ordered_holdout.test_set.features("value").as_series().to_vec<double>();
+  if (holdout_values.size() != 2 || holdout_values[0] != 70.0 || holdout_values[1] != 80.0) {
+    if (err) *err << "time_holdout(frame,time_feature,...) should return the last chronological block\n";
     return false;
   }
 

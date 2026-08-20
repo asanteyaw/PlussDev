@@ -33,11 +33,11 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::gradient_boost_regressor({.learners = 40, .learning_rate = 0.05}));
+      lymph::model::gradient_boost_regressor({.learners = 40, .learning_rate = 0.05}));
   wf.time(time_rules);
 
   auto split = lymph::validate::time().folds(3).gap(2).horizon(12).lookback(48);
-  const lymph::CrossValidationReport cv = split.run(wf, data, {}, {});
+  const auto cv = split.run(wf, data, {}, {});
   wf.learn_(data);
 
   std::cout << "time folds: " << cv.report.folds.size() << "\n";

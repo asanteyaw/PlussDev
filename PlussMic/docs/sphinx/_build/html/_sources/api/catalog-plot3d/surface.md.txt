@@ -35,8 +35,8 @@ projecting first avoids that entirely.
 
 See [`DataFramePlot3DAccessor::surface`](../dataframe-plot3d/surface.md) for the full grid
 construction (pivoting `y_key`'s distinct values into rows, `x_key`'s into columns, and
-aggregating `z_key` into each cell with `op`), which `GroupOp` values are actually supported,
-and how missing `(x, y)` combinations are filled.
+aggregating `z_key` into each cell with `op`), the numeric-grid requirement that still
+applies at render time, and how missing `(x, y)` combinations are filled.
 
 ## Parameters
 
@@ -47,7 +47,7 @@ and how missing `(x, y)` combinations are filled.
 **op** (`pluss::table::DataFrame::GroupOp`, default `Mean`)
     The aggregation applied per grid cell — see
     [`DataFramePlot3DAccessor::surface`](../dataframe-plot3d/surface.md) for
-    which of `GroupOp`'s ten values are actually supported by the underlying `pivot_table()`.
+    the remaining numeric-rendering constraints after pivoting.
 
 **options** (`const Surface3DPlotOptions&`)
     Same `scene`/`trace` shape documented on
@@ -111,8 +111,8 @@ chart.show();
   runs.
 - Delegates to [`DataFramePlot3DAccessor::surface`](../dataframe-plot3d/surface.md) after
   projecting to exactly the three requested keys — see the important callout above and that
-  page for the grid-aggregation rules, unsupported-`op` throw, and zero-fill behavior for
-  missing `(x, y)` combinations.
+  page for the grid-aggregation rules and zero-fill behavior for missing `(x, y)`
+  combinations.
 - Returns a `pluss::pl::Studio` — see
   [`CatalogPlotAccessor::line`](../catalog-plot/line.md)'s important callout for how to view
   or save the result.

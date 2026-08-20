@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5ab01632f4bb -->
 
 # DataFrameGroupBuilder::by
 
@@ -27,6 +28,11 @@ There are two distinct grouping domains:
 
 `by(...)` still does not execute the grouped work. It only fixes the grouping keys
 and returns `DataFrameGrouped`.
+
+When you supply more than one key, grouping uses the full tuple of key values.
+So `by({"city", "product"})` means rows are grouped by `(city, product)`, not
+by `city` alone with `product` acting as a later optional pass. Two rows land
+in the same group only when every key in the tuple matches.
 
 ## Parameters
 
@@ -165,6 +171,8 @@ to materialize it as ordinary columns first.
 - Group order is not chosen by `by(...)` alone. It also depends on the `sort` option
   captured earlier by `group(...)`: unsorted groups appear in first-occurrence order;
   sorted groups appear in ascending key order.
+- For multi-key grouping, "ascending key order" means lexicographic tuple order:
+  first key primary, second key tie-breaker, and so on.
 
 ## See Also
 

@@ -824,21 +824,21 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     std::vector<lymph::selection::Candidate> candidates;
     candidates.emplace_back(
         "linear",
-        lymph::linear_factory::linear_regression(LinearFamilyOptions{
+        lymph::model::linear_regression(LinearFamilyOptions{
             .objective = LinearObjective::LeastSquares,
             .regularization = RegularizationKind::None,
             .fit_intercept = true,
         }));
     candidates.emplace_back(
         "ridge",
-        lymph::linear_factory::linear_regression(LinearFamilyOptions{
+        lymph::model::linear_regression(LinearFamilyOptions{
             .objective = LinearObjective::LeastSquares,
             .regularization = RegularizationKind::L2,
             .regularization_strength = 10.0,
             .fit_intercept = true,
         }));
 
-    lymph::CrossValidationOptions cv{};
+    lymph::metrics::ValidationOptions cv{};
     cv.plan = CVPlanKind::CrossVal;
     cv.folds = 3;
     cv.shuffle = false;
@@ -864,9 +864,9 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
       if (err) *err << "lymph selection::compare should fit requested top-k workflows in ranked order\n";
       return false;
     }
-    auto top2 = tuned.topk(2);
-    if (top2.size() != 2 || !top2[0].get().trained() || !top2[1].get().trained()) {
-      if (err) *err << "lymph selection::CompareResult::topk should expose fitted ranked workflows\n";
+    auto top2 = tuned.top(2);
+    if (top2.size() != 2 || !top2[0].second.trained() || !top2[1].second.trained()) {
+      if (err) *err << "lymph selection::CompareResult::top should expose fitted ranked workflows\n";
       return false;
     }
     if (tuned.report.objective_rank.size() != tuned.report.trials.size()
@@ -896,21 +896,21 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     std::vector<lymph::selection::Candidate> candidates;
     candidates.emplace_back(
         "linear",
-        lymph::linear_factory::linear_regression(LinearFamilyOptions{
+        lymph::model::linear_regression(LinearFamilyOptions{
             .objective = LinearObjective::LeastSquares,
             .regularization = RegularizationKind::None,
             .fit_intercept = true,
         }));
     candidates.emplace_back(
         "ridge",
-        lymph::linear_factory::linear_regression(LinearFamilyOptions{
+        lymph::model::linear_regression(LinearFamilyOptions{
             .objective = LinearObjective::LeastSquares,
             .regularization = RegularizationKind::L2,
             .regularization_strength = 10.0,
             .fit_intercept = true,
         }));
 
-    lymph::CrossValidationOptions cv{};
+    lymph::metrics::ValidationOptions cv{};
     cv.plan = CVPlanKind::CrossVal;
     cv.folds = 3;
     cv.shuffle = false;
@@ -954,11 +954,10 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
   }
 
   {
-    // selection::tune: genuine hyperparameter search (expand a GridAxis space
-    // into ModelSpecs via a factory), dispatching on TuneOptions.search
-    // (Grid/None vs Random) the same way tune_specs/probe_specs already do.
-    // Distinct from selection::compare above, which only ranks candidates
-    // already fully built by the caller.
+    // search::grid/search::random: genuine hyperparameter search over a
+    // GridAxis space, with the trial factory building full Models instead of
+    // bare ModelSpecs. Distinct from selection::compare above, which only
+    // ranks candidates already fully built by the caller.
     namespace lymph = pluss::ai::lymph;
 
     // grid_size/grid_point_at/grid_points: a tiny 2x3 space, checked for
@@ -994,59 +993,56 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     const std::vector<lymph::selection::GridAxis> hp_axes = {
         {.name = "regularization_strength", .values = {0.0001, 0.01, 1.0, 10.0}},
     };
-    const auto make_linear_spec = [](const lymph::selection::GridPoint& point) {
-      return ModelSpec{
-          .task = TaskKind::Regression,
-          .family = ModelFamily::Linear,
-          .options = LinearFamilyOptions{
-              .objective = LinearObjective::LeastSquares,
-              .regularization = RegularizationKind::L2,
-              .regularization_strength = point.at("regularization_strength"),
-              .fit_intercept = true,
-          },
-      };
+    const auto make_linear_model = [](const lymph::selection::GridPoint& point) {
+      return lymph::model::linear_regression(LinearFamilyOptions{
+          .objective = LinearObjective::LeastSquares,
+          .regularization = RegularizationKind::L2,
+          .regularization_strength = point.at("regularization_strength"),
+          .fit_intercept = true,
+      });
     };
 
-    SplitOptions hp_split{};
-    hp_split.plan = CVPlanKind::CrossVal;
-    hp_split.folds = 3;
-    hp_split.shuffle = false;
+    lymph::metrics::ValidationOptions hp_cv{};
+    hp_cv.plan = CVPlanKind::CrossVal;
+    hp_cv.folds = 3;
+    hp_cv.shuffle = false;
 
-    // SearchKind::Grid (also the None default) -- exhaustive cross product.
-    TuneOptions grid_tune_options{};
-    grid_tune_options.search = SearchKind::Grid;
-    grid_tune_options.split = hp_split;
-    const auto exhaustive = lymph::selection::tune(
-        hp_axes, make_linear_spec, tune_x, y_series, grid_tune_options, TrainOptions{},
-        AssessOptions{.metrics = {MetricKind::Rmse}}, MetricKind::Rmse, TuneObjectivePolicy::Minimize);
+    const auto exhaustive = lymph::search::grid(hp_axes, hp_cv).run(
+        make_linear_model,
+        tune_x,
+        y_series,
+        TrainOptions{},
+        AssessOptions{.metrics = {MetricKind::Rmse}},
+        MetricKind::Rmse,
+        TuneObjectivePolicy::Minimize);
     if (exhaustive.report.trials.size() != 4) {
-      if (err) *err << "selection::tune(Grid) should evaluate exactly grid_size(axes) trials\n";
+      if (err) *err << "search::grid(...).run(...) should evaluate exactly grid_size(axes) trials\n";
       return false;
     }
-    const auto& best_options = std::get<LinearFamilyOptions>(exhaustive.best_spec.options);
+    const auto& best_options = std::get<LinearFamilyOptions>(exhaustive.best().model_spec().value().options);
     if (best_options.regularization_strength > 0.001) {
-      if (err) *err << "selection::tune(Grid) should prefer the least-biased fit on noiseless linear data\n";
+      if (err) *err << "search::grid(...).run(...) should prefer the least-biased fit on noiseless linear data\n";
       return false;
     }
 
-    // SearchKind::Random -- without-replacement sample, now dispatched from
-    // inside the same tune() entry point instead of a separate tune_sample().
-    TuneOptions random_tune_options{};
-    random_tune_options.search = SearchKind::Random;
-    random_tune_options.trials = 2;
-    random_tune_options.random = RandomState{.seed = 7, .deterministic = true};
-    random_tune_options.split = hp_split;
-    const auto sampled = lymph::selection::tune(
-        hp_axes, make_linear_spec, tune_x, y_series, random_tune_options, TrainOptions{},
-        AssessOptions{.metrics = {MetricKind::Rmse}}, MetricKind::Rmse, TuneObjectivePolicy::Minimize);
+    const auto sampled = lymph::search::random(
+                             hp_axes,
+                             2,
+                             RandomState{.seed = 7, .deterministic = true},
+                             hp_cv)
+                             .run(make_linear_model,
+                                  tune_x,
+                                  y_series,
+                                  TrainOptions{},
+                                  AssessOptions{.metrics = {MetricKind::Rmse}},
+                                  MetricKind::Rmse,
+                                  TuneObjectivePolicy::Minimize);
     if (sampled.report.trials.size() != 2) {
-      if (err) *err << "selection::tune(Random) should evaluate exactly TuneOptions.trials trials\n";
+      if (err) *err << "search::random(...).run(...) should evaluate exactly the requested trial count\n";
       return false;
     }
-    const double first_strength = std::get<LinearFamilyOptions>(sampled.report.trials[0].spec.options).regularization_strength;
-    const double second_strength = std::get<LinearFamilyOptions>(sampled.report.trials[1].spec.options).regularization_strength;
-    if (first_strength == second_strength) {
-      if (err) *err << "selection::tune(Random) should draw distinct grid points without replacement\n";
+    if (sampled.report.trials[0].name == sampled.report.trials[1].name) {
+      if (err) *err << "search::random(...).run(...) should draw distinct grid points without replacement\n";
       return false;
     }
   }

@@ -35,7 +35,7 @@ struct Candidate {
 struct Trial {
   std::string name{};
   double objective = std::numeric_limits<double>::quiet_NaN();
-  CrossValidationReport cv{};
+  metrics::CrossValidationReport cv{};
 };
 
 // Named compare, not tune: this ranks candidates the caller has already
@@ -288,7 +288,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
 // otherwise share every line of the actual grid-scheduling/ranking logic.
 [[nodiscard]] inline CompareResult compare_batch_(std::vector<Candidate> candidates,
                                                    const LabeledBatch& batch,
-                                                   CrossValidationOptions cv,
+                                                   metrics::ValidationOptions cv,
                                                    TrainOptions train_options,
                                                    AssessOptions assess_options,
                                                    MetricKind objective_metric,
@@ -323,7 +323,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
   }
   const SplitOptions split = detail::effective_workflow_split_options_(cv, task);
   const SplitPlan plan = detail::workflow_split_plan_(batch, split, task, "selection::compare");
-  const std::vector<FoldBatchPair> fold_batches = detail::materialize_fold_batches_(batch, plan, "selection::compare");
+  const std::vector<metrics::FoldBatchPair> fold_batches = detail::materialize_fold_batches_(batch, plan, "selection::compare");
 
   std::int64_t best_index = -1;
   double best_objective = std::numeric_limits<double>::quiet_NaN();
@@ -353,7 +353,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
   const auto evaluate_cell = [&](const GridCell_& cell) -> FoldAssessResult {
     const Candidate& candidate = candidates[cell.candidate_index];
     const auto& fold = plan.folds[cell.fold_index];
-    const FoldBatchPair& fold_batch = fold_batches[cell.fold_index];
+    const metrics::FoldBatchPair& fold_batch = fold_batches[cell.fold_index];
     const Model trained = candidate.model.learn(
         fold_batch.train, candidate.train_options.value_or(train_options));
     const Series fold_metrics =
@@ -382,7 +382,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
     for (std::size_t fi = 0; fi < fold_n; ++fi) {
       report.folds[fi] = cell_results[ci * fold_n + fi];
     }
-    CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(report));
+    metrics::CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(report));
     const double objective = scalar_metric_(cv_report.mean, objective_metric);
     result.report.trials.push_back(Trial{
         .name = candidates[ci].name,
@@ -483,7 +483,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline CompareResult compare_frame_(std::vector<Candidate> candidates,
                                                    const pluss::table::DataFrame& frame,
                                                    const DataFrameBatchOptions& data_options,
-                                                   CrossValidationOptions cv,
+                                                   metrics::ValidationOptions cv,
                                                    TrainOptions train_options,
                                                    AssessOptions assess_options,
                                                    MetricKind objective_metric,
@@ -573,7 +573,7 @@ struct FoldFramePair_ {
     for (std::size_t fi = 0; fi < fold_n; ++fi) {
       report.folds[fi] = cell_results[ci * fold_n + fi];
     }
-    CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(report));
+    metrics::CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(report));
     const double objective = scalar_metric_(cv_report.mean, objective_metric);
     result.report.trials.push_back(Trial{
         .name = candidates[ci].name,
@@ -657,7 +657,7 @@ struct FoldFramePair_ {
 // the platform is a property of the data you hand in, not a policy knob.
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const LabeledBatch& batch,
-                                           CrossValidationOptions cv = {},
+                                           metrics::ValidationOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
                                            MetricKind objective_metric = MetricKind::Accuracy,
@@ -670,7 +670,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const pluss::table::DataFrame& x,
                                            const Series& y,
-                                           CrossValidationOptions cv = {},
+                                           metrics::ValidationOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
                                            MetricKind objective_metric = MetricKind::Accuracy,
@@ -692,7 +692,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const pluss::table::DataFrame& frame,
                                            const DataFrameBatchOptions& data_options,
-                                           CrossValidationOptions cv = {},
+                                           metrics::ValidationOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
                                            MetricKind objective_metric = MetricKind::Accuracy,
@@ -705,7 +705,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const pluss::table::DataFrame& x,
                                            const pluss::table::Thread& y,
-                                           CrossValidationOptions cv = {},
+                                           metrics::ValidationOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
                                            MetricKind objective_metric = MetricKind::Accuracy,

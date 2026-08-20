@@ -77,6 +77,37 @@ Method argument; see signature type for accepted form.</p></li>
 </pre></div>
 </div>
 </section>
+<section id="example-2-demo-pattern">
+<h3>Example 2 (Demo Pattern)<a class="headerlink" href="#example-2-demo-pattern" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">FeatureBatch</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">LabeledBatch</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">LinearFamilyOptions</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">LinearObjective</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">ObservationLayout</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">RegularizationKind</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">TrainOptions</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">lymph</span><span class="o">::</span><span class="n">OnlineLinearClassifier</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">lymph</span><span class="o">::</span><span class="n">OnlineLinearOptions</span><span class="p">;</span>
+
+<span class="n">Config</span><span class="w"> </span><span class="nf">f64</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">).</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">Config</span><span class="w"> </span><span class="nf">i64</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">).</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">LabeledBatch</span><span class="w"> </span><span class="nf">slice_rows</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">LabeledBatch</span><span class="o">&amp;</span><span class="w"> </span><span class="n">batch</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">count</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">i64</span><span class="p">());</span>
+</pre></div>
+</div>
+<p><strong>Expected output</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>lymph online seen_samples=1660
+lymph online metrics [accuracy]: 0.9875
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 

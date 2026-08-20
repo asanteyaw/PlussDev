@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5ab01632f4bb -->
 <section id="dataframegroupbuilder-by">
 <h1>DataFrameGroupBuilder::by<a class="headerlink" href="#dataframegroupbuilder-by" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_group_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameGroupBuilder API Reference</span></a></p>
@@ -62,6 +63,10 @@
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">by(...)</span></code> still does not execute the grouped work. It only fixes the grouping keys
 and returns <code class="docutils literal notranslate"><span class="pre">DataFrameGrouped</span></code>.</p>
+<p>When you supply more than one key, grouping uses the full tuple of key values.
+So <code class="docutils literal notranslate"><span class="pre">by({&quot;city&quot;,</span> <span class="pre">&quot;product&quot;})</span></code> means rows are grouped by <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">product)</span></code>, not
+by <code class="docutils literal notranslate"><span class="pre">city</span></code> alone with <code class="docutils literal notranslate"><span class="pre">product</span></code> acting as a later optional pass. Two rows land
+in the same group only when every key in the tuple matches.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -190,6 +195,8 @@ already have case labels, and it rejects “both <code class="docutils literal n
 <li><p>Group order is not chosen by <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> alone. It also depends on the <code class="docutils literal notranslate"><span class="pre">sort</span></code> option
 captured earlier by <code class="docutils literal notranslate"><span class="pre">group(...)</span></code>: unsorted groups appear in first-occurrence order;
 sorted groups appear in ascending key order.</p></li>
+<li><p>For multi-key grouping, “ascending key order” means lexicographic tuple order:
+first key primary, second key tie-breaker, and so on.</p></li>
 </ul>
 </section>
 <section id="see-also">

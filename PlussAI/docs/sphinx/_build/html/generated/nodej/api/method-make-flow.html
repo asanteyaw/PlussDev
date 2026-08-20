@@ -124,15 +124,16 @@ result.value() is available
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>libc++abi: terminating due to uncaught exception of type pluss::Error: DataReader::with_sizes: explicit sizes are only supported for host-buffer inputs
 Triggered at: &lt;path&gt; (DataReader &amp;pluss::detail::DataReader::with_sizes(std::span&lt;const std::int64_t&gt;))
 Native stack trace:
-  0  pluss::detail::DataReader::with_sizes(std::__1::span&lt;long long const, 18446744073709551615ul&gt;)(data_reader.h:250)
-  1  pluss::codem::Series pluss::detail::DataReader::to_series&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader::Option, pluss::codem::Config const&amp;) const(data_reader.h:295)
+  0  pluss::detail::DataReader::with_sizes(std::__1::span&lt;long long const, 18446744073709551615ul&gt;)(data_reader.h:265)
+  1  pluss::codem::Series pluss::detail::DataReader::to_series&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader::Option, pluss::codem::Config const&amp;) const(data_reader.h:310)
   2  pluss::codem::Series pluss::codem::value&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&amp;)(series_value.h:13)
-  3  pluss::codem::Series pluss::make_series&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&amp;)(series_factory.h:960)
-  4  main(nodej_flow_bundle_demo.cpp:13)
-  5  start + 6992 [dyld]
+  3  pluss::codem::Series pluss::series::make&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&amp;)(series_factory.h:973)
+  4  pluss::codem::Series pluss::make_series&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&amp;)(series_factory_compat.h:20)
+  5  main(nodej_flow_bundle_demo.cpp:13)
+  6  start + 6992 [dyld]
 
 
-[exit_code] -6
+...
 </pre></div>
 </div>
 </section>

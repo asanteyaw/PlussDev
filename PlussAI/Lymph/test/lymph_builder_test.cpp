@@ -98,7 +98,7 @@ bool run_builder_construction_checks(std::ostream* err) {
     return false;
   }
 
-  Model source = models::logistic_regression({});
+  Model source = model::logistic_regression({});
   Builder cow = builder::build({{"source", source}});
   cow.get("source").standard_scaler();
   if (source.stage_count() != 0 || cow.get("source").stage_count() != 1) {
@@ -122,9 +122,9 @@ bool run_builder_checks(std::ostream* err) {
   }
 
   // Prvalues built directly at the call site -- zero std::move needed.
-  builder.inject("logreg", models::logistic_regression({.fit_intercept = true}))
-         .inject("tree", models::decision_tree_classifier({.max_depth = 3}))
-         .inject("knn", models::knn_classifier({.k = 3}));
+  builder.inject("logreg", model::logistic_regression({.fit_intercept = true}))
+         .inject("tree", model::decision_tree_classifier({.max_depth = 3}))
+         .inject("knn", model::knn_classifier({.k = 3}));
 
   if (builder.size() != 3) {
     if (err) *err << "expected 3 registered models, got " << builder.size() << "\n";
@@ -148,7 +148,7 @@ bool run_builder_checks(std::ostream* err) {
 
   // An already-named lvalue Model should copy cheaply; neither side should
   // need std::move for ordinary coordinator construction.
-  Model extra = models::gaussian_nb_classifier({});
+  Model extra = model::gaussian_nb_classifier({});
   builder.inject("nb", extra);
   if (builder.size() != 4) {
     if (err) *err << "inject(name, lvalue) did not register the model\n";
@@ -158,7 +158,7 @@ bool run_builder_checks(std::ostream* err) {
   // Duplicate name must throw, not silently overwrite.
   bool threw_dup = false;
   try {
-    builder.inject("logreg", models::logistic_regression({}));
+    builder.inject("logreg", model::logistic_regression({}));
   } catch (const std::exception&) {
     threw_dup = true;
   }
@@ -203,7 +203,7 @@ bool run_builder_checks(std::ostream* err) {
   // building a single Candidate by hand, and leave the Builder untouched.
   // 2 folds -- the default fold count leaves too few of these 8 rows per
   // test fold once split by class.
-  CrossValidationOptions cv{};
+  metrics::ValidationOptions cv{};
   cv.folds = 2;
   cv.shuffle = false;
   const Frame frame = make_frame();

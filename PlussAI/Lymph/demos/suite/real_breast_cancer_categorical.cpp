@@ -1,3 +1,4 @@
+#include "pluss/ai/lymph/model.h"
 #include <pluss/ai/lymph.h>
 #include <pluss/mic.h>
 
@@ -33,8 +34,8 @@ int main() {
           }),
           lymph::workflow::branch("ord", {"deg_malig"}, {{"scale", lymph::stage::standard_scaler()}}),
       },
-      lymph::models::decision_tree_classifier({.max_depth = 5, .min_samples_leaf = 4}));
-
+      lymph::model::decision_tree_classifier({.max_depth = 5, .min_samples_leaf = 4}));
+      
   wf.learn_(data);
   std::cout << "breast-cancer accuracy: " << wf.assess(data).accuracy.item<double>() << "\n";
   return 0;

@@ -34,7 +34,9 @@
 #include <vector>
 
 namespace pluss::table {
+class Atlas;
 class DataFrame;
+class Thread;
 }
 
 namespace pluss::pl::flash {
@@ -56,6 +58,27 @@ struct ToFrameOptions {
   FramePolicy policy{FramePolicy::Strict};
   std::optional<std::string> title{};
 };
+
+struct TableColumns {
+  std::optional<std::string> feature{};
+  std::optional<std::string> x_feature{};
+  std::optional<std::string> y_feature{};
+  std::optional<std::string> z_feature{};
+  std::optional<std::string> hue_feature{};
+  std::optional<std::string> label_feature{};
+  std::optional<std::string> class_feature{};
+  std::optional<std::string> err_feature{};
+  std::optional<std::string> yneg_feature{};
+  std::optional<std::string> ypos_feature{};
+  std::optional<std::string> xneg_feature{};
+  std::optional<std::string> xpos_feature{};
+};
+
+template <class T>
+concept TableBackedValue =
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Thread> ||
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::DataFrame> ||
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Atlas>;
 
 namespace detail {
 
@@ -1370,7 +1393,7 @@ public:
     return std::nullopt;
   }
 
-  [[nodiscard]] static Dataset from_frame(
+  [[nodiscard]] static Dataset from_table(
       const ::pluss::table::DataFrame& frame,
       const FromFrameOptions& options = {});
 
@@ -2132,6 +2155,7 @@ Trace& hist3d(Studio& studio, X&& x, Y&& y, const Hist3DOptions& options = {}, s
 }
 
 template <class X, class Y>
+  requires(!TableBackedValue<X> && !TableBackedValue<Y>)
 Trace& scatterplot(Pane& pane, X&& x, Y&& y) {
   return pane.cloud(detail::to_series(std::forward<X>(x)), detail::to_series(std::forward<Y>(y)));
 }
@@ -2184,11 +2208,13 @@ Trace& scatterplot(Pane& pane, X&& x, Y&& y, Hue&& hue) {
 }
 
 template <class X, class Y>
+  requires(!TableBackedValue<X> && !TableBackedValue<Y>)
 Trace& lineplot(Pane& pane, X&& x, Y&& y) {
   return pane.trend(detail::to_series(std::forward<X>(x)), detail::to_series(std::forward<Y>(y)));
 }
 
 template <class X, class Y>
+  requires(!TableBackedValue<X> && !TableBackedValue<Y>)
 Trace& stepplot(Pane& pane, X&& x, Y&& y) {
   const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
   const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
@@ -2322,11 +2348,13 @@ Trace& relplot(
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& histplot(Pane& pane, Values&& values, int bins = 12) {
   return pane.bucket(detail::to_series(std::forward<Values>(values)), bins);
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& displot(Pane& pane, Values&& values, int bins = 12) {
   return histplot(pane, std::forward<Values>(values), bins);
 }
@@ -2338,18 +2366,21 @@ Trace& kdeplot(Pane& pane, X&& x, Density&& density) {
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& kdeplot(Pane& pane, Values&& values, std::int64_t points = 128) {
   const auto [x, y] = detail::gaussian_kde(detail::to_series(std::forward<Values>(values)), points);
   return lineplot(pane, x, y);
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& ecdfplot(Pane& pane, Values&& values) {
   const auto [x, y] = detail::ecdf_xy(detail::to_series(std::forward<Values>(values)));
   return lineplot(pane, x, y);
 }
 
 template <class X, class Y>
+  requires(!TableBackedValue<X> && !TableBackedValue<Y>)
 Trace& areaplot(Pane& pane, X&& x, Y&& y, double base = 0.0) {
   return pane.ribbon(detail::to_series(std::forward<X>(x)),
                      detail::to_series(std::forward<Y>(y)),
@@ -2357,6 +2388,7 @@ Trace& areaplot(Pane& pane, X&& x, Y&& y, double base = 0.0) {
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
   const Series x = detail::to_series(std::forward<Values>(values));
   const double spike_height = std::max(height, 1e-4);
@@ -2553,8 +2585,146 @@ struct BarPlotOptions {
   bool horizontal{false};
 };
 
+Trace& lineplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& lineplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& lineplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& scatterplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& scatterplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& scatterplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& stepplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& stepplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& stepplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& areaplot(Pane& pane, const ::pluss::table::Thread& values, double base = 0.0);
+Trace& areaplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    double base = 0.0);
+Trace& areaplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    double base = 0.0);
+
+Trace& histplot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& histplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    int bins = 12);
+Trace& histplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    int bins = 12);
+
+Trace& displot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& displot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    int bins = 12);
+Trace& displot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    int bins = 12);
+
+Trace& kdeplot(Pane& pane, const ::pluss::table::Thread& values, std::int64_t points = 128);
+Trace& kdeplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    std::int64_t points = 128);
+Trace& kdeplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    std::int64_t points = 128);
+
+Trace& ecdfplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& ecdfplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& ecdfplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& rugplot(Pane& pane, const ::pluss::table::Thread& values, double height = 0.08);
+Trace& rugplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    double height = 0.08);
+Trace& rugplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    double height = 0.08);
+
+Trace& countplot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& countplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    int bins = 12);
+Trace& countplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    int bins = 12);
+
+Trace& barplot(
+    Pane& pane,
+    const ::pluss::table::Thread& values,
+    const BarPlotOptions& options = {});
+Trace& barplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    const BarPlotOptions& options = {});
+Trace& barplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    const BarPlotOptions& options = {});
+
+Trace& path3(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& path3(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& cloud3(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& cloud3(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& plot3D(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& plot3D(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& scatter3D(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& scatter3D(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Studio& jointplot(
+    Studio& studio,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    std::string_view kind = "scatter");
+Studio& jointplot(
+    Studio& studio,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns,
+    const JointPlotOptions& options);
+Studio& jointplot(
+    Studio& studio,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    std::string_view kind = "scatter");
+Studio& jointplot(
+    Studio& studio,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns,
+    const JointPlotOptions& options);
+
 template <class X, class Y>
-  requires(!std::same_as<std::remove_cvref_t<X>, Note>)
+  requires(!std::same_as<std::remove_cvref_t<X>, Note> &&
+           !TableBackedValue<X> &&
+           !TableBackedValue<Y>)
 Trace& barplot(Pane& pane, X&& x, Y&& y, const BarPlotOptions& options = {}) {
   return options.horizontal ? pane.columns_h(detail::to_series(std::forward<X>(x)),
                                              detail::to_series(std::forward<Y>(y)))
@@ -2574,7 +2744,8 @@ inline Trace& barplot(Pane& pane, const Note& categories, const Series& values, 
 }
 
 template <class Values>
-  requires(!std::same_as<std::remove_cvref_t<Values>, Note>)
+  requires(!std::same_as<std::remove_cvref_t<Values>, Note> &&
+           !TableBackedValue<Values>)
 Trace& countplot(Pane& pane, Values&& values, int bins = 12) {
   return histplot(pane, std::forward<Values>(values), bins);
 }

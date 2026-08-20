@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Series::extract_put
 
 [Back to Series API Reference](../../series_api_reference)
@@ -10,18 +12,19 @@ Series::extract_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Serie
 
 ## What It Does
 
-Returns a modified copy of the series after writing through the full
+Returns a patched copy of the series after writing through the full
 `ExtractSpec` selector language.
 
-This is the non-mutating sibling of [`extract_put_()`](extract_put_.md). It
-accepts the same selectors, applies the same broadcast and cardinality rules,
-and performs the same logical write. The only difference is ownership:
+This is the value-semantic sibling of [`extract_put_()`](extract_put_.md). The
+selector grammar is the same, the cardinality rules are the same, and the
+logical write order is the same. The only difference is where the update lands:
 
 - `extract_put_()` mutates the current series
-- `extract_put()` leaves the current series unchanged and returns a patched copy
+- `extract_put()` leaves the current series unchanged and returns a new one
 
-Use this when selector-based patching is part of an expression and you do not
-want to disturb the original value.
+That makes `extract_put()` the right surface when the write is part of an
+expression, a pipeline, or any other place where "derive a modified result"
+reads better than "mutate this object first, then keep going."
 
 ## Parameters
 
@@ -29,34 +32,40 @@ want to disturb the original value.
 
 The destination selector.
 
-All major `extract()`-style selector forms are supported here:
+This method accepts the same broad selector family as [`extract()`](extract.md):
 
 - scalar indices
-- slices, including negative-step slices
-- boolean masks
+- positive or negative-step slices
+- `SliceAll()`
+- `Ellipsis()`
+- `NewAxis()`
+- bool mask series
 - integer index series
-- `Ellipsis`
-- `NewAxis`
 
-Key write-side behavior:
+The write-side meaning is worth stating carefully:
 
-- Scalar indices narrow the targeted destination region.
-- Negative-step slices remain legal here.
-- Advanced selectors are materialized internally into explicit destination
-  positions before the write happens.
-- `NewAxis` is accepted for selector compatibility, but it does not contribute a
-  new writable destination axis.
+- scalar indices narrow the destination region
+- slices preserve an axis and choose which positions on that axis will be
+  written
+- `Ellipsis()` expands to the required number of identity slices
+- advanced selectors are materialized into explicit destination positions before
+  assignment
+- `NewAxis()` is accepted for selector compatibility, but it does not create a
+  new writable destination axis
 
 **values** (`const Series&`)
 
-The source data to write into the selected positions.
+The source values that will be written into the selected destination positions.
 
-`values` may be:
+Two cardinality modes are supported:
 
-- scalar, in which case it broadcasts across the whole selection
-- non-scalar, in which case its element count must match the selection exactly
+- scalar source: broadcast across the entire selection
+- non-scalar source: `values.numel()` must exactly match the number of selected
+  destination elements
 
-If dtype or platform differ, `values` is converted before assignment.
+For non-scalar writes, matching is by element count, not by preserving the
+original shape of `values`. The source is consumed in the selector's logical
+visit order.
 
 ## Returns
 
@@ -65,12 +74,13 @@ If dtype or platform differ, `values` is converted before assignment.
 
 ## Examples
 
-Example 1. Start from the already-patched grid produced by the in-place
-examples, then show that `extract_put()` itself does not mutate that input.
+Example 1. Shared setup. Start from a grid whose state is easy to track by eye.
 
 ```cpp
 auto grid = pluss::make_series(
-    std::vector<double>{100, -1, 12, 13, 200, 70, 22, 90, 300, -1, 32, 33},
+    {100.0, -1.0, 12.0, 13.0,
+     200.0, 70.0, 22.0, 90.0,
+     300.0, -1.0, 32.0, 33.0},
     {3, 4});
 
 std::cout << grid;
@@ -85,11 +95,11 @@ data=[[100, -1, 12, 13],
   [300, -1, 32, 33]]
 ```
 
-Example 2. A scalar source broadcasts into the selected region of the returned
-copy.
+Example 2. A scalar source broadcasts across the selected region of the
+returned copy.
 
 ```cpp
-const std::vector<ExtractSpec> right_two{
+const auto right_two = std::vector<ExtractSpec>{
     pluss::Slicing::SliceAll(),
     pluss::Slicing::SliceRange(2, 4, 1)};
 
@@ -109,16 +119,35 @@ data=[[100, -1, 5, 5],
   [300, -1, 5, 5]]
 ```
 
-The original `grid` still holds its old right-hand columns. Only `patched`
-contains the replacement.
+The selection is "all rows, columns `2:4`". Because the source is scalar, every
+selected position receives the same replacement value.
 
-Example 3. Advanced selectors work on the copy-returning surface too. Here a
-boolean row mask zeros only the masked rows.
+Example 3. The original series is unchanged after the copy-returning write.
 
 ```cpp
-auto row_mask = pluss::make_series(std::vector<bool>{true, false, true}, {3});
+std::cout << grid;
+```
 
-const std::vector<ExtractSpec> mask_specs{
+### Output
+
+```text
+pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[100, -1, 12, 13],
+  [200, 70, 22, 90],
+  [300, -1, 32, 33]]
+```
+
+That is the practical difference between `extract_put()` and
+[`extract_put_()`](extract_put_.md): same selector power, different ownership
+result.
+
+Example 4. Advanced selectors work here too. A bool row mask can patch only the
+rows that satisfy the mask.
+
+```cpp
+auto row_mask = pluss::make_series({true, false, true}, {3});
+
+const auto mask_specs = std::vector<ExtractSpec>{
     row_mask,
     pluss::Slicing::SliceAll()};
 
@@ -136,23 +165,47 @@ data=[[0, 0, 0, 0],
   [0, 0, 0, 0]]
 ```
 
-The same selector would have been legal on [`extract_put_()`](extract_put_.md);
-the difference is only whether the update lands on `grid` itself or on the
-returned series.
+The mask is not "view-like," but `extract_put()` is allowed to materialize the
+selected destinations, so the write still succeeds.
+
+Example 5. A reverse slice is also legal on the copy-returning surface.
+
+```cpp
+const auto reverse_write = std::vector<ExtractSpec>{
+    std::int64_t{1},
+    pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -2)};
+
+std::cout << grid.extract_put(
+    pluss::msharp::RangeView::Of<ExtractSpec>(reverse_write),
+    pluss::make_series({900.0, 700.0}, {2}));
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[100, -1, 12, 13],
+  [200, 700, 22, 900],
+  [300, -1, 32, 33]]
+```
+
+The selector visits row `1`, columns `3` then `1`. The source values are
+consumed in exactly that order.
 
 ## Notes
 
-- `extract_put()` is the unrestricted selector-write surface when you want value
-  semantics rather than mutation.
-- This is usually the cleanest method for "derive a patched copy" code.
-- If you need the update to happen in place, use
+- `extract_put()` is the broadest copy-returning selector-write surface on
+  `Series`.
+- Use it when mutation would be awkward or misleading, but the selector still
+  needs full `extract()`-style power.
+- If you want the same selector language in place, use
   [`extract_put_()`](extract_put_.md).
-- If you want the selector to be rejected unless it is view-representable, use
-  [`traverse_put()`](traverse_put.md) instead.
+- If you want the method to reject anything that is not a plain traversal/view,
+  use [`traverse_put()`](traverse_put.md).
 
 ## See Also
 
-- [`Series::extract_put_`](extract_put_.md): the in-place form.
+- [`Series::extract_put_`](extract_put_.md): the in-place sibling.
 - [`Series::traverse_put`](traverse_put.md): copy-returning writes with a
   stricter selector gate.
 - [`Series::extract`](extract.md): read through the same selector language.

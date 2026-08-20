@@ -16,7 +16,7 @@ int main() {
   const DataFrame raw({{"x", Thread(x)}, {"y", Thread(y)}});
 
   lymph::Payload data = lymph::payload::make(raw).features({"x"}).label("y");
-  lymph::Workflow wf = lymph::workflow::make(lymph::models::linear_regression());
+  lymph::Workflow wf = lymph::workflow::make(lymph::model::linear_regression());
   wf.add(lymph::stage::custom("log1p_all", [](const Series& input) {
     return input.add(1.0).log();
   }));

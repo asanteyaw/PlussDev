@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -369,6 +371,117 @@ void test_vectorized_group_reductions() {
   expect(pivoted.features("c1").as_series().to_vec<double>() ==
              std::vector<double>({3.0, 5.0}),
          "pivot_table median should aggregate duplicate cells");
+
+  const auto sparse_counts = DataFrame({
+      {"case", Thread(pluss::make_note({"r1", "r2"}))},
+      {"feature", Thread(pluss::make_note({"c1", "c2"}))},
+      {"value", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+  }).pivot_table("case", "feature", "value", DataFrame::GroupOp::Count, true, false);
+  expect(pluss::table::detail::validity_mask(sparse_counts.features("c1"))->to_vec<bool>() ==
+             std::vector<bool>({true, false}),
+         "pivot_table count should leave unobserved cells missing instead of materializing zeros");
+  expect(pluss::table::detail::validity_mask(sparse_counts.features("c2"))->to_vec<bool>() ==
+             std::vector<bool>({false, true}),
+         "pivot_table count should preserve sparsity per pivoted feature");
+
+  const auto feature_keys = Thread(
+      pluss::make_note(std::vector<std::string>{"NULL", "unused"}),
+      pluss::make_series(std::vector<bool>{true, false}));
+  const auto collision_frame = DataFrame({
+      {"case", Thread(pluss::make_note({"r1", "r2"}))},
+      {"feature", feature_keys},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+  });
+  const auto collision_pivot =
+      collision_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Count, false, false);
+  expect(collision_pivot.get("NULL").has_value() && collision_pivot.get("<NULL>").has_value(),
+         "pivot_table should distinguish literal 'NULL' feature keys from missing feature keys");
+  expect(collision_pivot.features("NULL").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, 0}) &&
+             pluss::table::detail::validity_mask(collision_pivot.features("NULL"))->to_vec<bool>() ==
+                 std::vector<bool>({true, false}),
+         "pivot_table should keep the literal 'NULL' key in its own output feature");
+  expect(collision_pivot.features("<NULL>").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1}) &&
+             pluss::table::detail::validity_mask(collision_pivot.features("<NULL>"))->to_vec<bool>() ==
+                 std::vector<bool>({false, true}),
+         "pivot_table should render missing feature keys as '<NULL>' on the feature axis");
+
+  const auto pivot_std =
+      pivot_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Std, true, false);
+  const auto pivot_var =
+      pivot_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Var, true, false);
+  const auto std_col = pivot_std.features("c1").as_series().to_vec<double>();
+  const auto var_col = pivot_var.features("c1").as_series().to_vec<double>();
+  expect(std::abs(std_col[0] - std::sqrt(8.0)) < 1e-12 &&
+             std::abs(std_col[1] - std::sqrt(18.0)) < 1e-12,
+         "pivot_table(std) should support sample standard deviation per cell");
+  expect(std::abs(var_col[0] - 8.0) < 1e-12 &&
+             std::abs(var_col[1] - 18.0) < 1e-12,
+         "pivot_table(var) should support sample variance per cell");
+
+  const auto mode_frame = DataFrame({
+      {"case", Thread(pluss::make_note({"r1", "r1", "r2", "r2"}))},
+      {"feature", Thread(pluss::make_note({"c1", "c1", "c1", "c1"}))},
+      {"value", Thread(pluss::make_note({"x", "x", "z", "z"}))},
+  });
+  const auto pivot_mode =
+      mode_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Mode, true, false);
+  expect(pivot_mode.features("c1").as_note().vector() ==
+             std::vector<std::string_view>({"x", "z"}),
+         "pivot_table(mode) should support note-valued grouped modes");
+
+  DataFrame::PivotTableOptions multi_options;
+  multi_options.index = {"city", "quarter"};
+  multi_options.columns = {"product"};
+  multi_options.values = {"units", "revenue"};
+  multi_options.aggfuncs = {DataFrame::GroupOp::Sum};
+  auto sales = DataFrame({
+      {"city", Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+      {"quarter", Thread(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
+      {"product", Thread(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+      {"units", Thread(pluss::make_series(std::vector<double>{2.0, 3.0, 4.0, 1.0, 5.0}))},
+      {"revenue", Thread(pluss::make_series(std::vector<double>{20.0, 30.0, 40.0, 10.0, 50.0}))},
+  });
+  const auto multi_pivot = sales.pivot_table(multi_options);
+  expect(multi_pivot.label().names() == std::vector<std::string>({"city", "quarter"}),
+         "pivot_table(options) should promote multi-key rows into a structured case axis");
+  expect(multi_pivot.label().part("city").as_note().vector() ==
+             std::vector<std::string_view>({"Accra", "Accra", "Tema", "Tema"}) &&
+             multi_pivot.label().part("quarter").as_note().vector() ==
+                 std::vector<std::string_view>({"Q1", "Q2", "Q1", "Q2"}),
+         "pivot_table(options) should preserve lexicographic row-key ordering");
+  expect(multi_pivot.features() ==
+             std::vector<std::string>({
+                 "units_sum :: Laptop",
+                 "units_sum :: Phone",
+                 "revenue_sum :: Laptop",
+                 "revenue_sum :: Phone",
+             }),
+         "pivot_table(options) should flatten multi-value outputs deterministically");
+  const auto units_laptop = multi_pivot.features("units_sum :: Laptop").as_series().to_vec<double>();
+  expect(std::abs(units_laptop[0] - 2.0) < 1e-12 &&
+             std::abs(units_laptop[1] - 4.0) < 1e-12 &&
+             std::abs(units_laptop[2] - 1.0) < 1e-12 &&
+             pluss::table::detail::validity_mask(multi_pivot.features("units_sum :: Laptop"))->to_vec<bool>() ==
+                 std::vector<bool>({true, true, true, false}),
+         "pivot_table(options) should populate the requested value-column aggregates per pivoted column");
+
+  multi_options.fill_value = pluss::table::ThreadValue::HostAny::floating(0.0);
+  multi_options.margins = true;
+  const auto pivot_with_totals = sales.pivot_table(multi_options);
+  expect(pivot_with_totals.get("units_sum :: All").has_value() &&
+             pivot_with_totals.get("revenue_sum :: All").has_value(),
+         "pivot_table(options) should add total columns when margins=true");
+  expect(pivot_with_totals.label().part("city").as_note().vector().back() == "All" &&
+             pivot_with_totals.label().part("quarter").as_note().vector().back() == "",
+         "pivot_table(options) should append a bottom total row on a structured case axis");
+  expect(pivot_with_totals.features("units_sum :: Phone").as_series().to_vec<double>() ==
+             std::vector<double>({3.0, 0.0, 0.0, 5.0, 8.0}),
+         "pivot_table(fill_value, margins) should fill missing cells before exposing the result");
+  expect(pivot_with_totals.features("units_sum :: All").as_series().to_vec<double>() ==
+             std::vector<double>({5.0, 4.0, 1.0, 5.0, 15.0}),
+         "pivot_table(margins=true) should add row totals plus a grand total");
 }
 
 void test_group_phase5_contracts() {
@@ -394,6 +507,27 @@ void test_group_phase5_contracts() {
   expect(rows.features("count").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({2, 3}),
          "grouped row-count fallback should count cases per group");
+
+  const auto targeted_count = frame.group().by({"group"}).count({"value"});
+  expect(targeted_count.features() ==
+             std::vector<std::string>({"group", "value_count"}),
+         "targeted grouped count should only emit the requested value feature");
+  expect(targeted_count.features("value_count").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2, 3}),
+         "targeted grouped count should preserve non-null count semantics");
+
+  const auto targeted_mean = frame.group().by({"group"}).mean({"value"});
+  expect(targeted_mean.features() ==
+             std::vector<std::string>({"group", "value_mean"}),
+         "targeted grouped mean should only emit the requested value feature");
+  expect(targeted_mean.features("value_mean").as_series().to_vec<double>() ==
+             std::vector<double>({2.0, 4.0}),
+         "targeted grouped mean should aggregate only the requested feature");
+
+  const auto targeted_multi = frame.group().by({"group"}).count({"value", "label"});
+  expect(targeted_multi.features() ==
+             std::vector<std::string>({"group", "value_count", "label_count"}),
+         "targeted grouped reducers should preserve the requested feature order");
 
   const auto unnamed = frame.group().by({"group"}).agg({
       {"", "", DataFrame::GroupOp::Count},
@@ -530,7 +664,7 @@ void test_group_yield_and_ndistinct() {
       {"active_months", "month_code", DataFrame::GroupOp::Ndistinct},
   });
   expect(grouped.features("active_months").as_series().to_vec<std::int64_t>() ==
-             std::vector<std::int64_t>({2, 1}),
+             std::vector<std::int64_t>({1, 2}),
          "grouped ndistinct should count unique non-null values per group");
 
   const auto indexed = DataFrame({
@@ -547,8 +681,171 @@ void test_group_yield_and_ndistinct() {
   expect(!label_yield.get("__pluss_case_level_region").has_value(),
          "group(...).by(LabelGroup).yield() should not leak internal grouping features");
   expect(label_yield.features("sales").as_series().to_vec<double>() ==
-             std::vector<double>({30.0, 40.0, 10.0, 20.0}),
+             std::vector<double>({10.0, 20.0, 30.0, 40.0}),
          "label-group yield should regroup rows by case-label keys");
+}
+
+void test_contingency_and_split() {
+  const auto cont_frame = DataFrame(
+      {
+          {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
+          {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+          {"weekend", Thread(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+          {"amount", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
+      },
+      Thread(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
+
+  const auto counts_ct = cont_frame.contingency("city", "channel");
+  expect(counts_ct.ndim() == 2,
+         "contingency(city, channel) should retain two dimensions");
+  expect(counts_ct.dims() == std::vector<std::string>({"city", "channel"}),
+         "contingency(city, channel) should preserve dimension names");
+  expect(counts_ct.shape() == std::vector<std::int64_t>({2, 2}),
+         "contingency(city, channel) should expose the dense tensor shape");
+
+  const auto count_array = counts_ct.to_array().to(pluss::codem::Platform::CPU).contiguous();
+  expect(std::vector<std::int64_t>(count_array.sizes().begin(), count_array.sizes().end()) ==
+             std::vector<std::int64_t>({2, 2}),
+         "to_array() should keep the contingency tensor shape");
+  const auto* count_raw = reinterpret_cast<const std::int64_t*>(count_array.raw_data());
+  std::vector<std::int64_t> count_values(count_raw, count_raw + 4);
+  std::sort(count_values.begin(), count_values.end());
+  expect(count_values == std::vector<std::int64_t>({1, 1, 1, 2}),
+         "to_array() should retain the full cell counts");
+
+  const auto counts = counts_ct.to_frame();
+  expect(counts.features() ==
+             std::vector<std::string>({"city", "Card", "Cash"}),
+         "to_frame() should widen column levels into output features");
+  expect(counts.features("city").as_note().vector() ==
+             std::vector<std::string_view>({"A", "B"}),
+         "to_frame() should preserve the sorted row levels by default");
+  expect(counts.features("Card").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, 1}),
+         "to_frame() should materialize the count cells");
+  expect(counts.features("Cash").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, 2}),
+         "to_frame() should materialize the count cells");
+
+  DataFrame::ContingencyOptions totals_options;
+  totals_options.totals = true;
+  const auto totals = counts_ct.to_frame({"city"}, {"channel"}, totals_options);
+  expect(totals.features() ==
+             std::vector<std::string>({"city", "Card", "Cash", "Total"}),
+         "to_frame(..., totals=true) should append a total output feature");
+  expect(totals.features("city").as_note().vector() ==
+             std::vector<std::string_view>({"A", "B", "Total"}),
+         "to_frame(..., totals=true) should append a total row marker");
+  expect(totals.features("Total").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({2, 3, 5}),
+         "to_frame(..., totals=true) should report row and grand totals");
+
+  const auto shares = counts_ct.share().to_frame();
+  expect(std::abs(shares.features("Card").as_series().to_vec<double>()[0] - 0.2) < 1e-12,
+         "share() should normalize by the full table total");
+  expect(std::abs(shares.features("Cash").as_series().to_vec<double>()[1] - 0.4) < 1e-12,
+         "share() should normalize by the full table total");
+
+  const auto conditional = counts_ct.condition({"city"}).to_frame();
+  const auto conditional_card = conditional.features("Card").as_series().to_vec<double>();
+  expect(std::abs(conditional_card[0] - 0.5) < 1e-12 &&
+             std::abs(conditional_card[1] - (1.0 / 3.0)) < 1e-12,
+         "condition({city}) should normalize within each city slice");
+  expect(std::abs(conditional.features("Cash").as_series().to_vec<double>()[1] - (2.0 / 3.0)) < 1e-12,
+         "condition({city}) should normalize across the complementary dimensions");
+
+  const auto multi_ct = cont_frame.contingency({"city", "channel", "weekend"});
+  const auto multi = multi_ct.to_frame({"city"}, {"channel"});
+  expect(multi.features() ==
+             std::vector<std::string>({
+                 "city",
+                 "channel=Card | weekend=no",
+                 "channel=Card | weekend=yes",
+                 "channel=Cash | weekend=no",
+                 "channel=Cash | weekend=yes",
+             }),
+         "to_frame(row, col) should flatten extra column dimensions deterministically");
+
+  const auto weekend_yes = multi_ct.slice({{"weekend", "yes"}}).to_frame({"city"}, {"channel"});
+  expect(weekend_yes.features("Card").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1}),
+         "slice(...) should fix a level before rendering");
+  expect(weekend_yes.features("Cash").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1}),
+         "slice(...) should preserve the remaining dimensions");
+
+  const auto marginalized = multi_ct.marginalize({"weekend"}).to_frame({"city"}, {"channel"});
+  expect(marginalized.features("Card").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, 1}),
+         "marginalize(...) should sum out the requested dimensions");
+  expect(marginalized.features("Cash").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, 2}),
+         "marginalize(...) should sum out the requested dimensions");
+
+  const auto facets = multi_ct.facet({"city"}, {"channel"});
+  expect(facets.depth() == 2,
+         "facet(row, col) should return one frame per remaining level combination");
+  expect(facets.axis0_labels().has_value(),
+         "facet(row, col) should label the facet axis");
+  expect(facets.axis0_labels()->as_note().vector() ==
+             std::vector<std::string_view>({"weekend=no", "weekend=yes"}),
+         "facet(row, col) should label each rendered slice");
+  expect(facets.frame(0).features("Cash").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, 1}),
+         "facet(row, col) should render the first remaining level slice");
+  expect(facets.frame(1).features("Card").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1}),
+         "facet(row, col) should render the second remaining level slice");
+
+  const auto split_frame = DataFrame(
+      {
+          {"city", Thread(pluss::make_note({"A", "A", "B", "B", "C"}))},
+          {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
+          {"amount", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
+          {"score", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}))},
+      },
+      Thread(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
+
+  const auto ordered_case = split_frame.split(0.4);
+  expect(ordered_case.first.ncases() == 3 && ordered_case.second.ncases() == 2,
+         "split(frac) should allocate frac of rows to the second output");
+  expect(ordered_case.first.label().values().as_note().vector() ==
+             std::vector<std::string_view>({"r0", "r1", "r2"}),
+         "ordered row split should preserve the leading rows in the first output");
+  expect(ordered_case.second.label().values().as_note().vector() ==
+             std::vector<std::string_view>({"r3", "r4"}),
+         "ordered row split should preserve the trailing rows in the second output");
+
+  const auto ordered_feature = split_frame.split(0.5, Axis::Feature, false);
+  expect(ordered_feature.first.features() ==
+             std::vector<std::string>({"city", "channel"}),
+         "ordered feature split should keep the leading features in the first output");
+  expect(ordered_feature.second.features() ==
+             std::vector<std::string>({"amount", "score"}),
+         "ordered feature split should keep the trailing features in the second output");
+
+  const auto random_case = split_frame.split(0.4, 7);
+  expect(random_case.first.ncases() == 3 && random_case.second.ncases() == 2,
+         "randomized row split should preserve the requested row counts");
+  std::vector<std::string_view> combined_labels = random_case.first.label().values().as_note().vector();
+  const auto rhs_labels = random_case.second.label().values().as_note().vector();
+  combined_labels.insert(combined_labels.end(), rhs_labels.begin(), rhs_labels.end());
+  std::sort(combined_labels.begin(), combined_labels.end());
+  expect(combined_labels ==
+             std::vector<std::string_view>({"r0", "r1", "r2", "r3", "r4"}),
+         "randomized row split should partition the original rows without loss");
+
+  const auto nan_render = DataFrame({
+      {"value", Thread(pluss::make_series(std::vector<double>{
+          1.0,
+          std::numeric_limits<double>::quiet_NaN(),
+      }))},
+  }).to_string();
+  expect(nan_render.find("nan") == std::string::npos &&
+             nan_render.find("NaN") == std::string::npos,
+         "display rendering should not print literal nan for floating values");
+  expect(nan_render.find("NULL") != std::string::npos,
+         "display rendering should present floating NaN values as NULL");
 }
 
 void test_temporal_subtraction_and_sort_builder() {
@@ -1376,6 +1673,7 @@ int main(int argc, char** argv) {
       {"group_phase5_contracts", test_group_phase5_contracts},
       {"group_transform_and_filter", test_group_transform_and_filter},
       {"group_yield_and_ndistinct", test_group_yield_and_ndistinct},
+      {"contingency_and_split", test_contingency_and_split},
       {"temporal_subtraction_and_sort_builder", test_temporal_subtraction_and_sort_builder},
       {"bundelize_and_tabelize_interop", test_bundelize_and_tabelize_interop},
       {"group_phase7_hardening", test_group_phase7_hardening},

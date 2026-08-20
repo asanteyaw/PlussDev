@@ -25,7 +25,7 @@ int main() {
               {"norm", lymph::stage::vector_normalizer()},
           }),
       },
-      lymph::models::decision_tree_classifier({.max_depth = 3}),
+      lymph::model::decision_tree_classifier({.max_depth = 3}),
       options);
 
   lymph::Payload data = lymph::payload::make(raw).features({"x", "x2"}).label("y");

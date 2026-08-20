@@ -34,13 +34,13 @@ int main() {
   std::vector<lymph::GridAxis> space{
       {.name = "regularization_strength", .values = {0.0001, 0.001, 0.01}},
   };
-  lymph::CrossValidationOptions cv{};
+  lymph::metrics::CrossValidationOptions cv{};
   cv.plan = lymph::CVPlanKind::CrossVal;
   cv.folds = 3;
 
   const lymph::search::Result tuned = lymph::search::grid(space, cv)
       .run([](const lymph::GridPoint& point) {
-             return lymph::models::linear_regression({
+             return lymph::model::linear_regression({
                  .regularization_strength = point.at("regularization_strength"),
              });
            },

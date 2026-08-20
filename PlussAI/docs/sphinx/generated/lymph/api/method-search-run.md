@@ -57,27 +57,27 @@ run returned Result
 ### Example 2 (Demo Pattern)
 
 ```cpp
-      .hist("residual", 80)
-      .headline("Residual distribution (final model)")
-      .save_pdf((out_dir / "final_residual_hist.pdf").string());
-  pred_frame.plot()
-      .hist("abs_error", 80)
-      .headline("Absolute error distribution (final model)")
-      .save_pdf((out_dir / "final_abs_error_hist.pdf").string());
+  cv_options.plan = pluss::ai::nodej::CVPlanKind::CrossVal;
+  cv_options.folds = 3;
+  cv_options.shuffle = true;
+  cv_options.random_state = 42;
+  cv_options.deterministic = true;
 
-  //========== run summary ========
-  // This section writes compact run metadata.
-  DataFrame run_summary({
-      {"n_rows_loaded", Thread(pluss::make_series(std::vector<double>{static_cast<double>(frame.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"n_features_used", Thread(pluss::make_series(std::vector<double>{static_cast<double>(model_feature_names.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"holdout_train_rows", Thread(pluss::make_series(std::vector<double>{static_cast<double>(train_frame_full.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"holdout_test_rows", Thread(pluss::make_series(std::vector<double>{static_cast<double>(test_frame_full.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"broad_candidates", Thread(pluss::make_series(std::vector<double>{static_cast<double>(broad_specs.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"tuned_candidates", Thread(pluss::make_series(std::vector<double>{static_cast<double>(tuned_specs.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"final_rmse", Thread(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 0 ? final_metrics_vec[0] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"final_r2", Thread(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 1 ? final_metrics_vec[1] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"final_mae", Thread(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 2 ? final_metrics_vec[2] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"restored_max_abs_diff", Thread(pluss::make_series(std::vector<double>{restored_max_abs_diff}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+  const auto t_cv0 = Clock::now();
+  const auto cv_plan = lymph::validate::cross(cv_options);
+  const auto linear_cv = cv_plan.run(linear_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
+  const auto tree_cv = cv_plan.run(tree_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
+  const auto forest_cv = cv_plan.run(forest_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
+  const auto t_cv1 = Clock::now();
+  out.writef("cross_validate block seconds={}", secs(t_cv0, t_cv1)).endln();
+
+  out.writeln("linear cv", linear_cv.mean.rmse, linear_cv.mean.r2);
+  out.writeln("tree cv", tree_cv.mean.rmse, tree_cv.mean.r2);
+  out.writeln("forest cv", forest_cv.mean.rmse, forest_cv.mean.r2);
+  //========== End Cell 12 ========
+
+  //========== Cell 13: Tune Candidate Families ========
+  // Equivalent in spirit to Grid/Random search over model hyperparameters.
 ```
 
 **Expected output**

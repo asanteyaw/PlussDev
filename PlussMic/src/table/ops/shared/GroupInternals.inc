@@ -352,6 +352,7 @@ struct GroupDistinctKeyHash_ {
 
 template <class TokenFn>
 Thread group_ndistinct_tokens_(const GroupState_& state,
+                               const Thread* value,
                                TokenFn&& token_at) {
   using Token = std::decay_t<decltype(token_at(std::declval<std::int64_t>()))>;
 
@@ -361,6 +362,9 @@ Thread group_ndistinct_tokens_(const GroupState_& state,
       std::max<std::int64_t>(16, static_cast<std::int64_t>(state.included_rows.size()))));
   for (std::size_t i = 0; i < state.included_rows.size(); ++i) {
     const auto row = state.included_rows[i];
+    if (value != nullptr && !detail::valid_at(*value, row)) {
+      continue;
+    }
     const auto group_id = state.included_group_ids[i];
     if (seen.insert(GroupDistinctKey_<Token>{.group_id = group_id, .token = token_at(row)}).second) {
       ++counts[static_cast<std::size_t>(group_id)];
@@ -370,65 +374,66 @@ Thread group_ndistinct_tokens_(const GroupState_& state,
 }
 
 Thread group_ndistinct_series_thread_(const pluss::Series& series,
-                                      const GroupState_& state) {
+                                      const GroupState_& state,
+                                      const Thread* value) {
   switch (series.scalar_type()) {
     case pluss::codem::ScalarType::Bool: {
       const auto* raw = reinterpret_cast<const bool*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint8_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::uint8_t {
         return raw[static_cast<std::size_t>(row)] ? 1U : 0U;
       });
     }
     case pluss::codem::ScalarType::Int8: {
       const auto* raw = reinterpret_cast<const std::int8_t*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::int8_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::int8_t {
         return raw[static_cast<std::size_t>(row)];
       });
     }
     case pluss::codem::ScalarType::UInt8: {
       const auto* raw = reinterpret_cast<const std::uint8_t*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint8_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::uint8_t {
         return raw[static_cast<std::size_t>(row)];
       });
     }
     case pluss::codem::ScalarType::Int16: {
       const auto* raw = reinterpret_cast<const std::int16_t*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::int16_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::int16_t {
         return raw[static_cast<std::size_t>(row)];
       });
     }
     case pluss::codem::ScalarType::UInt16: {
       const auto* raw = reinterpret_cast<const std::uint16_t*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint16_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::uint16_t {
         return raw[static_cast<std::size_t>(row)];
       });
     }
     case pluss::codem::ScalarType::Int32: {
       const auto* raw = reinterpret_cast<const std::int32_t*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::int32_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::int32_t {
         return raw[static_cast<std::size_t>(row)];
       });
     }
     case pluss::codem::ScalarType::UInt32: {
       const auto* raw = reinterpret_cast<const std::uint32_t*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint32_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::uint32_t {
         return raw[static_cast<std::size_t>(row)];
       });
     }
     case pluss::codem::ScalarType::Int64: {
       const auto* raw = reinterpret_cast<const std::int64_t*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::int64_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::int64_t {
         return raw[static_cast<std::size_t>(row)];
       });
     }
     case pluss::codem::ScalarType::UInt64: {
       const auto* raw = reinterpret_cast<const std::uint64_t*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint64_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::uint64_t {
         return raw[static_cast<std::size_t>(row)];
       });
     }
     case pluss::codem::ScalarType::Float32: {
       const auto* raw = reinterpret_cast<const float*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint32_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::uint32_t {
         std::uint32_t bits = 0;
         std::memcpy(&bits, raw + static_cast<std::size_t>(row), sizeof(bits));
         return bits;
@@ -436,7 +441,7 @@ Thread group_ndistinct_series_thread_(const pluss::Series& series,
     }
     case pluss::codem::ScalarType::Float64: {
       const auto* raw = reinterpret_cast<const double*>(series.raw_data());
-      return group_ndistinct_tokens_(state, [raw](std::int64_t row) -> std::uint64_t {
+      return group_ndistinct_tokens_(state, value, [raw](std::int64_t row) -> std::uint64_t {
         std::uint64_t bits = 0;
         std::memcpy(&bits, raw + static_cast<std::size_t>(row), sizeof(bits));
         return bits;
@@ -830,14 +835,14 @@ Thread group_count_thread_(const GroupState_& state,
 Thread group_ndistinct_thread_(const Thread& value, const GroupState_& state) {
   switch (value.kind()) {
     case ThreadKind::Series:
-      return group_ndistinct_series_thread_(value.as_series(), state);
+      return group_ndistinct_series_thread_(value.as_series(), state, &value);
     case ThreadKind::Timeline:
-      return group_ndistinct_series_thread_(value.as_timeline().epoch_nanos(), state);
+      return group_ndistinct_series_thread_(value.as_timeline().epoch_nanos(), state, &value);
     case ThreadKind::TimeIndex:
-      return group_ndistinct_series_thread_(value.as_timeindex().timeline().epoch_nanos(), state);
+      return group_ndistinct_series_thread_(value.as_timeindex().timeline().epoch_nanos(), state, &value);
     case ThreadKind::Note: {
       const auto note = value.as_note();
-      return group_ndistinct_tokens_(state, [&note](std::int64_t row) -> std::string_view {
+      return group_ndistinct_tokens_(state, &value, [&note](std::int64_t row) -> std::string_view {
         return note.at(row);
       });
     }

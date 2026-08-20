@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame::arrange(pluss::RangeView<ArrangeSpec> specs) const -> DataFrame
+DataFrame::arrange(pluss::RangeView<DataFrame::ArrangeSpec> specs) const -> DataFrame
 
 DataFrame::arrange(pluss::RangeView<std::string_view> features,
                    bool ascending = true,
@@ -30,6 +30,10 @@ Two overloads cover the common shapes:
 - The simple overload accepts feature names plus one shared direction and null-placement
   policy.
 - The `ArrangeSpec` overload accepts per-feature direction and null-placement settings.
+
+With more than one key, `arrange()` uses ordinary lexicographic / tuple ordering:
+the first feature is primary, the second only breaks ties within equal first-feature
+values, the third only breaks remaining ties, and so on.
 
 ## Parameters
 
@@ -108,13 +112,58 @@ auto by_city_then_price = orders.arrange({
     ArrangeSpec{.feature = "unit_price", .ascending = false, .nulls_last = true},
 });
 ```
+### Output
 
+```text
+================================================================
+     | order_id  city    product     units  unit_price  discount
+----------------------------------------------------------------
+0    | 101       Accra   Laptop      2      1200        0.1     
+1    | 102       Accra   Headphones  5      45.5        0.05    
+4    | 105       Kumasi  Headphones  4      42          0.05    
+5    | 106       Kumasi  Monitor     2      NULL        0.12    
+2    | 103       Tema    Laptop      1      1150        NULL     
+3    | 104       Tema    Monitor     3      320         0.08    
+----------------------------------------------------------------
+[6 cs x 6 feat]
+```
 Rows are grouped by `city` alphabetically first, and within each city the higher
 `unit_price` rows come first.
+
+Example 3. The simple overload applies one shared direction to every key.
+
+```cpp
+auto uniform_desc = orders.arrange({"city", "unit_price"}, /*ascending=*/false, /*nulls_last=*/true);
+std::cout << uniform_desc;
+```
+
+### Output
+
+```text
+================================================================
+     | order_id  city    product     units  unit_price  discount
+----------------------------------------------------------------
+3    | 104       Tema    Monitor     3      320         0.08
+2    | 103       Tema    Laptop      1      1150        NULL
+5    | 106       Kumasi  Monitor     2      NULL        0.12
+4    | 105       Kumasi  Headphones  4      42          0.05
+1    | 102       Accra   Headphones  5      45.5        0.05
+0    | 101       Accra   Laptop      2      1200        0.1
+----------------------------------------------------------------
+[6 cs x 6 feat]
+```
+
+Because this is the simple overload, both keys inherit the same `ascending = false`
+setting. That means `city` sorts descending (`Tema`, then `Kumasi`, then `Accra`),
+and `unit_price` sorts descending inside each city as the tie-break key. If you want
+mixed directions like "city ascending, price descending", you must use the
+`ArrangeSpec` overload from Example 2.
 
 ## Notes
 
 - `arrange()` is the general row-ordering surface for `DataFrame`.
 - `top()` and `bottom()` are shorthand for `arrange(...).head(...)`.
 - `arrange()` does not deduplicate ties; equal-key rows keep their stable relative order.
+- When you pass several feature names plus one `ascending` flag, that direction is
+  shared by every key. Per-key direction requires `ArrangeSpec`.
 - If you need to sort case labels rather than feature values, use [`label().sort()`](label.md).

@@ -1,8 +1,8 @@
-# `Workflow::has_model`
+# `workflow::has_model`
 
 ## API Signature
 
-- `Workflow::has_model() -> bool`
+- `workflow::has_model() -> bool`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::has_model();
+auto value = workflow::has_model();
 out.info("has_model", value);
 ```
 

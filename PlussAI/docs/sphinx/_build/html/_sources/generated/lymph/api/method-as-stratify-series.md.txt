@@ -3,7 +3,6 @@
 ## API Signature
 
 - `as_stratify_series(thread: const pluss::table::Thread&) -> Series`
-- `as_stratify_series(thread: const pluss::table::Thread&) -> Series`
 
 ## Notes
 

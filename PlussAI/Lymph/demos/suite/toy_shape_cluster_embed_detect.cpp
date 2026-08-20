@@ -19,7 +19,7 @@ int main() {
   };
 
   const lymph::shape::Result profile = lymph::shape::data(shaped, {"log_axis", "sqrt_axis", "wave"}).run();
-  lymph::Model shaped_model = lymph::models::linear_regression();
+  lymph::Model shaped_model = lymph::model::linear_regression();
   profile.plan().apply(shaped_model);
 
   std::vector<double> points{};
@@ -40,11 +40,11 @@ int main() {
   lymph::ClusterFamilyOptions kmeans{};
   kmeans.clusters = 2;
   kmeans.restarts = 1;
-  const lymph::cluster::Result clustered = lymph::cluster::model(lymph::models::kmeans(kmeans)).run(groups);
+  const lymph::cluster::Result clustered = lymph::cluster::model(lymph::model::kmeans(kmeans)).run(groups);
 
   lymph::DecomposeFamilyOptions pca{};
   pca.components = 1;
-  const lymph::embed::Result embedded = lymph::embed::model(lymph::models::pca(pca)).run(shaped);
+  const lymph::embed::Result embedded = lymph::embed::model(lymph::model::pca(pca)).run(shaped);
 
   lymph::prep::OutlierIsolatorOptions iso{};
   iso.estimators = 7;
@@ -53,7 +53,7 @@ int main() {
   iso.contamination_auto = false;
   iso.contamination = 0.05;
   const lymph::detect::Result detected =
-      lymph::detect::model(lymph::models::isolation_detector(iso)).run(groups);
+      lymph::detect::model(lymph::model::isolation_detector(iso)).run(groups);
 
   std::cout << "shape features: " << profile.feature_count() << "\n";
   std::cout << "clusters: " << clustered.cluster_count() << "\n";

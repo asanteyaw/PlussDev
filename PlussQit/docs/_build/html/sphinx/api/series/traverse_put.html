@@ -36,7 +36,8 @@
 
           <div class="body" role="main">
             
-  <section id="series-traverse-put">
+  <!-- pluss-hand-authored -->
+<section id="series-traverse-put">
 <h1>Series::traverse_put<a class="headerlink" href="#series-traverse-put" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
 <section id="signature">
@@ -47,52 +48,63 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a modified copy of the series after writing through a
-view-representable selector.</p>
-<p>This is the value-semantic sibling of <a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a>. It
-keeps the same strict selector gate and the same write rules, but the update is
-applied to a cloned series rather than to the current object.</p>
-<p>Use it when all of the following are true:</p>
+<p>Returns a patched copy of the series after writing through a selector that must
+remain view-representable.</p>
+<p>This is the value-semantic sibling of <a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a>.
+The write rules are the same, the accepted selector subset is the same, and the
+selector normalization is the same. The only difference is ownership:</p>
 <ul class="simple">
-<li><p>you want selector-based patching</p></li>
-<li><p>you want the selector restricted to ordinary traversal/view patterns</p></li>
-<li><p>you want the original value left untouched</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code> mutates the current series</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">traverse_put()</span></code> leaves the current series alone and returns a modified copy</p></li>
 </ul>
+<p>So <code class="docutils literal notranslate"><span class="pre">traverse_put()</span></code> is the method to choose when you want a clean “derive a
+patched result” style, but you also want the selector itself constrained to
+plain traversal/view semantics.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>specs</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Of&lt;ExtractSpec&gt;</span></code>)</p>
 <p>The destination selector.</p>
-<p>Allowed forms are exactly the view-representable subset used by
+<p>This method accepts only the view-representable subset shared with
 <a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_slice()</span></code></span></a> and <a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a>:</p>
 <ul class="simple">
 <li><p>scalar indices</p></li>
 <li><p>positive-step slices</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code></p></li>
 </ul>
-<p>Anything that would require materialized advanced indexing is rejected before
-the copy is patched.</p>
+<p>Rejected selectors include:</p>
+<ul class="simple">
+<li><p>negative-step slices</p></li>
+<li><p>bool masks</p></li>
+<li><p>integer advanced index series</p></li>
+<li><p>any mixed selector that requires materialized advanced indexing</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> is allowed because it is only result-shape bookkeeping; it does not
+turn the write into advanced indexing.</p>
 <p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
 <p>The replacement data.</p>
-<p>This method accepts either:</p>
+<p>Two value modes are supported:</p>
 <ul class="simple">
-<li><p>a scalar source, broadcast across the selected region</p></li>
-<li><p>a non-scalar source whose element count exactly matches the selected region</p></li>
+<li><p>scalar source: broadcast across the selected destination region</p></li>
+<li><p>non-scalar source: element count must exactly match the selected destination
+element count</p></li>
 </ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A new series containing the patched result.</p>
+A new series containing the write result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Start from a grid that has already been modified in place through
-<code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code>, then derive one more patch without changing that input.</p>
+<p>Example 1. Shared setup. This starting grid matches the state produced by the
+in-place <code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code> examples.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w"> </span><span class="mi">-5</span><span class="p">,</span><span class="w"> </span><span class="mi">-5</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">,</span>
+<span class="w">     </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">,</span>
+<span class="w">     </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">300.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-5.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
@@ -101,13 +113,14 @@ A new series containing the patched result.</p>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
-data=[[10, 100, 12, 13],
-  [20, 200, 22, 23],
-  [30, 300, -5, -5]]
+data=[[1, 100, 12, 13],
+  [2, 200, 22, 23],
+  [3, 300, -5, -5]]
 </pre></div>
 </div>
-<p>Example 2. The returned copy receives the new patch.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">first_two</span><span class="p">{</span>
+<p>Example 2. A copy-returning write patches the result and leaves the source
+unchanged.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">first_two</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">},</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)};</span>
 
@@ -123,11 +136,11 @@ data=[[10, 100, 12, 13],
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
 data=[[999, 999, 12, 13],
-  [20, 200, 22, 23],
-  [30, 300, -5, -5]]
+  [2, 200, 22, 23],
+  [3, 300, -5, -5]]
 </pre></div>
 </div>
-<p>Example 3. The source series remains unchanged after the copy-returning call.</p>
+<p>Example 3. The original input is still unchanged after <code class="docutils literal notranslate"><span class="pre">traverse_put()</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -135,33 +148,95 @@ data=[[999, 999, 12, 13],
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[1, 100, 12, 13],
+  [2, 200, 22, 23],
+  [3, 300, -5, -5]]
+</pre></div>
+</div>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> is still legal on the copy-returning surface.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">with_newaxis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">NewAxis</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">}};</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">traverse_put</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">(</span><span class="n">with_newaxis</span><span class="p">),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">}));</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
 data=[[10, 100, 12, 13],
   [20, 200, 22, 23],
   [30, 300, -5, -5]]
 </pre></div>
 </div>
-<p>This is the entire reason to choose <code class="docutils literal notranslate"><span class="pre">traverse_put()</span></code> over
-<a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a>: the selector rules are the same, but the
-ownership outcome is different.</p>
+<p>The added axis affects selector normalization, not the final writable rank.</p>
+<p>Example 5. Reverse slices are rejected because they are not view-representable
+on this surface.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">reverse_specs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Slice</span><span class="o">::</span><span class="n">kUnbounded</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">)};</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">traverse_put</span><span class="p">(</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">(</span><span class="n">reverse_specs</span><span class="p">),</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::traverse_put: selector is not view-representable; use extract() or extract_put() for materializing paths
+</pre></div>
+</div>
+<p>Example 6. Bool masks are rejected for the same reason.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">row_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask_specs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">      </span><span class="n">row_mask</span><span class="p">,</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">()};</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">traverse_put</span><span class="p">(</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mask_specs</span><span class="p">),</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::traverse_put: selector is not view-representable; use extract() or extract_put() for materializing paths
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">traverse_put()</span></code> is the strict, copy-returning selector-write surface.</p></li>
-<li><p>Prefer it when you are building derived values and want accidental mutation
-ruled out.</p></li>
-<li><p>If the selector needs masking, reverse stepping, or other materializing
-behavior, use <a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put()</span></code></span></a> instead.</p></li>
-<li><p>If you want the same selector gate but in-place mutation, use
+<li><p>Choose it when the selector should stay in the ordinary traversal/view lane
+and mutation would be undesirable.</p></li>
+<li><p>If the selector needs masks, reverse steps, or explicit advanced indexing,
+use <a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put()</span></code></span></a> instead.</p></li>
+<li><p>If you want the same selector gate but in place, use
 <a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_put_</span></code></span></a>: in-place mutation with the same
-selector restrictions.</p></li>
+<li><p><a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_put_</span></code></span></a>: in-place sibling with the same
+selector gate.</p></li>
 <li><p><a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put</span></code></span></a>: copy-returning writes without the
 view-only restriction.</p></li>
 <li><p><a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_slice</span></code></span></a>: read-side companion.</p></li>

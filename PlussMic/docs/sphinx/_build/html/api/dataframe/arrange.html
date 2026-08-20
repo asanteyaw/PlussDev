@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -43,7 +43,7 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">arrange</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">ArrangeSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">arrange</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ArrangeSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">arrange</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span>
 <span class="w">                   </span><span class="kt">bool</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
@@ -66,6 +66,9 @@ the reordered frame. Every feature is carried along unchanged; only case order m
 policy.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code> overload accepts per-feature direction and null-placement settings.</p></li>
 </ul>
+<p>With more than one key, <code class="docutils literal notranslate"><span class="pre">arrange()</span></code> uses ordinary lexicographic / tuple ordering:
+the first feature is primary, the second only breaks ties within equal first-feature
+values, the third only breaks remaining ties, and so on.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -131,8 +134,50 @@ keys. Case labels travel with their row; only row position changes.</p>
 <span class="p">});</span>
 </pre></div>
 </div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================================================================
+     | order_id  city    product     units  unit_price  discount
+----------------------------------------------------------------
+0    | 101       Accra   Laptop      2      1200        0.1     
+1    | 102       Accra   Headphones  5      45.5        0.05    
+4    | 105       Kumasi  Headphones  4      42          0.05    
+5    | 106       Kumasi  Monitor     2      NULL        0.12    
+2    | 103       Tema    Laptop      1      1150        NULL     
+3    | 104       Tema    Monitor     3      320         0.08    
+----------------------------------------------------------------
+[6 cs x 6 feat]
+</pre></div>
+</div>
 <p>Rows are grouped by <code class="docutils literal notranslate"><span class="pre">city</span></code> alphabetically first, and within each city the higher
 <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> rows come first.</p>
+<p>Example 3. The simple overload applies one shared direction to every key.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">uniform_desc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">arrange</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;unit_price&quot;</span><span class="p">},</span><span class="w"> </span><span class="cm">/*ascending=*/</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="cm">/*nulls_last=*/</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">uniform_desc</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================================================================
+     | order_id  city    product     units  unit_price  discount
+----------------------------------------------------------------
+3    | 104       Tema    Monitor     3      320         0.08
+2    | 103       Tema    Laptop      1      1150        NULL
+5    | 106       Kumasi  Monitor     2      NULL        0.12
+4    | 105       Kumasi  Headphones  4      42          0.05
+1    | 102       Accra   Headphones  5      45.5        0.05
+0    | 101       Accra   Laptop      2      1200        0.1
+----------------------------------------------------------------
+[6 cs x 6 feat]
+</pre></div>
+</div>
+<p>Because this is the simple overload, both keys inherit the same <code class="docutils literal notranslate"><span class="pre">ascending</span> <span class="pre">=</span> <span class="pre">false</span></code>
+setting. That means <code class="docutils literal notranslate"><span class="pre">city</span></code> sorts descending (<code class="docutils literal notranslate"><span class="pre">Tema</span></code>, then <code class="docutils literal notranslate"><span class="pre">Kumasi</span></code>, then <code class="docutils literal notranslate"><span class="pre">Accra</span></code>),
+and <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> sorts descending inside each city as the tie-break key. If you want
+mixed directions like “city ascending, price descending”, you must use the
+<code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code> overload from Example 2.</p>
 </section>
 </section>
 <section id="notes">
@@ -141,6 +186,8 @@ keys. Case labels travel with their row; only row position changes.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">arrange()</span></code> is the general row-ordering surface for <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">top()</span></code> and <code class="docutils literal notranslate"><span class="pre">bottom()</span></code> are shorthand for <code class="docutils literal notranslate"><span class="pre">arrange(...).head(...)</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arrange()</span></code> does not deduplicate ties; equal-key rows keep their stable relative order.</p></li>
+<li><p>When you pass several feature names plus one <code class="docutils literal notranslate"><span class="pre">ascending</span></code> flag, that direction is
+shared by every key. Per-key direction requires <code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code>.</p></li>
 <li><p>If you need to sort case labels rather than feature values, use <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().sort()</span></code></span></a>.</p></li>
 </ul>
 </section>

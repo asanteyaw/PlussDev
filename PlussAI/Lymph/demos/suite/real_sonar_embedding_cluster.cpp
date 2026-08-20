@@ -25,12 +25,12 @@ int main() {
 
   lymph::DecomposeFamilyOptions pca{};
   pca.components = 3;
-  const lymph::embed::Result embedded = lymph::embed::model(lymph::models::pca(pca)).run(raw, data);
+  const lymph::embed::Result embedded = lymph::embed::model(lymph::model::pca(pca)).run(raw, data);
 
   lymph::ClusterFamilyOptions kmeans{};
   kmeans.clusters = 2;
   kmeans.restarts = 2;
-  const lymph::cluster::Result clustered = lymph::cluster::model(lymph::models::kmeans(kmeans)).run(raw, data);
+  const lymph::cluster::Result clustered = lymph::cluster::model(lymph::model::kmeans(kmeans)).run(raw, data);
 
   std::cout << "sonar components: " << embedded.component_count() << "\n";
   std::cout << "sonar clusters: " << clustered.cluster_count() << "\n";

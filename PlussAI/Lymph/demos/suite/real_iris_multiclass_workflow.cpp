@@ -25,7 +25,7 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::random_forest_classifier({.learners = 51, .subsample = 1.0}));
+      lymph::model::random_forest_classifier({.learners = 51, .subsample = 1.0}));
 
   wf.learn_(data);
   const lymph::MetricReport report = wf.assess(data);

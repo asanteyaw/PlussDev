@@ -1,0 +1,79 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 84e68eb71d88 -->
+
+# DataFrameContingencyTableBuilder::totals
+
+[Back to DataFrame contingency accessor API Reference](../../dataframe_contingency_accessor_api_reference)
+
+## Signature
+
+```cpp
+DataFrameContingencyTableBuilder::totals() const -> DataFrameContingencyTableBuilder
+```
+
+## What It Does
+
+Configures the contingency builder to append row totals, column totals, and the
+bottom-right grand total when the table is materialized.
+
+## Parameters
+
+`None`
+
+## Returns
+
+`DataFrameContingencyTableBuilder`
+    A new builder with totals enabled.
+
+## Examples
+
+Example 1. Append a `Total` row and a `Total` column.
+
+```cpp
+using namespace pluss::table;
+
+auto df = DataFrame({
+    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+});
+
+auto out = df.contingency("city", "channel")
+             .totals()
+             .count();
+std::cout << out;
+```
+
+### Output
+
+```text
+===============================
+     | city   Card  Cash  Total
+-------------------------------
+0    | A      1     1     2
+1    | B      1     2     3
+2    | Total  2     3     5
+-------------------------------
+[3 cs x 4 feat]
+```
+
+## Notes
+
+- Totals apply to count tables, normalized share tables, and value reducers.
+- For normalized tables, totals reflect the active normalization mode rather
+  than always behaving like raw counts.
+
+## See Also
+
+- [`DataFrameContingencyTableBuilder::nototals`](nototals.md)
+- [`DataFrameContingencyTableBuilder::count`](count.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sum.html">
+    <span class="label">Previous</span>
+    <span class="title">sum</span>
+  </a>
+  <a class="next-link" href="var.html">
+    <span class="label">Next</span>
+    <span class="title">var</span>
+  </a>
+</div>

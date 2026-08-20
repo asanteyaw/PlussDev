@@ -22,7 +22,7 @@ Public fields on this type:
 
 - `std::string name{}`
 - `double objective = std::numeric_limits<double>::quiet_NaN()`
-- `CrossValidationReport cv{}`
+- `metrics::CrossValidationReport cv{}`
 
 ## Examples
 

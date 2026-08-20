@@ -217,7 +217,7 @@ int main() {
 
   //========== Cell 12: Cross-Validation Comparison ========
   // Equivalent in spirit to sklearn cross_val_score model ranking.
-  lymph::CrossValidationOptions cv_options{};
+  lymph::metrics::CrossValidationOptions cv_options{};
   cv_options.plan = pluss::ai::nodej::CVPlanKind::CrossVal;
   cv_options.folds = 3;
   cv_options.shuffle = true;
@@ -225,9 +225,10 @@ int main() {
   cv_options.deterministic = true;
 
   const auto t_cv0 = Clock::now();
-  const auto linear_cv = lymph::cross_validate(linear_wf.model_spec().value(), train_prepared, train_y, cv_options, train_options, assess_options);
-  const auto tree_cv = lymph::cross_validate(tree_wf.model_spec().value(), train_prepared, train_y, cv_options, train_options, assess_options);
-  const auto forest_cv = lymph::cross_validate(forest_wf.model_spec().value(), train_prepared, train_y, cv_options, train_options, assess_options);
+  const auto cv_plan = lymph::validate::cross(cv_options);
+  const auto linear_cv = cv_plan.run(linear_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
+  const auto tree_cv = cv_plan.run(tree_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
+  const auto forest_cv = cv_plan.run(forest_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
   const auto t_cv1 = Clock::now();
   out.writef("cross_validate block seconds={}", secs(t_cv0, t_cv1)).endln();
 

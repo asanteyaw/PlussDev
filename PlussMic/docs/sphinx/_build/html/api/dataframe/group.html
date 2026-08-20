@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -60,7 +60,9 @@ through <code class="docutils literal notranslate"><span class="pre">GroupOption
 <li><p><code class="docutils literal notranslate"><span class="pre">.transform({...})</span></code> for broadcasted grouped values back to original row order</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.filter(keep)</span></code> for keeping or dropping whole groups</p></li>
 <li><p>grouped convenience terminals such as <code class="docutils literal notranslate"><span class="pre">.count()</span></code>, <code class="docutils literal notranslate"><span class="pre">.sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">.mean()</span></code>, <code class="docutils literal notranslate"><span class="pre">.median()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">.min()</span></code>, <code class="docutils literal notranslate"><span class="pre">.max()</span></code>, <code class="docutils literal notranslate"><span class="pre">.std()</span></code>, <code class="docutils literal notranslate"><span class="pre">.var()</span></code>, <code class="docutils literal notranslate"><span class="pre">.mode()</span></code>, and <code class="docutils literal notranslate"><span class="pre">.ndistinct()</span></code></p></li>
+<code class="docutils literal notranslate"><span class="pre">.min()</span></code>, <code class="docutils literal notranslate"><span class="pre">.max()</span></code>, <code class="docutils literal notranslate"><span class="pre">.std()</span></code>, <code class="docutils literal notranslate"><span class="pre">.var()</span></code>, <code class="docutils literal notranslate"><span class="pre">.mode()</span></code>, and <code class="docutils literal notranslate"><span class="pre">.ndistinct()</span></code>, each
+available either as a no-argument “all remaining value features” form or a
+targeted selected-feature form</p></li>
 </ul>
 <p>The mental model is:</p>
 <ol class="arabic simple">
@@ -220,7 +222,10 @@ grouped handle, and grouped terminals return a new <code class="docutils literal
 <li><p>Explicit <code class="docutils literal notranslate"><span class="pre">.agg({...})</span></code> is the most precise form when you want mixed operations or
 custom output names.</p></li>
 <li><p>Convenience terminals such as <code class="docutils literal notranslate"><span class="pre">.mean()</span></code> and <code class="docutils literal notranslate"><span class="pre">.sum()</span></code> operate on the current frame’s
-non-key value features.</p></li>
+non-key value features by default.</p></li>
+<li><p>Those same convenience terminals also accept one or more feature names when you want
+to aggregate only a targeted subset, for example
+<code class="docutils literal notranslate"><span class="pre">group().by({&quot;city&quot;}).mean({&quot;price&quot;})</span></code>.</p></li>
 <li><p>Convenience <code class="docutils literal notranslate"><span class="pre">.count()</span></code> counts non-null values for the current non-key value features.
 Use <code class="docutils literal notranslate"><span class="pre">.agg({{&quot;count&quot;,</span> <span class="pre">&quot;&quot;,</span> <span class="pre">DataFrame::GroupOp::Count}})</span></code> when you want row count per
 group as an explicit aggregate.</p></li>

@@ -18,6 +18,7 @@ PER_METHOD_CLASSES = {
     'DataFrameNoteAccessor', 'DataFrameTimelineAccessor', 'DataFrameLabelAccessor',
     'DataFrameFeatureAxisAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
     'DataFrameTsWindowAccessor', 'DataFrameTsResampler', 'DataFrameGroupBuilder',
+    'DataFrameSortBuilder', 'ContingencyTable',
     'TimeSeriesAccessor', 'DataFrameCastAccessor', 'ThreadPlotAccessor',
     'AtlasLabelAccessor', 'AtlasTimelineAccessor', 'AtlasTsAccessor',
     'AtlasTsResampler', 'AtlasPlotAccessor',
@@ -186,6 +187,23 @@ CLASS_CONFIG = {
         'subtitle': 'Practical DataFrameGroupBuilder API Reference',
         'intro': 'This page documents the public grouped-workflow surface entered via `DataFrame::group()` -- the `DataFrameGroupBuilder` returned by `group()` itself, and the `DataFrameGrouped` handle returned by its `.by(...)`.',
         'binder': 'group()',
+    },
+    'DataFrameSortBuilder': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_sort_accessor_api_reference.md',
+        'title': 'DataFrameSortBuilder API Reference',
+        'subtitle': 'Practical DataFrameSortBuilder API Reference',
+        'intro': 'This page documents the value-ordering workflow entered via `DataFrame::sort()` and continued through `DataFrameSortBuilder`.',
+        'binder': 'sort()',
+    },
+    'ContingencyTable': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_contingency_accessor_api_reference.md',
+        'title': 'ContingencyTable API Reference',
+        'subtitle': 'Practical ContingencyTable API Reference',
+        'intro': 'This page documents the retained `ContingencyTable` object returned by `DataFrame::contingency(...)`.',
+        'binder': 'contingency(...)',
+        'nav_title': 'ContingencyTable',
     },
     'Thread': {
         'header': ROOT / 'PlussMic/src/table/Thread.h',
@@ -573,6 +591,8 @@ METHOD_PAGE_DIR = {
     'DataFrameTsWindowAccessor': 'dataframe-ts-window',
     'DataFrameTsResampler': 'dataframe-ts-resample',
     'DataFrameGroupBuilder': 'dataframe-group',
+    'DataFrameSortBuilder': 'dataframe-sort',
+    'ContingencyTable': 'dataframe-contingency',
     'TimeSeriesAccessor': 'thread-ts',
     'DataFrameCastAccessor': 'dataframe-cast',
     'ThreadPlotAccessor': 'thread-plot',
@@ -620,6 +640,8 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
         'DataFrameFeatureAxisAccessor',
         'DataFramePlot3DAccessor',
         'DataFrameTsAccessor',
+        'DataFrameSortBuilder',
+        'ContingencyTable',
     ],
     'DataFrameTsAccessor': [
         'DataFrameTsWindowAccessor',
@@ -1194,6 +1216,13 @@ def ordered_method_names(methods: list[Method]) -> list[str]:
     for name in grouped_names:
         by_letter.setdefault(name[0].upper(), []).append(name)
     return [name for letter in sorted(by_letter.keys()) for name in by_letter[letter]]
+
+
+def methods_for_index(extracted: dict[str, list[Method]], class_name: str) -> list[Method]:
+    methods = list(extracted.get(class_name, []))
+    if class_name == 'DataFrameGroupBuilder':
+        methods.extend(extracted.get('DataFrameGrouped', []))
+    return methods
 
 
 def parse_hidden_toctree_entries(index_path: pathlib.Path) -> list[str]:
@@ -6515,6 +6544,32 @@ def ts_resampler_accessor_base() -> str:
     return ts_accessor_base() + '\n' + 'auto resampler = ts.resample("ts", "1D");'
 
 
+def group_builder_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Accra\", \"Tema\", \"Tema\"}))},
+    {\"units\", pluss::table::Thread(pluss::make_series({2.0, 5.0, 1.0, 3.0}))},
+    {\"price\", pluss::table::Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0}))},
+});
+auto grouped = df.group();"""
+
+
+def sort_builder_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"city\", pluss::table::Thread(pluss::make_note({\"Tema\", \"Accra\", \"Accra\", \"Tema\"}))},
+    {\"sales\", pluss::table::Thread(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
+});
+auto sorter = df.sort();"""
+
+
+def contingency_accessor_base() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"city\", pluss::table::Thread(pluss::make_note({\"A\", \"A\", \"B\", \"B\", \"B\"}))},
+    {\"channel\", pluss::table::Thread(pluss::make_note({\"Cash\", \"Card\", \"Cash\", \"Cash\", \"Card\"}))},
+    {\"amount\", pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+});
+auto contingency = df.contingency(\"city\", \"channel\");"""
+
+
 def thread_plot_accessor_base() -> str:
     return """auto revenue = pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}));
 auto plot = revenue.plot();"""
@@ -6795,6 +6850,9 @@ ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
     'DataFrameTsAccessor': ts_accessor_base,
     'DataFrameTsWindowAccessor': ts_window_accessor_base,
     'DataFrameTsResampler': ts_resampler_accessor_base,
+    'DataFrameGroupBuilder': group_builder_base,
+    'DataFrameSortBuilder': sort_builder_base,
+    'ContingencyTable': contingency_accessor_base,
     'ThreadPlotAccessor': thread_plot_accessor_base,
     'AtlasLabelAccessor': atlas_label_accessor_base,
     'AtlasTimelineAccessor': atlas_timeline_accessor_base,
@@ -6842,6 +6900,9 @@ ACCESSOR_STUB_VAR: dict[str, str] = {
     'DataFrameTsAccessor': 'ts',
     'DataFrameTsWindowAccessor': 'window',
     'DataFrameTsResampler': 'resampler',
+    'DataFrameGroupBuilder': 'grouped',
+    'DataFrameSortBuilder': 'sorter',
+    'ContingencyTable': 'ct',
     'ThreadPlotAccessor': 'plot',
     'AtlasLabelAccessor': 'labels',
     'AtlasTimelineAccessor': 'timelines',
@@ -6920,7 +6981,11 @@ def placeholder_arg_for_param(param_name: str, param_type: str) -> str:
 def accessor_stub_example(class_name: str, method: Method) -> str:
     base = ACCESSOR_STUB_BASE[class_name]()
     var = ACCESSOR_STUB_VAR[class_name]
-    args = ', '.join(placeholder_arg_for_param(name, typ) for name, typ in method.params)
+    def arg_for(name: str, typ: str) -> str:
+        if class_name == 'ContingencyTable' and name == 'feature' and 'string_view' in typ:
+            return '"amount"'
+        return placeholder_arg_for_param(name, typ)
+    args = ', '.join(arg_for(name, typ) for name, typ in method.params)
     return base + f'\n\nauto out = {var}.{method.name}({args});\nstd::cout << out;'
 
 
@@ -9971,6 +10036,24 @@ def build_method_index_page(class_name: str, methods: list[Method]) -> str:
         'The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.',
         '',
     ])
+    if class_name == 'DataFrameGroupBuilder':
+        lines.extend([
+            '`by()` fixes the grouping keys, then `DataFrameGrouped` executes the grouped work:',
+            '',
+            '- Plan grouping keys: [`by()`](api/dataframe-group/by.md)',
+            '- Explicit grouped reductions: [`agg()`](api/dataframe-group/agg.md), [`transform()`](api/dataframe-group/transform.md), [`filter()`](api/dataframe-group/filter.md), [`yield()`](api/dataframe-group/yield.md)',
+            '- Uniform grouped reducers: [`count()`](api/dataframe-group/count.md), [`ndistinct()`](api/dataframe-group/ndistinct.md), [`sum()`](api/dataframe-group/sum.md), [`mean()`](api/dataframe-group/mean.md), [`median()`](api/dataframe-group/median.md), [`min()`](api/dataframe-group/min.md), [`max()`](api/dataframe-group/max.md), [`std()`](api/dataframe-group/std.md), [`var()`](api/dataframe-group/var.md), [`mode()`](api/dataframe-group/mode.md), [`mode_ties()`](api/dataframe-group/mode_ties.md)',
+            '',
+        ])
+    elif class_name == 'DataFrameSortBuilder':
+        lines.extend([
+            '`sort()` enters a reusable sort plan, then the builder grows or executes it:',
+            '',
+            '- Plan keys: [`by()`](api/dataframe-sort/by.md), [`then()`](api/dataframe-sort/then.md), [`within()`](api/dataframe-sort/within.md)',
+            '- Refine the active key: [`asc()`](api/dataframe-sort/asc.md), [`desc()`](api/dataframe-sort/desc.md), [`nulls_first()`](api/dataframe-sort/nulls_first.md), [`nulls_last()`](api/dataframe-sort/nulls_last.md)',
+            '- Materialize: [`order()`](api/dataframe-sort/order.md), [`yield()`](api/dataframe-sort/yield.md), [`head()`](api/dataframe-sort/head.md), [`tail()`](api/dataframe-sort/tail.md)',
+            '',
+        ])
 
     children = ACCESSOR_CHILDREN.get(class_name, [])
     if class_name == 'Registry':
@@ -10012,6 +10095,9 @@ def build_method_index_page(class_name: str, methods: list[Method]) -> str:
         ':maxdepth: 1',
         '',
     ])
+    for child in children:
+        child_cfg = CLASS_CONFIG[child]
+        lines.append(child_cfg['output'].stem)
     for name in ordered_names:
         lines.append(method_page_rel_from_index(class_name, name))
     lines.extend(['```', ''])
@@ -10165,7 +10251,7 @@ def write_api_nav_manifest(extracted: dict[str, list[Method]]) -> None:
             'title': cfg.get('nav_title', class_name),
             'slug': METHOD_PAGE_DIR[class_name],
             'landing': f"{cfg['output'].stem}.html",
-            'methods': ordered_method_names(extracted.get(class_name, [])),
+            'methods': ordered_method_names(methods_for_index(extracted, class_name)),
         }
     for class_name, cfg in MANUAL_API_NAV.items():
         payload[class_name] = {
@@ -10213,9 +10299,17 @@ def main(argv: list[str] | None = None) -> int:
         methods = [m for m in methods if m.name not in {'begin', 'end'} or class_name in {'Catalog', 'Registry'}]
         extracted[class_name] = methods
 
+    try:
+        extracted['DataFrameGrouped'] = extract_methods('DataFrameGrouped', ROOT / 'PlussMic/src/table/DataFrame.h')
+    except (FileNotFoundError, RuntimeError):
+        extracted['DataFrameGrouped'] = []
+
     write_api_nav_manifest(extracted)
 
     known_methods = {class_name: set(ordered_method_names(methods)) for class_name, methods in extracted.items()}
+    known_methods['DataFrameGroupBuilder'] = set(
+        ordered_method_names(methods_for_index(extracted, 'DataFrameGroupBuilder'))
+    )
     all_drifted: list[str] = []
 
     for class_name, cfg in CLASS_CONFIG.items():
@@ -10224,6 +10318,7 @@ def main(argv: list[str] | None = None) -> int:
         methods = extracted[class_name]
         try:
             if class_name in PER_METHOD_CLASSES:
+                methods = methods_for_index(extracted, class_name)
                 full_page = build_page(class_name, methods)
                 chunks = extract_method_chunks(full_page)
                 ordered_names = ordered_method_names(methods)

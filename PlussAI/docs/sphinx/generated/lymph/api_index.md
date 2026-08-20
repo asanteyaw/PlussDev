@@ -1,6 +1,6 @@
 # Lymph Full API Reference: Method Index
 
-Total method pages: **377**
+Total method pages: **380**
 Total data-type pages: **39**
 
 ## Data Types
@@ -143,9 +143,9 @@ api/method-load-policy
 api/method-log1p
 api/method-make
 api/method-make-branch-transformer
-api/method-make-cross-validation-split-options
 api/method-make-feature-transformer
 api/method-make-triplet
+api/method-make-validation-split-options
 api/method-max-abs-diff
 api/method-metrics-as-stratify-series
 api/method-metrics-crossvalidationreport-board
@@ -283,11 +283,13 @@ api/method-plan-features
 api/method-plan-folds
 api/method-plan-gap
 api/method-plan-horizon
+api/method-plan-last
 api/method-plan-lookback
 api/method-plan-options
 api/method-plan-repeat
 api/method-plan-seed
 api/method-plan-shuffle
+api/method-plan-splits
 api/method-plan-workers
 api/method-policy-allow
 api/method-policy-apply
@@ -386,6 +388,7 @@ api/method-timeseriessplit-make-holdout-split-options
 api/method-timeseriessplit-make-time-series-split-options
 api/method-timeseriessplit-output-render
 api/method-timeseriessplit-simple-imputer-strategy-name
+api/method-timeseriessplit-timeseries-split
 api/method-to-csr
 api/method-tune-ledger
 api/method-tune-specs

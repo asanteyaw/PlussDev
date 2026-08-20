@@ -31,12 +31,12 @@ int main() {
   };
 
   lymph::Builder candidates = lymph::builder::build({
-      {"bayes", lymph::models::gaussian_nb_classifier()},
-      {"tree", lymph::models::decision_tree_classifier({.max_depth = 2})},
-      {"knn", lymph::models::knn_classifier({.k = 3})},
+      {"bayes", lymph::model::gaussian_nb_classifier()},
+      {"tree", lymph::model::decision_tree_classifier({.max_depth = 2})},
+      {"knn", lymph::model::knn_classifier({.k = 3})},
   });
 
-  lymph::CrossValidationOptions cv{};
+  lymph::metrics::CrossValidationOptions cv{};
   cv.folds = 2;
   cv.shuffle = false;
   cv.max_parallel = 1;
@@ -62,7 +62,7 @@ int main() {
       {.name = "regularization_strength", .values = {0.01, 0.1, 1.0}},
   };
   const auto make_model = [](const lymph::GridPoint& point) {
-    lymph::Model model = lymph::models::logistic_regression({
+    lymph::Model model = lymph::model::logistic_regression({
         .regularization_strength = point.at("regularization_strength"),
         .fit_intercept = true,
     });

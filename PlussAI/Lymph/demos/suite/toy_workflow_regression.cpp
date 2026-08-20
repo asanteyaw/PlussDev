@@ -41,7 +41,7 @@ int main() {
               {"shape", lymph::stage::power_map()},
           }),
       },
-      lymph::models::random_forest_regressor({.learners = 31, .subsample = 1.0}),
+      lymph::model::random_forest_regressor({.learners = 31, .subsample = 1.0}),
       flow);
 
   lymph::TrainOptions train{};

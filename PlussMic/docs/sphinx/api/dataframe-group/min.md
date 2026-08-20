@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e80a8e1df68b -->
 
 # DataFrameGrouped::min
 

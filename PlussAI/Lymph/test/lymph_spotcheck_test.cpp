@@ -53,11 +53,11 @@ DataFrame frame() {
 
 bool run_spotcheck_checks(std::ostream* err) {
   Builder registry = builder::build({
-      {"bayes", models::gaussian_nb_classifier()},
-      {"tree", models::decision_tree_classifier({.max_depth = 2})},
+      {"bayes", model::gaussian_nb_classifier()},
+      {"tree", model::decision_tree_classifier({.max_depth = 2})},
   });
 
-  CrossValidationOptions cv{};
+  metrics::ValidationOptions cv{};
   cv.folds = 2;
   cv.shuffle = false;
   cv.max_parallel = 1;
@@ -104,7 +104,7 @@ bool run_spotcheck_checks(std::ostream* err) {
     return false;
   }
 
-  CrossValidationOptions time_cv{};
+  metrics::ValidationOptions time_cv{};
   time_cv.plan = CVPlanKind::TSCrossVal;
   time_cv.folds = 2;
   time_cv.shuffle = false;
@@ -117,7 +117,7 @@ bool run_spotcheck_checks(std::ostream* err) {
   Workflow time_design = workflow::make(Policy{});
   time_design.time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
 
-  const CrossValidationOptions effective_time =
+  const metrics::ValidationOptions effective_time =
       validate::detail::effective_time_options_(time_cv, time_design);
   if (effective_time.time_gap != 1 || effective_time.time_test_size != 1 || effective_time.time_max_train_size != 4) {
     if (err) *err << "spotcheck should use the shared Workflow/Payload time option merge\n";

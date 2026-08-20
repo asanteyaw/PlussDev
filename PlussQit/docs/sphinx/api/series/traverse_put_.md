@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Series::traverse_put_
 
 [Back to Series API Reference](../../series_api_reference)
@@ -10,20 +12,17 @@ Series::traverse_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Ser
 
 ## What It Does
 
-Writes into the current series through a selector that must remain
+Writes into the current series through a selector that must stay
 view-representable, mutates in place, and returns `*this`.
 
-This is the strict write-side companion to [`traverse_slice()`](traverse_slice.md).
-It uses selector syntax, but it does not accept the full `extract()` surface.
-Its contract is intentionally narrower:
+This is the write-side companion to [`traverse_slice()`](traverse_slice.md). It
+accepts dynamic selector syntax, but only the subset that can still be lowered
+into ordinary view operations such as `select()`, `slice()`, and `unsqueeze()`.
 
-- destination selection must be representable as an ordinary view traversal
-- after that selector check passes, writing follows the usual scalar-broadcast
-  or exact-cardinality rules
-
-So `traverse_put_()` is best when you want selector-based writes, but you also
-want the API to reject anything that would require materializing scattered
-positions.
+That restriction is not a limitation by accident. It is the reason to use the
+method at all. `traverse_put_()` gives you selector-based writes while still
+guarding against drifting into masked or gathered writes that would need
+materialized destination positions.
 
 ## Parameters
 
@@ -31,36 +30,36 @@ positions.
 
 The destination selector.
 
-Accepted selectors are the same view-representable subset used by
+Accepted selector forms are the same view-representable subset used by
 [`traverse_slice()`](traverse_slice.md):
 
 - scalar indices
 - positive-step slices
 - `SliceAll()`
-- `Ellipsis`
-- `NewAxis`
+- `Ellipsis()`
+- `NewAxis()`
 
 Rejected selectors include:
 
 - negative-step slices
-- boolean masks
+- bool masks
 - integer advanced index series
-- mixed selectors that require materialized advanced indexing
+- any mixed selector that requires materialized advanced indexing
 
-`NewAxis` is still permitted because it is view-like bookkeeping rather than a
-materializing index operation.
+`NewAxis()` is still legal because it is only shape bookkeeping.
 
 **values** (`const Series&`)
 
-The source data to write into the selected region.
+The source values to write into the selected destination region.
 
 Two value modes are accepted:
 
-- scalar broadcast
-- exact element-count replacement
+- scalar source: broadcast across every selected destination element
+- non-scalar source: element count must exactly match the selected destination
+  element count
 
-Like the broader selector-write surfaces, `values` is converted to the target
-dtype and platform if necessary before assignment.
+As on the other write surfaces, dtype and platform are normalized before the
+assignment happens.
 
 ## Returns
 
@@ -69,22 +68,38 @@ dtype and platform if necessary before assignment.
 
 ## Examples
 
-Example 1. A whole-column write is accepted because the destination is plainly
-view-representable.
+Example 1. Shared setup. Start from a simple `3 x 4` grid.
 
 ```cpp
 auto grid = pluss::make_series(
-    std::vector<double>{10, 11, 12, 13, 20, 21, 22, 23, 30, 31, 32, 33},
+    {10.0, 11.0, 12.0, 13.0,
+     20.0, 21.0, 22.0, 23.0,
+     30.0, 31.0, 32.0, 33.0},
     {3, 4});
 
-auto col_values = pluss::make_series(std::vector<double>{100, 200, 300}, {3});
-const std::vector<ExtractSpec> middle_column{
+std::cout << grid;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[10, 11, 12, 13],
+  [20, 21, 22, 23],
+  [30, 31, 32, 33]]
+```
+
+Example 2. A whole-column write is accepted because the destination is plainly
+view-representable.
+
+```cpp
+const auto middle_column = std::vector<ExtractSpec>{
     pluss::Slicing::SliceAll(),
     std::int64_t{1}};
 
 grid.traverse_put_(
     pluss::msharp::RangeView::Of<ExtractSpec>(middle_column),
-    col_values);
+    pluss::make_series({100.0, 200.0, 300.0}, {3}));
 
 std::cout << grid;
 ```
@@ -98,11 +113,36 @@ data=[[10, 100, 12, 13],
   [30, 300, 32, 33]]
 ```
 
-Example 2. Scalar broadcast still works after the selector passes the stricter
-view-only validator.
+Example 3. `NewAxis()` is accepted here too. It does not create a new writable
+destination axis; it only participates in selector normalization.
 
 ```cpp
-const std::vector<ExtractSpec> row_tail{
+const auto with_newaxis = std::vector<ExtractSpec>{
+    pluss::Slicing::NewAxis(),
+    pluss::Slicing::SliceAll(),
+    std::int64_t{0}};
+
+grid.traverse_put_(
+    pluss::msharp::RangeView::Of<ExtractSpec>(with_newaxis),
+    pluss::make_series({1.0, 2.0, 3.0}, {3}));
+
+std::cout << grid;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[1, 100, 12, 13],
+  [2, 200, 22, 23],
+  [3, 300, 32, 33]]
+```
+
+Example 4. Scalar broadcast still works after the stricter selector gate has
+accepted the destination.
+
+```cpp
+const auto row_tail = std::vector<ExtractSpec>{
     std::int64_t{2},
     pluss::Slicing::SliceRange(2, 4, 1)};
 
@@ -117,17 +157,17 @@ std::cout << grid;
 
 ```text
 pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
-data=[[10, 100, 12, 13],
-  [20, 200, 22, 23],
-  [30, 300, -5, -5]]
+data=[[1, 100, 12, 13],
+  [2, 200, 22, 23],
+  [3, 300, -5, -5]]
 ```
 
-Example 3. A reverse slice is rejected here even though the broader
-[`extract_put_()`](extract_put_.md) surface could have handled it.
+Example 5. Reverse slices are rejected even though the broader
+[`extract_put_()`](extract_put_.md) surface could handle them.
 
 ```cpp
 try {
-  const std::vector<ExtractSpec> reverse_specs{
+  const auto reverse_specs = std::vector<ExtractSpec>{
       pluss::Slicing::SliceAll(),
       pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)};
 
@@ -146,22 +186,44 @@ try {
 Series::traverse_put_: selector is not view-representable; use extract() or extract_put_() for materializing paths
 ```
 
-This is the key boundary of the method: it is not "write through any selector,"
-it is "write through a selector only if that selector is still a pure
-traversal."
+Example 6. Bool masks are rejected for the same reason: they require
+materialized destination positions rather than plain traversal.
+
+```cpp
+try {
+  auto row_mask = pluss::make_series({true, false, true}, {3});
+  const auto mask_specs = std::vector<ExtractSpec>{
+      row_mask,
+      pluss::Slicing::SliceAll()};
+
+  grid.traverse_put_(
+      pluss::msharp::RangeView::Of<ExtractSpec>(mask_specs),
+      pluss::make_series(0.0));
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+Series::traverse_put_: selector is not view-representable; use extract() or extract_put_() for materializing paths
+```
 
 ## Notes
 
 - `traverse_put_()` is the strictest selector-write method on `Series`.
-- Use it when you want the API to guard against accidental advanced indexing.
-- If the selector needs reverse traversal, masking, or integer gather-style
-  addressing, move to [`extract_put_()`](extract_put_.md).
+- Use it when selector-based writes should stay in the same ordinary
+  traversal/view lane as [`traverse_slice()`](traverse_slice.md).
+- If the selector needs masks, reverse steps, or explicit advanced indexing,
+  move to [`extract_put_()`](extract_put_.md).
 - If you want value semantics instead of mutation, use
   [`traverse_put()`](traverse_put.md).
 
 ## See Also
 
-- [`Series::traverse_put`](traverse_put.md): copy-returning version with the
+- [`Series::traverse_put`](traverse_put.md): copy-returning sibling with the
   same selector gate.
 - [`Series::traverse_slice`](traverse_slice.md): read-side companion.
 - [`Series::extract_put_`](extract_put_.md): broader write surface that accepts

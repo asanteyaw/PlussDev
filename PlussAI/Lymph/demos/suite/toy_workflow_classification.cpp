@@ -44,7 +44,7 @@ int main() {
               {"encode", lymph::stage::one_hot_encoder(unknown)},
           }),
       },
-      lymph::models::logistic_regression({.regularization_strength = 0.02}));
+      lymph::model::logistic_regression({.regularization_strength = 0.02}));
 
   wf.learn_(data);
   const lymph::MetricReport score = wf.assess(data);

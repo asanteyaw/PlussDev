@@ -13,10 +13,12 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=3dd29194"></script>
+    <script src="_static/api_nav.js?v=052b4a34"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DataFrameSortBuilder::asc" href="api/dataframe-sort/asc.html" />
+    <link rel="prev" title="DataFrameTsAccessor::zscore_rolling" href="api/dataframe-ts/zscore_rolling.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -36,8 +38,7 @@
             
   <section id="dataframesortbuilder-api-reference">
 <h1>DataFrameSortBuilder API Reference<a class="headerlink" href="#dataframesortbuilder-api-reference" title="Link to this heading">¶</a></h1>
-<p>This page documents the value-ordering workflow entered via
-<code class="docutils literal notranslate"><span class="pre">DataFrame::sort()</span></code> and continued through <code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder</span></code>.</p>
+<p>This page documents the value-ordering workflow entered via <code class="docutils literal notranslate"><span class="pre">DataFrame::sort()</span></code> and continued through <code class="docutils literal notranslate"><span class="pre">DataFrameSortBuilder</span></code>.</p>
 <section id="using-this-reference">
 <h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
 <ul class="simple">
@@ -48,15 +49,13 @@
 </section>
 <section id="method-pages">
 <h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">sort()</span></code> enters the planner. The builder then splits into three roles:</p>
+<p>The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sort()</span></code> enters a reusable sort plan, then the builder grows or executes it:</p>
 <ul class="simple">
-<li><p>plan keys with <code class="docutils literal notranslate"><span class="pre">by(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">then(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">within(...)</span></code></p></li>
-<li><p>refine the active key with <code class="docutils literal notranslate"><span class="pre">asc()</span></code>, <code class="docutils literal notranslate"><span class="pre">desc()</span></code>, <code class="docutils literal notranslate"><span class="pre">nulls_first()</span></code>, and <code class="docutils literal notranslate"><span class="pre">nulls_last()</span></code></p></li>
-<li><p>execute or materialize with <code class="docutils literal notranslate"><span class="pre">order()</span></code>, <code class="docutils literal notranslate"><span class="pre">yield()</span></code>, <code class="docutils literal notranslate"><span class="pre">head(n)</span></code>, and <code class="docutils literal notranslate"><span class="pre">tail(n)</span></code></p></li>
+<li><p>Plan keys: <a class="reference internal" href="api/dataframe-sort/by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/then.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">then()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/within.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">within()</span></code></span></a></p></li>
+<li><p>Refine the active key: <a class="reference internal" href="api/dataframe-sort/asc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">asc()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/desc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">desc()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/nulls_first.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nulls_first()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/nulls_last.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nulls_last()</span></code></span></a></p></li>
+<li><p>Materialize: <a class="reference internal" href="api/dataframe-sort/order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">order()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/yield.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">yield()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tail()</span></code></span></a></p></li>
 </ul>
-<p>Use <code class="docutils literal notranslate"><span class="pre">arrange(...)</span></code> when you want the direct execute-now sorter. Use the sort
-builder when ordering itself is a plan you want to grow, reuse, or partially
-materialize.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>
@@ -88,8 +87,11 @@ materialize.</p>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api/plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
@@ -106,6 +108,16 @@ materialize.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="api_reference.html">API Reference</a><ul>
+  <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="api/dataframe-ts/zscore_rolling.html" title="previous chapter">DataFrameTsAccessor::zscore_rolling</a></li>
+      <li>Next: <a href="api/dataframe-sort/asc.html" title="next chapter">DataFrameSortBuilder::asc</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
   </ul></li>
 </ul>
 </div>

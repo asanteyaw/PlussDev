@@ -31,15 +31,13 @@ See [`line()`](line.md) for the shared `Studio`-return / no-`cout` mechanics and
 `Plot3DSceneOptions`/`Plot3DTraceOptions` layering explanation — this page only covers what
 is specific to `surface()`.
 
-```{important} op is more restricted here than DataFrame::GroupOp's own ten values
-`op` is typed as `DataFrame::GroupOp` (`Count`, `Ndistinct`, `Sum`, `Mean`, `Median`, `Min`,
-`Max`, `Std`, `Var`, `Mode`), but `pivot_table()` itself only implements seven of those:
-`Count`, `Ndistinct`, `Sum`, `Mean`, `Median`, `Min`, and `Max`. Passing `Std`, `Var`, or
-`Mode` compiles fine but throws at call time: `"DataFrame::pivot_table: unsupported
-aggregation op"`. For any of the seven supported numeric aggregations (everything except
-`Count`/`Ndistinct`), `z_feature` must already be a numeric `Series` — a non-numeric
-`z_feature` throws `"DataFrame::pivot_table: numeric aggregations require a numeric Series
-value feature"`.
+```{important} plot3d still needs a numeric grid even though pivot_table is broader now
+`pivot_table()` now supports the full grouped aggregation set here too, including `Std`,
+`Var`, and `Mode`. The 3D renderer is narrower for a different reason: after pivoting, the
+result still has to become a numeric z-grid. Numeric reductions (`Sum`, `Mean`, `Median`,
+`Min`, `Max`, `Std`, `Var`) therefore still require `z_feature` to be numeric. `Mode` is
+only meaningful here when the pivoted result can still be converted to numeric values for
+plotting.
 ```
 
 ```{note} How each axis gets its grid coordinates
@@ -171,20 +169,17 @@ and `(2.0, 1.0)`) have no matching data and render at height `0`, not as gaps.
 
 ![Output of Example 4](img/surface-4.svg)
 
-Example 5. An unsupported aggregation op throws.
+Example 5. `Std` is now supported, producing a sample-standard-deviation grid.
 
 ```cpp
-try {
-  auto bad = readings.plot3d().surface("hour", "depth_m", "temp_c", DataFrame::GroupOp::Std);
-} catch (const std::exception& e) {
-  std::cout << e.what();
-}
-```
+auto repeated = DataFrame({
+    {"depth_m", Thread(pluss::make_series({10.0, 10.0, 10.0, 10.0}))},
+    {"hour",    Thread(pluss::make_series({0.0, 0.0, 12.0, 12.0}))},
+    {"temp_c",  Thread(pluss::make_series({18.0, 20.0, 15.0, 19.0}))},
+});
 
-### Output
-
-```text
-DataFrame::pivot_table: unsupported aggregation op
+auto chart = repeated.plot3d().surface("hour", "depth_m", "temp_c", DataFrame::GroupOp::Std);
+chart.show();
 ```
 
 Example 6. A `Plot3DSceneOptions` scene preset applied to the surface.
@@ -200,10 +195,10 @@ auto chart = readings.plot3d().surface("hour", "depth_m", "temp_c", DataFrame::G
 
 ## Notes
 
-- Only 7 of `DataFrame::GroupOp`'s 10 values are supported (`Std`/`Var`/`Mode` throw) — see
-  the important callout above.
 - Numeric aggregations (everything but `Count`/`Ndistinct`) require `z_feature` to already be
   a numeric `Series`.
+- `Mode` follows `pivot_table()`'s broader semantics, but only makes sense here when the
+  resulting mode values still convert numerically for plotting.
 - x/y grid coordinates are parsed-as-number-or-positional-fallback — see the note above.
 - Rows with an invalid `x_feature`/`y_feature` are dropped; missing `(x, y)` cells fill to
   `0`, not `NaN`.

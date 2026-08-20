@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,13 +50,12 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reorders every row by case label. The simple overload compares the <strong>flat</strong>
-case label as a single sequence (the same comparison
-<a class="reference internal" href="monotonic.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">monotonic()</span></code></span></a> uses) — on a structured, multi-level frame, this
-sorts by the composite <em>displayed</em> string, not level-by-level. <code class="docutils literal notranslate"><span class="pre">sort(options)</span></code>
-with <code class="docutils literal notranslate"><span class="pre">options.names</span></code> given instead sorts <strong>lexicographically by those named
-levels</strong>, in the order you list them — a real per-level sort, independent of
-how the composite string happens to be joined.</p>
+<p>Reorders every row by case label. On a structured, multi-level case axis, the
+simple overload sorts <strong>lexicographically by the stored case-label levels in
+their existing order</strong>: first level primary, second level tie-breaker, third
+level next tie-breaker, and so on. <code class="docutils literal notranslate"><span class="pre">sort(options)</span></code> with <code class="docutils literal notranslate"><span class="pre">options.names</span></code> given
+does the same kind of lexicographic comparison, but using the named levels in
+the order you provide rather than the frame’s current case-axis order.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -136,7 +135,7 @@ east  | east    150
 <p>Ties (the two <code class="docutils literal notranslate"><span class="pre">&quot;east&quot;</span></code> rows) keep their original relative order either way —
 the sort is stable.</p>
 <p>Example 2. Sort a 2-level structured frame by one named level ahead of the
-other, instead of the composite string’s own left-to-right order.</p>
+other, instead of the case axis’s existing level order.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
@@ -168,8 +167,8 @@ east/NYC    | 20
 </pre></div>
 </div>
 </section>
-<section id="output-flat-sorted-composite-string-order">
-<h3>Output (flat_sorted — composite string order)<a class="headerlink" href="#output-flat-sorted-composite-string-order" title="Link to this heading">¶</a></h3>
+<section id="output-flat-sorted-existing-level-order-region-then-city">
+<h3>Output (flat_sorted — existing level order: region, then city)<a class="headerlink" href="#output-flat-sorted-existing-level-order-region-then-city" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
             | sales
 -------------------
@@ -195,20 +194,21 @@ west/SF     | 40
 [4 cs x 1 feat]
 </pre></div>
 </div>
-<p>The composite label is <code class="docutils literal notranslate"><span class="pre">&quot;region/city&quot;</span></code>, so the plain <code class="docutils literal notranslate"><span class="pre">sort()</span></code> above sorts by
-<code class="docutils literal notranslate"><span class="pre">region</span></code> first (<code class="docutils literal notranslate"><span class="pre">east</span></code> before <code class="docutils literal notranslate"><span class="pre">west</span></code>) and <code class="docutils literal notranslate"><span class="pre">city</span></code> only breaks ties within it.
+<p>The case axis stores <code class="docutils literal notranslate"><span class="pre">region</span></code> first and <code class="docutils literal notranslate"><span class="pre">city</span></code> second, so the plain <code class="docutils literal notranslate"><span class="pre">sort()</span></code>
+above sorts by <code class="docutils literal notranslate"><span class="pre">region</span></code> first (<code class="docutils literal notranslate"><span class="pre">east</span></code> before <code class="docutils literal notranslate"><span class="pre">west</span></code>) and <code class="docutils literal notranslate"><span class="pre">city</span></code> only breaks
+ties within it.
 <code class="docutils literal notranslate"><span class="pre">sort(SortLabelOptions{.names</span> <span class="pre">=</span> <span class="pre">{&quot;city&quot;,</span> <span class="pre">&quot;region&quot;}})</span></code> instead sorts by <code class="docutils literal notranslate"><span class="pre">city</span></code>
-first regardless of level order in the composite string — <code class="docutils literal notranslate"><span class="pre">&quot;Boston&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;LA&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;NYC&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;SF&quot;</span></code> puts <code class="docutils literal notranslate"><span class="pre">west/LA</span></code> right after <code class="docutils literal notranslate"><span class="pre">east/Boston</span></code>, ahead of
-<code class="docutils literal notranslate"><span class="pre">east/NYC</span></code>, which the flat composite sort would never produce.</p>
+first regardless of the case axis’s existing level order — <code class="docutils literal notranslate"><span class="pre">&quot;Boston&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;LA&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;NYC&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;SF&quot;</span></code> puts <code class="docutils literal notranslate"><span class="pre">west/LA</span></code> right after <code class="docutils literal notranslate"><span class="pre">east/Boston</span></code>, ahead of
+<code class="docutils literal notranslate"><span class="pre">east/NYC</span></code>, which the default region-first label sort would never produce.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The simple overload compares the flat, displayed case-label string on a
-structured frame — if the composite join could ever be ambiguous (rare with
-the default separator, more of a concern with a custom one), prefer
-<code class="docutils literal notranslate"><span class="pre">sort(SortLabelOptions{.names</span> <span class="pre">=</span> <span class="pre">{...}})</span></code> for an unambiguous, per-level sort.</p></li>
+<li><p>The simple overload already uses the full multi-level case axis lexicographically;
+it is not limited to a naïve string compare of the rendered joined label.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">sort(SortLabelOptions{.names</span> <span class="pre">=</span> <span class="pre">{...}})</span></code> when you need a different level
+priority from the frame’s existing case-axis order.</p></li>
 <li><p>Sorting is stable: rows with equal case labels retain their original
 relative order.</p></li>
 </ul>
@@ -284,9 +284,11 @@ already jointly sorted.</p></li>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
   <li><a href="../../dataframe_label_accessor_api_reference.html">DataFrameLabelAccessor API Reference</a><ul>
       <li>Previous: <a href="slice.html" title="previous chapter">DataFrameLabelAccessor::slice</a></li>
       <li>Next: <a href="swap.html" title="next chapter">DataFrameLabelAccessor::swap</a></li>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>

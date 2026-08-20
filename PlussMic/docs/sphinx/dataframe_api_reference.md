@@ -22,11 +22,21 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 - `feataxis()` -> [`DataFrameFeatureAxisAccessor`](dataframe_feataxis_accessor_api_reference.md)
 - `plot3d()` -> [`DataFramePlot3DAccessor`](dataframe_plot3d_accessor_api_reference.md)
 - `ts()` -> [`DataFrameTsAccessor`](dataframe_ts_accessor_api_reference.md)
+- `sort()` -> [`DataFrameSortBuilder`](dataframe_sort_accessor_api_reference.md)
+- `contingency(...)` -> [`ContingencyTable`](dataframe_contingency_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
+dataframe_note_accessor_api_reference
+dataframe_timeline_accessor_api_reference
+dataframe_label_accessor_api_reference
+dataframe_feataxis_accessor_api_reference
+dataframe_plot3d_accessor_api_reference
+dataframe_ts_accessor_api_reference
+dataframe_sort_accessor_api_reference
+dataframe_contingency_accessor_api_reference
 api/dataframe/abs
 api/dataframe/add
 api/dataframe/aggregate
@@ -46,6 +56,7 @@ api/dataframe/clip
 api/dataframe/combine
 api/dataframe/compare
 api/dataframe/conform
+api/dataframe/contingency
 api/dataframe/copy
 api/dataframe/corr
 api/dataframe/corr_with
@@ -182,6 +193,7 @@ api/dataframe/shuffle
 api/dataframe/skew
 api/dataframe/slice
 api/dataframe/sort
+api/dataframe/split
 api/dataframe/sql
 api/dataframe/stack
 api/dataframe/std

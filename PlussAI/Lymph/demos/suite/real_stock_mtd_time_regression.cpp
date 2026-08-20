@@ -30,10 +30,10 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::random_forest_regressor({.learners = 80, .subsample = 0.9}));
+      lymph::model::random_forest_regressor({.learners = 80, .subsample = 0.9}));
   wf.time(time);
 
-  const lymph::CrossValidationReport cv = lymph::validate::time().folds(4).gap(1).horizon(20).lookback(180).run(wf, data);
+  const auto cv = lymph::validate::time().folds(4).gap(1).horizon(20).lookback(180).run(wf, data);
   wf.learn_(data);
   std::cout << "mtd folds: " << cv.report.folds.size() << "\n";
   std::cout << "mtd r2: " << wf.assess(data).r2.item<double>() << "\n";

@@ -57,7 +57,7 @@ bool run_search_checks(std::ostream* err) {
       {.name = "regularization_strength", .values = {0.01, 1.0}},
   };
   const auto make_model = [](const GridPoint& point) {
-    Model m = models::logistic_regression({
+    Model m = model::logistic_regression({
         .regularization_strength = point.at("regularization_strength"),
         .fit_intercept = true,
     });
@@ -65,7 +65,7 @@ bool run_search_checks(std::ostream* err) {
     return m;
   };
 
-  CrossValidationOptions cv{};
+  metrics::ValidationOptions cv{};
   cv.plan = CVPlanKind::CrossVal;
   cv.folds = 2;
   cv.shuffle = false;
@@ -118,7 +118,7 @@ bool run_search_checks(std::ostream* err) {
   TuneOptions tune_options{};
   tune_options.search = SearchKind::Random;
   tune_options.trials = 1;
-  tune_options.split = make_cross_validation_split_options(cv);
+  tune_options.split = make_validation_split_options(cv);
   tune_options.max_parallel = 2;
   tune_options.random = RandomState{.seed = 7, .deterministic = true};
   Search random_search = search::build(axes, tune_options);

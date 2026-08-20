@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+
 # Series::traverse_put
 
 [Back to Series API Reference](../../series_api_reference)
@@ -10,18 +12,19 @@ Series::traverse_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Seri
 
 ## What It Does
 
-Returns a modified copy of the series after writing through a
-view-representable selector.
+Returns a patched copy of the series after writing through a selector that must
+remain view-representable.
 
-This is the value-semantic sibling of [`traverse_put_()`](traverse_put_.md). It
-keeps the same strict selector gate and the same write rules, but the update is
-applied to a cloned series rather than to the current object.
+This is the value-semantic sibling of [`traverse_put_()`](traverse_put_.md).
+The write rules are the same, the accepted selector subset is the same, and the
+selector normalization is the same. The only difference is ownership:
 
-Use it when all of the following are true:
+- `traverse_put_()` mutates the current series
+- `traverse_put()` leaves the current series alone and returns a modified copy
 
-- you want selector-based patching
-- you want the selector restricted to ordinary traversal/view patterns
-- you want the original value left untouched
+So `traverse_put()` is the method to choose when you want a clean "derive a
+patched result" style, but you also want the selector itself constrained to
+plain traversal/view semantics.
 
 ## Parameters
 
@@ -29,40 +32,50 @@ Use it when all of the following are true:
 
 The destination selector.
 
-Allowed forms are exactly the view-representable subset used by
+This method accepts only the view-representable subset shared with
 [`traverse_slice()`](traverse_slice.md) and [`traverse_put_()`](traverse_put_.md):
 
 - scalar indices
 - positive-step slices
 - `SliceAll()`
-- `Ellipsis`
-- `NewAxis`
+- `Ellipsis()`
+- `NewAxis()`
 
-Anything that would require materialized advanced indexing is rejected before
-the copy is patched.
+Rejected selectors include:
+
+- negative-step slices
+- bool masks
+- integer advanced index series
+- any mixed selector that requires materialized advanced indexing
+
+`NewAxis()` is allowed because it is only result-shape bookkeeping; it does not
+turn the write into advanced indexing.
 
 **values** (`const Series&`)
 
 The replacement data.
 
-This method accepts either:
+Two value modes are supported:
 
-- a scalar source, broadcast across the selected region
-- a non-scalar source whose element count exactly matches the selected region
+- scalar source: broadcast across the selected destination region
+- non-scalar source: element count must exactly match the selected destination
+  element count
 
 ## Returns
 
 `Series`
-    A new series containing the patched result.
+    A new series containing the write result.
 
 ## Examples
 
-Example 1. Start from a grid that has already been modified in place through
-`traverse_put_()`, then derive one more patch without changing that input.
+Example 1. Shared setup. This starting grid matches the state produced by the
+in-place `traverse_put_()` examples.
 
 ```cpp
 auto grid = pluss::make_series(
-    std::vector<double>{10, 100, 12, 13, 20, 200, 22, 23, 30, 300, -5, -5},
+    {1.0, 100.0, 12.0, 13.0,
+     2.0, 200.0, 22.0, 23.0,
+     3.0, 300.0, -5.0, -5.0},
     {3, 4});
 
 std::cout << grid;
@@ -72,15 +85,16 @@ std::cout << grid;
 
 ```text
 pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
-data=[[10, 100, 12, 13],
-  [20, 200, 22, 23],
-  [30, 300, -5, -5]]
+data=[[1, 100, 12, 13],
+  [2, 200, 22, 23],
+  [3, 300, -5, -5]]
 ```
 
-Example 2. The returned copy receives the new patch.
+Example 2. A copy-returning write patches the result and leaves the source
+unchanged.
 
 ```cpp
-const std::vector<ExtractSpec> first_two{
+const auto first_two = std::vector<ExtractSpec>{
     std::int64_t{0},
     pluss::Slicing::SliceRange(0, 2, 1)};
 
@@ -96,14 +110,36 @@ std::cout << copied;
 ```text
 pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
 data=[[999, 999, 12, 13],
-  [20, 200, 22, 23],
-  [30, 300, -5, -5]]
+  [2, 200, 22, 23],
+  [3, 300, -5, -5]]
 ```
 
-Example 3. The source series remains unchanged after the copy-returning call.
+Example 3. The original input is still unchanged after `traverse_put()`.
 
 ```cpp
 std::cout << grid;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[1, 100, 12, 13],
+  [2, 200, 22, 23],
+  [3, 300, -5, -5]]
+```
+
+Example 4. `NewAxis()` is still legal on the copy-returning surface.
+
+```cpp
+const auto with_newaxis = std::vector<ExtractSpec>{
+    pluss::Slicing::NewAxis(),
+    pluss::Slicing::SliceAll(),
+    std::int64_t{0}};
+
+std::cout << grid.traverse_put(
+    pluss::msharp::RangeView::Of<ExtractSpec>(with_newaxis),
+    pluss::make_series({10.0, 20.0, 30.0}, {3}));
 ```
 
 ### Output
@@ -115,24 +151,70 @@ data=[[10, 100, 12, 13],
   [30, 300, -5, -5]]
 ```
 
-This is the entire reason to choose `traverse_put()` over
-[`traverse_put_()`](traverse_put_.md): the selector rules are the same, but the
-ownership outcome is different.
+The added axis affects selector normalization, not the final writable rank.
+
+Example 5. Reverse slices are rejected because they are not view-representable
+on this surface.
+
+```cpp
+try {
+  const auto reverse_specs = std::vector<ExtractSpec>{
+      pluss::Slicing::SliceAll(),
+      pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)};
+
+  std::cout << grid.traverse_put(
+      pluss::msharp::RangeView::Of<ExtractSpec>(reverse_specs),
+      pluss::make_series(0.0));
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+Series::traverse_put: selector is not view-representable; use extract() or extract_put() for materializing paths
+```
+
+Example 6. Bool masks are rejected for the same reason.
+
+```cpp
+try {
+  auto row_mask = pluss::make_series({true, false, true}, {3});
+  const auto mask_specs = std::vector<ExtractSpec>{
+      row_mask,
+      pluss::Slicing::SliceAll()};
+
+  std::cout << grid.traverse_put(
+      pluss::msharp::RangeView::Of<ExtractSpec>(mask_specs),
+      pluss::make_series(0.0));
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+Series::traverse_put: selector is not view-representable; use extract() or extract_put() for materializing paths
+```
 
 ## Notes
 
 - `traverse_put()` is the strict, copy-returning selector-write surface.
-- Prefer it when you are building derived values and want accidental mutation
-  ruled out.
-- If the selector needs masking, reverse stepping, or other materializing
-  behavior, use [`extract_put()`](extract_put.md) instead.
-- If you want the same selector gate but in-place mutation, use
+- Choose it when the selector should stay in the ordinary traversal/view lane
+  and mutation would be undesirable.
+- If the selector needs masks, reverse steps, or explicit advanced indexing,
+  use [`extract_put()`](extract_put.md) instead.
+- If you want the same selector gate but in place, use
   [`traverse_put_()`](traverse_put_.md).
 
 ## See Also
 
-- [`Series::traverse_put_`](traverse_put_.md): in-place mutation with the same
-  selector restrictions.
+- [`Series::traverse_put_`](traverse_put_.md): in-place sibling with the same
+  selector gate.
 - [`Series::extract_put`](extract_put.md): copy-returning writes without the
   view-only restriction.
 - [`Series::traverse_slice`](traverse_slice.md): read-side companion.

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4b209a5977c9 -->
 
 # DataFrameSortBuilder::by
 
@@ -21,6 +22,10 @@ feature names, each one inherits the builder's current defaults (set on
 direction and null placement. When you pass `DataFrame::ArrangeSpec`s
 directly, each spec carries its own `ascending`/`nulls_last`, overriding the
 builder defaults for that key specifically.
+
+With more than one key, `by(...)` establishes a lexicographic / tuple key:
+the first entry is primary, the next entry only breaks ties within equal
+earlier-key values, and so on.
 
 ```{important} by() replaces the plan; it does not append
 Calling `.by(...)` a second time on the same builder discards whatever keys
@@ -132,12 +137,39 @@ std::cout << out3;
 [4 cs x 2 feat]
 ```
 
-Example 4 (edge case). An unknown feature name doesn't throw at `.by(...)`
+Example 4. Two `ArrangeSpec`s give independent directions per key.
+
+```cpp
+auto out4 = df.sort().by({
+    DataFrame::ArrangeSpec{"city", true, true},
+    DataFrame::ArrangeSpec{"sales", false, true},
+}).yield();
+std::cout << out4;
+```
+
+### Output
+
+```text
+===================
+     | city   sales
+-------------------
+1    | Accra  100  
+2    | Accra  90   
+3    | Tema   200  
+0    | Tema   120  
+-------------------
+[4 cs x 2 feat]
+```
+
+This is the mixed-direction case plain feature-name overloads cannot express:
+`city` is ascending, while `sales` breaks ties descending inside each city.
+
+Example 5 (edge case). An unknown feature name doesn't throw at `.by(...)`
 time — only when a terminal method executes the plan.
 
 ```cpp
 try {
-  auto out4 = df.sort().by("nope").yield();
+  auto out5 = df.sort().by("nope").yield();
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n'));
@@ -156,6 +188,9 @@ DataFrame::sort.order: unknown feature 'nope'
   and validation is deferred to the terminal.
 - The last-supplied key becomes the active key for the direction/null-
   placement mutators.
+- When you pass only feature names, all of them inherit one shared direction
+  and null-placement default from the builder. Per-key control requires
+  `ArrangeSpec`.
 - Feature names must exist on the frame — checked lazily, per Example 4.
 
 ## See Also

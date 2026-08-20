@@ -1,8 +1,8 @@
-# `Workflow::has_opaque_transforms`
+# `workflow::has_opaque_transforms`
 
 ## API Signature
 
-- `Workflow::has_opaque_transforms() -> bool`
+- `workflow::has_opaque_transforms() -> bool`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::has_opaque_transforms();
+auto value = workflow::has_opaque_transforms();
 out.info("has_opaque_transforms", value);
 ```
 

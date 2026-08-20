@@ -1,8 +1,6 @@
 # DataFrameGroupBuilder API Reference
 
-This page documents the public grouped-workflow surface entered via
-`DataFrame::group()` — the `DataFrameGroupBuilder` returned by `group()` itself,
-and the `DataFrameGrouped` handle returned by its `.by(...)`.
+This page documents the public grouped-workflow surface entered via `DataFrame::group()` -- the `DataFrameGroupBuilder` returned by `group()` itself, and the `DataFrameGrouped` handle returned by its `.by(...)`.
 
 ## Using This Reference
 
@@ -14,13 +12,11 @@ and the `DataFrameGrouped` handle returned by its `.by(...)`.
 
 The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
-`by()` (on `DataFrameGroupBuilder`) fixes the grouping keys and returns
-`DataFrameGrouped`. Every other method here (`agg`, `transform`, `filter`, and the
-grouped convenience terminals `count`, `max`, `mean`, `median`, `min`, `mode`,
-`ndistinct`, `std`, `sum`, `var`) is a `DataFrameGrouped` method that actually
-executes the grouped work. `mode_ties` is a standalone companion to `mode` — it
-takes an explicit feature argument and can return more than one row per group, so
-it does not fit the zero-argument convenience-terminal pattern the others share.
+`by()` fixes the grouping keys, then `DataFrameGrouped` executes the grouped work:
+
+- Plan grouping keys: [`by()`](api/dataframe-group/by.md)
+- Explicit grouped reductions: [`agg()`](api/dataframe-group/agg.md), [`transform()`](api/dataframe-group/transform.md), [`filter()`](api/dataframe-group/filter.md), [`yield()`](api/dataframe-group/yield.md)
+- Uniform grouped reducers: [`count()`](api/dataframe-group/count.md), [`ndistinct()`](api/dataframe-group/ndistinct.md), [`sum()`](api/dataframe-group/sum.md), [`mean()`](api/dataframe-group/mean.md), [`median()`](api/dataframe-group/median.md), [`min()`](api/dataframe-group/min.md), [`max()`](api/dataframe-group/max.md), [`std()`](api/dataframe-group/std.md), [`var()`](api/dataframe-group/var.md), [`mode()`](api/dataframe-group/mode.md), [`mode_ties()`](api/dataframe-group/mode_ties.md)
 
 ```{toctree}
 :hidden:

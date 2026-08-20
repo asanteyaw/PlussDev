@@ -1,0 +1,79 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 80f54355e34f -->
+
+# DataFrameContingencyTableBuilder::sort
+
+[Back to DataFrame contingency accessor API Reference](../../dataframe_contingency_accessor_api_reference)
+
+## Signature
+
+```cpp
+DataFrameContingencyTableBuilder::sort() const -> DataFrameContingencyTableBuilder
+```
+
+## What It Does
+
+Configures the contingency builder to sort distinct row-key tuples and distinct
+column-key tuples before rendering.
+
+## Parameters
+
+`None`
+
+## Returns
+
+`DataFrameContingencyTableBuilder`
+    A new builder that renders sorted row and column groups.
+
+## Examples
+
+Example 1. Sort the crossed groups lexicographically instead of preserving
+first-seen order.
+
+```cpp
+using namespace pluss::table;
+
+auto df = DataFrame({
+    {"city", Thread(pluss::make_note({"B", "A", "B", "A"}))},
+    {"channel", Thread(pluss::make_note({"Cash", "Card", "Card", "Cash"}))},
+});
+
+auto out = df.contingency("city", "channel")
+             .sort()
+             .count();
+std::cout << out;
+```
+
+### Output
+
+```text
+=======================
+     | city  Card  Cash
+-----------------------
+0    | A     1     1
+1    | B     1     1
+-----------------------
+[2 cs x 3 feat]
+```
+
+## Notes
+
+- Sorting is by tuple. With one row feature and one column feature this is just
+  the ordinary label order of those values.
+- When you bind multiple row or column features, the builder sorts by the full
+  key tuple, not by only the first level.
+
+## See Also
+
+- [`DataFrameContingencyTableBuilder::preserve`](preserve.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="share.html">
+    <span class="label">Previous</span>
+    <span class="title">share</span>
+  </a>
+  <a class="next-link" href="std.html">
+    <span class="label">Next</span>
+    <span class="title">std</span>
+  </a>
+</div>

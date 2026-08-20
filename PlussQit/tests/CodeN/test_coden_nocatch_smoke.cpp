@@ -783,6 +783,48 @@ void test_note_factory_paths() {
   pluss::Note like = pluss::note::full_like(s2, "y");
   expect_true(like.sizes() == s2.sizes(), "full_note_like copies shape");
 
+  pluss::Note repeated = pluss::note::rep("Alex", {2, 2});
+  expect_true(repeated.dim() == 2 && repeated.size(0) == 2 && repeated.at(3) == "Alex",
+              "note::rep repeats arbitrary text");
+
+  pluss::Note random_upper = pluss::note::rand({6}, true, 7);
+  expect_true(random_upper.dim() == 1 && random_upper.size(0) == 6, "note::rand shape");
+  for (std::int64_t i = 0; i < random_upper.numel(); ++i) {
+    const auto token = random_upper.at(i);
+    expect_true(token.size() == 1 && token[0] >= 'A' && token[0] <= 'Z',
+                "note::rand emits uppercase letters");
+  }
+
+  pluss::Note random_between = pluss::note::rand_between("D", "H", {6}, 7);
+  for (std::int64_t i = 0; i < random_between.numel(); ++i) {
+    const auto token = random_between.at(i);
+    expect_true(token.size() == 1 && token[0] >= 'D' && token[0] <= 'H',
+                "note::rand_between honors inclusive bounds");
+  }
+
+  pluss::Note alpha_range = pluss::note::arange("A", "H", 2);
+  expect_true(alpha_range.size(0) == 4 &&
+                  alpha_range.at(0) == "A" &&
+                  alpha_range.at(1) == "C" &&
+                  alpha_range.at(2) == "E" &&
+                  alpha_range.at(3) == "G",
+              "note::arange walks characters");
+
+  pluss::Note combos = pluss::note::perm("abc", 2);
+  expect_true(combos.size(0) == 3 &&
+                  combos.at(0) == "ab" &&
+                  combos.at(1) == "ac" &&
+                  combos.at(2) == "bc",
+              "note::perm default combination mode");
+
+  pluss::Note perms = pluss::note::perm(
+      "aba", 2, pluss::note::WordSelectMode::Permutation, false, true);
+  expect_true(perms.size(0) == 3 &&
+                  perms.at(0) == "ab" &&
+                  perms.at(1) == "aa" &&
+                  perms.at(2) == "ba",
+              "note::perm permutation mode deduplicates repeated letters");
+
   pluss::Note b0 = pluss::note::bytes("hi");
   expect_true(static_cast<const pluss::coden::NoteBase&>(b0).is_bytes(), "bytes_content uses bytes mode");
 

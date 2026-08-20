@@ -27,6 +27,12 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+archive_plot_accessor_api_reference
+archive_label_accessor_api_reference
+archive_keyaxis_accessor_api_reference
+archive_cast_accessor_api_reference
+archive_timeline_accessor_api_reference
+archive_ts_accessor_api_reference
 api/archive/aggregate_over_catalogs
 api/archive/astype
 api/archive/bfill

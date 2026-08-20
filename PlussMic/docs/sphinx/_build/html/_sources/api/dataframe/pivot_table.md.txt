@@ -1,217 +1,385 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 4b0f8816b9a3 -->
+<!-- pluss-signature-hash: 62f6c6a1c7b7 -->
 
 # DataFrame::pivot_table
 
 [Back to DataFrame API Reference](../../dataframe_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrame::pivot_table(std::string_view case_feature,
-                        std::string_view feature_feature,
-                        std::string_view value_feature,
-                        GroupOp op = GroupOp::Mean,
-                        bool dropnull_keys = true,
-                        bool render = false) const -> DataFrameView
+                       std::string_view feature_feature,
+                       std::string_view value_feature,
+                       GroupOp op = GroupOp::Mean,
+                       bool dropnull_keys = true,
+                       bool render = false) const -> DataFrameView
+
+DataFrame::pivot_table(const PivotTableOptions& options) const -> DataFrameView
+
+DataFrame::pivot_table(pluss::msharp::RangeView::Of<std::string_view> index_features,
+                       pluss::msharp::RangeView::Of<std::string_view> column_features,
+                       pluss::msharp::RangeView::Of<std::string_view> value_features,
+                       GroupOp op = GroupOp::Mean,
+                       bool dropna = true,
+                       bool render = false,
+                       bool sort = true) const -> DataFrameView
+
+DataFrame::pivot_table(std::initializer_list<std::string_view> index_features,
+                       std::initializer_list<std::string_view> column_features,
+                       std::initializer_list<std::string_view> value_features,
+                       GroupOp op = GroupOp::Mean,
+                       bool dropna = true,
+                       bool render = false,
+                       bool sort = true) const -> DataFrameView
 ```
 
-## What It Does
+## What It Is
 
-Reshapes long-format data into a wide summary table: one distinct value of
-`case_feature` per output row, one distinct value of `feature_feature` per output
-column, and each cell holding `op` applied to every `value_feature` observation that
-shares that row's and column's key values.
+`pivot_table()` reshapes long data into a summarized matrix.
 
-`pivot_table()` is closely related to [`group()`](group.md) — both aggregate
-`value_feature` per key combination — but `group()` keeps every key as its own row
-feature (a "long" result), while `pivot_table()` spreads one key out across columns (a
-"wide" result). Reach for `pivot_table()` specifically when you want that
-row/column cross-tabulation shape, for example to visualize or export a summary as a
-matrix.
+Conceptually it does three things:
 
-## Parameters
+1. groups rows by one or more row keys (`index`) and one or more column keys (`columns`)
+2. aggregates one or more value features inside each key combination
+3. spreads the column-side key combinations across wide output features
 
-**case_feature** (`std::string_view`)
+If you know pandas, this is the Pluss analogue of `pandas.pivot_table(...)`. The
+generalized Pluss surface now covers the same core use cases:
 
-Feature whose distinct values become the output rows.
+- multiple row keys
+- multiple column keys
+- multiple value features
+- multiple aggregation functions
+- per-value aggregation specs
+- `fill_value`
+- `margins`
+- `margins_name`
+- `dropna`
+- `sort`
 
-**feature_feature** (`std::string_view`)
+The main representation difference is output shape:
 
-Feature whose distinct values become the new output columns.
+- pandas uses row/column `MultiIndex`
+- Pluss keeps multi-row keys as a structured case axis
+- Pluss flattens multi-column combinations into descriptive feature names
 
-**value_feature** (`std::string_view`)
+That is why a multi-key pivot in Pluss still behaves like an N-key pivot, but prints as a
+regular `DataFrame` with names such as `units_sum :: Laptop` or
+`revenue_mean :: West | Retail`.
 
-Feature whose values are aggregated into each pivoted cell.
+## When To Use It
 
-**op** (`GroupOp`, default `GroupOp::Mean`)
+Use `pivot_table()` when your source data is long and duplicate `(row_key, column_key)`
+pairs need aggregation.
 
-The aggregation applied within each `(case_feature, feature_feature)` cell — the same
-operation set as [`group()`](group.md)'s `GroupSpec::op`:
+Prefer nearby methods in these cases:
 
-- `GroupOp::Count`: the number of observations in the cell, including any that are
-  themselves null. Use this to answer "how many orders fell in this combination" rather
-  than to summarize `value_feature`'s magnitude at all.
-- `GroupOp::Ndistinct`: the number of *distinct* `value_feature` values in the cell.
-  Useful when `value_feature` is closer to a category or an ID than a quantity — for
-  example, counting how many distinct `product` values a customer bought per city rather
-  than summing an amount.
-- `GroupOp::Sum`: the total of every observed value in the cell, nulls skipped. This is
-  the natural choice when `value_feature` is a quantity that should accumulate, such as
-  `units` or `revenue`.
-- `GroupOp::Mean`: the arithmetic average of the observed values in the cell, nulls
-  skipped. The default — most appropriate when `value_feature` measures a rate, price, or
-  score rather than something you want summed.
-- `GroupOp::Min` / `GroupOp::Max`: the smallest / largest observed value in the cell.
-  Useful for questions like "the latest order date" or "the lowest price seen" per
-  combination.
-- `GroupOp::Std` / `GroupOp::Var`: the sample standard deviation / variance of the
-  observed values in the cell (divides by `n - 1`, not `n`). A cell with only one
-  observation reports `NULL` here, since sample variance is undefined for `n = 1`.
+- use [`pivot()`](pivot.md) when each `(case_feature, feature_feature)` pair is already
+  unique and no aggregation should happen
+- use [`group()`](group.md) when you want a long grouped result rather than a wide matrix
+- use [`contingency()`](contingency.md) when the core object is a retained categorical
+  joint distribution rather than an immediately rendered wide table
 
-**dropnull_keys** (`bool`, default `true`)
+## Surface Summary
 
-When `true`, cases with a null `case_feature` or `feature_feature` value are excluded
-before pivoting. When `false`, a null key value forms its own row or column instead of
-being dropped.
+The legacy overload is still there:
 
-**render** (`bool`, default `false`)
+```cpp
+df.pivot_table("city", "product", "units", DataFrame::GroupOp::Sum);
+```
 
-Display toggle for the returned `DataFrameView`; `false` for explicit printing, `true` to
-allow auto-render in a temporary-value context.
+It is now just the simple entry point into the generalized engine.
 
-## Returns
+For the full surface, use `PivotTableOptions`:
 
-`DataFrameView`
-    A new frame with one row per distinct `case_feature` value, `case_feature` itself as
-    the first column, and one additional column per distinct `feature_feature` value.
-    Cells for `(case_feature, feature_feature)` combinations that never occur together in
-    the source data are `NULL` rather than `0` — the aggregation genuinely has no
-    observations to summarize for that cell, which is different from summarizing an
-    empty group as zero.
+```cpp
+struct PivotValueSpec {
+  std::string output{};
+  std::string feature{};
+  GroupOp op{GroupOp::Mean};
+};
+
+struct PivotTableOptions {
+  std::vector<std::string> index{};
+  std::vector<std::string> columns{};
+  std::vector<std::string> values{};
+  std::vector<GroupOp> aggfuncs{GroupOp::Mean};
+  std::vector<PivotValueSpec> specs{};
+  std::optional<ThreadValue::HostAny> fill_value{std::nullopt};
+  bool margins{false};
+  std::string margins_name{"All"};
+  bool dropna{true};
+  bool sort{true};
+  bool render{false};
+  std::string index_separator{"\x1F"};
+  std::string column_separator{" | "};
+  std::string value_separator{" :: "};
+};
+```
+
+## How The Options Behave
+
+**index**
+
+The row-side grouping keys. With one feature, the output has one row per distinct key
+value. With multiple features, the output keeps them as a structured case axis.
+
+**columns**
+
+The column-side grouping keys. With one feature, each distinct value becomes a set of
+output columns. With multiple features, each distinct tuple is flattened into one display
+label using `column_separator`.
+
+**values**
+
+The value features to aggregate. If omitted, `pivot_table()` infers every non-key feature
+compatible with the requested aggregation(s).
+
+**aggfuncs**
+
+Uniform aggregation(s) applied to every feature in `values`. This is the closest analogue
+to pandas' `aggfunc=["sum", "mean"]`.
+
+**specs**
+
+Explicit per-output aggregation specs. This is the targeted surface for "apply different
+reductions to different features" rather than using one `aggfunc` across everything.
+
+If `specs` is non-empty, it takes precedence over `values` and `aggfuncs`.
+
+**fill_value**
+
+Applied after the pivot is built. Unobserved cells stay null unless you supply a fill.
+
+**margins / margins_name**
+
+Adds totals. When a column axis exists, totals become extra wide features such as
+`units_sum :: All`. When a row axis exists, an extra bottom row is appended.
+
+**dropna**
+
+If `true`, rows with null row/column keys are excluded before grouping. If `false`, null
+keys become real groups and render as `NULL`/`<NULL>` labels where appropriate.
+
+**sort**
+
+If `true`, the grouped keys are ordered lexicographically before the pivot is spread wide.
+If `false`, first-seen group order is preserved.
+
+**index_separator / column_separator / value_separator**
+
+These are formatting controls for multi-key rendering:
+
+- `index_separator` is the join token used when structured row-key labels are rendered
+- `column_separator` joins multiple column-side key levels in the flattened output label
+- `value_separator` joins the value-aggregation label to the flattened column label
+
+## Aggregations
+
+`pivot_table()` accepts the same grouped reductions as [`group().agg()`](group.md):
+
+- `Count`
+- `Ndistinct`
+- `Sum`
+- `Mean`
+- `Median`
+- `Min`
+- `Max`
+- `Std`
+- `Var`
+- `Mode`
+
+The same type rules apply here too:
+
+- `Sum`/`Mean`/`Median`/`Min`/`Max`/`Std`/`Var` require numeric value features
+- `Mode` works on note features and on numeric series
+- `Count` can count rows without needing a numeric value magnitude
 
 ## Examples
 
-Example 1. Pivot total units sold by city (rows) and product (columns).
+Example 1. Classic one-row-key, one-column-key pivot using the legacy overload.
 
 ```cpp
 using namespace pluss::table;
 
-auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",  Thread(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"units",    Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+auto sales = DataFrame({
+    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"product", Thread(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Phone"}))},
+    {"units",   Thread(pluss::make_series({2.0, 4.0, 1.0, 3.0, 5.0}))},
 });
 
-auto by_city_product = orders.pivot_table("city", "product", "units", DataFrame::GroupOp::Sum);
-std::cout << by_city_product;
+auto out = sales.pivot_table("city", "product", "units", DataFrame::GroupOp::Sum);
+std::cout << out;
 ```
 
 ### Output
 
 ```text
-==========================================
-     | city    Laptop  Headphones  Monitor
-------------------------------------------
-0    | Accra   2       5           NULL   
-1    | Tema    1       NULL        3      
-2    | Kumasi  NULL    4           2      
-------------------------------------------
-[3 cs x 4 feat]
+=============================
+      | Laptop  Phone
+---------------------
+Accra | 6       1
+Tema  | 3       5
+---------------------
+[2 cs x 2 feat]
 ```
 
-Every `(city, product)` pair that never occurs in `orders` — Accra never sold a
-`Monitor`, Tema never sold `Headphones`, Kumasi never sold a `Laptop` — shows up as
-`NULL`, not `0`. That distinction matters downstream: summing a row of `NULL`s and real
-numbers with a null-skipping reduction gives the true total, whereas a stray `0` would
-silently (and wrongly) count as "zero units sold" for a combination that was simply never
-observed.
+This is the original `pivot_table()` use case: duplicate `(city, product)` pairs exist,
+so a plain [`pivot()`](pivot.md) would be wrong, but `Sum` makes the intended collapse
+explicit.
 
-Example 2. Use the default aggregation (`Mean`) instead of naming `Sum` explicitly.
+Example 2. Default aggregation is `Mean`, so repeated pairs are averaged rather than just
+spread wide.
 
 ```cpp
-auto avg_units = orders.pivot_table("city", "product", "units");  // op defaults to GroupOp::Mean
-std::cout << avg_units;
+auto avg = sales.pivot_table("city", "product", "units");
+std::cout << avg;
 ```
 
 ### Output
 
 ```text
-==========================================
-     | city    Laptop  Headphones  Monitor
-------------------------------------------
-0    | Accra   2       5           NULL   
-1    | Tema    1       NULL        3      
-2    | Kumasi  NULL    4           2      
-------------------------------------------
-[3 cs x 4 feat]
+=============================
+      | Laptop  Phone
+---------------------
+Accra | 3       1
+Tema  | 3       5
+---------------------
+[2 cs x 2 feat]
 ```
 
-Since every `(city, product)` combination in this particular dataset happens to occur
-exactly once, `Mean` and `Sum` produce numerically identical cells here — the difference
-only shows up once a combination has more than one matching order. `NULL` cells are still
-`NULL` regardless of `op`: there is nothing to average or sum when zero observations
-share that key pair.
+The two `Accra`/`Laptop` rows (`2` and `4`) are averaged to `3`. This is the key
+behavioral difference between `pivot_table()` and a non-aggregating reshape.
 
-Example 3. Keep a null key value as its own row instead of dropping it.
+Example 3. Multiple row keys, one column key, and multiple value features.
 
 ```cpp
-auto orders_with_gap = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106, 107}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi", ""}), pluss::make_series({true, true, true, true, true, true, false}))},
-    {"product",  Thread(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor", "Laptop"}))},
-    {"units",    Thread(pluss::make_series({2, 5, 1, 3, 4, 2, 9}))},
+DataFrame::PivotTableOptions options;
+options.index = {"city", "quarter"};
+options.columns = {"product"};
+options.values = {"units", "revenue"};
+options.aggfuncs = {DataFrame::GroupOp::Sum};
+options.index_separator = " / ";
+
+auto detailed = DataFrame({
+    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"quarter", Thread(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
+    {"product", Thread(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+    {"units",   Thread(pluss::make_series({2.0, 3.0, 4.0, 1.0, 5.0}))},
+    {"revenue", Thread(pluss::make_series({20.0, 30.0, 40.0, 10.0, 50.0}))},
 });
 
-auto with_null_row = orders_with_gap.pivot_table(
-    "city", "product", "units", DataFrame::GroupOp::Sum, /*dropnull_keys=*/false);
-std::cout << with_null_row;
+auto multi = detailed.pivot_table(options);
+std::cout << multi;
 ```
 
 ### Output
 
 ```text
-==========================================
-     | city    Laptop  Headphones  Monitor
-------------------------------------------
-0    | Accra   2       5           NULL   
-1    | Tema    1       NULL        3      
-2    | Kumasi  NULL    4           2      
-3    | NULL    9       NULL        NULL   
-------------------------------------------
+=================================================================================================
+           | units_sum :: Laptop  units_sum :: Phone  revenue_sum :: Laptop  revenue_sum :: Phone
+-------------------------------------------------------------------------------------------------
+Accra / Q1 | 2                    3                   20                     30
+Accra / Q2 | 4                    NULL                40                     NULL
+Tema / Q1  | 1                    NULL                10                     NULL
+Tema / Q2  | NULL                 5                   NULL                   50
+-------------------------------------------------------------------------------------------------
 [4 cs x 4 feat]
 ```
 
-Order `107` has no recorded `city` (the case's `city` cell is null via the validity mask
-constructor). With `dropnull_keys = false`, that order is not discarded — it forms its
-own row keyed on a null `city`, keeping its `Laptop` total of `9` visible. With the
-default `dropnull_keys = true`, that same order would simply vanish from the pivoted
-result with no trace, which is the right behavior when a missing key represents bad data
-you want to exclude, but the wrong behavior when a missing key is itself a meaningful
-group (an "unassigned" bucket, for example).
+The returned object keeps `{"city", "quarter"}` as a structured case axis. The printed row
+labels are joined with `index_separator`, which is why this example sets it to `" / "`
+instead of leaving the default internal separator.
+
+Example 4. `fill_value` and `margins` make the result closer to a spreadsheet-style pivot.
+
+```cpp
+options.fill_value = ThreadValue::HostAny::floating(0.0);
+options.margins = true;
+
+auto totaled = detailed.pivot_table(options);
+std::cout << totaled;
+```
+
+### Output
+
+```text
+=======================================================================================================================================
+           | units_sum :: Laptop  units_sum :: Phone  units_sum :: All  revenue_sum :: Laptop  revenue_sum :: Phone  revenue_sum :: All
+---------------------------------------------------------------------------------------------------------------------------------------
+Accra / Q1 | 2                    3                   5                 20                     30                    50
+Accra / Q2 | 4                    0                   4                 40                     0                     40
+Tema / Q1  | 1                    0                   1                 10                     0                     10
+Tema / Q2  | 0                    5                   5                 0                      50                    50
+All /      | 7                    8                   15                70                     80                    150
+---------------------------------------------------------------------------------------------------------------------------------------
+[5 cs x 6 feat]
+```
+
+This demonstrates two separate behaviors:
+
+- missing combinations are filled after pivoting, so absent `Phone` cells become `0`
+- totals are appended both across columns (`:: All`) and across rows (the bottom `All`
+  case)
+
+Example 5. Use explicit `specs` when different value features need different reductions.
+
+```cpp
+auto events = DataFrame({
+    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Tema"}))},
+    {"channel", Thread(pluss::make_note({"Card", "Cash", "Card", "Card", "Cash"}))},
+    {"amount",  Thread(pluss::make_series({20.0, 35.0, 10.0, 50.0, 40.0}))},
+    {"status",  Thread(pluss::make_note({"ok", "ok", "retry", "ok", "retry"}))},
+});
+
+DataFrame::PivotTableOptions mixed;
+mixed.index = {"city"};
+mixed.columns = {"channel"};
+mixed.specs = {
+    {"amount_sum", "amount", DataFrame::GroupOp::Sum},
+    {"status_mode", "status", DataFrame::GroupOp::Mode},
+};
+
+auto mixed_out = events.pivot_table(mixed);
+std::cout << mixed_out;
+```
+
+### Output
+
+```text
+========================================================================================
+      | amount_sum :: Card  amount_sum :: Cash  status_mode :: Card  status_mode :: Cash
+----------------------------------------------------------------------------------------
+Accra | 20                  35                  ok                   ok
+Tema  | 60                  40                  retry                retry
+----------------------------------------------------------------------------------------
+[2 cs x 4 feat]
+```
+
+This is the `pivot_table()` equivalent of pandas' "dict aggfunc" style. The two outputs
+are not forced through the same reduction:
+
+- `amount` is summed
+- `status` is reduced by mode
 
 ## Notes
 
-- `pivot_table()` never invents a value for an unobserved `(case_feature,
-  feature_feature)` pair; missing cells are always `NULL`. Follow with
-  [`fillnull(0.0)`](fillnull.md) explicitly if a zero is the correct interpretation for
-  your data.
-- If more than one row of `orders` shares the exact same `(case_feature,
-  feature_feature)` key pair, `op` aggregates across all of them into the single
-  resulting cell — this is exactly the scenario `pivot_table()` exists for, as opposed to
-  a plain reshape that would need every key pair to be unique already.
-- For a result that keeps every key as its own row feature instead of spreading one key
-  into columns, use [`group()`](group.md) directly.
+- If exactly one value spec is resolved, Pluss omits the value prefix and uses just the
+  flattened column labels when that is unambiguous, preserving the old simple look.
+- If `values` is omitted, compatible non-key features are inferred automatically.
+- Multi-column pivots stay ordinary `DataFrame`s. Pluss does not manufacture a column
+  `MultiIndex`; it flattens column tuples into stable feature names instead.
+- Multi-row pivots use the case axis natively. Use `label().reset()` only when you want
+  the row hierarchy materialized as ordinary features for printing or downstream joins.
+- Missing cells are true nulls unless you explicitly provide `fill_value`.
 
 ## See Also
 
-- [`DataFrame::group`](group.md): the long-format sibling of this reshape.
-- [`DataFrame::pivot`](pivot.md): reshape without aggregation, for data that is already
-  one row per `(case_feature, feature_feature)` pair.
-- [`DataFrame::fillnull`](fillnull.md): replace the `NULL` cells this method leaves for
-  unobserved combinations.
-- [`DataFrame::stack`](stack.md): fold pivoted columns back into a long format.
+- [`DataFrame::pivot`](pivot.md)
+- [`DataFrame::group`](group.md)
+- [`DataFrame::contingency`](contingency.md)
+- [`DataFrame::stack`](stack.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pivot.html">

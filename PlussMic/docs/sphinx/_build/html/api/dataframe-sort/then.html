@@ -13,10 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameSortBuilder::within" href="within.html" />
+    <link rel="prev" title="DataFrameSortBuilder::tail" href="tail.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -35,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 27f1c27b2a6b -->
 <section id="dataframesortbuilder-then">
 <h1>DataFrameSortBuilder::then<a class="headerlink" href="#dataframesortbuilder-then" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_sort_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameSortBuilder API Reference</span></a></p>
@@ -52,6 +55,10 @@
 <p>Appends additional tie-break key(s) after an existing <a class="reference internal" href="by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by(...)</span></code></span></a>
 plan — the mirror image of <code class="docutils literal notranslate"><span class="pre">by()</span></code>, which replaces the plan instead of
 extending it.</p>
+<p>The appended key is not a separate second sort pass; it becomes the next slot
+in the same lexicographic / tuple ordering. So <code class="docutils literal notranslate"><span class="pre">.by(&quot;city&quot;).then(&quot;sales&quot;)</span></code>
+means “sort by <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">sales)</span></code>”, with <code class="docutils literal notranslate"><span class="pre">sales</span></code> used only inside equal-<code class="docutils literal notranslate"><span class="pre">city</span></code>
+ties.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>then() requires an existing by() plan
@@ -118,6 +125,31 @@ The last appended key becomes the active key.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::sort.then: no existing sort plan; call .by(...) first
 </pre></div>
 </div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code>s let appended tie-break keys carry their own direction.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort</span><span class="p">()</span>
+<span class="w">              </span><span class="p">.</span><span class="n">by</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">)</span>
+<span class="w">              </span><span class="p">.</span><span class="n">then</span><span class="p">({</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ArrangeSpec</span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}})</span>
+<span class="w">              </span><span class="p">.</span><span class="n">yield</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   sales
+-------------------
+1    | Accra  100  
+2    | Accra  90   
+3    | Tema   200  
+0    | Tema   120  
+-------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>The primary key remains <code class="docutils literal notranslate"><span class="pre">city</span></code> ascending. The appended <code class="docutils literal notranslate"><span class="pre">sales</span></code> key only breaks
+ties inside each city, and it does so descending because its <code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code>
+overrides the builder default.</p>
 </section>
 </section>
 <section id="notes">
@@ -129,6 +161,8 @@ the terminal method, not <code class="docutils literal notranslate"><span class=
 <li><p>The last-appended key becomes the active key for
 <a class="reference internal" href="asc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">asc()</span></code></span></a>/<a class="reference internal" href="desc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">desc()</span></code></span></a>/<a class="reference internal" href="nulls_first.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nulls_first()</span></code></span></a>/
 <a class="reference internal" href="nulls_last.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nulls_last()</span></code></span></a>.</p></li>
+<li><p>Plain feature-name forms inherit one shared builder default; use
+<code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code> when an appended tie-break key needs its own direction.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -180,8 +214,11 @@ reached from.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -198,6 +235,18 @@ reached from.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+  <li><a href="../../dataframe_sort_accessor_api_reference.html">DataFrameSortBuilder API Reference</a><ul>
+      <li>Previous: <a href="tail.html" title="previous chapter">DataFrameSortBuilder::tail</a></li>
+      <li>Next: <a href="within.html" title="next chapter">DataFrameSortBuilder::within</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
   </ul></li>
 </ul>
 </div>

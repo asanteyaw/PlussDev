@@ -14,13 +14,12 @@ DataFrameLabelAccessor::sort(const DataFrame::SortLabelOptions& options) const -
 
 ## What It Does
 
-Reorders every row by case label. The simple overload compares the **flat**
-case label as a single sequence (the same comparison
-[`monotonic()`](monotonic.md) uses) — on a structured, multi-level frame, this
-sorts by the composite *displayed* string, not level-by-level. `sort(options)`
-with `options.names` given instead sorts **lexicographically by those named
-levels**, in the order you list them — a real per-level sort, independent of
-how the composite string happens to be joined.
+Reorders every row by case label. On a structured, multi-level case axis, the
+simple overload sorts **lexicographically by the stored case-label levels in
+their existing order**: first level primary, second level tie-breaker, third
+level next tie-breaker, and so on. `sort(options)` with `options.names` given
+does the same kind of lexicographic comparison, but using the named levels in
+the order you provide rather than the frame's current case-axis order.
 
 ## Parameters
 
@@ -110,7 +109,7 @@ Ties (the two `"east"` rows) keep their original relative order either way —
 the sort is stable.
 
 Example 2. Sort a 2-level structured frame by one named level ahead of the
-other, instead of the composite string's own left-to-right order.
+other, instead of the case axis's existing level order.
 
 ```cpp
 using namespace pluss::table;
@@ -143,7 +142,7 @@ east/NYC    | 20
 [4 cs x 1 feat]
 ```
 
-### Output (flat_sorted — composite string order)
+### Output (flat_sorted — existing level order: region, then city)
 
 ```text
 ===================
@@ -171,19 +170,20 @@ west/SF     | 40
 [4 cs x 1 feat]
 ```
 
-The composite label is `"region/city"`, so the plain `sort()` above sorts by
-`region` first (`east` before `west`) and `city` only breaks ties within it.
+The case axis stores `region` first and `city` second, so the plain `sort()`
+above sorts by `region` first (`east` before `west`) and `city` only breaks
+ties within it.
 `sort(SortLabelOptions{.names = {"city", "region"}})` instead sorts by `city`
-first regardless of level order in the composite string — `"Boston" <
+first regardless of the case axis's existing level order — `"Boston" <
 "LA" < "NYC" < "SF"` puts `west/LA` right after `east/Boston`, ahead of
-`east/NYC`, which the flat composite sort would never produce.
+`east/NYC`, which the default region-first label sort would never produce.
 
 ## Notes
 
-- The simple overload compares the flat, displayed case-label string on a
-  structured frame — if the composite join could ever be ambiguous (rare with
-  the default separator, more of a concern with a custom one), prefer
-  `sort(SortLabelOptions{.names = {...}})` for an unambiguous, per-level sort.
+- The simple overload already uses the full multi-level case axis lexicographically;
+  it is not limited to a naïve string compare of the rendered joined label.
+- Use `sort(SortLabelOptions{.names = {...}})` when you need a different level
+  priority from the frame's existing case-axis order.
 - Sorting is stable: rows with equal case labels retain their original
   relative order.
 

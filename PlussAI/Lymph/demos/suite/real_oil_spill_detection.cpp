@@ -33,7 +33,7 @@ int main() {
   iso.random.deterministic = true;
 
   const lymph::detect::Result result =
-      lymph::detect::model(lymph::models::isolation_detector(iso)).run(raw, data);
+      lymph::detect::model(lymph::model::isolation_detector(iso)).run(raw, data);
 
   std::cout << "oil-spill flagged: " << result.flagged_count() << "\n";
   std::cout << "oil-spill rate: " << result.flagged_rate() << "\n";

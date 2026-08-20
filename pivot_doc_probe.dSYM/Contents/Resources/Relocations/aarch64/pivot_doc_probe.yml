@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/yawasante/software/cxx/PlussDev/pivot_doc_probe'
+relocations:     []
+...

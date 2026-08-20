@@ -35,9 +35,8 @@ bool run_namespace_surface_checks(std::ostream* err) {
   static_assert(std::is_same_v<lymph::MetricReport, lymph::metrics::MetricReport>);
   static_assert(std::is_same_v<lymph::SeriesCompareReport, lymph::metrics::SeriesCompareReport>);
   static_assert(std::is_same_v<lymph::LinearParameters, lymph::metrics::LinearParameters>);
-  static_assert(std::is_same_v<lymph::CrossValidationOptions, lymph::metrics::CrossValidationOptions>);
-  static_assert(std::is_same_v<lymph::CrossValidationReport, lymph::metrics::CrossValidationReport>);
-  static_assert(std::is_same_v<lymph::FoldBatchPair, lymph::metrics::FoldBatchPair>);
+  static_assert(std::is_same_v<decltype(lymph::validate::cross().options()),
+                               const lymph::metrics::ValidationOptions&>);
   static_assert(std::is_same_v<lymph::ModelReports, lymph::reports::ModelReports>);
   static_assert(std::is_same_v<lymph::OnlineLinearClassifier, lymph::online::OnlineLinearClassifier>);
   static_assert(std::is_same_v<lymph::OnlineLinearRegressor, lymph::online::OnlineLinearRegressor>);
@@ -47,10 +46,8 @@ bool run_namespace_surface_checks(std::ostream* err) {
   static_assert(std::is_same_v<lymph::CategoryIndexer, lymph::prep::CategoryIndexer>);
   static_assert(std::is_same_v<decltype(lymph::model::linear::linear_regression()), lymph::Model>);
   static_assert(std::is_same_v<decltype(lymph::model::linear_regression()), lymph::Model>);
-  static_assert(std::is_same_v<decltype(lymph::models::linear_regression()), lymph::Model>);
   static_assert(std::is_same_v<decltype(lymph::model::tree::decision_tree_regressor()), lymph::Model>);
   static_assert(std::is_same_v<decltype(lymph::model::decision_tree_regressor()), lymph::Model>);
-  static_assert(std::is_same_v<decltype(lymph::models::decision_tree_regressor()), lymph::Model>);
   static_assert(std::is_same_v<decltype(lymph::model::ensemble::random_forest_classifier()), lymph::Model>);
   static_assert(std::is_same_v<decltype(lymph::model::random_forest_classifier()), lymph::Model>);
   static_assert(std::is_same_v<decltype(lymph::builder::build()), lymph::Builder>);

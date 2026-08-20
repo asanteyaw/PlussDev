@@ -24,7 +24,7 @@ int main() {
   data.feature_names = features;
   data.label_feature = "spill";
 
-  lymph::Workflow wf = lymph::workflow::make(lymph::models::random_forest_classifier({.learners = 60, .subsample = 0.9}));
+  lymph::Workflow wf = lymph::workflow::make(lymph::model::random_forest_classifier({.learners = 60, .subsample = 0.9}));
   wf.learn_(raw, data);
   std::cout << "oil-spill classifier f1: " << wf.assess(raw, data).f1.item<double>() << "\n";
   return 0;

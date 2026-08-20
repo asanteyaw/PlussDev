@@ -1,8 +1,8 @@
-# `Workflow::stage_count`
+# `workflow::stage_count`
 
 ## API Signature
 
-- `Workflow::stage_count() -> std::int64_t`
+- `workflow::stage_count() -> std::int64_t`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::stage_count();
+auto value = workflow::stage_count();
 out.info("stage_count", value);
 ```
 

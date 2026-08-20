@@ -1,0 +1,74 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7f6996adb66f -->
+
+# DataFrameContingencyTableBuilder::var
+
+[Back to DataFrame contingency accessor API Reference](../../dataframe_contingency_accessor_api_reference)
+
+## Signature
+
+```cpp
+DataFrameContingencyTableBuilder::var(std::string_view feature) const -> DataFrame
+```
+
+## What It Does
+
+Computes the sample variance of a numeric value feature inside each crossed
+contingency cell.
+
+## Parameters
+
+**feature** (`std::string_view`)
+    The numeric value feature to reduce per crossed cell.
+
+## Returns
+
+`DataFrame`
+    A contingency table whose numeric cells are sample variances for the
+    selected value feature.
+
+## Examples
+
+Example 1. Sample variance of `amount` inside each crossed cell.
+
+```cpp
+using namespace pluss::table;
+
+auto df = DataFrame({
+    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+});
+
+auto out = df.contingency("city", "channel").var("amount");
+std::cout << out;
+```
+
+### Output
+
+```text
+=======================
+     | city  Card  Cash
+-----------------------
+0    | A     NULL  NULL
+1    | B     NULL  50
+-----------------------
+[2 cs x 3 feat]
+```
+
+## Notes
+
+- `var()` uses sample degrees of freedom within each cell.
+- Cells with fewer than two observed values render `NULL` because the sample
+  variance is not defined there.
+
+## See Also
+
+- [`DataFrameContingencyTableBuilder::std`](std.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="totals.html">
+    <span class="label">Previous</span>
+    <span class="title">totals</span>
+  </a>
+</div>

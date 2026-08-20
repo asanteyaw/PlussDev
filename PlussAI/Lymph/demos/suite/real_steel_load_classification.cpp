@@ -34,7 +34,7 @@ int main() {
               {"encode", lymph::stage::one_hot_encoder(enc)},
           }),
       },
-      lymph::models::gradient_boost_classifier({.learners = 70, .learning_rate = 0.05}));
+      lymph::model::gradient_boost_classifier({.learners = 70, .learning_rate = 0.05}));
 
   wf.learn_(data);
   std::cout << "steel balanced accuracy: " << wf.assess(data).balanced_accuracy.item<double>() << "\n";

@@ -31,7 +31,7 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::random_forest_regressor({.learners = 60, .subsample = 0.8}));
+      lymph::model::random_forest_regressor({.learners = 60, .subsample = 0.8}));
 
   wf.learn_(data);
   std::cout << "warehouse rmse: " << wf.assess(data).rmse.item<double>() << "\n";

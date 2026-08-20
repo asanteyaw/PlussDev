@@ -42,12 +42,11 @@ int main(int argc, char** argv) {
     });
 
 
-    const auto split = nja::holdout_split(frame, nja::HoldoutSplitOptions{
-                                                     .test_size = 0.2,
-                                                     .random_state = 42,
-                                                     .deterministic = true,
-                                                     .shuffle = true,
-                                                 });
+    const auto split = nja::validate::holdout()
+                           .test_size(0.2)
+                           .shuffle(true)
+                           .seed(42)
+                           .split(frame);
     const DataFrame train_x = split.train_set.features(
         {"season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday", "weather_condition", "temp", "atemp", "humidity", "windspeed"});
     const DataFrame test_x = split.test_set.features(
@@ -64,7 +63,7 @@ int main(int argc, char** argv) {
     AssessOptions assess_options{};
     assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
 
-    nja::CrossValidationOptions cv_options{};
+    nja::metrics::CrossValidationOptions cv_options{};
     cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
     cv_options.shuffle = true;

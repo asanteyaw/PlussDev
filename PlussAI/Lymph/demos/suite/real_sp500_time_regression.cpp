@@ -30,10 +30,10 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::gradient_boost_regressor({.learners = 60, .learning_rate = 0.04}));
+      lymph::model::gradient_boost_regressor({.learners = 60, .learning_rate = 0.04}));
   wf.time(time);
 
-  lymph::CrossValidationReport cv = lymph::validate::time().folds(4).gap(1).horizon(15).lookback(180).run(wf, data);
+  auto cv = lymph::validate::time().folds(4).gap(1).horizon(15).lookback(180).run(wf, data);
   wf.learn_(data);
   std::cout << "sp500 folds: " << cv.report.folds.size() << "\n";
   std::cout << "sp500 rmse: " << wf.assess(data).rmse.item<double>() << "\n";

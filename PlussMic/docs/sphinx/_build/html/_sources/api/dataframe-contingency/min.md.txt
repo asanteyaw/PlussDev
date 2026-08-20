@@ -1,0 +1,73 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ec3a06c5ab19 -->
+
+# DataFrameContingencyTableBuilder::min
+
+[Back to DataFrame contingency accessor API Reference](../../dataframe_contingency_accessor_api_reference)
+
+## Signature
+
+```cpp
+DataFrameContingencyTableBuilder::min(std::string_view feature) const -> DataFrame
+```
+
+## What It Does
+
+Computes the per-cell minimum of a numeric value feature inside the contingency
+layout.
+
+## Parameters
+
+**feature** (`std::string_view`)
+    The numeric value feature to reduce per crossed cell.
+
+## Returns
+
+`DataFrame`
+    A contingency table whose numeric cells are minima for the selected value
+    feature.
+
+## Examples
+
+Example 1. Minimum `amount` in each crossed cell.
+
+```cpp
+using namespace pluss::table;
+
+auto df = DataFrame({
+    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+});
+
+auto out = df.contingency("city", "channel").min("amount");
+std::cout << out;
+```
+
+### Output
+
+```text
+=======================
+     | city  Card  Cash
+-----------------------
+0    | A     20    10
+1    | B     50    30
+-----------------------
+[2 cs x 3 feat]
+```
+
+## See Also
+
+- [`DataFrameContingencyTableBuilder::max`](max.md)
+- [`DataFrameContingencyTableBuilder::median`](median.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="median.html">
+    <span class="label">Previous</span>
+    <span class="title">median</span>
+  </a>
+  <a class="next-link" href="ndistinct.html">
+    <span class="label">Next</span>
+    <span class="title">ndistinct</span>
+  </a>
+</div>

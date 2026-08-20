@@ -25,7 +25,7 @@ int main() {
       .label("outcome")
       .note(lymph::DataNotePolicy::Factorize);
 
-  lymph::Workflow wf = lymph::workflow::make(lymph::models::decision_tree_classifier({.max_depth = 6, .min_samples_leaf = 3}));
+  lymph::Workflow wf = lymph::workflow::make(lymph::model::decision_tree_classifier({.max_depth = 6, .min_samples_leaf = 3}));
   wf.learn_(data);
   std::cout << "horse-colic accuracy: " << wf.assess(data).accuracy.item<double>() << "\n";
   return 0;

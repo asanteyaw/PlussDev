@@ -23,6 +23,7 @@ window.PLUSS_API_NAV = {
       "combine",
       "compare",
       "conform",
+      "contingency",
       "copy",
       "corr",
       "corr_with",
@@ -159,6 +160,7 @@ window.PLUSS_API_NAV = {
       "skew",
       "slice",
       "sort",
+      "split",
       "sql",
       "stack",
       "std",
@@ -408,7 +410,58 @@ window.PLUSS_API_NAV = {
     "slug": "dataframe-group",
     "landing": "dataframe_group_accessor_api_reference.html",
     "methods": [
-      "by"
+      "agg",
+      "by",
+      "count",
+      "filter",
+      "max",
+      "mean",
+      "median",
+      "min",
+      "mode",
+      "mode_ties",
+      "ndistinct",
+      "std",
+      "sum",
+      "transform",
+      "var",
+      "yield"
+    ]
+  },
+  "DataFrameSortBuilder": {
+    "title": "DataFrameSortBuilder",
+    "slug": "dataframe-sort",
+    "landing": "dataframe_sort_accessor_api_reference.html",
+    "methods": [
+      "asc",
+      "by",
+      "desc",
+      "head",
+      "nulls_first",
+      "nulls_last",
+      "order",
+      "tail",
+      "then",
+      "within",
+      "yield"
+    ]
+  },
+  "ContingencyTable": {
+    "title": "ContingencyTable",
+    "slug": "dataframe-contingency",
+    "landing": "dataframe_contingency_accessor_api_reference.html",
+    "methods": [
+      "condition",
+      "dims",
+      "facet",
+      "freq",
+      "marginalize",
+      "ndim",
+      "shape",
+      "share",
+      "slice",
+      "to_array",
+      "to_frame"
     ]
   },
   "Thread": {

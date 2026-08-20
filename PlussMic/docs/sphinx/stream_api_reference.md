@@ -27,6 +27,12 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+stream_plot_accessor_api_reference
+stream_cast_accessor_api_reference
+stream_note_accessor_api_reference
+stream_timeline_accessor_api_reference
+stream_ts_accessor_api_reference
+stream_lbl_accessor_api_reference
 api/stream/abs
 api/stream/as_note
 api/stream/as_series

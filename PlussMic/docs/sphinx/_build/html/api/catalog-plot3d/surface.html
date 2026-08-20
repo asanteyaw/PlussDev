@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -70,8 +70,8 @@ projecting first avoids that entirely.</p>
 </div>
 <p>See <a class="reference internal" href="../dataframe-plot3d/surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::surface</span></code></span></a> for the full grid
 construction (pivoting <code class="docutils literal notranslate"><span class="pre">y_key</span></code>’s distinct values into rows, <code class="docutils literal notranslate"><span class="pre">x_key</span></code>’s into columns, and
-aggregating <code class="docutils literal notranslate"><span class="pre">z_key</span></code> into each cell with <code class="docutils literal notranslate"><span class="pre">op</span></code>), which <code class="docutils literal notranslate"><span class="pre">GroupOp</span></code> values are actually supported,
-and how missing <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> combinations are filled.</p>
+aggregating <code class="docutils literal notranslate"><span class="pre">z_key</span></code> into each cell with <code class="docutils literal notranslate"><span class="pre">op</span></code>), the numeric-grid requirement that still
+applies at render time, and how missing <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> combinations are filled.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -81,7 +81,7 @@ work happens.</p>
 <p><strong>op</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::DataFrame::GroupOp</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>)
 The aggregation applied per grid cell — see
 <a class="reference internal" href="../dataframe-plot3d/surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::surface</span></code></span></a> for
-which of <code class="docutils literal notranslate"><span class="pre">GroupOp</span></code>’s ten values are actually supported by the underlying <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code>.</p>
+the remaining numeric-rendering constraints after pivoting.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Surface3DPlotOptions&amp;</span></code>)
 Same <code class="docutils literal notranslate"><span class="pre">scene</span></code>/<code class="docutils literal notranslate"><span class="pre">trace</span></code> shape documented on
 <a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlot3DAccessor::scatter</span></code></span></a>.</p>
@@ -139,8 +139,8 @@ hour/depth combination — here, each combination happens to have exactly one ma
 runs.</p></li>
 <li><p>Delegates to <a class="reference internal" href="../dataframe-plot3d/surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlot3DAccessor::surface</span></code></span></a> after
 projecting to exactly the three requested keys — see the important callout above and that
-page for the grid-aggregation rules, unsupported-<code class="docutils literal notranslate"><span class="pre">op</span></code> throw, and zero-fill behavior for
-missing <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> combinations.</p></li>
+page for the grid-aggregation rules and zero-fill behavior for missing <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code>
+combinations.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see
 <a class="reference internal" href="../catalog-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::line</span></code></span></a>’s important callout for how to view
 or save the result.</p></li>
@@ -219,9 +219,11 @@ internally on the projected three-key slice.</p></li>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
   <li><a href="../../catalog_plot3d_accessor_api_reference.html">CatalogPlot3DAccessor API Reference</a><ul>
       <li>Previous: <a href="scatter.html" title="previous chapter">CatalogPlot3DAccessor::scatter</a></li>
       <li>Next: <a href="wireframe.html" title="next chapter">CatalogPlot3DAccessor::wireframe</a></li>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>

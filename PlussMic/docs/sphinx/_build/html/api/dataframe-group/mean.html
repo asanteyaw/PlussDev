@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,12 +37,16 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5eb86fdf4cfb -->
 <section id="dataframegrouped-mean">
 <h1>DataFrameGrouped::mean<a class="headerlink" href="#dataframegrouped-mean" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_group_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameGroupBuilder API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">mean</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">mean</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">mean</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameGrouped</span><span class="o">::</span><span class="n">mean</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -51,10 +55,15 @@
 <p>Computes group-wise arithmetic mean for each non-key value feature — the grouped
 convenience terminal equivalent to calling <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> with a <code class="docutils literal notranslate"><span class="pre">GroupOp::Mean</span></code>
 spec for every remaining value feature.</p>
+<p>When you pass one or more feature names, <code class="docutils literal notranslate"><span class="pre">mean(...)</span></code> only aggregates those selected
+value features instead of every remaining non-key value feature.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p>This method takes no parameters.</p>
+<p><strong>feature</strong> / <strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">initializer_list&lt;string_view&gt;</span></code> /
+<code class="docutils literal notranslate"><span class="pre">RangeView&lt;string_view&gt;</span></code>, optional)</p>
+<p>Select one or more non-key value features to average. Omit them to average every
+remaining non-key value feature on the current frame.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -94,6 +103,25 @@ One row per group. The group key column(s) come first, followed by one
 <p><code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code>’s <code class="docutils literal notranslate"><span class="pre">amount_mean</span></code> is <code class="docutils literal notranslate"><span class="pre">(100</span> <span class="pre">+</span> <span class="pre">80)</span> <span class="pre">/</span> <span class="pre">2</span> <span class="pre">=</span> <span class="pre">90</span></code>; its <code class="docutils literal notranslate"><span class="pre">units_mean</span></code> is
 <code class="docutils literal notranslate"><span class="pre">(2</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">2</span> <span class="pre">=</span> <span class="pre">1.5</span></code>, printed with the fractional part since it is not a whole number.
 <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> averages to <code class="docutils literal notranslate"><span class="pre">45</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> respectively.</p>
+<p>Example 2. Average only one selected value feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
+<span class="w">                </span><span class="p">.</span><span class="n">by</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
+<span class="w">                </span><span class="p">.</span><span class="n">mean</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================
+     | city   amount_mean
+------------------------
+0    | Accra  90
+1    | Tema   45
+------------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">
@@ -101,6 +129,8 @@ One row per group. The group key column(s) come first, followed by one
 <ul class="simple">
 <li><p>The convenience terminal is best when all remaining value features should take the
 same grouped operation.</p></li>
+<li><p>Passing <code class="docutils literal notranslate"><span class="pre">mean({&quot;amount&quot;})</span></code> or <code class="docutils literal notranslate"><span class="pre">mean(&quot;amount&quot;)</span></code> is the targeted form when you only
+want a subset of the value side.</p></li>
 <li><p>If you need one mean and one count in the same output, use <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a>
 instead.</p></li>
 <li><p>A group where the value feature is entirely null means to null, not <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>

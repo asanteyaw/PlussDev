@@ -23,6 +23,8 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+thread_ts_accessor_api_reference
+thread_plot_api_reference
 api/thread/abs
 api/thread/add
 api/thread/align

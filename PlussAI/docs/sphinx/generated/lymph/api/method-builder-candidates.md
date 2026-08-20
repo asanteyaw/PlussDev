@@ -81,7 +81,7 @@ NodeJ CV + tune demo completed.
 ### Example 3 (Demo Pattern)
 
 ```cpp
-    nja::CrossValidationOptions cv_options{};
+    nja::metrics::CrossValidationOptions cv_options{};
     cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
     cv_options.shuffle = true;

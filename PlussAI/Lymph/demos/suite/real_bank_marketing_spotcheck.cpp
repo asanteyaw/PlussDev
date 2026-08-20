@@ -36,12 +36,12 @@ int main() {
       });
 
   lymph::Builder models = lymph::builder::build({
-      {"logistic", lymph::models::logistic_regression({.regularization_strength = 0.02})},
-      {"forest", lymph::models::random_forest_classifier({.learners = 40, .subsample = 0.8})},
-      {"boost", lymph::models::gradient_boost_classifier({.learners = 50, .learning_rate = 0.05})},
+      {"logistic", lymph::model::logistic_regression({.regularization_strength = 0.02})},
+      {"forest", lymph::model::random_forest_classifier({.learners = 40, .subsample = 0.8})},
+      {"boost", lymph::model::gradient_boost_classifier({.learners = 50, .learning_rate = 0.05})},
   });
 
-  lymph::CrossValidationOptions cv{};
+  lymph::metrics::CrossValidationOptions cv{};
   cv.plan = lymph::CVPlanKind::StratifiedCrossVal;
   cv.folds = 3;
   cv.shuffle = true;

@@ -24,6 +24,9 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+slot_cast_accessor_api_reference
+slot_note_accessor_api_reference
+slot_timeline_accessor_api_reference
 api/slot/astype
 api/slot/at
 api/slot/cast

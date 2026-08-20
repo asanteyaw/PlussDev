@@ -19,7 +19,7 @@ int main() {
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"x", "score"}, {{"scale", lymph::stage::standard_scaler()}}),
       },
-      lymph::models::logistic_regression({.regularization_strength = 0.01}));
+      lymph::model::logistic_regression({.regularization_strength = 0.01}));
   wf.learn_(data);
 
   const lymph::ThresholdCurve curve = lymph::reports::threshold_curve(wf, data);

@@ -98,6 +98,73 @@ inline pluss::Note empty_like(const pluss::Note& like) {
   return full_like(like, std::string_view{});
 }
 
+inline pluss::Note rep(std::string_view value, pluss::msharp::RangeView::Of<std::int64_t> sizes) {
+  return full(sizes, value);
+}
+inline pluss::Note rep(std::string_view value, std::initializer_list<std::int64_t> sizes) {
+  return rep(value, pluss::msharp::RangeView::Of<std::int64_t>(sizes));
+}
+
+inline pluss::Note rand(pluss::msharp::RangeView::Of<std::int64_t> sizes,
+                        bool capitalize = true,
+                        std::uint64_t seed = 0) {
+  const pluss::detail::ShapeSpec shape(std::span<const std::int64_t>(sizes.data(), sizes.size()));
+  const auto n = pluss::coden::factory_detail::checked_numel(shape);
+  const auto flat = pluss::coden::factory_detail::random_chars_from_charset(
+      n,
+      capitalize ? std::string_view{"ABCDEFGHIJKLMNOPQRSTUVWXYZ"}
+                 : std::string_view{"abcdefghijklmnopqrstuvwxyz"},
+      seed);
+  return pluss::coden::factory_detail::make_note_from_textspan(
+      pluss::detail::TextSpan::from_strings(flat),
+      shape);
+}
+inline pluss::Note rand(std::initializer_list<std::int64_t> sizes,
+                        bool capitalize = true,
+                        std::uint64_t seed = 0) {
+  return rand(pluss::msharp::RangeView::Of<std::int64_t>(sizes), capitalize, seed);
+}
+
+inline pluss::Note rand_between(std::string_view lo,
+                                std::string_view hi,
+                                pluss::msharp::RangeView::Of<std::int64_t> sizes,
+                                std::uint64_t seed = 0) {
+  const pluss::detail::ShapeSpec shape(std::span<const std::int64_t>(sizes.data(), sizes.size()));
+  const auto n = pluss::coden::factory_detail::checked_numel(shape);
+  const auto flat = pluss::coden::factory_detail::random_chars_between(
+      n, lo, hi, seed, "pluss::note::rand_between");
+  return pluss::coden::factory_detail::make_note_from_textspan(
+      pluss::detail::TextSpan::from_strings(flat),
+      shape);
+}
+inline pluss::Note rand_between(std::string_view lo,
+                                std::string_view hi,
+                                std::initializer_list<std::int64_t> sizes,
+                                std::uint64_t seed = 0) {
+  return rand_between(lo, hi, pluss::msharp::RangeView::Of<std::int64_t>(sizes), seed);
+}
+
+inline pluss::Note arange(std::string_view start,
+                          std::string_view end,
+                          std::int64_t step = 1,
+                          bool inclusive = true) {
+  const auto flat = pluss::coden::factory_detail::char_arange(
+      start, end, step, inclusive, "pluss::note::arange");
+  return pluss::coden::factory_detail::make_note_from_owned_strings_1d(flat);
+}
+
+using WordSelectMode = pluss::coden::factory_detail::WordSelectMode;
+
+inline pluss::Note perm(std::string_view word,
+                        std::int64_t pick,
+                        WordSelectMode mode = WordSelectMode::Combination,
+                        bool with_replacement = false,
+                        bool unique_results = true) {
+  const auto flat = pluss::coden::factory_detail::word_select(
+      word, pick, mode, with_replacement, unique_results);
+  return pluss::coden::factory_detail::make_note_from_owned_strings_1d(flat);
+}
+
 inline pluss::Note full_bytes_like(const pluss::Note& like, std::string_view value) {
   PLUSS_CHECK(like.defined(), "pluss::note::full_bytes_like requires a defined Note");
   const auto sizes = like.sizes();

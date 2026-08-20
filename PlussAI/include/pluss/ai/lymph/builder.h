@@ -183,7 +183,7 @@ class Builder final {
   // detour and no separate "which platform" argument required -- the
   // platform already lives on the Series you hand in.
   [[nodiscard]] selection::CompareResult benchmark(const LabeledBatch& batch,
-                                                    CrossValidationOptions cv = {},
+                                                    metrics::ValidationOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
                                                     MetricKind objective_metric = MetricKind::Accuracy,
@@ -195,7 +195,7 @@ class Builder final {
 
   [[nodiscard]] selection::CompareResult benchmark(const pluss::table::DataFrame& x,
                                                     const Series& y,
-                                                    CrossValidationOptions cv = {},
+                                                    metrics::ValidationOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
                                                     MetricKind objective_metric = MetricKind::Accuracy,
@@ -211,7 +211,7 @@ class Builder final {
   // the (x, y) form).
   [[nodiscard]] selection::CompareResult benchmark(const pluss::table::DataFrame& frame,
                                                     const DataFrameBatchOptions& data_options,
-                                                    CrossValidationOptions cv = {},
+                                                    metrics::ValidationOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
                                                     MetricKind objective_metric = MetricKind::Accuracy,

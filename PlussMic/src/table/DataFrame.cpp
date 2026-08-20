@@ -405,15 +405,23 @@ std::string series_scalar_string_at(const pluss::Series& s, std::int64_t row) {
     case pluss::codem::ScalarType::UInt64:
       return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16:
-      return fmt::format("{:.6g}",
-                         pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
+      return std::isnan(pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]))
+          ? std::string("NULL")
+          : fmt::format("{:.6g}",
+                        pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
     case pluss::codem::ScalarType::BFloat16:
-      return fmt::format("{:.6g}",
-                         pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
+      return std::isnan(pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]))
+          ? std::string("NULL")
+          : fmt::format("{:.6g}",
+                        pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
     case pluss::codem::ScalarType::Float32:
-      return fmt::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
+      return std::isnan(reinterpret_cast<const float*>(base)[row])
+          ? std::string("NULL")
+          : fmt::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
     case pluss::codem::ScalarType::Float64:
-      return fmt::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
+      return std::isnan(reinterpret_cast<const double*>(base)[row])
+          ? std::string("NULL")
+          : fmt::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
       return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
@@ -497,6 +505,16 @@ Thread make_i64_thread(const std::vector<std::int64_t>& values) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
   return Thread(s);
+}
+
+Thread make_i64_thread(const std::vector<std::int64_t>& values, const std::vector<bool>& valid) {
+  PLUSS_CHECK(values.size() == valid.size(), "make_i64_thread: values/valid length mismatch");
+  const auto n = static_cast<std::int64_t>(values.size());
+  auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Int64);
+  if (!values.empty()) {
+    std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
+  }
+  return Thread(s, bool_series_from_keep(valid));
 }
 
 std::string summary_op_name(DataFrame::SummaryOp op) {

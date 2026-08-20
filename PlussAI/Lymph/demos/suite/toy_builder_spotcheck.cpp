@@ -25,12 +25,12 @@ int main() {
       });
 
   lymph::Builder models = lymph::builder::build({
-      {"linear", lymph::models::logistic_regression({.regularization_strength = 0.01})},
-      {"tree", lymph::models::decision_tree_classifier({.max_depth = 4, .min_samples_leaf = 2})},
-      {"forest", lymph::models::random_forest_classifier({.learners = 25, .subsample = 1.0})},
+      {"linear", lymph::model::logistic_regression({.regularization_strength = 0.01})},
+      {"tree", lymph::model::decision_tree_classifier({.max_depth = 4, .min_samples_leaf = 2})},
+      {"forest", lymph::model::random_forest_classifier({.learners = 25, .subsample = 1.0})},
   });
 
-  lymph::CrossValidationOptions cv{};
+  lymph::metrics::CrossValidationOptions cv{};
   cv.plan = lymph::CVPlanKind::StratifiedCrossVal;
   cv.folds = 3;
   cv.shuffle = true;

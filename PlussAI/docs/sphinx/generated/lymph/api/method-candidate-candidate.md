@@ -56,7 +56,7 @@ Candidate returned Candidate(std::string in_name, Model in_model, std::optional<
 ### Example 2 (Demo Pattern)
 
 ```cpp
-    nja::CrossValidationOptions cv_options{};
+    nja::metrics::CrossValidationOptions cv_options{};
     cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
     cv_options.shuffle = true;

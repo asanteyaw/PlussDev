@@ -15,8 +15,8 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="MultiLinearModel::class_count" href="method-multilinearmodel-class-count.html" />
-    <link rel="prev" title="make_triplet" href="method-make-triplet.html" />
+    <link rel="next" title="metrics::as_stratify_series" href="method-metrics-as-stratify-series.html" />
+    <link rel="prev" title="make_validation_split_options" href="method-make-validation-split-options.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -87,7 +87,7 @@ Pluss numeric vector/tensor input.</p></li>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">pred</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">best</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">test_x</span><span class="p">);</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">fs</span><span class="o">::</span><span class="n">path</span><span class="w"> </span><span class="n">best_model_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model_dir</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s">&quot;hour_best_workflow.bin&quot;</span><span class="p">;</span>
 <span class="w">    </span><span class="n">best</span><span class="p">.</span><span class="n">save</span><span class="p">(</span><span class="n">best_model_path</span><span class="p">.</span><span class="n">string</span><span class="p">(),</span><span class="w"> </span><span class="n">train_x</span><span class="p">,</span><span class="w"> </span><span class="n">train_y</span><span class="p">,</span><span class="w"> </span><span class="n">train_options</span><span class="p">);</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">restored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">Workflow</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="n">best_model_path</span><span class="p">.</span><span class="n">string</span><span class="p">());</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">restored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">Model</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="n">best_model_path</span><span class="p">.</span><span class="n">string</span><span class="p">());</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">pred_restored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">restored</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">test_x</span><span class="p">);</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">restored_max_abs_diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">max_abs_diff</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span><span class="w"> </span><span class="n">pred_restored</span><span class="p">);</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;restored prediction max_abs_diff: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">restored_max_abs_diff</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -171,8 +171,8 @@ data=[0.63710967] cv_mae=pluss::Series(shape=[1], strides=[1], dtype=float64, pl
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../lymph_full_api.html">Lymph Full API Reference</a><ul>
   <li><a href="../api_index.html">Lymph Full API Reference: Method Index</a><ul>
-      <li>Previous: <a href="method-make-triplet.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">make_triplet</span></code></a></li>
-      <li>Next: <a href="method-multilinearmodel-class-count.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">MultiLinearModel::class_count</span></code></a></li>
+      <li>Previous: <a href="method-make-validation-split-options.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">make_validation_split_options</span></code></a></li>
+      <li>Next: <a href="method-metrics-as-stratify-series.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">metrics::as_stratify_series</span></code></a></li>
   </ul></li>
   </ul></li>
   </ul></li>

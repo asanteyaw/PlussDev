@@ -866,8 +866,8 @@ private:
   std::vector<std::pair<Stage, ColumnRouter>> pending_stages_{};
   std::optional<TargetTransform> target_transform_{};
 };
-[[nodiscard]] inline SplitOptions effective_workflow_split_options_(CrossValidationOptions cv, TaskKind task) {
-  SplitOptions split = make_cross_validation_split_options(cv);
+[[nodiscard]] inline SplitOptions effective_workflow_split_options_(metrics::ValidationOptions cv, TaskKind task) {
+  SplitOptions split = make_validation_split_options(cv);
   if (split.reliability_defaults && task == TaskKind::Classification
       && !split.stratified
       && (split.plan == CVPlanKind::Holdout || split.plan == CVPlanKind::CrossVal)) {
@@ -911,7 +911,7 @@ private:
   }
   if (split.plan == CVPlanKind::GroupCrossVal) {
     if (!split.groups.defined()) {
-      ::pluss::throw_error(std::string(where) + ": GroupCrossVal requires CrossValidationOptions.groups.");
+      ::pluss::throw_error(std::string(where) + ": GroupCrossVal requires ValidationOptions.groups.");
     }
     if (split.groups.numel() != batch.features.sample_count()) {
       ::pluss::throw_error(std::string(where) + ": GroupCrossVal requires groups length to match sample count.");
@@ -922,13 +922,13 @@ private:
   ::pluss::throw_error(std::string(where) + ": only Holdout/CrossVal/StratifiedCrossVal/TSCrossVal/GroupCrossVal are currently supported.");
 }
 
-[[nodiscard]] inline std::vector<FoldBatchPair> materialize_fold_batches_(const LabeledBatch& batch,
-                                                                          const SplitPlan& plan,
-                                                                          const char* where) {
-  std::vector<FoldBatchPair> out{};
+[[nodiscard]] inline std::vector<metrics::FoldBatchPair> materialize_fold_batches_(const LabeledBatch& batch,
+                                                                                    const SplitPlan& plan,
+                                                                                    const char* where) {
+  std::vector<metrics::FoldBatchPair> out{};
   out.reserve(plan.folds.size());
   for (const auto& fold : plan.folds) {
-    out.push_back(FoldBatchPair{
+    out.push_back(metrics::FoldBatchPair{
         .train = resolve(pluss::ai::nodej::slice_labeled_batch(batch, fold.train_indices),
                          std::string(where) + ".slice_labeled_batch(train)"),
         .test = resolve(pluss::ai::nodej::slice_labeled_batch(batch, fold.test_indices),
@@ -965,7 +965,7 @@ struct FoldFramePair_ {
 // CrossValidationReport -- the tail every cross-validation caller needs,
 // factored out so cross_validate_batches_ and selection::compare's flattened
 // candidate-fold scheduler don't each derive it separately.
-[[nodiscard]] inline CrossValidationReport cross_validation_report_from_folds_(CrossAssessReport report) {
+[[nodiscard]] inline metrics::CrossValidationReport cross_validation_report_from_folds_(CrossAssessReport report) {
   const std::vector<MetricKind>& metrics = report.metrics;
   const std::int64_t fold_count = static_cast<std::int64_t>(report.folds.size());
   const std::int64_t metric_count = static_cast<std::int64_t>(metrics.size());
@@ -978,20 +978,20 @@ struct FoldFramePair_ {
   const Series centered = fold_matrix.sub(report.mean_metrics.reshape({1, metric_count}));
   report.std_metrics = centered.square().mean(0, false).sqrt().reshape({metric_count});
 
-  return CrossValidationReport{
+  return metrics::CrossValidationReport{
       .report = report,
       .mean = metric_report_from_series_(report.mean_metrics, metrics),
       .stdev = metric_report_from_series_(report.std_metrics, metrics),
   };
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate_batches_(const ModelCore& model,
-                                                                   const std::vector<FoldBatchPair>& fold_batches,
-                                                                   const SplitPlan& plan,
-                                                                   std::int64_t max_parallel,
-                                                                   TrainOptions train_options,
-                                                                   AssessOptions assess_options,
-                                                                   const char* where) {
+[[nodiscard]] inline metrics::CrossValidationReport cross_validate_batches_(const ModelCore& model,
+                                                                            const std::vector<metrics::FoldBatchPair>& fold_batches,
+                                                                            const SplitPlan& plan,
+                                                                            std::int64_t max_parallel,
+                                                                            TrainOptions train_options,
+                                                                            AssessOptions assess_options,
+                                                                            const char* where) {
   if (!model.workflow().has_model()) {
     ::pluss::throw_error(std::string(where) + ": workflow has no model.");
   }
@@ -1059,14 +1059,14 @@ struct FoldFramePair_ {
   return cross_validation_report_from_folds_(std::move(report));
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate_frames_(const ModelCore& model,
-                                                                  const std::vector<FoldFramePair_>& fold_frames,
-                                                                  const DataFrameBatchOptions& data_options,
-                                                                  const SplitPlan& plan,
-                                                                  std::int64_t max_parallel,
-                                                                  TrainOptions train_options,
-                                                                  AssessOptions assess_options,
-                                                                  const char* where) {
+[[nodiscard]] inline metrics::CrossValidationReport cross_validate_frames_(const ModelCore& model,
+                                                                           const std::vector<FoldFramePair_>& fold_frames,
+                                                                           const DataFrameBatchOptions& data_options,
+                                                                           const SplitPlan& plan,
+                                                                           std::int64_t max_parallel,
+                                                                           TrainOptions train_options,
+                                                                           AssessOptions assess_options,
+                                                                           const char* where) {
   if (!model.workflow().has_model()) {
     ::pluss::throw_error(std::string(where) + ": workflow has no model.");
   }
@@ -1135,23 +1135,23 @@ struct FoldFramePair_ {
   return cross_validation_report_from_folds_(std::move(report));
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate_plan_(const ModelCore& model,
-                                                                const LabeledBatch& batch,
-                                                                const SplitPlan& plan,
-                                                                std::int64_t max_parallel,
-                                                                TrainOptions train_options,
-                                                                AssessOptions assess_options,
-                                                                const char* where) {
+[[nodiscard]] inline metrics::CrossValidationReport cross_validate_plan_(const ModelCore& model,
+                                                                         const LabeledBatch& batch,
+                                                                         const SplitPlan& plan,
+                                                                         std::int64_t max_parallel,
+                                                                         TrainOptions train_options,
+                                                                         AssessOptions assess_options,
+                                                                         const char* where) {
   resolve(validate_labeled(batch), std::string(where) + ".validate_labeled");
-  const std::vector<FoldBatchPair> fold_batches = materialize_fold_batches_(batch, plan, where);
+  const std::vector<metrics::FoldBatchPair> fold_batches = materialize_fold_batches_(batch, plan, where);
   return cross_validate_batches_(model, fold_batches, plan, max_parallel, train_options, assess_options, where);
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate(const ModelCore& model,
-                                                          const LabeledBatch& batch,
-                                                          CrossValidationOptions cv = {},
-                                                          TrainOptions train_options = {},
-                                                          AssessOptions assess_options = {}) {
+[[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
+                                                                   const LabeledBatch& batch,
+                                                                   metrics::ValidationOptions cv = {},
+                                                                   TrainOptions train_options = {},
+                                                                   AssessOptions assess_options = {}) {
   resolve(validate_labeled(batch), "cross_validate(model).validate_labeled");
   if (!model.workflow().has_model()) {
     ::pluss::throw_error("cross_validate(model,...): workflow has no model.");
@@ -1164,12 +1164,12 @@ struct FoldFramePair_ {
   return cross_validate_plan_(model, batch, plan, split.max_parallel, train_options, assess_options, "cross_validate(model)");
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate(const ModelCore& model,
-                                                          const pluss::table::DataFrame& frame,
-                                                          const DataFrameBatchOptions& data_options,
-                                                          CrossValidationOptions cv = {},
-                                                          TrainOptions train_options = {},
-                                                          AssessOptions assess_options = {}) {
+[[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
+                                                                   const pluss::table::DataFrame& frame,
+                                                                   const DataFrameBatchOptions& data_options,
+                                                                   metrics::ValidationOptions cv = {},
+                                                                   TrainOptions train_options = {},
+                                                                   AssessOptions assess_options = {}) {
   const LabeledBatch plan_batch = resolve(labeled_batch_from_dataframe(frame, data_options),
                                           "cross_validate(model).labeled_batch_from_dataframe");
   resolve(validate_labeled(plan_batch), "cross_validate(model).validate_labeled");
@@ -1186,49 +1186,49 @@ struct FoldFramePair_ {
                                 train_options, assess_options, "cross_validate(model)");
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate(const ModelCore& model,
-                                                          const pluss::table::DataFrame& x,
-                                                          const Series& y,
-                                                          CrossValidationOptions cv = {},
-                                                          TrainOptions train_options = {},
-                                                          AssessOptions assess_options = {}) {
+[[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
+                                                                   const pluss::table::DataFrame& x,
+                                                                   const Series& y,
+                                                                   metrics::ValidationOptions cv = {},
+                                                                   TrainOptions train_options = {},
+                                                                   AssessOptions assess_options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "cross_validate(model,x,y)");
   const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "cross_validate(model,x,y)");
   return cross_validate(model, batch, cv, train_options, assess_options);
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate(const ModelCore& model,
-                                                          const pluss::table::DataFrame& x,
-                                                          const pluss::table::Thread& y,
-                                                          CrossValidationOptions cv = {},
-                                                          TrainOptions train_options = {},
-                                                          AssessOptions assess_options = {}) {
+[[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
+                                                                   const pluss::table::DataFrame& x,
+                                                                   const pluss::table::Thread& y,
+                                                                   metrics::ValidationOptions cv = {},
+                                                                   TrainOptions train_options = {},
+                                                                   AssessOptions assess_options = {}) {
   return cross_validate(model, x, as_stratify_series(y), cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline Series cross_validate_scores(const ModelCore& model,
                                                   const LabeledBatch& batch,
                                                   MetricKind metric,
-                                                  CrossValidationOptions cv = {},
+                                                  metrics::ValidationOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   if (!model.workflow().model_spec().has_value()) {
     ::pluss::throw_error("cross_validate_scores(model,...): workflow model has no model specification.");
   }
-  return ::pluss::ai::lymph::cross_validate_scores(
+  return ::pluss::ai::lymph::metrics::detail::cross_validate_scores(
       *model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline double cross_validate_score(const ModelCore& model,
                                                  const LabeledBatch& batch,
                                                  MetricKind metric,
-                                                 CrossValidationOptions cv = {},
+                                                 metrics::ValidationOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   if (!model.workflow().model_spec().has_value()) {
     ::pluss::throw_error("cross_validate_score(model,...): workflow model has no model specification.");
   }
-  return ::pluss::ai::lymph::cross_validate_score(
+  return ::pluss::ai::lymph::metrics::detail::cross_validate_score(
       *model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
 }
 
@@ -1236,13 +1236,13 @@ struct FoldFramePair_ {
                                                   const pluss::table::DataFrame& x,
                                                   const Series& y,
                                                   MetricKind metric,
-                                                  CrossValidationOptions cv = {},
+                                                  metrics::ValidationOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   if (!model.workflow().model_spec().has_value()) {
     ::pluss::throw_error("cross_validate_scores(model,x,y): workflow model has no model specification.");
   }
-  return ::pluss::ai::lymph::cross_validate_scores(
+  return ::pluss::ai::lymph::metrics::detail::cross_validate_scores(
       *model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
 }
 
@@ -1250,13 +1250,13 @@ struct FoldFramePair_ {
                                                  const pluss::table::DataFrame& x,
                                                  const Series& y,
                                                  MetricKind metric,
-                                                 CrossValidationOptions cv = {},
+                                                 metrics::ValidationOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   if (!model.workflow().model_spec().has_value()) {
     ::pluss::throw_error("cross_validate_score(model,x,y): workflow model has no model specification.");
   }
-  return ::pluss::ai::lymph::cross_validate_score(
+  return ::pluss::ai::lymph::metrics::detail::cross_validate_score(
       *model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
 }
 

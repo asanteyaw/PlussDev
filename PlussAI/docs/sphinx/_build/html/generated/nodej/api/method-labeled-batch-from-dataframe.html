@@ -39,7 +39,7 @@
 <section id="api-signature">
 <h2>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">labeled_batch_from_dataframe(frame:</span> <span class="pre">const</span> <span class="pre">pluss::table::DataFrame&amp;,</span> <span class="pre">options:</span> <span class="pre">const</span> <span class="pre">DataFrameBatchOptions&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">StatusOr&lt;LabeledBatch&gt;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">labeled_batch_from_dataframe(frame:</span> <span class="pre">const</span> <span class="pre">pluss::table::DataFrame&amp;,</span> <span class="pre">options:</span> <span class="pre">const</span> <span class="pre">DataFrameBatchOptions&amp;,</span> <span class="pre">existing_categories:</span> <span class="pre">const</span> <span class="pre">CategoryMaps*</span> <span class="pre">=</span> <span class="pre">nullptr,</span> <span class="pre">fitted_categories_out:</span> <span class="pre">CategoryMaps*</span> <span class="pre">=</span> <span class="pre">nullptr)</span> <span class="pre">-&gt;</span> <span class="pre">StatusOr&lt;LabeledBatch&gt;</span></code></p></li>
 </ul>
 </section>
 <section id="notes">
@@ -49,6 +49,10 @@
 <section id="inputs">
 <h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">existing_categories</span></code> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">CategoryMaps*</span></code>), default: <code class="docutils literal notranslate"><span class="pre">nullptr</span></code>
+Input feature data used by this call.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fitted_categories_out</span></code> (<code class="docutils literal notranslate"><span class="pre">CategoryMaps*</span></code>), default: <code class="docutils literal notranslate"><span class="pre">nullptr</span></code>
+Method argument; see signature type for accepted form.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">frame</span></code> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::DataFrame&amp;</span></code>)
 Input feature data used by this call.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrameBatchOptions&amp;</span></code>)
@@ -81,6 +85,8 @@ Controls how numeric/temporal frame columns are adapted into <code class="docuti
 Controls how note/categorical columns are handled during adaptation.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">std::uint64_t</span> <span class="pre">note_hash_seed{1469598103934665603ULL}</span></code>
 Random seed for reproducible behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">UnknownCategoryPolicy</span> <span class="pre">factorize_unknown_categorical{UnknownCategoryPolicy::MissingBucket}</span></code>
+Controls fold/trial/count sizing.</p></li>
 </ul>
 </li>
 </ul>
@@ -90,7 +96,7 @@ Random seed for reproducible behavior.</p></li>
 <section id="example-1-minimal-usage">
 <h3>Example 1 (Minimal Usage)<a class="headerlink" href="#example-1-minimal-usage" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled_batch_from_dataframe</span><span class="p">(</span><span class="cm">/* frame */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* options */</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled_batch_from_dataframe</span><span class="p">(</span><span class="cm">/* frame */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* options */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* existing_categories */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* fitted_categories_out */</span><span class="p">);</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">res</span><span class="p">.</span><span class="n">ok</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;labeled_batch_from_dataframe failed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">res</span><span class="p">.</span><span class="n">status</span><span class="p">().</span><span class="n">message</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>

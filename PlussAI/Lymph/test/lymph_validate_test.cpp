@@ -39,7 +39,7 @@ DataFrame make_frame() {
 Model staged_logistic() {
   const ColumnRouter categorical = columnrouter::names({"category"});
   const ColumnRouter numeric = columnrouter::remaining_of(categorical);
-  Model model = models::decision_tree_classifier({.max_depth = 3});
+  Model model = model::decision_tree_classifier({.max_depth = 3});
   model.append(stage::standard_scaler(), numeric)
        .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical);
   return model;
@@ -60,7 +60,7 @@ bool run_validate_checks(std::ostream* err) {
   quick_train.tolerance = 1e-4;
 
   const validate::Plan plan = validate::stratified().folds(2).shuffle(false).workers(1);
-  const CrossValidationReport report = plan.run(staged_logistic(), frame, data_options, quick_train, assess);
+  const metrics::CrossValidationReport report = plan.run(staged_logistic(), frame, data_options, quick_train, assess);
   if (report.report.folds.size() != 2 || report.report.metrics.size() != 2) {
     if (err) *err << "validate::stratified().run(model, frame, data_options, ...) should produce 2 folds x 2 metrics\n";
     return false;
@@ -95,7 +95,7 @@ bool run_validate_checks(std::ostream* err) {
 
   Builder candidates = builder::build({
       {"staged_tree", staged_logistic()},
-      {"plain_tree", models::decision_tree_classifier({.max_depth = 2})},
+      {"plain_tree", model::decision_tree_classifier({.max_depth = 2})},
   });
   const selection::CompareResult ranked = plan.run(candidates, frame, data_options, quick_train, assess,
                                                    MetricKind::Accuracy, TuneObjectivePolicy::Maximize,
@@ -115,13 +115,13 @@ bool run_validate_checks(std::ostream* err) {
               .reject_missing = {"timestamp", "y"},
               .allow_missing = {"x1", "x2", "category"}};
 
-  Workflow time_workflow = workflow::make(models::linear_regression(), gate)
+  Workflow time_workflow = workflow::make(model::linear_regression(), gate)
       .time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
   time_workflow.on({"x1", "x2"}).add(stage::standard_scaler());
 
-  CrossValidationOptions raw_time_options{};
+  metrics::ValidationOptions raw_time_options{};
   raw_time_options.plan = CVPlanKind::TSCrossVal;
-  const CrossValidationOptions effective_time =
+  const metrics::ValidationOptions effective_time =
       validate::detail::effective_time_options_(raw_time_options, time_workflow);
   if (effective_time.time_gap != 1 || effective_time.time_test_size != 1 || effective_time.time_max_train_size != 4) {
     if (err) *err << "time validation should merge Workflow time options into effective CV options\n";
@@ -131,6 +131,25 @@ bool run_validate_checks(std::ostream* err) {
   Payload no_time_payload = payload::make(frame).features({"x1", "x2", "category"}).label("y").note(DataNotePolicy::Factorize);
   if (!time_payload.has_time() || no_time_payload.has_time()) {
     if (err) *err << "time validation fixtures should distinguish explicit and absent Payload time roles\n";
+    return false;
+  }
+
+  metrics::ValidationOptions ordered_time{};
+  ordered_time.plan = CVPlanKind::TSCrossVal;
+  ordered_time.folds = 2;
+  ordered_time.time_test_size = 2;
+  const validate::Plan time_plan = validate::time(ordered_time);
+  const auto ordered_splits = time_plan.splits(frame, "timestamp");
+  if (ordered_splits.size() != 2
+      || ordered_splits.back().test_set.ncases() != 2
+      || ordered_splits.back().test_set.features("timestamp").as_series().to_vec<double>().front() != 7.0) {
+    if (err) *err << "validate::time(...).splits(frame,time_feature) should sort by the time feature and expose ordered temporal folds\n";
+    return false;
+  }
+  const prep::TimeSeriesSplit tail_holdout = time_plan.last(frame, "timestamp");
+  if (tail_holdout.test_set.ncases() != 2
+      || tail_holdout.test_set.features("timestamp").as_series().to_vec<double>().front() != 7.0) {
+    if (err) *err << "validate::time(...).last(frame,time_feature) should return the last chronological holdout block\n";
     return false;
   }
 

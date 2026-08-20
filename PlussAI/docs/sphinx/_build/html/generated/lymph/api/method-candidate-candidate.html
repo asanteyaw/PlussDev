@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="CategoryIndexer::features" href="method-categoryindexer-features.html" />
-    <link rel="prev" title="branch_transformer" href="method-branch-transformer.html" />
+    <link rel="prev" title="callable_contract" href="method-callable-contract.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -39,7 +39,7 @@
 <section id="api-signature">
 <h2>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">name(arg1:</span> <span class="pre">std::move(in_name)),</span> <span class="pre">arg2:</span> <span class="pre">workflow(std::move(in_workflow))</span> <span class="pre">-&gt;</span> <span class="pre">Candidate(std::string</span> <span class="pre">in_name,</span> <span class="pre">Workflow</span> <span class="pre">in_workflow)</span> <span class="pre">:</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name(arg1:</span> <span class="pre">std::move(in_name)),</span> <span class="pre">arg2:</span> <span class="pre">model(std::move(in_model)),</span> <span class="pre">arg3:</span> <span class="pre">train_options(std::move(in_train_options))</span> <span class="pre">-&gt;</span> <span class="pre">Candidate(std::string</span> <span class="pre">in_name,</span> <span class="pre">Model</span> <span class="pre">in_model,</span> <span class="pre">std::optional&lt;TrainOptions&gt;</span> <span class="pre">in_train_options</span> <span class="pre">=</span> <span class="pre">std::nullopt)</span> <span class="pre">:</span></code></p></li>
 </ul>
 </section>
 <section id="notes">
@@ -51,14 +51,16 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">arg1</span></code> (<code class="docutils literal notranslate"><span class="pre">std::move(in_name))</span></code>)
 Method argument; see signature type for accepted form.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">arg2</span></code> (<code class="docutils literal notranslate"><span class="pre">workflow(std::move(in_workflow)</span></code>)
+<li><p><code class="docutils literal notranslate"><span class="pre">arg2</span></code> (<code class="docutils literal notranslate"><span class="pre">model(std::move(in_model))</span></code>)
+Method argument; see signature type for accepted form.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arg3</span></code> (<code class="docutils literal notranslate"><span class="pre">train_options(std::move(in_train_options)</span></code>)
 Method argument; see signature type for accepted form.</p></li>
 </ul>
 </section>
 <section id="output">
 <h2>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Returns <code class="docutils literal notranslate"><span class="pre">Candidate(std::string</span> <span class="pre">in_name,</span> <span class="pre">Workflow</span> <span class="pre">in_workflow)</span> <span class="pre">:</span></code>.</p></li>
+<li><p>Returns <code class="docutils literal notranslate"><span class="pre">Candidate(std::string</span> <span class="pre">in_name,</span> <span class="pre">Model</span> <span class="pre">in_model,</span> <span class="pre">std::optional&lt;TrainOptions&gt;</span> <span class="pre">in_train_options</span> <span class="pre">=</span> <span class="pre">std::nullopt)</span> <span class="pre">:</span></code>.</p></li>
 </ul>
 </section>
 <section id="options">
@@ -69,11 +71,13 @@ Method argument; see signature type for accepted form.</p></li>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">std::string</span> <span class="pre">name{}</span></code>
 Option field used by this method.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Workflow</span> <span class="pre">workflow{}</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">Model</span> <span class="pre">model</span></code>
 Option field used by this method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::optional&lt;TrainOptions&gt;</span> <span class="pre">train_options{}</span></code>
+Controls fold/trial/count sizing.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Candidate&amp;</span> <span class="pre">operator=(Candidate&amp;&amp;)</span> <span class="pre">noexcept</span> <span class="pre">=</span> <span class="pre">default</span></code>
 Option field used by this method.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Candidate&amp;</span> <span class="pre">operator=(const</span> <span class="pre">Candidate&amp;)</span> <span class="pre">=</span> <span class="pre">delete</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">Candidate&amp;</span> <span class="pre">operator=(const</span> <span class="pre">Candidate&amp;)</span> <span class="pre">noexcept</span> <span class="pre">=</span> <span class="pre">default</span></code>
 Option field used by this method.</p></li>
 </ul>
 </li>
@@ -84,18 +88,18 @@ Option field used by this method.</p></li>
 <section id="example-1-minimal-usage">
 <h3>Example 1 (Minimal Usage)<a class="headerlink" href="#example-1-minimal-usage" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">(</span><span class="cm">/* arg1 */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* arg2 */</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">(</span><span class="cm">/* arg1 */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* arg2 */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* arg3 */</span><span class="p">);</span>
 <span class="n">out</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Candidate&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
 </pre></div>
 </div>
 <p><strong>Expected output</strong></p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Candidate returned Candidate(std::string in_name, Workflow in_workflow) :
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Candidate returned Candidate(std::string in_name, Model in_model, std::optional&lt;TrainOptions&gt; in_train_options = std::nullopt) :
 </pre></div>
 </div>
 </section>
 <section id="example-2-demo-pattern">
 <h3>Example 2 (Demo Pattern)<a class="headerlink" href="#example-2-demo-pattern" title="Link to this heading">¶</a></h3>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="n">nja</span><span class="o">::</span><span class="n">CrossValidationOptions</span><span class="w"> </span><span class="n">cv_options</span><span class="p">{};</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="n">nja</span><span class="o">::</span><span class="n">metrics</span><span class="o">::</span><span class="n">CrossValidationOptions</span><span class="w"> </span><span class="n">cv_options</span><span class="p">{};</span>
 <span class="w">    </span><span class="n">cv_options</span><span class="p">.</span><span class="n">plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CVPlanKind</span><span class="o">::</span><span class="n">CrossVal</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cv_options</span><span class="p">.</span><span class="n">folds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cv_options</span><span class="p">.</span><span class="n">shuffle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -104,17 +108,17 @@ Option field used by this method.</p></li>
 
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">nja</span><span class="o">::</span><span class="n">selection</span><span class="o">::</span><span class="n">Candidate</span><span class="o">&gt;</span><span class="w"> </span><span class="n">candidates</span><span class="p">{};</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="k">auto</span><span class="w"> </span><span class="n">wf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">Workflow</span><span class="p">{</span>
-<span class="w">          </span><span class="p">.</span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">linear_factory</span><span class="o">::</span><span class="n">linear_regression</span><span class="p">(</span><span class="n">LinearFamilyOptions</span><span class="p">{</span><span class="w">          </span><span class="p">.</span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LinearObjective</span><span class="o">::</span><span class="n">LeastSquares</span><span class="p">,</span>
+<span class="w">      </span><span class="n">nja</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">wf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">linear_regression</span><span class="p">(</span><span class="n">LinearFamilyOptions</span><span class="p">{</span>
+<span class="w">          </span><span class="p">.</span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LinearObjective</span><span class="o">::</span><span class="n">LeastSquares</span><span class="p">,</span>
 <span class="w">          </span><span class="p">.</span><span class="n">regularization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RegularizationKind</span><span class="o">::</span><span class="n">L2</span><span class="p">,</span>
 <span class="w">          </span><span class="p">.</span><span class="n">regularization_strength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-6</span><span class="p">,</span>
 <span class="w">          </span><span class="p">.</span><span class="n">fit_intercept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
-<span class="w">      </span><span class="p">}),</span>
-<span class="w">          </span><span class="p">.</span><span class="n">stages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">              </span><span class="n">nja</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">simple_imputer</span><span class="p">(</span><span class="n">nja</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerOptions</span><span class="p">{.</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerStrategy</span><span class="o">::</span><span class="n">Median</span><span class="p">}),</span>
-<span class="w">              </span><span class="n">nja</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">standard_scaler</span><span class="p">(),</span>
-<span class="w">          </span><span class="p">},</span>
-<span class="w">      </span><span class="p">};</span>
+<span class="w">      </span><span class="p">});</span>
+<span class="w">      </span><span class="n">wf</span><span class="p">.</span><span class="n">simple_imputer</span><span class="p">(</span><span class="n">nja</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerOptions</span><span class="p">{.</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerStrategy</span><span class="o">::</span><span class="n">Median</span><span class="p">});</span>
+<span class="w">      </span><span class="n">wf</span><span class="p">.</span><span class="n">standard_scaler</span><span class="p">();</span>
+<span class="w">      </span><span class="n">candidates</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="s">&quot;linear_ridge&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">wf</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
 </pre></div>
 </div>
 <p><strong>Expected output</strong></p>
@@ -184,7 +188,7 @@ data=[0.63710967] cv_mae=pluss::Series(shape=[1], strides=[1], dtype=float64, pl
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../lymph_full_api.html">Lymph Full API Reference</a><ul>
   <li><a href="../api_index.html">Lymph Full API Reference: Method Index</a><ul>
-      <li>Previous: <a href="method-branch-transformer.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">branch_transformer</span></code></a></li>
+      <li>Previous: <a href="method-callable-contract.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">callable_contract</span></code></a></li>
       <li>Next: <a href="method-categoryindexer-features.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">CategoryIndexer::features</span></code></a></li>
   </ul></li>
   </ul></li>

@@ -1,7 +1,6 @@
 # DataFrameSortBuilder API Reference
 
-This page documents the value-ordering workflow entered via
-`DataFrame::sort()` and continued through `DataFrameSortBuilder`.
+This page documents the value-ordering workflow entered via `DataFrame::sort()` and continued through `DataFrameSortBuilder`.
 
 ## Using This Reference
 
@@ -11,15 +10,13 @@ This page documents the value-ordering workflow entered via
 
 ## Method Pages
 
-`sort()` enters the planner. The builder then splits into three roles:
+The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
 
-- plan keys with `by(...)`, `then(...)`, and `within(...)`
-- refine the active key with `asc()`, `desc()`, `nulls_first()`, and `nulls_last()`
-- execute or materialize with `order()`, `yield()`, `head(n)`, and `tail(n)`
+`sort()` enters a reusable sort plan, then the builder grows or executes it:
 
-Use `arrange(...)` when you want the direct execute-now sorter. Use the sort
-builder when ordering itself is a plan you want to grow, reuse, or partially
-materialize.
+- Plan keys: [`by()`](api/dataframe-sort/by.md), [`then()`](api/dataframe-sort/then.md), [`within()`](api/dataframe-sort/within.md)
+- Refine the active key: [`asc()`](api/dataframe-sort/asc.md), [`desc()`](api/dataframe-sort/desc.md), [`nulls_first()`](api/dataframe-sort/nulls_first.md), [`nulls_last()`](api/dataframe-sort/nulls_last.md)
+- Materialize: [`order()`](api/dataframe-sort/order.md), [`yield()`](api/dataframe-sort/yield.md), [`head()`](api/dataframe-sort/head.md), [`tail()`](api/dataframe-sort/tail.md)
 
 ```{toctree}
 :hidden:

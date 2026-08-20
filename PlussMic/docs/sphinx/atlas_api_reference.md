@@ -25,6 +25,10 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+atlas_label_accessor_api_reference
+atlas_timeline_accessor_api_reference
+atlas_ts_accessor_api_reference
+atlas_plot_accessor_api_reference
 api/atlas/aggregate_over_frames
 api/atlas/align_depth
 api/atlas/axis0_labels

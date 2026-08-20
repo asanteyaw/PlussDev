@@ -218,6 +218,18 @@ std::vector<std::size_t> sample_feature_indices_(std::size_t total, std::size_t 
   return idx;
 }
 
+DataFrame take_feature_indices_(const DataFrame& frame, std::span<const std::size_t> indices) {
+  const auto& all_names = frame.features();
+  std::vector<std::string_view> selected;
+  selected.reserve(indices.size());
+  for (const auto idx : indices) {
+    selected.push_back(all_names[idx]);
+  }
+  return frame.features(
+      pluss::msharp::RangeView::Of<std::string_view>(
+          std::span<const std::string_view>(selected.data(), selected.size())));
+}
+
 } // namespace
 
 DataFrame DataFrame::sample(std::int64_t n) const {
@@ -386,6 +398,71 @@ DataFrame DataFrame::take(const Thread& indices) const {
           || values.scalar_type() == pluss::codem::ScalarType::Int8,
       "DataFrame::take: indices thread must use an integer Series dtype");
   return take(values.to_vec<std::int64_t>());
+}
+
+std::pair<DataFrame, DataFrame> DataFrame::split(double frac) const {
+  return split(frac, SplitOptions{});
+}
+
+std::pair<DataFrame, DataFrame> DataFrame::split(double frac,
+                                                 const SplitOptions& options) const {
+  PLUSS_CHECK(std::isfinite(frac), "DataFrame::split: frac must be finite");
+  PLUSS_CHECK(frac >= 0.0 && frac <= 1.0, "DataFrame::split: frac must be in [0, 1]");
+
+  if (options.axis == Axis::Case) {
+    const auto total = ncases();
+    const auto rhs_count = static_cast<std::int64_t>(std::llround(frac * static_cast<double>(total)));
+    const auto lhs_count = total - rhs_count;
+    if (!options.shuffle) {
+      return {slice(0, lhs_count), slice(lhs_count, total)};
+    }
+
+    std::mt19937_64 rng(options.random_state.value_or(std::random_device{}()));
+    std::vector<std::int64_t> order(static_cast<std::size_t>(total));
+    std::iota(order.begin(), order.end(), 0);
+    std::shuffle(order.begin(), order.end(), rng);
+    std::vector<std::int64_t> lhs_indices(order.begin(), order.begin() + lhs_count);
+    std::vector<std::int64_t> rhs_indices(order.begin() + lhs_count, order.end());
+    return {take(lhs_indices), take(rhs_indices)};
+  }
+
+  const auto total = nfeatures();
+  const auto rhs_count = static_cast<std::int64_t>(std::llround(frac * static_cast<double>(total)));
+  const auto lhs_count = total - rhs_count;
+  if (!options.shuffle) {
+    std::vector<std::size_t> lhs_indices(static_cast<std::size_t>(lhs_count));
+    std::vector<std::size_t> rhs_indices(static_cast<std::size_t>(rhs_count));
+    std::iota(lhs_indices.begin(), lhs_indices.end(), 0);
+    std::iota(rhs_indices.begin(), rhs_indices.end(), static_cast<std::size_t>(lhs_count));
+    return {take_feature_indices_(*this, lhs_indices), take_feature_indices_(*this, rhs_indices)};
+  }
+
+  std::mt19937_64 rng(options.random_state.value_or(std::random_device{}()));
+  auto order = sample_feature_indices_(static_cast<std::size_t>(total), static_cast<std::size_t>(total), rng);
+  std::vector<std::size_t> lhs_indices(order.begin(), order.begin() + lhs_count);
+  std::vector<std::size_t> rhs_indices(order.begin() + lhs_count, order.end());
+  return {take_feature_indices_(*this, lhs_indices), take_feature_indices_(*this, rhs_indices)};
+}
+
+std::pair<DataFrame, DataFrame> DataFrame::split(double frac,
+                                                 Axis axis,
+                                                 bool shuffle) const {
+  return split(frac, SplitOptions{
+                       .axis = axis,
+                       .shuffle = shuffle,
+                       .random_state = std::nullopt,
+                   });
+}
+
+std::pair<DataFrame, DataFrame> DataFrame::split(double frac,
+                                                 std::uint64_t random_state,
+                                                 Axis axis,
+                                                 bool shuffle) const {
+  return split(frac, SplitOptions{
+                       .axis = axis,
+                       .shuffle = shuffle,
+                       .random_state = random_state,
+                   });
 }
 
 DataFrame DataFrame::where(const pluss::Series& bool_mask) const {

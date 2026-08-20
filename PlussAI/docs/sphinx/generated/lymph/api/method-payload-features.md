@@ -42,12 +42,14 @@ features returned const FeatureBatch&
 ### Example 2 (Demo Pattern)
 
 ```cpp
-    const auto split = nja::holdout_split(frame, nja::HoldoutSplitOptions{
-                                                     .test_size = 0.2,
-                                                     .random_state = 42,
-                                                     .deterministic = true,
-                                                     .shuffle = true,
-                                                 });
+    });
+
+
+    const auto split = nja::validate::holdout()
+                           .test_size(0.2)
+                           .shuffle(true)
+                           .seed(42)
+                           .split(frame);
     const DataFrame train_x = split.train_set.features(
         {"season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday", "weather_condition", "temp", "atemp", "humidity", "windspeed"});
     const DataFrame test_x = split.test_set.features(

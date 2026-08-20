@@ -31,7 +31,7 @@ int main() {
   data.label_feature = "bad";
   data.note_policy = lymph::DataNotePolicy::Factorize;
 
-  lymph::Model forest = lymph::models::random_forest_classifier({.learners = 15, .subsample = 1.0});
+  lymph::Model forest = lymph::model::random_forest_classifier({.learners = 15, .subsample = 1.0});
   lymph::ModelPrep prep = forest.prepare();
   const lymph::ColumnRouter categorical = prep.names({"region"});
   prep.fill({"income", "debt", "age"})

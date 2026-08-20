@@ -26,7 +26,7 @@ int main() {
               {"scale", lymph::stage::standard_scaler()},
           }),
       },
-      lymph::models::gradient_boost_regressor({.learners = 80, .learning_rate = 0.04}));
+      lymph::model::gradient_boost_regressor({.learners = 80, .learning_rate = 0.04}));
 
   wf.learn_(data);
   std::cout << "boston rmse: " << wf.assess(data).rmse.item<double>() << "\n";

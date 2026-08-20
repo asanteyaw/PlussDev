@@ -15,7 +15,7 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="classification_summary" href="method-classification-summary.html" />
+    <link rel="next" title="Classification::options" href="method-classification-options.html" />
     <link rel="prev" title="CategoryIndexer::summary" href="method-categoryindexer-summary.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -39,6 +39,7 @@
 <section id="api-signature">
 <h2>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">class_mix(frame:</span> <span class="pre">const</span> <span class="pre">pluss::table::DataFrame&amp;,</span> <span class="pre">label_feature:</span> <span class="pre">std::string_view)</span> <span class="pre">-&gt;</span> <span class="pre">ClassMix</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">class_mix(labels:</span> <span class="pre">const</span> <span class="pre">Series&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">ClassMix</span></code></p></li>
 </ul>
 </section>
@@ -49,6 +50,10 @@
 <section id="inputs">
 <h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">frame</span></code> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::DataFrame&amp;</span></code>)
+Input feature data used by this call.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label_feature</span></code> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+Input feature data used by this call.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)
 Target values aligned to input observations.</p></li>
 </ul>
@@ -68,7 +73,7 @@ Target values aligned to input observations.</p></li>
 <section id="example-1-minimal-usage">
 <h3>Example 1 (Minimal Usage)<a class="headerlink" href="#example-1-minimal-usage" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">class_mix</span><span class="p">(</span><span class="cm">/* labels */</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">class_mix</span><span class="p">(</span><span class="cm">/* frame */</span><span class="p">,</span><span class="w"> </span><span class="cm">/* label_feature */</span><span class="p">);</span>
 <span class="n">out</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;class_mix&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -128,7 +133,7 @@ Target values aligned to input observations.</p></li>
   <li><a href="../../../lymph_full_api.html">Lymph Full API Reference</a><ul>
   <li><a href="../api_index.html">Lymph Full API Reference: Method Index</a><ul>
       <li>Previous: <a href="method-categoryindexer-summary.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">CategoryIndexer::summary</span></code></a></li>
-      <li>Next: <a href="method-classification-summary.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">classification_summary</span></code></a></li>
+      <li>Next: <a href="method-classification-options.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">Classification::options</span></code></a></li>
   </ul></li>
   </ul></li>
   </ul></li>

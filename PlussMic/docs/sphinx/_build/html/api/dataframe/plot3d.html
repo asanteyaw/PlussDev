@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=3dd29194"></script>
+    <script src="../../_static/api_nav.js?v=052b4a34"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -128,9 +128,9 @@ nanoseconds, and a <code class="docutils literal notranslate"><span class="pre">
 number becomes <code class="docutils literal notranslate"><span class="pre">NaN</span></code> rather than throwing outright). See each method’s own page
 for the exact conversion rule and throw text.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">surface()</span></code> and <code class="docutils literal notranslate"><span class="pre">wireframe()</span></code> build their grid via <code class="docutils literal notranslate"><span class="pre">DataFrame::pivot_table()</span></code>
-internally, which only supports 7 of <code class="docutils literal notranslate"><span class="pre">DataFrame::GroupOp</span></code>’s 10 aggregation values
-(<code class="docutils literal notranslate"><span class="pre">Std</span></code>/<code class="docutils literal notranslate"><span class="pre">Var</span></code>/<code class="docutils literal notranslate"><span class="pre">Mode</span></code> throw) — see <a class="reference internal" href="../dataframe-plot3d/surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>’s
-important callout.</p></li>
+internally. That means they inherit pivot aggregation behavior, but the final rendered
+grid still has to become numeric for plotting — see
+<a class="reference internal" href="../dataframe-plot3d/surface.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">surface()</span></code></span></a>’s notes for the exact conversion rules.</p></li>
 </ul>
 </section>
 <section id="see-also">

@@ -27,7 +27,7 @@ int main() {
   kernel.nu = 0.08;
   kernel.gamma = 0.2;
   const lymph::detect::Result outliers =
-      lymph::detect::model(lymph::models::one_class_svm(kernel))
+      lymph::detect::model(lymph::model::one_class_svm(kernel))
           .run(lymph::FeatureBatch{
               .x = pluss::make_series(values, {33, 2}, f64),
               .layout = lymph::ObservationLayout::Rows,

@@ -758,7 +758,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
         {"margin", make_series(std::vector<double>{1.1, 1.5, 0.9, 1.9, 1.3, 1.4})},
     }).title("sales");
 
-    auto data = Dataset::from_frame(
+    auto data = Dataset::from_table(
         frame,
         {.features = {"units", "price", "margin", "city"}});
 
@@ -777,7 +777,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
         {"margin", make_series(std::vector<double>{1.1, 1.5, 0.9, 1.9, 1.3, 1.4})},
     }).title("sales");
 
-    auto data = Dataset::from_frame(
+    auto data = Dataset::from_table(
         frame,
         {.features = {"units", "price", "margin", "city"}});
 

@@ -99,9 +99,9 @@ surface_chart.save_svg("temp_surface.svg");
   number becomes `NaN` rather than throwing outright). See each method's own page
   for the exact conversion rule and throw text.
 - `surface()` and `wireframe()` build their grid via `DataFrame::pivot_table()`
-  internally, which only supports 7 of `DataFrame::GroupOp`'s 10 aggregation values
-  (`Std`/`Var`/`Mode` throw) — see [`surface()`](../dataframe-plot3d/surface.md)'s
-  important callout.
+  internally. That means they inherit pivot aggregation behavior, but the final rendered
+  grid still has to become numeric for plotting — see
+  [`surface()`](../dataframe-plot3d/surface.md)'s notes for the exact conversion rules.
 
 ## See Also
 

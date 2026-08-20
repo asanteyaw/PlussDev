@@ -1,8 +1,8 @@
-# `Workflow::trained`
+# `workflow::trained`
 
 ## API Signature
 
-- `Workflow::trained() -> bool`
+- `workflow::trained() -> bool`
 
 ## Notes
 
@@ -26,7 +26,7 @@ No explicit option struct/enum parameters were detected for this method.
 
 ```cpp
 pluss::OutputEngine out;
-auto value = Workflow::trained();
+auto value = workflow::trained();
 out.info("trained", value);
 ```
 

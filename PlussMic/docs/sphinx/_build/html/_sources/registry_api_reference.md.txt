@@ -24,6 +24,10 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+registry_fieldaxis_accessor_api_reference
+registry_cast_accessor_api_reference
+registry_note_accessor_api_reference
+registry_timeline_accessor_api_reference
 api/registry/begin
 api/registry/cast
 api/registry/clear

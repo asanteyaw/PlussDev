@@ -31,7 +31,7 @@ int main() {
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"x", "sqrt_x"}, {{"scale", lymph::stage::standard_scaler()}}),
       },
-      lymph::models::linear_regression());
+      lymph::model::linear_regression());
 
   wf.learn_(data);
   std::cout << "policy payload r2: " << wf.assess(data).r2.item<double>() << "\n";

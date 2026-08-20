@@ -1,0 +1,75 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 89c5e8a3a54b -->
+
+# DataFrameContingencyTableBuilder::mean
+
+[Back to DataFrame contingency accessor API Reference](../../dataframe_contingency_accessor_api_reference)
+
+## Signature
+
+```cpp
+DataFrameContingencyTableBuilder::mean(std::string_view feature) const -> DataFrame
+```
+
+## What It Does
+
+Computes the arithmetic mean of a numeric value feature inside each crossed
+contingency cell.
+
+## Parameters
+
+**feature** (`std::string_view`)
+    The numeric value feature to average per cell.
+
+## Returns
+
+`DataFrame`
+    A contingency table whose numeric cells are means for the selected value
+    feature.
+
+## Examples
+
+Example 1. Mean `amount` in each crossed cell.
+
+```cpp
+using namespace pluss::table;
+
+auto df = DataFrame({
+    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+});
+
+auto out = df.contingency("city", "channel").mean("amount");
+std::cout << out;
+```
+
+### Output
+
+```text
+=======================
+     | city  Card  Cash
+-----------------------
+0    | A     20    10
+1    | B     50    35
+-----------------------
+[2 cs x 3 feat]
+```
+
+The `"B"` and `"Cash"` cell averages `(30 + 40) / 2 = 35`.
+
+## See Also
+
+- [`DataFrameContingencyTableBuilder::sum`](sum.md)
+- [`DataFrameContingencyTableBuilder::median`](median.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="max.html">
+    <span class="label">Previous</span>
+    <span class="title">max</span>
+  </a>
+  <a class="next-link" href="median.html">
+    <span class="label">Next</span>
+    <span class="title">median</span>
+  </a>
+</div>

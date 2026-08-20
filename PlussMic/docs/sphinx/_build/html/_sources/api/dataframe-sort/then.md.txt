@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 27f1c27b2a6b -->
 
 # DataFrameSortBuilder::then
 
@@ -18,6 +19,11 @@ DataFrameSortBuilder DataFrameSortBuilder::then(pluss::msharp::RangeView::Of<Dat
 Appends additional tie-break key(s) after an existing [`by(...)`](by.md)
 plan — the mirror image of `by()`, which replaces the plan instead of
 extending it.
+
+The appended key is not a separate second sort pass; it becomes the next slot
+in the same lexicographic / tuple ordering. So `.by("city").then("sales")`
+means "sort by `(city, sales)`", with `sales` used only inside equal-`city`
+ties.
 
 ```{important} then() requires an existing by() plan
 Calling `.then(...)` before any `.by(...)` throws — there's no plan yet to
@@ -89,6 +95,34 @@ try {
 DataFrame::sort.then: no existing sort plan; call .by(...) first
 ```
 
+Example 3. `ArrangeSpec`s let appended tie-break keys carry their own direction.
+
+```cpp
+auto out3 = df.sort()
+              .by("city")
+              .then({DataFrame::ArrangeSpec{"sales", false, true}})
+              .yield();
+std::cout << out3;
+```
+
+### Output
+
+```text
+===================
+     | city   sales
+-------------------
+1    | Accra  100  
+2    | Accra  90   
+3    | Tema   200  
+0    | Tema   120  
+-------------------
+[4 cs x 2 feat]
+```
+
+The primary key remains `city` ascending. The appended `sales` key only breaks
+ties inside each city, and it does so descending because its `ArrangeSpec`
+overrides the builder default.
+
 ## Notes
 
 - See the important callout above.
@@ -97,6 +131,8 @@ DataFrame::sort.then: no existing sort plan; call .by(...) first
 - The last-appended key becomes the active key for
   [`asc()`](asc.md)/[`desc()`](desc.md)/[`nulls_first()`](nulls_first.md)/
   [`nulls_last()`](nulls_last.md).
+- Plain feature-name forms inherit one shared builder default; use
+  `ArrangeSpec` when an appended tie-break key needs its own direction.
 
 ## See Also
 

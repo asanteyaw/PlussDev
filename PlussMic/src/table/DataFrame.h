@@ -94,6 +94,7 @@ class DataFrameCastAccessor;
 class DataFrameGroupBuilder;
 class DataFrameGrouped;
 class DataFrameSortBuilder;
+class ContingencyTable;
 class AtlasPlotAccessor;
 struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
@@ -360,6 +361,43 @@ public:
     bool dropnull{true};
     bool sort{false};
     GroupLayout layout{GroupLayout::Flat};
+  };
+
+  struct SplitOptions {
+    Axis axis{Axis::Case};
+    bool shuffle{false};
+    std::optional<std::uint64_t> random_state{std::nullopt};
+  };
+
+  struct PivotValueSpec {
+    std::string output{};
+    std::string feature{};
+    GroupOp op{GroupOp::Mean};
+  };
+
+  struct PivotTableOptions {
+    std::vector<std::string> index{};
+    std::vector<std::string> columns{};
+    std::vector<std::string> values{};
+    std::vector<GroupOp> aggfuncs{GroupOp::Mean};
+    std::vector<PivotValueSpec> specs{};
+    std::optional<ThreadValue::HostAny> fill_value{std::nullopt};
+    bool margins{false};
+    std::string margins_name{"All"};
+    bool dropna{true};
+    bool sort{true};
+    bool render{false};
+    std::string index_separator{"\x1F"};
+    std::string column_separator{" | "};
+    std::string value_separator{" :: "};
+  };
+
+  struct ContingencyOptions {
+    bool dropnull{true};
+    bool sort{true};
+    bool totals{false};
+    std::string separator{" | "};
+    std::string null_label{"NULL"};
   };
 
   struct DeriveSpec {
@@ -1090,6 +1128,48 @@ public:
   DataFrameView aggregate(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = false) const;
   DataFrameGroupBuilder group() const;
   DataFrameGroupBuilder group(const GroupOptions& options) const;
+  ContingencyTable contingency(std::string_view row_feature,
+                               std::string_view column_feature) const;
+  ContingencyTable contingency(
+      std::string_view row_feature,
+      std::string_view column_feature,
+      const ContingencyOptions& options) const;
+  ContingencyTable contingency(
+      std::initializer_list<std::string_view> features) const;
+  ContingencyTable contingency(
+      std::initializer_list<std::string_view> features,
+      const ContingencyOptions& options) const;
+  ContingencyTable contingency(
+      std::initializer_list<std::string_view> row_features,
+      std::initializer_list<std::string_view> column_features) const;
+  ContingencyTable contingency(
+      std::initializer_list<std::string_view> row_features,
+      std::initializer_list<std::string_view> column_features,
+      const ContingencyOptions& options) const;
+  ContingencyTable contingency(
+      pluss::msharp::RangeView::Of<std::string_view> features) const;
+  ContingencyTable contingency(
+      pluss::msharp::RangeView::Of<std::string_view> features,
+      const ContingencyOptions& options) const;
+  ContingencyTable contingency(
+      pluss::msharp::RangeView::Of<std::string_view> row_features,
+      pluss::msharp::RangeView::Of<std::string_view> column_features) const;
+  ContingencyTable contingency(
+      pluss::msharp::RangeView::Of<std::string_view> row_features,
+      pluss::msharp::RangeView::Of<std::string_view> column_features,
+      const ContingencyOptions& options) const;
+  template <detail::StringViewNameRange NameRange>
+  ContingencyTable contingency(const NameRange& features) const;
+  template <detail::StringViewNameRange NameRange>
+  ContingencyTable contingency(const NameRange& features,
+                               const ContingencyOptions& options) const;
+  template <detail::StringViewNameRange RowRange, detail::StringViewNameRange ColumnRange>
+  ContingencyTable contingency(const RowRange& row_features,
+                               const ColumnRange& column_features) const;
+  template <detail::StringViewNameRange RowRange, detail::StringViewNameRange ColumnRange>
+  ContingencyTable contingency(const RowRange& row_features,
+                               const ColumnRange& column_features,
+                               const ContingencyOptions& options) const;
   DataFrameView pivot(std::string_view case_feature,
                       std::string_view feature_feature,
                       std::string_view value_feature,
@@ -1101,6 +1181,31 @@ public:
                             GroupOp op = GroupOp::Mean,
                             bool dropnull_keys = true,
                             bool render = false) const;
+  DataFrameView pivot_table(const PivotTableOptions& options) const;
+  DataFrameView pivot_table(pluss::msharp::RangeView::Of<std::string_view> index_features,
+                            pluss::msharp::RangeView::Of<std::string_view> column_features,
+                            pluss::msharp::RangeView::Of<std::string_view> value_features,
+                            GroupOp op = GroupOp::Mean,
+                            bool dropna = true,
+                            bool render = false,
+                            bool sort = true) const;
+  DataFrameView pivot_table(std::initializer_list<std::string_view> index_features,
+                            std::initializer_list<std::string_view> column_features,
+                            std::initializer_list<std::string_view> value_features,
+                            GroupOp op = GroupOp::Mean,
+                            bool dropna = true,
+                            bool render = false,
+                            bool sort = true) const;
+  template <detail::StringViewNameRange IndexRange,
+            detail::StringViewNameRange ColumnRange,
+            detail::StringViewNameRange ValueRange>
+  DataFrameView pivot_table(const IndexRange& index_features,
+                            const ColumnRange& column_features,
+                            const ValueRange& value_features,
+                            GroupOp op = GroupOp::Mean,
+                            bool dropna = true,
+                            bool render = false,
+                            bool sort = true) const;
   DataFrame combine(const DataFrame& other) const;
   DataFrame combine(const DataFrame& other, const CombineSpec& spec) const;
   DataFrame stack(std::string feature_name = "feature",
@@ -1633,6 +1738,16 @@ public:
                       bool dropnull = true,
                       bool render = false) const;
   DataFrameView view(std::int64_t start, std::int64_t stop, bool render = false) const;
+  std::pair<DataFrame, DataFrame> split(double frac) const;
+  std::pair<DataFrame, DataFrame> split(double frac,
+                                        const SplitOptions& options) const;
+  std::pair<DataFrame, DataFrame> split(double frac,
+                                        Axis axis,
+                                        bool shuffle = false) const;
+  std::pair<DataFrame, DataFrame> split(double frac,
+                                        std::uint64_t random_state,
+                                        Axis axis = Axis::Case,
+                                        bool shuffle = true) const;
   DataFrame copy() const;
   bool equals(const DataFrame& other) const;
   bool equals(const DataFrame& other, double atol, double rtol) const;
@@ -2054,15 +2169,65 @@ public:
   DataFrame filter(const Thread& keep) const;
 
   DataFrame count() const;
+  DataFrame count(std::string_view feature) const;
+  DataFrame count(std::initializer_list<std::string_view> features) const;
+  DataFrame count(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame count(const NameRange& features) const;
   DataFrame ndistinct() const;
+  DataFrame ndistinct(std::string_view feature) const;
+  DataFrame ndistinct(std::initializer_list<std::string_view> features) const;
+  DataFrame ndistinct(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame ndistinct(const NameRange& features) const;
   DataFrame sum() const;
+  DataFrame sum(std::string_view feature) const;
+  DataFrame sum(std::initializer_list<std::string_view> features) const;
+  DataFrame sum(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame sum(const NameRange& features) const;
   DataFrame mean() const;
+  DataFrame mean(std::string_view feature) const;
+  DataFrame mean(std::initializer_list<std::string_view> features) const;
+  DataFrame mean(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame mean(const NameRange& features) const;
   DataFrame median() const;
+  DataFrame median(std::string_view feature) const;
+  DataFrame median(std::initializer_list<std::string_view> features) const;
+  DataFrame median(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame median(const NameRange& features) const;
   DataFrame min() const;
+  DataFrame min(std::string_view feature) const;
+  DataFrame min(std::initializer_list<std::string_view> features) const;
+  DataFrame min(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame min(const NameRange& features) const;
   DataFrame max() const;
+  DataFrame max(std::string_view feature) const;
+  DataFrame max(std::initializer_list<std::string_view> features) const;
+  DataFrame max(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame max(const NameRange& features) const;
   DataFrame std() const;
+  DataFrame std(std::string_view feature) const;
+  DataFrame std(std::initializer_list<std::string_view> features) const;
+  DataFrame std(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame std(const NameRange& features) const;
   DataFrame var() const;
+  DataFrame var(std::string_view feature) const;
+  DataFrame var(std::initializer_list<std::string_view> features) const;
+  DataFrame var(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame var(const NameRange& features) const;
   DataFrame mode() const;
+  DataFrame mode(std::string_view feature) const;
+  DataFrame mode(std::initializer_list<std::string_view> features) const;
+  DataFrame mode(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  template <detail::StringViewNameRange NameRange>
+  DataFrame mode(const NameRange& features) const;
   DataFrame yield() const;  // returns the dataframe unaggregated after grouping
 
   // Standalone terminal: unlike every op above, a group with a tie can
@@ -2081,7 +2246,12 @@ private:
   const std::vector<std::string>& key_names_cached_() const;
   const detail::GroupStateCache& state_cached_() const;
   DataFrame terminal_(DataFrame::GroupOp op) const;
+  DataFrame terminal_(DataFrame::GroupOp op,
+                      pluss::msharp::RangeView::Of<std::string_view> features) const;
   std::vector<DataFrame::GroupSpec> value_specs_(DataFrame::GroupOp op) const;
+  std::vector<DataFrame::GroupSpec> selected_value_specs_(
+      DataFrame::GroupOp op,
+      pluss::msharp::RangeView::Of<std::string_view> features) const;
 
   DataFrame frame_{};
   std::vector<std::string> keys_{};
@@ -2148,6 +2318,107 @@ private:
   mutable std::vector<std::int64_t> head_cache_{};
   mutable std::optional<std::int64_t> tail_cache_n_{};
   mutable std::vector<std::int64_t> tail_cache_{};
+};
+
+class ContingencyTable {
+public:
+  struct SliceSpec {
+    std::string dim{};
+    ThreadValue::HostAny value{};
+
+    SliceSpec(std::string_view dim_name, std::string_view level);
+    SliceSpec(std::string_view dim_name, const char* level);
+    SliceSpec(std::string_view dim_name, bool level);
+    SliceSpec(std::string_view dim_name, std::int64_t level);
+    SliceSpec(std::string_view dim_name, double level);
+  };
+
+  ContingencyTable();
+  std::int64_t ndim() const;
+  std::vector<std::int64_t> shape() const;
+  std::vector<std::string> dims() const;
+
+  ContingencyTable freq() const;
+  ContingencyTable share() const;
+  ContingencyTable slice(std::string_view dim, std::string_view value) const;
+  ContingencyTable slice(std::string_view dim, const char* value) const;
+  ContingencyTable slice(std::string_view dim, bool value) const;
+  ContingencyTable slice(std::string_view dim, std::int64_t value) const;
+  ContingencyTable slice(std::string_view dim, double value) const;
+  ContingencyTable slice(std::initializer_list<SliceSpec> specs) const;
+  ContingencyTable marginalize(std::string_view dim) const;
+  ContingencyTable marginalize(std::initializer_list<std::string_view> dims) const;
+  ContingencyTable marginalize(pluss::msharp::RangeView::Of<std::string_view> dims) const;
+  ContingencyTable condition(std::string_view dim) const;
+  ContingencyTable condition(std::initializer_list<std::string_view> dims) const;
+  ContingencyTable condition(pluss::msharp::RangeView::Of<std::string_view> dims) const;
+
+  pluss::Series to_array() const;
+  DataFrame to_frame() const;
+  DataFrame to_frame(const DataFrame::ContingencyOptions& options) const;
+  DataFrame to_frame(std::initializer_list<std::string_view> row_dims,
+                     std::initializer_list<std::string_view> column_dims) const;
+  DataFrame to_frame(std::initializer_list<std::string_view> row_dims,
+                     std::initializer_list<std::string_view> column_dims,
+                     const DataFrame::ContingencyOptions& options) const;
+  DataFrame to_frame(pluss::msharp::RangeView::Of<std::string_view> row_dims,
+                     pluss::msharp::RangeView::Of<std::string_view> column_dims) const;
+  DataFrame to_frame(pluss::msharp::RangeView::Of<std::string_view> row_dims,
+                     pluss::msharp::RangeView::Of<std::string_view> column_dims,
+                     const DataFrame::ContingencyOptions& options) const;
+  Atlas facet() const;
+  Atlas facet(const DataFrame::ContingencyOptions& options) const;
+  Atlas facet(std::initializer_list<std::string_view> row_dims,
+              std::initializer_list<std::string_view> column_dims) const;
+  Atlas facet(std::initializer_list<std::string_view> row_dims,
+              std::initializer_list<std::string_view> column_dims,
+              const DataFrame::ContingencyOptions& options) const;
+  Atlas facet(pluss::msharp::RangeView::Of<std::string_view> row_dims,
+              pluss::msharp::RangeView::Of<std::string_view> column_dims) const;
+  Atlas facet(pluss::msharp::RangeView::Of<std::string_view> row_dims,
+              pluss::msharp::RangeView::Of<std::string_view> column_dims,
+              const DataFrame::ContingencyOptions& options) const;
+
+private:
+  enum class Normalize : std::uint8_t {
+    None = 0,
+    All = 1,
+    Conditional = 2,
+  };
+
+  ContingencyTable(std::vector<std::string> dims,
+                   std::vector<Thread> levels,
+                   pluss::Series counts,
+                   DataFrame::ContingencyOptions options,
+                   std::vector<std::string> default_row_dims,
+                   std::vector<std::string> default_column_dims,
+                   Normalize normalize = Normalize::None,
+                   std::vector<std::string> conditioned_dims = {});
+
+  std::size_t dim_index_(std::string_view dim, std::string_view where) const;
+  std::vector<std::size_t> dim_indices_(pluss::msharp::RangeView::Of<std::string_view> dims,
+                                        std::string_view where) const;
+  std::vector<std::string> default_row_dims_() const;
+  std::vector<std::string> default_column_dims_() const;
+  std::vector<std::string> render_column_dims_(pluss::msharp::RangeView::Of<std::string_view> row_dims,
+                                               pluss::msharp::RangeView::Of<std::string_view> column_dims) const;
+  std::int64_t level_index_(std::size_t dim_index,
+                            const ThreadValue::HostAny& value,
+                            std::string_view where) const;
+  ContingencyTable slice_at_(std::size_t dim_index, std::int64_t level_index) const;
+  pluss::Series materialized_values_() const;
+  std::vector<std::string> conditioned_dims_after_drop_(std::size_t dim_index) const;
+
+  std::vector<std::string> dims_{};
+  std::vector<Thread> levels_{};
+  pluss::Series counts_{};
+  DataFrame::ContingencyOptions options_{};
+  std::vector<std::string> default_row_dims_hint_{};
+  std::vector<std::string> default_column_dims_hint_{};
+  Normalize normalize_{Normalize::None};
+  std::vector<std::string> conditioned_dims_{};
+
+  friend class DataFrame;
 };
 
 class DataFrameView final : public DataFrame {
@@ -2526,6 +2797,157 @@ template <detail::StringViewNameRange NameRange>
 inline DataFrameSortBuilder DataFrameSortBuilder::within(const NameRange& features) const {
   return detail::with_stack_name_view(features, [&](auto names) {
     return within(names);
+  });
+}
+
+inline ContingencyTable DataFrame::contingency(
+    std::initializer_list<std::string_view> features) const {
+  return contingency(
+      pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+inline ContingencyTable DataFrame::contingency(
+    std::initializer_list<std::string_view> features,
+    const ContingencyOptions& options) const {
+  return contingency(
+      pluss::msharp::RangeView::Of<std::string_view>(features),
+      options);
+}
+
+inline ContingencyTable DataFrame::contingency(
+    std::initializer_list<std::string_view> row_features,
+    std::initializer_list<std::string_view> column_features) const {
+  return contingency(
+      pluss::msharp::RangeView::Of<std::string_view>(row_features),
+      pluss::msharp::RangeView::Of<std::string_view>(column_features));
+}
+
+inline ContingencyTable DataFrame::contingency(
+    std::initializer_list<std::string_view> row_features,
+    std::initializer_list<std::string_view> column_features,
+    const ContingencyOptions& options) const {
+  return contingency(
+      pluss::msharp::RangeView::Of<std::string_view>(row_features),
+      pluss::msharp::RangeView::Of<std::string_view>(column_features),
+      options);
+}
+
+template <detail::StringViewNameRange NameRange>
+inline ContingencyTable DataFrame::contingency(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return contingency(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline ContingencyTable DataFrame::contingency(const NameRange& features,
+                                               const ContingencyOptions& options) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return contingency(names, options);
+  });
+}
+
+template <detail::StringViewNameRange RowRange, detail::StringViewNameRange ColumnRange>
+inline ContingencyTable DataFrame::contingency(const RowRange& row_features,
+                                               const ColumnRange& column_features) const {
+  return detail::with_stack_name_views(row_features, column_features, [&](auto rows, auto columns) {
+    return contingency(rows, columns);
+  });
+}
+
+template <detail::StringViewNameRange RowRange, detail::StringViewNameRange ColumnRange>
+inline ContingencyTable DataFrame::contingency(const RowRange& row_features,
+                                               const ColumnRange& column_features,
+                                               const ContingencyOptions& options) const {
+  return detail::with_stack_name_views(row_features, column_features, [&](auto rows, auto columns) {
+    return contingency(rows, columns, options);
+  });
+}
+
+template <detail::StringViewNameRange IndexRange,
+          detail::StringViewNameRange ColumnRange,
+          detail::StringViewNameRange ValueRange>
+inline DataFrameView DataFrame::pivot_table(const IndexRange& index_features,
+                                            const ColumnRange& column_features,
+                                            const ValueRange& value_features,
+                                            GroupOp op,
+                                            bool dropna,
+                                            bool render,
+                                            bool sort) const {
+  return detail::with_stack_name_views(index_features, column_features, [&](auto rows, auto columns) {
+    return detail::with_stack_name_view(value_features, [&](auto values) {
+      return pivot_table(rows, columns, values, op, dropna, render, sort);
+    });
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::count(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return count(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::ndistinct(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return ndistinct(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::sum(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return sum(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::mean(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return mean(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::median(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return median(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::min(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return min(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::max(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return max(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::std(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return std(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::var(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return var(names);
+  });
+}
+
+template <detail::StringViewNameRange NameRange>
+inline DataFrame DataFrameGrouped::mode(const NameRange& features) const {
+  return detail::with_stack_name_view(features, [&](auto names) {
+    return mode(names);
   });
 }
 

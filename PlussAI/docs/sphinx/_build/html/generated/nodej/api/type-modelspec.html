@@ -15,7 +15,7 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="PermuteImpactReport" href="type-permuteimpactreport.html" />
+    <link rel="next" title="Node" href="type-node.html" />
     <link rel="prev" title="LexiconMapperState" href="type-lexiconmapperstate.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -171,15 +171,16 @@ NodeJ DataFrame bridge demo completed.
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>libc++abi: terminating due to uncaught exception of type pluss::Error: DataReader::with_sizes: explicit sizes are only supported for host-buffer inputs
 Triggered at: &lt;path&gt; (DataReader &amp;pluss::detail::DataReader::with_sizes(std::span&lt;const std::int64_t&gt;))
 Native stack trace:
-  0  pluss::detail::DataReader::with_sizes(std::__1::span&lt;long long const, 18446744073709551615ul&gt;)(data_reader.h:250)
-  1  pluss::codem::Series pluss::detail::DataReader::to_series&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader::Option, pluss::codem::Config const&amp;) const(data_reader.h:295)
+  0  pluss::detail::DataReader::with_sizes(std::__1::span&lt;long long const, 18446744073709551615ul&gt;)(data_reader.h:265)
+  1  pluss::codem::Series pluss::detail::DataReader::to_series&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader::Option, pluss::codem::Config const&amp;) const(data_reader.h:310)
   2  pluss::codem::Series pluss::codem::value&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&amp;)(series_value.h:13)
-  3  pluss::codem::Series pluss::make_series&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&amp;)(series_factory.h:960)
-  4  main(nodej_flow_bundle_demo.cpp:13)
-  5  start + 6992 [dyld]
+  3  pluss::codem::Series pluss::series::make&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&amp;)(series_factory.h:973)
+  4  pluss::codem::Series pluss::make_series&lt;pluss::codem::Config const&amp;&gt;(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&amp;)(series_factory_compat.h:20)
+  5  main(nodej_flow_bundle_demo.cpp:13)
+  6  start + 6992 [dyld]
 
 
-[exit_code] -6
+...
 </pre></div>
 </div>
 </section>
@@ -234,7 +235,7 @@ Native stack trace:
   <li><a href="../../../nodej_full_api.html">NodeJ Full API Reference</a><ul>
   <li><a href="../api_index.html">NodeJ Full API Reference: Method Index</a><ul>
       <li>Previous: <a href="type-lexiconmapperstate.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">LexiconMapperState</span></code></a></li>
-      <li>Next: <a href="type-permuteimpactreport.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">PermuteImpactReport</span></code></a></li>
+      <li>Next: <a href="type-node.html" title="next chapter"><code class="docutils literal notranslate"><span class="pre">Node</span></code></a></li>
   </ul></li>
   </ul></li>
   </ul></li>

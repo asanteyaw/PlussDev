@@ -39,7 +39,7 @@ int main() {
               {"encode", lymph::stage::one_hot_encoder(enc)},
           }),
       },
-      lymph::models::random_forest_classifier({.learners = 60, .subsample = 0.85}));
+      lymph::model::random_forest_classifier({.learners = 60, .subsample = 0.85}));
 
   wf.learn_(data);
   std::cout << "accident severity balanced accuracy: " << wf.assess(data).balanced_accuracy.item<double>() << "\n";

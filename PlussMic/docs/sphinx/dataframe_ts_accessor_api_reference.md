@@ -23,6 +23,8 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+dataframe_ts_window_accessor_api_reference
+dataframe_ts_resampler_api_reference
 api/dataframe-ts/add
 api/dataframe-ts/align_to
 api/dataframe-ts/asfreq

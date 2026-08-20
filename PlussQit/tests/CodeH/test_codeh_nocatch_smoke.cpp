@@ -269,6 +269,82 @@ void test_factory_rank_and_printing() {
   expect_true(t_epoch_nested.dim() == 3, "from_epoch_nanos nested rank");
   expect_true(t_epoch_nested.numel() == 8, "from_epoch_nanos nested numel");
 
+  const auto t_date = pluss::timeline::date({"2024-06-10", "2024-06-11"});
+  expect_true(t_date.dim() == 1 && t_date.numel() == 2, "timeline::date rank");
+  expect_eq_vec(t_date.hour().to_vec<std::int32_t>(), std::vector<std::int32_t>{0, 0},
+                "timeline::date zeros time-of-day");
+
+  const auto t_time = pluss::timeline::time({"09:30:00", "17:45:30"});
+  expect_true(t_time.dim() == 1 && t_time.numel() == 2, "timeline::time rank");
+  expect_eq_vec(t_time.hour().to_vec<std::int32_t>(), std::vector<std::int32_t>{9, 17},
+                "timeline::time preserves time component");
+
+  const auto t_datetime = pluss::timeline::datetime(t_date, t_time);
+  expect_true(t_datetime.dim() == 1 && t_datetime.numel() == 2, "timeline::datetime rank");
+  expect_eq_vec(t_datetime.strftime("%F %T").vector(),
+                std::vector<std::string_view>{"2024-06-10 09:30:00", "2024-06-11 17:45:30"},
+                "timeline::datetime composes date and time fields");
+
+  const auto t_rep = pluss::timeline::rep("2025-02-05", {2, 2});
+  const auto t_rep_sizes = t_rep.sizes();
+  expect_true(t_rep.dim() == 2 && t_rep_sizes.size() == 2 &&
+                  t_rep_sizes[0] == 2 && t_rep_sizes[1] == 2,
+              "timeline::rep copies requested shape");
+  expect_eq_vec(t_rep.day().to_vec<std::int32_t>(),
+                std::vector<std::int32_t>{5, 5, 5, 5},
+                "timeline::rep repeats same instant");
+
+  const auto t_rand_between = pluss::timeline::rand_between(
+      "2024-06-01", "2024-06-03", {5}, 11);
+  expect_true(t_rand_between.dim() == 1 && t_rand_between.numel() == 5,
+              "timeline::rand_between shape");
+  for (const auto tick : t_rand_between.to_epoch_nanos_vector()) {
+    expect_true(tick >= pluss::timeline::date("2024-06-01").to_epoch_nanos_vector()[0] &&
+                    tick <= pluss::timeline::date("2024-06-03").to_epoch_nanos_vector()[0],
+                "timeline::rand_between uses inclusive bounds");
+  }
+
+  const auto t_arange_dates = pluss::timeline::arange(
+      "2024-06-01", "2024-06-03", 1, true);
+  expect_true(t_arange_dates.numel() == 3, "timeline::arange date count");
+  expect_eq_vec(t_arange_dates.day().to_vec<std::int32_t>(),
+                std::vector<std::int32_t>{1, 2, 3},
+                "timeline::arange date default uses days");
+
+  const auto t_arange_times = pluss::timeline::arange(
+      "09:00:00", "09:00:03", 1, true);
+  expect_true(t_arange_times.numel() == 4, "timeline::arange time count");
+  expect_eq_vec(t_arange_times.second().to_vec<std::int32_t>(),
+                std::vector<std::int32_t>{0, 1, 2, 3},
+                "timeline::arange time default uses seconds");
+
+  const auto t_arange_dt = pluss::timeline::arange(
+      "2024-06-01T00:00:00Z",
+      "2024-06-01T06:00:00Z",
+      pluss::duration::hours(2),
+      true);
+  expect_true(t_arange_dt.numel() == 4, "timeline::arange datetime count");
+  expect_eq_vec(t_arange_dt.hour().to_vec<std::int32_t>(),
+                std::vector<std::int32_t>{0, 2, 4, 6},
+                "timeline::arange datetime uses explicit Duration step");
+
+  expect_throw(
+      [] { (void)pluss::timeline::date("2024-06-10T09:30:00Z"); },
+      "timeline::date rejects datetime input");
+  expect_throw(
+      [] { (void)pluss::timeline::time("2024-06-10"); },
+      "timeline::time rejects date input");
+  expect_throw(
+      [] { (void)pluss::timeline::arange("2024-06-01T00:00:00Z", "2024-06-01T06:00:00Z", 1, true); },
+      "timeline::arange datetime/int step requires explicit Duration");
+  expect_eq_vec(
+      pluss::timeline::datetime(pluss::timeline::date("2024-06-12"),
+                                pluss::timeline::time({"08:00:00", "09:15:00"}))
+          .strftime("%F %T")
+          .vector(),
+      std::vector<std::string_view>{"2024-06-12 08:00:00", "2024-06-12 09:15:00"},
+      "timeline::datetime broadcasts scalar date over vector times");
+
   const auto idx = pluss::timeindex::make({
       "2024-01-01T00:00:00Z",
       "2024-01-01T01:00:00Z",

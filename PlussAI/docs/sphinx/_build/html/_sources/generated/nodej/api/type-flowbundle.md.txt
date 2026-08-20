@@ -29,6 +29,7 @@ Public fields on this type:
 - `std::vector<Series> model_state{}`
 - `TrainOptions train_options{}`
 - `LabeledBatch train_batch{}`
+- `CategoryMaps category_maps{}`
 
 ## Examples
 

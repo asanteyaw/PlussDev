@@ -118,7 +118,7 @@ bool run_lymph_factorize_checks(std::ostream* err = nullptr) {
   linear.regularization_strength = 1e-6;
   linear.fit_intercept = true;
 
-  Model model = models::logistic_regression(linear);
+  Model model = model::logistic_regression(linear);
   TrainOptions train{};
   train.max_iterations = 2000;
   train.tolerance = 1e-8;
@@ -197,7 +197,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   linear.regularization_strength = 1e-6;
   linear.fit_intercept = true;
 
-  Model model = models::logistic_regression(linear);
+  Model model = model::logistic_regression(linear);
   TrainOptions train{};
   train.max_iterations = 2500;
   train.tolerance = 1e-8;
@@ -288,20 +288,21 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
     return false;
   }
 
-  CrossValidationOptions cv{};
+  metrics::ValidationOptions cv{};
   cv.plan = CVPlanKind::CrossVal;
   cv.folds = 4;
   cv.shuffle = true;
   cv.random_state = 73;
   cv.deterministic = true;
 
-  const Series fold_scores = cross_validate_scores(model.model_spec().value(), batch, MetricKind::Accuracy, cv, train);
+  const validate::Plan cv_plan = validate::cross(cv);
+  const Series fold_scores = cv_plan.scores(model.model_spec().value(), batch, MetricKind::Accuracy, train);
   if (fold_scores.numel() != 4 || !fold_scores.isfinite().all().item<bool>()) {
     if (err) *err << "lymph cross_validate_scores should return one finite score per fold\n";
     return false;
   }
 
-  const double score = cross_validate_score(model.model_spec().value(), batch, MetricKind::Accuracy, cv, train);
+  const double score = cv_plan.score(model.model_spec().value(), batch, MetricKind::Accuracy, train);
   if (!std::isfinite(score) || score < 0.0 || score > 1.0) {
     if (err) *err << "lymph cross_validate_score should return finite fold-mean score\n";
     return false;
@@ -309,7 +310,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
 
   AssessOptions assess{};
   assess.metrics = {MetricKind::Accuracy};
-  const CrossValidationReport report_cv = cross_validate(model.model_spec().value(), batch, cv, train, assess);
+  const metrics::CrossValidationReport report_cv = cv_plan.run(model.model_spec().value(), batch, train, assess);
   const double mean_cv = report_cv.report.mean_metrics.reshape({1}).item<double>();
   if (!approx(score, mean_cv, 1e-10)) {
     if (err) *err << "lymph cross_validate_score should match cross_validate mean metric for same setup\n";
@@ -318,7 +319,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
 
   // Reports are now produced by the reports family consuming a public Model;
   // CV still uses the spec-level validation path until validate:: lands.
-  Model report_model = models::logistic_regression(linear);
+  Model report_model = model::logistic_regression(linear);
   report_model.learn_(batch, train);
   const ConfusionTable report_cm = reports::confusion_table(report_model, batch);
   if (report_cm.counts.numel() != cm.counts.numel()) {
@@ -335,12 +336,12 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
     if (err) *err << "reports::classification_metric_series(model,...) should produce requested metrics\n";
     return false;
   }
-  const Series report_fold_scores = cross_validate_scores(report_model.model_spec().value(), batch, MetricKind::Accuracy, cv, train);
+  const Series report_fold_scores = cv_plan.scores(report_model.model_spec().value(), batch, MetricKind::Accuracy, train);
   if (report_fold_scores.numel() != 4) {
     if (err) *err << "cross_validate_scores(model_spec,...) should emit one score per fold\n";
     return false;
   }
-  const double report_score = cross_validate_score(report_model.model_spec().value(), batch, MetricKind::Accuracy, cv, train);
+  const double report_score = cv_plan.score(report_model.model_spec().value(), batch, MetricKind::Accuracy, train);
   if (!std::isfinite(report_score) || report_score < 0.0 || report_score > 1.0) {
     if (err) *err << "cross_validate_score(model_spec,...) should produce finite score in [0,1]\n";
     return false;

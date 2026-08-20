@@ -187,12 +187,11 @@ int main(int argc, char** argv) {
 
     //========== train/test split ========
     // This section creates a deterministic holdout split for final validation.
-    const auto holdout = lymph::holdout_split(frame, lymph::HoldoutSplitOptions{
-                                                         .test_size = 0.2,
-                                                         .random_state = 42,
-                                                         .deterministic = true,
-                                                         .shuffle = true,
-                                                     });
+    const auto holdout = lymph::validate::holdout()
+                             .test_size(0.2)
+                             .shuffle(true)
+                             .seed(42)
+                             .split(frame);
 
     const std::vector<std::string> model_features = {
         "season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday", "weather_condition",
@@ -300,7 +299,7 @@ int main(int argc, char** argv) {
     AssessOptions assess_options{};
     assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
 
-    lymph::CrossValidationOptions cv_options{};
+    lymph::metrics::CrossValidationOptions cv_options{};
     cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
     cv_options.stratified = false;

@@ -39,6 +39,36 @@ DataFrameGrouped::DataFrameGrouped(DataFrame frame,
       labels_(std::move(labels)),
       options_(options) {}
 
+namespace {
+
+const char* group_terminal_name_(DataFrame::GroupOp op) {
+  switch (op) {
+    case DataFrame::GroupOp::Count:
+      return "count";
+    case DataFrame::GroupOp::Ndistinct:
+      return "ndistinct";
+    case DataFrame::GroupOp::Sum:
+      return "sum";
+    case DataFrame::GroupOp::Mean:
+      return "mean";
+    case DataFrame::GroupOp::Median:
+      return "median";
+    case DataFrame::GroupOp::Min:
+      return "min";
+    case DataFrame::GroupOp::Max:
+      return "max";
+    case DataFrame::GroupOp::Std:
+      return "std";
+    case DataFrame::GroupOp::Var:
+      return "var";
+    case DataFrame::GroupOp::Mode:
+      return "mode";
+  }
+  return "group";
+}
+
+}
+
 const DataFrame& DataFrameGrouped::keyed_frame_cached_() const {
   if (!keyed_cache_ready_) {
     keyed_frame_cache_ = keyed_frame_(key_names_cache_);
@@ -244,7 +274,8 @@ DataFrame DataFrameGrouped::filter(const Thread& keep) const {
 }
 
 std::vector<DataFrame::GroupSpec> DataFrameGrouped::value_specs_(DataFrame::GroupOp op) const {
-  std::unordered_set<std::string> key_set(keys_.begin(), keys_.end());
+  const auto& key_names = key_names_cached_();
+  std::unordered_set<std::string> key_set(key_names.begin(), key_names.end());
   std::vector<DataFrame::GroupSpec> specs;
   for (const auto& name : frame_.features()) {
     if (key_set.contains(name)) {
@@ -270,21 +301,158 @@ std::vector<DataFrame::GroupSpec> DataFrameGrouped::value_specs_(DataFrame::Grou
   return specs;
 }
 
+std::vector<DataFrame::GroupSpec> DataFrameGrouped::selected_value_specs_(
+    DataFrame::GroupOp op,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& key_names = key_names_cached_();
+  std::unordered_set<std::string> key_set(key_names.begin(), key_names.end());
+  std::unordered_set<std::string> seen;
+  seen.reserve(features.size());
+
+  std::vector<DataFrame::GroupSpec> specs;
+  specs.reserve(features.size());
+  const auto where = std::string("DataFrameGrouped::") + group_terminal_name_(op);
+  for (const auto feature_sv : features) {
+    const auto feature = owned_name(feature_sv);
+    PLUSS_CHECK(!feature.empty(), where + ": feature name cannot be empty");
+    PLUSS_CHECK(frame_.get(feature).has_value(), where + ": unknown feature '" + feature + "'");
+    PLUSS_CHECK(!key_set.contains(feature), where + ": feature '" + feature + "' is a grouping key");
+    if (!seen.insert(feature).second) {
+      continue;
+    }
+    specs.push_back(DataFrame::GroupSpec{
+        .output = {},
+        .feature = feature,
+        .op = op,
+    });
+  }
+
+  PLUSS_CHECK(!specs.empty(), where + ": at least one value feature is required");
+  return specs;
+}
+
 DataFrame DataFrameGrouped::terminal_(DataFrame::GroupOp op) const {
   const auto specs = value_specs_(op);
   return agg(pluss::msharp::RangeView::Of<DataFrame::GroupSpec>(specs));
 }
 
+DataFrame DataFrameGrouped::terminal_(
+    DataFrame::GroupOp op,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto specs = selected_value_specs_(op, features);
+  return agg(pluss::msharp::RangeView::Of<DataFrame::GroupSpec>(specs));
+}
+
 DataFrame DataFrameGrouped::count() const { return terminal_(DataFrame::GroupOp::Count); }
+DataFrame DataFrameGrouped::count(std::string_view feature) const {
+  return count(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::count(std::initializer_list<std::string_view> features) const {
+  return count(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::count(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Count, features);
+}
+
 DataFrame DataFrameGrouped::ndistinct() const { return terminal_(DataFrame::GroupOp::Ndistinct); }
+DataFrame DataFrameGrouped::ndistinct(std::string_view feature) const {
+  return ndistinct(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::ndistinct(std::initializer_list<std::string_view> features) const {
+  return ndistinct(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::ndistinct(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Ndistinct, features);
+}
+
 DataFrame DataFrameGrouped::sum() const { return terminal_(DataFrame::GroupOp::Sum); }
+DataFrame DataFrameGrouped::sum(std::string_view feature) const {
+  return sum(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::sum(std::initializer_list<std::string_view> features) const {
+  return sum(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::sum(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Sum, features);
+}
+
 DataFrame DataFrameGrouped::mean() const { return terminal_(DataFrame::GroupOp::Mean); }
+DataFrame DataFrameGrouped::mean(std::string_view feature) const {
+  return mean(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::mean(std::initializer_list<std::string_view> features) const {
+  return mean(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::mean(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Mean, features);
+}
+
 DataFrame DataFrameGrouped::median() const { return terminal_(DataFrame::GroupOp::Median); }
+DataFrame DataFrameGrouped::median(std::string_view feature) const {
+  return median(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::median(std::initializer_list<std::string_view> features) const {
+  return median(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::median(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Median, features);
+}
+
 DataFrame DataFrameGrouped::min() const { return terminal_(DataFrame::GroupOp::Min); }
+DataFrame DataFrameGrouped::min(std::string_view feature) const {
+  return min(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::min(std::initializer_list<std::string_view> features) const {
+  return min(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::min(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Min, features);
+}
+
 DataFrame DataFrameGrouped::max() const { return terminal_(DataFrame::GroupOp::Max); }
+DataFrame DataFrameGrouped::max(std::string_view feature) const {
+  return max(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::max(std::initializer_list<std::string_view> features) const {
+  return max(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::max(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Max, features);
+}
+
 DataFrame DataFrameGrouped::std() const { return terminal_(DataFrame::GroupOp::Std); }
+DataFrame DataFrameGrouped::std(std::string_view feature) const {
+  return std(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::std(std::initializer_list<std::string_view> features) const {
+  return std(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::std(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Std, features);
+}
+
 DataFrame DataFrameGrouped::var() const { return terminal_(DataFrame::GroupOp::Var); }
+DataFrame DataFrameGrouped::var(std::string_view feature) const {
+  return var(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::var(std::initializer_list<std::string_view> features) const {
+  return var(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::var(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Var, features);
+}
+
 DataFrame DataFrameGrouped::mode() const { return terminal_(DataFrame::GroupOp::Mode); }
+DataFrame DataFrameGrouped::mode(std::string_view feature) const {
+  return mode(pluss::msharp::RangeView::Of<std::string_view>({feature}));
+}
+DataFrame DataFrameGrouped::mode(std::initializer_list<std::string_view> features) const {
+  return mode(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+DataFrame DataFrameGrouped::mode(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return terminal_(DataFrame::GroupOp::Mode, features);
+}
+
 DataFrame DataFrameGrouped::yield() const
 {
     PLUSS_CHECK(
