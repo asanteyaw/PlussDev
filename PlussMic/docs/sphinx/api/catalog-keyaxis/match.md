@@ -95,7 +95,7 @@ Catalog::keyaxis().match: invalid regex '(unterminated': The expression containe
 - [`Catalog::keyaxis`](../catalog/keyaxis.md): the entry point this accessor
   is reached from.
 - [`RegistryFieldAxisAccessor::match`](../registry-fieldaxis/match.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="like.html">

@@ -43,7 +43,7 @@ confirms the instant actually moved; a follow-up `fmt()` shows the
 shifted instant correctly rendered in NY-local wall-clock time.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
 
 pluss::table::TimelineLocalizeOptions options;
 options.tz = "America/New_York";

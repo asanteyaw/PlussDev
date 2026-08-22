@@ -8,6 +8,11 @@
 
 namespace pluss::table {
 
+namespace detail {
+std::string sql_primary_source_name(std::string_view statement,
+                                    const DataFrame::SqlOptions& options = {});
+}
+
 class DataFrameSqlPrepared {
 public:
   DataFrameSqlPrepared(DataFrame frame,

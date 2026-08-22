@@ -40,7 +40,7 @@ Example 1. Default (`full = false`): the pattern just needs to appear
 somewhere.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")});
+auto slot = pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")});
 auto out = slot.nt().matches("[0-9]+");
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
@@ -56,7 +56,7 @@ true true
 Example 2. `full = true` requires the whole value to match.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")});
+auto slot = pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")});
 auto out = slot.nt().matches("^[0-9]+$", true);
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "

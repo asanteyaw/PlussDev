@@ -130,7 +130,7 @@ becomes `NULL`, matching the normal `Note -> Series` conversion path.
 - `cast()` does not select columns. Selection belongs on [`features(names)`](features.md).
 - If you need to preserve the full frame while replacing only one or more casted
   columns, compose `features(...).cast()` with [`set(...)`](set.md).
-- The accessor applies one shared `ThreadCastOptions` bundle to every currently bound
+- The accessor applies one shared `ThreadCastOptions` scribble to every currently bound
   feature.
 - Calling `cast()` on a zero-feature frame is valid; the accessor methods simply
   return the same zero-feature frame.

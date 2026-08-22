@@ -7,9 +7,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <ostream>
 #include <span>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #include "Flame/Flame.h"
@@ -24,6 +26,93 @@ class CODEN_API NoteBase {
 public:
   using value_type = ::std::string_view;
   using index_type = ::std::int64_t;
+
+  struct HostArray {
+    ::std::vector<::std::string> data;
+    ::std::vector<index_type> sizes;
+    bool contiguous{true};
+
+    ::std::span<const index_type> shape() const noexcept { return sizes; }
+    index_type dim() const noexcept { return static_cast<index_type>(sizes.size()); }
+    index_type numel() const noexcept { return static_cast<index_type>(data.size()); }
+  };
+
+  class HostAny final {
+  public:
+    enum class Kind : ::std::uint8_t { Scalar = 0, Vector = 1, Array = 2 };
+
+    HostAny() = default;
+
+    static HostAny from_scalar(::std::string value) {
+      HostAny out;
+      out.kind_ = Kind::Scalar;
+      out.payload_ = ::std::move(value);
+      return out;
+    }
+
+    static HostAny from_vector(::std::vector<::std::string> values) {
+      HostAny out;
+      out.kind_ = Kind::Vector;
+      out.payload_ = ::std::move(values);
+      return out;
+    }
+
+    static HostAny from_array(HostArray values) {
+      HostAny out;
+      out.kind_ = Kind::Array;
+      out.payload_ = ::std::move(values);
+      return out;
+    }
+
+    Kind kind() const noexcept { return kind_; }
+    bool is_scalar() const noexcept { return kind_ == Kind::Scalar; }
+    bool is_vector() const noexcept { return kind_ == Kind::Vector; }
+    bool is_array() const noexcept { return kind_ == Kind::Array; }
+
+    const ::std::string& scalar() const {
+      PLUSS_CHECK(is_scalar(), "Note::host(): value is not scalar");
+      return ::std::get<::std::string>(payload_);
+    }
+
+    const ::std::vector<::std::string>& vector() const {
+      PLUSS_CHECK(is_vector(), "Note::host(): value is not a 1-D vector");
+      return ::std::get<::std::vector<::std::string>>(payload_);
+    }
+
+    const HostArray& array() const {
+      PLUSS_CHECK(is_array(), "Note::host(): value is not N-D array");
+      return ::std::get<HostArray>(payload_);
+    }
+
+    friend ::std::ostream& operator<<(::std::ostream& os, const HostAny& value) {
+      switch (value.kind_) {
+        case Kind::Scalar:
+          os << value.scalar();
+          break;
+        case Kind::Vector:
+          os << "[";
+          for (::std::size_t i = 0; i < value.vector().size(); ++i) {
+            if (i) os << ", ";
+            os << value.vector()[i];
+          }
+          os << "]";
+          break;
+        case Kind::Array:
+          os << "Note::HostArray(shape=[";
+          for (::std::size_t i = 0; i < value.array().sizes.size(); ++i) {
+            if (i) os << ", ";
+            os << value.array().sizes[i];
+          }
+          os << "], values=" << value.array().data.size() << ")";
+          break;
+      }
+      return os;
+    }
+
+  private:
+    Kind kind_{Kind::Scalar};
+    ::std::variant<::std::string, ::std::vector<::std::string>, HostArray> payload_{::std::string{}};
+  };
 
   class const_iterator {
   public:
@@ -101,6 +190,30 @@ public:
   ::std::vector<value_type> vector() const;
   ::std::vector<::std::vector<value_type>> matrix() const;
   ::std::vector<::std::vector<::std::vector<value_type>>> tensor3() const;
+
+  HostAny host() const {
+    PLUSS_CHECK(defined(), "Note::host(): undefined");
+
+    if (is_scalar()) {
+      return HostAny::from_scalar(::std::string(scalar()));
+    }
+
+    ::std::vector<::std::string> values;
+    values.reserve(static_cast<::std::size_t>(numel()));
+    for (index_type i = 0; i < numel(); ++i) {
+      values.emplace_back(flat_at(i));
+    }
+
+    if (is_vector()) {
+      return HostAny::from_vector(::std::move(values));
+    }
+
+    HostArray array;
+    array.data = ::std::move(values);
+    array.sizes = shape();
+    array.contiguous = true;
+    return HostAny::from_array(::std::move(array));
+  }
 
   ::std::string join_flat(::std::string_view sep = " ") const;
   ::std::string debug(index_type max_items = 12) const;

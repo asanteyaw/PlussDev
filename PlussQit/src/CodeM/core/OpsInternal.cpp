@@ -2362,6 +2362,30 @@ static void maybe_link_extrema_reduce_(
   series_tape::bind_source_link(out, std::move(link));
 }
 
+static void maybe_link_extrema_all_reduce_(
+    const Series& out,
+    const Series& input,
+    const Series& reduced,
+    const char* op_name) {
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(input)) return;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = op_name;
+  link->parents = {input};
+  link->propagate = [input, reduced](const Series& out_sens) {
+    Series value = reduced.expand(input.sizes(), true);
+    Series sens = out_sens.expand(input.sizes(), true);
+    if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
+    if (sens.platform() != input.platform()) sens = sens.to(input.platform());
+
+    const Series mask = eq(input, value);
+    const Series mask_value = mask.to(input.scalar_type());
+    const Series count = sum(mask_value).expand(input.sizes(), true);
+    const Series grad = mask_value.mul(sens).div(count);
+    series_tape::accumulate_sensitivity(input, grad);
+  };
+  series_tape::bind_source_link(out, std::move(link));
+}
+
 Series sum(const Series& a) {
   PLUSS_CHECK(a.defined(), "sum: undefined");
   if (a.dim() == 0) {
@@ -2841,34 +2865,49 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
 
 Series amax(const Series& a) {
   PLUSS_CHECK(a.defined(), "amax: undefined");
-  if (a.platform() != Platform::CPU) {
-    if (a.platform() == Platform::MPS) {
-      // handled by per-dim path below
-    } else if (a.platform() == Platform::CUDA) {
-      const bool native_enabled = native::cuda::native_reduction_enabled();
-      const bool native_strict = native::cuda::native_reduction_strict();
-      const bool route_supported = native::cuda::supports_ordered_extrema_reduction(a);
-      if (native_enabled && route_supported) {
-        Series out = Series::empty({}, a.scalar_type(), a.platform());
-        if (!native::cuda::run_amax_reduction(a.contiguous(), out)) {
-          PLUSS_FAIL("amax: native CUDA reduction kernel launch failed");
+  if (a.dim() == 0) {
+    Series out = a.clone();
+    maybe_link_unary_op_(out, a, "amax", [](const Series& g) { return g; });
+    return out;
+  }
+  PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
+              "amax: complex dtype not supported for ordered reduction");
+  const bool track_input = series_tape::recording_enabled() && series_tape::tracks_slope(a);
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    if (a.platform() != Platform::CPU) {
+      if (a.platform() == Platform::MPS) {
+        // handled by per-dim path below
+      } else if (a.platform() == Platform::CUDA) {
+        const bool native_enabled = native::cuda::native_reduction_enabled();
+        const bool native_strict = native::cuda::native_reduction_strict();
+        const bool route_supported = native::cuda::supports_ordered_extrema_reduction(a);
+        if (native_enabled && route_supported) {
+          out = Series::empty({}, a.scalar_type(), a.platform());
+          if (!native::cuda::run_amax_reduction(a.contiguous(), out)) {
+            PLUSS_FAIL("amax: native CUDA reduction kernel launch failed");
+          }
+        } else {
+          (void)cuda_reduction_route_or_bridge_(
+              "amax",
+              native_enabled,
+              native_strict,
+              route_supported,
+              [&]() { return a; });
         }
-        return out;
+      } else {
+        require_backend_dispatch_supported_(a.platform(), "amax");
       }
-      (void)cuda_reduction_route_or_bridge_(
-          "amax",
-          native_enabled,
-          native_strict,
-          route_supported,
-          [&]() { return a; });
-    } else {
-      require_backend_dispatch_supported_(a.platform(), "amax");
+    }
+    if (!out.defined()) {
+      Series cur = a.contiguous();
+      for (std::int64_t d = (std::int64_t)cur.dim()-1; d>=0; --d) cur = amax(cur, d, false);
+      out = cur;
     }
   }
-  if (a.dim() == 0) return a.clone();
-  Series cur = a.contiguous();
-  for (std::int64_t d = (std::int64_t)cur.dim()-1; d>=0; --d) cur = amax(cur, d, false);
-  return cur;
+  if (track_input) maybe_link_extrema_all_reduce_(out, a, out, "amax");
+  return out;
 }
 
 Series amax(const Series& a, std::int64_t dim, bool keepdim) {
@@ -2934,34 +2973,49 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
 
 Series amin(const Series& a) {
   PLUSS_CHECK(a.defined(), "amin: undefined");
-  if (a.platform() != Platform::CPU) {
-    if (a.platform() == Platform::MPS) {
-      // handled by per-dim path below
-    } else if (a.platform() == Platform::CUDA) {
-      const bool native_enabled = native::cuda::native_reduction_enabled();
-      const bool native_strict = native::cuda::native_reduction_strict();
-      const bool route_supported = native::cuda::supports_ordered_extrema_reduction(a);
-      if (native_enabled && route_supported) {
-        Series out = Series::empty({}, a.scalar_type(), a.platform());
-        if (!native::cuda::run_amin_reduction(a.contiguous(), out)) {
-          PLUSS_FAIL("amin: native CUDA reduction kernel launch failed");
+  if (a.dim() == 0) {
+    Series out = a.clone();
+    maybe_link_unary_op_(out, a, "amin", [](const Series& g) { return g; });
+    return out;
+  }
+  PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
+              "amin: complex dtype not supported for ordered reduction");
+  const bool track_input = series_tape::recording_enabled() && series_tape::tracks_slope(a);
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    if (a.platform() != Platform::CPU) {
+      if (a.platform() == Platform::MPS) {
+        // handled by per-dim path below
+      } else if (a.platform() == Platform::CUDA) {
+        const bool native_enabled = native::cuda::native_reduction_enabled();
+        const bool native_strict = native::cuda::native_reduction_strict();
+        const bool route_supported = native::cuda::supports_ordered_extrema_reduction(a);
+        if (native_enabled && route_supported) {
+          out = Series::empty({}, a.scalar_type(), a.platform());
+          if (!native::cuda::run_amin_reduction(a.contiguous(), out)) {
+            PLUSS_FAIL("amin: native CUDA reduction kernel launch failed");
+          }
+        } else {
+          (void)cuda_reduction_route_or_bridge_(
+              "amin",
+              native_enabled,
+              native_strict,
+              route_supported,
+              [&]() { return a; });
         }
-        return out;
+      } else {
+        require_backend_dispatch_supported_(a.platform(), "amin");
       }
-      (void)cuda_reduction_route_or_bridge_(
-          "amin",
-          native_enabled,
-          native_strict,
-          route_supported,
-          [&]() { return a; });
-    } else {
-      require_backend_dispatch_supported_(a.platform(), "amin");
+    }
+    if (!out.defined()) {
+      Series cur = a.contiguous();
+      for (std::int64_t d = (std::int64_t)cur.dim()-1; d>=0; --d) cur = amin(cur, d, false);
+      out = cur;
     }
   }
-  if (a.dim() == 0) return a.clone();
-  Series cur = a.contiguous();
-  for (std::int64_t d = (std::int64_t)cur.dim()-1; d>=0; --d) cur = amin(cur, d, false);
-  return cur;
+  if (track_input) maybe_link_extrema_all_reduce_(out, a, out, "amin");
+  return out;
 }
 Series amin(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
@@ -3112,6 +3166,12 @@ Series any(const Series& a, std::int64_t dim, bool keepdim) {
   return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
 }
 
+Series argmax(const Series& a) {
+  PLUSS_CHECK(a.defined(), "argmax: undefined");
+  Series flat = a.contiguous().reshape({a.numel()});
+  return argmax(flat, 0, false);
+}
+
 Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "argmax: undefined");
   if (a.platform() == Platform::MPS) {
@@ -3121,6 +3181,8 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
     auto aa = a.contiguous();
     const auto nd = aa.dim();
     if (dim < 0) dim += nd;
+    PLUSS_CHECK(dim >= 0 && dim < nd, "argmax: dim out of range");
+    PLUSS_CHECK(aa.sizes()[(std::size_t)dim] > 0, "argmax: cannot reduce an empty dimension");
     auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
     Series out = Series::empty(out_sizes, ScalarType::Int64, aa.platform());
     if (native::mps::supports_argmax_argmin_dim(aa.scalar_type())) {
@@ -3146,6 +3208,8 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
       auto aa = a.contiguous();
       const auto nd = aa.dim();
       if (dim < 0) dim += nd;
+      PLUSS_CHECK(dim >= 0 && dim < nd, "argmax: dim out of range");
+      PLUSS_CHECK(aa.sizes()[(std::size_t)dim] > 0, "argmax: cannot reduce an empty dimension");
       auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
       Series out = Series::empty(out_sizes, ScalarType::Int64, aa.platform());
       if (!native::cuda::run_argmax_reduction(aa, dim, out)) {
@@ -3164,6 +3228,12 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
   }
   return native::cpu::argmax(a, dim, keepdim);
 }
+Series argmin(const Series& a) {
+  PLUSS_CHECK(a.defined(), "argmin: undefined");
+  Series flat = a.contiguous().reshape({a.numel()});
+  return argmin(flat, 0, false);
+}
+
 Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "argmin: undefined");
   if (a.platform() == Platform::MPS) {
@@ -3173,6 +3243,8 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
     auto aa = a.contiguous();
     const auto nd = aa.dim();
     if (dim < 0) dim += nd;
+    PLUSS_CHECK(dim >= 0 && dim < nd, "argmin: dim out of range");
+    PLUSS_CHECK(aa.sizes()[(std::size_t)dim] > 0, "argmin: cannot reduce an empty dimension");
     auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
     Series out = Series::empty(out_sizes, ScalarType::Int64, aa.platform());
     if (native::mps::supports_argmax_argmin_dim(aa.scalar_type())) {
@@ -3198,6 +3270,8 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
       auto aa = a.contiguous();
       const auto nd = aa.dim();
       if (dim < 0) dim += nd;
+      PLUSS_CHECK(dim >= 0 && dim < nd, "argmin: dim out of range");
+      PLUSS_CHECK(aa.sizes()[(std::size_t)dim] > 0, "argmin: cannot reduce an empty dimension");
       auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
       Series out = Series::empty(out_sizes, ScalarType::Int64, aa.platform());
       if (!native::cuda::run_argmin_reduction(aa, dim, out)) {

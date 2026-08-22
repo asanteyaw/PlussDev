@@ -33,8 +33,8 @@ every frame via [`Axel::map`](../axel/map.md).
 Example 1. Cast a `Series` field of integers to text.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"id"}).cast().note();
 auto ids = out.registry(0).fields("id");

@@ -61,8 +61,8 @@ overload counts every character, since `.` is the regex wildcard; the
 explicit `{.regex = false}` form counts actual literal dots.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"txt", pluss::bundle::Slot({pluss::make_note("banana"), pluss::make_note("a.b.c")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"txt", pluss::scribble::Slot({pluss::make_note("banana"), pluss::make_note("a.b.c")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto regexCount = axel.fields({"txt"}).nt().count(".");
 auto txt1 = regexCount.registry(0).fields("txt");

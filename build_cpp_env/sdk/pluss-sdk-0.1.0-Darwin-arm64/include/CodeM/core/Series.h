@@ -852,6 +852,26 @@ public:
   // Request transfer to another backend.
   Series platform(Platform target) const;
   TernaryCompareBuilder tri() const noexcept;
+  Series grouped_count(const Series& group_ids,
+                       std::int64_t group_count) const;
+  Series grouped_sum(const Series& group_ids,
+                     std::int64_t group_count) const;
+  Series grouped_mean(const Series& group_ids,
+                      std::int64_t group_count) const;
+  Series grouped_var(const Series& group_ids,
+                     std::int64_t group_count,
+                     std::int64_t ddof = 1) const;
+  Series grouped_std(const Series& group_ids,
+                     std::int64_t group_count,
+                     std::int64_t ddof = 1) const;
+  Series grouped_min(const Series& group_ids,
+                     std::int64_t group_count) const;
+  Series grouped_max(const Series& group_ids,
+                     std::int64_t group_count) const;
+  Series grouped_median(const Series& group_ids,
+                        std::int64_t group_count) const;
+  Series grouped_mode(const Series& group_ids,
+                      std::int64_t group_count) const;
 
 #ifdef PLUSS_ENABLE_TORCH
   ::torch::Tensor tensor() const;
@@ -1492,21 +1512,35 @@ public:
   }
 
   Series& traverse_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) {
-    Series view = traverse_slice(specs);
-    pluss::codem::_compat::invoke_("copy_", view, {values});
-    return *this;
+    const std::vector<ExtractSpec> parsed(specs.begin(), specs.end());
+    const auto normalized = normalize_extract_specs_(parsed, dim());
+    if (!can_traverse_as_view_(normalized)) {
+      PLUSS_FAIL(
+          "Series::traverse_put_: selector is not view-representable; "
+          "use extract() or extract_put_() for materializing paths");
+    }
+    return extract_put_from_specs_(parsed, values);
   }
 
   Series traverse_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) const {
-    Series out = *this;
-    Series view = out.traverse_slice(specs);
-    pluss::codem::_compat::invoke_("copy_", view, {values});
-    return out;
+    const std::vector<ExtractSpec> parsed(specs.begin(), specs.end());
+    const auto normalized = normalize_extract_specs_(parsed, dim());
+    if (!can_traverse_as_view_(normalized)) {
+      PLUSS_FAIL(
+          "Series::traverse_put: selector is not view-representable; "
+          "use extract() or extract_put() for materializing paths");
+    }
+    return extract_put_copy_from_specs_(parsed, values);
   }
 
   // Dynamic extract surface: accepts a dynamic list of specs.
   Series extract(pluss::msharp::RangeView::Of<ExtractSpec> specs) const {
     return extract_from_specs_({specs.begin(), specs.end()});
+  }
+
+  Series extract(ExtractSpec a0) const {
+    const std::array<ExtractSpec, 1> specs{a0};
+    return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
   }
 
   Series extract(ExtractSpec a0, ExtractSpec a1) const {

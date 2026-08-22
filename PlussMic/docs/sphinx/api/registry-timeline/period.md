@@ -37,8 +37,8 @@ the start of that calendar period (e.g. the first of the month).
 Example 1. Snap a mid-day timestamp to its containing day's start.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().period("D");

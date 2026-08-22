@@ -38,8 +38,8 @@ Example 1. A field with one repeated value: the repeated value's count
 (`2`) sorts before the singleton's count (`1`).
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.freq();
 auto counts = out.registry(0).fields("id");

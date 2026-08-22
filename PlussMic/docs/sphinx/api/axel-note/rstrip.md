@@ -41,8 +41,8 @@ frame via [`Axel::map`](../axel/map.md).
 Example 1. No-argument overload trims trailing whitespace.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("  Accra  ")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("  Accra  ")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().rstrip();
 std::cout << "'" << std::get<pluss::Note>(out.registry(0).fields("city").at(0)).at(0) << "'";
@@ -61,8 +61,8 @@ Example 2. `chars`-argument overload trims a specific character set
 from the right edge only.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("xxAccraxx")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("xxAccraxx")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"code"}).nt().rstrip("x");
 std::cout << std::get<pluss::Note>(out.registry(0).fields("code").at(0)).at(0);

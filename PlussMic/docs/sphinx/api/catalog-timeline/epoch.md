@@ -118,7 +118,7 @@ Thread::tl().epoch: unit is span-only; use Thread::tl().span
   instead of a raw epoch count.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::epoch`](../registry-timeline/epoch.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="day.html">

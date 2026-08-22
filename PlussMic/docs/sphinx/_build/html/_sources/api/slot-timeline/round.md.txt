@@ -34,7 +34,7 @@ replacing each `Timeline` value's values in place (stays
 Example 1. Round two timestamps to the nearest hour.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().round("H");
 auto fmted = out.tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << std::get<pluss::Note>(fmted.at(0)).at(0) << " | "

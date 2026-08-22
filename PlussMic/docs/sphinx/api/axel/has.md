@@ -42,9 +42,9 @@ Example 1. Two frames with disjoint schemas — `has()` is `true` for a
 field that only exists in one of them.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}});
-auto r1 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra")})}});
-auto axel = pluss::bundle::Axel({r0, r1});
+auto r0 = pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}});
+auto r1 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra")})}});
+auto axel = pluss::scribble::Axel({r0, r1});
 
 std::cout << std::boolalpha << axel.has("ids") << " " << axel.has("city") << " " << axel.has("zzz");
 ```

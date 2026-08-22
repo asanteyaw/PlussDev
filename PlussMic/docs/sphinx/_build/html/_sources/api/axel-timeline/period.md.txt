@@ -40,8 +40,8 @@ every frame via [`Axel::map`](../axel/map.md).
 Example 1. Snap a mid-day timestamp to its containing day's start.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().period("D");
 auto fmted = out.fields({"ts"}).tl().fmt("%Y-%m-%d %H:%M:%S");

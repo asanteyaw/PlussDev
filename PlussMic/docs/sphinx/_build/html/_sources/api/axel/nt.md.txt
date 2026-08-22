@@ -39,9 +39,9 @@ field names — it applies to every field of every frame. Chain
 Example 1. Uppercase the `"city"` field across every frame.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})}});
-auto r1 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Kumasi"), pluss::make_note("Takoradi")})}});
-auto axel = pluss::bundle::Axel({r0, r1});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})}});
+auto r1 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Kumasi"), pluss::make_note("Takoradi")})}});
+auto axel = pluss::scribble::Axel({r0, r1});
 
 auto out = axel.fields({"city"}).nt().upper();
 std::cout << std::get<pluss::Note>(out.registry(0).fields("city").at(0)).at(0);

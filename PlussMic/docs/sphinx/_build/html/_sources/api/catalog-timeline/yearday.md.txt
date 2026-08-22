@@ -83,7 +83,7 @@ a non-leap year.
   extra day that shifts this number.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::yearday`](../registry-timeline/yearday.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="year.html">

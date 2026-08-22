@@ -30,7 +30,7 @@ Destination file path.
 **config** (`const pluss::loader::Config&`) / **config_entries**
 (`std::initializer_list<pluss::loader::ConfigEntry>`)
 
-A reusable or inline settings bundle, recognizing the same keys
+A reusable or inline settings scribble, recognizing the same keys
 [`save_csv()`](save_csv.md)'s `Config` overload does (`addcases`, `header`, `sep`,
 `nullrep`, and so on).
 

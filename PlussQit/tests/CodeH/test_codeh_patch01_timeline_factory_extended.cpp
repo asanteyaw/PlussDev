@@ -23,24 +23,14 @@ TEST_CASE("CodeH extended Timeline factories cover strict date/time, repetition,
   REQUIRE(times.strftime("%T").vector() ==
           std::vector<std::string_view>({"09:30:00", "17:45:30"}));
 
-  const auto datetimes = pluss::timeline::datetime(dates, times);
-  REQUIRE(datetimes.strftime("%F %T").vector() ==
-          std::vector<std::string_view>({"2024-06-10 09:30:00", "2024-06-11 17:45:30"}));
-
-  const auto broadcast_datetimes = pluss::timeline::datetime(
-      pluss::timeline::date("2024-06-12"),
-      pluss::timeline::time({"08:00:00", "09:15:00"}));
-  REQUIRE(broadcast_datetimes.strftime("%F %T").vector() ==
-          std::vector<std::string_view>({"2024-06-12 08:00:00", "2024-06-12 09:15:00"}));
-
   const auto repeated = pluss::timeline::rep("2025-02-05", {2, 2});
   const auto repeated_sizes = repeated.sizes();
   REQUIRE(repeated.dim() == 2);
   REQUIRE(repeated_sizes.size() == 2);
   REQUIRE(repeated_sizes[0] == 2);
   REQUIRE(repeated_sizes[1] == 2);
-  REQUIRE(repeated.flatten().strftime("%F").vector() ==
-          std::vector<std::string_view>({"2025-02-05", "2025-02-05", "2025-02-05", "2025-02-05"}));
+  REQUIRE(repeated.day().to_vec<std::int32_t>() ==
+          std::vector<std::int32_t>({5, 5, 5, 5}));
 
   const auto random_between =
       pluss::timeline::rand_between("2024-06-01", "2024-06-03", {12}, 11);

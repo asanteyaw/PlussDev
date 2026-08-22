@@ -31,8 +31,8 @@ calendar month, replacing each `Timeline` field with a `Bool` `Series` field.
 Example 1. Neither sample timestamp falls on the 1st of its month.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().month_start();

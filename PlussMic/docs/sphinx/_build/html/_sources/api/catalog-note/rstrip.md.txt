@@ -78,7 +78,7 @@ city                     | Note         | Note             | 2       | [  Accra,
 - [`CatalogNoteAccessor::strip`](strip.md) / [`lstrip()`](lstrip.md): the both-sides and
   left-side variants.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::rstrip`](../registry-note/rstrip.md): the bundle-model
+- [`RegistryNoteAccessor::rstrip`](../registry-note/rstrip.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

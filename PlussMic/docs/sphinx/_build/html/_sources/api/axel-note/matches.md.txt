@@ -50,8 +50,8 @@ Example 1. Default (`full = false`): the pattern just needs to appear
 somewhere in the value.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"code"}).nt().matches("[0-9]+");
 auto code = out.registry(0).fields("code");
@@ -74,8 +74,8 @@ anchored digits-only pattern rejects `"AB-123"` (which has letters and
 a dash) and `"99XY"` (which has letters).
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"code"}).nt().matches("^[0-9]+$", true);
 auto code = out.registry(0).fields("code");

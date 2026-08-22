@@ -41,8 +41,8 @@ until a unique name is found.
 Example 1. No overlapping field names — a straightforward union.
 
 ```cpp
-auto left = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1)})}});
-auto right = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra")})}});
+auto left = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1)})}});
+auto right = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra")})}});
 
 auto out = left.combine(right);
 for (const auto& key : out.fields()) std::cout << key << " ";
@@ -57,8 +57,8 @@ id city
 Example 2. A colliding field name gets the default `"_other"` suffix.
 
 ```cpp
-auto left = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1)})}});
-auto right = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(99)})}});
+auto left = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1)})}});
+auto right = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(99)})}});
 
 auto out = left.combine(right);
 for (const auto& key : out.fields()) std::cout << key << " ";
@@ -73,8 +73,8 @@ id id_other
 Example 3. Pass an explicit suffix instead of the default.
 
 ```cpp
-auto left = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1)})}});
-auto right = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(99)})}});
+auto left = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1)})}});
+auto right = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(99)})}});
 
 auto out = left.combine(right, "_right");
 for (const auto& key : out.fields()) std::cout << key << " ";
@@ -90,11 +90,11 @@ Example 4. If the suffixed name is *also* already taken, a numeric counter is
 appended until the name is unique.
 
 ```cpp
-auto left = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
-    {"id_other", pluss::bundle::Slot({pluss::make_series(2)})},
+auto left = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
+    {"id_other", pluss::scribble::Slot({pluss::make_series(2)})},
 });
-auto right = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(99)})}});
+auto right = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(99)})}});
 
 auto out = left.combine(right);
 for (const auto& key : out.fields()) std::cout << key << " ";

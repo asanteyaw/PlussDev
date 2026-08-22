@@ -39,7 +39,7 @@ same regardless of how many values the slot holds, including exactly one
 Example 1. Cast a text slot of numeric-looking strings to `Series`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("1"), pluss::make_note("2")});
+auto slot = pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")});
 auto out = slot.cast().series();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
 ```
@@ -53,7 +53,7 @@ std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
 Example 2. Pass `options` to force a specific target dtype.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("1"), pluss::make_note("2")});
+auto slot = pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")});
 pluss::table::ThreadCastOptions options;
 options.series_dtype = pluss::codem::ScalarType::Float64;
 auto out = slot.cast(options).series();
@@ -69,7 +69,7 @@ std::cout << std::get<pluss::Series>(out.at(0)).to_vec<double>()[0];
 Example 3. A single-value slot casts the same way a multi-value one does.
 
 ```cpp
-auto single = pluss::bundle::Slot({pluss::make_series(1)});
+auto single = pluss::scribble::Slot({pluss::make_series(1)});
 auto out = single.cast().note();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```

@@ -2,6 +2,7 @@
 
 #include "pluss/nn.h"
 #include "pluss/ai/ml.h"
+#include "pluss/ai/procedure.h"
 
 // Compatibility umbrella.
 // The active fusion/RNN surface now lives under <pluss/nn.h> plus the

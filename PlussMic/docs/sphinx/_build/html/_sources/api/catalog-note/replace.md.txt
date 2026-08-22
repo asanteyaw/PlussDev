@@ -91,7 +91,7 @@ city                     | Note         | Note             | 2       | [AccrX, K
 - [`CatalogNoteAccessor::count`](count.md) / [`has()`](has.md): related pattern
   operations sharing the same `TextOptions` type.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::replace`](../registry-note/replace.md): the bundle-model
+- [`RegistryNoteAccessor::replace`](../registry-note/replace.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

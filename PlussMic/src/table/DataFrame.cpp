@@ -14,7 +14,7 @@
 #include <optional>
 #include <random>
 
-#include "bundle/registry.h"
+#include "scribble/registry.h"
 #include <regex>
 #include <string>
 #include <unordered_map>

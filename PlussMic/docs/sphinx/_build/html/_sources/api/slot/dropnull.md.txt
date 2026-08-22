@@ -30,7 +30,7 @@ shortening the slot.
 Example 1. Drop the null in the middle of a slot.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(3)});
 auto out = slot.dropnull();
 std::cout << "size=" << out.size() << " vals="
           << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << ","

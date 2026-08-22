@@ -31,11 +31,11 @@ fields — fields whose every value is the null sentinel.
 Example 1. Keep only the all-null field in every frame.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"nullfield", pluss::bundle::Slot({pluss::bundle::Slot::Value{std::monostate{}}})},
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto r0 = pluss::scribble::Registry({
+    {"nullfield", pluss::scribble::Slot({pluss::scribble::Slot::Value{std::monostate{}}})},
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
-auto axel = pluss::bundle::Axel({r0});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fieldaxis().nulls();
 for (const auto& key : out.registry(0).fields()) std::cout << key << " ";

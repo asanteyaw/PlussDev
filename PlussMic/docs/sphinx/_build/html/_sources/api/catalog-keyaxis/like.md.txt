@@ -18,7 +18,7 @@ Returns a new catalog containing only the keys whose **name** contains
 
 ```{important} Defaults to case-sensitive, unlike RegistryFieldAxisAccessor::like
 `CatalogKeyAxisAccessor::like()` defaults `case_sensitive` to `true`. The
-bundle-model equivalent, [`RegistryFieldAxisAccessor::like`](../registry-fieldaxis/like.md),
+scribble-model equivalent, [`RegistryFieldAxisAccessor::like`](../registry-fieldaxis/like.md),
 defaults to `false` (case-insensitive) instead — a real asymmetry between the
 two models' accessors, not just a naming difference. Pass `false` explicitly
 here for a case-insensitive substring search.
@@ -117,7 +117,7 @@ user_id                  | Series       | Series[float64]  | 2       | [3, 4]
 ## Notes
 
 - See the important callout above — this method's default differs from its
-  bundle-model counterpart.
+  scribble-model counterpart.
 - Matches against key **names**, not key values.
 - An empty result is a valid, defined, empty catalog — not a throw.
 
@@ -132,7 +132,7 @@ user_id                  | Series       | Series[float64]  | 2       | [3, 4]
 - [`Catalog::keys`](../catalog/keys.md): select keys you already know the
   exact names of, rather than by pattern.
 - [`RegistryFieldAxisAccessor::like`](../registry-fieldaxis/like.md): the
-  bundle-model equivalent, with the opposite default.
+  scribble-model equivalent, with the opposite default.
 
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="match.html">

@@ -80,7 +80,7 @@ Both sample dates are the *last* day of their month, not the first — see
   this method is derived from.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::month_start`](../registry-timeline/month_start.md):
-  the bundle-model equivalent.
+  the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month_name.html">

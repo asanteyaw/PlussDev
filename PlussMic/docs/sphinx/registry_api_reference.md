@@ -1,6 +1,6 @@
 # Registry API Reference
 
-This page documents the full public `Registry` surface for named bundle slots.
+This page documents the full public `Registry` surface for named scribble slots.
 
 ## Using This Reference
 

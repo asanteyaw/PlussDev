@@ -39,12 +39,12 @@ a time (`Slot::Value -> Slot::Value`), preserving the field's length.
 Example 1. Multiply every value in `id` by 10.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.morph("id", [](const pluss::bundle::Slot::Value& v) -> pluss::bundle::Slot::Value {
+auto out = rg.morph("id", [](const pluss::scribble::Slot::Value& v) -> pluss::scribble::Slot::Value {
   return pluss::make_series(std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] * 10);
 });
 

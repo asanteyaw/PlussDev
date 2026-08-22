@@ -196,7 +196,7 @@ auto roundtrip_df = catalog.tabelize();
 auto archive = atlas.kindelize();
 auto roundtrip_atlas = archive.tabelize();
 
-auto registry = df.bundelize();
+auto registry = df.scribbelize();
 auto back_catalog = registry.kindelize();
 ```
 

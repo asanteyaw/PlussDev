@@ -34,7 +34,7 @@ transform like [`filter()`](filter.md) or [`transform()`](transform.md).
 Example 1. Iterate the values directly, extracting each `Series` scalar.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 
 std::int64_t total = 0;
 for (const auto& value : slot.values()) {
@@ -52,7 +52,7 @@ count=3 total=6
 Example 2. Check for a null value directly via `std::holds_alternative`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}});
 
 bool has_null = false;
 for (const auto& value : slot.values()) {

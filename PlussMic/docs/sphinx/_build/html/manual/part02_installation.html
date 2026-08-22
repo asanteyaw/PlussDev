@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -51,8 +51,8 @@ module header.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">&lt;pluss/mic.h&gt;</span></code> includes table, loader, Kindle, and Bundle surfaces:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/bundle/bundle.h&quot;</span>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;pluss/mic.h&gt;</span></code> includes table, loader, Kindle, and Scribble surfaces:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/scribble/scribble.h&quot;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/kindle/kindle.h&quot;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/loader/loader.h&quot;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/table/table.h&quot;</span>
@@ -139,7 +139,7 @@ cmake<span class="w"> </span>--workflow<span class="w"> </span>--preset<span cla
 <p>Useful PlussMic examples live under:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PlussMic/examples/table/
 PlussMic/examples/kindle/
-PlussMic/examples/bundle/
+PlussMic/examples/scribble/
 </pre></div>
 </div>
 <p>The examples are a good way to verify that a build has working table I/O,
@@ -156,7 +156,7 @@ display, plotting, and model conversion.</p>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/table/table.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/loader/loader.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/kindle/kindle.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/bundle/bundle.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/scribble/scribble.h&gt;</span>
 </pre></div>
 </div>
 <p>Use source-local headers only when working inside the Pluss repository.</p>
@@ -201,6 +201,7 @@ display, plotting, and model conversion.</p>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../build_outputs.html">Build Outputs</a></li>
 </ul>

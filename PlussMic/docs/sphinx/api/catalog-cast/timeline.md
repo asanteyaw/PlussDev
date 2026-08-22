@@ -100,7 +100,7 @@ moment: failed to parse datetime
 - [`Catalog::cast`](../catalog/cast.md): the entry point this accessor is
   reached from.
 - [`RegistryCastAccessor::timeline`](../registry-cast/timeline.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="timeindex.html">

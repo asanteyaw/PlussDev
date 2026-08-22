@@ -43,8 +43,8 @@ the end.
 Example 1. Take the first two characters of each value.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")})},
 });
 
 auto out = rg.fields({"city"}).nt().chars(0, 2);
@@ -63,8 +63,8 @@ Example 2. A negative `start` slices from the end — the last two characters
 of each value.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
 });
 
 auto out = rg.fields({"city"}).nt().chars(-2);
@@ -81,8 +81,8 @@ Example 3. `step` keeps every Nth character starting at `start`, with no
 `stop` bound (`std::nullopt` runs to the end).
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
 });
 
 auto out = rg.fields({"city"}).nt().chars(0, std::nullopt, 2);

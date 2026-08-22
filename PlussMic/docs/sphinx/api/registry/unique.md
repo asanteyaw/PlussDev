@@ -44,8 +44,8 @@ See Example 2.
 Example 1. A freshly built registry with no copies is unique.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
 std::cout << std::boolalpha << rg.unique();
@@ -61,8 +61,8 @@ Example 2. Copying a registry makes **both** the original and the copy report
 `unique() == false`, since they now share the same backing storage.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
 auto copy = rg;
@@ -80,7 +80,7 @@ false
 Example 3. An undefined registry is never unique.
 
 ```cpp
-pluss::bundle::Registry rg;
+pluss::scribble::Registry rg;
 std::cout << std::boolalpha << rg.unique();
 ```
 

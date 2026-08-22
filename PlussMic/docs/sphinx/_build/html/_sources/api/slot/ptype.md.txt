@@ -31,7 +31,7 @@ if values differ in type, or `"Empty"` for a zero-value slot.
 Example 1. A homogeneous `Series` slot reports `"Series"`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
 std::cout << slot.ptype();
 ```
 
@@ -44,7 +44,7 @@ Series
 Example 2. A homogeneous `Note` slot reports `"Note"`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("a"), pluss::make_note("bb")});
+auto slot = pluss::scribble::Slot({pluss::make_note("a"), pluss::make_note("bb")});
 std::cout << slot.ptype();
 ```
 
@@ -57,7 +57,7 @@ Note
 Example 3. Mixing value types reports `"Mixed"`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("x")});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_note("x")});
 std::cout << slot.ptype();
 ```
 

@@ -31,8 +31,8 @@ Measures the character length of each bound field's text, replacing each
 Example 1. Measure city name lengths.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")})},
 });
 
 auto out = rg.fields({"city"}).nt().length();

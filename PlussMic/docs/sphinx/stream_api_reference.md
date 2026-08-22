@@ -40,7 +40,6 @@ api/stream/as_timeindex
 api/stream/as_timeline
 api/stream/astype
 api/stream/bfill
-api/stream/bundelize
 api/stream/cast
 api/stream/clear_label
 api/stream/clear_label_
@@ -78,6 +77,7 @@ api/stream/nrecords
 api/stream/nt
 api/stream/plot
 api/stream/ptype
+api/stream/scribbelize
 api/stream/select
 api/stream/shape
 api/stream/show

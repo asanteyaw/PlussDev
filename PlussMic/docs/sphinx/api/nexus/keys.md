@@ -33,6 +33,7 @@ Example 1. Names come back in construction order.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", pluss::make_series({1.0, 2.0, 3.0})},

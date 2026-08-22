@@ -32,8 +32,8 @@ explicit `std::ostream&` rather than a returned `std::string`.
 Example 1. `show()` writes exactly what `to_string()` returns.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
 });
 
 std::ostringstream oss;

@@ -70,7 +70,7 @@ exactly.
   keeping the date and zeroing the time-of-day.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::time`](../registry-timeline/time.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="shift.html">

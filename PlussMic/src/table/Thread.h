@@ -24,7 +24,7 @@
 namespace pluss::kindle {
 class Stream;
 }
-namespace pluss::bundle {
+namespace pluss::scribble {
 class Slot;
 }
 
@@ -383,10 +383,10 @@ public:
   std::string dtype() const;
   ThreadValue value() const;
 
-  // 1D counterparts to DataFrame::kindelize()/bundelize() and
-  // Atlas::kindelize()/bundelize().
+  // 1D counterparts to DataFrame::kindelize()/scribbelize() and
+  // Atlas::kindelize()/scribbelize().
   pluss::kindle::Stream kindelize() const;
-  pluss::bundle::Slot bundelize() const;
+  pluss::scribble::Slot scribbelize() const;
 
   Thread isnull() const;
   Thread notnull() const;

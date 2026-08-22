@@ -78,7 +78,7 @@ city                     | Note         | Note             | 2       | [Accra  ,
 - [`CatalogNoteAccessor::strip`](strip.md) / [`rstrip()`](rstrip.md): the both-sides and
   right-side variants.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::lstrip`](../registry-note/lstrip.md): the bundle-model
+- [`RegistryNoteAccessor::lstrip`](../registry-note/lstrip.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

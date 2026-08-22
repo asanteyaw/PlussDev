@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -78,9 +78,9 @@ output — including every value — with no truncation at all. Use
 Example 1. A small, unlabeled, two-frame `Axel`.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{&quot;ids&quot;, pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
-    pluss::bundle::Registry({{&quot;ids&quot;, pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{&quot;ids&quot;, pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{&quot;ids&quot;, pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})}}),
 });
 std::cout &lt;&lt; axel.to_string();
 </pre></div>
@@ -120,7 +120,7 @@ std::cout &lt;&lt; axel.to_string();
 <p>Notice <code class="docutils literal notranslate"><span class="pre">slot_sizes</span></code> reports each field’s row count, not its values —
 <code class="docutils literal notranslate"><span class="pre">to_string()</span></code> never renders actual value content, only shape.</p>
 <p>Example 2. An undefined <code class="docutils literal notranslate"><span class="pre">Axel</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="w"> </span><span class="n">undef</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">scribble</span><span class="o">::</span><span class="n">Axel</span><span class="w"> </span><span class="n">undef</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">undef</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span>
 </pre></div>
 </div>
@@ -202,6 +202,7 @@ dump.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -215,7 +216,7 @@ dump.</p></li>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../plussmic_scribble.html">PlussMic <code class="docutils literal notranslate"><span class="pre">scribble</span></code></a><ul>
   <li><a href="../../axel_api_reference.html">Axel API Reference</a><ul>
       <li>Previous: <a href="to_json.html" title="previous chapter">Axel::to_json</a></li>
       <li>Next: <a href="unique.html" title="next chapter">Axel::unique</a></li>

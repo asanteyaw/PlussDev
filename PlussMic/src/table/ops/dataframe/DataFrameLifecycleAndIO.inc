@@ -555,11 +555,11 @@ pluss::kindle::Catalog DataFrame::kindelize(const pluss::kindle::KindelizePolicy
   return pluss::kindle::Catalog(std::move(out));
 }
 
-pluss::bundle::Registry DataFrame::bundelize() const {
-  return bundelize(pluss::kindle::KindelizePolicy{});
+pluss::scribble::Registry DataFrame::scribbelize() const {
+  return scribbelize(pluss::kindle::KindelizePolicy{});
 }
 
-pluss::bundle::Registry DataFrame::bundelize(const pluss::kindle::KindelizePolicy& policy) const {
-  PLUSS_CHECK(defined(), "DataFrame::bundelize requires a defined DataFrame");
-  return kindelize(policy).bundelize();
+pluss::scribble::Registry DataFrame::scribbelize(const pluss::kindle::KindelizePolicy& policy) const {
+  PLUSS_CHECK(defined(), "DataFrame::scribbelize requires a defined DataFrame");
+  return kindelize(policy).scribbelize();
 }

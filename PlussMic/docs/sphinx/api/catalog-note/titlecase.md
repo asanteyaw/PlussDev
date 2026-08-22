@@ -69,7 +69,7 @@ city                     | Note         | Note             | 2       | [Accra Ci
 - [`CatalogNoteAccessor::upper`](upper.md): capitalizes the entire string, not just the
   first letter of each word.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::titlecase`](../registry-note/titlecase.md): the bundle-model
+- [`RegistryNoteAccessor::titlecase`](../registry-note/titlecase.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

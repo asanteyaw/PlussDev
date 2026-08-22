@@ -19,7 +19,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_cmake_targets_defined "")
 set(_cmake_targets_not_defined "")
 set(_cmake_expected_targets "")
-foreach(_cmake_expected_target IN ITEMS Pluss::PlussTilsView Pluss::PlussTilsCore Pluss::PlussTils Pluss::PlussPl Pluss::plussmic_curl_link Pluss::PlussMic Pluss::pluss)
+foreach(_cmake_expected_target IN ITEMS Pluss::pluss_sdk_zip_link Pluss::PlussTilsView Pluss::PlussTilsCore Pluss::PlussTils Pluss::PlussPl Pluss::plussmic_curl_link Pluss::PlussMic Pluss::pluss)
   list(APPEND _cmake_expected_targets "${_cmake_expected_target}")
   if(TARGET "${_cmake_expected_target}")
     list(APPEND _cmake_targets_defined "${_cmake_expected_target}")
@@ -55,13 +55,20 @@ if(_IMPORT_PREFIX STREQUAL "/")
   set(_IMPORT_PREFIX "")
 endif()
 
+# Create imported target Pluss::pluss_sdk_zip_link
+add_library(Pluss::pluss_sdk_zip_link INTERFACE IMPORTED)
+
+set_target_properties(Pluss::pluss_sdk_zip_link PROPERTIES
+  INTERFACE_LINK_LIBRARIES "${_IMPORT_PREFIX}/lib/libzip.5.5.dylib"
+)
+
 # Create imported target Pluss::PlussTilsView
 add_library(Pluss::PlussTilsView STATIC IMPORTED)
 
 set_target_properties(Pluss::PlussTilsView PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "PLUSSTILS_VIEW_HAVE_GTK_WEBKIT=0;PLUSSTILS_VIEW_HAVE_MAC_WEBKIT=1;PLUSSTILS_VIEW_HAVE_WIN_WEBVIEW2=0"
+  INTERFACE_COMPILE_DEFINITIONS "PLUSSTILS_VIEW_HAVE_GTK_WEBKIT=0;PLUSSTILS_VIEW_HAVE_MAC_WEBKIT=1;PLUSSTILS_VIEW_HAVE_WIN_WEBVIEW2=0;PLUSSTILS_VIEW_HAVE_X11_SHELL=0"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-  INTERFACE_LINK_LIBRARIES "-framework Cocoa;-framework UniformTypeIdentifiers;-framework WebKit;-framework QuartzCore;-framework CoreText;-framework CoreFoundation;-framework CoreGraphics"
+  INTERFACE_LINK_LIBRARIES "Pluss::pluss_sdk_zip_link;-framework Cocoa;-framework UniformTypeIdentifiers;-framework WebKit;-framework QuartzCore;-framework CoreText;-framework CoreFoundation;-framework CoreGraphics;-framework CoreVideo;-framework Metal"
 )
 
 # Create imported target Pluss::PlussTilsCore
@@ -99,7 +106,7 @@ add_library(Pluss::PlussMic STATIC IMPORTED)
 
 set_target_properties(Pluss::PlussMic PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-  INTERFACE_LINK_LIBRARIES "/Users/yawasante/software/miniconda3/envs/cpp_env/lib/libzip.dylib;\$<LINK_ONLY:Arrow::arrow_shared>;\$<LINK_ONLY:Parquet::parquet_shared>;Pluss::plussmic_curl_link;Pluss::PlussPl;Pluss::PlussTils;Pluss::pluss;pluss::plussqit_codeh;pluss::plussqit_codem;pluss::plussqit_coden"
+  INTERFACE_LINK_LIBRARIES "Pluss::pluss_sdk_zip_link;\$<LINK_ONLY:Arrow::arrow_shared>;\$<LINK_ONLY:Parquet::parquet_shared>;Pluss::plussmic_curl_link;Pluss::PlussPl;Pluss::PlussTils;Pluss::pluss;pluss::plussqit_codeh;pluss::plussqit_codem;pluss::plussqit_coden"
 )
 
 # Create imported target Pluss::pluss

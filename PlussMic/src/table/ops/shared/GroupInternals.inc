@@ -64,6 +64,16 @@ Thread group_note_thread_(const std::vector<std::string>& values,
   return out;
 }
 
+pluss::Timeline group_rebuild_timeline_like_(const pluss::Timeline& reference,
+                                             const std::vector<std::int64_t>& ticks) {
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(ticks.size())};
+  auto out = pluss::codeh::ops_internal::timeline_from_epoch_nanos(
+      std::span<const std::int64_t>(ticks.data(), ticks.size()),
+      std::span<const std::int64_t>(shape.data(), shape.size()));
+  out.unsafe_tz_name() = std::string(reference.tz());
+  return out;
+}
+
 pluss::codem::Platform group_thread_platform_(const Thread& value) {
   switch (value.kind()) {
     case ThreadKind::Series:
@@ -326,6 +336,9 @@ Thread group_count_thread_(const GroupState_& state,
                            std::optional<Thread> value = std::nullopt);
 Thread group_ndistinct_thread_(const Thread& value, const GroupState_& state);
 Thread group_note_mode_thread_(const Thread& value, const GroupState_& state);
+Thread group_temporal_thread_(const Thread& value,
+                              const GroupState_& state,
+                              GroupOp op);
 Thread group_numeric_thread_(const Thread& value,
                              const GroupState_& state,
                              GroupOp op);
@@ -780,10 +793,14 @@ Thread group_agg_thread_(const GroupState_& state,
     case GroupOp::Sum:
     case GroupOp::Mean:
     case GroupOp::Median:
-    case GroupOp::Min:
-    case GroupOp::Max:
     case GroupOp::Std:
     case GroupOp::Var:
+      return group_numeric_thread_(*value, state, op);
+    case GroupOp::Min:
+    case GroupOp::Max:
+      if (value->kind() == ThreadKind::Timeline || value->kind() == ThreadKind::TimeIndex) {
+        return group_temporal_thread_(*value, state, op);
+      }
       return group_numeric_thread_(*value, state, op);
   }
   PLUSS_FAIL(std::string(where) + ": unsupported group aggregation op");
@@ -1110,6 +1127,87 @@ Thread group_numeric_thread_(const Thread& value,
           out.numel()));
 
   return reorder_group_thread_(Thread(out, validity), state);
+}
+
+Thread group_temporal_thread_(const Thread& value,
+                              const GroupState_& state,
+                              GroupOp op) {
+  PLUSS_CHECK((value.kind() == ThreadKind::Timeline || value.kind() == ThreadKind::TimeIndex) &&
+                  (op == GroupOp::Min || op == GroupOp::Max),
+              "group: temporal aggregation only supports min/max");
+  const auto platform = group_thread_platform_(value);
+  const auto ticks_all = value.kind() == ThreadKind::Timeline
+      ? value.as_timeline().epoch_nanos()
+      : value.as_timeindex().timeline().epoch_nanos();
+
+  pluss::Series ids;
+  pluss::Series ticks;
+  if (detail::has_validity_mask(value)) {
+    auto active = state.included_mask_cpu.platform() == platform
+        ? state.included_mask_cpu
+        : state.included_mask_cpu.to(platform);
+    auto valid = *detail::validity_mask(value);
+    if (valid.platform() != platform) {
+      valid = valid.to(platform);
+    }
+    active = active.logical_and(valid);
+    auto all_ids = state.group_ids_cpu.platform() == platform
+        ? state.group_ids_cpu
+        : state.group_ids_cpu.to(platform);
+    ids = all_ids.masked_select(active);
+    ticks = ticks_all.masked_select(active);
+  } else if (state.all_included) {
+    ids = state.group_ids_cpu.platform() == platform
+        ? state.group_ids_cpu
+        : state.group_ids_cpu.to(platform);
+    ticks = ticks_all;
+  } else {
+    auto included_rows = state.included_rows_cpu.platform() == platform
+        ? state.included_rows_cpu
+        : state.included_rows_cpu.to(platform);
+    ids = state.included_group_ids_cpu.platform() == platform
+        ? state.included_group_ids_cpu
+        : state.included_group_ids_cpu.to(platform);
+    ticks = ticks_all.take(included_rows);
+  }
+
+  auto counts = pluss::Series::zeros(
+      {state.ngroups},
+      pluss::codem::ScalarType::Float64,
+      platform);
+  auto reduced = pluss::Series::zeros(
+      {state.ngroups},
+      pluss::codem::ScalarType::Int64,
+      platform);
+  if (ids.numel() > 0) {
+    auto ones = pluss::Series::ones(
+        {ids.numel()},
+        pluss::codem::ScalarType::Float64,
+        platform);
+    counts = counts.scatter_add(0, ids, ones);
+    reduced = op == GroupOp::Min
+        ? ticks.grouped_min(ids, state.ngroups)
+        : ticks.grouped_max(ids, state.ngroups);
+  }
+
+  const auto ordered_ticks = reorder_group_thread_(Thread(reduced), state);
+  const auto ordered_counts = reorder_group_thread_(Thread(counts), state);
+  const auto tick_values = ordered_ticks.as_series().to_vec<std::int64_t>();
+  const auto count_values = ordered_counts.as_series().to_vec<double>();
+
+  std::vector<bool> valid(count_values.size(), false);
+  for (std::size_t i = 0; i < count_values.size(); ++i) {
+    valid[i] = count_values[i] > 0.0;
+  }
+
+  Thread out = value.kind() == ThreadKind::Timeline
+      ? Thread(group_rebuild_timeline_like_(value.as_timeline(), tick_values))
+      : Thread(group_rebuild_timeline_like_(value.as_timeindex().timeline(), tick_values).to_timeindex(false));
+
+  if (std::any_of(valid.begin(), valid.end(), [](bool flag) { return !flag; })) {
+    out = detail::with_validity_mask(out, group_bool_mask_(valid, group_thread_platform_(out)));
+  }
+  return out;
 }
 
 } // namespace

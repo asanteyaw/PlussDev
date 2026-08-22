@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
+#include <limits>
+#include <optional>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -118,6 +120,19 @@ struct DataReader final {
 
   DataReader(std::initializer_list<NestedSeriesLiteral> list) {
     assign_nested_(list);
+  }
+
+  // Supports the `{68.0, std::nullopt, 72.0}` null-gap construction pattern for
+  // floating-point data. `std::nullopt` maps to NaN, the existing null-sentinel
+  // convention for raw (validity-mask-less) numeric Series/Thread values. Deliberately
+  // NOT templated on T: template argument deduction for `std::initializer_list<T>`
+  // requires every element to independently deduce the *same* T, which a mix of
+  // `double` and `std::nullopt_t` elements can never satisfy. Making the element type
+  // concrete (`std::optional<double>`) instead lets each element go through ordinary
+  // copy-initialization, where the implicit `double`/`std::nullopt_t` -> `optional<double>`
+  // conversions are allowed.
+  DataReader(std::initializer_list<std::optional<double>> list) {
+    assign_optional_double_list_(list);
   }
 
   template <class T>
@@ -700,6 +715,15 @@ struct DataReader final {
     } else {
       assign_host_span_(std::span<const U>(data.data(), data.size()));
     }
+  }
+
+  void assign_optional_double_list_(std::initializer_list<std::optional<double>> list) {
+    std::vector<double> values;
+    values.reserve(list.size());
+    for (const auto& v : list) {
+      values.push_back(v.has_value() ? *v : std::numeric_limits<double>::quiet_NaN());
+    }
+    assign_host_vector_(values);
   }
 
   void assign_series_(const Series& s) {

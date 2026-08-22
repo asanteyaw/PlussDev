@@ -33,7 +33,7 @@ one — see Example 2.
 Example 1. Cast a two-value numeric `Series` slot to text.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
 auto out = slot.cast().note();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0) << " "
           << std::get<pluss::Note>(out.at(1)).at(0);
@@ -49,7 +49,7 @@ Example 2. A single-value slot converts the same way a multi-value one
 does.
 
 ```cpp
-auto single = pluss::bundle::Slot({pluss::make_series(1)});
+auto single = pluss::scribble::Slot({pluss::make_series(1)});
 auto out = single.cast().note();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```

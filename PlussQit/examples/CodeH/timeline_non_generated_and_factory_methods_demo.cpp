@@ -150,7 +150,6 @@ int main() {
   show_timeline("factory date_range(start, end, freq, step)", t_date_range_factory);
   const auto t_date_only = pluss::timeline::date({"2024-06-10", "2024-06-11"});
   const auto t_time_only = pluss::timeline::time({"09:30:00", "17:45:30"});
-  const auto t_datetime = pluss::timeline::datetime(t_date_only, t_time_only);
   const auto t_repeated = pluss::timeline::rep("2025-02-05", {2, 2});
   const auto t_rand_between = pluss::timeline::rand_between(
       "2024-06-01", "2024-06-03", {5}, 11);
@@ -165,7 +164,6 @@ int main() {
       true);
   show_timeline("factory date(strict)", t_date_only);
   show_timeline("factory time(strict)", t_time_only);
-  show_timeline("factory datetime(date, time)", t_datetime);
   show_timeline("factory rep(value, sizes)", t_repeated);
   show_timeline("factory rand_between(lo, hi, sizes)", t_rand_between);
   show_timeline("factory arange(date, date, step)", t_arange_dates);

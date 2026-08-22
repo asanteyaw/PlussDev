@@ -33,7 +33,7 @@ calendar-field extraction, formatting, timezone handling, and more.
 Example 1. Extract the calendar year from a `Timeline`-kind slot.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
 auto out = slot.tl().year();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
 ```

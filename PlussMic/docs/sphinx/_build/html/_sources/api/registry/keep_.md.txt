@@ -36,11 +36,11 @@ this registry.
 Example 1. Keep only the odd values in `id`, in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
-rg.keep_("id", [](const pluss::bundle::Slot::Value& v) {
+rg.keep_("id", [](const pluss::scribble::Slot::Value& v) {
   return std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] % 2 == 1;
 });
 

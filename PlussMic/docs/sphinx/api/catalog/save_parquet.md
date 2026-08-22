@@ -31,7 +31,7 @@ on any call, regardless of the filename or options passed.
     The destination `.parquet` file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying Parquet writer options.
+    A generic configuration scribble, translated into the underlying Parquet writer options.
 
 ## Returns
 

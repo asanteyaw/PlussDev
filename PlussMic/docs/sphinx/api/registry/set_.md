@@ -39,11 +39,11 @@ registry directly, upserting (replacing an existing field or adding a new one).
 Example 1. Overwrite a field in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
-rg.set_("id", pluss::bundle::Slot({pluss::make_series(42)}));
+rg.set_("id", pluss::scribble::Slot({pluss::make_series(42)}));
 auto ids = rg.fields("id");
 std::cout << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0];
 ```

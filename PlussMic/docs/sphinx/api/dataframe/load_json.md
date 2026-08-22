@@ -44,7 +44,7 @@ Path to the JSON file to read.
 **config** (`const pluss::loader::Config&`) / **config_entries**
 (`std::initializer_list<pluss::loader::ConfigEntry>`)
 
-A reusable or inline settings bundle, recognizing the same general-purpose keys
+A reusable or inline settings scribble, recognizing the same general-purpose keys
 (`ncases`, `usefeats`, `case`, and so on) as [`load_csv()`](load_csv.md)'s `Config`
 overload — the layout (records vs. split) is detected automatically from the file
 itself and is not a setting you choose.

@@ -34,7 +34,7 @@ returning a new slot. The no-argument overload trims whitespace; the
 Example 1. No-argument overload trims leading whitespace.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("  Accra  ")});
+auto slot = pluss::scribble::Slot({pluss::make_note("  Accra  ")});
 auto out = slot.nt().lstrip();
 std::cout << "'" << std::get<pluss::Note>(out.at(0)).at(0) << "'";
 ```
@@ -49,7 +49,7 @@ Example 2. `chars`-argument overload trims a specific character set from
 the left edge only.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("xxAccraxx")});
+auto slot = pluss::scribble::Slot({pluss::make_note("xxAccraxx")});
 auto out = slot.nt().lstrip("x");
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```

@@ -46,8 +46,8 @@ Example 1. Default call reports nanoseconds — see the important
 callout above.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().epoch();
 std::cout << std::get<pluss::Series>(out.registry(0).fields("ts").at(0)).to_vec<std::int64_t>()[0];
@@ -63,8 +63,8 @@ Example 2. Pass `TimeUnit::Seconds` explicitly for the more commonly
 expected scale.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().epoch(pluss::table::TimeUnit::Seconds);
 auto ts = out.registry(0).fields("ts");
@@ -81,8 +81,8 @@ std::cout << std::get<pluss::Series>(ts.at(0)).to_vec<std::int64_t>()[0] << " "
 Example 3. A span-only unit throws.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 try {
   auto out = axel.fields({"ts"}).tl().epoch(pluss::table::TimeUnit::Weeks);

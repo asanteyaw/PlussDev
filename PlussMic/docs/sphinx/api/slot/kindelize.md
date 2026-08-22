@@ -14,7 +14,7 @@ pluss::kindle::Stream Slot::kindelize() const
 ## What It Does
 
 Converts the slot into a single `pluss::kindle::Stream`. This is the canonical
-bundle-to-kindle bridge for one heterogeneous-but-kind-compatible slot.
+scribble-to-kindle bridge for one heterogeneous-but-kind-compatible slot.
 
 ## Parameters
 
@@ -30,7 +30,7 @@ bundle-to-kindle bridge for one heterogeneous-but-kind-compatible slot.
 Example 1. Convert a homogeneous `Series` slot.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto stream = slot.kindelize();
 std::cout << stream.as_series().numel();
 ```
@@ -46,14 +46,14 @@ std::cout << stream.as_series().numel();
 - Every value in the slot must share one stream-compatible kind.
 - Requires the slot to be defined — an undefined `Slot` throws
   `"Slot: undefined handle"`.
-- A slot that later goes through `stream.tabelize()` or `stream.bundelize()` stays on the
+- A slot that later goes through `stream.tabelize()` or `stream.scribbelize()` stays on the
   same 1D bridge family; no table or registry wrapper is required.
 
 ## See Also
 
-- [`Stream::bundelize`](../stream/bundelize.md): the reverse bridge from
-  Kindle back into the bundle model.
-- [`Slot::tabelize`](tabelize.md): the sibling bridge from the bundle model into the
+- [`Stream::scribbelize`](../stream/scribbelize.md): the reverse bridge from
+  Kindle back into the scribble model.
+- [`Slot::tabelize`](tabelize.md): the sibling bridge from the scribble model into the
   table model.
 
 <div class="pluss-inline-prev-next">

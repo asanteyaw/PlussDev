@@ -29,7 +29,7 @@ Uppercases every value in the bound slot and returns a new slot.
 Example 1. Uppercase two values.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
 auto out = slot.nt().upper();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0) << " "
           << std::get<pluss::Note>(out.at(1)).at(0);

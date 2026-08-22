@@ -34,8 +34,8 @@ every frame via [`Axel::map`](../axel/map.md).
 Example 1. Titlecase a mixed-case field.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().titlecase();
 auto city = out.registry(0).fields("city");

@@ -105,7 +105,7 @@ Thread::tl: expected Timeline or TimeIndex payload
 - [`Catalog::keys`](../catalog/keys.md): project down to timestamp-only keys before
   calling `.tl()`, per the important callout above.
 - [`RegistryTimelineAccessor::isnat`](../registry-timeline/isnat.md): the
-  bundle-model equivalent, which only accepts `Timeline`-kind (not `TimeIndex`).
+  scribble-model equivalent, which only accepts `Timeline`-kind (not `TimeIndex`).
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="index.html">

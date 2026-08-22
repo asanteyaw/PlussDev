@@ -13,6 +13,8 @@ namespace pluss::codeh {
 // This implementation ships with:
 //   - "UTC"
 //   - "America/Edmonton" (DST rules, 2007+ style)
+//   - "America/New_York" (DST rules, 2007+ style)
+//   - "Europe/London" (UK/EU DST rules)
 //
 // The API is deliberately small so we can later swap in a real tzdb.
 class TimeZone {
@@ -36,7 +38,8 @@ public:
 private:
   explicit TimeZone(std::string name) : name_(std::move(name)) {}
 
-  // Implementation currently supports only UTC and America/Edmonton.
+  // Implementation currently supports UTC, America/Edmonton,
+  // America/New_York, and Europe/London.
   std::string name_;
 };
 

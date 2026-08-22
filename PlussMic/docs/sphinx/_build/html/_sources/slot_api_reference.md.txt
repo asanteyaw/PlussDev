@@ -1,6 +1,6 @@
 # Slot API Reference
 
-This page documents the full public `Slot` surface for one-dimensional heterogeneous bundles.
+This page documents the full public `Slot` surface for one-dimensional heterogeneous scribbles.
 
 ## Using This Reference
 

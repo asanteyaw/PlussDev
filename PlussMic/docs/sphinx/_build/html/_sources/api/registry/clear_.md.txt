@@ -30,8 +30,8 @@ this registry directly. The registry remains **defined** afterward, just empty.
 Example 1. Clear a registry in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 
 rg.clear_();

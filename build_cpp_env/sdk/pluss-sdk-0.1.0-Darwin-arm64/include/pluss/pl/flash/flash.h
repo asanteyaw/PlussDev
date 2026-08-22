@@ -2,14 +2,18 @@
 
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/codeh.h"
+#include "pluss/codeh/timeline_factory.h"
 #include "pluss/pl/studio.h"
 #include "pluss/tils/view/html_window.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <concepts>
+#include <cstdlib>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <iomanip>
 #include <iterator>
@@ -29,7 +33,53 @@
 #include <utility>
 #include <vector>
 
+namespace pluss::table {
+class Atlas;
+class DataFrame;
+class Thread;
+}
+
 namespace pluss::pl::flash {
+
+enum class FramePolicy : std::uint8_t {
+  Strict = 0,
+  PadNull = 1,
+};
+
+struct FromFrameOptions {
+  std::vector<std::string> features{};
+  bool include_series{true};
+  bool include_text{true};
+  bool include_timeline{true};
+  bool include_timeindex_as_timeline{true};
+};
+
+struct ToFrameOptions {
+  FramePolicy policy{FramePolicy::Strict};
+  std::optional<std::string> title{};
+};
+
+struct TableColumns {
+  std::optional<std::string> feature{};
+  std::optional<std::string> x_feature{};
+  std::optional<std::string> y_feature{};
+  std::optional<std::string> z_feature{};
+  std::optional<std::string> hue_feature{};
+  std::optional<std::string> label_feature{};
+  std::optional<std::string> class_feature{};
+  std::optional<std::string> err_feature{};
+  std::optional<std::string> yneg_feature{};
+  std::optional<std::string> ypos_feature{};
+  std::optional<std::string> xneg_feature{};
+  std::optional<std::string> xpos_feature{};
+};
+
+template <class T>
+concept TableBackedValue =
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Thread> ||
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::DataFrame> ||
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Atlas>;
+
 namespace detail {
 
 template <class T>
@@ -205,7 +255,7 @@ inline void require_equal_xy_hue_lengths(
   const double low = scalar_f64(hue.min());
   const double high = scalar_f64(hue.max());
   if (!(high > low)) {
-    return {pluss::full({hue.numel()}, 0.0, ScalarType::Float64), {"hue=" + compact_number_label(low)}};
+    return {pluss::series::full({hue.numel()}, 0.0, ScalarType::Float64), {"hue=" + compact_number_label(low)}};
   }
 
   const Series codes = hue.sub(low)
@@ -736,7 +786,7 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
   const double low = scalar_value(flat.min());
   const double high = scalar_value(flat.max());
   if (!std::isfinite(low) || !std::isfinite(high) || !(high > low)) {
-    return pluss::full({flat.numel()}, 0.0, ScalarType::Float64);
+    return pluss::series::full({flat.numel()}, 0.0, ScalarType::Float64);
   }
   return flat.sub(low).div(high - low);
 }
@@ -974,7 +1024,11 @@ struct FieldmapGrid {
     return out;
   }
 
-  const Series flat_mask = flatten_f64(*mask).reshape({out.numel()});
+  // NOTE: check the flattened mask's element count BEFORE attempting to reshape it to
+  // out.numel(). Reshaping a mismatched-size series throws a raw, unrelated internal
+  // error ("view: requires contiguous") rather than a clean std::invalid_argument --
+  // so the intended validation below must run first, against the un-reshaped flat mask.
+  const Series flat_mask = flatten_f64(*mask);
   if (flat_mask.numel() != out.numel()) {
     throw std::invalid_argument("flash::heatmap mask must match z element count");
   }
@@ -1191,36 +1245,160 @@ struct FieldmapGrid {
 } // namespace detail
 
 struct Dataset {
+  std::optional<Note> feature_order{};
+  std::optional<Note> feature_kinds{};
   std::optional<Note> numeric_names{};
   std::vector<Series> numeric_values{};
-  std::optional<Note> note_names{};
-  std::vector<Note> note_values{};
+  std::vector<std::optional<Series>> numeric_validity{};
+  std::optional<Note> text_names{};
+  std::vector<Note> text_values{};
+  std::vector<std::optional<Series>> text_validity{};
+  std::optional<Note> temporal_names{};
+  std::vector<Timeline> temporal_values{};
+  std::vector<std::optional<Series>> temporal_validity{};
+
+private:
+  [[nodiscard]] static std::optional<std::size_t> lookup_index_(
+      const std::optional<Note>& names,
+      std::size_t value_count,
+      std::string_view name) {
+    if (!names.has_value()) {
+      return std::nullopt;
+    }
+    const auto n = std::min<std::int64_t>(names->numel(), static_cast<std::int64_t>(value_count));
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (names->at(i) == name) {
+        return static_cast<std::size_t>(i);
+      }
+    }
+    return std::nullopt;
+  }
+
+  template <class Value>
+  [[nodiscard]] static std::optional<Value> lookup_named_(
+      const std::optional<Note>& names,
+      const std::vector<Value>& values,
+      std::string_view name) {
+    const auto index = lookup_index_(names, values.size(), name);
+    if (!index.has_value()) {
+      return std::nullopt;
+    }
+    return values[*index];
+  }
+
+  [[nodiscard]] static std::optional<Series> lookup_named_validity_(
+      const std::optional<Note>& names,
+      const std::vector<std::optional<Series>>& validity,
+      std::string_view name) {
+    const auto index = lookup_index_(names, validity.size(), name);
+    if (!index.has_value() || !validity[*index].has_value()) {
+      return std::nullopt;
+    }
+    return *validity[*index];
+  }
+
+  [[nodiscard]] static Series apply_continuous_validity_(
+      const Series& values,
+      const std::optional<Series>& validity) {
+    if (!validity.has_value()) {
+      return values;
+    }
+    auto out = values.to(ScalarType::Float64);
+    auto mask = *validity;
+    if (mask.platform() != out.platform()) {
+      mask = mask.to(out.platform());
+    }
+    return out.masked_fill(mask.logical_not(), std::numeric_limits<double>::quiet_NaN());
+  }
+
+public:
+
+  [[nodiscard]] std::int64_t ncols() const {
+    const auto actual =
+        static_cast<std::int64_t>(numeric_values.size() + text_values.size() + temporal_values.size());
+    if (feature_order.has_value()) {
+      PLUSS_CHECK(
+          feature_order->numel() == actual,
+          "flash::Dataset::ncols: feature_order count does not match stored features");
+    }
+    if (feature_kinds.has_value()) {
+      PLUSS_CHECK(
+          feature_kinds->numel() == actual,
+          "flash::Dataset::ncols: feature_kinds count does not match stored features");
+    }
+    return actual;
+  }
+
+  [[nodiscard]] std::int64_t nrows() const {
+    std::optional<std::int64_t> rows;
+    auto consider = [&](std::int64_t count) {
+      if (!rows.has_value()) {
+        rows = count;
+        return;
+      }
+      PLUSS_CHECK(
+          *rows == count,
+          "flash::Dataset::nrows: dataset is ragged; use frame({.policy = FramePolicy::PadNull}) to rectangularize");
+    };
+
+    for (const auto& values : numeric_values) {
+      consider(values.numel());
+    }
+    for (const auto& values : text_values) {
+      consider(values.numel());
+    }
+    for (const auto& values : temporal_values) {
+      consider(values.numel());
+    }
+
+    return rows.value_or(0);
+  }
+
+  [[nodiscard]] std::pair<std::int64_t, std::int64_t> size() const {
+    return {nrows(), ncols()};
+  }
 
   [[nodiscard]] std::optional<Series> numeric(std::string_view name) const {
-    if (!numeric_names.has_value()) {
-      return std::nullopt;
+    return lookup_named_(numeric_names, numeric_values, name);
+  }
+
+  [[nodiscard]] std::optional<Note> text(std::string_view name) const {
+    return lookup_named_(text_names, text_values, name);
+  }
+
+  [[nodiscard]] std::optional<Timeline> temporal(std::string_view name) const {
+    return lookup_named_(temporal_names, temporal_values, name);
+  }
+
+  [[nodiscard]] std::optional<Series> numeric_validity_mask(std::string_view name) const {
+    return lookup_named_validity_(numeric_names, numeric_validity, name);
+  }
+
+  [[nodiscard]] std::optional<Series> text_validity_mask(std::string_view name) const {
+    return lookup_named_validity_(text_names, text_validity, name);
+  }
+
+  [[nodiscard]] std::optional<Series> temporal_validity_mask(std::string_view name) const {
+    return lookup_named_validity_(temporal_names, temporal_validity, name);
+  }
+
+  [[nodiscard]] std::optional<Series> continuous(std::string_view name) const {
+    if (const auto numeric_values = numeric(name); numeric_values.has_value()) {
+      return apply_continuous_validity_(*numeric_values, numeric_validity_mask(name));
     }
-    const auto n = std::min<std::int64_t>(numeric_names->numel(), static_cast<std::int64_t>(numeric_values.size()));
-    for (std::int64_t i = 0; i < n; ++i) {
-      if (numeric_names->at(i) == name) {
-        return numeric_values[static_cast<std::size_t>(i)];
-      }
+    if (const auto temporal_values = temporal(name); temporal_values.has_value()) {
+      return apply_continuous_validity_(detail::to_series(*temporal_values),
+                                        temporal_validity_mask(name));
     }
     return std::nullopt;
   }
 
-  [[nodiscard]] std::optional<Note> note(std::string_view name) const {
-    if (!note_names.has_value()) {
-      return std::nullopt;
-    }
-    const auto n = std::min<std::int64_t>(note_names->numel(), static_cast<std::int64_t>(note_values.size()));
-    for (std::int64_t i = 0; i < n; ++i) {
-      if (note_names->at(i) == name) {
-        return note_values[static_cast<std::size_t>(i)];
-      }
-    }
-    return std::nullopt;
-  }
+  [[nodiscard]] static Dataset from_table(
+      const ::pluss::table::DataFrame& frame,
+      const FromFrameOptions& options = {});
+
+  [[nodiscard]] ::pluss::table::DataFrame frame(
+      const ToFrameOptions& options = {}) const;
 };
 
 enum class Axis : std::uint8_t {
@@ -1245,11 +1423,15 @@ struct MatrixJointOptions {
   PLUSS_CHECK(!numeric_values.empty(), "flash::make_dataset requires at least one numeric feature");
   Dataset data;
   data.numeric_values = std::move(numeric_values);
+  data.numeric_validity.resize(data.numeric_values.size());
   if (!numeric_names.empty()) {
     PLUSS_CHECK(
         numeric_names.size() == data.numeric_values.size(),
         "flash::make_dataset: numeric_names size must match numeric_values size");
     data.numeric_names = ::pluss::make_note(numeric_names);
+    data.feature_order = data.numeric_names;
+    data.feature_kinds = ::pluss::make_note(std::vector<std::string>(
+        numeric_names.size(), "numeric"));
   }
   return data;
 }
@@ -1261,6 +1443,7 @@ struct MatrixJointOptions {
   PLUSS_CHECK(matrix.dim() <= 2, "flash::make_dataset(matrix): expected up to 2D Series");
   Dataset data;
   data.numeric_values = detail::feature_columns_from_matrix(matrix, feature_axis == Axis::Cols);
+  data.numeric_validity.resize(data.numeric_values.size());
   if (feature_names.empty()) {
     feature_names = detail::default_feature_labels_underscore(static_cast<std::int64_t>(data.numeric_values.size()));
   } else {
@@ -1269,8 +1452,397 @@ struct MatrixJointOptions {
         "flash::make_dataset(matrix): feature_names size must match matrix feature axis size");
   }
   data.numeric_names = ::pluss::make_note(feature_names);
+  data.feature_order = data.numeric_names;
+  data.feature_kinds = ::pluss::make_note(std::vector<std::string>(
+      feature_names.size(), "numeric"));
   return data;
 }
+
+namespace detail {
+
+[[nodiscard]] inline const std::vector<std::string>& builtin_dataset_names() {
+  static const std::vector<std::string> names{
+      "tips",
+      "flights",
+      "petals",
+      "exams",
+      "retail_daily",
+      "weather_hourly",
+      "factor_blocks",
+      "sensor64",
+      "options_chain",
+      "customer_funnel",
+      "commute_modes",
+      "regimes",
+      "quality_batches",
+  };
+  return names;
+}
+
+[[nodiscard]] inline bool dataset_name_known(std::string_view name) {
+  const auto& names = builtin_dataset_names();
+  return std::find(names.begin(), names.end(), std::string(name)) != names.end();
+}
+
+[[nodiscard]] inline std::vector<std::string> split_csv_row(std::string_view line) {
+  std::vector<std::string> fields;
+  std::string current;
+  current.reserve(line.size());
+  bool in_quotes = false;
+  for (char ch : line) {
+    if (ch == '"') {
+      in_quotes = !in_quotes;
+      continue;
+    }
+    if (ch == ',' && !in_quotes) {
+      fields.push_back(current);
+      current.clear();
+      continue;
+    }
+    current.push_back(ch);
+  }
+  fields.push_back(current);
+  for (auto& field : fields) {
+    if (!field.empty() && field.back() == '\r') {
+      field.pop_back();
+    }
+  }
+  return fields;
+}
+
+[[nodiscard]] inline pluss::Timeline timeline_from_text_and_validity_(
+    const std::vector<std::string>& values,
+    const std::vector<bool>& valid) {
+  PLUSS_CHECK(values.size() == valid.size(),
+              "flash::load_dataset: temporal values/validity length mismatch");
+  auto normalize = [](std::string_view token) -> std::string {
+    const auto is_digit = [](char ch) {
+      return std::isdigit(static_cast<unsigned char>(ch)) != 0;
+    };
+    if (token.size() == 10 &&
+        is_digit(token[0]) && is_digit(token[1]) && is_digit(token[2]) && is_digit(token[3]) &&
+        token[4] == '-' &&
+        is_digit(token[5]) && is_digit(token[6]) &&
+        token[7] == '-' &&
+        is_digit(token[8]) && is_digit(token[9])) {
+      return std::string(token) + "T00:00:00Z";
+    }
+    if (token.size() == 7 &&
+        is_digit(token[0]) && is_digit(token[1]) && is_digit(token[2]) && is_digit(token[3]) &&
+        token[4] == '-' &&
+        is_digit(token[5]) && is_digit(token[6])) {
+      return std::string(token) + "-01T00:00:00Z";
+    }
+    return std::string(token);
+  };
+  std::vector<std::string> normalized(values.size());
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    normalized[i] = normalize(values[i]);
+  }
+  const auto all_valid = std::all_of(valid.begin(), valid.end(), [](bool v) { return v; });
+  if (all_valid) {
+    return ::pluss::make_timeline(normalized);
+  }
+
+  std::vector<std::int64_t> ticks(values.size(), ::pluss::Timeline::kNaT);
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (!valid[i]) {
+      continue;
+    }
+    const auto parsed = ::pluss::make_timeline(std::vector<std::string>{normalized[i]});
+    ticks[i] = parsed.epoch_nanos().to(Platform::CPU).to_vec<std::int64_t>()[0];
+  }
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(ticks.size())};
+  return ::pluss::codeh::ops_internal::timeline_from_epoch_nanos(ticks, shape);
+}
+
+[[nodiscard]] inline std::filesystem::path dataset_root_from_header() {
+  return std::filesystem::path(__FILE__).lexically_normal();
+}
+
+[[nodiscard]] inline std::vector<std::filesystem::path> dataset_search_roots() {
+  std::vector<std::filesystem::path> roots;
+  auto push_root = [&](std::filesystem::path root) {
+    if (root.empty()) {
+      return;
+    }
+    root = root.lexically_normal();
+    if (std::find(roots.begin(), roots.end(), root) == roots.end()) {
+      roots.push_back(std::move(root));
+    }
+  };
+
+  if (const char* env_root = std::getenv("PLUSS_FLASH_DATASET_DIR"); env_root != nullptr && *env_root != '\0') {
+    push_root(std::filesystem::path(env_root));
+  }
+
+  std::error_code ec;
+  const auto cwd = std::filesystem::current_path(ec);
+  if (!ec) {
+    auto probe = cwd;
+    for (int depth = 0; depth < 12; ++depth) {
+      push_root(probe / "PlussPl" / "data" / "flash_datasets");
+      push_root(probe / "data" / "flash_datasets");
+      push_root(probe / "share" / "pluss" / "plusspl" / "flash_datasets");
+      if (!probe.has_parent_path()) {
+        break;
+      }
+      const auto parent = probe.parent_path();
+      if (parent == probe) {
+        break;
+      }
+      probe = parent;
+    }
+  }
+
+  auto probe = dataset_root_from_header();
+  for (int depth = 0; depth < 10; ++depth) {
+    const auto parent = probe.parent_path();
+    if (parent.empty() || parent == probe) {
+      break;
+    }
+    probe = parent;
+    push_root(probe / "data" / "flash_datasets");
+    push_root(probe / "share" / "pluss" / "plusspl" / "flash_datasets");
+  }
+
+  return roots;
+}
+
+[[nodiscard]] inline std::optional<std::filesystem::path> locate_dataset_root() {
+  for (const auto& root : dataset_search_roots()) {
+    if (std::filesystem::exists(root / "manifest.csv") || std::filesystem::exists(root / "tips.csv")) {
+      return root;
+    }
+  }
+  return std::nullopt;
+}
+
+enum class DatasetColumnType : std::uint8_t {
+  Numeric = 0,
+  Text = 1,
+  Temporal = 2,
+};
+
+[[nodiscard]] inline std::optional<DatasetColumnType> parse_dataset_column_type(std::string_view value) {
+  if (value == "numeric") {
+    return DatasetColumnType::Numeric;
+  }
+  if (value == "text" || value == "note") {
+    return DatasetColumnType::Text;
+  }
+  if (value == "temporal") {
+    return DatasetColumnType::Temporal;
+  }
+  return std::nullopt;
+}
+
+struct DatasetSchemaColumn {
+  std::string name{};
+  DatasetColumnType type{DatasetColumnType::Numeric};
+};
+
+[[nodiscard]] inline std::vector<DatasetSchemaColumn> read_dataset_schema(const std::filesystem::path& schema_path) {
+  std::ifstream in(schema_path);
+  PLUSS_CHECK(in.good(), "flash::load_dataset: unable to open schema file: " + schema_path.string());
+
+  std::vector<DatasetSchemaColumn> columns;
+  std::string line;
+  bool first_row = true;
+  while (std::getline(in, line)) {
+    if (line.empty()) {
+      continue;
+    }
+    auto fields = split_csv_row(line);
+    if (fields.size() < 2) {
+      continue;
+    }
+    if (first_row && fields[0] == "name" && fields[1] == "type") {
+      first_row = false;
+      continue;
+    }
+    first_row = false;
+    const auto type = parse_dataset_column_type(fields[1]);
+    PLUSS_CHECK(type.has_value(),
+                "flash::load_dataset: unsupported schema type '" + fields[1] + "' in " + schema_path.string());
+    columns.push_back(DatasetSchemaColumn{std::move(fields[0]), *type});
+  }
+  PLUSS_CHECK(!columns.empty(), "flash::load_dataset: schema file has no columns: " + schema_path.string());
+  return columns;
+}
+
+[[nodiscard]] inline Dataset read_dataset_csv(
+    const std::filesystem::path& csv_path,
+    const std::vector<DatasetSchemaColumn>& schema) {
+  std::ifstream in(csv_path);
+  PLUSS_CHECK(in.good(), "flash::load_dataset: unable to open dataset file: " + csv_path.string());
+
+  std::string header_line;
+  PLUSS_CHECK(static_cast<bool>(std::getline(in, header_line)),
+              "flash::load_dataset: dataset file is empty: " + csv_path.string());
+  auto headers = split_csv_row(header_line);
+  PLUSS_CHECK(headers.size() == schema.size(),
+              "flash::load_dataset: schema/header width mismatch in " + csv_path.string());
+  for (std::size_t i = 0; i < schema.size(); ++i) {
+    PLUSS_CHECK(headers[i] == schema[i].name,
+                "flash::load_dataset: schema/header name mismatch for column " + std::to_string(i) +
+                    " in " + csv_path.string());
+  }
+
+  std::vector<std::vector<double>> numeric_columns;
+  std::vector<std::vector<bool>> numeric_validity;
+  std::vector<std::vector<std::string>> text_columns;
+  std::vector<std::vector<bool>> text_validity;
+  std::vector<std::vector<std::string>> temporal_columns;
+  std::vector<std::vector<bool>> temporal_validity;
+  std::vector<std::string> numeric_names;
+  std::vector<std::string> text_names;
+  std::vector<std::string> temporal_names;
+  std::vector<std::string> feature_order;
+  std::vector<std::string> feature_kinds;
+
+  numeric_columns.reserve(schema.size());
+  numeric_validity.reserve(schema.size());
+  text_columns.reserve(schema.size());
+  text_validity.reserve(schema.size());
+  temporal_columns.reserve(schema.size());
+  temporal_validity.reserve(schema.size());
+  for (const auto& column : schema) {
+    feature_order.push_back(column.name);
+    switch (column.type) {
+      case DatasetColumnType::Numeric:
+        feature_kinds.emplace_back("numeric");
+        numeric_names.push_back(column.name);
+        numeric_columns.emplace_back();
+        numeric_validity.emplace_back();
+        break;
+      case DatasetColumnType::Text:
+        feature_kinds.emplace_back("text");
+        text_names.push_back(column.name);
+        text_columns.emplace_back();
+        text_validity.emplace_back();
+        break;
+      case DatasetColumnType::Temporal:
+        feature_kinds.emplace_back("temporal");
+        temporal_names.push_back(column.name);
+        temporal_columns.emplace_back();
+        temporal_validity.emplace_back();
+        break;
+    }
+  }
+
+  std::string row_line;
+  std::int64_t row_count = 0;
+  while (std::getline(in, row_line)) {
+    if (row_line.empty()) {
+      continue;
+    }
+    auto fields = split_csv_row(row_line);
+    PLUSS_CHECK(fields.size() == schema.size(),
+                "flash::load_dataset: row width mismatch at row " + std::to_string(row_count) +
+                    " in " + csv_path.string());
+    std::size_t numeric_pos = 0;
+    std::size_t text_pos = 0;
+    std::size_t temporal_pos = 0;
+    for (std::size_t i = 0; i < schema.size(); ++i) {
+      const auto& field = fields[i];
+      switch (schema[i].type) {
+        case DatasetColumnType::Numeric: {
+          if (field.empty()) {
+            numeric_columns[numeric_pos].push_back(std::numeric_limits<double>::quiet_NaN());
+            numeric_validity[numeric_pos].push_back(false);
+          } else {
+            numeric_columns[numeric_pos].push_back(std::stod(field));
+            numeric_validity[numeric_pos].push_back(true);
+          }
+          ++numeric_pos;
+          break;
+        }
+        case DatasetColumnType::Text:
+          text_columns[text_pos].push_back(field);
+          text_validity[text_pos].push_back(!field.empty());
+          ++text_pos;
+          break;
+        case DatasetColumnType::Temporal:
+          temporal_columns[temporal_pos].push_back(field);
+          temporal_validity[temporal_pos].push_back(!field.empty());
+          ++temporal_pos;
+          break;
+      }
+    }
+    ++row_count;
+  }
+
+  Dataset data;
+  data.feature_order = ::pluss::make_note(feature_order);
+  data.feature_kinds = ::pluss::make_note(feature_kinds);
+  if (!numeric_names.empty()) {
+    data.numeric_names = ::pluss::make_note(numeric_names);
+    data.numeric_values.reserve(numeric_columns.size());
+    data.numeric_validity.reserve(numeric_columns.size());
+    for (std::size_t i = 0; i < numeric_columns.size(); ++i) {
+      auto& values = numeric_columns[i];
+      data.numeric_values.push_back(::pluss::make_series(std::move(values), {row_count}));
+      const auto any_missing = std::any_of(
+          numeric_validity[i].begin(), numeric_validity[i].end(), [](bool v) { return !v; });
+      if (any_missing) {
+        auto mask = Series::zeros({row_count}, ScalarType::Bool);
+        auto* out = reinterpret_cast<bool*>(mask.raw_data());
+        for (std::int64_t row = 0; row < row_count; ++row) {
+          out[row] = numeric_validity[i][static_cast<std::size_t>(row)];
+        }
+        data.numeric_validity.push_back(mask);
+      } else {
+        data.numeric_validity.push_back(std::nullopt);
+      }
+    }
+  }
+  if (!text_names.empty()) {
+    data.text_names = ::pluss::make_note(text_names);
+    data.text_values.reserve(text_columns.size());
+    data.text_validity.reserve(text_columns.size());
+    for (std::size_t i = 0; i < text_columns.size(); ++i) {
+      auto& values = text_columns[i];
+      data.text_values.push_back(::pluss::make_note(std::move(values)));
+      const auto any_missing = std::any_of(
+          text_validity[i].begin(), text_validity[i].end(), [](bool v) { return !v; });
+      if (any_missing) {
+        auto mask = Series::zeros({row_count}, ScalarType::Bool);
+        auto* out = reinterpret_cast<bool*>(mask.raw_data());
+        for (std::int64_t row = 0; row < row_count; ++row) {
+          out[row] = text_validity[i][static_cast<std::size_t>(row)];
+        }
+        data.text_validity.push_back(mask);
+      } else {
+        data.text_validity.push_back(std::nullopt);
+      }
+    }
+  }
+  if (!temporal_names.empty()) {
+    data.temporal_names = ::pluss::make_note(temporal_names);
+    data.temporal_values.reserve(temporal_columns.size());
+    data.temporal_validity.reserve(temporal_columns.size());
+    for (std::size_t i = 0; i < temporal_columns.size(); ++i) {
+      auto& values = temporal_columns[i];
+      data.temporal_values.push_back(timeline_from_text_and_validity_(values, temporal_validity[i]));
+      const auto any_missing = std::any_of(
+          temporal_validity[i].begin(), temporal_validity[i].end(), [](bool v) { return !v; });
+      if (any_missing) {
+        auto mask = Series::zeros({row_count}, ScalarType::Bool);
+        auto* out = reinterpret_cast<bool*>(mask.raw_data());
+        for (std::int64_t row = 0; row < row_count; ++row) {
+          out[row] = temporal_validity[i][static_cast<std::size_t>(row)];
+        }
+        data.temporal_validity.push_back(mask);
+      } else {
+        data.temporal_validity.push_back(std::nullopt);
+      }
+    }
+  }
+  return data;
+}
+
+} // namespace detail
 
 #include "pluss/pl/flash/detail/flash_style.h"
 #include "pluss/pl/flash/detail/scene3d.h"
@@ -1583,6 +2155,7 @@ Trace& hist3d(Studio& studio, X&& x, Y&& y, const Hist3DOptions& options = {}, s
 }
 
 template <class X, class Y>
+  requires(!TableBackedValue<X> && !TableBackedValue<Y>)
 Trace& scatterplot(Pane& pane, X&& x, Y&& y) {
   return pane.cloud(detail::to_series(std::forward<X>(x)), detail::to_series(std::forward<Y>(y)));
 }
@@ -1635,11 +2208,13 @@ Trace& scatterplot(Pane& pane, X&& x, Y&& y, Hue&& hue) {
 }
 
 template <class X, class Y>
+  requires(!TableBackedValue<X> && !TableBackedValue<Y>)
 Trace& lineplot(Pane& pane, X&& x, Y&& y) {
   return pane.trend(detail::to_series(std::forward<X>(x)), detail::to_series(std::forward<Y>(y)));
 }
 
 template <class X, class Y>
+  requires(!TableBackedValue<X> && !TableBackedValue<Y>)
 Trace& stepplot(Pane& pane, X&& x, Y&& y) {
   const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
   const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
@@ -1773,11 +2348,13 @@ Trace& relplot(
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& histplot(Pane& pane, Values&& values, int bins = 12) {
   return pane.bucket(detail::to_series(std::forward<Values>(values)), bins);
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& displot(Pane& pane, Values&& values, int bins = 12) {
   return histplot(pane, std::forward<Values>(values), bins);
 }
@@ -1789,18 +2366,21 @@ Trace& kdeplot(Pane& pane, X&& x, Density&& density) {
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& kdeplot(Pane& pane, Values&& values, std::int64_t points = 128) {
   const auto [x, y] = detail::gaussian_kde(detail::to_series(std::forward<Values>(values)), points);
   return lineplot(pane, x, y);
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& ecdfplot(Pane& pane, Values&& values) {
   const auto [x, y] = detail::ecdf_xy(detail::to_series(std::forward<Values>(values)));
   return lineplot(pane, x, y);
 }
 
 template <class X, class Y>
+  requires(!TableBackedValue<X> && !TableBackedValue<Y>)
 Trace& areaplot(Pane& pane, X&& x, Y&& y, double base = 0.0) {
   return pane.ribbon(detail::to_series(std::forward<X>(x)),
                      detail::to_series(std::forward<Y>(y)),
@@ -1808,10 +2388,11 @@ Trace& areaplot(Pane& pane, X&& x, Y&& y, double base = 0.0) {
 }
 
 template <class Values>
+  requires(!TableBackedValue<Values>)
 Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
   const Series x = detail::to_series(std::forward<Values>(values));
   const double spike_height = std::max(height, 1e-4);
-  const Series y = ::pluss::full_like(x, spike_height, ScalarType::Float64).reshape({x.numel()});
+  const Series y = ::pluss::series::full_like(x, spike_height, ScalarType::Float64).reshape({x.numel()});
   return pane.spike(x, y, 0.0);
 }
 
@@ -1878,7 +2459,8 @@ inline Trace& violinplot(Pane& pane, const Note& categories, const Series& value
 }
 
 template <class Group, class Values>
-  requires(!std::same_as<std::remove_cvref_t<Group>, Note>)
+  requires(!std::same_as<std::remove_cvref_t<Group>, Note> &&
+           !std::same_as<std::remove_cvref_t<Values>, ViolinOptions>)
 Trace& violinplot(Pane& pane, Group&& group, Values&& values) {
   return pane.violin(detail::to_series(std::forward<Group>(group)),
                      detail::to_series(std::forward<Values>(values)));
@@ -2003,8 +2585,146 @@ struct BarPlotOptions {
   bool horizontal{false};
 };
 
+Trace& lineplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& lineplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& lineplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& scatterplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& scatterplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& scatterplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& stepplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& stepplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& stepplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& areaplot(Pane& pane, const ::pluss::table::Thread& values, double base = 0.0);
+Trace& areaplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    double base = 0.0);
+Trace& areaplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    double base = 0.0);
+
+Trace& histplot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& histplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    int bins = 12);
+Trace& histplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    int bins = 12);
+
+Trace& displot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& displot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    int bins = 12);
+Trace& displot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    int bins = 12);
+
+Trace& kdeplot(Pane& pane, const ::pluss::table::Thread& values, std::int64_t points = 128);
+Trace& kdeplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    std::int64_t points = 128);
+Trace& kdeplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    std::int64_t points = 128);
+
+Trace& ecdfplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& ecdfplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& ecdfplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& rugplot(Pane& pane, const ::pluss::table::Thread& values, double height = 0.08);
+Trace& rugplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    double height = 0.08);
+Trace& rugplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    double height = 0.08);
+
+Trace& countplot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& countplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    int bins = 12);
+Trace& countplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    int bins = 12);
+
+Trace& barplot(
+    Pane& pane,
+    const ::pluss::table::Thread& values,
+    const BarPlotOptions& options = {});
+Trace& barplot(
+    Pane& pane,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    const BarPlotOptions& options = {});
+Trace& barplot(
+    Pane& pane,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    const BarPlotOptions& options = {});
+
+Trace& path3(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& path3(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& cloud3(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& cloud3(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& plot3D(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& plot3D(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Trace& scatter3D(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
+Trace& scatter3D(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
+
+Studio& jointplot(
+    Studio& studio,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns = {},
+    std::string_view kind = "scatter");
+Studio& jointplot(
+    Studio& studio,
+    const ::pluss::table::DataFrame& frame,
+    const TableColumns& columns,
+    const JointPlotOptions& options);
+Studio& jointplot(
+    Studio& studio,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns = {},
+    std::string_view kind = "scatter");
+Studio& jointplot(
+    Studio& studio,
+    const ::pluss::table::Atlas& atlas,
+    const TableColumns& columns,
+    const JointPlotOptions& options);
+
 template <class X, class Y>
-  requires(!std::same_as<std::remove_cvref_t<X>, Note>)
+  requires(!std::same_as<std::remove_cvref_t<X>, Note> &&
+           !TableBackedValue<X> &&
+           !TableBackedValue<Y>)
 Trace& barplot(Pane& pane, X&& x, Y&& y, const BarPlotOptions& options = {}) {
   return options.horizontal ? pane.columns_h(detail::to_series(std::forward<X>(x)),
                                              detail::to_series(std::forward<Y>(y)))
@@ -2024,7 +2744,8 @@ inline Trace& barplot(Pane& pane, const Note& categories, const Series& values, 
 }
 
 template <class Values>
-  requires(!std::same_as<std::remove_cvref_t<Values>, Note>)
+  requires(!std::same_as<std::remove_cvref_t<Values>, Note> &&
+           !TableBackedValue<Values>)
 Trace& countplot(Pane& pane, Values&& values, int bins = 12) {
   return histplot(pane, std::forward<Values>(values), bins);
 }
@@ -2073,12 +2794,6 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
   const std::vector<double> vx = detail::to_f64_vector(sx);
   const std::vector<double> vy = detail::to_f64_vector(sy);
 
-  Trace* scatter_trace = nullptr;
-  if (options.show_scatter) {
-    auto& scatter = pane.cloud(sx, sy, std::array<double, 1>{std::max(1.0, options.marker_area)});
-    scatter.width(options.scatter_trace_width).label("data");
-    scatter_trace = &scatter;
-  }
   const auto [xmin, xmax] = std::minmax_element(vx.begin(), vx.end());
   const std::int64_t points = std::max<std::int64_t>(2, options.fit_points);
   std::vector<double> fit_x = detail::linspace(*xmin, *xmax, points);
@@ -2091,13 +2806,13 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
       options.lowess,
       options.lowess_frac);
 
-  Trace* fit_trace = nullptr;
-  if (options.show_fit) {
-    auto& trend = pane.trend(fit_x, fit_y);
-    trend.width(options.fit_trace_width).label("fit");
-    fit_trace = &trend;
-  }
-
+  // NOTE: the CI whisk trace (if any) is drawn FIRST, and the scatter/fit traces are
+  // drawn AFTER it, with fit drawn last of all. Pane::add_trace_ appends to a
+  // std::vector<Trace>, which can reallocate on any subsequent push -- capturing a
+  // Trace& from an earlier draw call and then returning it after a later draw call
+  // risks that reference dangling. Ordering the calls so the trace we might return is
+  // always the LAST one pushed (and never followed by another push) guarantees the
+  // returned reference stays valid.
   if (options.show_ci && sx.numel() > 2) {
     std::vector<double> y_err(static_cast<std::size_t>(points), 0.0);
     if (options.n_boot > 0) {
@@ -2156,6 +2871,20 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
     }
     auto& ci = pane.whisk(fit_x, fit_y, y_err);
     ci.width(options.ci_trace_width).label("ci");
+  }
+
+  Trace* scatter_trace = nullptr;
+  if (options.show_scatter) {
+    auto& scatter = pane.cloud(sx, sy, std::array<double, 1>{std::max(1.0, options.marker_area)});
+    scatter.width(options.scatter_trace_width).label("data");
+    scatter_trace = &scatter;
+  }
+
+  Trace* fit_trace = nullptr;
+  if (options.show_fit) {
+    auto& trend = pane.trend(fit_x, fit_y);
+    trend.width(options.fit_trace_width).label("fit");
+    fit_trace = &trend;
   }
 
   if (fit_trace != nullptr) {
@@ -2240,8 +2969,12 @@ Trace& qqplot(Pane& pane, Values&& values, const QqPlotOptions& options = {}) {
     q[i] = detail::inv_norm_cdf(p);
   }
 
-  auto& trace = pane.cloud(q, sample, std::array<double, 1>{std::max(2.0, options.marker_area)});
-  trace.width(options.trace_width).label("qq");
+  // NOTE: the reference line (if any) is drawn BEFORE the qq scatter, not after.
+  // Pane::add_trace_ appends to a std::vector<Trace>, which can reallocate on any
+  // subsequent push -- capturing the qq scatter's Trace& and then drawing the
+  // reference line afterward would risk that reference dangling by the time it's
+  // returned. Drawing the scatter last, and taking `trace` from that final push,
+  // guarantees no further pane mutation invalidates it.
   if (options.show_reference_line) {
     const double q25 = detail::inv_norm_cdf(0.25);
     const double q75 = detail::inv_norm_cdf(0.75);
@@ -2253,6 +2986,8 @@ Trace& qqplot(Pane& pane, Values&& values, const QqPlotOptions& options = {}) {
     const std::array<double, 2> ly{intercept + slope * lx[0], intercept + slope * lx[1]};
     pane.trend(lx, ly).width(options.reference_width).label("reference");
   }
+  auto& trace = pane.cloud(q, sample, std::array<double, 1>{std::max(2.0, options.marker_area)});
+  trace.width(options.trace_width).label("qq");
   pane.grid(GridStyle::Major).x_label("theoretical quantiles").y_label("sample quantiles");
   return trace;
 }
@@ -2426,6 +3161,8 @@ struct CatPlotOptions {
   float trace_width{0.9F};
 };
 
+namespace detail {
+
 [[nodiscard]] inline CatPlotKind catplot_kind(std::string_view kind) {
   if (kind == "swarm") return CatPlotKind::Swarm;
   if (kind == "box") return CatPlotKind::Box;
@@ -2463,6 +3200,8 @@ struct CatPlotOptions {
   return out;
 }
 
+} // namespace detail
+
 struct CatBucketStats {
   std::vector<double> values{};
   double sum{0.0};
@@ -2476,6 +3215,8 @@ struct CatSummary {
   bool has_error{false};
   bool valid{false};
 };
+
+namespace detail {
 
 [[nodiscard]] inline CatSummary summarize_bucket(
     const CatBucketStats& bucket,
@@ -2556,6 +3297,8 @@ struct CatSummary {
   return out;
 }
 
+} // namespace detail
+
 inline Trace& catplot(
     Pane& pane,
     const Note& group,
@@ -2567,7 +3310,7 @@ inline Trace& catplot(
     Pane& pane,
     const Note& group,
     const Series& values,
-    const CatPlotOptions& options = {}) {
+    const CatPlotOptions& options) {
   const auto empty_hue = ::pluss::make_note(std::vector<std::string>{});
   return catplot(pane, group, values, empty_hue, options);
 }
@@ -2577,7 +3320,7 @@ inline Trace& catplot(
     const Note& group,
     const Series& values,
     const Note& hue,
-    const CatPlotOptions& options = {}) {
+    const CatPlotOptions& options) {
   const auto groups = detail::note_values(group);
   const auto vals = detail::to_f64_vector(detail::flatten_f64(values));
   if (groups.size() != vals.size()) {
@@ -2591,7 +3334,7 @@ inline Trace& catplot(
     }
   }
 
-  const auto group_levels = ordered_levels(groups, options.order);
+  const auto group_levels = detail::ordered_levels(groups, options.order);
   if (group_levels.empty()) {
     throw std::invalid_argument("flash::catplot requires at least one category");
   }
@@ -2602,7 +3345,7 @@ inline Trace& catplot(
   }
 
   const bool has_hue = !hues.empty();
-  const auto hue_levels = has_hue ? ordered_levels(hues, options.hue_order) : std::vector<std::string>{};
+  const auto hue_levels = has_hue ? detail::ordered_levels(hues, options.hue_order) : std::vector<std::string>{};
   std::unordered_map<std::string, std::size_t> hue_idx;
   hue_idx.reserve(hue_levels.size());
   for (const auto i : std::views::iota(std::size_t{0}, hue_levels.size())) {
@@ -2685,23 +3428,29 @@ inline Trace& catplot(
           continue;
         }
         const auto summary =
-            summarize_bucket(bucket, options.estimator, options.errorbar, options.confidence_level);
+            detail::summarize_bucket(bucket, options.estimator, options.errorbar, options.confidence_level);
         y_vals.push_back(summary.valid ? summary.value : std::numeric_limits<double>::quiet_NaN());
         y_neg.push_back(summary.has_error ? summary.err_neg : 0.0);
         y_pos.push_back(summary.has_error ? summary.err_pos : 0.0);
         any_err = any_err || summary.has_error;
       }
-      auto& trace = pane.columns(::pluss::make_series(x_vals), ::pluss::make_series(y_vals));
-      trace.width(options.trace_width);
-      if (has_hue) {
-        trace.label(hue_levels[h]);
-      }
+      // NOTE: the error-bar whisk trace is drawn BEFORE the columns trace, not after.
+      // Pane::add_trace_ appends to a std::vector<Trace>, which can reallocate on any
+      // subsequent push -- drawing whisk() after capturing a reference to the columns
+      // trace would risk that reference (and `last`, taken from it) dangling once the
+      // loop's return value is used. Drawing columns() last, and taking `trace`/`last`
+      // from that final push, guarantees no further pane mutation invalidates it.
       if (options.kind != CatPlotKind::Count && options.errorbar != CatErrorBar::None && any_err) {
         pane.whisk(
             ::pluss::make_series(x_vals),
             ::pluss::make_series(y_vals),
             ::pluss::make_series(y_neg),
             ::pluss::make_series(y_pos));
+      }
+      auto& trace = pane.columns(::pluss::make_series(x_vals), ::pluss::make_series(y_vals));
+      trace.width(options.trace_width);
+      if (has_hue) {
+        trace.label(hue_levels[h]);
       }
       last = &trace;
     }
@@ -2787,7 +3536,7 @@ inline Trace& catplot(
 
 inline Trace& catplot(Pane& pane, const Note& group, const Series& values, std::string_view kind = "strip") {
   CatPlotOptions options;
-  options.kind = catplot_kind(kind);
+  options.kind = detail::catplot_kind(kind);
   return catplot(pane, group, values, options);
 }
 
@@ -2798,11 +3547,12 @@ inline Trace& catplot(
     const Note& hue,
     std::string_view kind = "strip") {
   CatPlotOptions options;
-  options.kind = catplot_kind(kind);
+  options.kind = detail::catplot_kind(kind);
   return catplot(pane, group, values, hue, options);
 }
 
 template <class Group, class Values>
+  requires(!std::same_as<std::remove_cvref_t<Group>, Note>)
 Trace& catplot(Pane& pane, Group&& group, Values&& values, std::string_view kind = "strip") {
   if (kind == "box") {
     return boxplot(pane, std::forward<Group>(group), std::forward<Values>(values));
@@ -2834,6 +3584,8 @@ inline Studio& JointGrid(Studio& studio, double gx = 14.0, double gy = 14.0) {
 enum class RelGridKind : std::uint8_t { Scatter, Line, Reg };
 enum class DisGridKind : std::uint8_t { Hist, Density, Ecdf, Rug };
 
+namespace detail {
+
 [[nodiscard]] inline RelGridKind relgrid_kind(std::string_view kind) {
   if (kind == "line") {
     return RelGridKind::Line;
@@ -2862,6 +3614,8 @@ enum class DisGridKind : std::uint8_t { Hist, Density, Ecdf, Rug };
   }
   throw std::invalid_argument("flash::disgridplot unknown kind: " + std::string(kind));
 }
+
+} // namespace detail
 
 struct RelGridPlotOptions {
   RelGridKind kind{RelGridKind::Scatter};
@@ -2903,6 +3657,8 @@ struct DisGridPlotOptions {
   double rug_height{0.06};
 };
 
+namespace detail {
+
 [[nodiscard]] inline std::pair<std::int64_t, std::int64_t> resolve_grid_shape(
     std::size_t facets,
     std::int64_t rows_hint,
@@ -2932,6 +3688,8 @@ struct DisGridPlotOptions {
   return {rows, cols};
 }
 
+} // namespace detail
+
 inline Studio& relgridplot(
     Studio& studio,
     pluss::msharp::RangeView::Series xs,
@@ -2940,7 +3698,7 @@ inline Studio& relgridplot(
   if (xs.empty() || ys.empty() || xs.size() != ys.size()) {
     throw std::invalid_argument("flash::relgridplot requires non-empty aligned x/y facet vectors");
   }
-  const auto [rows, cols] = resolve_grid_shape(xs.size(), options.rows, options.cols);
+  const auto [rows, cols] = detail::resolve_grid_shape(xs.size(), options.rows, options.cols);
   FacetGrid(studio, rows, cols, options.grid_gap_x, options.grid_gap_y);
   const auto panel_count = static_cast<std::size_t>(rows * cols);
   for (const auto panel : std::views::iota(std::size_t{0}, panel_count)) {
@@ -2981,7 +3739,7 @@ inline Studio& relgridplot(
     pluss::msharp::RangeView::Series ys,
     std::string_view kind) {
   RelGridPlotOptions options;
-  options.kind = relgrid_kind(kind);
+  options.kind = detail::relgrid_kind(kind);
   return relgridplot(studio, xs, ys, options);
 }
 
@@ -3017,7 +3775,7 @@ inline Studio& catgridplot(
   if (groups.empty() || values.empty() || groups.size() != values.size()) {
     throw std::invalid_argument("flash::catgridplot requires non-empty aligned group/value facet vectors");
   }
-  const auto [rows, cols] = resolve_grid_shape(groups.size(), options.rows, options.cols);
+  const auto [rows, cols] = detail::resolve_grid_shape(groups.size(), options.rows, options.cols);
   FacetGrid(studio, rows, cols, options.grid_gap_x, options.grid_gap_y);
   const auto panel_count = static_cast<std::size_t>(rows * cols);
   for (const auto panel : std::views::iota(std::size_t{0}, panel_count)) {
@@ -3051,7 +3809,7 @@ inline Studio& catgridplot(
       groups.size() != values.size() || groups.size() != hues.size()) {
     throw std::invalid_argument("flash::catgridplot requires aligned group/value/hue facet vectors");
   }
-  const auto [rows, cols] = resolve_grid_shape(groups.size(), options.rows, options.cols);
+  const auto [rows, cols] = detail::resolve_grid_shape(groups.size(), options.rows, options.cols);
   FacetGrid(studio, rows, cols, options.grid_gap_x, options.grid_gap_y);
   const auto panel_count = static_cast<std::size_t>(rows * cols);
   for (const auto panel : std::views::iota(std::size_t{0}, panel_count)) {
@@ -3108,7 +3866,7 @@ inline Studio& disgridplot(
   if (values.empty()) {
     throw std::invalid_argument("flash::disgridplot requires at least one facet series");
   }
-  const auto [rows, cols] = resolve_grid_shape(values.size(), options.rows, options.cols);
+  const auto [rows, cols] = detail::resolve_grid_shape(values.size(), options.rows, options.cols);
   FacetGrid(studio, rows, cols, options.grid_gap_x, options.grid_gap_y);
   const auto panel_count = static_cast<std::size_t>(rows * cols);
   for (const auto panel : std::views::iota(std::size_t{0}, panel_count)) {
@@ -3148,7 +3906,7 @@ inline Studio& disgridplot(
 
 inline Studio& disgridplot(Studio& studio, pluss::msharp::RangeView::Series values, std::string_view kind) {
   DisGridPlotOptions options;
-  options.kind = disgrid_kind(kind);
+  options.kind = detail::disgrid_kind(kind);
   return disgridplot(studio, values, options);
 }
 
@@ -3282,6 +4040,8 @@ struct PairPlotOptions {
   std::optional<double> y_label_gap_points{std::nullopt};
 };
 
+namespace detail {
+
 [[nodiscard]] inline std::pair<std::vector<Series>, std::vector<std::string>> dataset_numeric_columns(
     const Dataset& data) {
   PLUSS_CHECK(!data.numeric_values.empty(), "flash::dataset_numeric_columns requires at least one numeric feature");
@@ -3294,6 +4054,8 @@ struct PairPlotOptions {
   std::vector<std::string> labels = detail::note_labels_or_default(data.numeric_names, static_cast<std::int64_t>(columns.size()));
   return {std::move(columns), std::move(labels)};
 }
+
+} // namespace detail
 
 inline Studio& pairplot(
     Studio& studio,
@@ -3481,7 +4243,7 @@ inline Studio& pairplot(
 }
 
 inline Studio& pairplot(Studio& studio, const Dataset& data, const PairPlotOptions& options = {}) {
-  auto [columns, labels] = dataset_numeric_columns(data);
+  auto [columns, labels] = detail::dataset_numeric_columns(data);
   auto pair_options = options;
   if (pair_options.labels.empty()) {
     pair_options.labels = std::move(labels);
@@ -3581,6 +4343,8 @@ struct TriplotOptions {
   double grid_gap_y{10.0};
 };
 
+namespace detail {
+
 [[nodiscard]] inline std::vector<std::int64_t> triplot_feature_indices(
     const std::vector<std::string>& labels,
     const TriplotOptions& options) {
@@ -3643,6 +4407,73 @@ struct TriplotOptions {
   return triplets;
 }
 
+// TriplotKind::Sheet, ::Lattice, ::Spire, and ::Ridge all render a gridded surface -- they
+// need x/y as per-axis coordinate vectors and z as a matching rank-2 matrix, not three
+// flat, unstructured observation columns (only ::Cloud and ::Path accept those directly).
+// This bins the two axis features into a square grid over their observed [min, max] range
+// and averages the third feature within each cell, producing a genuine (x_centers,
+// y_centers, z_grid) surface triplet that sheet()/lattice()/spire3()/ridge3() can render.
+// Empty cells (bins with no observations landing in them) fall back to the triplet's
+// overall z mean, keeping the surface continuous rather than leaving gaps or propagating
+// NaN into the renderer.
+[[nodiscard]] inline std::array<Series, 3> triplot_bin_surface(
+    const Series& x,
+    const Series& y,
+    const Series& z) {
+  const auto xs = x.to_vec<double>();
+  const auto ys = y.to_vec<double>();
+  const auto zs = z.to_vec<double>();
+  const auto n = static_cast<std::int64_t>(xs.size());
+  const auto g = std::clamp<std::int64_t>(
+      static_cast<std::int64_t>(std::ceil(std::sqrt(static_cast<double>(std::max<std::int64_t>(1, n))))),
+      2,
+      20);
+
+  const auto [x_min_it, x_max_it] = std::minmax_element(xs.begin(), xs.end());
+  const auto [y_min_it, y_max_it] = std::minmax_element(ys.begin(), ys.end());
+  const double x_min = *x_min_it;
+  const double y_min = *y_min_it;
+  const double x_span = (*x_max_it - x_min) > 0.0 ? (*x_max_it - x_min) : 1.0;
+  const double y_span = (*y_max_it - y_min) > 0.0 ? (*y_max_it - y_min) : 1.0;
+
+  std::vector<double> sums(static_cast<std::size_t>(g * g), 0.0);
+  std::vector<std::int64_t> counts(static_cast<std::size_t>(g * g), 0);
+  double z_sum = 0.0;
+  for (const auto row : std::views::iota(std::int64_t{0}, n)) {
+    z_sum += zs[static_cast<std::size_t>(row)];
+    auto bx = static_cast<std::int64_t>((xs[static_cast<std::size_t>(row)] - x_min) / x_span * static_cast<double>(g));
+    auto by = static_cast<std::int64_t>((ys[static_cast<std::size_t>(row)] - y_min) / y_span * static_cast<double>(g));
+    bx = std::clamp<std::int64_t>(bx, 0, g - 1);
+    by = std::clamp<std::int64_t>(by, 0, g - 1);
+    const auto cell = static_cast<std::size_t>(by * g + bx);
+    sums[cell] += zs[static_cast<std::size_t>(row)];
+    counts[cell] += 1;
+  }
+  const double z_mean = n > 0 ? z_sum / static_cast<double>(n) : 0.0;
+
+  std::vector<double> grid(static_cast<std::size_t>(g * g), z_mean);
+  for (std::size_t cell = 0; cell < sums.size(); ++cell) {
+    if (counts[cell] > 0) {
+      grid[cell] = sums[cell] / static_cast<double>(counts[cell]);
+    }
+  }
+
+  std::vector<double> x_centers(static_cast<std::size_t>(g));
+  std::vector<double> y_centers(static_cast<std::size_t>(g));
+  for (const auto i : std::views::iota(std::int64_t{0}, g)) {
+    x_centers[static_cast<std::size_t>(i)] = x_min + (static_cast<double>(i) + 0.5) * x_span / static_cast<double>(g);
+    y_centers[static_cast<std::size_t>(i)] = y_min + (static_cast<double>(i) + 0.5) * y_span / static_cast<double>(g);
+  }
+
+  return {
+      ::pluss::make_series(std::move(x_centers), {g}),
+      ::pluss::make_series(std::move(y_centers), {g}),
+      ::pluss::make_series(std::move(grid), {g, g}),
+  };
+}
+
+} // namespace detail
+
 inline Studio& triplot(
     Studio& studio,
     pluss::msharp::RangeView::Series columns,
@@ -3653,11 +4484,11 @@ inline Studio& triplot(
   detail::downsample_columns(prepared, options.max_points);
 
   std::vector<std::string> labels = detail::default_feature_labels(options.labels, static_cast<std::int64_t>(prepared.size()));
-  const auto selected = triplot_feature_indices(labels, options);
-  const auto triplets = triplot_triplets(selected, options.max_panels);
+  const auto selected = detail::triplot_feature_indices(labels, options);
+  const auto triplets = detail::triplot_triplets(selected, options.max_panels);
   PLUSS_CHECK(!triplets.empty(), "flash::triplot produced no feature triplets");
 
-  const auto [rows, cols] = resolve_grid_shape(triplets.size(), options.rows, options.cols);
+  const auto [rows, cols] = detail::resolve_grid_shape(triplets.size(), options.rows, options.cols);
   if (options.auto_size) {
     const double cols_d = static_cast<double>(cols);
     const double rows_d = static_cast<double>(rows);
@@ -3697,35 +4528,43 @@ inline Studio& triplot(
             prepared[static_cast<std::size_t>(j)],
             prepared[static_cast<std::size_t>(k)]);
         break;
-      case TriplotKind::Sheet:
-        sheet(
-            pane,
+      case TriplotKind::Sheet: {
+        const auto surface = detail::triplot_bin_surface(
             prepared[static_cast<std::size_t>(i)],
             prepared[static_cast<std::size_t>(j)],
             prepared[static_cast<std::size_t>(k)]);
+        sheet(pane, surface[0], surface[1], surface[2]);
         break;
-      case TriplotKind::Lattice:
-        lattice(
-            pane,
+      }
+      case TriplotKind::Lattice: {
+        const auto surface = detail::triplot_bin_surface(
             prepared[static_cast<std::size_t>(i)],
             prepared[static_cast<std::size_t>(j)],
             prepared[static_cast<std::size_t>(k)]);
+        lattice(pane, surface[0], surface[1], surface[2]);
         break;
-      case TriplotKind::Spire:
-        spire3(
-            pane,
+      }
+      case TriplotKind::Spire: {
+        const auto surface = detail::triplot_bin_surface(
             prepared[static_cast<std::size_t>(i)],
             prepared[static_cast<std::size_t>(j)],
             prepared[static_cast<std::size_t>(k)]);
+        spire3(pane, surface[0], surface[1], surface[2]);
         break;
-      case TriplotKind::Ridge:
+      }
+      case TriplotKind::Ridge: {
+        const auto surface = detail::triplot_bin_surface(
+            prepared[static_cast<std::size_t>(i)],
+            prepared[static_cast<std::size_t>(j)],
+            prepared[static_cast<std::size_t>(k)]);
         ridge3(
             pane,
-            prepared[static_cast<std::size_t>(i)],
-            prepared[static_cast<std::size_t>(j)],
-            prepared[static_cast<std::size_t>(k)],
+            surface[0],
+            surface[1],
+            surface[2],
             static_cast<int>(std::max<std::int64_t>(3, options.ridge_levels)));
         break;
+      }
       case TriplotKind::Cloud:
       default:
         cloud3(
@@ -3750,7 +4589,7 @@ inline Studio& triplot(
     Studio& studio,
     const Dataset& data,
     const TriplotOptions& options = {}) {
-  auto [columns, labels] = dataset_numeric_columns(data);
+  auto [columns, labels] = detail::dataset_numeric_columns(data);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = std::move(labels);
@@ -4038,7 +4877,7 @@ inline Studio& parallelplot(
     Studio& studio,
     const Dataset& data,
     const ParallelCoordinatesOptions& options = {}) {
-  auto [columns, labels] = dataset_numeric_columns(data);
+  auto [columns, labels] = detail::dataset_numeric_columns(data);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = std::move(labels);
@@ -4131,7 +4970,7 @@ inline Studio& andrews_curves(
   detail::downsample_columns(prepared, options.max_curves);
   const std::int64_t plotted_rows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
 
-  const auto t = ::pluss::linspace(-3.14159265358979323846,
+  const auto t = ::pluss::series::linspace(-3.14159265358979323846,
                                  3.14159265358979323846,
                                  std::max<std::int64_t>(64, options.points),
                                  ScalarType::Float64);
@@ -4180,7 +5019,7 @@ inline Studio& andrews_curves(
   detail::downsample_columns(prepared, options.max_curves, &labels);
   const std::int64_t plotted_rows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
 
-  const auto t = ::pluss::linspace(-3.14159265358979323846,
+  const auto t = ::pluss::series::linspace(-3.14159265358979323846,
                                  3.14159265358979323846,
                                  std::max<std::int64_t>(64, options.points),
                                  ScalarType::Float64);
@@ -4230,7 +5069,7 @@ inline Studio& andrews_curves(
     Studio& studio,
     const Dataset& data,
     const AndrewsCurvesOptions& options = {}) {
-  auto [columns, labels] = dataset_numeric_columns(data);
+  auto [columns, labels] = detail::dataset_numeric_columns(data);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = std::move(labels);
@@ -4463,7 +5302,7 @@ inline Studio& radviz(
     Studio& studio,
     const Dataset& data,
     const RadvizOptions& options = {}) {
-  auto [columns, labels] = dataset_numeric_columns(data);
+  auto [columns, labels] = detail::dataset_numeric_columns(data);
   auto local_options = options;
   if (local_options.labels.empty()) {
     local_options.labels = std::move(labels);
@@ -4780,7 +5619,7 @@ Studio& bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOption
   bootstrap_stats.reserve(static_cast<std::size_t>(samples));
   for (const auto i : std::views::iota(std::int64_t{0}, samples)) {
     const auto idx =
-        ::pluss::randint(0, n, {draw_size}, ScalarType::Int64, options.seed + static_cast<std::uint64_t>(i + 1));
+        ::pluss::series::randint(0, n, {draw_size}, ScalarType::Int64, options.seed + static_cast<std::uint64_t>(i + 1));
     const Series sample = base.take(idx);
     double stat = 0.0;
     switch (options.statistic) {
@@ -5089,10 +5928,14 @@ inline Studio& jointplot(
     std::string_view x_name,
     std::string_view y_name,
     std::string_view kind = "scatter") {
-  const auto x = data.numeric(x_name);
-  const auto y = data.numeric(y_name);
-  PLUSS_CHECK(x.has_value(), std::string("flash::jointplot(dataset): unknown numeric feature '") + std::string(x_name) + "'");
-  PLUSS_CHECK(y.has_value(), std::string("flash::jointplot(dataset): unknown numeric feature '") + std::string(y_name) + "'");
+  const auto x = data.continuous(x_name);
+  const auto y = data.continuous(y_name);
+  PLUSS_CHECK(
+      x.has_value(),
+      std::string("flash::jointplot(dataset): unknown continuous feature '") + std::string(x_name) + "'");
+  PLUSS_CHECK(
+      y.has_value(),
+      std::string("flash::jointplot(dataset): unknown continuous feature '") + std::string(y_name) + "'");
   PLUSS_CHECK(x->dim() <= 2 && y->dim() <= 2, "flash::jointplot(dataset): supports up to 2D numeric features");
   return jointplot(studio, *x, *y, kind);
 }
@@ -5103,10 +5946,14 @@ inline Studio& jointplot(
     std::string_view x_name,
     std::string_view y_name,
     const JointPlotOptions& options) {
-  const auto x = data.numeric(x_name);
-  const auto y = data.numeric(y_name);
-  PLUSS_CHECK(x.has_value(), std::string("flash::jointplot(dataset): unknown numeric feature '") + std::string(x_name) + "'");
-  PLUSS_CHECK(y.has_value(), std::string("flash::jointplot(dataset): unknown numeric feature '") + std::string(y_name) + "'");
+  const auto x = data.continuous(x_name);
+  const auto y = data.continuous(y_name);
+  PLUSS_CHECK(
+      x.has_value(),
+      std::string("flash::jointplot(dataset): unknown continuous feature '") + std::string(x_name) + "'");
+  PLUSS_CHECK(
+      y.has_value(),
+      std::string("flash::jointplot(dataset): unknown continuous feature '") + std::string(y_name) + "'");
   PLUSS_CHECK(x->dim() <= 2 && y->dim() <= 2, "flash::jointplot(dataset): supports up to 2D numeric features");
   return jointplot(studio, *x, *y, options);
 }
@@ -5378,7 +6225,24 @@ inline Studio& jointplot(
   return PaletteRamp("diverging", std::move(stops));
 }
 
-[[nodiscard]] inline PaletteRamp mpl_palette(std::string_view = "viridis") {
+[[nodiscard]] inline PaletteRamp mpl_palette(std::string_view name = "viridis") {
+  // PlussPl only ships five built-in named ramps (see PaletteRamp), not a full
+  // matplotlib colormap catalog, so this maps common mpl colormap-family names to
+  // their closest available ramp by hue progression, falling back to lagoon
+  // (viridis's own match: indigo -> blue -> teal -> green -> yellow) for anything
+  // unrecognized.
+  if (name == "viridis" || name == "cividis") return PaletteRamp::lagoon();
+  if (name == "plasma" || name == "inferno" || name == "magma" || name == "hot" ||
+      name == "afmhot") {
+    return PaletteRamp::thermal();
+  }
+  if (name == "blues" || name == "cool" || name == "winter" || name == "ocean") {
+    return PaletteRamp::ocean();
+  }
+  if (name == "greens" || name == "summer" || name == "spring") return PaletteRamp::meadow();
+  if (name == "greys" || name == "gray" || name == "grey" || name == "binary") {
+    return PaletteRamp::neutral();
+  }
   return PaletteRamp::lagoon();
 }
 
@@ -5395,37 +6259,50 @@ inline Studio& jointplot(
 }
 
 [[nodiscard]] inline Note get_dataset_names() {
-  return ::pluss::make_note({"tips", "flights"});
+  if (const auto root = detail::locate_dataset_root(); root.has_value()) {
+    const auto manifest_path = *root / "manifest.csv";
+    std::ifstream in(manifest_path);
+    if (in.good()) {
+      std::vector<std::string> names;
+      std::string line;
+      bool first_row = true;
+      while (std::getline(in, line)) {
+        if (line.empty()) {
+          continue;
+        }
+        auto fields = detail::split_csv_row(line);
+        if (fields.empty()) {
+          continue;
+        }
+        if (first_row && fields[0] == "name") {
+          first_row = false;
+          continue;
+        }
+        first_row = false;
+        names.push_back(std::move(fields[0]));
+      }
+      if (!names.empty()) {
+        return ::pluss::make_note(std::move(names));
+      }
+    }
+  }
+  return ::pluss::make_note(detail::builtin_dataset_names());
 }
 
 [[nodiscard]] inline std::optional<Dataset> load_dataset(std::string_view name) {
-  Dataset data;
-  if (name == "tips") {
-    data.numeric_names = ::pluss::make_note({"total_bill", "tip", "size"});
-    data.numeric_values = {
-        ::pluss::make_series(std::vector<double>{16.99, 10.34, 21.01, 23.68}, {4}),
-        ::pluss::make_series(std::vector<double>{1.01, 1.66, 3.5, 3.31}, {4}),
-        ::pluss::make_series(std::vector<double>{2.0, 3.0, 3.0, 2.0}, {4}),
-    };
-    data.note_names = ::pluss::make_note({"day"});
-    data.note_values = {
-        ::pluss::make_note({"Sun", "Sun", "Sun", "Sun"}),
-    };
-    return data;
+  if (!detail::dataset_name_known(name)) {
+    return std::nullopt;
   }
-  if (name == "flights") {
-    data.numeric_names = ::pluss::make_note({"month", "passengers"});
-    data.numeric_values = {
-        ::pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {6}),
-        ::pluss::make_series(std::vector<double>{112, 118, 132, 129, 121, 135}, {6}),
-    };
-    data.note_names = ::pluss::make_note({"year"});
-    data.note_values = {
-        ::pluss::make_note({"1949", "1949", "1949", "1949", "1949", "1949"}),
-    };
-    return data;
+  const auto root = detail::locate_dataset_root();
+  PLUSS_CHECK(root.has_value(),
+              "flash::load_dataset: unable to locate flash dataset directory; set PLUSS_FLASH_DATASET_DIR or install dataset assets");
+  const auto csv_path = *root / (std::string(name) + ".csv");
+  const auto schema_path = *root / (std::string(name) + ".schema.csv");
+  if (!std::filesystem::exists(csv_path) || !std::filesystem::exists(schema_path)) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  const auto schema = detail::read_dataset_schema(schema_path);
+  return detail::read_dataset_csv(csv_path, schema);
 }
 
 } // namespace pluss::pl::flash

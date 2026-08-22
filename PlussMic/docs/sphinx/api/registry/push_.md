@@ -36,8 +36,8 @@ value-only overload appends to every field.
 Example 1. Append to a single named field in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
 rg.push_("id", pluss::make_series(4));

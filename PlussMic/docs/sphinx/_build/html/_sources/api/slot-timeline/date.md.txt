@@ -31,7 +31,7 @@ to [`floor("D")`](floor.md).
 Example 1. Strip the time-of-day from two timestamps.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().date();
 auto fmted = out.tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << std::get<pluss::Note>(fmted.at(0)).at(0) << " | "

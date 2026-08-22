@@ -83,6 +83,20 @@ struct TextCommand {
   std::string font_family{};
 };
 
+struct TextCaretCommand {
+  PointI text_anchor{};
+  std::string text{};
+  int pixel_size{12};
+  int font_weight{400};
+  std::string font_family{};
+  int fallback_width{0};
+  int max_x{0};
+  int y0{0};
+  int y1{0};
+  int thickness{1};
+  Color color{Color::rgba(71, 118, 184, 255)};
+};
+
 using DrawCommand = std::variant<ClearCommand,
                                  FillRectCommand,
                                  FillRoundedRectCommand,
@@ -95,7 +109,8 @@ using DrawCommand = std::variant<ClearCommand,
                                  MarkerCloudCommand,
                                  SetClipRectCommand,
                                  ClearClipRectCommand,
-                                 TextCommand>;
+                                 TextCommand,
+                                 TextCaretCommand>;
 
 class Scene {
  public:
@@ -109,5 +124,7 @@ class Scene {
  private:
   std::vector<DrawCommand> commands_{};
 };
+
+[[nodiscard]] Scene scale_scene(const Scene& scene, double scale);
 
 } // namespace pluss::view::window

@@ -32,7 +32,7 @@ order.
 Example 1. A repeated value collapses to one occurrence.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)});
 auto out = slot.distinct();
 std::cout << "size=" << out.size() << " vals="
           << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << ","

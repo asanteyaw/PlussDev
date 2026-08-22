@@ -83,7 +83,7 @@ above.
 - [`Catalog::keyaxis`](../catalog/keyaxis.md): the entry point this accessor
   is reached from.
 - [`RegistryFieldAxisAccessor::prefix`](../registry-fieldaxis/prefix.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="note.html">

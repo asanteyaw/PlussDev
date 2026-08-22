@@ -30,7 +30,7 @@ slot and lowercases the rest, returning a new slot.
 Example 1. Titlecase a mixed-case value.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")});
 auto out = slot.nt().titlecase();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0) << " | "
           << std::get<pluss::Note>(out.at(1)).at(0);

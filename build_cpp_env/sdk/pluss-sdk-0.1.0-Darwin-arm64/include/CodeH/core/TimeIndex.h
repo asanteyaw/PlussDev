@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include "pluss/export.h"
 
@@ -18,7 +19,7 @@ namespace _compat { namespace detail { struct Access; } }
 
 // A 1D, (optionally) monotonic Timeline axis with index-oriented utilities.
 // This is the key building block for pandas-like resampling/alignment.
-// Construction is intentionally routed through pluss::make_timeindex(...)
+// Construction is intentionally routed through pluss::timeindex::make(...)
 // and Timeline::to_timeindex(...), not public constructors.
 class CODEH_API TimeIndex {
 public:
@@ -39,6 +40,7 @@ public:
 
   const Timeline& timeline() const noexcept { return t_; }
   std::int64_t size() const { return t_.numel(); }
+  std::vector<std::int64_t> host() const { return t_.to_epoch_nanos_vector(); }
 
   // searchsorted (like numpy/pandas). Returns insertion index in [0, size()].
   std::int64_t searchsorted(const Timeline& key, bool right = false) const { return ::pluss::codeh::_compat::invoke<std::int64_t>("searchsorted", *this, {key, right}); }
@@ -58,21 +60,111 @@ public:
     pluss::codem::Series bin_id;  // 1D int64 of length size(): bin index per observation
   };
 
-  ResampleBins resample_bins(std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<ResampleBins>("resample_bins", *this, {freq, step}); }
+  enum class ResampleClosed : std::uint8_t {
+    Left = 0,
+    Right = 1,
+  };
+
+  enum class ResampleLabel : std::uint8_t {
+    Left = 0,
+    Right = 1,
+  };
+
+  enum class ResampleOrigin : std::uint8_t {
+    StartDay = 0,
+    Start = 1,
+    Epoch = 2,
+  };
+
+  struct ResampleOptions {
+    std::string freq{"D"};
+    std::int64_t step{1};
+    ResampleClosed closed{ResampleClosed::Left};
+    ResampleLabel label{ResampleLabel::Left};
+    ResampleOrigin origin{ResampleOrigin::StartDay};
+    std::int64_t offset_nanos{0};
+  };
+
+  ResampleBins resample_bins(const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<ResampleBins>(
+        "resample_bins_opts",
+        *this,
+        {options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  ResampleBins resample_bins(std::string_view freq, std::int64_t step = 1) const {
+    return resample_bins(ResampleOptions{.freq = std::string(freq), .step = step});
+  }
 
   // Count observations per bin (like resample().size()).
-  pluss::codem::Series resample_count(std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_count", *this, {freq, step}); }
+  pluss::codem::Series resample_count(const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_count_opts",
+        *this,
+        {options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  pluss::codem::Series resample_count(std::string_view freq, std::int64_t step = 1) const {
+    return resample_count(ResampleOptions{.freq = std::string(freq), .step = step});
+  }
 
   // Numeric aggregations. values must be 1D and same length as index.
-  pluss::codem::Series resample_sum(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_sum", *this, {values, freq, step}); }
-  pluss::codem::Series resample_mean(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_mean", *this, {values, freq, step}); }
-  pluss::codem::Series resample_min(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_min", *this, {values, freq, step}); }
-  pluss::codem::Series resample_max(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_max", *this, {values, freq, step}); }
-  pluss::codem::Series resample_first(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_first", *this, {values, freq, step}); }
-  pluss::codem::Series resample_last(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_last", *this, {values, freq, step}); }
+  pluss::codem::Series resample_sum(const pluss::codem::Series& values, const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_sum_opts",
+        *this,
+        {values, options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  pluss::codem::Series resample_sum(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return resample_sum(values, ResampleOptions{.freq = std::string(freq), .step = step}); }
+  pluss::codem::Series resample_mean(const pluss::codem::Series& values, const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_mean_opts",
+        *this,
+        {values, options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  pluss::codem::Series resample_mean(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return resample_mean(values, ResampleOptions{.freq = std::string(freq), .step = step}); }
+  pluss::codem::Series resample_min(const pluss::codem::Series& values, const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_min_opts",
+        *this,
+        {values, options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  pluss::codem::Series resample_min(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return resample_min(values, ResampleOptions{.freq = std::string(freq), .step = step}); }
+  pluss::codem::Series resample_max(const pluss::codem::Series& values, const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_max_opts",
+        *this,
+        {values, options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  pluss::codem::Series resample_max(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return resample_max(values, ResampleOptions{.freq = std::string(freq), .step = step}); }
+  pluss::codem::Series resample_first(const pluss::codem::Series& values, const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_first_opts",
+        *this,
+        {values, options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  pluss::codem::Series resample_first(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return resample_first(values, ResampleOptions{.freq = std::string(freq), .step = step}); }
+  pluss::codem::Series resample_last(const pluss::codem::Series& values, const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_last_opts",
+        *this,
+        {values, options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  pluss::codem::Series resample_last(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return resample_last(values, ResampleOptions{.freq = std::string(freq), .step = step}); }
+
+  pluss::codem::Series resample_agg(const pluss::codem::Series& values, const ResampleOptions& options, std::string_view op) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_agg_opts",
+        *this,
+        {values, options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos, std::string(op)});
+  }
 
   // OHLC: returns 2D [nbins, 4] in order [open, high, low, close].
-  pluss::codem::Series resample_ohlc(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_ohlc", *this, {values, freq, step}); }
+  pluss::codem::Series resample_ohlc(const pluss::codem::Series& values, const ResampleOptions& options) const {
+    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
+        "resample_ohlc_opts",
+        *this,
+        {values, options.freq, options.step, options.closed, options.label, options.origin, options.offset_nanos});
+  }
+  pluss::codem::Series resample_ohlc(const pluss::codem::Series& values, std::string_view freq, std::int64_t step = 1) const { return resample_ohlc(values, ResampleOptions{.freq = std::string(freq), .step = step}); }
 
   // Rolling count within a trailing window.
   pluss::codem::Series rolling_count(const Duration& window) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("rolling_count", *this, {window}); }

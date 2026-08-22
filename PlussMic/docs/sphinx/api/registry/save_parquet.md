@@ -31,7 +31,7 @@ them, `save_parquet()` throws
     The destination `.parquet` file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying Parquet writer
+    A generic configuration scribble, translated into the underlying Parquet writer
     options.
 
 ## Returns
@@ -46,9 +46,9 @@ throws — this is the exact message this documentation environment produces, si
 it was built without Arrow/Parquet C++.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 try {

@@ -78,7 +78,7 @@ July falls in Q3 (months 7-9); March falls in Q1 (months 1-3).
   arbitrary frequency-based periods, not just quarters.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::quarter`](../registry-timeline/quarter.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="period.html">

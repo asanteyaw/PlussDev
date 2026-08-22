@@ -67,7 +67,7 @@ std::cout << out.keys("ts").as_note().at(0);
   fixed pattern of.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::iso`](../registry-timeline/iso.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="isnat.html">

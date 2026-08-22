@@ -2,69 +2,55 @@
 
 ## When To Use Bundle Types
 
-The bundle model is the heterogeneous record layer:
+The bundle model is the multi-table workbench layer:
 
-- `Slot`: sequence of heterogeneous Pluss values
-- `Registry`: named set of slots
-- `Axel`: depth stack of registries
+- `Nexus`: named collection of related `DataFrame` tables
+- `NexusTraverse`: fluent join-graph builder returned by `Nexus::from(...)`
+- `NexusQuery`: workspace SQL accessor returned by `Nexus::query()`
 
-Use it when one field can hold different domain types, or when you want a lighter record/batch abstraction than `DataFrame`.
+Use it when the job is bigger than one table: several frames must be coordinated,
+relationships should be declared once and reused, and join plans or audits should
+belong to the workspace itself rather than be rebuilt ad hoc each time.
 
-## Slot
-
-```cpp
-auto ids = pluss::bundle::Slot({
-    pluss::make_series(1, pluss::codem::ScalarType::Int64),
-    pluss::make_series(2, pluss::codem::ScalarType::Int64),
-    pluss::make_series(3, pluss::codem::ScalarType::Int64),
-});
-
-ids.push_(pluss::make_series(4, pluss::codem::ScalarType::Int64));
-auto even = ids.filter([](const pluss::bundle::Slot::Value& v) {
-  return std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] % 2 == 0;
-});
-```
-
-## Registry
+## Nexus
 
 ```cpp
-auto cities = pluss::bundle::Slot({
-    pluss::make_note("Accra"),
-    pluss::make_note("Tema"),
-    pluss::make_note("Kumasi"),
+using namespace pluss::table;
+using namespace pluss::bundle;
+
+auto customers = DataFrame({
+    {"customer_id", pluss::make_series({1.0, 2.0, 3.0})},
+    {"name", pluss::make_note({"Ada", "Bola", "Chen"})},
 });
 
-auto registry = pluss::bundle::Registry({
-    {"id", ids},
-    {"city", cities},
+auto orders = DataFrame({
+    {"order_id", pluss::make_series({100.0, 101.0, 102.0})},
+    {"customer_id", pluss::make_series({1.0, 2.0, 2.0})},
+    {"amount", pluss::make_series({50.0, 75.0, 20.0})},
 });
 
-auto selected = registry.fields({"id"});
-auto renamed = registry.rename({{"city", "location"}});
-auto profiled = registry.profiles();
+auto biz = Nexus({
+    {"customers", customers},
+    {"orders", orders},
+}).add_relationship({
+    .name = "customer_orders",
+    .left_table = "customers",
+    .right_table = "orders",
+    .keys = {{"customer_id", "customer_id"}},
+});
+
+auto joined = biz.from("customers").join("orders").collect();
 ```
 
-## Axel
+## What Nexus Adds Beyond DataFrame
 
-```cpp
-auto train = registry;
-auto test = registry.rename({{"city", "city_test"}});
-auto labels = pluss::bundle::Slot({pluss::make_note("train"), pluss::make_note("test")});
+- keyed table storage with `frame(...)`, `select(...)`, `drop(...)`, and `inject(...)`
+- declared relationship metadata with `add_relationship(...)`
+- root-grain feature assembly with `pull(...)`
+- audit surfaces such as `audit()`, `validate_keys(...)`, `validate_relationship(...)`, and `detect_orphans(...)`
+- graph navigation with `path(...)`, `plan(...)`, `materialize(...)`, and `from(...).via(...)`
+- persistence with `save(...)`, `load(...)`, and `store(...)`
 
-auto axel = pluss::bundle::Axel({train, test}, labels);
-
-auto first = axel.head(1);
-auto combined = axel.concat_depth(first);
-```
-
-## Kindle Bridge
-
-```cpp
-auto stream = ids.kindelize();
-auto catalog = registry.kindelize();
-auto archive = axel.kindelize();
-
-auto back_slot = stream.bundelize();
-auto back_registry = catalog.bundelize();
-auto back_axel = archive.bundelize();
-```
+See the [Nexus API Reference](nexus_api_reference.md) and
+[NexusTraverse API Reference](nexus_traverse_api_reference.md) and
+[NexusQuery API Reference](nexus_query_api_reference.md) for the full public surface.

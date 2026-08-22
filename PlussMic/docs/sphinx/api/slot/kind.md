@@ -41,8 +41,8 @@ enum class SlotKind : std::uint8_t {
 Example 1. A homogeneous `int64` `Series` slot classifies as `Series`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
-std::cout << (slot.kind() == pluss::bundle::SlotKind::Series);
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
+std::cout << (slot.kind() == pluss::scribble::SlotKind::Series);
 ```
 
 ### Output
@@ -55,8 +55,8 @@ Example 2. A slot mixing `Series` and `Note` values classifies as `Mixed` —
 so does a `Series` slot whose values don't all share one scalar dtype.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("x")});
-std::cout << (slot.kind() == pluss::bundle::SlotKind::Mixed);
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_note("x")});
+std::cout << (slot.kind() == pluss::scribble::SlotKind::Mixed);
 ```
 
 ### Output

@@ -42,9 +42,9 @@ field names — it applies to every field of every frame. Chain
 Example 1. Extract the year from the `"ts"` field of every frame.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
-auto r1 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2023-07-04T00:00:00Z")})}});
-auto axel = pluss::bundle::Axel({r0, r1});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
+auto r1 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2023-07-04T00:00:00Z")})}});
+auto axel = pluss::scribble::Axel({r0, r1});
 
 auto out = axel.fields({"ts"}).tl().year();
 std::cout << std::get<pluss::Series>(out.registry(0).fields("ts").at(0)).to_vec<std::int64_t>()[0] << " "

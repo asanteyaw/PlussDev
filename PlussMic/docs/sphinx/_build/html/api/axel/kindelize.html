@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,7 +50,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Converts this <code class="docutils literal notranslate"><span class="pre">Axel</span></code> to its <code class="docutils literal notranslate"><span class="pre">kindle::Archive</span></code> representation. A
-depth-stacked bridge from the bundle model into the Kindle model.</p>
+depth-stacked bridge from the scribble model into the Kindle model.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -64,9 +64,9 @@ One archive catalog per registry, in axel depth order.</p>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> preserves depth.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">)})}}),</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})}}),</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">scribble</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">scribble</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">scribble</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">)})}}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">scribble</span><span class="o">::</span><span class="n">Registry</span><span class="p">({{</span><span class="s">&quot;ids&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">scribble</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">)})}}),</span>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">depth</span><span class="p">();</span>
@@ -89,8 +89,8 @@ One archive catalog per registry, in axel depth order.</p>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../archive/bundelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::bundelize</span></code></span></a>: the reverse bridge from
-Kindle back into the bundle model.</p></li>
+<li><p><a class="reference internal" href="../archive/scribbelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::scribbelize</span></code></span></a>: the reverse bridge from
+Kindle back into the scribble model.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="isnull.html">
@@ -141,6 +141,7 @@ Kindle back into the bundle model.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -154,7 +155,7 @@ Kindle back into the bundle model.</p></li>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../plussmic_scribble.html">PlussMic <code class="docutils literal notranslate"><span class="pre">scribble</span></code></a><ul>
   <li><a href="../../axel_api_reference.html">Axel API Reference</a><ul>
       <li>Previous: <a href="isnull.html" title="previous chapter">Axel::isnull</a></li>
       <li>Next: <a href="labels.html" title="next chapter">Axel::labels</a></li>

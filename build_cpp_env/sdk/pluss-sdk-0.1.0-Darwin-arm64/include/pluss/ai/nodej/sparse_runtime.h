@@ -9,6 +9,7 @@
 #include <functional>
 #include <initializer_list>
 #include <limits>
+#include <string>
 #include <vector>
 
 namespace pluss::ai::nodej {
@@ -190,12 +191,28 @@ struct SparseTuneTrial {
   double objective = std::numeric_limits<double>::quiet_NaN();
 };
 
+struct SparseTuneLedger {
+  std::vector<MetricKind> metrics{};
+  std::vector<std::string> encoded_param_feature_names{};
+  Series objective = Series::undefined();
+  Series objective_rank = Series::undefined();
+  Series status_code = Series::undefined();
+  Series is_success = Series::undefined();
+  Series mean_test_metrics = Series::undefined();
+  Series std_test_metrics = Series::undefined();
+  Series split_test_metrics = Series::undefined();
+  Series fit_time_seconds = Series::undefined();
+  Series score_time_seconds = Series::undefined();
+  Series encoded_params = Series::undefined();
+};
+
 struct SparseTuneReport {
   std::vector<SparseTuneTrial> trials{};
   std::int64_t best_index = -1;
   MetricKind objective_metric = MetricKind::Accuracy;
   SparseObjectivePolicy objective_policy = SparseObjectivePolicy::Auto;
   std::vector<std::int64_t> objective_rank{};
+  SparseTuneLedger ledger{};
 };
 
 StatusOr<SparseCrossReport> cross_assess_sparse_binary(const SparseTripletMatrix& x,

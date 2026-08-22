@@ -56,7 +56,7 @@ overload counts every character; the explicit `{.regex = false}` form
 counts actual literal dots.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("banana"), pluss::make_note("a.b.c")});
+auto slot = pluss::scribble::Slot({pluss::make_note("banana"), pluss::make_note("a.b.c")});
 
 auto regexCount = slot.nt().count(".");
 std::cout << "regex: " << std::get<pluss::Series>(regexCount.at(0)).to_vec<std::int64_t>()[0]
@@ -79,7 +79,7 @@ literal: 0 2
 Example 2. Case-insensitive counting of a literal pattern.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("banana"), pluss::make_note("Banana")});
+auto slot = pluss::scribble::Slot({pluss::make_note("banana"), pluss::make_note("Banana")});
 pluss::table::TextOptions opts;
 opts.case_sensitive = false;
 auto out = slot.nt().count("AN", opts);

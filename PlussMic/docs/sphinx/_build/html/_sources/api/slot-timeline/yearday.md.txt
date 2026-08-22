@@ -31,7 +31,7 @@ Example 1. Extract the day-of-year from a late-January and a
 late-February timestamp.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().yearday();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
           << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];

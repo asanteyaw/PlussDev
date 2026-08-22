@@ -104,6 +104,7 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
   }
   if (dim < 0) dim += nd;
   if (dim < 0 || dim >= nd) throw_error("argmax: dim out of range");
+  if (aa.sizes()[(std::size_t)dim] == 0) throw_error("argmax: cannot reduce an empty dimension");
 
   auto out_sizes = std::vector<std::int64_t>(aa.sizes().begin(), aa.sizes().end());
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
@@ -198,6 +199,7 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
   }
   if (dim < 0) dim += nd;
   if (dim < 0 || dim >= nd) throw_error("argmin: dim out of range");
+  if (aa.sizes()[(std::size_t)dim] == 0) throw_error("argmin: cannot reduce an empty dimension");
 
   auto out_sizes = std::vector<std::int64_t>(aa.sizes().begin(), aa.sizes().end());
   if (keepdim) out_sizes[(std::size_t)dim] = 1;

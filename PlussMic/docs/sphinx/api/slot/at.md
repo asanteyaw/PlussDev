@@ -30,7 +30,7 @@ Fetches the value at position `i`, bounds-checked.
 Example 1. Fetch and unwrap a `Series` value.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 std::cout << std::get<pluss::Series>(slot.at(0)).to_vec<std::int64_t>()[0];
 ```
 
@@ -43,7 +43,7 @@ std::cout << std::get<pluss::Series>(slot.at(0)).to_vec<std::int64_t>()[0];
 Example 2. An out-of-bounds index throws.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
   auto v = slot.at(5);
 } catch (const std::exception& e) {

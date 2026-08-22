@@ -45,8 +45,8 @@ frame via [`Axel::map`](../axel/map.md).
 Example 1. Take the first two characters of each value.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().chars(0, 2);
 auto city = out.registry(0).fields("city");
@@ -64,8 +64,8 @@ Example 2. A negative `start` slices from the end — the last two
 characters of each value.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().chars(-2);
 std::cout << std::get<pluss::Note>(out.registry(0).fields("city").at(0)).at(0);
@@ -81,8 +81,8 @@ Example 3. `step` keeps every Nth character starting at `start`, with
 no `stop` bound (`std::nullopt` runs to the end).
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().chars(0, std::nullopt, 2);
 std::cout << std::get<pluss::Note>(out.registry(0).fields("city").at(0)).at(0);

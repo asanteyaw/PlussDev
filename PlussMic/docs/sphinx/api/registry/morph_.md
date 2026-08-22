@@ -35,11 +35,11 @@ values individually, directly on this registry.
 Example 1. Add 100 to every value in `id`, in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
-rg.morph_("id", [](const pluss::bundle::Slot::Value& v) -> pluss::bundle::Slot::Value {
+rg.morph_("id", [](const pluss::scribble::Slot::Value& v) -> pluss::scribble::Slot::Value {
   return pluss::make_series(std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] + 100);
 });
 

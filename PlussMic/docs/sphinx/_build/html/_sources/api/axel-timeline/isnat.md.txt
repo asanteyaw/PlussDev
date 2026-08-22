@@ -51,8 +51,8 @@ string passed to `pluss::make_timeline` produces `NaT` rather than
 throwing.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline(""), pluss::make_timeline("2024-01-01T00:00:00Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline(""), pluss::make_timeline("2024-01-01T00:00:00Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().isnat();
 auto ts = out.registry(0).fields("ts");
@@ -71,8 +71,8 @@ Example 2. A non-`Timeline` field bound to `.tl()` throws — see the
 important callout above.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1)})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1)})}});
+auto axel = pluss::scribble::Axel({r0});
 
 try {
   auto out = axel.fields({"id"}).tl().isnat();

@@ -152,7 +152,7 @@ the danger callout above.
 - [`CatalogNoteAccessor::length`](length.md): the other method on this accessor that
   turns text into an `Int64` `Series`.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::count`](../registry-note/count.md): the bundle-model
+- [`RegistryNoteAccessor::count`](../registry-note/count.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

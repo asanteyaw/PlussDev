@@ -74,7 +74,7 @@ city                     | Note         | Note             | 2       | [accra, t
 - [`CatalogNoteAccessor::lower`](lower.md): the simpler, non-Unicode-aware lowercase
   conversion this method agrees with on ASCII text.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::casefold`](../registry-note/casefold.md): the bundle-model
+- [`RegistryNoteAccessor::casefold`](../registry-note/casefold.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

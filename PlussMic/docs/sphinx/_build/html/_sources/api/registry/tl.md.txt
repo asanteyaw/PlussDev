@@ -42,8 +42,8 @@ field, project first: `rg.fields({"created_at"}).tl().year()`.
 Example 1. Extract the calendar year from a projected `Timeline` field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"created_at", pluss::bundle::Slot({pluss::make_timeline("2024-03-15"), pluss::make_timeline("2023-07-04")})},
+auto rg = pluss::scribble::Registry({
+    {"created_at", pluss::scribble::Slot({pluss::make_timeline("2024-03-15"), pluss::make_timeline("2023-07-04")})},
 });
 
 auto out = rg.fields({"created_at"}).tl().year();

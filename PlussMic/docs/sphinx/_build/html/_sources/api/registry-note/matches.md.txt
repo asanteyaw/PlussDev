@@ -46,8 +46,8 @@ Example 1. Default (`full = false`): the pattern just needs to appear
 somewhere in the value.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"code", pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})},
+auto rg = pluss::scribble::Registry({
+    {"code", pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})},
 });
 
 auto out = rg.fields({"code"}).nt().matches("[0-9]+");
@@ -71,8 +71,8 @@ digits-only pattern rejects `"AB-123"` (which has letters and a dash) and
 `"99XY"` (which has letters).
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"code", pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})},
+auto rg = pluss::scribble::Registry({
+    {"code", pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})},
 });
 
 auto out = rg.fields({"code"}).nt().matches("^[0-9]+$", true);

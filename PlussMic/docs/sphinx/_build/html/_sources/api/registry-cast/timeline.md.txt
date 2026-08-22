@@ -38,8 +38,8 @@ than producing a null value.
 Example 1. Cast a `Note` field of date-looking text to `Timeline`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"created_at", pluss::bundle::Slot({pluss::make_note("2024-01-01"), pluss::make_note("2024-01-02")})},
+auto rg = pluss::scribble::Registry({
+    {"created_at", pluss::scribble::Slot({pluss::make_note("2024-01-01"), pluss::make_note("2024-01-02")})},
 });
 
 auto out = rg.fields({"created_at"}).cast().timeline();
@@ -64,8 +64,8 @@ Example 2. Text that doesn't parse as a datetime throws — see the important
 callout above.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 try {

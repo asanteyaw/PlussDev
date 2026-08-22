@@ -38,8 +38,8 @@ in any order, repeated as many times as they appear at the start.
 Example 1. No-argument overload trims leading whitespace.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("  Accra  ")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("  Accra  ")})},
 });
 
 auto out = rg.fields({"city"}).nt().lstrip();
@@ -59,8 +59,8 @@ Example 2. `chars`-argument overload trims a specific character set from the
 left edge only.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"code", pluss::bundle::Slot({pluss::make_note("xxAccraxx")})},
+auto rg = pluss::scribble::Registry({
+    {"code", pluss::scribble::Slot({pluss::make_note("xxAccraxx")})},
 });
 
 auto out = rg.fields({"code"}).nt().lstrip("x");

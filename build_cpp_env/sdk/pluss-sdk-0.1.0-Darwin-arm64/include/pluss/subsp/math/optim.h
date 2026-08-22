@@ -274,7 +274,7 @@ public:
     out.reserve(blocks_.size());
     for (const auto& block : blocks_) {
       detail::require_defined_(block.value, "ParameterPack::zeros_like");
-      out.push_back({block.name, pluss::zeros_like(block.value, block.value.scalar_type())});
+      out.push_back({block.name, pluss::series::zeros_like(block.value, block.value.scalar_type())});
     }
     return ParameterPack<Series>(std::move(out));
   }
@@ -1442,8 +1442,8 @@ struct FlatConstraintSystem {
 
 inline Series empty_vec_like_(const ParameterPack<Series>& params,
                               ScalarType dtype = ScalarType::Float64) {
-  if (params.empty()) return pluss::empty({0}, dtype);
-  return pluss::empty({0}, dtype).to(params[0].value.platform());
+  if (params.empty()) return pluss::series::empty({0}, dtype);
+  return pluss::series::empty({0}, dtype).to(params[0].value.platform());
 }
 
 inline Series as_flat_vec_(const Series& x) {
@@ -1465,7 +1465,7 @@ inline Series concat_flat_(const std::vector<Series>& pieces,
     if (v.platform() != platform) v = v.to(platform);
     flat.push_back(v.reshape({v.numel()}));
   }
-  if (flat.empty()) return pluss::empty({0}, dtype).to(platform);
+  if (flat.empty()) return pluss::series::empty({0}, dtype).to(platform);
   if (flat.size() == 1) return flat.front();
   return flat.front().unite(std::vector<Series>(flat.begin() + 1, flat.end()), 0);
 }
@@ -1544,7 +1544,7 @@ inline ParameterPack<Series> zero_jacobian_pack_(const ParameterPack<Series>& pa
   out.reserve(params.size());
   for (const auto& block : params.blocks()) {
     require_defined_(block.value, "zero_jacobian_pack");
-    out.push_back({block.name, pluss::zeros({rows, block.value.numel()}, dtype).to(block.value.platform())});
+    out.push_back({block.name, pluss::series::zeros({rows, block.value.numel()}, dtype).to(block.value.platform())});
   }
   return ParameterPack<Series>(std::move(out));
 }
@@ -1675,14 +1675,14 @@ inline void validate_problem_(const ConstrainedProblem& problem, const Parameter
 }
 
 inline Series evaluate_linear_eq_(const LinearConstraints& linear, const Series& flat_params) {
-  if (!linear.Aeq.has_value()) return pluss::empty({0}, flat_params.scalar_type()).to(flat_params.platform());
+  if (!linear.Aeq.has_value()) return pluss::series::empty({0}, flat_params.scalar_type()).to(flat_params.platform());
   Series residual = dense_matvec_(*linear.Aeq, flat_params).to(flat_params.scalar_type());
   if (linear.beq.has_value()) residual = residual.sub(linear.beq->reshape({linear.beq->numel()}));
   return residual;
 }
 
 inline Series evaluate_linear_ineq_(const LinearConstraints& linear, const Series& flat_params) {
-  if (!linear.Aineq.has_value()) return pluss::empty({0}, flat_params.scalar_type()).to(flat_params.platform());
+  if (!linear.Aineq.has_value()) return pluss::series::empty({0}, flat_params.scalar_type()).to(flat_params.platform());
   Series residual = dense_matvec_(*linear.Aineq, flat_params).to(flat_params.scalar_type());
   if (linear.bineq.has_value()) residual = residual.sub(linear.bineq->reshape({linear.bineq->numel()}));
   return residual;
@@ -2035,12 +2035,12 @@ inline ParameterPack<Series> lift_flat_std_(const ParameterPack<Series>& like,
 
 inline Series zeros_series_(std::int64_t n,
                             pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
-  return pluss::zeros({n}, ScalarType::Float64).to(platform);
+  return pluss::series::zeros({n}, ScalarType::Float64).to(platform);
 }
 
 inline Series ones_series_(std::int64_t n,
                            pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
-  return pluss::ones({n}, ScalarType::Float64).to(platform);
+  return pluss::series::ones({n}, ScalarType::Float64).to(platform);
 }
 
 inline Series identity_matrix_(std::int64_t n,
@@ -2123,14 +2123,14 @@ inline bool normalize_objective_constraints_(OptimaProblemScaling scaling) {
 
 inline Series slice_series_(const Series& x, std::int64_t offset, std::int64_t length) {
   if (!x.defined() || x.numel() == 0 || length <= 0) {
-    return pluss::empty({0}, ScalarType::Float64).to(x.defined() ? x.platform() : pluss::codem::Platform::CPU);
+    return pluss::series::empty({0}, ScalarType::Float64).to(x.defined() ? x.platform() : pluss::codem::Platform::CPU);
   }
   return x.reshape({x.numel()}).slice(0, offset, offset + length, 1).reshape({length});
 }
 
 inline Series row_scale_series_(const std::vector<FlatConstraintRow>& rows,
                                 pluss::codem::Platform platform) {
-  if (rows.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  if (rows.empty()) return pluss::series::empty({0}, ScalarType::Float64).to(platform);
   std::vector<double> scales;
   scales.reserve(rows.size());
   for (const auto& row : rows) {
@@ -2149,8 +2149,8 @@ inline OptimaNormalizationStats compute_problem_normalization_(const ProblemEval
                                                                pluss::codem::Platform platform) {
   OptimaNormalizationStats out;
   if (!normalize_objective_constraints_(scaling)) {
-    out.equality_row_scale = pluss::ones({static_cast<std::int64_t>(system.equalities.size())}, ScalarType::Float64).to(platform);
-    out.inequality_row_scale = pluss::ones({static_cast<std::int64_t>(system.inequalities.size())}, ScalarType::Float64).to(platform);
+    out.equality_row_scale = pluss::series::ones({static_cast<std::int64_t>(system.equalities.size())}, ScalarType::Float64).to(platform);
+    out.inequality_row_scale = pluss::series::ones({static_cast<std::int64_t>(system.inequalities.size())}, ScalarType::Float64).to(platform);
     return out;
   }
   const auto bounded_norm = [](double value) {
@@ -2196,7 +2196,7 @@ inline Series active_constraint_row_scales_(const FlatConstraintSystem& system,
                                             const std::vector<FlatConstraintRow>& active_constraints,
                                             const OptimaNormalizationStats& normalization,
                                             pluss::codem::Platform platform) {
-  if (active_constraints.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  if (active_constraints.empty()) return pluss::series::empty({0}, ScalarType::Float64).to(platform);
   const Series eq = normalization.equality_row_scale.defined()
       ? normalization.equality_row_scale.to(ScalarType::Float64).reshape({normalization.equality_row_scale.numel()})
       : Series();
@@ -2551,7 +2551,7 @@ inline Series project_direction_from_active_bounds_(const ConstrainedProblem& pr
     Series dir = block.value.to(ScalarType::Float64).reshape({block.value.numel()});
     const auto block_platform = dir.platform();
     const Series value = params.at(block.name).to(ScalarType::Float64).to(block_platform).reshape({block.value.numel()});
-    const Series zero = pluss::zeros_like(dir, ScalarType::Float64).to(block_platform);
+    const Series zero = pluss::series::zeros_like(dir, ScalarType::Float64).to(block_platform);
 
     if (problem.bounds.lower.has_value()) {
       const Series lower =
@@ -2580,7 +2580,7 @@ inline Series project_direction_from_active_bounds_(const ConstrainedProblem& pr
 inline Series stack_rows_series_(const std::vector<Series>& rows,
                                  std::int64_t ncols,
                                  pluss::codem::Platform platform) {
-  if (rows.empty()) return pluss::empty({0, ncols}, ScalarType::Float64).to(platform);
+  if (rows.empty()) return pluss::series::empty({0, ncols}, ScalarType::Float64).to(platform);
   if (rows.size() == 1) return rows.front().reshape({1, ncols});
   return rows.front().reshape({1, ncols}).unite(
       [&]() {
@@ -2595,7 +2595,7 @@ inline Series stack_rows_series_(const std::vector<Series>& rows,
 inline Series stack_cols_series_(const std::vector<Series>& cols,
                                  std::int64_t nrows,
                                  pluss::codem::Platform platform) {
-  if (cols.empty()) return pluss::empty({nrows, 0}, ScalarType::Float64).to(platform);
+  if (cols.empty()) return pluss::series::empty({nrows, 0}, ScalarType::Float64).to(platform);
   if (cols.size() == 1) return cols.front().reshape({nrows, 1});
   return cols.front().reshape({nrows, 1}).unite(
       [&]() {
@@ -2615,13 +2615,13 @@ inline Series jacobian_row_from_pack_(const ParameterPack<Series>& params,
   row_pieces.reserve(params.size());
   for (const auto& block : params.blocks()) {
     if (!jacobian.contains(block.name)) {
-      row_pieces.push_back(pluss::zeros({block.value.numel()}, ScalarType::Float64).to(platform));
+      row_pieces.push_back(pluss::series::zeros({block.value.numel()}, ScalarType::Float64).to(platform));
       continue;
     }
     const Series& block_jacobian = jacobian.at(block.name);
     const std::int64_t cols = block.value.numel();
     if (block_jacobian.numel() == 0) {
-      row_pieces.push_back(pluss::zeros({cols}, ScalarType::Float64).to(platform));
+      row_pieces.push_back(pluss::series::zeros({cols}, ScalarType::Float64).to(platform));
       continue;
     }
     if (block_jacobian.sizes().size() != 2 || block_jacobian.sizes()[0] <= row || block_jacobian.sizes()[1] != cols) {
@@ -2631,7 +2631,7 @@ inline Series jacobian_row_from_pack_(const ParameterPack<Series>& params,
         block_jacobian.to(ScalarType::Float64).to(platform).reshape({block_jacobian.sizes()[0], cols}).select(0, row).reshape({cols}));
   }
   if (row_pieces.empty()) {
-    return pluss::empty({0}, ScalarType::Float64).to(platform);
+    return pluss::series::empty({0}, ScalarType::Float64).to(platform);
   }
   if (row_pieces.size() == 1) return row_pieces.front().to(ScalarType::Float64).to(platform);
   return row_pieces.front().unite(std::vector<Series>(row_pieces.begin() + 1, row_pieces.end()), 0)
@@ -2681,7 +2681,7 @@ inline FlatConstraintSystem assemble_constraint_system_(const ConstrainedProblem
 
   const Series nonlinear_eq = evaluation.nonlinear_equality_residual.defined()
       ? evaluation.nonlinear_equality_residual.to(ScalarType::Float64).reshape({evaluation.nonlinear_equality_residual.numel()})
-      : pluss::empty({0}, ScalarType::Float64).to(platform);
+      : pluss::series::empty({0}, ScalarType::Float64).to(platform);
   for (std::int64_t row = 0; row < evaluation.nonlinear_equality_residual.numel(); ++row) {
     out.equalities.push_back(
         {jacobian_row_from_pack_(params, evaluation.equality_jacobian, row),
@@ -2742,7 +2742,7 @@ inline FlatConstraintSystem assemble_constraint_system_(const ConstrainedProblem
 
   const Series nonlinear_ineq = evaluation.nonlinear_inequality_residual.defined()
       ? evaluation.nonlinear_inequality_residual.to(ScalarType::Float64).reshape({evaluation.nonlinear_inequality_residual.numel()})
-      : pluss::empty({0}, ScalarType::Float64).to(platform);
+      : pluss::series::empty({0}, ScalarType::Float64).to(platform);
   for (std::int64_t row = 0; row < evaluation.nonlinear_inequality_residual.numel(); ++row) {
     out.inequalities.push_back(
         {jacobian_row_from_pack_(params, evaluation.inequality_jacobian, row),
@@ -3037,7 +3037,7 @@ inline double max_step_to_bounds_(const ConstrainedProblem& problem,
   const auto platform = step_direction.platform();
   const Series x = flatten_values(params).to(ScalarType::Float64).to(platform).reshape({step_direction.numel()});
   const Series d = step_direction.to(ScalarType::Float64).to(platform).reshape({step_direction.numel()});
-  const Series ones = pluss::ones({d.numel()}, ScalarType::Float64).to(platform);
+  const Series ones = pluss::series::ones({d.numel()}, ScalarType::Float64).to(platform);
   const Series inf_fill = ones.mul(std::numeric_limits<double>::infinity());
   double max_step = std::numeric_limits<double>::infinity();
   if (problem.bounds.lower.has_value()) {
@@ -3084,7 +3084,7 @@ inline double max_step_to_linearized_inequalities_(const FlatConstraintSystem& s
   if (!mask.any().item<bool>()) {
     return std::numeric_limits<double>::infinity();
   }
-  const Series ones = pluss::ones({residual.numel()}, ScalarType::Float64).to(platform);
+  const Series ones = pluss::series::ones({residual.numel()}, ScalarType::Float64).to(platform);
   const Series inf_fill = ones.mul(std::numeric_limits<double>::infinity());
   const Series safe_denom = mask.where(directional, ones);
   Series candidate = residual.mul(-1.0).div(safe_denom).mul(fraction_to_boundary);
@@ -3150,7 +3150,7 @@ inline void cleanup_working_set_multipliers_(const std::vector<FlatConstraintRow
                                  .to(ScalarType::Bool)
                                  .to(lambda.platform());
   const Series drop_mask = active_ineq.logical_and(lambda.lt(drop_multiplier_tolerance));
-  *multipliers = drop_mask.where(pluss::zeros_like(lambda, ScalarType::Float64).to(lambda.platform()), lambda)
+  *multipliers = drop_mask.where(pluss::series::zeros_like(lambda, ScalarType::Float64).to(lambda.platform()), lambda)
                      .to(ScalarType::Float64)
                      .to(multipliers->platform());
 }
@@ -3327,7 +3327,7 @@ inline double barrier_value_(const ProblemEvaluation& evaluation,
 
 inline Series inequality_slack_(const FlatConstraintSystem& system,
                                 pluss::codem::Platform platform) {
-  if (system.inequalities.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  if (system.inequalities.empty()) return pluss::series::empty({0}, ScalarType::Float64).to(platform);
   std::vector<double> slack(system.inequalities.size(), 0.0);
   for (std::size_t i = 0; i < system.inequalities.size(); ++i) {
     slack[i] = std::max(-system.inequalities[i].residual, 1e-12);
@@ -3339,7 +3339,7 @@ inline Series inequality_slack_(const FlatConstraintSystem& system,
 
 inline Series inequality_residual_series_(const FlatConstraintSystem& system,
                                           pluss::codem::Platform platform) {
-  if (system.inequalities.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  if (system.inequalities.empty()) return pluss::series::empty({0}, ScalarType::Float64).to(platform);
   std::vector<double> residuals(system.inequalities.size(), 0.0);
   for (std::size_t i = 0; i < system.inequalities.size(); ++i) {
     residuals[i] = system.inequalities[i].residual;
@@ -3351,7 +3351,7 @@ inline Series inequality_residual_series_(const FlatConstraintSystem& system,
 
 inline Series equality_residual_series_(const FlatConstraintSystem& system,
                                         pluss::codem::Platform platform) {
-  if (system.equalities.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  if (system.equalities.empty()) return pluss::series::empty({0}, ScalarType::Float64).to(platform);
   std::vector<double> residuals(system.equalities.size(), 0.0);
   for (std::size_t i = 0; i < system.equalities.size(); ++i) {
     residuals[i] = system.equalities[i].residual;
@@ -3624,7 +3624,7 @@ inline Series barrier_gradient_flat_(const ProblemEvaluation& evaluation,
   if (!system.inequalities.empty()) {
     const Series ineq_residual = inequality_residual_series_(system, platform);
     if (ineq_residual.ge(0.0).any().item<bool>()) {
-      return pluss::full({grad.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64)
+      return pluss::series::full({grad.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64)
           .to(platform);
     }
     const Series ineq_weights = ineq_residual.reciprocal().mul(-barrier_parameter);
@@ -3663,7 +3663,7 @@ inline Series barrier_gradient_flat_(const ProblemEvaluation& evaluation,
   if (!system.inequalities.empty()) {
     const Series ineq_residual = inequality_residual_series_(system, platform);
     if (ineq_residual.ge(0.0).any().item<bool>()) {
-      return pluss::full({grad.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64)
+      return pluss::series::full({grad.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64)
           .to(platform);
     }
     const Series ineq_weights = ineq_residual.reciprocal().mul(-barrier_parameter);
@@ -3759,7 +3759,7 @@ inline bool recover_nonfinite_initial_point_(const ConstrainedProblem& problem,
   const auto layout = seed_params.layout();
   ParameterPack<Series> seed = options.project_bounds ? project_bounds_(seed_params, problem.bounds) : seed_params;
   const Series seed_flat = flatten_values(seed).to(ScalarType::Float64);
-  const Series zero_flat = pluss::zeros_like(seed_flat);
+  const Series zero_flat = pluss::series::zeros_like(seed_flat);
   const std::array<double, 14> scales = {
       1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625,
       0.0078125, 0.00390625, 0.001953125, 1e-3, 1e-4, 1e-5, 1e-6};
@@ -3986,7 +3986,7 @@ inline std::pair<Series, Series> solve_sqp_kkt_(
   for (const auto& row : active_constraints) rows.push_back(row.jacobian.to(platform));
   const Series A = stack_rows_series_(rows, n, platform);
   const Series top = Hreg.unite({A.transpose(0, 1)}, 1);
-  const Series bottom = A.unite({pluss::zeros({m, m}, ScalarType::Float64).to(platform)}, 1);
+  const Series bottom = A.unite({pluss::series::zeros({m, m}, ScalarType::Float64).to(platform)}, 1);
   const Series KKT = top.unite({bottom}, 0);
 
   std::vector<double> rhs_tail(static_cast<std::size_t>(m), 0.0);
@@ -4020,8 +4020,8 @@ inline std::pair<Series, Series> solve_sqp_kkt_(
     return {zeros_series_(n, platform), zeros_series_(m, platform)};
   }
   return {
-      solution.index({pluss::arange(0, n, 1, ScalarType::Int64).to(platform)}).reshape({n}),
-      solution.index({pluss::arange(n, n + m, 1, ScalarType::Int64).to(platform)}).reshape({m})};
+      solution.index({pluss::series::arange(0, n, 1, ScalarType::Int64).to(platform)}).reshape({n}),
+      solution.index({pluss::series::arange(n, n + m, 1, ScalarType::Int64).to(platform)}).reshape({m})};
 }
 
 inline double kkt_residual_(const Series& gradient,
@@ -4044,7 +4044,7 @@ inline double kkt_residual_(const Series& gradient,
       const Series ineq_mask = pluss::make_series(std::move(ineq_mask_host), {m})
                                    .to(ScalarType::Bool)
                                    .to(lambda_used.platform());
-      const Series zeros = pluss::zeros_like(lambda_used, ScalarType::Float64).to(lambda_used.platform());
+      const Series zeros = pluss::series::zeros_like(lambda_used, ScalarType::Float64).to(lambda_used.platform());
       const Series ineq_lambdas = ineq_mask.where(lambda_used, zeros);
       multiplier_violation = std::max(0.0, -ineq_lambdas.amin(0, false).item<double>());
     }
@@ -4070,7 +4070,7 @@ inline std::pair<double, std::size_t> most_negative_inequality_multiplier_(
 }
 
 inline Series sized_multiplier_series_(std::int64_t n, pluss::codem::Platform platform) {
-  return n > 0 ? zeros_series_(n, platform) : pluss::empty({0}, ScalarType::Float64).to(platform);
+  return n > 0 ? zeros_series_(n, platform) : pluss::series::empty({0}, ScalarType::Float64).to(platform);
 }
 
 inline ConstraintMultipliers zero_constraint_multipliers_(const ConstrainedProblem& problem,
@@ -4606,7 +4606,7 @@ inline ParameterPack<Series> combine_constraint_gradient_(
   std::vector<typename ParameterPack<Series>::Block> out;
   out.reserve(params.size());
   for (const auto& param_block : params.blocks()) {
-    Series contribution = pluss::zeros_like(param_block.value, param_block.value.scalar_type());
+    Series contribution = pluss::series::zeros_like(param_block.value, param_block.value.scalar_type());
     if (jacobian.contains(param_block.name)) {
       const Series& block_jacobian = jacobian.at(param_block.name);
       if (block_jacobian.defined() && block_jacobian.numel() > 0) {
@@ -4844,14 +4844,14 @@ inline ProblemEvaluation evaluate_problem(const ConstrainedProblem& problem,
           ? detail::dense_transpose_matvec_(
                 *problem.linear.Aeq,
                 detail::evaluate_linear_eq_(problem.linear, flat_params).to(ScalarType::Float64))
-                : pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+                : pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
   const Series linear_ineq_pos = linear_ineq.numel() == 0 ? linear_ineq : linear_ineq.clamp_min(0.0);
   const Series linear_ineq_grad_flat =
       problem.linear.Aineq.has_value() && linear_ineq_pos.numel() > 0
           ? detail::dense_transpose_matvec_(*problem.linear.Aineq, linear_ineq_pos.to(ScalarType::Float64))
-          : pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+          : pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
 
-  Series bound_grad_flat = pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+  Series bound_grad_flat = pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
   if (problem.bounds.lower.has_value()) {
     bound_grad_flat = bound_grad_flat.sub(lower_ineq.clamp_min(0.0).to(ScalarType::Float64));
   }
@@ -5001,12 +5001,12 @@ inline ParameterPack<Series> penalty_gradient(const ConstrainedProblem& problem,
   Series linear_eq_grad_flat =
       problem.linear.Aeq.has_value() && linear_eq.numel() > 0
           ? detail::dense_transpose_matvec_(*problem.linear.Aeq, linear_eq.to(ScalarType::Float64))
-          : pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+          : pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
   Series linear_ineq_grad_flat =
       problem.linear.Aineq.has_value() && linear_ineq.numel() > 0
           ? detail::dense_transpose_matvec_(*problem.linear.Aineq, linear_ineq.clamp_min(0.0).to(ScalarType::Float64))
-          : pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
-  Series bound_grad_flat = pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+          : pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+  Series bound_grad_flat = pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
   if (lower_ineq.numel() > 0) bound_grad_flat = bound_grad_flat.sub(lower_ineq.clamp_min(0.0).to(ScalarType::Float64));
   if (upper_ineq.numel() > 0) bound_grad_flat = bound_grad_flat.add(upper_ineq.clamp_min(0.0).to(ScalarType::Float64));
 
@@ -5052,10 +5052,10 @@ inline ParameterPack<Series> normalized_penalty_gradient_(const ConstrainedProbl
 
   const Series eq_scale = normalization.equality_row_scale.defined()
                               ? normalization.equality_row_scale.to(flat_params.platform())
-                              : pluss::ones({evaluation.equality_residual.numel()}, ScalarType::Float64).to(flat_params.platform());
+                              : pluss::series::ones({evaluation.equality_residual.numel()}, ScalarType::Float64).to(flat_params.platform());
   const Series ineq_scale = normalization.inequality_row_scale.defined()
                                 ? normalization.inequality_row_scale.to(flat_params.platform())
-                                : pluss::ones({evaluation.inequality_residual.numel()}, ScalarType::Float64).to(flat_params.platform());
+                                : pluss::series::ones({evaluation.inequality_residual.numel()}, ScalarType::Float64).to(flat_params.platform());
 
   const Series linear_eq_weight =
       linear_eq.numel() == 0 ? linear_eq
@@ -5090,12 +5090,12 @@ inline ParameterPack<Series> normalized_penalty_gradient_(const ConstrainedProbl
   Series linear_eq_grad_flat =
       problem.linear.Aeq.has_value() && linear_eq_weight.numel() > 0
           ? detail::dense_transpose_matvec_(*problem.linear.Aeq, linear_eq_weight)
-          : pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+          : pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
   Series linear_ineq_grad_flat =
       problem.linear.Aineq.has_value() && linear_ineq_weight.numel() > 0
           ? detail::dense_transpose_matvec_(*problem.linear.Aineq, linear_ineq_weight)
-          : pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
-  Series bound_grad_flat = pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+          : pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+  Series bound_grad_flat = pluss::series::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
   if (lower_weight.numel() > 0) bound_grad_flat = bound_grad_flat.sub(lower_weight);
   if (upper_weight.numel() > 0) bound_grad_flat = bound_grad_flat.add(upper_weight);
 
@@ -6795,7 +6795,7 @@ inline InternalProtocolState init_internal_protocol_state(const ConstrainedProbl
   } else {
     state.barrier_value = std::numeric_limits<double>::infinity();
     state.barrier_gradient_norm = std::numeric_limits<double>::infinity();
-    state.inequality_slack = pluss::empty({0}, ScalarType::Float64).to(
+    state.inequality_slack = pluss::series::empty({0}, ScalarType::Float64).to(
         state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
     state.inequality_dual = state.inequality_slack;
     state.primal_residual = std::numeric_limits<double>::infinity();
@@ -7123,8 +7123,8 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
       std::max(1e-12, options.trust_region_min_radius),
       std::max(options.trust_region_min_radius, options.trust_region_max_radius));
   double max_step = std::min(options.initial_step_size, trust_radius);
-  Series slack_step = pluss::empty({0}, ScalarType::Float64).to(step_direction.platform());
-  Series dual_step = pluss::empty({0}, ScalarType::Float64).to(step_direction.platform());
+  Series slack_step = pluss::series::empty({0}, ScalarType::Float64).to(step_direction.platform());
+  Series dual_step = pluss::series::empty({0}, ScalarType::Float64).to(step_direction.platform());
   const Series inequality_residual = detail::inequality_residual_series_(system, state.hessian.platform());
   if (slack.defined() && slack.numel() > 0) {
     const Series Jdx = detail::stack_inequality_jacobian_(system, n, step_direction.platform())
@@ -7135,7 +7135,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
     const Series centering_resid =
         slack.mul(dual).sub(state.barrier_parameter * options.centrality_fraction);
     dual_step = centering_resid.add(dual.mul(slack_step)).div(slack).mul(-1.0);
-    const Series ones = pluss::ones({slack.numel()}, ScalarType::Float64).to(slack.platform());
+    const Series ones = pluss::series::ones({slack.numel()}, ScalarType::Float64).to(slack.platform());
     const Series inf_fill = ones.mul(std::numeric_limits<double>::infinity());
     const Series slack_mask = slack_step.lt(0.0);
     if (slack_mask.any().item<bool>()) {
@@ -7158,7 +7158,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
                              .reshape({static_cast<std::int64_t>(system.inequalities.size())});
       const Series directional_mask = Jdx.gt(0.0);
       if (directional_mask.any().item<bool>()) {
-        const Series ones = pluss::ones({Jdx.numel()}, ScalarType::Float64).to(Jdx.platform());
+        const Series ones = pluss::series::ones({Jdx.numel()}, ScalarType::Float64).to(Jdx.platform());
         const Series inf_fill = ones.mul(std::numeric_limits<double>::infinity());
         const Series safe_denom = directional_mask.where(Jdx, ones);
         Series candidate = inequality_residual.mul(-1.0).div(safe_denom).mul(options.fraction_to_boundary);
@@ -8143,9 +8143,9 @@ inline AdamState adam_state_like(const std::vector<Series>& params) {
   st.v.reserve(params.size());
   st.max_v.reserve(params.size());
   for (const auto& p : params) {
-    st.m.push_back(pluss::zeros_like(p, p.scalar_type()));
-    st.v.push_back(pluss::zeros_like(p, p.scalar_type()));
-    st.max_v.push_back(pluss::zeros_like(p, p.scalar_type()));
+    st.m.push_back(pluss::series::zeros_like(p, p.scalar_type()));
+    st.v.push_back(pluss::series::zeros_like(p, p.scalar_type()));
+    st.max_v.push_back(pluss::series::zeros_like(p, p.scalar_type()));
   }
   return st;
 }
@@ -8541,7 +8541,7 @@ inline std::vector<Series> septima_zero_like_(const std::vector<Series>& residua
   std::vector<Series> lambda;
   lambda.reserve(residuals.size());
   for (const auto& r : residuals) {
-    lambda.push_back(pluss::zeros_like(r, r.scalar_type()));
+    lambda.push_back(pluss::series::zeros_like(r, r.scalar_type()));
   }
   return lambda;
 }
@@ -8555,7 +8555,7 @@ inline void septima_align_multipliers_(std::vector<Series>& lambda, const std::v
     if (!same_shape_(lambda[i], residuals[i]) ||
         lambda[i].platform() != residuals[i].platform() ||
         lambda[i].scalar_type() != residuals[i].scalar_type()) {
-      lambda[i] = pluss::zeros_like(residuals[i], residuals[i].scalar_type());
+      lambda[i] = pluss::series::zeros_like(residuals[i], residuals[i].scalar_type());
     }
   }
 }

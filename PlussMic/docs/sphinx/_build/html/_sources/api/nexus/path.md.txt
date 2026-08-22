@@ -57,6 +57,7 @@ Example 1. A direct, one-hop path.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -146,7 +147,7 @@ Nexus::path: no relationship path from 'customers' to 'standalone'
 
 - [`Nexus::plan`](plan.md): turn this route into an executable `JoinPlan`.
 - [`Nexus::neighbors`](neighbors.md): the one-hop adjacency this search traverses.
-- [`Nexus::from`](from.md): the fluent [`NexusQuery`](../../nexus_query_api_reference)
+- [`Nexus::from`](from.md): the fluent [`NexusTraverse`](../../nexus_traverse_api_reference)
   builder, which can use this same graph via `.via()` without you calling `path()`
   yourself.
 

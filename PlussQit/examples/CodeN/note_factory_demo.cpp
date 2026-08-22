@@ -1,4 +1,5 @@
-#include <pluss/pluss.h>
+#include <pluss/coden.h>
+#include <pluss/coden/note_factory.h>
 
 #include <array>
 #include <cstdint>
@@ -29,6 +30,14 @@ int main() {
   pluss::Note combos = pluss::note::perm("hypocrite", 2);
   pluss::Note perms = pluss::note::perm(
       "aba", 2, pluss::note::WordSelectMode::Permutation, false, true);
+  int weight = 175;
+  double height = 6.45;
+  pluss::Note formatted = pluss::note::format(
+      "This guy has weight {weight} and height {height}, thus his BMI is {weight * height / 2} right now",
+      {
+          {"weight", weight},
+          {"height", height},
+      });
 
   pluss::Note bytes = pluss::note::bytes({{"\x01", "\x02"}, {"\x03", "\x04"}});
 
@@ -48,6 +57,7 @@ int main() {
   std::cout << "alpha_range:\n" << pluss::print_note(alpha_range) << "\n\n";
   std::cout << "combos:\n" << pluss::print_note(combos) << "\n\n";
   std::cout << "perms:\n" << pluss::print_note(perms) << "\n\n";
+  std::cout << "formatted:\n" << pluss::print_note(formatted) << "\n\n";
 
   pluss::Note lower = two_d.lower();
   pluss::Note escaped = three_d.tex_escape();

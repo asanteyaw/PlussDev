@@ -37,7 +37,7 @@ Example 1. Format two timestamps with a custom day/month-name/year
 pattern.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().fmt("%d %b %Y");
 std::cout << std::get<pluss::Note>(out.at(0)).at(0) << " | "
           << std::get<pluss::Note>(out.at(1)).at(0);

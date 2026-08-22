@@ -17,7 +17,7 @@ static DataFrame load_txt(std::string_view filepath, std::initializer_list<pluss
 
 `DataFrame`'s static constructor for plain delimited text files that aren't
 necessarily comma-separated — the same underlying parser and type-inference machinery
-as [`load_csv()`](load_csv.md), read through a `Config`/`ConfigEntry` settings bundle
+as [`load_csv()`](load_csv.md), read through a `Config`/`ConfigEntry` settings scribble
 instead of `load_csv()`'s rich set of dedicated positional/typed overloads.
 
 ## Parameters
@@ -29,7 +29,7 @@ Path to the text file to read.
 **config** (`const pluss::loader::Config&`) / **config_entries**
 (`std::initializer_list<pluss::loader::ConfigEntry>`)
 
-A reusable or inline settings bundle. Recognizes the same kind of keys `load_csv()`'s
+A reusable or inline settings scribble. Recognizes the same kind of keys `load_csv()`'s
 `Config` overload does (`sep`, `header`, `ncases`, `case`, `usefeats`, and so on) —
 `load_txt()` doesn't default to a different delimiter on the read side; pass
 `{"sep", "\t"}` explicitly for tab-separated input, the same as you would for

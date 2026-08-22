@@ -36,8 +36,8 @@ semantics), so a partial match anywhere in the middle is not enough.
 Example 1. A code pattern that matches one value fully and not the other.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"code", pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})},
+auto rg = pluss::scribble::Registry({
+    {"code", pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})},
 });
 
 auto out = rg.fields({"code"}).nt().fullmatch("[A-Z]{2}-[0-9]{3}");

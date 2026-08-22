@@ -51,8 +51,8 @@ default-constructed `TextOptions`.
 Example 1. Default: literal, case-sensitive, unlimited substring replacement.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("banana")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("banana")})},
 });
 
 auto out = rg.fields({"city"}).nt().replace("a", "o");
@@ -72,8 +72,8 @@ Example 2. `case_sensitive = false` matches regardless of case, but `to` is
 still inserted exactly as written.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("BANANA")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("BANANA")})},
 });
 
 pluss::table::TextOptions opts;

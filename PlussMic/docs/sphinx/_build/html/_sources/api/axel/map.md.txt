@@ -41,13 +41,13 @@ Example 1. Narrow every frame down to just the `"ids"` field using
 internally).
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({
-        {"ids", pluss::bundle::Slot({pluss::make_series(1)})},
-        {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({
+        {"ids", pluss::scribble::Slot({pluss::make_series(1)})},
+        {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
     }),
 });
-auto out = axel.map([](const pluss::bundle::Registry& reg) { return reg.fields({"ids"}); });
+auto out = axel.map([](const pluss::scribble::Registry& reg) { return reg.fields({"ids"}); });
 std::cout << out.registry(0).nfields();
 ```
 
@@ -60,11 +60,11 @@ std::cout << out.registry(0).nfields();
 Example 2. An empty `fn` throws.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
 try {
-  std::function<pluss::bundle::Registry(const pluss::bundle::Registry&)> fn;
+  std::function<pluss::scribble::Registry(const pluss::scribble::Registry&)> fn;
   axel.map(fn);
 } catch (const std::exception& e) {
   std::string msg(e.what());

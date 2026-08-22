@@ -80,7 +80,7 @@ here is the full English weekday name — a different rendering from
 
 - [`Stream::tl`](../stream/tl.md): the general calendar/timestamp accessor,
   offering `.year()`/`.month()` and similar individually rather than as one
-  bundled frame.
+  scribbled frame.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`DataFrameTsAccessor::calendar`](../dataframe-ts/calendar.md): the
   DataFrame-level equivalent, with a `time_feature`-by-name overload and a

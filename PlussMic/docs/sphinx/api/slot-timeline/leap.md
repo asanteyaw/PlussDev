@@ -39,7 +39,7 @@ Example 1. Two timestamps from the same leap year both flag `true`,
 even though only one falls on February 29th.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().leap();
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
@@ -56,7 +56,7 @@ Example 2. A 2024 timestamp flags `true`; a 2023 timestamp flags
 `false`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")});
 auto out = slot.tl().leap();
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "

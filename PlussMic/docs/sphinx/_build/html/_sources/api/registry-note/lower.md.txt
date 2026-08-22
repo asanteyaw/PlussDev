@@ -31,8 +31,8 @@ fields replaced.
 Example 1. Lowercase a projected `city` field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")})},
 });
 
 auto out = rg.fields({"city"}).nt().lower();

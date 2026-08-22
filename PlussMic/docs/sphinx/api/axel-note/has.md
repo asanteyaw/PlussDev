@@ -71,8 +71,8 @@ text.
 Example 1. Default call: literal, case-sensitive substring search.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().has("Ac");
 auto city = out.registry(0).fields("city");
@@ -93,8 +93,8 @@ capitalized `"Ac"`.
 Example 2. The `case_sensitive` toggle finds it regardless of case.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 pluss::table::TextOptions opts;
 opts.case_sensitive = false;
@@ -116,8 +116,8 @@ danger callout on [`count()`](count.md) still applies there, but
 `has()` needs `options.regex` set explicitly to opt in.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("no digits")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("no digits")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 pluss::table::TextOptions opts;
 opts.regex = true;

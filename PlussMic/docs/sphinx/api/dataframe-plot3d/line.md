@@ -108,7 +108,7 @@ when it fires from a `plot3d()` call.
     Every field in `Plot3DSceneOptions` is a `std::optional` that defaults to
     `std::nullopt`, meaning "leave the pane's built-in default alone." When several
     fields *are* set, they're applied in a fixed order, each one layering on top of
-    (and able to override) whatever came before: **`preset`** first (a bundle that sets
+    (and able to override) whatever came before: **`preset`** first (a scribble that sets
     a theme, grid style, camera angle, and a lighting rig all at once — see the preset
     table below), then **`theme`** (overrides just the color theme), then
     **`grid_style`** (`None`, `Major`, or `MajorMinor`), then **`camera_preset`**
@@ -140,7 +140,7 @@ when it fires from a `plot3d()` call.
     };
     ```
 
-    Same layering rule as `Plot3DSceneOptions`: **`preset`** applies first (a bundle of
+    Same layering rule as `Plot3DSceneOptions`: **`preset`** applies first (a scribble of
     shade/lighting/material/width/transparency tuned for one trace shape — `Path` is
     tuned for line traces, `Cloud` for scatter, `Surface` for filled meshes,
     `Wireframe` for mesh edges, `Spire` for 3D-bar histograms, `Volume` for

@@ -13,11 +13,11 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Slot API Reference" href="../slot_api_reference.html" />
+    <link rel="next" title="Nexus API Reference" href="../nexus_api_reference.html" />
     <link rel="prev" title="Archive::unique" href="archive/unique.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -38,28 +38,20 @@
             
   <section id="plussmic-bundle">
 <h1>PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code><a class="headerlink" href="#plussmic-bundle" title="Link to this heading">¶</a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">bundle</span></code> model is the heterogeneous record surface.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">bundle</span></code> model is the multi-table workspace surface.</p>
 <ul class="simple">
-<li><p>Use <a class="reference internal" href="../slot_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot</span></code></span></a> for one heterogeneous sequence.</p></li>
-<li><p>Use <a class="reference internal" href="../registry_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry</span></code></span></a> for named slots.</p></li>
-<li><p>Use <a class="reference internal" href="../axel_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel</span></code></span></a> for depth-stacked registries.</p></li>
+<li><p>Use <a class="reference internal" href="../nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus</span></code></span></a> for a named workbench of related
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> tables, declared relationships, join plans, and workspace audits.</p></li>
+<li><p>Use <a class="reference internal" href="../nexus_traverse_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code></span></a> for the fluent
+join-graph builder returned by <code class="docutils literal notranslate"><span class="pre">Nexus::from(...)</span></code>.</p></li>
+<li><p>Use <a class="reference internal" href="../nexus_query_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a> for SQL-style workspace
+<code class="docutils literal notranslate"><span class="pre">SELECT</span></code> queries returned by <code class="docutils literal notranslate"><span class="pre">Nexus::query()</span></code>.</p></li>
 </ul>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../slot_api_reference.html">Slot API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../registry_api_reference.html">Registry API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../axel_api_reference.html">Axel API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../slot_cast_accessor_api_reference.html">SlotCastAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../slot_note_accessor_api_reference.html">SlotNoteAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../slot_timeline_accessor_api_reference.html">SlotTimelineAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../registry_fieldaxis_accessor_api_reference.html">RegistryFieldAxisAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../registry_cast_accessor_api_reference.html">RegistryCastAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../registry_note_accessor_api_reference.html">RegistryNoteAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../registry_timeline_accessor_api_reference.html">RegistryTimelineAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../axel_fieldaxis_accessor_api_reference.html">AxelFieldAxisAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../axel_cast_accessor_api_reference.html">AxelCastAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../axel_note_accessor_api_reference.html">AxelNoteAccessor API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../axel_timeline_accessor_api_reference.html">AxelTimelineAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nexus_api_reference.html">Nexus API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nexus_traverse_api_reference.html">NexusTraverse API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nexus_query_api_reference.html">NexusQuery API Reference</a></li>
 </ul>
 </div>
 </section>
@@ -100,6 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -114,7 +107,7 @@
   <li><a href="../api_reference.html">API Reference</a><ul>
   <li><a href="plussmic_root.html">PlussMic API Reference</a><ul>
       <li>Previous: <a href="archive/unique.html" title="previous chapter">Archive::unique</a></li>
-      <li>Next: <a href="../slot_api_reference.html" title="next chapter">Slot API Reference</a></li>
+      <li>Next: <a href="../nexus_api_reference.html" title="next chapter">Nexus API Reference</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

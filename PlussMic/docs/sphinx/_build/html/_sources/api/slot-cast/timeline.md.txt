@@ -32,7 +32,7 @@ Example 1. Cast a two-value `Note` slot of date-looking text to
 `Timeline`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("2024-01-01"), pluss::make_note("2024-01-02")});
+auto slot = pluss::scribble::Slot({pluss::make_note("2024-01-01"), pluss::make_note("2024-01-02")});
 auto out = slot.cast().timeline();
 std::cout << out.to_json();
 ```
@@ -55,7 +55,7 @@ Example 2. A single-value slot converts the same way a multi-value one
 does.
 
 ```cpp
-auto single = pluss::bundle::Slot({pluss::make_note("2024-01-01")});
+auto single = pluss::scribble::Slot({pluss::make_note("2024-01-01")});
 auto out = single.cast().timeline();
 std::cout << out.to_json();
 ```
@@ -77,7 +77,7 @@ Example 3. On a two-or-more-value slot, unparseable text throws the
 intended, documented error.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
 try {
   auto out = slot.cast().timeline();
 } catch (const std::exception& e) {
@@ -96,7 +96,7 @@ Example 4. A single-value slot with unparseable text throws the same
 intended error, not an internal crash.
 
 ```cpp
-auto single_bad = pluss::bundle::Slot({pluss::make_note("Accra")});
+auto single_bad = pluss::scribble::Slot({pluss::make_note("Accra")});
 try {
   auto out = single_bad.cast().timeline();
 } catch (const std::exception& e) {

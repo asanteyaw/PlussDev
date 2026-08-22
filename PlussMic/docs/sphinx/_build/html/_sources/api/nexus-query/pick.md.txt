@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# NexusQuery::pick
+# NexusTraverse::pick
 
-[Back to NexusQuery API Reference](../../nexus_query_api_reference)
+[Back to NexusTraverse API Reference](../../nexus_traverse_api_reference)
 
 ## Signature
 
 ```cpp
-NexusQuery::pick(std::initializer_list<std::string_view> features) const -> NexusQuery
+NexusTraverse::pick(std::initializer_list<std::string_view> features) const -> NexusTraverse
 ```
 
 ## What It Does
@@ -28,7 +28,7 @@ replaces it entirely; it doesn't intersect or extend the previous list.
 
 ## Returns
 
-`NexusQuery`
+`NexusTraverse`
     A new query with the pick list set (or replaced). The original query is unchanged.
 
 ## Examples
@@ -37,6 +37,7 @@ Example 1. Narrow the joined result to two columns.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -84,9 +85,9 @@ order_id name
 
 ## See Also
 
-- [`NexusQuery::drop`](drop.md): the complementary "remove these, keep everything else"
+- [`NexusTraverse::drop`](drop.md): the complementary "remove these, keep everything else"
   operation.
-- [`NexusQuery::collect`](collect.md): where `.pick()`/`.drop()` are actually applied.
+- [`NexusTraverse::collect`](collect.md): where `.pick()`/`.drop()` are actually applied.
 - [`Nexus::select`](../nexus/select.md): the table-level (not column-level) analog.
 
 <div class="pluss-inline-prev-next">

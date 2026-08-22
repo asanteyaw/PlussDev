@@ -124,7 +124,7 @@ at least one match.
 - [`CatalogNoteAccessor::starts`](starts.md) / [`ends()`](ends.md): position-anchored,
   always-literal substring tests.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::has`](../registry-note/has.md): the bundle-model equivalent.
+- [`RegistryNoteAccessor::has`](../registry-note/has.md): the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fullmatch.html">

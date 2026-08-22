@@ -32,7 +32,7 @@ its calendar month, replacing each `Timeline` value with a `Bool`
 Example 1. Neither sample timestamp falls on the 1st of its month.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().month_start();
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "

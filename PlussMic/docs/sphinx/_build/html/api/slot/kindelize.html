@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,7 +50,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Converts the slot into a single <code class="docutils literal notranslate"><span class="pre">pluss::kindle::Stream</span></code>. This is the canonical
-bundle-to-kindle bridge for one heterogeneous-but-kind-compatible slot.</p>
+scribble-to-kindle bridge for one heterogeneous-but-kind-compatible slot.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -64,7 +64,7 @@ The slot’s values as a single kindle <code class="docutils literal notranslate
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Convert a homogeneous <code class="docutils literal notranslate"><span class="pre">Series</span></code> slot.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">scribble</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">as_series</span><span class="p">().</span><span class="n">numel</span><span class="p">();</span>
 </pre></div>
@@ -82,16 +82,16 @@ The slot’s values as a single kindle <code class="docutils literal notranslate
 <li><p>Every value in the slot must share one stream-compatible kind.</p></li>
 <li><p>Requires the slot to be defined — an undefined <code class="docutils literal notranslate"><span class="pre">Slot</span></code> throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Slot:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
-<li><p>A slot that later goes through <code class="docutils literal notranslate"><span class="pre">stream.tabelize()</span></code> or <code class="docutils literal notranslate"><span class="pre">stream.bundelize()</span></code> stays on the
+<li><p>A slot that later goes through <code class="docutils literal notranslate"><span class="pre">stream.tabelize()</span></code> or <code class="docutils literal notranslate"><span class="pre">stream.scribbelize()</span></code> stays on the
 same 1D bridge family; no table or registry wrapper is required.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../stream/bundelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::bundelize</span></code></span></a>: the reverse bridge from
-Kindle back into the bundle model.</p></li>
-<li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::tabelize</span></code></span></a>: the sibling bridge from the bundle model into the
+<li><p><a class="reference internal" href="../stream/scribbelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::scribbelize</span></code></span></a>: the reverse bridge from
+Kindle back into the scribble model.</p></li>
+<li><p><a class="reference internal" href="tabelize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::tabelize</span></code></span></a>: the sibling bridge from the scribble model into the
 table model.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -143,6 +143,7 @@ table model.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -156,7 +157,7 @@ table model.</p></li>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../plussmic_scribble.html">PlussMic <code class="docutils literal notranslate"><span class="pre">scribble</span></code></a><ul>
   <li><a href="../../slot_api_reference.html">Slot API Reference</a><ul>
       <li>Previous: <a href="kind.html" title="previous chapter">Slot::kind</a></li>
       <li>Next: <a href="max.html" title="next chapter">Slot::max</a></li>

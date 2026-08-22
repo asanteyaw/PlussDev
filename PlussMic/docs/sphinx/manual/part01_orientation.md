@@ -19,7 +19,7 @@ Use PlussMic when you want to:
 - convert rectangular data into stream/catalog or registry/slot models;
 - save cleaned data back to common file formats.
 
-## The three PlussMic layers
+## The four PlussMic layers
 
 ### Table
 
@@ -57,18 +57,31 @@ Kindle is the stream/catalog model:
 Use Kindle when stream metadata and catalog-like organization matter more than
 DataFrame ergonomics.
 
-### Bundle
+### Scribble
 
-Bundle is the heterogeneous record model:
+Scribble is the heterogeneous record model:
 
 | Type | Role |
 | --- | --- |
 | `Slot` | vector of heterogeneous values |
 | `Registry` | named slots |
-| `Aisle` | collection-oriented bundle layer |
+| `Axel` | collection-oriented scribble layer |
 
-Use Bundle when a field can hold mixed values or when a dataset is closer to a
+Use Scribble when a field can hold mixed values or when a dataset is closer to a
 record registry than a typed rectangular table.
+
+### Bundle
+
+Bundle is the multi-table workspace model:
+
+| Type | Role |
+| --- | --- |
+| `Nexus` | multi-table workbench with declared relationships and join plans |
+| `NexusTraverse` | fluent builder returned by `Nexus::from(...)` |
+| `NexusQuery` | SQL workspace accessor returned by `Nexus::query()` |
+
+Use Bundle when the job is not one frame at all, but a coordinated workbench of
+related frames with reusable join logic, auditing, and saved workspace plans.
 
 ## The core table model
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -42,90 +42,201 @@
 <p><a class="reference internal" href="../../nexus_api_reference.html"><span class="doc std std-doc">Back to Nexus API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">directory</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">StoreOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">directory</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">LoadOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reconstructs a <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> from a directory previously written by <a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save()</span></code></span></a> — the
-exact inverse. A <strong>static</strong> method (called as <code class="docutils literal notranslate"><span class="pre">Nexus::load(...)</span></code>, not on an existing
-instance), since there’s no workspace to call it on yet.</p>
-<p><code class="docutils literal notranslate"><span class="pre">load()</span></code> reads <code class="docutils literal notranslate"><span class="pre">options.manifest</span></code> first to discover the store’s own <code class="docutils literal notranslate"><span class="pre">kind</span></code> and the other
-file names/directory, then reads <code class="docutils literal notranslate"><span class="pre">options.schema</span></code>/<code class="docutils literal notranslate"><span class="pre">options.graph</span></code> to reconstruct every
-table’s <a class="reference internal" href="table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TableMeta</span></code></span></a> and every declared <a class="reference internal" href="relationships.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Relationship</span></code></span></a>,
-then each table’s own data file from the <code class="docutils literal notranslate"><span class="pre">tables</span></code> subdirectory, and finally
-<code class="docutils literal notranslate"><span class="pre">options.views</span></code> (if present) to restore saved views.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>options must match what save() actually used
-<code class="docutils literal notranslate"><span class="pre">load()</span></code> doesn’t read <code class="docutils literal notranslate"><span class="pre">options.kind</span></code> from the manifest to guess the table file format for
-you — it uses <code class="docutils literal notranslate"><span class="pre">options.kind</span></code> (or the manifest’s own recorded <code class="docutils literal notranslate"><span class="pre">kind</span></code>, for locating the
-right file extension) consistently with whatever <code class="docutils literal notranslate"><span class="pre">save()</span></code> was called with. Pass the same
-<code class="docutils literal notranslate"><span class="pre">StoreOptions</span></code> you saved with, especially <code class="docutils literal notranslate"><span class="pre">kind</span></code> — mismatched file extensions won’t be
-found.</p>
-</div>
+<p>Loads a raw table directory into a <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> workbench.</p>
+<p>This is the canonical “MySQL-workbench-style” entry point for in-memory table coordination:</p>
+<ul class="simple">
+<li><p>scan a directory</p></li>
+<li><p>discover supported tabular files</p></li>
+<li><p>load them in parallel batches</p></li>
+<li><p>return one <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> where each file becomes one named table</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">load()</span></code> does <strong>not</strong> restore a previously saved Nexus store. That persistence-side inverse of
+<a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save()</span></code></span></a> now lives on <a class="reference internal" href="read.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">read()</span></code></span></a>.</p>
+</section>
+<section id="supported-formats">
+<h2>Supported Formats<a class="headerlink" href="#supported-formats" title="Link to this heading">¶</a></h2>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">load()</span></code> discovers these file types directly from extension:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.csv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.txt</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.text</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.tsv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.parquet</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.pq</span></code></p></li>
+</ul>
+<p>Excel is intentionally excluded from directory loading. A workbook is not naturally “one file =
+one table” because sheet selection becomes part of the contract, so it stays a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+concern instead of the default Nexus bulk-loader path.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>directory</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
-The directory a prior <a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save()</span></code></span></a> call wrote to.</p>
-<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">StoreOptions&amp;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
-Must match what <a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save()</span></code></span></a> was called with — see the important callout above.</p>
+Directory to scan for raw tabular files.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">LoadOptions&amp;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
+Controls discovery, filtering, and dispatch.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code>
-A workspace equivalent to the one that was saved — same tables, same declared
-metadata, same relationships, same saved views, same <a class="reference internal" href="fingerprint.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fingerprint()</span></code></span></a>.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. A full round trip.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">,</span><span class="w"> </span><span class="mf">103.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
-<span class="p">});</span>
-
-<span class="n">TableMeta</span><span class="w"> </span><span class="n">customers_meta</span><span class="p">;</span>
-<span class="n">customers_meta</span><span class="p">.</span><span class="n">grain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;one row per customer&quot;</span><span class="p">;</span>
-<span class="n">customers_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">set_table_meta</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers_meta</span><span class="p">);</span>
-
-<span class="n">Relationship</span><span class="w"> </span><span class="n">rel</span><span class="p">;</span>
-<span class="n">rel</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders_to_customers&quot;</span><span class="p">;</span>
-<span class="n">rel</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders&quot;</span><span class="p">;</span>
-<span class="n">rel</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
-<span class="n">rel</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}};</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">linked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">add_relationship</span><span class="p">(</span><span class="n">rel</span><span class="p">);</span>
-
-<span class="n">StoreOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">StoreKind</span><span class="o">::</span><span class="n">Csv</span><span class="p">;</span>
-<span class="n">linked</span><span class="p">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;/tmp/nexus_biz_store&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">loaded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/nexus_biz_store&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">loaded</span><span class="p">.</span><span class="n">ntables</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">loaded</span><span class="p">.</span><span class="n">nrelationships</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">loaded</span><span class="p">.</span><span class="n">has_table_meta</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="o">*</span><span class="n">loaded</span><span class="p">.</span><span class="n">table_meta</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">grain</span><span class="p">;</span>
+<section id="loadoptions">
+<h2>LoadOptions<a class="headerlink" href="#loadoptions" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">LoadOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">load</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ignore</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">formats</span><span class="p">{</span><span class="s">&quot;csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;json&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;parquet&quot;</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">recursive</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_extension</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">parallel</span><span class="p">{</span><span class="nb">true</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">max_workers</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">config</span><span class="p">{};</span>
+<span class="p">};</span>
 </pre></div>
 </div>
+<section id="field-semantics">
+<h3>Field Semantics<a class="headerlink" href="#field-semantics" title="Link to this heading">¶</a></h3>
+<p><strong>load</strong>
+Explicit allow-list. If non-empty, only those tables/files are loaded.</p>
+<p><strong>ignore</strong>
+Explicit deny-list. If non-empty, everything else is loaded except those tables/files.</p>
+<p>```{important} <code class="docutils literal notranslate"><span class="pre">load</span></code> and <code class="docutils literal notranslate"><span class="pre">ignore</span></code> are mutually exclusive
+Use one or the other. Supplying both is rejected.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+**formats**
+    Allowed source types for discovery. This filters by normalized format tokens, not only by
+    literal extension spelling. For example, `&quot;parquet&quot;` covers both `.parquet` and `.pq`.
+
+**recursive**
+    If `true`, descend into subdirectories. Otherwise only the top level is scanned.
+
+**keep_extension**
+    Controls how file names become Nexus table keys.
+
+    - `false` (default): `orders.csv` -&gt; `orders`
+    - `true`: `orders.csv` -&gt; `orders.csv`
+
+**parallel**
+    Enables concurrent file loading across the directory. In other words, Nexus can load
+    `account.csv`, `loan.csv`, and `trans.json` at the same time instead of loading one file,
+    then the next, then the next. The heavy parsing still delegates to
+    `DataFrame::load(...)` for each individual file.
+
+**max_workers**
+    Caps concurrent file loads. Leave empty to let Nexus choose a bounded worker count from
+    hardware concurrency.
+
+**config**
+    Passed through to the underlying `DataFrame::load(source_type, filepath, config)` calls.
+    This is how you tune delimiter/header-style behavior for text-like formats while keeping
+    Nexus as the coordinator rather than the parser.
+
+## Returns
+
+`Nexus`
+    A workbench whose table keys come from the discovered file names.
+
+## Naming Rules
+
+By default, each file’s stem becomes the table name:
+
+- `account.csv` -&gt; `account`
+- `district.json` -&gt; `district`
+- `loan.parquet` -&gt; `loan`
+
+If two discovered files collapse to the same key, `load()` fails rather than silently picking
+one. Use `keep_extension=true` or narrower `load`/`ignore` filters when you need to disambiguate.
+
+## Examples
+
+Example 1. Load every supported top-level file.
+
+```cpp
+using namespace pluss::bundle;
+
+auto nx = Nexus::load(&quot;/tmp/bank_raw&quot;);
+std::cout &lt;&lt; nx.ntables() &lt;&lt; &quot;\n&quot;;
+std::cout &lt;&lt; std::boolalpha &lt;&lt; nx.has(&quot;account&quot;) &lt;&lt; &quot; &quot;
+          &lt;&lt; nx.has(&quot;district&quot;) &lt;&lt; &quot; &quot;
+          &lt;&lt; nx.has(&quot;trans&quot;) &lt;&lt; &quot;\n&quot;;
+</pre></div>
+</div>
+</section>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2 1
-true one row per customer
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3
+true true true
+</pre></div>
+</div>
+<p>Example 2. Load only the files you name.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;loan.json&quot;</span><span class="p">};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">formats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;json&quot;</span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/bank_raw&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">keys</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">keys</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>account loan
+</pre></div>
+</div>
+<p>Example 3. Ignore a few heavy tables but load the rest.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">ignore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;trans&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;order&quot;</span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/bank_raw&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;trans&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;account&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false true
+</pre></div>
+</div>
+<p>Example 4. Recursive scan plus stable file-name keys.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">recursive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">keep_extension</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/project_tables&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;customers.csv&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;events.parquet&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1 1
+</pre></div>
+</div>
+<p>Example 5. Invalid mixed selection mode.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;account&quot;</span><span class="p">};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">ignore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;loan&quot;</span><span class="p">};</span>
+
+<span class="c1">// throws</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/bank_raw&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>runtime error: Nexus::load: choose either LoadOptions.load or LoadOptions.ignore, not both
 </pre></div>
 </div>
 </section>
@@ -133,19 +244,20 @@ true one row per customer
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Static — called as <code class="docutils literal notranslate"><span class="pre">Nexus::load(...)</span></code>, not on an existing <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> instance.</p></li>
-<li><p>Must be called with the same <code class="docutils literal notranslate"><span class="pre">StoreOptions</span></code> (especially <code class="docutils literal notranslate"><span class="pre">kind</span></code>) that
-<a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save()</span></code></span></a> was called with — see the important callout above.</p></li>
-<li><p>Fully reconstructs declared <code class="docutils literal notranslate"><span class="pre">TableMeta</span></code> and <code class="docutils literal notranslate"><span class="pre">Relationship</span></code>s, plus any saved views — not
-just the raw table data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">load()</span></code> is for raw file ingestion into an in-memory Nexus workbench.</p></li>
+<li><p><a class="reference internal" href="read.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">read()</span></code></span></a> is the persisted-store restore path.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parallel=true</span></code> means outer file-level concurrency across the discovered tables, not
+“parallel parsing inside one csv file”.</p></li>
+<li><p>Actual per-file parsing still remains delegated to <code class="docutils literal notranslate"><span class="pre">DataFrame::load(...)</span></code>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">config</span></code> field lets you stay format-flexible without teaching Nexus parser-specific knobs.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::save</span></code></span></a>: the exact inverse of this method.</p></li>
-<li><p><a class="reference internal" href="fingerprint.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::fingerprint</span></code></span></a>: compare before/after to confirm a round trip
-preserved everything.</p></li>
+<li><p><a class="reference internal" href="read.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::read</span></code></span></a>: restore a saved Nexus store.</p></li>
+<li><p><a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::save</span></code></span></a>: persist a Nexus store that <code class="docutils literal notranslate"><span class="pre">read()</span></code> can reconstruct.</p></li>
+<li><p><a class="reference internal" href="pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::pull</span></code></span></a>: once the tables are loaded, lift root-grain features safely.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="links.html">
@@ -196,6 +308,7 @@ preserved everything.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -209,7 +322,7 @@ preserved everything.</p></li>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
       <li>Previous: <a href="links.html" title="previous chapter">Nexus::links</a></li>
       <li>Next: <a href="map_frames.html" title="next chapter">Nexus::map_frames</a></li>

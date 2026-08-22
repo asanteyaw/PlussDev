@@ -30,9 +30,9 @@ field from this registry directly, rather than returning a new one.
 Example 1. Prune an empty field in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"empty_field", pluss::bundle::Slot(std::vector<pluss::bundle::Slot::Value>{})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"empty_field", pluss::scribble::Slot(std::vector<pluss::scribble::Slot::Value>{})},
 });
 
 rg.prune_();

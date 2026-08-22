@@ -32,7 +32,7 @@ Converts the bound slot from `Timeline`-kind to `TimeIndex`-kind.
 Example 1. Convert a sorted `Timeline` slot to `TimeIndex`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-01T00:00:00Z"), pluss::make_timeline("2024-01-02T00:00:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-01T00:00:00Z"), pluss::make_timeline("2024-01-02T00:00:00Z")});
 auto out = slot.tl().index();
 std::cout << out.to_json();
 ```
@@ -55,7 +55,7 @@ Example 2. An out-of-order slot throws under the default
 `require_sorted = true`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-02T00:00:00Z"), pluss::make_timeline("2024-01-01T00:00:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-02T00:00:00Z"), pluss::make_timeline("2024-01-01T00:00:00Z")});
 try {
   auto out = slot.tl().index();
 } catch (const std::exception& e) {
@@ -85,7 +85,7 @@ TimeIndex must be sorted (non-decreasing)
 
 ## See Also
 
-- [`Stream::bundelize`](../stream/bundelize.md): the round-trip partner
+- [`Stream::scribbelize`](../stream/scribbelize.md): the round-trip partner
   that reconstructs `TimeIndex` values from a `kindle::Stream`.
 - [`Slot::tl`](../slot/tl.md): the entry point this accessor is reached
   from.

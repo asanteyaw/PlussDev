@@ -157,7 +157,7 @@ from.
 
 - [`DataFrame::tl`](../dataframe/tl.md): the general calendar/timestamp accessor
   for `Timeline`/`TimeIndex` features, offering `.year()`/`.month()` and similar
-  individually rather than as one bundled frame.
+  individually rather than as one scribbled frame.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bounded.html">

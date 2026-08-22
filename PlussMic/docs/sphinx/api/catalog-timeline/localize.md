@@ -100,7 +100,7 @@ rendered as NY-local wall-clock time.
   instant shift independent of display.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::localize`](../registry-timeline/localize.md):
-  the bundle-model equivalent.
+  the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="leap.html">

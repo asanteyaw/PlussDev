@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Part XII: Bundle: Slot, Registry, and Axel &#8212; PlussMic  documentation</title>
+    <title>Part XII-B: Bundle: Nexus, NexusTraverse, and NexusQuery &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part XIII: Recipes" href="part13_recipes.html" />
-    <link rel="prev" title="Part XI: Kindle: Stream, Catalog, and Archive" href="part11_kindle.html" />
+    <link rel="prev" title="Part XII: Scribble: Slot, Registry, and Axel" href="part12_scribble.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -36,121 +36,94 @@
 
           <div class="body" role="main">
             
-  <section id="part-xii-bundle-slot-registry-and-axel">
-<h1>Part XII: Bundle: Slot, Registry, and Axel<a class="headerlink" href="#part-xii-bundle-slot-registry-and-axel" title="Link to this heading">¶</a></h1>
-<p>Bundle is PlussMic’s heterogeneous record model. It is useful when values are
-not naturally represented as one typed <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
-<section id="slot">
-<h2>Slot<a class="headerlink" href="#slot" title="Link to this heading">¶</a></h2>
-<p>A <code class="docutils literal notranslate"><span class="pre">Slot</span></code> is a vector of values. Values can represent multiple scalar/value
-families depending on the Bundle API surface.</p>
-<p>Common Slot operations:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">slot</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">values</span><span class="p">();</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-
-<span class="n">slot</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">);</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">indices</span><span class="p">);</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">predicate</span><span class="p">);</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">fn</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Slot mutation style follows the Pluss convention:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="n">slot</span><span class="p">.</span><span class="n">push_</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Use non-mutating operations in pipelines and mutating operations when updating
-owned state.</p>
+  <section id="part-xii-b-bundle-nexus-nexustraverse-and-nexusquery">
+<h1>Part XII-B: Bundle: Nexus, NexusTraverse, and NexusQuery<a class="headerlink" href="#part-xii-b-bundle-nexus-nexustraverse-and-nexusquery" title="Link to this heading">¶</a></h1>
+<p>Bundle is PlussMic’s multi-table workbench model. It sits beside the table
+model rather than replacing it: each table is still a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, but the
+workspace that coordinates them is a <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>.</p>
+<section id="when-to-use-bundle">
+<h2>When to use Bundle<a class="headerlink" href="#when-to-use-bundle" title="Link to this heading">¶</a></h2>
+<p>Reach for Bundle when:</p>
+<ul class="simple">
+<li><p>your analysis spans several named tables;</p></li>
+<li><p>join rules should be declared once and reused;</p></li>
+<li><p>you need root-grain feature assembly, key audits, orphan detection, or relationship validation;</p></li>
+<li><p>a saved multi-hop join plan is part of the workflow.</p></li>
+</ul>
 </section>
-<section id="registry">
-<h2>Registry<a class="headerlink" href="#registry" title="Link to this heading">¶</a></h2>
-<p>A <code class="docutils literal notranslate"><span class="pre">Registry</span></code> is a named collection of slots.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">catalog2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-</pre></div>
-</div>
-<p>Load and save registry data:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span><span class="s">&quot;data.csv&quot;</span><span class="p">);</span>
-<span class="n">reg</span><span class="p">.</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;registry.json&quot;</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Inspect:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">registry</span><span class="p">.</span><span class="n">nfields</span><span class="p">();</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">fields</span><span class="p">();</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;field&quot;</span><span class="p">);</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;field&quot;</span><span class="p">);</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">sizes</span><span class="p">();</span>
-<span class="n">registry</span><span class="p">.</span><span class="n">profiles</span><span class="p">();</span>
-</pre></div>
-</div>
-<p>Select and reshape:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">one_row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">cloc</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">selected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">select</span><span class="p">({</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;score&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">dropped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">drop</span><span class="p">(</span><span class="s">&quot;temporary&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">renamed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">rename</span><span class="p">(</span><span class="s">&quot;old&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;new&quot;</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Transform:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">apply</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">slot</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">slot</span><span class="p">;</span>
+<section id="nexus">
+<h2>Nexus<a class="headerlink" href="#nexus" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code> stores a keyed set of <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> objects and relationship metadata.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">map</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">slot</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">slot</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
+<span class="p">}).</span><span class="n">add_relationship</span><span class="p">({</span>
+<span class="w">    </span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customer_orders&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}},</span>
 <span class="p">});</span>
 </pre></div>
 </div>
-<p>Update fields:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;new_field&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">slot</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">pushed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="s">&quot;events&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Combine:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">merged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_other&quot;</span><span class="p">);</span>
+<p>From there you can:</p>
+<ul class="simple">
+<li><p>fetch tables with <code class="docutils literal notranslate"><span class="pre">frame(...)</span></code></p></li>
+<li><p>inspect workspace state with <code class="docutils literal notranslate"><span class="pre">summary()</span></code>, <code class="docutils literal notranslate"><span class="pre">profile()</span></code>, and <code class="docutils literal notranslate"><span class="pre">schema()</span></code></p></li>
+<li><p>assemble root-grain feature tables with <code class="docutils literal notranslate"><span class="pre">pull(...)</span></code></p></li>
+<li><p>validate relationships and workspace health with <code class="docutils literal notranslate"><span class="pre">audit()</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_keys(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_relationship(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">relationship_audit(...)</span></code></p></li>
+<li><p>persist the workspace with <code class="docutils literal notranslate"><span class="pre">save(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">load(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">store(...)</span></code></p></li>
+</ul>
+<p>The practical split is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pull(...)</span></code> for grain-preserving feature assembly back onto a root table</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">from(...).join(...).collect()</span></code> when you actually want the expanded child rows</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">audit()</span></code> when you want one command-center view of table-key and relationship integrity</p></li>
+</ul>
+</section>
+<section id="nexustraverse">
+<h2>NexusTraverse<a class="headerlink" href="#nexustraverse" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code> is the fluent graph-walk builder returned by <code class="docutils literal notranslate"><span class="pre">Nexus::from(...)</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">joined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">})</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
-<section id="kindle-bridge">
-<h2>Kindle bridge<a class="headerlink" href="#kindle-bridge" title="Link to this heading">¶</a></h2>
-<p>Some Registry operations require slots that can map cleanly to streams. The public
-surface no longer exposes separate compatibility checkers; <code class="docutils literal notranslate"><span class="pre">kindelize()</span></code> is the
-single contract point.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
-<span class="p">}</span>
+<section id="nexusquery">
+<h2>NexusQuery<a class="headerlink" href="#nexusquery" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> is the SQL workspace accessor returned by <code class="docutils literal notranslate"><span class="pre">Nexus::query()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">totals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT customers.customer_id, orders.amount &quot;</span>
+<span class="w">    </span><span class="s">&quot;FROM customers &quot;</span>
+<span class="w">    </span><span class="s">&quot;JOIN orders ON customers.customer_id = orders.customer_id&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-</section>
-<section id="axel">
-<h2>Axel<a class="headerlink" href="#axel" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Axel</span></code> is the higher collection-oriented bundle type. Use it when you need to
-organize registries/slots into a broader bundle workflow. See the
-<a class="reference internal" href="../axel_api_reference.html"><span class="std std-doc">Axel API Reference</span></a> for exact constructors and
-operations.</p>
-</section>
-<section id="bundle-conversion-strategy">
-<h2>Bundle conversion strategy<a class="headerlink" href="#bundle-conversion-strategy" title="Link to this heading">¶</a></h2>
-<p>DataFrame path:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
-</pre></div>
-</div>
-<p>Back to table:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">tabelize</span><span class="p">();</span>
-</pre></div>
-</div>
-<p>Use Bundle for heterogeneous data, but return to DataFrame when you need
-rectangular analysis, group-by, plotting, or file export.</p>
+<p>The important distinction is now architectural:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code> is the retained workspace object</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code> is the lazy graph-walk builder returned by <code class="docutils literal notranslate"><span class="pre">from(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> is the SQL-facing workspace query accessor returned by <code class="docutils literal notranslate"><span class="pre">query()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> is still the concrete result after either <code class="docutils literal notranslate"><span class="pre">.collect()</span></code> or SQL execution</p></li>
+</ul>
+<p>For exact signatures and verified examples, use the
+<a class="reference internal" href="../nexus_api_reference.html"><span class="std std-doc">Nexus API Reference</span></a> and
+<a class="reference internal" href="../nexus_traverse_api_reference.html"><span class="std std-doc">NexusTraverse API Reference</span></a> and
+<a class="reference internal" href="../nexus_query_api_reference.html"><span class="std std-doc">NexusQuery API Reference</span></a>.</p>
 </section>
 </section>
 
@@ -192,6 +165,7 @@ rectangular analysis, group-by, plotting, or file export.</p>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -204,7 +178,7 @@ rectangular analysis, group-by, plotting, or file export.</p>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../manual.html">PlussMic User Manual</a><ul>
-      <li>Previous: <a href="part11_kindle.html" title="previous chapter">Part XI: Kindle: Stream, Catalog, and Archive</a></li>
+      <li>Previous: <a href="part12_scribble.html" title="previous chapter">Part XII: Scribble: Slot, Registry, and Axel</a></li>
       <li>Next: <a href="part13_recipes.html" title="next chapter">Part XIII: Recipes</a></li>
   </ul></li>
   </ul></li>

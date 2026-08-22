@@ -1912,12 +1912,12 @@ Linear 0 0
 plussview_html_scroll_tests 25 0.0184536
 plussview_html_export_tests 10 0.0305616
 plussmic_table_csv 0 0
-plussmic_kindle_catalog 10 26.0015
+plussmic_kindle_catalog 12 0.00584299
 plussmic_bundle_model 7 27.0427
-plussmic_table_dataframe_plot_api 3 2.23931
-plussmic_table_ts_accessor 7 7.10983
-plussmic_table_axis_match 6 9.88071
-plussmic_table_statistics_window 4 12.5764
+plussmic_table_dataframe_plot_api 5 3.33043
+plussmic_table_ts_accessor 9 6.1196
+plussmic_table_axis_match 6 0
+plussmic_table_statistics_window 6 11.1097
 ice_model_test 6 13.5543
 nn_grad_mode_test 1 0.410274
 ice_dataset_test 3 0.130162
@@ -1938,7 +1938,7 @@ lymph_expansion_surface_test 1 83.7577
 lymph_shape_test 1 15.7118
 lymph_unsupervised_test 1 0.035186
 lymph_validate_test 1 201.779
-plussmic_table_flash_dataset_bridge 0 0
+plussmic_table_flash_dataset_bridge 2 22.4858
 procedure_phase1_test 4 0.00935943
 procedure_phase3_test 4 0.0115559
 procedure_phase4_test 4 0.0106536
@@ -1947,4 +1947,7 @@ procedure_phase6_test 4 10.107
 procedure_phase7_test 4 14.4268
 procedure_phase8_test 4 12.9469
 procedure_system_test 2 9.11693
+plussmic_scribble_model 1 0.0337124
 ---
+plussmic_table_csv
+plussmic_table_axis_match

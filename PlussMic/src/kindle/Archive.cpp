@@ -10,7 +10,7 @@
 #include <utility>
 
 #include "CodeM/core/Errors.h"
-#include "bundle/Axel.h"
+#include "scribble/Axel.h"
 #include "kindle/display/Display.h"
 #include "table/Atlas.h"
 

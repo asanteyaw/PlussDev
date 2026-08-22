@@ -73,7 +73,7 @@ ts                       | Series       | Series[bool]     | 2       | [false, t
 - [`CatalogTimelineAccessor::isnat`](isnat.md): the logical inverse.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::valid`](../registry-timeline/valid.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="utc.html">

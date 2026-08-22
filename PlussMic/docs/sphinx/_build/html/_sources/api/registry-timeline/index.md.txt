@@ -33,8 +33,8 @@ Converts each bound field from `Timeline`-kind to `TimeIndex`-kind.
 Example 1. Convert a sorted `Timeline` field to `TimeIndex`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-01T00:00:00Z"), pluss::make_timeline("2024-01-02T00:00:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-01T00:00:00Z"), pluss::make_timeline("2024-01-02T00:00:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().index();
@@ -59,8 +59,8 @@ Example 2. An out-of-order field throws under the default
 `require_sorted = true`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-02T00:00:00Z"), pluss::make_timeline("2024-01-01T00:00:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-02T00:00:00Z"), pluss::make_timeline("2024-01-01T00:00:00Z")})},
 });
 
 try {

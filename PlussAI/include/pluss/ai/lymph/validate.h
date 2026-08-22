@@ -579,3 +579,10 @@ class HoldoutPlan final {
 }
 
 } // namespace pluss::ai::lymph::validate
+
+namespace pluss::ai::lymph {
+
+using ValidationPlan = validate::Plan;
+using HoldoutPlan = validate::HoldoutPlan;
+
+} // namespace pluss::ai::lymph

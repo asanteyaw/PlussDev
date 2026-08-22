@@ -44,9 +44,9 @@ output — including every value — with no truncation at all. Use
 Example 1. A small, unlabeled, two-frame `Axel`.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})}}),
 });
 std::cout << axel.to_string();
 ```
@@ -90,7 +90,7 @@ Notice `slot_sizes` reports each field's row count, not its values —
 Example 2. An undefined `Axel`.
 
 ```cpp
-pluss::bundle::Axel undef;
+pluss::scribble::Axel undef;
 std::cout << undef.to_string();
 ```
 

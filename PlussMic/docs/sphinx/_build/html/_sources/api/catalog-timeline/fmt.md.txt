@@ -109,7 +109,7 @@ ts                       | Note         | Note             | 1       | [2024]
   tokens.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::fmt`](../registry-timeline/fmt.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="floor.html">

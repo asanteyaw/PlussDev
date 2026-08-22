@@ -16,7 +16,7 @@ Renders the workspace's table-level metadata as a `DataFrame`, one row per table
 combining structural facts (row/column counts, feature names, dtypes) with whatever
 [`TableMeta`](table_meta.md) has been declared. This is the format
 [`save()`](save.md) writes to disk (as `schema.csv` by default) and
-[`load()`](load.md) reads back to reconstruct declared metadata.
+[`read()`](read.md) reads back to reconstruct declared metadata.
 
 ## Parameters
 
@@ -44,6 +44,7 @@ Example 1. A workspace with metadata on one table, none on the other.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -84,7 +85,7 @@ std::cout << s.features({"table", "rows", "cols", "grain", "pkey"});
 
 ## Notes
 
-- This is exactly the format [`save()`](save.md)/[`load()`](load.md) round-trip through
+- This is exactly the format [`save()`](save.md)/[`read()`](read.md) round-trip through
   disk for table-level metadata.
 - `feats`/`dtypes` are joined strings meant for the save/load round trip, not for reading
   directly — inspect a table's actual feature list via
@@ -94,7 +95,7 @@ std::cout << s.features({"table", "rows", "cols", "grain", "pkey"});
 
 - [`Nexus::graph`](graph.md): the relationship-level counterpart to this table-level view.
 - [`Nexus::table_meta`](table_meta.md): the source of most of this method's columns.
-- [`Nexus::save`](save.md) / [`load`](load.md): where this exact format is persisted and
+- [`Nexus::save`](save.md) / [`read`](read.md): where this exact format is persisted and
   restored.
 
 <div class="pluss-inline-prev-next">

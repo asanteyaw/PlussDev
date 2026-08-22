@@ -51,6 +51,7 @@ Example 1. Apply the same row-trimming rule to every table.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},

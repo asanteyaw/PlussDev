@@ -52,8 +52,8 @@ first with [`fields(keys)`](../axel/fields.md) before calling `.nt()`.
 Example 1. No-argument overload trims leading and trailing whitespace.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("  Accra  "), pluss::make_note("  Tema  ")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("  Accra  "), pluss::make_note("  Tema  ")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().strip();
 auto city = out.registry(0).fields("city");
@@ -71,8 +71,8 @@ Example 2. `chars`-argument overload trims a specific character set
 from both edges.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("xxAccraxx")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("xxAccraxx")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"code"}).nt().strip("x");
 std::cout << std::get<pluss::Note>(out.registry(0).fields("code").at(0)).at(0);
@@ -88,8 +88,8 @@ Example 3. Calling any method on this accessor with a non-`Note` field
 bound throws — see the important callout above.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1)})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1)})}});
+auto axel = pluss::scribble::Axel({r0});
 
 try {
   auto out = axel.fields({"id"}).nt().strip();

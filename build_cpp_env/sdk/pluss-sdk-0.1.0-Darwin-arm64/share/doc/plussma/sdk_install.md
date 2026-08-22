@@ -39,7 +39,7 @@ rm -rf build-torch-sdk
 cmake -S . -B build-torch-sdk \
   -DPLUSS_ENABLE_TORCH=ON \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python3" \
+  -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python3" \ 
   -DPKG_CONFIG_EXECUTABLE="$CONDA_PREFIX/bin/pkg-config"
   
 cmake --build build-torch-sdk --target pluss_sdk_stage --parallel "$(sysctl -n hw.logicalcpu)"
@@ -68,7 +68,7 @@ Notes:
 - If Torch is installed in a non-default location, pass:
   - `-DTorch_DIR=/path/to/torch/share/cmake/Torch`
   - optionally `-DCMAKE_PREFIX_PATH="/extra/prefix;/another/prefix"`
-- In a Torch-enabled SDK build, `PLUSS_ENABLE_TORCH` is exported by CMake targets. Consumers linking `Pluss::SDK`/`PlussQit::CodeM` automatically get `pluss::from_torch(...)` and `pluss::to_torch(...)` from `<pluss/pluss.h>` / `<pluss/core.h>`.
+- In a Torch-enabled SDK build, `PLUSS_ENABLE_TORCH` is exported by CMake targets. Consumers linking `Pluss::SDK`/`PlussQit::CodeM` automatically get `pluss::series::from_torch(...)` and `pluss::series::to_torch(...)` from `<pluss/pluss.h>` / `<pluss/core.h>`.
 - `Pluss::SDK` now propagates traceback-friendly compile flags to consumers (`-fno-omit-frame-pointer` and minimal line tables in Release), so downstream call stacks are meaningful by default.
 - Unified core serialization is available via `pluss::io::save/load` and top-level aliases `pluss::save/load` for `Series/Note/Timeline/TimeIndex` and supported STL containers. See `docs/IO_SAVE_LOAD_GUIDE.md`.
 - If your app also uses `torch::Tensor` directly, keep `find_package(Torch REQUIRED)` in your consumer CMake for clarity.

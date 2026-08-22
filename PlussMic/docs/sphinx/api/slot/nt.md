@@ -33,7 +33,7 @@ case folding, trimming, pattern matching, and more.
 Example 1. Uppercase a `Note`-kind slot.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra")});
 auto out = slot.nt().upper();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```

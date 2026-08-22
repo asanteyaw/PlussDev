@@ -33,7 +33,7 @@ throws on a genuinely mixed-type field.
     The destination file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the format-specific writer
+    A generic configuration scribble, translated into the format-specific writer
     options.
 
 ## Returns
@@ -46,9 +46,9 @@ throws on a genuinely mixed-type field.
 Example 1. Save to JSON by naming the format explicitly.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 rg.save_as("json", "cities.json");
@@ -79,9 +79,9 @@ std::cout << saved.rdbuf();
 Example 2. An unrecognized `target_type` throws.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 try {

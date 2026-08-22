@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# NexusQuery::join
+# NexusTraverse::join
 
-[Back to NexusQuery API Reference](../../nexus_query_api_reference)
+[Back to NexusTraverse API Reference](../../nexus_traverse_api_reference)
 
 ## Signatures
 
 ```cpp
-NexusQuery::join(std::string_view right) const -> NexusQuery
-NexusQuery::join(std::string_view right, const JoinSpec& spec) const -> NexusQuery
+NexusTraverse::join(std::string_view right) const -> NexusTraverse
+NexusTraverse::join(std::string_view right, const JoinSpec& spec) const -> NexusTraverse
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ calls builds up a multi-hop plan without you constructing
 
 ```{important} The single-argument overload auto-detects the relationship — and defaults to Inner
 Unlike [`Nexus::join()`](../nexus/join.md), which always requires an explicit `keys` list
-or `relationship_name` in its `JoinSpec`, `NexusQuery::join(right)` (no `spec`) looks for
+or `relationship_name` in its `JoinSpec`, `NexusTraverse::join(right)` (no `spec`) looks for
 exactly one relationship directly connecting the current anchor and `right`, using it
 automatically. If more than one relationship connects the same pair, the call throws,
 telling you to disambiguate via `JoinSpec::relationship_name`. Also note the resolved
@@ -44,7 +44,7 @@ left join through `.join()`, set `spec.how` explicitly.
 
 ## Returns
 
-`NexusQuery`
+`NexusTraverse`
     A new query with the join step appended and the anchor moved to `right`. The original
     query is unchanged — like the rest of this class's non-mutating, chainable design.
 
@@ -54,6 +54,7 @@ Example 1. A single auto-detected hop.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -141,7 +142,7 @@ try {
 ### Output
 
 ```text
-NexusQuery::join: multiple direct relationships connect 'orders' and 'customers'. Specify JoinSpec.relationship_name explicitly
+NexusTraverse::join: multiple direct relationships connect 'orders' and 'customers'. Specify JoinSpec.relationship_name explicitly
 ```
 
 ## Notes
@@ -151,15 +152,15 @@ NexusQuery::join: multiple direct relationships connect 'orders' and 'customers'
   disambiguate with `spec.relationship_name` in the two-argument overload.
 - `spec.how` defaults to `JoinHow::Inner` when left unset — different from
   [`.via()`](via.md)'s `Left` default. See the important callout above.
-- Non-mutating and chainable — each call returns a new `NexusQuery`.
+- Non-mutating and chainable — each call returns a new `NexusTraverse`.
 
 ## See Also
 
-- [`NexusQuery::via`](via.md): reach a table by its shortest graph path (possibly several
+- [`NexusTraverse::via`](via.md): reach a table by its shortest graph path (possibly several
   hops) in one call, defaulting to `Left`, instead of one explicit hop at a time.
 - [`Nexus::join`](../nexus/join.md): the lower-level, non-auto-detecting primitive this
   method builds on.
-- [`NexusQuery::collect`](collect.md): execute the accumulated plan.
+- [`NexusTraverse::collect`](collect.md): execute the accumulated plan.
 
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="via.html">

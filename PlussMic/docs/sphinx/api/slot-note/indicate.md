@@ -44,7 +44,7 @@ in **alphabetical order** — not first-seen order.
 Example 1. The default `"|"` delimiter.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("red|blue"), pluss::make_note("blue|green"), pluss::make_note("red")});
+auto slot = pluss::scribble::Slot({pluss::make_note("red|blue"), pluss::make_note("blue|green"), pluss::make_note("red")});
 auto out = slot.nt().indicate();
 std::cout << out;
 ```

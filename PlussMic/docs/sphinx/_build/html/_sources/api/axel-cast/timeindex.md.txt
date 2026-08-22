@@ -33,8 +33,8 @@ to every frame via [`Axel::map`](../axel/map.md).
 Example 1. Cast a `Timeline` field to `TimeIndex`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-01T00:00:00Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-01T00:00:00Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).cast().timeindex();
 std::cout << out.registry(0).fields("ts").to_json();

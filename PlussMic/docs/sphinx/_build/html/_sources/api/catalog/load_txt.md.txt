@@ -24,7 +24,7 @@ per column, with per-column dtype inference.
     The text file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying CSV-style reader
+    A generic configuration scribble, translated into the underlying CSV-style reader
     options.
 
 ## Returns

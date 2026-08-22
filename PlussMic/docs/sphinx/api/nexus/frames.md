@@ -32,6 +32,7 @@ Example 1. Iterate over both vectors together to print each table's shape.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", pluss::make_series({1.0, 2.0, 3.0})},

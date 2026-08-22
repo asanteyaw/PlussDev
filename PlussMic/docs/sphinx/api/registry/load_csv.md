@@ -25,7 +25,7 @@ become `Series`-kind, everything else becomes `Note`-kind).
     The CSV file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into `ReadCsvOptions` internally. The
+    A generic configuration scribble, translated into `ReadCsvOptions` internally. The
     row-limiting key is `"ncases"`, not `"nrows"`.
 
 **options** (`const pluss::loader::ReadCsvOptions&`, optional)
@@ -42,7 +42,7 @@ become `Series`-kind, everything else becomes `Note`-kind).
 Example 1. Load a CSV file with default options.
 
 ```cpp
-auto rg = pluss::bundle::Registry::load_csv("cities.csv");
+auto rg = pluss::scribble::Registry::load_csv("cities.csv");
 std::cout << rg;
 ```
 
@@ -79,11 +79,11 @@ std::cout << rg;
 Numeric columns (`id`, `population`) are inferred as `Series`-kind; the text column
 (`city`) becomes `Note`-kind.
 
-Example 2. Pass a `Config` bundle to limit the number of rows read, via the
+Example 2. Pass a `Config` scribble to limit the number of rows read, via the
 `"ncases"` key.
 
 ```cpp
-auto rg = pluss::bundle::Registry::load_csv("cities.csv", pluss::loader::Config{{"ncases", 2}});
+auto rg = pluss::scribble::Registry::load_csv("cities.csv", pluss::loader::Config{{"ncases", 2}});
 std::cout << rg;
 ```
 

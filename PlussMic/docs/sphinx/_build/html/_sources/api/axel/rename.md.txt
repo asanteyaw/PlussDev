@@ -39,8 +39,8 @@ matching `Registry::rename()` overload per frame.
 Example 1. Rename `"ids"` to `"identifiers"` in every frame.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
 auto out = axel.rename("ids", "identifiers");
 std::cout << std::boolalpha << out.registry(0).has("identifiers");
@@ -55,10 +55,10 @@ true
 Example 2. Rename two fields in a single call using the mapping form.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({
-        {"ids", pluss::bundle::Slot({pluss::make_series(1)})},
-        {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({
+        {"ids", pluss::scribble::Slot({pluss::make_series(1)})},
+        {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
     }),
 });
 auto out = axel.rename({{"ids", "identifiers"}, {"city", "town"}});

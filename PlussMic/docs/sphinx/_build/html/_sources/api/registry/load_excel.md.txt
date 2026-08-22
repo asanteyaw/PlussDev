@@ -34,7 +34,7 @@ available.
     The `.xlsx` file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into `ReadExcelOptions` internally.
+    A generic configuration scribble, translated into `ReadExcelOptions` internally.
 
 **options** (`const pluss::loader::ReadExcelOptions&`, optional)
     Sheet selection and header-parsing controls, same struct as
@@ -53,7 +53,7 @@ was built without `libzip`.
 
 ```cpp
 try {
-  auto rg = pluss::bundle::Registry::load_excel("cities.xlsx");
+  auto rg = pluss::scribble::Registry::load_excel("cities.xlsx");
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

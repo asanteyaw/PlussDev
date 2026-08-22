@@ -37,9 +37,9 @@ value to **every** field.
 Example 1. Append to a single named field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 auto out = rg.push("id", pluss::make_series(4));
@@ -61,8 +61,8 @@ std::cout << "]";
 Example 2. Appending to an unknown field name throws.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 
 try {
@@ -81,9 +81,9 @@ Registry::push: unknown key 'zzz'
 Example 3. The value-only overload appends the same value to every field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"a", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"b", pluss::bundle::Slot({pluss::make_series(10), pluss::make_series(20)})},
+auto rg = pluss::scribble::Registry({
+    {"a", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"b", pluss::scribble::Slot({pluss::make_series(10), pluss::make_series(20)})},
 });
 
 auto out = rg.push(pluss::make_series(99));

@@ -6,10 +6,12 @@
 #include <concepts>
 #include <cstdint>
 #include <iterator>
+#include <ostream>
 #include <span>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "CodeH/core/Errors.h"
@@ -22,11 +24,160 @@ namespace pluss::codeh {
 class Timeline;
 class TimeIndex;
 
+enum class TimelineSpanUnit : std::uint8_t {
+  Nanos = 0,
+  Micros = 1,
+  Millis = 2,
+  Seconds = 3,
+  Days = 4,
+  Weeks = 5,
+  Months = 6,
+  Years = 7,
+  BusinessDays = 8,
+};
+
+enum class TimelineSpanMode : std::uint8_t {
+  Complete = 0, // completed elapsed calendar units
+  Boundary = 1, // crossed calendar/unit labels
+};
+
+enum class TimelineSpanClosed : std::uint8_t {
+  Right = 0,   // (start, end]
+  Left = 1,    // [start, end)
+  Both = 2,    // [start, end]
+  Neither = 3, // (start, end)
+};
+
+enum class TimelineSpanAnchor : std::uint8_t {
+  DayOfMonth = 0, // strict calendar-day completion
+  MonthEnd = 1,   // treat last-day-of-month endpoints as equivalent
+};
+
+struct BusinessCalendar {
+  static BusinessCalendar monfri();
+  static BusinessCalendar usa_federal(int year_start, int year_end);
+  static BusinessCalendar canada_federal(int year_start, int year_end);
+  static BusinessCalendar uk_bank(int year_start, int year_end);
+  static BusinessCalendar target2(int year_start, int year_end);
+  static BusinessCalendar nyse(int year_start, int year_end);
+
+  // Bits use std::chrono::weekday::c_encoding(): Sunday=0, Monday=1, ..., Saturday=6.
+  // Default is Monday-Friday only. Holidays are local epoch-day labels in the
+  // Timeline timezone, e.g. values produced by tl().epoch(TimeUnit::Days).
+  std::uint8_t weekmask{0b0111110};
+  std::vector<std::int64_t> holidays{};
+  std::string name{"MonFri"};
+  std::string region{};
+  std::string timezone{};
+};
+
+struct TimelineSpanOptions {
+  TimelineSpanUnit unit{TimelineSpanUnit::Days};
+  TimelineSpanMode mode{TimelineSpanMode::Complete};
+  TimelineSpanAnchor anchor{TimelineSpanAnchor::DayOfMonth};
+  bool signed_result{true};
+  BusinessCalendar calendar{};
+  TimelineSpanClosed closed{TimelineSpanClosed::Right};
+};
+
 // Lightweight Timeline handle base (similar to CodeM::SeriesBase):
 // - cheap copy (Series is ref-counted)
 // - shared core invariants for all Timeline-like types
 class CODEH_API TimelineBase {
 public:
+  struct HostArray {
+    std::vector<std::int64_t> data;
+    std::vector<std::int64_t> sizes;
+    std::string tz{"UTC"};
+    bool contiguous{true};
+
+    std::span<const std::int64_t> shape() const noexcept { return sizes; }
+    std::int64_t dim() const noexcept { return static_cast<std::int64_t>(sizes.size()); }
+    std::int64_t numel() const noexcept { return static_cast<std::int64_t>(data.size()); }
+  };
+
+  class HostAny final {
+  public:
+    enum class Kind : std::uint8_t { Scalar = 0, Vector = 1, Array = 2 };
+
+    HostAny() = default;
+
+    static HostAny from_scalar(std::int64_t value, std::string tz) {
+      HostAny out;
+      out.kind_ = Kind::Scalar;
+      out.tz_ = std::move(tz);
+      out.payload_ = value;
+      return out;
+    }
+
+    static HostAny from_vector(std::vector<std::int64_t> values, std::string tz) {
+      HostAny out;
+      out.kind_ = Kind::Vector;
+      out.tz_ = std::move(tz);
+      out.payload_ = std::move(values);
+      return out;
+    }
+
+    static HostAny from_array(HostArray values) {
+      HostAny out;
+      out.kind_ = Kind::Array;
+      out.tz_ = values.tz;
+      out.payload_ = std::move(values);
+      return out;
+    }
+
+    Kind kind() const noexcept { return kind_; }
+    const std::string& tz() const noexcept { return tz_; }
+    bool is_scalar() const noexcept { return kind_ == Kind::Scalar; }
+    bool is_vector() const noexcept { return kind_ == Kind::Vector; }
+    bool is_array() const noexcept { return kind_ == Kind::Array; }
+
+    std::int64_t scalar() const {
+      CODEM_CHECK(is_scalar(), "Timeline::host(): value is not scalar");
+      return std::get<std::int64_t>(payload_);
+    }
+
+    const std::vector<std::int64_t>& vector() const {
+      CODEM_CHECK(is_vector(), "Timeline::host(): value is not a 1-D vector");
+      return std::get<std::vector<std::int64_t>>(payload_);
+    }
+
+    const HostArray& array() const {
+      CODEM_CHECK(is_array(), "Timeline::host(): value is not N-D array");
+      return std::get<HostArray>(payload_);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const HostAny& value) {
+      switch (value.kind_) {
+        case Kind::Scalar:
+          os << value.scalar();
+          break;
+        case Kind::Vector:
+          os << "[";
+          for (std::size_t i = 0; i < value.vector().size(); ++i) {
+            if (i) os << ", ";
+            os << value.vector()[i];
+          }
+          os << "]";
+          break;
+        case Kind::Array:
+          os << "Timeline::HostArray(shape=[";
+          for (std::size_t i = 0; i < value.array().sizes.size(); ++i) {
+            if (i) os << ", ";
+            os << value.array().sizes[i];
+          }
+          os << "], values=" << value.array().data.size() << ", tz=" << value.tz_ << ")";
+          break;
+      }
+      return os;
+    }
+
+  private:
+    Kind kind_{Kind::Scalar};
+    std::string tz_{"UTC"};
+    std::variant<std::int64_t, std::vector<std::int64_t>, HostArray> payload_{std::int64_t{0}};
+  };
+
   TimelineBase() = delete;
   TimelineBase(const TimelineBase&) = default;
   TimelineBase(TimelineBase&&) noexcept = default;
@@ -76,6 +227,24 @@ public:
     out.reserve(static_cast<std::size_t>(numel()));
     copy_epoch_nanos_to(std::back_inserter(out));
     return out;
+  }
+
+  HostAny host() const {
+    CODEM_CHECK(defined(), "Timeline::host(): undefined");
+    auto values = to_epoch_nanos_vector();
+    if (numel() == 1) {
+      CODEM_CHECK(!values.empty(), "Timeline::host(): scalar payload is empty");
+      return HostAny::from_scalar(values.front(), tz_name_);
+    }
+    if (dim() <= 1) {
+      return HostAny::from_vector(std::move(values), tz_name_);
+    }
+    HostArray array;
+    array.data = std::move(values);
+    array.sizes = sizes().vec();
+    array.tz = tz_name_;
+    array.contiguous = true;
+    return HostAny::from_array(std::move(array));
   }
 
   // -----------------------------------------------------------------------
@@ -176,6 +345,9 @@ public:
   pluss::codem::Series epoch_micros() const;
   pluss::codem::Series epoch_millis() const;
   pluss::codem::Series epoch_seconds() const;
+  pluss::codem::Series epoch_days() const;
+  pluss::codem::Series span(const Timeline& other,
+                            const TimelineSpanOptions& options = {}) const;
 
   static Timeline from_epoch_seconds(const pluss::codem::Series& epoch_seconds,
                                      std::string_view tz_name = "UTC");

@@ -279,12 +279,6 @@ void test_factory_rank_and_printing() {
   expect_eq_vec(t_time.hour().to_vec<std::int32_t>(), std::vector<std::int32_t>{9, 17},
                 "timeline::time preserves time component");
 
-  const auto t_datetime = pluss::timeline::datetime(t_date, t_time);
-  expect_true(t_datetime.dim() == 1 && t_datetime.numel() == 2, "timeline::datetime rank");
-  expect_eq_vec(t_datetime.strftime("%F %T").vector(),
-                std::vector<std::string_view>{"2024-06-10 09:30:00", "2024-06-11 17:45:30"},
-                "timeline::datetime composes date and time fields");
-
   const auto t_rep = pluss::timeline::rep("2025-02-05", {2, 2});
   const auto t_rep_sizes = t_rep.sizes();
   expect_true(t_rep.dim() == 2 && t_rep_sizes.size() == 2 &&
@@ -337,13 +331,6 @@ void test_factory_rank_and_printing() {
   expect_throw(
       [] { (void)pluss::timeline::arange("2024-06-01T00:00:00Z", "2024-06-01T06:00:00Z", 1, true); },
       "timeline::arange datetime/int step requires explicit Duration");
-  expect_eq_vec(
-      pluss::timeline::datetime(pluss::timeline::date("2024-06-12"),
-                                pluss::timeline::time({"08:00:00", "09:15:00"}))
-          .strftime("%F %T")
-          .vector(),
-      std::vector<std::string_view>{"2024-06-12 08:00:00", "2024-06-12 09:15:00"},
-      "timeline::datetime broadcasts scalar date over vector times");
 
   const auto idx = pluss::timeindex::make({
       "2024-01-01T00:00:00Z",

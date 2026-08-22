@@ -19,8 +19,8 @@ using pluss::table::FrameMatchRule;
 using pluss::table::RepeatedCaseRule;
 using pluss::table::Thread;
 using pluss::table::Atlas;
-using pluss::bundle::Registry;
-using pluss::bundle::Axel;
+using pluss::scribble::Registry;
+using pluss::scribble::Axel;
 
 [[noreturn]] void fail(std::string_view message) {
   throw std::runtime_error(std::string(message));
@@ -945,7 +945,7 @@ void test_bundelize_and_tabelize_interop() {
   expect(rebuilt.label().values().as_note().vector() == orders.label().values().as_note().vector(),
          "Catalog::tabelize() should preserve case labels on a round-trip");
 
-  const auto registry = orders.bundelize();
+  const auto registry = orders.scribbelize();
   const auto from_registry = registry.tabelize();
   expect(from_registry.features() == orders.features(),
          "Registry::tabelize() should rebuild feature names from a bundelized frame");
@@ -953,13 +953,13 @@ void test_bundelize_and_tabelize_interop() {
              std::vector<double>({100.0, 150.0, 90.0}),
          "Registry::tabelize() should preserve numeric values");
 
-  const auto from_catalog_bundle = catalog.bundelize();
-  expect(from_catalog_bundle.fields() == std::vector<std::string>({"id", "city", "sales"}),
-         "Catalog::bundelize() should preserve key names");
+  const auto from_catalog_scribble = catalog.scribbelize();
+  expect(from_catalog_scribble.fields() == std::vector<std::string>({"id", "city", "sales"}),
+         "Catalog::scribbelize() should preserve key names");
 
   const auto atlas = Atlas({orders, orders.title("copy")});
   const auto archive = atlas.kindelize();
-  const auto axel = atlas.bundelize();
+  const auto axel = atlas.scribbelize();
   const auto atlas_from_archive = archive.tabelize();
   const auto atlas_from_axel = axel.tabelize();
   expect(atlas_from_archive.depth() == 2 && atlas_from_axel.depth() == 2,

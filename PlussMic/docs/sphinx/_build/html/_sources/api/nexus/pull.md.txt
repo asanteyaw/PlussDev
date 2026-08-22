@@ -7,7 +7,10 @@
 ## Signature
 
 ```cpp
+Nexus::pull(std::string_view root) const -> NexusPull
 Nexus::pull(std::string_view root, std::initializer_list<std::string_view> fields) const -> DataFrame
+Nexus::pull(std::string_view root, std::initializer_list<PullSpec> fields) const -> DataFrame
+Nexus::pull(std::string_view root, const std::vector<PullSpec>& fields) const -> DataFrame
 ```
 
 ## What It Does
@@ -18,6 +21,19 @@ alternative to [`materialize()`](materialize.md), which instead returns the full
 frame with every column from every hop. `pull()` never changes `root`'s own row count or
 row grain; every requested field, however many hops away, comes back as exactly one value
 per `root` row.
+
+There are now three public ways to describe the requested fields:
+
+- the fluent builder returned by `pull(root)` (`.take(...)`, `.agg(...).sum(...).end()`, `.collect()`)
+- the original compact string grammar (`"orders.amount.sum"`, `"regions.zone"`)
+- the preferred typed `PullSpec` helpers (`take(...)`, `count(...)`, `sum(...)`, `mean(...)`,
+  `median(...)`, `min(...)`, `max(...)`, `std(...)`, `var(...)`)
+
+The execution rules are the same either way. The fluent builder is now the preferred
+teaching surface because it removes the repetitive fully qualified helper calls from
+real feature-engineering code while still delegating to the same underlying typed pull
+engine. The lower-level typed form remains useful when you want to inject a prebuilt
+`PullSpec`, especially for windowed reducers.
 
 Each entry in `fields` is a small expression, parsed according to its own grammar:
 
@@ -30,7 +46,8 @@ Each entry in `fields` is a small expression, parsed according to its own gramma
   `OneToMany` or `ManyToMany` hop) throws — see Example 5.
 - **`table.feature.aggregate`** (`"orders.amount.sum"`) — an aggregate of a related table's
   feature, computed by grouping that table's rows by `root`'s declared primary key.
-  `aggregate` is one of `count`, `ndistinct`, `sum`, `mean`, `min`, `max` (case-insensitive).
+  `aggregate` is one of `count`, `ndistinct`, `sum`, `mean`, `median`, `min`, `max`, `std`,
+  `var` (case-insensitive).
   Unlike plain fields, aggregate fields work across **any** cardinality, including
   `OneToMany` — that's the whole point of aggregating. `table` must not be `root` itself
   (aggregating a root feature against itself doesn't mean anything — see Example 8).
@@ -72,7 +89,8 @@ anchor, chosen by an optional `_root` suffix:
   default "Latest" anchor.
 
 `ndistinct` windows are not supported and throw `"ndistinct windows are not supported
-yet"`.
+yet"`. `median`, `std`, and `var` are supported for ordinary grouped pulls, but not for
+windowed pulls yet.
 ```
 
 ## Parameters
@@ -91,12 +109,181 @@ yet"`.
     One row per `root` row, one column per requested field (aliased as described above),
     titled `root + "_pull"`.
 
+## Fluent Builder Surface
+
+`pull(root)` returns a `NexusPull` builder. The most important public methods on that
+builder are:
+
+```cpp
+NexusPull& take(std::string_view source, std::string_view alias = {});
+NexusPull& take(pluss::msharp::RangeView::Of<std::string_view> sources);
+NexusPull& take(
+    std::string_view table,
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg agg(std::string_view table);
+NexusPull& add(const PullSpec& spec);
+NexusPull& add(std::initializer_list<PullSpec> specs);
+DataFrame collect() const;
+```
+
+The important detail is that `RangeView` is the canonical builder edge, while
+brace-list, vector, array, and similar name ranges are adapted through the same
+`StackArray`-backed helper pattern the `DataFrame` API already uses.
+
+- Root-field listings such as `.take({"customer_id", "region_id"})` stay ergonomic,
+  but now funnel through the same owned `StackArray<std::string_view>` adaptation used
+  elsewhere in Pluss.
+- Scoped related-table lifts such as `.take("regions", {{"zone", "zone"}})` accept a
+  range of `(source, alias)` pairs and then expose it to the builder as a
+  `RangeView`.
+- In other words, user-facing code stays short; the adapter types standardize the
+  overload surface and prevent the ambiguity that the earlier raw `initializer_list`
+  overload set introduced.
+
+## Fluent Builder Example
+
+The fluent pull builder is the preferred spelling when you are building a real root-grain
+feature table.
+
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
+
+auto customers = DataFrame({
+    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"region_id",   Thread(pluss::make_series({10.0, 20.0, 10.0}))},
+});
+auto regions = DataFrame({
+    {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
+    {"zone",      Thread(pluss::make_note({"west", "east"}))},
+});
+auto events = DataFrame({
+    {"event_id",    Thread(pluss::make_series({100.0, 101.0, 102.0, 103.0, 104.0}))},
+    {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0, 2.0, 2.0}))},
+    {"occurred_at", Thread(pluss::make_timeline({
+        "2026-01-01T00:00:00Z",
+        "2026-01-20T00:00:00Z",
+        "2026-01-05T00:00:00Z",
+        "2026-01-25T00:00:00Z",
+        "2026-02-10T00:00:00Z",
+    }))},
+    {"spend",       Thread(pluss::make_series({10.0, 5.0, 2.0, 8.0, 4.0}))},
+});
+
+TableMeta customer_meta;
+customer_meta.primary_key = {"customer_id"};
+
+TableMeta event_meta;
+event_meta.time_field = "occurred_at";
+
+Relationship customer_region;
+customer_region.name = "customer_region";
+customer_region.left_table = "customers";
+customer_region.right_table = "regions";
+customer_region.keys = {{"region_id", "region_id"}};
+customer_region.cardinality = RelationshipCardinality::ManyToOne;
+
+Relationship customer_events;
+customer_events.name = "customer_events";
+customer_events.left_table = "customers";
+customer_events.right_table = "events";
+customer_events.keys = {{"customer_id", "customer_id"}};
+customer_events.cardinality = RelationshipCardinality::OneToMany;
+
+auto nx = Nexus({
+    {"customers", customers},
+    {"regions", regions},
+    {"events", events},
+}).meta("customers", customer_meta)
+  .meta("events", event_meta)
+  .links({customer_region, customer_events});
+
+auto pulled = nx.pull("customers")
+    .take("customer_id")
+    .take("regions", {{"zone", "zone"}})
+    .agg("events")
+        .count("event_id", "event_count")
+        .sum("spend", "total_spend")
+        .median("spend", "median_spend")
+    .end()
+    .add({sum("events.spend", "recent_spend").windowed(30, "d")})
+    .collect();
+
+std::cout << pulled.features();
+```
+
+### Output
+
+```text
+customer_id zone event_count total_spend median_spend recent_spend
+```
+
+Notice the alias behavior:
+
+- `.take("regions", {{"zone", "zone"}})` scopes several related-table lifts under one table token
+- `.agg("events") ... .end()` scopes several grouped reducers under one child table token
+- aggregate helpers usually want an explicit alias (`"event_count"`, `"total_spend"`)
+- windows are declared structurally with `.windowed(...)` or `.root_windowed(...)`
+
+## Example: Range-Friendly Root Lists
+
+The builder accepts root-field collections from ordinary C++ ranges, not only brace
+lists.
+
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
+
+auto customers = DataFrame({
+    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"region_id",   Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto regions = DataFrame({
+    {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
+    {"zone",      Thread(pluss::make_note({"west", "east"}))},
+});
+
+Relationship rel;
+rel.name = "customer_region";
+rel.left_table = "customers";
+rel.right_table = "regions";
+rel.keys = {{"region_id", "region_id"}};
+rel.cardinality = RelationshipCardinality::ManyToOne;
+
+std::vector<std::string_view> root_fields = {"customer_id", "region_id"};
+
+auto nx = Nexus({
+    {"customers", customers},
+    {"regions", regions},
+}).links({rel});
+
+auto pulled = nx.pull("customers")
+    .take(root_fields)
+    .take("regions", {{"zone", "zone"}})
+    .collect();
+
+std::cout << pulled.features();
+```
+
+### Output
+
+```text
+customer_id region_id zone
+```
+
+The same call also works with:
+
+- `.take({"customer_id", "region_id"})`
+- `.take(std::array<std::string_view, 2>{"customer_id", "region_id"})`
+- `.take(pluss::StackArray<std::string_view>{"customer_id", "region_id"})`
+
 ## Examples
 
 Example 1. A bare field from `root` itself.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},

@@ -13,12 +13,12 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=052b4a34"></script>
+    <script src="_static/api_nav.js?v=bd236ad6"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="NexusQuery::join" href="api/nexus-query/join.html" />
-    <link rel="prev" title="Nexus::validate_relationship" href="api/nexus/validate_relationship.html" />
+    <link rel="next" title="NexusQuery::execute" href="api/nexus-sql/execute.html" />
+    <link rel="prev" title="NexusTraverse::collect" href="api/nexus-query/collect.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -38,18 +38,20 @@
             
   <section id="nexusquery-api-reference">
 <h1>NexusQuery API Reference<a class="headerlink" href="#nexusquery-api-reference" title="Link to this heading">¶</a></h1>
-<p>This page documents the public <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> surface — the fluent join-graph query
-builder returned by <a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::from(table)</span></code></span></a>.</p>
+<p>This page documents the public <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> surface returned by
+<a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::query()</span></code></span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> lives in <code class="docutils literal notranslate"><span class="pre">pluss::bundle</span></code> beside <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>, but it delegates to the
+same in-memory SQL engine used by
+<a class="reference internal" href="dataframe_sql_accessor_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sql()</span></code></span></a>. The difference is
+scope: <code class="docutils literal notranslate"><span class="pre">DataFrame::sql()</span></code> starts from one frame, while <code class="docutils literal notranslate"><span class="pre">Nexus::query()</span></code> exposes
+the named tables already loaded into the workspace.</p>
 <section id="what-it-is">
 <h2>What It Is<a class="headerlink" href="#what-it-is" title="Link to this heading">¶</a></h2>
-<p>Calling <code class="docutils literal notranslate"><span class="pre">nexus.from(&quot;table_name&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> anchored at that table.
-From there, <code class="docutils literal notranslate"><span class="pre">.join(other)</span></code> (optionally with a <code class="docutils literal notranslate"><span class="pre">JoinSpec</span></code>) or <code class="docutils literal notranslate"><span class="pre">.via(other,</span> <span class="pre">how)</span></code>
-extends the walk across the join graph, <code class="docutils literal notranslate"><span class="pre">.pick()</span></code>/<code class="docutils literal notranslate"><span class="pre">.drop()</span></code> narrow the result
-columns, <code class="docutils literal notranslate"><span class="pre">.name()</span></code> labels the result, and <code class="docutils literal notranslate"><span class="pre">.collect()</span></code> executes the accumulated plan
-and returns the joined <a class="reference internal" href="dataframe_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></span></a>.</p>
-<p>Every method except <code class="docutils literal notranslate"><span class="pre">.collect()</span></code> is non-mutating and chainable, returning a new
-<code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> with one more step accumulated — nothing touches table data until
-<code class="docutils literal notranslate"><span class="pre">.collect()</span></code> actually runs.</p>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">nexus.query()</span></code> returns a SQL accessor. Use <code class="docutils literal notranslate"><span class="pre">.execute(&quot;SELECT</span> <span class="pre">...&quot;)</span></code> for
+one-off workspace queries, or <code class="docutils literal notranslate"><span class="pre">.prepare(&quot;SELECT</span> <span class="pre">...&quot;)</span></code> when you want a reusable
+statement template with runtime parameter binding.</p>
+<p>This SQL surface is currently read-oriented and in-memory. It is for querying a
+named table workspace, not for mutating persisted storage.</p>
 </section>
 <section id="using-this-reference">
 <h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
@@ -61,8 +63,7 @@ outputs, and working previous/next navigation.</p></li>
 </section>
 <section id="method-pages">
 <h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
-<p>The sidebar lists methods in typical pipeline order: <code class="docutils literal notranslate"><span class="pre">join</span></code>, <code class="docutils literal notranslate"><span class="pre">via</span></code>, <code class="docutils literal notranslate"><span class="pre">pick</span></code>, <code class="docutils literal notranslate"><span class="pre">drop</span></code>,
-<code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">collect</span></code>.</p>
+<p>The sidebar lists the two SQL entry points: <code class="docutils literal notranslate"><span class="pre">execute</span></code> and <code class="docutils literal notranslate"><span class="pre">prepare</span></code>.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>
@@ -104,6 +105,7 @@ outputs, and working previous/next navigation.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -117,9 +119,9 @@ outputs, and working previous/next navigation.</p></li>
   <li><a href="index.html">Documentation overview</a><ul>
   <li><a href="api_reference.html">API Reference</a><ul>
   <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
-      <li>Previous: <a href="api/nexus/validate_relationship.html" title="previous chapter">Nexus::validate_relationship</a></li>
-      <li>Next: <a href="api/nexus-query/join.html" title="next chapter">NexusQuery::join</a></li>
+  <li><a href="api/plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+      <li>Previous: <a href="api/nexus-query/collect.html" title="previous chapter">NexusTraverse::collect</a></li>
+      <li>Next: <a href="api/nexus-sql/execute.html" title="next chapter">NexusQuery::execute</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

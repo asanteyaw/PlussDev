@@ -34,8 +34,8 @@ Checks whether each bound field's text starts with `prefix`, replacing each
 Example 1. Check which city names start with `"Ac"`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 auto out = rg.fields({"city"}).nt().starts("Ac");

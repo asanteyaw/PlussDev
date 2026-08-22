@@ -109,7 +109,7 @@ ts                       | Series       | Series[bool]     | 2       | [true, fa
   day-of-year number from March onward.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::leap`](../registry-timeline/leap.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="iso.html">

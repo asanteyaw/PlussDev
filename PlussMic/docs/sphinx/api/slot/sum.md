@@ -29,7 +29,7 @@ Returns a new, single-value slot holding the sum of the slot's values.
 Example 1. Sum three values.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.sum();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
 ```

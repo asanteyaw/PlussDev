@@ -34,8 +34,8 @@ escape-hatch way to build a per-value transform when no built-in method
 Example 1. Multiply every `Series` scalar by 10.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-auto out = slot.transform([](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value {
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto out = slot.transform([](const pluss::scribble::Slot::Value& value) -> pluss::scribble::Slot::Value {
   auto n = std::get<pluss::Series>(value).to_vec<std::int64_t>()[0];
   return pluss::make_series(n * 10);
 });

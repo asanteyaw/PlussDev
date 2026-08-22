@@ -32,8 +32,8 @@ Returns a new slot keeping only the values for which `predicate` returns
 Example 1. Keep only the `Series` values out of a mixed-kind slot.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("x"), pluss::make_series(3)});
-auto out = slot.filter([](const pluss::bundle::Slot::Value& value) {
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_note("x"), pluss::make_series(3)});
+auto out = slot.filter([](const pluss::scribble::Slot::Value& value) {
   return std::holds_alternative<pluss::Series>(value);
 });
 std::cout << "size=" << out.size() << " vals="
@@ -50,9 +50,9 @@ size=2 vals=1,3
 Example 2. An empty predicate throws.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
-  std::function<bool(const pluss::bundle::Slot::Value&)> empty_pred;
+  std::function<bool(const pluss::scribble::Slot::Value&)> empty_pred;
   slot.filter(empty_pred);
 } catch (const std::exception& e) {
   std::string msg(e.what());

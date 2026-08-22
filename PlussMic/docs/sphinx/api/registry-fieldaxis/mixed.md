@@ -34,9 +34,9 @@ check.
 Example 1. Isolate the mixed field in a registry that also has a uniform field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"mixed", pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("x")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"mixed", pluss::scribble::Slot({pluss::make_series(1), pluss::make_note("x")})},
 });
 
 auto out = rg.fieldaxis().mixed();

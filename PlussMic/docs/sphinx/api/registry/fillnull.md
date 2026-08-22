@@ -52,9 +52,9 @@ Example 1. On a registry where every field is numeric, `fillnull(double)`
 succeeds and fills the null.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)})},
-    {"population", pluss::bundle::Slot({pluss::make_series(100), pluss::make_series(200), pluss::make_series(300)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(3)})},
+    {"population", pluss::scribble::Slot({pluss::make_series(100), pluss::make_series(200), pluss::make_series(300)})},
 });
 
 auto out = rg.fillnull(99.0);
@@ -81,9 +81,9 @@ Example 2. On a registry with a mixed numeric field *and* a `Note` field,
 fill.
 
 ```cpp
-auto mixed = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto mixed = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 try {
@@ -103,8 +103,8 @@ Example 3. On a `Note`-only registry, `fillnull(string_view)` (via the
 `const char*` overload) fills the null with the given text.
 
 ```cpp
-auto notes = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_note("Kumasi")})},
+auto notes = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_note("Kumasi")})},
 });
 
 auto out = notes.fillnull("Unknown");

@@ -36,7 +36,6 @@ archive_ts_accessor_api_reference
 api/archive/aggregate_over_catalogs
 api/archive/astype
 api/archive/bfill
-api/archive/bundelize
 api/archive/cast
 api/archive/catalog
 api/archive/catalogs
@@ -69,6 +68,7 @@ api/archive/notnull
 api/archive/nrecords
 api/archive/plot
 api/archive/rename
+api/archive/scribbelize
 api/archive/shape
 api/archive/show
 api/archive/size

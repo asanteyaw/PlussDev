@@ -31,8 +31,8 @@ value from the source slot.
 Example 1. Concatenate two slots.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
-auto other = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto other = pluss::scribble::Slot({pluss::make_series(4), pluss::make_series(5)});
 auto out = slot.concat(other);
 std::cout << "size=" << out.size() << " last_two="
           << std::get<pluss::Series>(out.at(3)).to_vec<std::int64_t>()[0] << ","

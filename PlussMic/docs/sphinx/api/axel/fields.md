@@ -45,15 +45,15 @@ which all start with `axel.fields({"..."}).accessor().method()`.
 Example 1. Narrow a two-field, two-frame `Axel` down to just `"ids"`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto r0 = pluss::scribble::Registry({
+    {"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Kumasi"), pluss::make_note("Takoradi")})},
+auto r1 = pluss::scribble::Registry({
+    {"ids", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Kumasi"), pluss::make_note("Takoradi")})},
 });
-auto axel = pluss::bundle::Axel({r0, r1});
+auto axel = pluss::scribble::Axel({r0, r1});
 
 auto narrowed = axel.fields({"ids"});
 std::cout << narrowed.registry(0).nfields();
@@ -68,8 +68,8 @@ std::cout << narrowed.registry(0).nfields();
 Example 2. Calling `fields()` with no names throws.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
 try {
   std::vector<std::string_view> empty_keys;

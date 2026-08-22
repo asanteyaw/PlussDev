@@ -78,7 +78,7 @@ UTC-relabeled: 2024-01-31 09:15:30
   actually changes the underlying instant.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::utc`](../registry-timeline/utc.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tz.html">

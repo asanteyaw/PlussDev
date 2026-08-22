@@ -43,8 +43,8 @@ the authoritative per-kind rules.
 Example 1. A numeric field containing a `NaN` value.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1.0), pluss::make_series(std::numeric_limits<double>::quiet_NaN()), pluss::make_series(3.0)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1.0), pluss::make_series(std::numeric_limits<double>::quiet_NaN()), pluss::make_series(3.0)})},
 });
 
 auto out = rg.invalid();

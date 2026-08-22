@@ -31,7 +31,7 @@
 #include "CodeN/core/OpsInternal.h"
 #include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
-#include "bundle/Slot.h"
+#include "scribble/Slot.h"
 #include "kindle/Stream.h"
 #include "table/DataFrame.h"
 #include "table/display/Display.h"

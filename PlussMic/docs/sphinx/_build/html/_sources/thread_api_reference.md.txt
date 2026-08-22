@@ -43,7 +43,6 @@ api/thread/bottom
 api/thread/bounded
 api/thread/btw
 api/thread/bucketize
-api/thread/bundelize
 api/thread/casefold
 api/thread/cast
 api/thread/chars
@@ -150,6 +149,7 @@ api/thread/rtruediv
 api/thread/rxor
 api/thread/sample
 api/thread/scan
+api/thread/scribbelize
 api/thread/se
 api/thread/select
 api/thread/shape

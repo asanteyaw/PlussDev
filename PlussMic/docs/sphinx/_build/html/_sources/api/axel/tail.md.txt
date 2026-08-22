@@ -36,12 +36,12 @@ clamping.
 Example 1. Keep the last two frames of a five-frame `Axel`.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(4)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(0)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(4)})}}),
 });
 auto out = axel.tail(2);
 std::cout << "depth=" << out.depth() << " first_id="

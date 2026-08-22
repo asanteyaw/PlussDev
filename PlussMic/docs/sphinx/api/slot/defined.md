@@ -39,7 +39,7 @@ sibling [`unique()`](unique.md)) are the two exceptions — both are
 Example 1. A slot built from values is defined.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
 std::cout << std::boolalpha << slot.defined();
 ```
 
@@ -52,7 +52,7 @@ true
 Example 2. A default-constructed slot is not.
 
 ```cpp
-pluss::bundle::Slot slot;
+pluss::scribble::Slot slot;
 std::cout << std::boolalpha << slot.defined();
 ```
 

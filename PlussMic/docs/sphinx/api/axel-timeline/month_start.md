@@ -35,8 +35,8 @@ to every frame via [`Axel::map`](../axel/map.md).
 Example 1. Neither sample timestamp falls on the 1st of its month.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().month_start();
 auto ts = out.registry(0).fields("ts");

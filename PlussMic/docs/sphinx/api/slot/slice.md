@@ -35,7 +35,7 @@ slicing does.
 Example 1. A plain forward slice.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.slice(1, 3);
 std::cout << "size=" << out.size() << " vals="
           << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << ","
@@ -51,7 +51,7 @@ size=2 vals=2,3
 Example 2. Negative indices count from the end.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.slice(-2, -1);
 std::cout << "size=" << out.size() << " val="
           << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];

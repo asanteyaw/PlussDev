@@ -119,7 +119,7 @@ code                     | Series       | Series[bool]     | 3       | [true, fa
 - [`CatalogNoteAccessor::has`](has.md): a related pattern test with a `TextOptions`
   overload for literal-vs-regex switching, absent here.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::matches`](../registry-note/matches.md): the bundle-model
+- [`RegistryNoteAccessor::matches`](../registry-note/matches.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

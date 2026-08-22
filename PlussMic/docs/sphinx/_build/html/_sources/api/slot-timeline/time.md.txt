@@ -32,7 +32,7 @@ date is reset to the Unix epoch day (`1970-01-01`) — replacing each
 Example 1. Keep only the time-of-day from two timestamps.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().time();
 auto fmted = out.tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << std::get<pluss::Note>(fmted.at(0)).at(0) << " | "

@@ -40,8 +40,8 @@ previously-aligned registry can come out ragged.
 Example 1. A field with a repeated value is reduced to its unique values.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)})},
 });
 
 auto out = rg.distinct();

@@ -33,7 +33,7 @@ each `Note` value with a `Bool` `Series`.
 Example 1. Check which city names end in `"ma"`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
 auto out = slot.nt().ends("ma");
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "

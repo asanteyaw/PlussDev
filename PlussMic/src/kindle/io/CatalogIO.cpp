@@ -3,7 +3,7 @@
 #include <iostream>
 #include <ostream>
 
-#include "bundle/registry.h"
+#include "scribble/registry.h"
 #include "loader/Loader.h"
 #include "kindle/display/Display.h"
 #include "table/DataFrame.h"
@@ -42,14 +42,14 @@ pluss::table::DataFrame catalog_to_io_frame(const Catalog& catalog) {
 
 } // namespace
 
-pluss::bundle::Registry Catalog::bundelize() const {
-  PLUSS_CHECK(defined(), "Catalog::bundelize: catalog undefined");
-  std::vector<std::pair<std::string, pluss::bundle::Slot>> out;
+pluss::scribble::Registry Catalog::scribbelize() const {
+  PLUSS_CHECK(defined(), "Catalog::scribbelize: catalog undefined");
+  std::vector<std::pair<std::string, pluss::scribble::Slot>> out;
   out.reserve(static_cast<std::size_t>(nkeys()));
   for (const auto& key : keys()) {
-    out.emplace_back(key, keys(key).bundelize());
+    out.emplace_back(key, keys(key).scribbelize());
   }
-  return pluss::bundle::Registry(std::move(out));
+  return pluss::scribble::Registry(std::move(out));
 }
 
 void Catalog::display() const {

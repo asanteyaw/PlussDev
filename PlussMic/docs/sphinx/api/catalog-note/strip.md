@@ -132,7 +132,7 @@ Thread::strip is only valid for Note payload
 - [`CatalogNoteAccessor::pad`](pad.md): the inverse operation, adding characters
   instead of removing them.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::strip`](../registry-note/strip.md): the bundle-model
+- [`RegistryNoteAccessor::strip`](../registry-note/strip.md): the scribble-model
   equivalent, which can be scoped to a key subset via `fields(keys).nt()` first.
 
 <div class="pluss-inline-prev-next">

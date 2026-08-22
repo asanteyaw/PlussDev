@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -90,7 +90,7 @@ row present, every column and row loaded, malformed rows treated as an error.</p
 <li><p>The positional overload (<code class="docutils literal notranslate"><span class="pre">sep</span></code>, <code class="docutils literal notranslate"><span class="pre">ncases</span></code>, <code class="docutils literal notranslate"><span class="pre">usefeats</span></code>, <code class="docutils literal notranslate"><span class="pre">case_col</span></code>, <code class="docutils literal notranslate"><span class="pre">on_bad_lines</span></code>) is
 for one-off loads where a handful of settings need to change but a whole config object
 would be overkill.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Config</span></code> / <code class="docutils literal notranslate"><span class="pre">ReadCsvOptions</span></code> overloads are for reusable, named option bundles —
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Config</span></code> / <code class="docutils literal notranslate"><span class="pre">ReadCsvOptions</span></code> overloads are for reusable, named option scribbles —
 build the options once and pass the same object to several <code class="docutils literal notranslate"><span class="pre">load_csv</span></code> calls, or store
 it alongside a data pipeline definition.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">header</span></code> overloads are for headerless files or files where the source column that
@@ -127,7 +127,7 @@ becomes the case label thread.</p>
 </ul>
 <p><strong>config</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>) / <strong>config_entries</strong>
 (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;pluss::loader::ConfigEntry&gt;</span></code>)</p>
-<p>A reusable or inline key/value settings bundle, for callers who prefer a single options
+<p>A reusable or inline key/value settings scribble, for callers who prefer a single options
 object over a long positional argument list.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::ReadCsvOptions&amp;</span></code>)</p>
 <p>A typed options struct covering the same settings as the positional overload
@@ -274,6 +274,7 @@ single-frame <code class="docutils literal notranslate"><span class="pre">load_c
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>

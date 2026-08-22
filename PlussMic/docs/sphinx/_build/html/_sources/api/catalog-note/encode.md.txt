@@ -71,7 +71,7 @@ secret                   | Note         | Note             | 1       | [aGk=]
 - [`CatalogNoteAccessor::normalize`](normalize.md): the other byte/text-level
   transform on this accessor.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::encode`](../registry-note/encode.md): the bundle-model
+- [`RegistryNoteAccessor::encode`](../registry-note/encode.md): the scribble-model
   equivalent, which also verifies the `"hex"` scheme's exact output.
 
 <div class="pluss-inline-prev-next">

@@ -32,7 +32,6 @@ atlas_plot_accessor_api_reference
 api/atlas/aggregate_over_frames
 api/atlas/align_depth
 api/atlas/axis0_labels
-api/atlas/bundelize
 api/atlas/column_names
 api/atlas/defined
 api/atlas/depth
@@ -52,6 +51,7 @@ api/atlas/ncases
 api/atlas/nfeatures
 api/atlas/plot
 api/atlas/relabel_depth
+api/atlas/scribbelize
 api/atlas/show
 api/atlas/slice_frames
 api/atlas/sort_depth

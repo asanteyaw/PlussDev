@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -60,7 +60,7 @@ returns a new <code class="docutils literal notranslate"><span class="pre">Nexus
 records an edge in the workspace’s relationship graph, which downstream methods
 (<a class="reference internal" href="path.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">path()</span></code></span></a>, <a class="reference internal" href="plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plan()</span></code></span></a>, <a class="reference internal" href="neighbors.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">neighbors()</span></code></span></a>,
 <a class="reference internal" href="relationship_audit.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">relationship_audit()</span></code></span></a>, <a class="reference internal" href="pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pull()</span></code></span></a>,
-<a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery::join</span></code></span></a>) then use to find and validate join
+<a class="reference internal" href="../../nexus_traverse_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse::join</span></code></span></a>) then use to find and validate join
 paths without you having to restate the join keys every time.</p>
 </section>
 <section id="parameters">
@@ -101,6 +101,7 @@ A reference to the same, now-mutated workspace.</p>
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Declare a single relationship, non-mutating form.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
@@ -291,6 +292,7 @@ relationship actually holds against the current data.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -304,7 +306,7 @@ relationship actually holds against the current data.</p></li>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
       <li>Previous: <a href="../../nexus_api_reference.html" title="previous chapter">Nexus API Reference</a></li>
       <li>Next: <a href="apply.html" title="next chapter">Nexus::apply</a></li>

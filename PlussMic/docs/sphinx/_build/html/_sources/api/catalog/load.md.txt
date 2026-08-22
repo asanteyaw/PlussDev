@@ -32,7 +32,7 @@ is only known at runtime (e.g. from a user-supplied string); reach for the speci
     The file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic, format-agnostic configuration bundle, translated internally into the
+    A generic, format-agnostic configuration scribble, translated internally into the
     format-specific options struct (`ReadCsvOptions`, `ReadExcelOptions`, etc.).
 
 ## Returns
@@ -84,7 +84,7 @@ Catalog::load: unsupported source type 'xml'
 
 - `source_type` matching is case-insensitive.
 - The two-argument overload dispatches directly to the matching no-config `load_*()`
-  method; the three-argument overload additionally accepts a generic `Config` bundle.
+  method; the three-argument overload additionally accepts a generic `Config` scribble.
 - Every underlying `load_*()` method's own throw conditions (missing file, malformed
   content, unsupported build configuration for Excel/Parquet) apply once dispatched.
 

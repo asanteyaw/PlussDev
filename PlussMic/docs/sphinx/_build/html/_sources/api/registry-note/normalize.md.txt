@@ -50,8 +50,8 @@ they're normalized to the same form.
 Example 1. Default call normalizes to `NFC`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"txt", pluss::bundle::Slot({pluss::make_note("cafe")})},
+auto rg = pluss::scribble::Registry({
+    {"txt", pluss::scribble::Slot({pluss::make_note("cafe")})},
 });
 
 auto out = rg.fields({"txt"}).nt().normalize();
@@ -67,8 +67,8 @@ cafe
 Example 2. Passing a form explicitly.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"txt", pluss::bundle::Slot({pluss::make_note("cafe")})},
+auto rg = pluss::scribble::Registry({
+    {"txt", pluss::scribble::Slot({pluss::make_note("cafe")})},
 });
 
 auto out = rg.fields({"txt"}).nt().normalize(pluss::table::UnicodeForm::NFD);

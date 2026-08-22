@@ -467,8 +467,8 @@ class Trace {
   Trace& shade(ShadeMode mode) noexcept;
   Trace& lighting(LightingMode mode) noexcept;
   Trace& material(MaterialProfile profile) noexcept;
-  Trace& transparent(bool enable = true) noexcept;
-  Trace& annotate_levels(bool enable = true) noexcept;
+  Trace& transparent(bool enable) noexcept;
+  Trace& annotate_levels(bool enable) noexcept;
   Trace& hide() noexcept;
   Trace& show() noexcept;
 
@@ -512,7 +512,7 @@ inline Series index_series(std::int64_t count, double first = 1.0) {
   if (count == 1) {
     return pluss::make_series(std::vector<double>{first}, {1});
   }
-  return pluss::linspace(first, first + static_cast<double>(count - 1), count, ScalarType::Float64);
+  return pluss::series::linspace(first, first + static_cast<double>(count - 1), count, ScalarType::Float64);
 }
 
 template <ArithmeticRange Range>
@@ -721,9 +721,9 @@ class Pane {
   Pane& align_z(std::string group);
   Pane& align_xy(std::string group);
   Pane& align_xyz(std::string group);
-  Pane& parallel_xy_labels(bool enable = true) noexcept;
-  Pane& visible(bool enable = true) noexcept;
-  Pane& axes_visible(bool enable = true) noexcept;
+  Pane& parallel_xy_labels(bool enable) noexcept;
+  Pane& visible(bool enable) noexcept;
+  Pane& axes_visible(bool enable) noexcept;
   Pane& hide() noexcept;
   Pane& show() noexcept;
   Pane& clear_x_align() noexcept;

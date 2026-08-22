@@ -101,6 +101,9 @@ struct FoldBatchPair {
 using MetricReport = metrics::MetricReport;
 using SeriesCompareReport = metrics::SeriesCompareReport;
 using LinearParameters = metrics::LinearParameters;
+using ValidationOptions = metrics::ValidationOptions;
+using CrossValidationReport = metrics::CrossValidationReport;
+using FoldBatchPair = metrics::FoldBatchPair;
 using metrics::as_stratify_series;
 using metrics::compare_series;
 using metrics::max_abs_diff;

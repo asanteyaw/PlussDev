@@ -3,12 +3,18 @@
 #include "pluss/error.h"
 
 #include <cctype>
+#include <initializer_list>
 #include <source_location>
 #include <sstream>
 #include <string>
 #include <string_view>
 
 namespace pluss::validate {
+
+struct Warn {
+  bool condition = true;
+  std::string_view message = "validation warning";
+};
 
 namespace detail {
 
@@ -44,6 +50,31 @@ inline void warn(
     std::string_view message,
     const std::source_location& loc = std::source_location::current()) {
   ::pluss::codem::warn(detail::normalized_message(message, "validation warning"), loc);
+}
+
+inline void warn(
+    const char* message,
+    const std::source_location& loc = std::source_location::current()) {
+  ::pluss::codem::warn(detail::normalized_message(message ? std::string_view(message) : std::string_view{},
+                                                  "validation warning"),
+                       loc);
+}
+
+inline void warn(
+    bool condition,
+    std::string_view message = "validation warning",
+    const std::source_location& loc = std::source_location::current()) {
+  if (condition) return;
+  ::pluss::codem::warn(detail::normalized_message(message, "validation warning"), loc);
+}
+
+inline void warn(
+    std::initializer_list<Warn> checks,
+    const std::source_location& loc = std::source_location::current()) {
+  for (const auto& check : checks) {
+    if (check.condition) continue;
+    ::pluss::codem::warn(detail::normalized_message(check.message, "validation warning"), loc);
+  }
 }
 
 inline void inspect(

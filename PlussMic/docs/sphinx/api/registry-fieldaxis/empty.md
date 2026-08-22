@@ -34,9 +34,9 @@ Example 1. Isolate the zero-length field in a registry that also has a
 non-empty field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"empty_field", pluss::bundle::Slot(std::vector<pluss::bundle::Slot::Value>{})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"empty_field", pluss::scribble::Slot(std::vector<pluss::scribble::Slot::Value>{})},
 });
 
 auto out = rg.fieldaxis().empty();

@@ -32,7 +32,7 @@ Encodes each value's text bytes using the named encoding, replacing each
 Example 1. Default call: base64-encode.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("hi")});
+auto slot = pluss::scribble::Slot({pluss::make_note("hi")});
 auto out = slot.nt().encode();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
@@ -46,7 +46,7 @@ aGk=
 Example 2. Passing `"hex"` explicitly.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("hi")});
+auto slot = pluss::scribble::Slot({pluss::make_note("hi")});
 auto out = slot.nt().encode("hex");
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```

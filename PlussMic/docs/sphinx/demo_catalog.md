@@ -17,6 +17,6 @@
 
 - `PlussMic/examples/kindle/kindle_model_demo.cpp`: `Stream`, `Catalog`, and `Archive` workflows
 
-## Bundle Examples
+## Scribble Examples
 
-- `PlussMic/examples/bundle/bundle_model_demo.cpp`: `Slot`, `Registry`, and `Axel` workflows
+- `PlussMic/examples/scribble/scribble_model_demo.cpp`: `Slot`, `Registry`, and `Axel` workflows

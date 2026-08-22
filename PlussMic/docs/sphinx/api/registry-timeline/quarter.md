@@ -31,8 +31,8 @@ replacing each `Timeline` field with an `Int64` `Series` field.
 Example 1. Extract the quarter from a July and a March timestamp.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().quarter();

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,7 +53,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s static constructor for plain delimited text files that aren’t
 necessarily comma-separated — the same underlying parser and type-inference machinery
-as <a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_csv()</span></code></span></a>, read through a <code class="docutils literal notranslate"><span class="pre">Config</span></code>/<code class="docutils literal notranslate"><span class="pre">ConfigEntry</span></code> settings bundle
+as <a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_csv()</span></code></span></a>, read through a <code class="docutils literal notranslate"><span class="pre">Config</span></code>/<code class="docutils literal notranslate"><span class="pre">ConfigEntry</span></code> settings scribble
 instead of <code class="docutils literal notranslate"><span class="pre">load_csv()</span></code>’s rich set of dedicated positional/typed overloads.</p>
 </section>
 <section id="parameters">
@@ -62,7 +62,7 @@ instead of <code class="docutils literal notranslate"><span class="pre">load_csv
 <p>Path to the text file to read.</p>
 <p><strong>config</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>) / <strong>config_entries</strong>
 (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;pluss::loader::ConfigEntry&gt;</span></code>)</p>
-<p>A reusable or inline settings bundle. Recognizes the same kind of keys <code class="docutils literal notranslate"><span class="pre">load_csv()</span></code>’s
+<p>A reusable or inline settings scribble. Recognizes the same kind of keys <code class="docutils literal notranslate"><span class="pre">load_csv()</span></code>’s
 <code class="docutils literal notranslate"><span class="pre">Config</span></code> overload does (<code class="docutils literal notranslate"><span class="pre">sep</span></code>, <code class="docutils literal notranslate"><span class="pre">header</span></code>, <code class="docutils literal notranslate"><span class="pre">ncases</span></code>, <code class="docutils literal notranslate"><span class="pre">case</span></code>, <code class="docutils literal notranslate"><span class="pre">usefeats</span></code>, and so on) —
 <code class="docutils literal notranslate"><span class="pre">load_txt()</span></code> doesn’t default to a different delimiter on the read side; pass
 <code class="docutils literal notranslate"><span class="pre">{&quot;sep&quot;,</span> <span class="pre">&quot;\t&quot;}</span></code> explicitly for tab-separated input, the same as you would for
@@ -199,6 +199,7 @@ and type-inference behavior, plus the richer overload set (typed options,
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>

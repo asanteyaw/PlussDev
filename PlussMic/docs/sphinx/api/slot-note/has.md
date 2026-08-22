@@ -50,7 +50,7 @@ instead.
 Example 1. Default call: literal, case-sensitive substring search.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")});
 auto out = slot.nt().has("Ac");
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
@@ -66,7 +66,7 @@ true false
 Example 2. The `case_sensitive` toggle finds it regardless of case.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")});
 pluss::table::TextOptions opts;
 opts.case_sensitive = false;
 auto out = slot.nt().has("AC", opts);

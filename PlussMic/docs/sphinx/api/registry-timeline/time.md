@@ -33,8 +33,8 @@ date is reset to the Unix epoch day (`1970-01-01`) — replacing each
 Example 1. Keep only the time-of-day from two timestamps.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().time();

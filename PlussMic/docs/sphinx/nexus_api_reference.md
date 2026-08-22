@@ -1,13 +1,18 @@
 # Nexus API Reference
 
-This page documents the public `Nexus` surface with usage-first examples generated
-from the current table API.
+This page documents the public `Nexus` surface as part of the `bundle`
+workspace model.
 
 `Nexus` is a named, multi-table workspace built on top of [`DataFrame`](dataframe_api_reference.md)
 — it holds a keyed collection of frames, layers on declared relationships between
-them, and provides key/relationship auditing, join-graph pathfinding, a fluent query
-builder ([`NexusQuery`](nexus_query_api_reference.md), returned by `from()`), and
-save/load persistence.
+them, and provides key/relationship auditing, join-graph pathfinding, a fluent
+pull builder (`pull(root)`), a fluent graph builder
+([`NexusTraverse`](nexus_traverse_api_reference.md), returned by `from()`), a SQL
+workspace accessor ([`NexusQuery`](nexus_query_api_reference.md), returned by
+`query()`), and save/load persistence.
+
+Use the `pluss::bundle` namespace for `Nexus` itself, and `pluss::table` for the
+`DataFrame` and `Atlas` objects it coordinates.
 
 ```{note} No dedicated constructor page
 Construct a `Nexus` with `Nexus({{"name", frame}, ...})` (a vector or brace list of
@@ -34,10 +39,27 @@ page pointing back to the canonical one.
 
 ## The Query Builder
 
-`Nexus::from(table)` returns a [`NexusQuery`](nexus_query_api_reference.md), a
-separate fluent builder for walking the join graph from one anchor table
-(`.join()`/`.via()`/`.pick()`/`.drop()`/`.collect()`). See its own reference page for
-the full method-by-method breakdown.
+`Nexus::pull(root)` now has two layers:
+
+- `pull(root)` returns a fluent root-grain feature builder
+- `pull(root, {...})` executes immediately from string expressions or typed `PullSpec`s
+
+The fluent builder is the preferred spelling for real feature assembly because it
+avoids repeating namespace qualifiers on every requested field, while still
+delegating to the same underlying pull engine.
+
+Its builder edge now follows the same pattern as `DataFrame`: canonical
+`RangeView` inputs, with ergonomic brace-list / vector / array call sites adapted
+through `StackArray` where needed. That keeps ordinary user code short while
+avoiding fragile overload proliferation in the public API.
+
+`Nexus::from(table)` returns a [`NexusTraverse`](nexus_traverse_api_reference.md),
+a separate fluent builder for walking the join graph from one anchor table
+(`.join()`/`.via()`/`.pick()`/`.drop()`/`.collect()`).
+
+`Nexus::query()` returns a [`NexusQuery`](nexus_query_api_reference.md), the
+workspace SQL accessor for `SELECT ... FROM ... JOIN ...` queries over the
+named tables already loaded into the `Nexus`.
 
 ```{toctree}
 :hidden:
@@ -87,6 +109,8 @@ api/nexus/path
 api/nexus/plan
 api/nexus/profile
 api/nexus/pull
+api/nexus/query
+api/nexus/read
 api/nexus/relationship
 api/nexus/relationship_audit
 api/nexus/relationships

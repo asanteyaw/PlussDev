@@ -18,10 +18,10 @@ For code that only wants PlussMic:
 #include <pluss/mic.h>
 ```
 
-`<pluss/mic.h>` includes table, loader, Kindle, and Bundle surfaces:
+`<pluss/mic.h>` includes table, loader, Kindle, and Scribble surfaces:
 
 ```cpp
-#include "pluss/bundle/bundle.h"
+#include "pluss/scribble/scribble.h"
 #include "pluss/kindle/kindle.h"
 #include "pluss/loader/loader.h"
 #include "pluss/table/table.h"
@@ -99,7 +99,7 @@ Useful PlussMic examples live under:
 ```text
 PlussMic/examples/table/
 PlussMic/examples/kindle/
-PlussMic/examples/bundle/
+PlussMic/examples/scribble/
 ```
 
 The examples are a good way to verify that a build has working table I/O,
@@ -120,7 +120,7 @@ Use module headers for production libraries with tighter dependencies:
 #include <pluss/table/table.h>
 #include <pluss/loader/loader.h>
 #include <pluss/kindle/kindle.h>
-#include <pluss/bundle/bundle.h>
+#include <pluss/scribble/scribble.h>
 ```
 
 Use source-local headers only when working inside the Pluss repository.

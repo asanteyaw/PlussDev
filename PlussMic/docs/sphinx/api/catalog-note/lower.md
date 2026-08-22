@@ -72,7 +72,7 @@ city                     | Note         | Note             | 2       | [accra, t
 - [`CatalogNoteAccessor::casefold`](casefold.md): a Unicode-aware alternative
   purpose-built for case-insensitive comparison.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::lower`](../registry-note/lower.md): the bundle-model
+- [`RegistryNoteAccessor::lower`](../registry-note/lower.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

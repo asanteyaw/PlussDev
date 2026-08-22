@@ -41,8 +41,8 @@ case, prefer `casefold()` on both sides over `lower()`.
 Example 1. Case-fold a projected `city` field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")})},
 });
 
 auto out = rg.fields({"city"}).nt().casefold();
@@ -62,9 +62,9 @@ scope it with [`fields(keys)`](../registry/fields.md) first if only some
 fields should be affected.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
-    {"country", pluss::bundle::Slot({pluss::make_note("GHANA")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
+    {"country", pluss::scribble::Slot({pluss::make_note("GHANA")})},
 });
 
 auto out = rg.nt().casefold();

@@ -30,7 +30,7 @@ Appends `value` to the slot in place and returns `*this` for chaining.
 Example 1. Append in place; the same handle grows.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 slot.push_(pluss::make_series(99));
 std::cout << "size=" << slot.size() << " last=" << std::get<pluss::Series>(slot.at(3)).to_vec<std::int64_t>()[0];
 ```
@@ -44,7 +44,7 @@ size=4 last=99
 Example 2. Copy-on-write: mutating a copy leaves the original untouched.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
 auto copy = slot;
 copy.push_(pluss::make_series(99));
 std::cout << "slot.size=" << slot.size() << " copy.size=" << copy.size();

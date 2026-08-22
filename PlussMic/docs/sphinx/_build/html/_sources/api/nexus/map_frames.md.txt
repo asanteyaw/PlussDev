@@ -50,6 +50,7 @@ set.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto print_keys = [](const Nexus& nx) {
   for (std::int64_t i = 0; i < nx.ntables(); ++i) {

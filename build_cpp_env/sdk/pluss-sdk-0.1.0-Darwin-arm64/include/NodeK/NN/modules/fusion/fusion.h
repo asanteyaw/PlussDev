@@ -19,17 +19,29 @@ struct FusionOptions {
 class PLUSS_API FusionImpl final : public Module {
 public:
   explicit FusionImpl(FusionOptions options) : Module(true), options_(std::move(options)) {
+    // register_parameters_() allocates real (defined) storage for
+    // weight_/bias_ and registers each immediately after -- allocation and
+    // registration happen together, per parameter, so there is no window
+    // where a parameter is registered before it exists (see
+    // Module::parameter_record()'s contract). reset_parameters() then only
+    // fills in values, in place, and is safe to call again later.
     register_parameters_();
     reset_parameters();
   }
   FusionImpl(std::int64_t in_features, std::int64_t out_features, bool bias = true, Config cfg = ::pluss::detail::nn::default_cfg_(), std::uint64_t seed = 0)
       : FusionImpl(FusionOptions{in_features, out_features, bias, cfg, seed}) {}
 
+  // Re-randomizes weight/bias values in place. Never reassigns weight_/
+  // bias_, so it's safe to call any number of times after construction --
+  // registration and tracks_slope_ (set once, in register_parameters_())
+  // are never disturbed.
   void reset_parameters() {
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
     const double bound = 1.0 / std::sqrt(static_cast<double>(options_.in_features));
-    weight_ = ::pluss::detail::nn::uniform_({options_.out_features, options_.in_features}, -bound, bound, cfg, options_.seed);
-    bias_ = options_.bias ? ::pluss::detail::nn::uniform_({options_.out_features}, -bound, bound, cfg, options_.seed + 1ULL) : Series();
+    weight_.copy_(::pluss::detail::nn::uniform_({options_.out_features, options_.in_features}, -bound, bound, cfg, options_.seed));
+    if (options_.bias) {
+      bias_.copy_(::pluss::detail::nn::uniform_({options_.out_features}, -bound, bound, cfg, options_.seed + 1ULL));
+    }
   }
 
   Series forward(const Series& input) const { return pluss::ai::ff(input, weight_, bias_); }
@@ -47,8 +59,11 @@ public:
 private:
   void register_parameters_() {
     this->clear_parameter_records_();
+    const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
+    weight_ = Series::empty({options_.out_features, options_.in_features}, cfg.dtype, cfg.platform);
     this->parameter_record("weight", weight_);
     if (options_.bias) {
+      bias_ = Series::empty({options_.out_features}, cfg.dtype, cfg.platform);
       this->parameter_record("bias", bias_);
     }
   }

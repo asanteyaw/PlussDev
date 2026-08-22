@@ -12,6 +12,10 @@ notes. This page is the curated entry point into them.
 - [Series API Reference](sphinx/series_api_reference.md): the per-method reference
   for `Series` — one page per method, with real, verified examples. The primary
   entry point; start here.
+- [Series Factory API Reference](sphinx/series_factory_api_reference.md): the
+  separate handwritten construction reference for `pluss::series::*` — shape-first
+  allocators, value-first constructors, range builders, and the broader Series
+  factory surface.
 - [Note API Reference](sphinx/note_api_reference.md): the handwritten per-method
   reference for `Note` — the vectorized text object for cleanup, tokenization,
   regex work, NLP-style text preprocessing, and TeX-aware transforms.
@@ -37,6 +41,7 @@ notes. This page is the curated entry point into them.
 :maxdepth: 1
 
 sphinx/series_api_reference
+sphinx/series_factory_api_reference
 sphinx/note_api_reference
 sphinx/timeline_api_reference
 sphinx/duration_api_reference

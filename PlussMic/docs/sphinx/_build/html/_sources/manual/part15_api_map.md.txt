@@ -82,13 +82,21 @@ See [Atlas API Reference](../atlas_api_reference.md).
 | `Catalog` | [Catalog API Reference](../catalog_api_reference.md) |
 | `Archive` | [Archive API Reference](../archive_api_reference.md) |
 
-## Bundle API areas
+## Scribble API areas
 
 | Type | Reference |
 | --- | --- |
 | `Slot` | [Slot API Reference](../slot_api_reference.md) |
 | `Registry` | [Registry API Reference](../registry_api_reference.md) |
 | `Axel` | [Axel API Reference](../axel_api_reference.md) |
+
+## Bundle API areas
+
+| Type | Reference |
+| --- | --- |
+| `Nexus` | [Nexus API Reference](../nexus_api_reference.md) |
+| `NexusTraverse` | [NexusTraverse API Reference](../nexus_traverse_api_reference.md) |
+| `NexusQuery` | [NexusQuery API Reference](../nexus_query_api_reference.md) |
 
 ## Example source map
 
@@ -101,4 +109,4 @@ See [Atlas API Reference](../atlas_api_reference.md).
 | `atlas_plot_demo.cpp` | Atlas plotting |
 | `loader_saver_parity_demo.cpp` | load/save round trips |
 | `kindle_model_demo.cpp` | Kindle model |
-| `bundle_model_demo.cpp` | Bundle model |
+| `scribble_model_demo.cpp` | Scribble model |

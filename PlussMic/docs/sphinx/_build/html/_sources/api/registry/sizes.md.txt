@@ -33,9 +33,9 @@ Example 1. A ragged registry's field lengths, read back sorted for a determinist
 printout.
 
 ```cpp
-auto ragged = pluss::bundle::Registry({
-    {"a", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"b", pluss::bundle::Slot({pluss::make_series(10), pluss::make_series(20)})},
+auto ragged = pluss::scribble::Registry({
+    {"a", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"b", pluss::scribble::Slot({pluss::make_series(10), pluss::make_series(20)})},
 });
 
 auto sizes = ragged.sizes();

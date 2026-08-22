@@ -79,7 +79,7 @@ ts                       | Series       | Series[int32]    | 2       | [31, 29]
   last day of its month.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::day`](../registry-timeline/day.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="date.html">

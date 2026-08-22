@@ -74,7 +74,7 @@ std::cout << fmted.keys("ts").as_note().at(0);
   offset instead of snapping to a period boundary.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::period`](../registry-timeline/period.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month_start.html">

@@ -30,6 +30,7 @@ Example 1. A two-table workspace reports `2`.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", pluss::make_series({1.0, 2.0, 3.0})},

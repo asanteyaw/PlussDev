@@ -42,7 +42,7 @@ for "does this slot have any repeated values," that's
 Example 1. A freshly constructed slot is its own sole owner.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
 std::cout << std::boolalpha << slot.unique();
 ```
 
@@ -56,7 +56,7 @@ Example 2. Copying the slot means *neither* handle is unique anymore — see
 the danger callout above.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
 auto copy = slot;
 std::cout << std::boolalpha << slot.unique() << " " << copy.unique();
 ```

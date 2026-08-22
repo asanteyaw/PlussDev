@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -70,7 +70,7 @@ available.</p>
 <p><strong>filepath</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
 The <code class="docutils literal notranslate"><span class="pre">.xlsx</span></code> file to read.</p>
 <p><strong>config</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>, optional)
-A generic configuration bundle, translated into <code class="docutils literal notranslate"><span class="pre">ReadExcelOptions</span></code> internally.</p>
+A generic configuration scribble, translated into <code class="docutils literal notranslate"><span class="pre">ReadExcelOptions</span></code> internally.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::ReadExcelOptions&amp;</span></code>, optional)
 Sheet selection and header-parsing controls, same struct as
 <a class="reference internal" href="../catalog/load_excel.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::load_excel</span></code></span></a>’s.</p>
@@ -86,7 +86,7 @@ A new registry with one field per column of the selected sheet.</p>
 throws — this is the exact message this documentation environment produces, since it
 was built without <code class="docutils literal notranslate"><span class="pre">libzip</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">load_excel</span><span class="p">(</span><span class="s">&quot;cities.xlsx&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">rg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">scribble</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">load_excel</span><span class="p">(</span><span class="s">&quot;cities.xlsx&quot;</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="p">}</span>
@@ -167,6 +167,7 @@ kindle model, with the same <code class="docutils literal notranslate"><span cla
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -180,7 +181,7 @@ kindle model, with the same <code class="docutils literal notranslate"><span cla
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../plussmic_scribble.html">PlussMic <code class="docutils literal notranslate"><span class="pre">scribble</span></code></a><ul>
   <li><a href="../../registry_api_reference.html">Registry API Reference</a><ul>
       <li>Previous: <a href="load_csv.html" title="previous chapter">Registry::load_csv</a></li>
       <li>Next: <a href="load_json.html" title="next chapter">Registry::load_json</a></li>

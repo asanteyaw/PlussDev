@@ -34,8 +34,8 @@ Checks whether each bound field's text ends with `suffix`, replacing each
 Example 1. Check which city names end in `"ma"`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 auto out = rg.fields({"city"}).nt().ends("ma");

@@ -33,8 +33,8 @@ each field's `Note` values with their encoded text form.
 Example 1. Default call: base64-encode a text field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"txt", pluss::bundle::Slot({pluss::make_note("hi")})},
+auto rg = pluss::scribble::Registry({
+    {"txt", pluss::scribble::Slot({pluss::make_note("hi")})},
 });
 
 auto out = rg.fields({"txt"}).nt().encode();
@@ -50,8 +50,8 @@ aGk=
 Example 2. Passing `"hex"` explicitly selects hexadecimal encoding instead.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"txt", pluss::bundle::Slot({pluss::make_note("hi")})},
+auto rg = pluss::scribble::Registry({
+    {"txt", pluss::scribble::Slot({pluss::make_note("hi")})},
 });
 
 auto out = rg.fields({"txt"}).nt().encode("hex");

@@ -34,11 +34,11 @@ to one named field's `Slot` directly on this registry.
 Example 1. Append one more value onto `id`, in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
-auto extra = pluss::bundle::Slot({pluss::make_series(4)});
+auto extra = pluss::scribble::Slot({pluss::make_series(4)});
 rg.concat_("id", extra);
 
 auto ids = rg.fields("id");

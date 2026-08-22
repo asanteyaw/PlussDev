@@ -38,13 +38,13 @@ Example 1. Select every `Series`-kind field directly via `kind()`, equivalent
 to calling [`series()`](series.md).
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"user_id", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"user_id", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
-auto out = rg.fieldaxis().kind(pluss::bundle::SlotKind::Series);
+auto out = rg.fieldaxis().kind(pluss::scribble::SlotKind::Series);
 for (const auto& key : out.fields()) std::cout << key << " ";
 ```
 

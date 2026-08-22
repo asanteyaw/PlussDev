@@ -40,7 +40,7 @@ enum class UnicodeForm : std::uint8_t {
 Example 1. Default call normalizes to `NFC`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("cafe")});
+auto slot = pluss::scribble::Slot({pluss::make_note("cafe")});
 auto out = slot.nt().normalize();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```

@@ -33,7 +33,7 @@ Example 1. Cast a two-value `Note` field of date-looking text to
 `TimeIndex`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("2024-01-01"), pluss::make_note("2024-01-02")});
+auto slot = pluss::scribble::Slot({pluss::make_note("2024-01-01"), pluss::make_note("2024-01-02")});
 auto out = slot.cast().timeindex();
 std::cout << out.to_json();
 ```
@@ -56,7 +56,7 @@ Example 2. A single-value slot converts the same way a multi-value one
 does.
 
 ```cpp
-auto single = pluss::bundle::Slot({pluss::make_note("2024-01-01")});
+auto single = pluss::scribble::Slot({pluss::make_note("2024-01-01")});
 auto out = single.cast().timeindex();
 std::cout << out.to_json();
 ```

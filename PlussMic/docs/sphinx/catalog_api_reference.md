@@ -38,7 +38,6 @@ catalog_keyaxis_accessor_api_reference
 api/catalog/astype
 api/catalog/begin
 api/catalog/bfill
-api/catalog/bundelize
 api/catalog/cast
 api/catalog/clean
 api/catalog/cloc
@@ -98,6 +97,7 @@ api/catalog/save_excel
 api/catalog/save_json
 api/catalog/save_parquet
 api/catalog/save_txt
+api/catalog/scribbelize
 api/catalog/select
 api/catalog/set
 api/catalog/set_

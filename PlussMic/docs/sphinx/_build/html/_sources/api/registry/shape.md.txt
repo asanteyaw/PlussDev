@@ -36,9 +36,9 @@ other's length.
 Example 1. A registry whose fields all share the same length.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 auto [state, fields] = rg.shape();
@@ -55,9 +55,9 @@ Example 2. A **ragged** registry (fields of different lengths) reports the longe
 field's length as the row count, rather than throwing.
 
 ```cpp
-auto ragged = pluss::bundle::Registry({
-    {"a", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"b", pluss::bundle::Slot({pluss::make_series(10), pluss::make_series(20)})},
+auto ragged = pluss::scribble::Registry({
+    {"a", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"b", pluss::scribble::Slot({pluss::make_series(10), pluss::make_series(20)})},
 });
 
 auto [state, fields] = ragged.shape();

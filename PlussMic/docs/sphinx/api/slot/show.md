@@ -31,7 +31,7 @@ string. What `operator<<` calls internally.
 Example 1. Write to a caller-provided stream.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
 std::ostringstream oss;
 slot.show(oss);
 std::cout << std::boolalpha << (oss.str() == slot.to_string());

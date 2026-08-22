@@ -25,7 +25,7 @@
 namespace pluss::table {
 class DataFrame;
 }
-namespace pluss::bundle {
+namespace pluss::scribble {
 class Registry;
 }
 
@@ -354,7 +354,7 @@ public:
   Catalog drop(std::initializer_list<std::string_view> keys) const;
 
   pluss::table::DataFrame tabelize(const TabelizePolicy& policy = {}) const;
-  pluss::bundle::Registry bundelize() const;
+  pluss::scribble::Registry scribbelize() const;
 
   void display() const;
   void info() const;

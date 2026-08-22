@@ -42,13 +42,13 @@ Example 2.
 Example 1. Concatenate two two-frame axels into one four-frame axel.
 
 ```cpp
-auto a = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+auto a = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(0)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
-auto b = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
+auto b = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
 });
 auto out = a.concat_depth(b);
 std::cout << out.depth();
@@ -64,13 +64,13 @@ Example 2. Labels only survive when *both* sides have them — here `a`
 is labeled and `b` is not, so the concatenated result has no labels.
 
 ```cpp
-auto a = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
-}, pluss::bundle::Slot({pluss::make_note("l0"), pluss::make_note("l1")}));
-auto b = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
+auto a = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(0)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
+}, pluss::scribble::Slot({pluss::make_note("l0"), pluss::make_note("l1")}));
+auto b = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
 });
 auto out = a.concat_depth(b);
 std::cout << std::boolalpha << out.labels().has_value();
@@ -85,14 +85,14 @@ false
 Example 3. When both sides are labeled, the labels concatenate too.
 
 ```cpp
-auto a = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(0)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
-}, pluss::bundle::Slot({pluss::make_note("l0"), pluss::make_note("l1")}));
-auto b = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
-}, pluss::bundle::Slot({pluss::make_note("l2"), pluss::make_note("l3")}));
+auto a = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(0)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
+}, pluss::scribble::Slot({pluss::make_note("l0"), pluss::make_note("l1")}));
+auto b = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
+}, pluss::scribble::Slot({pluss::make_note("l2"), pluss::make_note("l3")}));
 auto out = a.concat_depth(b);
 std::cout << "has_value=" << std::boolalpha << out.labels().has_value() << " size=" << out.labels()->size();
 ```

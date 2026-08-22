@@ -38,8 +38,8 @@ relabels it back to `"UTC"`, and that too is visible on the next read —
 the instant itself never changes across either call.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto ny = axel.fields({"ts"}).tl().tz("America/New_York");
 std::cout << "NY-relabeled: "

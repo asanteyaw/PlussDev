@@ -3,12 +3,12 @@
 
 using pluss::codem::Series;
 using pluss::codem::ScalarType;
-using pluss::arange;
-using pluss::eye;
-using pluss::linspace;
-using pluss::poisson;
-using pluss::rand;
-using pluss::randn;
+using pluss::series::arange;
+using pluss::series::eye;
+using pluss::series::linspace;
+using pluss::series::poisson;
+using pluss::series::rand;
+using pluss::series::randn;
 
 
 

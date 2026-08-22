@@ -42,7 +42,7 @@ Example 1. Shift two timestamps forward one calendar month, showing
 day-of-month clamping on the January value.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().shift(1, "months");
 auto fmted = out.tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << std::get<pluss::Note>(fmted.at(0)).at(0) << " | "
@@ -62,7 +62,7 @@ than overflowing into March.
 Example 2. An unrecognized frequency throws.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
 try {
   auto out = slot.tl().shift(1, "bogus");
 } catch (const std::exception& e) {

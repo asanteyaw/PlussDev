@@ -74,7 +74,7 @@ ts                       | Series       | Series[int32]    | 2       | [2024, 20
   year.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::year`](../registry-timeline/year.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="weekend.html">

@@ -28,7 +28,7 @@ known at runtime; reach for the specific `save_*()` method directly otherwise.
     The destination file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the format-specific writer options.
+    A generic configuration scribble, translated into the format-specific writer options.
 
 ## Returns
 

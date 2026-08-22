@@ -104,7 +104,7 @@ Timeline::shift: unsupported frequency
   periods rather than shifting each one.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::shift`](../registry-timeline/shift.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="second.html">

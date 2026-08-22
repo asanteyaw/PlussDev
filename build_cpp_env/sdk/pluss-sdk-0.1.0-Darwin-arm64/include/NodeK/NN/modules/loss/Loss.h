@@ -148,7 +148,7 @@ inline Series class_weight_for_index_target_(const Series& class_weight,
                                              const Series& safe_target_index,
                                              const Series& like) {
   if (!class_weight.defined()) {
-    return pluss::ones(safe_target_index.sizes(), Config{}.with_dtype(like.scalar_type()).with_platform(like.platform()));
+    return pluss::series::ones(safe_target_index.sizes(), Config{}.with_dtype(like.scalar_type()).with_platform(like.platform()));
   }
   const Series flat = safe_target_index.reshape({safe_target_index.numel()});
   const Series gathered = class_weight.gather(0, flat);
@@ -321,7 +321,7 @@ inline Series NLL(const Series& log_probs, const Series& target, const NLLOption
   Series safe_target = target_i64;
   if (options.use_ignore_index) {
     active_mask = target_i64.ne(options.ignore_index);
-    safe_target = active_mask.where(target_i64, pluss::zeros_like(target_i64, ScalarType::Int64));
+    safe_target = active_mask.where(target_i64, pluss::series::zeros_like(target_i64, ScalarType::Int64));
   }
 
   const Series gather_index = safe_target.unsqueeze(class_dim);
@@ -338,7 +338,7 @@ inline Series NLL(const Series& log_probs, const Series& target, const NLLOption
     denom = detail::scalar_on_(static_cast<double>(target.numel()), per);
   }
   if (options.use_ignore_index) {
-    per = active_mask.where(per, pluss::zeros_like(per, per.scalar_type()));
+    per = active_mask.where(per, pluss::series::zeros_like(per, per.scalar_type()));
     const Series active_f = active_mask.to(per.scalar_type());
     if (options.class_weight.defined()) {
       denom = class_scale.mul(active_f).sum();
@@ -406,7 +406,7 @@ inline Series CrossEntropy(const Series& logits, const Series& target, const Cro
   Series safe_target = target_i64;
   if (options.use_ignore_index) {
     active_mask = target_i64.ne(options.ignore_index);
-    safe_target = active_mask.where(target_i64, pluss::zeros_like(target_i64, ScalarType::Int64));
+    safe_target = active_mask.where(target_i64, pluss::series::zeros_like(target_i64, ScalarType::Int64));
   }
 
   const Series gather_index = safe_target.unsqueeze(class_dim);
@@ -430,7 +430,7 @@ inline Series CrossEntropy(const Series& logits, const Series& target, const Cro
                      : detail::scalar_on_(static_cast<double>(target.numel()), per);
 
   if (options.use_ignore_index) {
-    per = active_mask.where(per, pluss::zeros_like(per, per.scalar_type()));
+    per = active_mask.where(per, pluss::series::zeros_like(per, per.scalar_type()));
     const Series active_f = active_mask.to(per.scalar_type());
     if (options.class_weight.defined()) {
       denom = class_scale.mul(active_f).sum();

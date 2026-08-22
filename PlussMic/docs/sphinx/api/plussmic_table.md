@@ -5,8 +5,6 @@ The `table` model is the main analysis surface in PlussMic.
 - Use [`DataFrame`](../dataframe_api_reference.md) for named, mixed-type tabular analysis.
 - Use [`Thread`](../thread_api_reference.md) when you want one typed column outside a frame.
 - Use [`Atlas`](../atlas_api_reference.md) when you want a depth stack of frames.
-- Use [`Nexus`](../nexus_api_reference.md) when you want a named, multi-table workspace
-  with declared relationships and join-graph queries across several frames at once.
 
 The helper/reference pages below stay in this same branch so the sidebar remains object-first instead of file-first.
 
@@ -16,8 +14,6 @@ The helper/reference pages below stay in this same branch so the sidebar remains
 ../dataframe_api_reference
 ../thread_api_reference
 ../atlas_api_reference
-../nexus_api_reference
-../nexus_query_api_reference
 ../column_ref_api_reference
 ../thread_value_api_reference
 ../statistics_window_api_reference

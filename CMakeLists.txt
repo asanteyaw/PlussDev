@@ -418,6 +418,15 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/src/kindle/
     PATTERN ".DS_Store" EXCLUDE
 )
 
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/src/scribble/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/scribble
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.hh"
+    PATTERN ".DS_Store" EXCLUDE
+)
+
 # bundle/ and kindle/ headers (Axel.h, registry.h, Archive.h, catalog.h) include
 # "common/StringViewNameRange.h" by its quoted include-tree path. Stage it
 # alongside its sibling header trees so those #includes resolve for SDK

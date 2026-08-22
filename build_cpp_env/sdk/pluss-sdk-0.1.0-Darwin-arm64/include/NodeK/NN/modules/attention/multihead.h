@@ -26,6 +26,9 @@ class PLUSS_API MultiheadAttentionImpl final : public Module {
 public:
   explicit MultiheadAttentionImpl(MultiheadAttentionOptions options)
       : Module(options.training), options_(std::move(options)) {
+    // sync_parameter_records_() allocates real (defined) storage for every
+    // weight/bias and registers each immediately after -- see FusionImpl's
+    // identical fix and Module::parameter_record()'s contract.
     sync_parameter_records_();
     reset_parameters();
   }
@@ -51,53 +54,23 @@ public:
             .training = true,
         }) {}
 
+  // Re-randomizes every weight/bias value in place. Never reassigns the
+  // *_weight_/*_bias_ members, so it's safe to call any number of times
+  // after construction -- registration and tracks_slope_ (set once, in
+  // sync_parameter_records_()) are never disturbed.
   void reset_parameters() {
-    PLUSS_CHECK(options_.embed_dim > 0, "pluss::ai::nn::MultiheadAttention: embed_dim must be > 0");
-    PLUSS_CHECK(options_.num_heads > 0, "pluss::ai::nn::MultiheadAttention: num_heads must be > 0");
-    PLUSS_CHECK(
-        options_.embed_dim % options_.num_heads == 0,
-        "pluss::ai::nn::MultiheadAttention: embed_dim must be divisible by num_heads");
-    PLUSS_CHECK(
-        options_.dropout >= 0.0 && options_.dropout <= 1.0,
-        "pluss::ai::nn::MultiheadAttention: dropout must be in [0,1]");
-
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
     const double bound = 1.0 / std::sqrt(static_cast<double>(options_.embed_dim));
-    q_weight_ = ::pluss::detail::nn::uniform_(
-        {options_.embed_dim, options_.embed_dim},
-        -bound,
-        bound,
-        cfg,
-        options_.seed + 11ULL);
-    k_weight_ = ::pluss::detail::nn::uniform_(
-        {options_.embed_dim, options_.embed_dim},
-        -bound,
-        bound,
-        cfg,
-        options_.seed + 13ULL);
-    v_weight_ = ::pluss::detail::nn::uniform_(
-        {options_.embed_dim, options_.embed_dim},
-        -bound,
-        bound,
-        cfg,
-        options_.seed + 17ULL);
-    out_weight_ = ::pluss::detail::nn::uniform_(
-        {options_.embed_dim, options_.embed_dim},
-        -bound,
-        bound,
-        cfg,
-        options_.seed + 19ULL);
+    q_weight_.copy_(::pluss::detail::nn::uniform_({options_.embed_dim, options_.embed_dim}, -bound, bound, cfg, options_.seed + 11ULL));
+    k_weight_.copy_(::pluss::detail::nn::uniform_({options_.embed_dim, options_.embed_dim}, -bound, bound, cfg, options_.seed + 13ULL));
+    v_weight_.copy_(::pluss::detail::nn::uniform_({options_.embed_dim, options_.embed_dim}, -bound, bound, cfg, options_.seed + 17ULL));
+    out_weight_.copy_(::pluss::detail::nn::uniform_({options_.embed_dim, options_.embed_dim}, -bound, bound, cfg, options_.seed + 19ULL));
 
     if (options_.bias) {
-      q_bias_ = ::pluss::detail::nn::uniform_({options_.embed_dim}, -bound, bound, cfg, options_.seed + 23ULL);
-      k_bias_ = ::pluss::detail::nn::uniform_({options_.embed_dim}, -bound, bound, cfg, options_.seed + 29ULL);
-      v_bias_ = ::pluss::detail::nn::uniform_({options_.embed_dim}, -bound, bound, cfg, options_.seed + 31ULL);
-      out_bias_ = ::pluss::detail::nn::uniform_({options_.embed_dim}, -bound, bound, cfg, options_.seed + 37ULL);
-    } else {
-      q_bias_ = Series();
-      k_bias_ = Series();
-      v_bias_ = Series();
-      out_bias_ = Series();
+      q_bias_.copy_(::pluss::detail::nn::uniform_({options_.embed_dim}, -bound, bound, cfg, options_.seed + 23ULL));
+      k_bias_.copy_(::pluss::detail::nn::uniform_({options_.embed_dim}, -bound, bound, cfg, options_.seed + 29ULL));
+      v_bias_.copy_(::pluss::detail::nn::uniform_({options_.embed_dim}, -bound, bound, cfg, options_.seed + 31ULL));
+      out_bias_.copy_(::pluss::detail::nn::uniform_({options_.embed_dim}, -bound, bound, cfg, options_.seed + 37ULL));
     }
   }
 
@@ -178,11 +151,29 @@ private:
 
   void sync_parameter_records_() {
     this->clear_parameter_records_();
+    PLUSS_CHECK(options_.embed_dim > 0, "pluss::ai::nn::MultiheadAttention: embed_dim must be > 0");
+    PLUSS_CHECK(options_.num_heads > 0, "pluss::ai::nn::MultiheadAttention: num_heads must be > 0");
+    PLUSS_CHECK(
+        options_.embed_dim % options_.num_heads == 0,
+        "pluss::ai::nn::MultiheadAttention: embed_dim must be divisible by num_heads");
+    PLUSS_CHECK(
+        options_.dropout >= 0.0 && options_.dropout <= 1.0,
+        "pluss::ai::nn::MultiheadAttention: dropout must be in [0,1]");
+
+    const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
+    q_weight_ = Series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
+    k_weight_ = Series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
+    v_weight_ = Series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
+    out_weight_ = Series::empty({options_.embed_dim, options_.embed_dim}, cfg.dtype, cfg.platform);
     this->parameter_record("q_weight", q_weight_);
     this->parameter_record("k_weight", k_weight_);
     this->parameter_record("v_weight", v_weight_);
     this->parameter_record("out_weight", out_weight_);
     if (options_.bias) {
+      q_bias_ = Series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
+      k_bias_ = Series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
+      v_bias_ = Series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
+      out_bias_ = Series::empty({options_.embed_dim}, cfg.dtype, cfg.platform);
       this->parameter_record("q_bias", q_bias_);
       this->parameter_record("k_bias", k_bias_);
       this->parameter_record("v_bias", v_bias_);

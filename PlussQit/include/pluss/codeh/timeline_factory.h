@@ -82,33 +82,6 @@ inline pluss::Timeline time(pluss::msharp::RangeView::Of<std::string> flat,
   return time(pluss::codeh::detail::TimelineTextReader(flat, sizes));
 }
 
-// pluss::timeline::datetime(date_part, time_part) -> compose a calendar date
-// from one Timeline with the clock time from another. The output timezone is
-// taken from `date_part`; `time_part` contributes only wall-clock fields
-// (hour/minute/second/subsecond), not its stored epoch day.
-inline pluss::Timeline datetime(const pluss::Timeline& date_part,
-                                const pluss::Timeline& time_part) {
-  CODEM_CHECK(date_part.defined() && time_part.defined(),
-              "pluss::timeline::datetime: both operands must be defined");
-  auto out = pluss::Timeline::from_ymdhms(
-      date_part.year(),
-      date_part.month(),
-      date_part.day(),
-      time_part.hour(),
-      time_part.minute(),
-      time_part.second(),
-      date_part.tz());
-  auto fractional_ns = time_part.nanosecond().to(pluss::codem::ScalarType::Int64);
-  if (fractional_ns.numel() == 0) {
-    return out;
-  }
-  return out + pluss::codeh::ops_internal::duration_from_series(std::move(fractional_ns));
-}
-inline pluss::Timeline datetime(std::string_view date_part,
-                                std::string_view time_part) {
-  return datetime(date(date_part), time(time_part));
-}
-
 // Same Int64FlatReader as Duration's unit factories (see int64_flat_reader.h
 // for why this is NOT built on Series' DataReader -- precision). Two
 // overloads, not one, for the same reason Duration's unit factories need

@@ -57,8 +57,8 @@ overload counts every character, since `.` is the regex wildcard; the
 explicit `{.regex = false}` form counts actual literal dots.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"txt", pluss::bundle::Slot({pluss::make_note("banana"), pluss::make_note("a.b.c")})},
+auto rg = pluss::scribble::Registry({
+    {"txt", pluss::scribble::Slot({pluss::make_note("banana"), pluss::make_note("a.b.c")})},
 });
 
 auto regexCount = rg.fields({"txt"}).nt().count(".");
@@ -88,8 +88,8 @@ literal mode, `"banana"` has zero literal dots and `"a.b.c"` has two.
 Example 2. Case-insensitive counting of a literal pattern.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"txt", pluss::bundle::Slot({pluss::make_note("banana"), pluss::make_note("Banana")})},
+auto rg = pluss::scribble::Registry({
+    {"txt", pluss::scribble::Slot({pluss::make_note("banana"), pluss::make_note("Banana")})},
 });
 
 pluss::table::TextOptions opts;

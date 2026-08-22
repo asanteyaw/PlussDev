@@ -29,7 +29,7 @@ Lowercases every value in the bound slot and returns a new slot.
 Example 1. Lowercase two values.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")});
 auto out = slot.nt().lower();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0) << " | "
           << std::get<pluss::Note>(out.at(1)).at(0);

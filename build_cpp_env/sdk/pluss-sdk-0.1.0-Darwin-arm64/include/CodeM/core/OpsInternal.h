@@ -1,5 +1,6 @@
 #pragma once
 #include "CodeM/core/Series.h"
+#include <cstdint>
 #include <string_view>
 #include <vector>
 
@@ -44,6 +45,18 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series mul(const Series& a, double s);
   Series div(const Series& a, double s);
   Series pow(const Series& a, double s);
+
+  // Integer-exact scalar variants: a must be an integral dtype; s stays a
+  // native std::int64_t with no double round-trip, correct for the full
+  // int64_t range (the double-based scalar ops above only round-trip
+  // exactly for |s| < 2^53). div_i64/mod_i64 truncate toward zero and
+  // PLUSS_CHECK(s != 0, ...) -- distinct from div(a,b)/div(a,double) above,
+  // which always promote integral output to Float64 ("true division").
+  Series add_i64(const Series& a, std::int64_t s);
+  Series sub_i64(const Series& a, std::int64_t s);
+  Series mul_i64(const Series& a, std::int64_t s);
+  Series div_i64(const Series& a, std::int64_t s);
+  Series mod_i64(const Series& a, std::int64_t s);
 
   Series abs(const Series& a);
   Series& abs_(Series& a);

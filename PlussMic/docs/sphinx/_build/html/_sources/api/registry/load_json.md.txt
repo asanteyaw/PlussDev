@@ -26,7 +26,7 @@ applied to the JSON values instead of parsed CSV text.
     objects.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying reader options.
+    A generic configuration scribble, translated into the underlying reader options.
 
 ## Returns
 
@@ -38,7 +38,7 @@ applied to the JSON values instead of parsed CSV text.
 Example 1. Load a JSON array of objects.
 
 ```cpp
-auto rg = pluss::bundle::Registry::load_json("cities.json");
+auto rg = pluss::scribble::Registry::load_json("cities.json");
 std::cout << rg;
 ```
 

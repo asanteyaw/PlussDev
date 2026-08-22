@@ -14,7 +14,7 @@
 #include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
-#include "bundle/Slot.h"
+#include "scribble/Slot.h"
 #include "kindle/display/Display.h"
 #include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"

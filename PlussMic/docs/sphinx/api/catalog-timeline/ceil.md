@@ -74,7 +74,7 @@ and `23:45:00` rolling over the day boundary into `2024-03-01 00:00:00`.
   down, or to the nearest boundary, instead of always up.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::ceil`](../registry-timeline/ceil.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="date.html">

@@ -45,14 +45,18 @@ enum class MetricKind : std::uint8_t {
   Mae = 9,
   R2 = 10,
   QuantileLoss = 11,
+  Sensitivity = 12,
+  Specificity = 13,
+  GeometricMean = 14,
+  BalanceQuality = 15,
 };
 
 enum class CVPlanKind : std::uint8_t {
   Holdout = 0,
-  KFold = 1,
-  StratifiedKFold = 2,
-  GroupKFold = 3,
-  TimeSeries = 4,
+  CrossVal = 1,
+  StratifiedCrossVal = 2,
+  GroupCrossVal = 3,
+  TSCrossVal = 4,
 };
 
 enum class SearchKind : std::uint8_t {
@@ -74,6 +78,42 @@ enum class ScoreCalibration : std::uint8_t {
   Platt = 1,
   Isotonic = 2,
   Temperature = 3,
+};
+
+enum class BalanceTargetKind : std::uint8_t {
+  Keep = 0,
+  Equalize = 1,
+  Ratio = 2,
+  Counts = 3,
+};
+
+enum class BalanceGrowthKind : std::uint8_t {
+  ReuseRows = 0,
+  BlendNeighbors = 1,
+};
+
+enum class BalanceCleanKind : std::uint8_t {
+  None = 0,
+  BoundaryPairs = 1,
+  NeighborAgreement = 2,
+  BoundaryPairsAndNeighborAgreement = 3,
+};
+
+enum class BalanceCleanVote : std::uint8_t {
+  AnyDisagreement = 0,
+  MajorityDisagreement = 1,
+};
+
+struct BalanceTarget {
+  BalanceTargetKind kind = BalanceTargetKind::Keep;
+  double ratio = 1.0;
+  Series counts = Series::undefined();
+  BalanceGrowthKind growth = BalanceGrowthKind::ReuseRows;
+  std::int64_t neighbors = 5;
+  BalanceCleanKind clean = BalanceCleanKind::None;
+  std::int64_t clean_neighbors = 3;
+  BalanceCleanVote clean_vote = BalanceCleanVote::AnyDisagreement;
+  bool protect_small_classes = true;
 };
 
 struct RandomState {
@@ -102,6 +142,9 @@ struct TrainOptions {
   // gradient-based learners (currently linear classification).
   Series parameter_lower_bounds = Series::undefined();
   Series parameter_upper_bounds = Series::undefined();
+  // Classification row balancing/cleaning applied before estimator fitting.
+  // Default Keep + no cleaning leaves training data unchanged.
+  BalanceTarget balance{};
 };
 
 struct InferOptions {
@@ -127,14 +170,16 @@ struct SplitOptions {
   CVPlanKind plan = CVPlanKind::Holdout;
   double holdout_fraction = 0.2;
   std::int64_t folds = 5;
-  // Time-series CV controls (used when plan == CVPlanKind::TimeSeries).
-  // If time_test_size <= 0, test window is inferred like sklearn.
+  // Repetition count used when plan == CVPlanKind::StratifiedCrossVal.
+  std::int64_t repeats = 1;
+  // Time-series CV controls (used when plan == CVPlanKind::TSCrossVal).
+  // If time_test_size <= 0, test window is inferred from the sample/fold layout.
   // If time_max_train_size <= 0, train window is unbounded (expanding).
   std::int64_t time_gap = 0;
   std::int64_t time_test_size = 0;
   std::int64_t time_max_train_size = 0;
   bool stratified = false;
-  // Optional per-sample group labels used when plan == CVPlanKind::GroupKFold.
+  // Optional per-sample group labels used when plan == CVPlanKind::GroupCrossVal.
   // Length must match the sample count.
   Series groups = Series::undefined();
   bool reliability_defaults = true;

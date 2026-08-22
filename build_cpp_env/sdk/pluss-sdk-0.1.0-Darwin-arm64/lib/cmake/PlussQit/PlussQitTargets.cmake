@@ -60,13 +60,14 @@ add_library(pluss::plussqit_coden STATIC IMPORTED)
 
 set_target_properties(pluss::plussqit_coden PROPERTIES
   INTERFACE_COMPILE_FEATURES "cxx_std_20"
+  INTERFACE_LINK_LIBRARIES "/opt/homebrew/lib/libunistring.dylib"
 )
 
 # Create imported target pluss::plussqit_codem
 add_library(pluss::plussqit_codem STATIC IMPORTED)
 
 set_target_properties(pluss::plussqit_codem PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "PLUSSQIT_HAS_FMT=0;PLUSS_HAS_ACCELERATE=1;PLUSS_HAS_MPS=1;PLUSS_HAS_CUDA=0;ACCELERATE_NEW_LAPACK=1"
+  INTERFACE_COMPILE_DEFINITIONS "PLUSSQIT_HAS_FMT=1;FMT_HEADER_ONLY=1;PLUSS_HAS_ACCELERATE=1;PLUSS_HAS_MPS=1;PLUSS_HAS_CUDA=0;ACCELERATE_NEW_LAPACK=1"
   INTERFACE_COMPILE_FEATURES "cxx_std_20"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
   INTERFACE_LINK_LIBRARIES "-framework Accelerate;-framework Metal;-framework MetalPerformanceShaders;-framework Foundation;-framework MetalPerformanceShadersGraph"
@@ -76,7 +77,7 @@ set_target_properties(pluss::plussqit_codem PROPERTIES
 add_library(pluss::plussqit_codeh STATIC IMPORTED)
 
 set_target_properties(pluss::plussqit_codeh PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "CODEH_ENABLE_TIMELINE_SURFACE;CODEH_ENABLE_TIMEINDEX_SURFACE"
+  INTERFACE_COMPILE_DEFINITIONS "CODEH_ENABLE_TIMELINE_SURFACE;CODEH_ENABLE_TIMEINDEX_SURFACE;CODEH_ENABLE_DURATION_SURFACE"
   INTERFACE_COMPILE_FEATURES "cxx_std_20"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
   INTERFACE_LINK_LIBRARIES "pluss::plussqit_codem;pluss::plussqit_coden"

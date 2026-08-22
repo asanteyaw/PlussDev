@@ -26,7 +26,7 @@ frame via `frames(index)`), the same figure/export mechanics documented on
 ## Parameters
 
 **options** (`const AtlasPlotOptions&`, optional)
-    A bundle of per-chart-type option structs (`figure`, `frames`, `depth_axis`, `surface`,
+    A scribble of per-chart-type option structs (`figure`, `frames`, `depth_axis`, `surface`,
     `wireframe`, `cloud3`, `depth`, `depth_compare`, `depth_facet`, `depth_rolling`,
     `triplot`) — each field configures the corresponding method on the returned accessor.
 

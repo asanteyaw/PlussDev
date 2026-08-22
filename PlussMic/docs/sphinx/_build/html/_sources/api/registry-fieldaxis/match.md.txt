@@ -33,10 +33,10 @@ pattern needs to match somewhere in the name, not the whole name — anchor with
 Example 1. Select every field name ending in `_id`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"user_id", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"user_id", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 auto out = rg.fieldaxis().match("^.*_id$");
@@ -52,8 +52,8 @@ user_id
 Example 2. An invalid regex pattern throws.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 
 try {

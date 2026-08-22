@@ -55,7 +55,7 @@ The overload set trades off convenience against control:
 - The positional overload (`sep`, `ncases`, `usefeats`, `case_col`, `on_bad_lines`) is
   for one-off loads where a handful of settings need to change but a whole config object
   would be overkill.
-- The `Config` / `ReadCsvOptions` overloads are for reusable, named option bundles —
+- The `Config` / `ReadCsvOptions` overloads are for reusable, named option scribbles —
   build the options once and pass the same object to several `load_csv` calls, or store
   it alongside a data pipeline definition.
 - The `header` overloads are for headerless files or files where the source column that
@@ -104,7 +104,7 @@ What to do when a row does not parse cleanly (wrong field count, for example):
 **config** (`const pluss::loader::Config&`) / **config_entries**
 (`std::initializer_list<pluss::loader::ConfigEntry>`)
 
-A reusable or inline key/value settings bundle, for callers who prefer a single options
+A reusable or inline key/value settings scribble, for callers who prefer a single options
 object over a long positional argument list.
 
 **options** (`const pluss::loader::ReadCsvOptions&`)

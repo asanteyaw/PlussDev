@@ -36,8 +36,8 @@ frame via [`Axel::map`](../axel/map.md).
 Example 1. Default call: base64-encode a text field.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"txt", pluss::bundle::Slot({pluss::make_note("hi")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"txt", pluss::scribble::Slot({pluss::make_note("hi")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"txt"}).nt().encode();
 std::cout << std::get<pluss::Note>(out.registry(0).fields("txt").at(0)).at(0);
@@ -53,8 +53,8 @@ Example 2. Passing `"hex"` explicitly selects hexadecimal encoding
 instead.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"txt", pluss::bundle::Slot({pluss::make_note("hi")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"txt", pluss::scribble::Slot({pluss::make_note("hi")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"txt"}).nt().encode("hex");
 std::cout << std::get<pluss::Note>(out.registry(0).fields("txt").at(0)).at(0);

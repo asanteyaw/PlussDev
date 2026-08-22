@@ -31,7 +31,7 @@ build-configuration issue, not something fixable by changing your call.
     The destination `.xlsx` file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying Excel writer
+    A generic configuration scribble, translated into the underlying Excel writer
     options.
 
 ## Returns
@@ -46,9 +46,9 @@ this is the exact message this documentation environment produces, since it was
 built without `libzip`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 try {

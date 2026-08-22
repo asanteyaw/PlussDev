@@ -32,7 +32,7 @@ text representation, replacing each `Timeline` value with a `Note`
 Example 1. Render a timestamp as ISO-8601 text.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
 auto out = slot.tl().iso();
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -19,6 +20,30 @@ class DataFrame;
 }
 
 namespace pluss::loader {
+
+struct ReadCsvOptions;
+
+class CsvCaseReader {
+public:
+  CsvCaseReader(std::string_view filepath,
+                std::size_t case_batch_size);
+  CsvCaseReader(std::string_view filepath,
+                std::size_t case_batch_size,
+                const ReadCsvOptions& options);
+  CsvCaseReader(CsvCaseReader&&) noexcept;
+  CsvCaseReader& operator=(CsvCaseReader&&) noexcept;
+  ~CsvCaseReader();
+
+  CsvCaseReader(const CsvCaseReader&) = delete;
+  CsvCaseReader& operator=(const CsvCaseReader&) = delete;
+
+  bool next(pluss::table::DataFrame& output);
+  std::size_t cases_read() const noexcept;
+
+private:
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
+};
 
 enum class BadLinePolicy : std::uint8_t {
   Error = 0,
@@ -49,8 +74,7 @@ struct CsvSeparator {
   constexpr operator char() const { return value; }
 };
 
-// Broad pandas-inspired option surface. Some options are hints/placeholders for
-// planned extensions (Excel/chunked readers) and may currently be no-ops.
+// CSV parsing policy. Options that cannot be honored must fail explicitly.
 struct ReadCsvOptions {
   std::string filepath;
   bool auto_detect_sep{true};
@@ -118,7 +142,7 @@ struct WriteCsvOptions {
   bool add_cases{false};
   bool cases{false}; // legacy alias
   std::optional<std::string> case_label{};
-  std::string na_rep{"NA"};
+  std::string null_rep{};
   std::optional<std::string> float_format{};
   char quotechar{'"'};
   bool doublequote{true};

@@ -53,8 +53,8 @@ differently until they're normalized to the same form.
 Example 1. Default call normalizes to `NFC`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"txt", pluss::bundle::Slot({pluss::make_note("cafe")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"txt", pluss::scribble::Slot({pluss::make_note("cafe")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"txt"}).nt().normalize();
 std::cout << std::get<pluss::Note>(out.registry(0).fields("txt").at(0)).at(0);
@@ -69,8 +69,8 @@ cafe
 Example 2. Passing a form explicitly.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"txt", pluss::bundle::Slot({pluss::make_note("cafe")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"txt", pluss::scribble::Slot({pluss::make_note("cafe")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"txt"}).nt().normalize(pluss::table::UnicodeForm::NFD);
 std::cout << std::get<pluss::Note>(out.registry(0).fields("txt").at(0)).at(0);

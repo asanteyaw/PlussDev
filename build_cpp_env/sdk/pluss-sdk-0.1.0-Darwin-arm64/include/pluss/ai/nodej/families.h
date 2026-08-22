@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/ai/nodej/options.h"
+#include "pluss/ai/nodej/prep.h"
 
 #include <cstdint>
 #include <variant>
@@ -17,6 +18,7 @@ enum class ModelFamily : std::uint8_t {
   Bayes = 5,
   Cluster = 6,
   Decompose = 7,
+  Detect = 8,
 };
 
 enum class RegularizationKind : std::uint8_t {
@@ -78,6 +80,10 @@ enum class ClusterMethod : std::uint8_t {
 
 enum class DecomposeMethod : std::uint8_t {
   Pca = 0,
+};
+
+enum class DetectMethod : std::uint8_t {
+  Isolation = 0,
 };
 
 struct LinearFamilyOptions {
@@ -151,6 +157,11 @@ struct DecomposeFamilyOptions {
   double tolerance = 1e-6;
 };
 
+struct DetectFamilyOptions {
+  DetectMethod method = DetectMethod::Isolation;
+  prep::OutlierIsolatorOptions isolation{};
+};
+
 using FamilyOptions = std::variant<LinearFamilyOptions,
                                    TreeFamilyOptions,
                                    EnsembleFamilyOptions,
@@ -158,7 +169,8 @@ using FamilyOptions = std::variant<LinearFamilyOptions,
                                    KernelFamilyOptions,
                                    BayesFamilyOptions,
                                    ClusterFamilyOptions,
-                                   DecomposeFamilyOptions>;
+                                   DecomposeFamilyOptions,
+                                   DetectFamilyOptions>;
 
 struct ModelSpec {
   TaskKind task = TaskKind::Regression;

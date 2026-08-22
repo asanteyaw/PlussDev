@@ -37,8 +37,8 @@ Example 1. A field with one repeated value: the repeated value's count (`2`)
 sorts before the singleton's count (`1`).
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)})},
 });
 
 auto out = rg.freq();
@@ -60,8 +60,8 @@ std::cout << "]";
 Example 2. Limit to the single most frequent value's count via `top`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)})},
 });
 
 auto out = rg.freq(pluss::kindle::FreqOptions{1, true});

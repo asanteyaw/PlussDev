@@ -41,6 +41,7 @@ Example 1. Materializing a two-hop plan.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -108,7 +109,7 @@ only has entries for orders `101` and `102`.
 - [`Nexus::plan`](plan.md) / [`path`](path.md): build the recipe this method executes.
 - [`Nexus::join`](join.md): the single-hop primitive each step is equivalent to.
 - [`Nexus::run`](run.md): materialize a previously-[`store`](store.md)d plan by name.
-- [`NexusQuery::collect`](../../nexus_query_api_reference): the fluent builder's own way to
+- [`NexusTraverse::collect`](../../nexus_traverse_api_reference): the fluent builder's own way to
   reach this same execution step.
 
 <div class="pluss-inline-prev-next">

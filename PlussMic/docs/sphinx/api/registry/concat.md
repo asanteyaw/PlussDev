@@ -36,12 +36,12 @@ Returns a new registry with `other`'s values appended to one named field's
 Example 1. Append two more values onto `id`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});
+auto extra = pluss::scribble::Slot({pluss::make_series(4), pluss::make_series(5)});
 auto out = rg.concat("id", extra);
 
 auto ids = out.fields("id");

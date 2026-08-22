@@ -14,7 +14,7 @@ pluss::kindle::Archive Axel::kindelize() const
 ## What It Does
 
 Converts this `Axel` to its `kindle::Archive` representation. A
-depth-stacked bridge from the bundle model into the Kindle model.
+depth-stacked bridge from the scribble model into the Kindle model.
 
 ## Parameters
 
@@ -30,9 +30,9 @@ depth-stacked bridge from the bundle model into the Kindle model.
 Example 1. `kindelize()` preserves depth.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
 });
 auto archive = axel.kindelize();
 std::cout << archive.depth();
@@ -51,8 +51,8 @@ std::cout << archive.depth();
 
 ## See Also
 
-- [`Archive::bundelize`](../archive/bundelize.md): the reverse bridge from
-  Kindle back into the bundle model.
+- [`Archive::scribbelize`](../archive/scribbelize.md): the reverse bridge from
+  Kindle back into the scribble model.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="isnull.html">

@@ -14,7 +14,7 @@ Nexus::graph() const -> DataFrame
 
 Renders every declared [`Relationship`](relationships.md) as a `DataFrame`, one row per
 relationship — the table-free counterpart to [`schema()`](schema.md). This is the format
-[`save()`](save.md) writes to disk (as `graph.csv` by default) and [`load()`](load.md)
+[`save()`](save.md) writes to disk (as `graph.csv` by default) and [`read()`](read.md)
 reads back to reconstruct declared relationships.
 
 ## Parameters
@@ -35,6 +35,7 @@ Example 1. One declared relationship.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -76,7 +77,7 @@ std::cout << g.features({"name", "left", "right", "cardinality"});
 
 ## Notes
 
-- This is exactly the format [`save()`](save.md)/[`load()`](load.md) round-trip through
+- This is exactly the format [`save()`](save.md)/[`read()`](read.md) round-trip through
   disk for relationships.
 - Empty (no declared relationships) returns a defined, zero-row frame rather than throwing.
 

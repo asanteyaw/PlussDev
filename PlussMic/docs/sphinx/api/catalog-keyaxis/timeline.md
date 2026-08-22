@@ -69,7 +69,7 @@ ts                       | Timeline     | Timeline         | 2       | [2024-01-
 - [`Catalog::keyaxis`](../catalog/keyaxis.md): the entry point this accessor
   is reached from.
 - [`RegistryFieldAxisAccessor::timeline`](../registry-fieldaxis/timeline.md):
-  the bundle-model equivalent.
+  the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="timeindex.html">

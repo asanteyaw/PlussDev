@@ -31,8 +31,8 @@ replacing each `Timeline` field with a `Bool` `Series` field.
 Example 1. Flag a Saturday and a Wednesday.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().weekend();

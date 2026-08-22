@@ -47,8 +47,8 @@ some fields, call `cast()` on a narrower, projected registry instead:
 Example 1. Cast every field of a registry to `Note`-kind.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
 });
 
 auto out = rg.cast().note();
@@ -72,9 +72,9 @@ std::cout << out.fields("id").to_json();
 Example 2. Cast only one field by projecting first.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"population", pluss::bundle::Slot({pluss::make_series(100), pluss::make_series(200)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"population", pluss::scribble::Slot({pluss::make_series(100), pluss::make_series(200)})},
 });
 
 auto id_as_note = rg.fields({"id"}).cast().note();

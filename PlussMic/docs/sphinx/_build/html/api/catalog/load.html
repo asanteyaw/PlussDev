@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -66,7 +66,7 @@ The format name — <code class="docutils literal notranslate"><span class="pre"
 <p><strong>filepath</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
 The file to read.</p>
 <p><strong>config</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>, optional)
-A generic, format-agnostic configuration bundle, translated internally into the
+A generic, format-agnostic configuration scribble, translated internally into the
 format-specific options struct (<code class="docutils literal notranslate"><span class="pre">ReadCsvOptions</span></code>, <code class="docutils literal notranslate"><span class="pre">ReadExcelOptions</span></code>, etc.).</p>
 </section>
 <section id="returns">
@@ -116,7 +116,7 @@ population               | Series       | Series[int64]    | 3       | [2388000,
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">source_type</span></code> matching is case-insensitive.</p></li>
 <li><p>The two-argument overload dispatches directly to the matching no-config <code class="docutils literal notranslate"><span class="pre">load_*()</span></code>
-method; the three-argument overload additionally accepts a generic <code class="docutils literal notranslate"><span class="pre">Config</span></code> bundle.</p></li>
+method; the three-argument overload additionally accepts a generic <code class="docutils literal notranslate"><span class="pre">Config</span></code> scribble.</p></li>
 <li><p>Every underlying <code class="docutils literal notranslate"><span class="pre">load_*()</span></code> method’s own throw conditions (missing file, malformed
 content, unsupported build configuration for Excel/Parquet) apply once dispatched.</p></li>
 </ul>
@@ -177,6 +177,7 @@ content, unsupported build configuration for Excel/Parquet) apply once dispatche
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>

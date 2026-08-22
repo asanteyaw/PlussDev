@@ -30,9 +30,9 @@ ragged registry (fields of differing lengths), unlike [`nstate()`](nstate.md).
 Example 1. A ragged registry reports its shortest field's length.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"a", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"b", pluss::bundle::Slot({pluss::make_series(10), pluss::make_series(20)})},
+auto rg = pluss::scribble::Registry({
+    {"a", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"b", pluss::scribble::Slot({pluss::make_series(10), pluss::make_series(20)})},
 });
 
 std::cout << rg.minstate();
@@ -47,7 +47,7 @@ std::cout << rg.minstate();
 Example 2. An explicitly empty registry reports `0`.
 
 ```cpp
-pluss::bundle::Registry rg(std::vector<std::pair<std::string, pluss::bundle::Slot>>{});
+pluss::scribble::Registry rg(std::vector<std::pair<std::string, pluss::scribble::Slot>>{});
 std::cout << rg.minstate();
 ```
 

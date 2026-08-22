@@ -75,7 +75,7 @@ city                     | Series       | Series[bool]     | 2       | [true, fa
 - [`CatalogNoteAccessor::has`](has.md): a substring (anywhere-in-value) test instead of
   a start-anchored one, with optional regex/case-insensitive matching.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::starts`](../registry-note/starts.md): the bundle-model
+- [`RegistryNoteAccessor::starts`](../registry-note/starts.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

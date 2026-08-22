@@ -3,4 +3,4 @@ project(PlussMic_examples NONE)
 
 add_subdirectory(table)
 add_subdirectory(kindle)
-add_subdirectory(bundle)
+add_subdirectory(scribble)

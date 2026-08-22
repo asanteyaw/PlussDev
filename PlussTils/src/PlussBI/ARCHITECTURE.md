@@ -6,7 +6,9 @@ PlussBI should become the programmatic dashboard layer for the Pluss stack.
 It is not a loose collection of plotting helpers. It should be a coherent
 system that lets users:
 
-- register one or more tables inside `pluss::table::Nexus`
+- register one or more tables inside `pluss::bundle::Nexus`
+- declare relationships, metadata, and reusable join plans inside that
+  `pluss::bundle::Nexus` workbench
 - describe dashboards in C++
 - bind visuals and controls to shared state
 - render natively in PlussView first
@@ -28,11 +30,11 @@ questions.
    strong dashboard system first.
 
 2. `Nexus` is not just a passive source bag; it is the BI workbench.
-   In the BI context, `Nexus` is the coordinated table workspace where named
-   tables, derived views, relationship knowledge, and multi-table query flows
-   live. This is the closest table-layer analogue to a workbench/workspace
-   coordinator. PlussBI should build over that workbench rather than invent a
-   parallel source registry.
+   In the BI context, `pluss::bundle::Nexus` is the coordinated bundle-layer
+   workspace where named tables, derived views, relationship knowledge,
+   reusable plans, and multi-table query flows live. This is the analytical
+   workbench root. PlussBI should build over that workbench rather than invent
+   a parallel source registry.
 
 3. Authoring should be hybrid.
    The implementation should centralize plain-data specs underneath, while the
@@ -63,28 +65,56 @@ questions.
    should not become part of the public model.
 
 8. `NexusQuery` is relational planning, not raw SQL.
-   Today, the fluent `Nexus::from(...).join(...).via(...).pick(...).collect()`
-   surface is the native multi-table query builder over the `Nexus` workbench.
-   Raw SQL currently lives on `DataFrame::sql()` instead. Optional SQL over
-   multi-table `Nexus` workspaces can be added later as a front-end, but it is
-   not the present foundation and should not be confused with `NexusQuery`.
+   Today, `Nexus` exposes two distinct query faces:
+   `NexusTraverse`, returned by
+   `Nexus::from(...).join(...).via(...).pick(...).collect()`, and
+   `NexusQuery`, returned by `Nexus::query(...).execute(...)`.
+   `NexusTraverse` is the fluent workbench-native planning path; `NexusQuery`
+   is the SQL-facing workspace path. Raw SQL parsing is still delegated through
+   the shared lower-level `DataFrame::sql()` engine underneath, but the user
+   entry point at this layer is the workbench-wide `Nexus::query()` surface.
+
+9. Layout starts as responsive grid only.
+   The first BI layout model should be rows, columns, spans, and responsive
+   breakpoint behavior. Freeform canvas can come later, but it should not
+   complicate the first usable product.
+
+10. The public BI naming family is `Studio`, `Board`, `Tile`, `View`,
+    `Control`, and `Session`.
+    `Portfolio` is too domain-specific for the root object, and `Visual` is
+    broader than needed for the public surface. `Studio` better conveys the
+    orchestrating root while `View` cleanly describes a rendered analytic
+    surface.
+
+11. The first usable BI release has a fixed scope.
+    The first release should cover one `Studio`, one or more `Board`s
+    architecturally, responsive grid layout, a centralized query planner over
+    `Nexus`, KPI cards, line views, bar views, pivot-table views, detail-table
+    views, categorical filters, numeric/date range filters, session-driven
+    cross-filtering, and native rendering in PlussView.
+
+12. Future SQL over `Nexus` must target the same planner.
+    If a SQL surface is later added for `Nexus`, it should compile or translate
+    into the same shared `QuerySpec` / join-plan machinery used by the fluent
+    API. PlussBI should not grow one execution path for `NexusQuery` and a
+    second unrelated execution path for SQL text.
 
 ## Open Product Decisions
 
 The following still need deliberate discussion before implementation grows
 around them:
 
-- layout model from point 7 onward
-- public BI naming family
-- exact v1 feature slice
 - how much browser export should be present in the first usable release
+- whether a SQL front-end over `Nexus` should be implemented immediately after
+  the fluent planner matures, or deferred until the planner and dashboard
+  runtime are hardened
 
 ## Design Principles
 
 1. `Nexus` is the data root.
    Every dashboard query should resolve against a named source inside a
-   `Nexus`, or against a derived view that is itself registered back into the
-   same session graph.
+   `pluss::bundle::Nexus`, or against a derived view that is itself registered
+   back into the same workbench graph.
 
 2. One query planner, not many ad hoc helpers.
    Filtering, grouping, pivoting, sorting, windowing, and reshaping should be
@@ -107,20 +137,39 @@ around them:
    dashboard definition.
 
 6. The `Nexus` workbench is the coordination center.
-   BI should treat `Nexus` as the orchestrated multi-table workspace and query
-   coordinator. The dashboard layer should ask that workbench for resolved
-   tables; it should not clone relationship planning or source coordination
-   privately.
+   BI should treat `pluss::bundle::Nexus` as the orchestrated multi-table
+   workspace and query coordinator. The dashboard layer should ask that
+   workbench for resolved tables through `NexusTraverse`, `NexusQuery`,
+   materialized join plans, and registered derived views; it should not clone
+   relationship planning or source coordination privately.
+
+## `Nexus` As Bundle Workbench Root
+
+`pluss::bundle::Nexus` is not merely "where the tables happen to sit." It is
+the bundle-layer root object that coordinates analytical table work for BI.
+
+PlussBI should explicitly rely on these existing workbench responsibilities:
+
+- named table registration
+- relationship declaration and validation
+- schema and graph inspection
+- shortest-path and explicit join planning
+- stored/materializable join plans
+- fluent multi-table traversal via `NexusTraverse`
+- SQL-style workspace queries via `NexusQuery`
+
+This matters because BI should not privately recreate any of that. The BI layer
+should add dashboard semantics, not a shadow workbench.
 
 ## Proposed Object Model
 
-### `Portfolio`
+### `Studio`
 
 Root dashboard object.
 
 Responsibilities:
 
-- owns a `Nexus` reference or handle
+- owns a `pluss::bundle::Nexus` reference or handle
 - owns one or more `Board`s
 - owns shared `Session` state
 - coordinates refresh, render, export, and serialization
@@ -130,14 +179,14 @@ Suggested shape:
 ```cpp
 namespace pluss::bi {
 
-class Portfolio {
+class Studio {
 public:
-  Portfolio& source(const pluss::table::Nexus& nexus);
-  Portfolio& add(Board board);
-  Portfolio& theme(ThemeSpec spec);
-  Portfolio& refresh();
-  Portfolio& show();
-  Portfolio& save(std::string_view path);
+  Studio& source(const pluss::bundle::Nexus& nexus);
+  Studio& add(Board board);
+  Studio& theme(ThemeSpec spec);
+  Studio& refresh();
+  Studio& show();
+  Studio& save(std::string_view path);
 };
 
 } // namespace pluss::bi
@@ -145,7 +194,7 @@ public:
 
 ### `Board`
 
-A page, tab, or canvas inside a portfolio.
+A page, tab, or canvas inside a studio.
 
 Responsibilities:
 
@@ -159,17 +208,18 @@ The smallest dashboard placement unit.
 
 Responsibilities:
 
-- holds one `Visual` or one `Control`
+- holds one `View` or one `Control`
 - stores layout coordinates and sizing rules
 - exposes title/subtitle/footnote chrome
 
-### `Visual`
+### `View`
 
 Declarative plot binding.
 
 Responsibilities:
 
-- references a source table name in `Nexus`
+- references a named workbench source, stored plan, or derived result inside
+  `pluss::bundle::Nexus`
 - carries a `QuerySpec`
 - carries a `BindSpec`
 - resolves to a Flash chart or scene
@@ -180,6 +230,7 @@ Examples:
 - bar visual
 - heatmap visual
 - pivot table visual
+- detail table visual
 - KPI card visual
 - scatter matrix visual
 
@@ -219,15 +270,17 @@ Responsibilities:
 ## Centralized Specs
 
 These specs should be plain data carriers and should stay reusable across
-Portfolio, Board, Visual, and export layers.
+Studio, Board, View, and export layers.
 
 ### `QuerySpec`
 
-Describes how a visual derives its table.
+Describes how a view derives its table.
 
 Fields should eventually cover:
 
-- source key in `Nexus`
+- source key in `pluss::bundle::Nexus`
+- optional stored-plan key in `Nexus`
+- optional traversal/program shape when the source is derived fluently
 - selected features
 - filter references
 - local filters
@@ -258,9 +311,29 @@ Fields should cover:
 
 - row / column placement
 - span
-- min/max size
-- stacking rules
-- breakpoints
+- breakpoint-aware resize behavior
+- min/max tile constraints
+- optional collapsible sections or panes
+
+## SQL Over `Nexus`
+
+SQL support over `Nexus` should be treated as a likely future surface, not as
+the first implementation center of gravity.
+
+That means:
+
+- the fluent workbench planner remains the semantic foundation
+- `NexusTraverse` remains the primary native multi-table planning path
+- `NexusQuery` remains the SQL-facing workspace path
+- BI query execution should be implemented once in shared planner machinery
+- any future SQL parser or SQL-like surface should translate into that same
+  machinery rather than bypassing it
+
+This keeps `pluss::bundle::Nexus` closer to an in-memory analytical workbench
+than to a database server clone. The goal is not to recreate MySQL Workbench
+wholesale. The goal is to make multi-table in-memory work principled,
+inspectable, reusable, and eventually SQL-addressable without splitting the
+engine in two.
 
 ### `ThemeSpec`
 
@@ -281,8 +354,9 @@ Fields should cover:
 
 The intended dashboard pipeline should be:
 
-1. `Portfolio` references a `Nexus`
-2. each `Visual` names a source inside that `Nexus`
+1. `Studio` references a `pluss::bundle::Nexus`
+2. each `View` names a source, stored plan, or derived query path inside that
+   `Nexus`
 3. `Session` contributes active shared filters and parameters
 4. `QuerySpec` resolves to a `DataFrame`
 5. `BindSpec` converts the frame into the correct Flash plot call
@@ -293,6 +367,13 @@ That means Flash now benefiting from direct `DataFrame` plot overloads is not a
 nice-to-have; it is foundational for PlussBI. The BI layer should be able to
 hand a resolved table straight into Flash without detouring through manual
 payload extraction everywhere.
+
+The query resolution step should be able to lower into one of three already
+native `Nexus` modes:
+
+- fluent traversal through `NexusTraverse`
+- stored join-plan execution through `run(...)` / `materialize(...)`
+- SQL-style workbench queries through `NexusQuery`
 
 ## Why `Dataset` Still Matters
 
@@ -325,7 +406,7 @@ Needed pieces:
 
 ### Browser Export
 
-Later host should emit browser-ready assets from the same portfolio definition.
+Later host should emit browser-ready assets from the same studio definition.
 
 This should reuse:
 
@@ -361,7 +442,7 @@ already has a bulk path.
 
 The first real implementation tranche should be:
 
-1. `Portfolio`
+1. `Studio`
 2. `Board`
 3. `Tile`
 4. `Session`
@@ -381,7 +462,7 @@ That produces a real usable BI seed instead of a large but inert type graph.
 Suggested file grouping:
 
 - `src/PlussBI/core/`
-  - `Portfolio.*`
+  - `Studio.*`
   - `Board.*`
   - `Tile.*`
   - `Session.*`
@@ -391,7 +472,7 @@ Suggested file grouping:
   - `Cache.*`
 - `src/PlussBI/bind/`
   - `BindSpec.*`
-  - `VisualFactory.*`
+  - `ViewFactory.*`
 - `src/PlussBI/runtime/`
   - `NativeHost.*`
   - `BrowserExport.*`

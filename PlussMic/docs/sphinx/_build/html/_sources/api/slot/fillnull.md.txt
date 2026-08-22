@@ -48,7 +48,7 @@ that matches the slot's actual [`kind()`](kind.md).
 Example 1. Fill a numeric slot's null with `99.0`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(3)});
 auto out = slot.fillnull(99.0);
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
           << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0] << " "
@@ -65,7 +65,7 @@ Example 2. Fill a text slot's null with a placeholder string (the `const
 char*` overload).
 
 ```cpp
-auto notes = pluss::bundle::Slot({pluss::make_note("a"), pluss::bundle::Slot::Value{std::monostate{}}});
+auto notes = pluss::scribble::Slot({pluss::make_note("a"), pluss::scribble::Slot::Value{std::monostate{}}});
 auto out = notes.fillnull("N/A");
 std::cout << std::get<pluss::Note>(out.at(1)).at(0);
 ```
@@ -80,7 +80,7 @@ Example 3. Calling `fillnull(double)` on a text slot throws — see the
 important callout above.
 
 ```cpp
-auto notes = pluss::bundle::Slot({pluss::make_note("a"), pluss::bundle::Slot::Value{std::monostate{}}});
+auto notes = pluss::scribble::Slot({pluss::make_note("a"), pluss::scribble::Slot::Value{std::monostate{}}});
 try {
   auto out = notes.fillnull(1.0);
 } catch (const std::exception& e) {

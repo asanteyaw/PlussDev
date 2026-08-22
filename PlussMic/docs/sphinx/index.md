@@ -4,7 +4,7 @@
 <div class="pluss-hero">
 <div class="kicker">Pluss &middot; Space</div>
 <h1>PlussMic</h1>
-<p class="tagline">The data-analysis layer of Pluss: tabular data (<code>DataFrame</code>), typed columns (<code>Thread</code>), stacks of related frames (<code>Atlas</code>), plus aligned streaming containers and heterogeneous record bundles.</p>
+<p class="tagline">The data-analysis layer of Pluss: tabular data (<code>DataFrame</code>), typed columns (<code>Thread</code>), stacks of related frames (<code>Atlas</code>), aligned streaming containers, heterogeneous record scribbles, and multi-table workbenches.</p>
 <div class="pluss-hero-actions">
 <a class="primary" href="api_reference.html">API Reference</a>
 </div>
@@ -12,7 +12,7 @@
 
 <div class="pluss-section">
 <h2>What's in this space</h2>
-<p class="section-sub">PlussMic's public surface is organized around three models, plus a plotting/display branch shared across them.</p>
+<p class="section-sub">PlussMic's public surface is organized around four models, plus a plotting/display branch shared across them.</p>
 <div class="pluss-package-grid">
 
 <div class="pluss-card">
@@ -28,9 +28,15 @@
 </div>
 
 <div class="pluss-card">
-<span class="card-name">bundle</span>
+<span class="card-name">scribble</span>
 <span class="card-model">Slot &middot; Registry &middot; Axel</span>
 <p class="card-desc">Heterogeneous record containers: a one-dimensional <code>Slot</code>, a <code>Registry</code> of named slots, and an <code>Axel</code> stack of registries.</p>
+</div>
+
+<div class="pluss-card">
+<span class="card-name">bundle</span>
+<span class="card-model">Nexus &middot; NexusTraverse &middot; NexusQuery</span>
+<p class="card-desc">Multi-table workbenches: <code>Nexus</code> coordinates related frames, declared relationships, join plans, and reusable workspace operations.</p>
 </div>
 
 <div class="pluss-card">
@@ -62,6 +68,7 @@ manual
 dataframe
 kindle
 bundle
+scribble
 demo_catalog
 build_outputs
 ```

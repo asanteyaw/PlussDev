@@ -95,8 +95,8 @@ metric                   | Series       | Series[float64]  | 3       | [nan, 10,
   text-processing and timestamp-feature operations.
 - [`Stream::ts`](../stream/ts.md): the single-stream equivalent, with a much larger
   method surface — see the important callout above.
-- [`Registry::fields(keys).tl()`](../registry/tl.md): the bundle-model's equivalent
-  narrowing pattern (Registry's bundle model has no direct `ts()` counterpart).
+- [`Registry::fields(keys).tl()`](../registry/tl.md): the scribble-model's equivalent
+  narrowing pattern (Registry's scribble model has no direct `ts()` counterpart).
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="transform.html">

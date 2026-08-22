@@ -4850,8 +4850,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "amin" || op == "min") return ops_internal::amin(self);
     if (op == "all") return ops_internal::all(self);
     if (op == "any") return ops_internal::any(self);
-    if (op == "argmax") return ops_internal::argmax(self, -1, false);
-    if (op == "argmin") return ops_internal::argmin(self, -1, false);
+    if (op == "argmax") return ops_internal::argmax(self);
+    if (op == "argmin") return ops_internal::argmin(self);
     if (op == "count_nonzero") {
       auto nz = ops_internal::nonzero(self);
       Series out = Series::zeros({}, ScalarType::Int64);

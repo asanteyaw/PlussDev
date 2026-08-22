@@ -32,7 +32,7 @@ Example 1. Cast a two-value `Note` slot of numeric-looking text to
 `Series`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("1"), pluss::make_note("2")});
+auto slot = pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")});
 auto out = slot.cast().series();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
           << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
@@ -48,7 +48,7 @@ Example 2. A single-value slot behaves the same way as a multi-value one —
 unparseable text becomes null rather than throwing.
 
 ```cpp
-auto single = pluss::bundle::Slot({pluss::make_note("Accra")});
+auto single = pluss::scribble::Slot({pluss::make_note("Accra")});
 auto out = single.cast().series();
 std::cout << out.to_json();
 ```
@@ -70,7 +70,7 @@ Example 3. On a two-or-more-value slot, unparseable text becomes null
 rather than throwing — the same behavior as Example 2, at a larger size.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")});
 auto out = slot.cast().series();
 std::cout << out.to_json();
 ```

@@ -33,9 +33,9 @@ which lists every individual value's type instead of just a per-kind count.
 Example 1. A registry with a uniform-kind field and a mixed-kind field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"mixed", pluss::bundle::Slot({pluss::make_series(10), pluss::make_note("hello")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"mixed", pluss::scribble::Slot({pluss::make_series(10), pluss::make_note("hello")})},
 });
 
 std::cout << rg.to_string();

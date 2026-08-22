@@ -40,11 +40,11 @@ it via [`fields(key)`](fields.md), call `fn` on it directly, and reinsert with
 Example 1. Apply one transform to every field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
-auto out = rg.map([](const pluss::bundle::Slot& s) { return s; });
+auto out = rg.map([](const pluss::scribble::Slot& s) { return s; });
 std::cout << out.nfields();
 ```
 

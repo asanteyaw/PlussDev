@@ -41,7 +41,7 @@ same rendering path. There's no separate "compact tally" form at the
 Example 1. Render a homogeneous `Series` slot.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 std::cout << slot.to_json();
 ```
 
@@ -63,7 +63,7 @@ std::cout << slot.to_json();
 Example 2. An undefined slot renders without throwing.
 
 ```cpp
-pluss::bundle::Slot undef;
+pluss::scribble::Slot undef;
 std::cout << undef.to_json();
 ```
 

@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# NexusQuery::via
+# NexusTraverse::via
 
-[Back to NexusQuery API Reference](../../nexus_query_api_reference)
+[Back to NexusTraverse API Reference](../../nexus_traverse_api_reference)
 
 ## Signature
 
 ```cpp
-NexusQuery::via(std::string_view to, JoinHow how = JoinHow::Left) const -> NexusQuery
+NexusTraverse::via(std::string_view to, JoinHow how = JoinHow::Left) const -> NexusTraverse
 ```
 
 ## What It Does
@@ -35,7 +35,7 @@ own `how` parameter — and defaults to `JoinHow::Left`, unlike [`.join()`](join
 
 ## Returns
 
-`NexusQuery`
+`NexusTraverse`
     A new query with every step of the route to `to` appended, anchor moved to `to`.
 
 ## Examples
@@ -44,6 +44,7 @@ Example 1. Reaching a two-hop-away table in one call.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -102,11 +103,11 @@ which drop unmatched rows at every hop.
 - Defaults to `JoinHow::Left`, unlike [`.join()`](join.md)'s `Inner` default.
 - Throws the same "no relationship path" error as [`path()`](../nexus/path.md) if `to`
   isn't reachable from the current anchor at all.
-- Non-mutating and chainable, like every other `NexusQuery` method.
+- Non-mutating and chainable, like every other `NexusTraverse` method.
 
 ## See Also
 
-- [`NexusQuery::join`](join.md): one explicit hop at a time, defaulting to `Inner`.
+- [`NexusTraverse::join`](join.md): one explicit hop at a time, defaulting to `Inner`.
 - [`Nexus::path`](../nexus/path.md) / [`plan`](../nexus/plan.md): the lower-level
   primitives this method calls internally.
 

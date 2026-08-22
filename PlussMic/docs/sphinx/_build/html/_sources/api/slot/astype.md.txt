@@ -31,7 +31,7 @@ shorthand for `cast(ThreadCastOptions{.series_dtype = dtype}).series()`.
 Example 1. Cast an `int64` `Series` slot to `float64`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)});
 auto out = slot.astype(pluss::codem::ScalarType::Float64);
 std::cout << out.to_json();
 ```
@@ -54,7 +54,7 @@ Example 2. A single-value slot converts the same way a multi-value one
 does.
 
 ```cpp
-auto single = pluss::bundle::Slot({pluss::make_series(1)});
+auto single = pluss::scribble::Slot({pluss::make_series(1)});
 auto out = single.astype(pluss::codem::ScalarType::Float64);
 std::cout << out.to_json();
 ```

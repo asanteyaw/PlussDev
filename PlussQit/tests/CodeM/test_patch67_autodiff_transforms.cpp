@@ -383,6 +383,36 @@ TEST_CASE("autodiff reverse distributes amax and amin ties across reduced lanes"
   }
 }
 
+TEST_CASE("autodiff reverse distributes full amax and amin ties across all global winners", "[autodiff][reverse][reduction]") {
+  Series x = make_series(std::vector<double>{7.0, 0.0, 0.0, 7.0, 7.0, 1.0}, {2, 3}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  x.amax().reverse();
+  {
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 6);
+    REQUIRE(g[0] == Approx(1.0 / 3.0));
+    REQUIRE(g[1] == Approx(0.0));
+    REQUIRE(g[2] == Approx(0.0));
+    REQUIRE(g[3] == Approx(1.0 / 3.0));
+    REQUIRE(g[4] == Approx(1.0 / 3.0));
+    REQUIRE(g[5] == Approx(0.0));
+  }
+
+  x = make_series(std::vector<double>{-3.0, 0.0, 0.0, -3.0, -3.0, 1.0}, {2, 3}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  x.amin().reverse();
+  {
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 6);
+    REQUIRE(g[0] == Approx(1.0 / 3.0));
+    REQUIRE(g[1] == Approx(0.0));
+    REQUIRE(g[2] == Approx(0.0));
+    REQUIRE(g[3] == Approx(1.0 / 3.0));
+    REQUIRE(g[4] == Approx(1.0 / 3.0));
+    REQUIRE(g[5] == Approx(0.0));
+  }
+}
+
 TEST_CASE("autodiff reverse propagates cumsum sensitivities with reverse scan", "[autodiff][reverse][scan]") {
   Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {2, 3}).to(ScalarType::Float64);
   x.tracks_slope_(true);

@@ -36,7 +36,7 @@ to the start of that calendar period (e.g. the first of the month).
 Example 1. Snap a mid-day timestamp to its containing day's start.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
 auto out = slot.tl().period("D");
 auto fmted = out.tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << std::get<pluss::Note>(fmted.at(0)).at(0);

@@ -8,7 +8,7 @@
 // - pluss::from_buffer(...)
 // - pluss::zeros/ones/full/rand/... factories
 // - pluss::distr::{sample,sample_like,pdf,logpdf,cdf,mixture_normal} when PlussMa is available
-// - pluss::from_torch(...) / pluss::to_torch(...) (when PLUSS_ENABLE_TORCH=ON)
+// - pluss::series::from_torch(...) / pluss::series::to_torch(...) (when PLUSS_ENABLE_TORCH=ON)
 //
 // For CodeN (text API), this exports:
 // - pluss::Note
@@ -16,9 +16,12 @@
 // - pluss::make_note(...) / pluss::make_note(...)
 //
 // For CodeH (time API), this exports:
-// - pluss::codeh::Timeline / Duration / TimeIndex
-// - pluss::make_timeline(...) / make_timeline(...) / from_epoch_nanos(...)
-// - pluss::duration_* helpers / make_timeindex(...)
+// - pluss::Timeline / Duration / TimeIndex
+// - pluss::timeline::make(...) / from_epoch(...) / date_range(...) / print(...)
+// - pluss::duration::{nanos,seconds,...,make,range,print}(...)
+// - pluss::timeindex::make(...) / date_range(...) / print(...)
+// - pluss::make_timeline(...) / from_epoch_nanos(...) / make_timeindex(...)
+//   (deprecated flat aliases, kept for existing callers)
 //
 // Unified serialization (core types + supported STL containers):
 // - pluss::io::save(...) / pluss::io::load<...>(...)

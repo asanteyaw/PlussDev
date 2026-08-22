@@ -311,6 +311,88 @@ bool looks_datetime_feature_name(std::string_view name) {
       lower.find("datetime") != std::string::npos;
 }
 
+bool looks_boolean_feature_name(std::string_view name) {
+  const auto lower = lower_copy(trim_ascii(name));
+  return lower == "bool" ||
+      lower == "boolean" ||
+      lower == "flag" ||
+      lower.starts_with("is_") ||
+      lower.starts_with("has_") ||
+      lower.starts_with("was_") ||
+      lower.starts_with("can_") ||
+      lower.ends_with("_flag") ||
+      lower.ends_with("_bool") ||
+      lower.find("active") != std::string::npos ||
+      lower.find("enabled") != std::string::npos;
+}
+
+bool looks_datetime_value(std::string_view token) {
+  const auto trimmed = trim_ascii(token);
+  if (trimmed.empty()) {
+    return false;
+  }
+  bool has_digit = false;
+  bool has_datetime_sep = false;
+  for (const char c : trimmed) {
+    if (std::isdigit(static_cast<unsigned char>(c))) {
+      has_digit = true;
+      continue;
+    }
+    if (c == '-' || c == '/' || c == ':' || c == 'T' || c == 'Z' || c == ' ') {
+      has_datetime_sep = true;
+    }
+  }
+  return has_digit && has_datetime_sep;
+}
+
+bool raw_values_look_datetime_like(const std::vector<std::string>& values, const std::vector<bool>& valid) {
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (valid[i] && looks_datetime_value(values[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool raw_values_look_datetime_like(const pluss::coden::Note& values, const std::vector<bool>& valid) {
+  for (std::size_t i = 0; i < static_cast<std::size_t>(values.numel()); ++i) {
+    if (valid[i] && looks_datetime_value(values.at(static_cast<std::int64_t>(i)))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ambiguous_numeric_bool_tokens(const std::vector<std::string>& values, const std::vector<bool>& valid) {
+  bool saw_value = false;
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (!valid[i]) {
+      continue;
+    }
+    saw_value = true;
+    const auto token = trim_ascii(values[i]);
+    if (token != "0" && token != "1") {
+      return false;
+    }
+  }
+  return saw_value;
+}
+
+bool ambiguous_numeric_bool_tokens(const pluss::coden::Note& values, const std::vector<bool>& valid) {
+  bool saw_value = false;
+  for (std::size_t i = 0; i < static_cast<std::size_t>(values.numel()); ++i) {
+    if (!valid[i]) {
+      continue;
+    }
+    saw_value = true;
+    const auto token = trim_ascii(values.at(static_cast<std::int64_t>(i)));
+    if (token != "0" && token != "1") {
+      return false;
+    }
+  }
+  return saw_value;
+}
+
 bool is_na_token(std::string_view token, const pluss::loader::ReadCsvOptions& options) {
   if (!options.na_filter) {
     return false;
@@ -431,15 +513,11 @@ Thread make_series_thread_f64(const std::vector<double>& values, const std::vect
 }
 
 Thread make_note_thread(const std::vector<std::string>& values, const std::vector<bool>& valid) {
-  std::vector<std::string_view> views;
-  views.reserve(values.size());
-  for (const auto& v : values) {
-    views.emplace_back(v);
+  auto note = pluss::make_note(values);
+  const bool all_valid = std::all_of(valid.begin(), valid.end(), [](bool value) { return value; });
+  if (all_valid) {
+    return Thread(note);
   }
-  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(views.size())};
-  auto note = pluss::coden::ops_internal::note_from_utf8(
-      std::span<const std::string_view>(views.data(), views.size()),
-      std::span<const std::int64_t>(shape.data(), shape.size()));
   return Thread(note, validity_mask_from_valid(valid));
 }
 
@@ -625,6 +703,9 @@ Thread infer_column_thread(const std::string& col_name,
       parsed[i] = v;
     }
     if (ok) {
+      if (ambiguous_numeric_bool_tokens(values, valid) && !looks_boolean_feature_name(col_name)) {
+        return std::nullopt;
+      }
       return make_series_thread_bool(parsed, valid);
     }
     if (forced.has_value() && *forced == InferredKind::Bool) {
@@ -687,7 +768,7 @@ Thread infer_column_thread(const std::string& col_name,
     }
   }
 
-  {
+  if (raw_values_look_datetime_like(values, valid)) {
     Thread out;
     if (try_make_timeline_thread(values, valid, options, out)) {
       return out;
@@ -743,6 +824,9 @@ Thread infer_column_note_thread(const std::string& col_name,
       parsed[i] = v;
     }
     if (ok) {
+      if (ambiguous_numeric_bool_tokens(raw_values, valid) && !looks_boolean_feature_name(col_name)) {
+        return std::nullopt;
+      }
       return make_series_thread_bool(parsed, valid);
     }
     if (forced.has_value() && *forced == InferredKind::Bool) {
@@ -805,14 +889,19 @@ Thread infer_column_note_thread(const std::string& col_name,
     }
   }
 
-  {
+  if (raw_values_look_datetime_like(raw_values, valid)) {
     Thread out;
     if (try_make_timeline_thread(raw_values, valid, options, out)) {
       return out;
     }
   }
 
-  return Thread(raw_values, validity_mask_from_valid(valid));
+  std::vector<std::string> values;
+  values.reserve(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    values.emplace_back(raw_values.at(static_cast<std::int64_t>(i)));
+  }
+  return make_note_thread(values, valid);
 }
 
 std::size_t resolve_column_workers(const pluss::loader::ReadCsvOptions& options, std::size_t column_count) {

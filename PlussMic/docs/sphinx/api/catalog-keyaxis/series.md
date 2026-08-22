@@ -68,7 +68,7 @@ id                       | Series       | Series[float64]  | 2       | [1, 2]
 - [`Catalog::keyaxis`](../catalog/keyaxis.md): the entry point this accessor
   is reached from.
 - [`RegistryFieldAxisAccessor::series`](../registry-fieldaxis/series.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="prefix.html">

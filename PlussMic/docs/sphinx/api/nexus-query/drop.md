@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# NexusQuery::drop
+# NexusTraverse::drop
 
-[Back to NexusQuery API Reference](../../nexus_query_api_reference)
+[Back to NexusTraverse API Reference](../../nexus_traverse_api_reference)
 
 ## Signature
 
 ```cpp
-NexusQuery::drop(std::initializer_list<std::string_view> features) const -> NexusQuery
+NexusTraverse::drop(std::initializer_list<std::string_view> features) const -> NexusTraverse
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ with it.
 
 ## Returns
 
-`NexusQuery`
+`NexusTraverse`
     A new query with the drop list set (or replaced). The original query is unchanged.
 
 ## Examples
@@ -35,6 +35,7 @@ Example 1. Drop the redundant join key after joining.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -83,8 +84,8 @@ order_id amount name
 
 ## See Also
 
-- [`NexusQuery::pick`](pick.md): the complementary "keep only these" operation.
-- [`NexusQuery::collect`](collect.md): where `.pick()`/`.drop()` are actually applied.
+- [`NexusTraverse::pick`](pick.md): the complementary "keep only these" operation.
+- [`NexusTraverse::collect`](collect.md): where `.pick()`/`.drop()` are actually applied.
 - [`Nexus::drop`](../nexus/drop.md): the table-level (not column-level) analog.
 
 <div class="pluss-inline-prev-next">

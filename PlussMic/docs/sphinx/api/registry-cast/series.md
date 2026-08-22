@@ -38,8 +38,8 @@ need to detect values that failed to convert.
 Example 1. Cast a `Note` field of numeric-looking text to `Series`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_note("1"), pluss::make_note("2")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")})},
 });
 
 auto out = rg.fields({"id"}).cast().series();
@@ -58,8 +58,8 @@ Example 2. Unparseable text becomes null rather than throwing — see the
 important callout above.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 auto out = rg.fields({"city"}).cast().series();

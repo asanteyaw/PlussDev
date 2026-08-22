@@ -17,7 +17,7 @@ Joins two tables already in the workspace, one hop at a time, and returns the jo
 `left.unify(...)` under the hood using whatever `JoinSpec` you provide. This is the
 lowest-level joining primitive on `Nexus`; [`materialize()`](materialize.md) is the version
 that chains several `join()`-style steps together from a [`JoinPlan`](plan.md), and
-[`NexusQuery`](../../nexus_query_api_reference) (via [`from()`](from.md)) is the fluent,
+[`NexusTraverse`](../../nexus_traverse_api_reference) (via [`from()`](from.md)) is the fluent,
 higher-level way to build that chain without constructing a `JoinPlan` by hand.
 
 ```cpp
@@ -70,6 +70,7 @@ Example 1. An explicit `JoinSpec` with keys spelled out directly.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -126,7 +127,7 @@ std::cout << joined2.ncases() << " " << joined2.nfeatures();
 3 4
 ```
 
-Example 3. Unlike [`NexusQuery::join`](../../nexus_query_api_reference), which
+Example 3. Unlike [`NexusTraverse::join`](../../nexus_traverse_api_reference), which
 auto-detects a relationship connecting two tables when you don't specify one,
 `Nexus::join()` never guesses — a `JoinSpec` with neither `keys` nor `relationship_name`
 set always throws, even when a relationship declaration would have made the join
@@ -156,7 +157,7 @@ Nexus::join: join keys cannot be empty
 - A `JoinHow::Cross` join accepts no `keys` and no `relationship_name`.
 - This is a single hop between two named tables — for a multi-hop chain across several
   tables, see [`path()`](path.md)/[`plan()`](plan.md)/[`materialize()`](materialize.md), or
-  the fluent [`NexusQuery`](../../nexus_query_api_reference) builder.
+  the fluent [`NexusTraverse`](../../nexus_traverse_api_reference) builder.
 
 ## See Also
 

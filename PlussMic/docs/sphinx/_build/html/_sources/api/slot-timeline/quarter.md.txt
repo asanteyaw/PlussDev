@@ -30,7 +30,7 @@ replacing each `Timeline` value with an `Int64` `Series`.
 Example 1. Extract the quarter from a July and a March timestamp.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")});
 auto out = slot.tl().quarter();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
           << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];

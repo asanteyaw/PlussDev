@@ -7,108 +7,230 @@
 ## Signature
 
 ```cpp
-static Nexus::load(std::string_view directory, const StoreOptions& options = {}) -> Nexus
+static Nexus::load(std::string_view directory, const LoadOptions& options = {}) -> Nexus
 ```
 
 ## What It Does
 
-Reconstructs a `Nexus` from a directory previously written by [`save()`](save.md) — the
-exact inverse. A **static** method (called as `Nexus::load(...)`, not on an existing
-instance), since there's no workspace to call it on yet.
+Loads a raw table directory into a `Nexus` workbench.
 
-`load()` reads `options.manifest` first to discover the store's own `kind` and the other
-file names/directory, then reads `options.schema`/`options.graph` to reconstruct every
-table's [`TableMeta`](table_meta.md) and every declared [`Relationship`](relationships.md),
-then each table's own data file from the `tables` subdirectory, and finally
-`options.views` (if present) to restore saved views.
+This is the canonical “MySQL-workbench-style” entry point for in-memory table coordination:
 
-```{important} options must match what save() actually used
-`load()` doesn't read `options.kind` from the manifest to guess the table file format for
-you — it uses `options.kind` (or the manifest's own recorded `kind`, for locating the
-right file extension) consistently with whatever `save()` was called with. Pass the same
-`StoreOptions` you saved with, especially `kind` — mismatched file extensions won't be
-found.
-```
+- scan a directory
+- discover supported tabular files
+- load them in parallel batches
+- return one `Nexus` where each file becomes one named table
+
+`load()` does **not** restore a previously saved Nexus store. That persistence-side inverse of
+[`save()`](save.md) now lives on [`read()`](read.md).
+
+## Supported Formats
+
+By default, `load()` discovers these file types directly from extension:
+
+- `.csv`
+- `.txt`
+- `.text`
+- `.tsv`
+- `.json`
+- `.parquet`
+- `.pq`
+
+Excel is intentionally excluded from directory loading. A workbook is not naturally “one file =
+one table” because sheet selection becomes part of the contract, so it stays a `DataFrame`
+concern instead of the default Nexus bulk-loader path.
 
 ## Parameters
 
 **directory** (`std::string_view`)
-    The directory a prior [`save()`](save.md) call wrote to.
+    Directory to scan for raw tabular files.
 
-**options** (`const StoreOptions&`, default `{}`)
-    Must match what [`save()`](save.md) was called with — see the important callout above.
+**options** (`const LoadOptions&`, default `{}`)
+    Controls discovery, filtering, and dispatch.
+
+## LoadOptions
+
+```cpp
+struct LoadOptions {
+  std::vector<std::string> load{};
+  std::vector<std::string> ignore{};
+  std::vector<std::string> formats{"csv", "txt", "json", "parquet"};
+  bool recursive{false};
+  bool keep_extension{false};
+  bool parallel{true};
+  std::optional<std::size_t> max_workers{};
+  pluss::loader::Config config{};
+};
+```
+
+### Field Semantics
+
+**load**
+    Explicit allow-list. If non-empty, only those tables/files are loaded.
+
+**ignore**
+    Explicit deny-list. If non-empty, everything else is loaded except those tables/files.
+
+```{important} `load` and `ignore` are mutually exclusive
+Use one or the other. Supplying both is rejected.
+```
+
+**formats**
+    Allowed source types for discovery. This filters by normalized format tokens, not only by
+    literal extension spelling. For example, `"parquet"` covers both `.parquet` and `.pq`.
+
+**recursive**
+    If `true`, descend into subdirectories. Otherwise only the top level is scanned.
+
+**keep_extension**
+    Controls how file names become Nexus table keys.
+
+    - `false` (default): `orders.csv` -> `orders`
+    - `true`: `orders.csv` -> `orders.csv`
+
+**parallel**
+    Enables concurrent file loading across the directory. In other words, Nexus can load
+    `account.csv`, `loan.csv`, and `trans.json` at the same time instead of loading one file,
+    then the next, then the next. The heavy parsing still delegates to
+    `DataFrame::load(...)` for each individual file.
+
+**max_workers**
+    Caps concurrent file loads. Leave empty to let Nexus choose a bounded worker count from
+    hardware concurrency.
+
+**config**
+    Passed through to the underlying `DataFrame::load(source_type, filepath, config)` calls.
+    This is how you tune delimiter/header-style behavior for text-like formats while keeping
+    Nexus as the coordinator rather than the parser.
 
 ## Returns
 
 `Nexus`
-    A workspace equivalent to the one that was saved — same tables, same declared
-    metadata, same relationships, same saved views, same [`fingerprint()`](fingerprint.md).
+    A workbench whose table keys come from the discovered file names.
+
+## Naming Rules
+
+By default, each file’s stem becomes the table name:
+
+- `account.csv` -> `account`
+- `district.json` -> `district`
+- `loan.parquet` -> `loan`
+
+If two discovered files collapse to the same key, `load()` fails rather than silently picking
+one. Use `keep_extension=true` or narrower `load`/`ignore` filters when you need to disambiguate.
 
 ## Examples
 
-Example 1. A full round trip.
+Example 1. Load every supported top-level file.
 
 ```cpp
-using namespace pluss::table;
+using namespace pluss::bundle;
 
-auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
-});
-auto orders = DataFrame({
-    {"order_id",    Thread(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 2.0}))},
-});
-
-auto biz = Nexus({
-    {"customers", customers},
-    {"orders", orders},
-});
-
-TableMeta customers_meta;
-customers_meta.grain = "one row per customer";
-customers_meta.primary_key = {"customer_id"};
-auto tagged = biz.set_table_meta("customers", customers_meta);
-
-Relationship rel;
-rel.name = "orders_to_customers";
-rel.left_table = "orders";
-rel.right_table = "customers";
-rel.keys = {{"customer_id", "customer_id"}};
-
-auto linked = tagged.add_relationship(rel);
-
-StoreOptions options;
-options.kind = StoreKind::Csv;
-linked.save("/tmp/nexus_biz_store", options);
-
-auto loaded = Nexus::load("/tmp/nexus_biz_store", options);
-
-std::cout << loaded.ntables() << " " << loaded.nrelationships() << "\n";
-std::cout << std::boolalpha << loaded.has_table_meta("customers") << " "
-          << *loaded.table_meta("customers")->grain;
+auto nx = Nexus::load("/tmp/bank_raw");
+std::cout << nx.ntables() << "\n";
+std::cout << std::boolalpha << nx.has("account") << " "
+          << nx.has("district") << " "
+          << nx.has("trans") << "\n";
 ```
 
 ### Output
 
 ```text
-2 1
-true one row per customer
+3
+true true true
+```
+
+Example 2. Load only the files you name.
+
+```cpp
+using namespace pluss::bundle;
+
+LoadOptions options;
+options.load = {"account", "loan.json"};
+options.formats = {"csv", "json"};
+
+auto nx = Nexus::load("/tmp/bank_raw", options);
+std::cout << nx.keys().at(0) << " " << nx.keys().at(1) << "\n";
+```
+
+### Output
+
+```text
+account loan
+```
+
+Example 3. Ignore a few heavy tables but load the rest.
+
+```cpp
+using namespace pluss::bundle;
+
+LoadOptions options;
+options.ignore = {"trans", "order"};
+
+auto nx = Nexus::load("/tmp/bank_raw", options);
+std::cout << std::boolalpha << nx.has("trans") << " "
+          << nx.has("account") << "\n";
+```
+
+### Output
+
+```text
+false true
+```
+
+Example 4. Recursive scan plus stable file-name keys.
+
+```cpp
+using namespace pluss::bundle;
+
+LoadOptions options;
+options.recursive = true;
+options.keep_extension = true;
+
+auto nx = Nexus::load("/tmp/project_tables", options);
+std::cout << nx.has("customers.csv") << " "
+          << nx.has("events.parquet") << "\n";
+```
+
+### Output
+
+```text
+1 1
+```
+
+Example 5. Invalid mixed selection mode.
+
+```cpp
+using namespace pluss::bundle;
+
+LoadOptions options;
+options.load = {"account"};
+options.ignore = {"loan"};
+
+// throws
+auto nx = Nexus::load("/tmp/bank_raw", options);
+```
+
+### Output
+
+```text
+runtime error: Nexus::load: choose either LoadOptions.load or LoadOptions.ignore, not both
 ```
 
 ## Notes
 
-- Static — called as `Nexus::load(...)`, not on an existing `Nexus` instance.
-- Must be called with the same `StoreOptions` (especially `kind`) that
-  [`save()`](save.md) was called with — see the important callout above.
-- Fully reconstructs declared `TableMeta` and `Relationship`s, plus any saved views — not
-  just the raw table data.
+- `load()` is for raw file ingestion into an in-memory Nexus workbench.
+- [`read()`](read.md) is the persisted-store restore path.
+- `parallel=true` means outer file-level concurrency across the discovered tables, not
+  “parallel parsing inside one csv file”.
+- Actual per-file parsing still remains delegated to `DataFrame::load(...)`.
+- The `config` field lets you stay format-flexible without teaching Nexus parser-specific knobs.
 
 ## See Also
 
-- [`Nexus::save`](save.md): the exact inverse of this method.
-- [`Nexus::fingerprint`](fingerprint.md): compare before/after to confirm a round trip
-  preserved everything.
+- [`Nexus::read`](read.md): restore a saved Nexus store.
+- [`Nexus::save`](save.md): persist a Nexus store that `read()` can reconstruct.
+- [`Nexus::pull`](pull.md): once the tables are loaded, lift root-grain features safely.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="links.html">

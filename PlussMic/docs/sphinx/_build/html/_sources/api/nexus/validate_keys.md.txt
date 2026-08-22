@@ -49,6 +49,7 @@ Example 1. Using the declared `primary_key`, on a table with a duplicate key val
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0, 3.0}))},

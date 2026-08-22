@@ -31,9 +31,9 @@ Example 1. Read the frame count and the first frame's field list
 straight off the returned vector.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
 });
 const auto& regs = axel.registries();
 std::cout << "count=" << regs.size() << " nfields0=" << regs[0].nfields();

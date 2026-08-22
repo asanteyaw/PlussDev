@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -84,7 +84,7 @@ throws <em>“unsupported source type”</em>.</p>
 <p>Path to the file to read.</p>
 <p><strong>config</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>) / <strong>config_entries</strong>
 (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;pluss::loader::ConfigEntry&gt;</span></code>)</p>
-<p>A reusable or inline settings bundle. Works with all five recognized <code class="docutils literal notranslate"><span class="pre">source_type</span></code>
+<p>A reusable or inline settings scribble. Works with all five recognized <code class="docutils literal notranslate"><span class="pre">source_type</span></code>
 values — each format’s own loader (for example <a class="reference internal" href="load_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_json()</span></code></span></a>’s
 <code class="docutils literal notranslate"><span class="pre">Config</span></code> overload) interprets the same key/value entries its dedicated loader would.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::ReadCsvOptions&amp;</span></code>)</p>
@@ -129,7 +129,7 @@ directly with equivalent settings.</p>
 </pre></div>
 </div>
 <p>This produces exactly what <code class="docutils literal notranslate"><span class="pre">DataFrame::load_csv(&quot;orders.csv&quot;)</span></code> would.</p>
-<p>Example 2. Dispatch with a <code class="docutils literal notranslate"><span class="pre">Config</span></code> bundle — works for any of the five formats.</p>
+<p>Example 2. Dispatch with a <code class="docutils literal notranslate"><span class="pre">Config</span></code> scribble — works for any of the five formats.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">config</span><span class="p">{{</span><span class="s">&quot;ncases&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">2</span><span class="p">}}};</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;orders.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">config</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">preview</span><span class="p">;</span>
@@ -227,6 +227,7 @@ format-selector string convention.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>

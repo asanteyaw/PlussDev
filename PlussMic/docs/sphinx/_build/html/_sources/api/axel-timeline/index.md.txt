@@ -36,8 +36,8 @@ every frame via [`Axel::map`](../axel/map.md).
 Example 1. Convert a sorted `Timeline` field to `TimeIndex`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-01T00:00:00Z"), pluss::make_timeline("2024-01-02T00:00:00Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-01T00:00:00Z"), pluss::make_timeline("2024-01-02T00:00:00Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().index();
 std::cout << out.registry(0).fields("ts").to_json();
@@ -61,8 +61,8 @@ Example 2. An out-of-order field throws under the default
 `require_sorted = true`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-02T00:00:00Z"), pluss::make_timeline("2024-01-01T00:00:00Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-02T00:00:00Z"), pluss::make_timeline("2024-01-01T00:00:00Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 try {
   auto out = axel.fields({"ts"}).tl().index();
@@ -93,7 +93,7 @@ TimeIndex must be sorted (non-decreasing)
 
 ## See Also
 
-- [`Archive::bundelize`](../archive/bundelize.md): the round-trip partner
+- [`Archive::scribbelize`](../archive/scribbelize.md): the round-trip partner
   that reconstructs `TimeIndex` values from a `kindle::Archive`.
 - [`Axel::tl`](../axel/tl.md): the entry point this accessor is reached
   from.

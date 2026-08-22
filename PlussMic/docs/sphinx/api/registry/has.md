@@ -36,9 +36,9 @@ Example 1. An existing key returns `true`; a missing one returns `false` — no
 throw.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::cout << std::boolalpha << rg.has("city") << " " << rg.has("zzz");
@@ -54,8 +54,8 @@ Example 2. Key lookup is exact and case-sensitive — a differently-cased name i
 treated as missing.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"City", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto rg = pluss::scribble::Registry({
+    {"City", pluss::scribble::Slot({pluss::make_note("Accra")})},
 });
 
 std::cout << std::boolalpha << rg.has("city") << " " << rg.has("City");

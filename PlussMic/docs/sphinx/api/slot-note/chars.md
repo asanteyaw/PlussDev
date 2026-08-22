@@ -42,7 +42,7 @@ indices counting from the end.
 Example 1. Take the first two characters of each value.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")});
 auto out = slot.nt().chars(0, 2);
 std::cout << std::get<pluss::Note>(out.at(0)).at(0) << " "
           << std::get<pluss::Note>(out.at(1)).at(0);
@@ -57,7 +57,7 @@ Ac Ku
 Example 2. A negative `start` slices from the end.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra")});
 auto out = slot.nt().chars(-2);
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
@@ -71,7 +71,7 @@ ra
 Example 3. `step` keeps every Nth character, with no `stop` bound.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("Accra")});
+auto slot = pluss::scribble::Slot({pluss::make_note("Accra")});
 auto out = slot.nt().chars(0, std::nullopt, 2);
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```

@@ -40,8 +40,8 @@ casting if you need to detect values that failed to convert.
 Example 1. Cast a `Note` field of numeric-looking text to `Series`.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_note("1"), pluss::make_note("2")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"id"}).cast().series();
 auto ids = out.registry(0).fields("id");
@@ -59,8 +59,8 @@ Example 2. Unparseable text becomes null rather than throwing — see the
 important callout above.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).cast().series();
 std::cout << out.registry(0).fields("city").to_json();

@@ -37,9 +37,9 @@ to find individual null values within a field that isn't entirely null.
 Example 1. Isolate a field where every value is null.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"all_null", pluss::bundle::Slot({pluss::bundle::Slot::Value{std::monostate{}}, pluss::bundle::Slot::Value{std::monostate{}}})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"all_null", pluss::scribble::Slot({pluss::scribble::Slot::Value{std::monostate{}}, pluss::scribble::Slot::Value{std::monostate{}}})},
 });
 
 auto out = rg.fieldaxis().nulls();

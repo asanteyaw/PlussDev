@@ -47,7 +47,7 @@ itself is still valid.
 Example 1. The not-found case's empty strings.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("key=value"), pluss::make_note("no-equals")});
+auto slot = pluss::scribble::Slot({pluss::make_note("key=value"), pluss::make_note("no-equals")});
 auto out = slot.nt().partition("=");
 std::cout << out;
 ```

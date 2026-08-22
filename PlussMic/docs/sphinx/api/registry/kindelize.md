@@ -30,8 +30,8 @@ the registry's field order.
 Example 1. `kindelize()` produces one catalog key per registry field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 
 std::cout << rg.kindelize().nkeys();
@@ -50,8 +50,8 @@ std::cout << rg.kindelize().nkeys();
 
 ## See Also
 
-- [`Catalog::bundelize`](../catalog/bundelize.md): the reverse bridge from
-  Kindle back into the bundle model.
+- [`Catalog::scribbelize`](../catalog/scribbelize.md): the reverse bridge from
+  Kindle back into the scribble model.
 - [`Registry::save_csv`](save_csv.md): one of the export methods that routes
   through this conversion internally.
 

@@ -45,7 +45,7 @@ Path to the Parquet file to read.
 **config** (`const pluss::loader::Config&`) / **config_entries**
 (`std::initializer_list<pluss::loader::ConfigEntry>`)
 
-A reusable or inline settings bundle, recognizing the same general-purpose keys
+A reusable or inline settings scribble, recognizing the same general-purpose keys
 (`ncases`, `usefeats`, `case`, and so on) as [`load_csv()`](load_csv.md)'s `Config`
 overload — `usefeats` here restricts which Parquet columns are even read out of the
 file via Arrow, rather than reading everything and discarding columns afterward.

@@ -20,12 +20,11 @@
 namespace pluss::table {
 class Atlas;
 }
-namespace pluss::bundle {
+namespace pluss::scribble {
 class Axel;
 }
 
 namespace pluss::kindle {
-
 namespace detail {
 class ArchiveImpl;
 }
@@ -117,7 +116,7 @@ public:
   Archive ndistinct(DistinctOptions options = {}) const;
 
   pluss::table::Atlas tabelize(const TabelizePolicy& policy = {}) const;
-  pluss::bundle::Axel bundelize() const;
+  pluss::scribble::Axel scribbelize() const;
 
   ArchivePlotAccessor plot() const;
   ArchivePlotAccessor plot(const pluss::table::AtlasPlotOptions& options) const;

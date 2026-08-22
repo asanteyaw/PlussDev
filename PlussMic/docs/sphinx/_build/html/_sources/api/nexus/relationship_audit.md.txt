@@ -59,6 +59,7 @@ Example 1. Auditing a relationship with one orphaned row on the left.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
@@ -122,7 +123,8 @@ because of the one left-side orphan.
   `left_orphans`/`right_orphans` counts.
 - [`Nexus::grain_audit`](grain_audit.md): the table-level counterpart to this
   relationship-level audit.
-- [`Nexus::audit`](audit.md): an exact alias.
+- [`Nexus::audit(name)`](audit.md): the shorter relationship-level spelling; note that
+  zero-argument [`audit()`](audit.md) now returns the workspace-wide audit table instead.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="relationship.html">

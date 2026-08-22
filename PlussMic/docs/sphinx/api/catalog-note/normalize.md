@@ -79,7 +79,7 @@ city                     | Note         | Note             | 1       | [Accra]
 - [`CatalogNoteAccessor::encode`](encode.md): the other byte/text-level transform on
   this accessor.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::normalize`](../registry-note/normalize.md): the bundle-model
+- [`RegistryNoteAccessor::normalize`](../registry-note/normalize.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

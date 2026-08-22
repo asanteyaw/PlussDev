@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -42,20 +42,20 @@
 <p><a class="reference internal" href="../../nexus_api_reference.html"><span class="doc std std-doc">Back to Nexus API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">from</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusQuery</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">from</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusTraverse</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Enters the fluent <a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a> builder, anchored at
+<p>Enters the fluent <a class="reference internal" href="../../nexus_traverse_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code></span></a> builder, anchored at
 <code class="docutils literal notranslate"><span class="pre">table</span></code>. <code class="docutils literal notranslate"><span class="pre">from()</span></code> itself does no joining — it just binds a starting table and hands back a
 builder whose methods (<code class="docutils literal notranslate"><span class="pre">.join()</span></code>, <code class="docutils literal notranslate"><span class="pre">.via()</span></code>, <code class="docutils literal notranslate"><span class="pre">.pick()</span></code>, <code class="docutils literal notranslate"><span class="pre">.drop()</span></code>, <code class="docutils literal notranslate"><span class="pre">.name()</span></code>) accumulate a
 <a class="reference internal" href="plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">JoinPlan</span></code></span></a> one call at a time, materialized only when you call
 <code class="docutils literal notranslate"><span class="pre">.collect()</span></code>.</p>
 <p>This is the higher-level counterpart to building a <a class="reference internal" href="plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">JoinPlan</span></code></span></a> by hand via
 <a class="reference internal" href="path.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">path()</span></code></span></a>/<a class="reference internal" href="plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plan()</span></code></span></a> and executing it with
-<a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">materialize()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> covers the common case (a chain of joins
+<a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">materialize()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code> covers the common case (a chain of joins
 from one anchor table) with a shorter, chainable spelling, and can auto-detect the
 relationship to use at each step when it’s unambiguous.</p>
 </section>
@@ -67,7 +67,7 @@ name throws <code class="docutils literal notranslate"><span class="pre">&quot;N
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code>
 A query builder anchored at <code class="docutils literal notranslate"><span class="pre">table</span></code>, with an empty plan (zero steps) so far.</p>
 </section>
 <section id="examples">
@@ -75,6 +75,7 @@ A query builder anchored at <code class="docutils literal notranslate"><span cla
 <p>Example 1. Enter the builder and immediately collect — with no <code class="docutils literal notranslate"><span class="pre">.join()</span></code> calls, this is
 equivalent to <a class="reference internal" href="frame.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">frame(table)</span></code></span></a>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
@@ -112,19 +113,19 @@ equivalent to <a class="reference internal" href="frame.html"><span class="std s
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Never touches table data itself — the anchor is validated (it must exist) but nothing is
-read or joined until <a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">.collect()</span></code></span></a> runs.</p></li>
-<li><p>See the <a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span> <span class="pre">API</span> <span class="pre">Reference</span></code></span></a> for the full
+read or joined until <a class="reference internal" href="../../nexus_traverse_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">.collect()</span></code></span></a> runs.</p></li>
+<li><p>See the <a class="reference internal" href="../../nexus_traverse_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span> <span class="pre">API</span> <span class="pre">Reference</span></code></span></a> for the full
 builder method list (<code class="docutils literal notranslate"><span class="pre">.join()</span></code>, <code class="docutils literal notranslate"><span class="pre">.via()</span></code>, <code class="docutils literal notranslate"><span class="pre">.pick()</span></code>, <code class="docutils literal notranslate"><span class="pre">.drop()</span></code>, <code class="docutils literal notranslate"><span class="pre">.name()</span></code>, <code class="docutils literal notranslate"><span class="pre">.collect()</span></code>).</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span> <span class="pre">API</span> <span class="pre">Reference</span></code></span></a>: every method on the
+<li><p><a class="reference internal" href="../../nexus_traverse_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span> <span class="pre">API</span> <span class="pre">Reference</span></code></span></a>: every method on the
 builder this returns.</p></li>
 <li><p><a class="reference internal" href="path.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::path</span></code></span></a> / <a class="reference internal" href="plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plan</span></code></span></a> / <a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">materialize</span></code></span></a>: the
-lower-level primitives <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> is built on top of.</p></li>
-<li><p><a class="reference internal" href="join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::join</span></code></span></a>: the single-hop primitive <code class="docutils literal notranslate"><span class="pre">NexusQuery::join</span></code> wraps.</p></li>
+lower-level primitives <code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code> is built on top of.</p></li>
+<li><p><a class="reference internal" href="join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::join</span></code></span></a>: the single-hop primitive <code class="docutils literal notranslate"><span class="pre">NexusTraverse::join</span></code> wraps.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="frames.html">
@@ -175,6 +176,7 @@ lower-level primitives <code class="docutils literal notranslate"><span class="p
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -188,7 +190,7 @@ lower-level primitives <code class="docutils literal notranslate"><span class="p
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
       <li>Previous: <a href="frames.html" title="previous chapter">Nexus::frames</a></li>
       <li>Next: <a href="from_atlas.html" title="next chapter">Nexus::from_atlas</a></li>

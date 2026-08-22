@@ -40,8 +40,8 @@ Example 1. Two timestamps from the same leap year both flag `true`, even
 though only one falls on February 29th.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().leap();
@@ -61,8 +61,8 @@ Example 2. A 2024 timestamp flags `true`; a 2023 timestamp flags `false`,
 since 2023 isn't a leap year.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().leap();

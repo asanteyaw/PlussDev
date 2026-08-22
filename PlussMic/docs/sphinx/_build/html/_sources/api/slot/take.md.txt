@@ -33,7 +33,7 @@ positional selection, with repeats allowed.
 Example 1. Select positions out of order, with a repeat.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 std::vector<std::int64_t> picks{2, 0, 0};
 auto out = slot.take(picks);
 std::cout << "size=" << out.size() << " vals="
@@ -52,7 +52,7 @@ Example 2. An out-of-range index throws — unlike [`slice()`](slice.md),
 `take()` doesn't clamp.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
   std::vector<std::int64_t> bad{10};
   auto out = slot.take(bad);

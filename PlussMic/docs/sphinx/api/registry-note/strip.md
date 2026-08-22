@@ -48,8 +48,8 @@ to trip the throw — project down to just the text fields first with
 Example 1. No-argument overload trims leading and trailing whitespace.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("  Accra  "), pluss::make_note("  Tema  ")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("  Accra  "), pluss::make_note("  Tema  ")})},
 });
 
 auto out = rg.fields({"city"}).nt().strip();
@@ -68,8 +68,8 @@ Example 2. `chars`-argument overload trims a specific character set from
 both edges.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"code", pluss::bundle::Slot({pluss::make_note("xxAccraxx")})},
+auto rg = pluss::scribble::Registry({
+    {"code", pluss::scribble::Slot({pluss::make_note("xxAccraxx")})},
 });
 
 auto out = rg.fields({"code"}).nt().strip("x");
@@ -86,8 +86,8 @@ Example 3. Calling any method on this accessor with a non-`Note` field bound
 throws — see the important callout above.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 
 try {

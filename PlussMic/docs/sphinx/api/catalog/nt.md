@@ -108,7 +108,7 @@ Thread::strip is only valid for Note payload
 - [`Catalog::keyaxis`](keyaxis.md): filter down to just the `Note`-kind keys first, via
   `.note()`, before falling back to per-key operations if you need to mix text and
   non-text processing in one pipeline.
-- [`Registry::fields(keys).nt()`](../registry/nt.md): the bundle-model equivalent,
+- [`Registry::fields(keys).nt()`](../registry/nt.md): the scribble-model equivalent,
   which *does* let you narrow to a key subset before binding.
 
 <div class="pluss-inline-prev-next">

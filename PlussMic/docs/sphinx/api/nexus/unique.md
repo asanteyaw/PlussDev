@@ -35,6 +35,7 @@ Example 1. A freshly constructed `Nexus` is its own sole owner.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", pluss::make_series({1.0, 2.0, 3.0})},

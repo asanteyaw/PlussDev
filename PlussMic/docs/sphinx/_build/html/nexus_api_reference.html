@@ -13,12 +13,12 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=052b4a34"></script>
+    <script src="_static/api_nav.js?v=bd236ad6"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Nexus::add_relationship" href="api/nexus/add_relationship.html" />
-    <link rel="prev" title="Atlas::unique" href="api/atlas/unique.html" />
+    <link rel="prev" title="PlussMic bundle" href="api/plussmic_bundle.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -38,13 +38,17 @@
             
   <section id="nexus-api-reference">
 <h1>Nexus API Reference<a class="headerlink" href="#nexus-api-reference" title="Link to this heading">¶</a></h1>
-<p>This page documents the public <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> surface with usage-first examples generated
-from the current table API.</p>
+<p>This page documents the public <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> surface as part of the <code class="docutils literal notranslate"><span class="pre">bundle</span></code>
+workspace model.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code> is a named, multi-table workspace built on top of <a class="reference internal" href="dataframe_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></span></a>
 — it holds a keyed collection of frames, layers on declared relationships between
-them, and provides key/relationship auditing, join-graph pathfinding, a fluent query
-builder (<a class="reference internal" href="nexus_query_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a>, returned by <code class="docutils literal notranslate"><span class="pre">from()</span></code>), and
-save/load persistence.</p>
+them, and provides key/relationship auditing, join-graph pathfinding, a fluent
+pull builder (<code class="docutils literal notranslate"><span class="pre">pull(root)</span></code>), a fluent graph builder
+(<a class="reference internal" href="nexus_traverse_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code></span></a>, returned by <code class="docutils literal notranslate"><span class="pre">from()</span></code>), a SQL
+workspace accessor (<a class="reference internal" href="nexus_query_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a>, returned by
+<code class="docutils literal notranslate"><span class="pre">query()</span></code>), and save/load persistence.</p>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">pluss::bundle</span></code> namespace for <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> itself, and <code class="docutils literal notranslate"><span class="pre">pluss::table</span></code> for the
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> objects it coordinates.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>No dedicated constructor page
@@ -73,10 +77,24 @@ page pointing back to the canonical one.</p>
 </section>
 <section id="the-query-builder">
 <h2>The Query Builder<a class="headerlink" href="#the-query-builder" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Nexus::from(table)</span></code> returns a <a class="reference internal" href="nexus_query_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a>, a
-separate fluent builder for walking the join graph from one anchor table
-(<code class="docutils literal notranslate"><span class="pre">.join()</span></code>/<code class="docutils literal notranslate"><span class="pre">.via()</span></code>/<code class="docutils literal notranslate"><span class="pre">.pick()</span></code>/<code class="docutils literal notranslate"><span class="pre">.drop()</span></code>/<code class="docutils literal notranslate"><span class="pre">.collect()</span></code>). See its own reference page for
-the full method-by-method breakdown.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Nexus::pull(root)</span></code> now has two layers:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pull(root)</span></code> returns a fluent root-grain feature builder</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pull(root,</span> <span class="pre">{...})</span></code> executes immediately from string expressions or typed <code class="docutils literal notranslate"><span class="pre">PullSpec</span></code>s</p></li>
+</ul>
+<p>The fluent builder is the preferred spelling for real feature assembly because it
+avoids repeating namespace qualifiers on every requested field, while still
+delegating to the same underlying pull engine.</p>
+<p>Its builder edge now follows the same pattern as <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>: canonical
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code> inputs, with ergonomic brace-list / vector / array call sites adapted
+through <code class="docutils literal notranslate"><span class="pre">StackArray</span></code> where needed. That keeps ordinary user code short while
+avoiding fragile overload proliferation in the public API.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Nexus::from(table)</span></code> returns a <a class="reference internal" href="nexus_traverse_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code></span></a>,
+a separate fluent builder for walking the join graph from one anchor table
+(<code class="docutils literal notranslate"><span class="pre">.join()</span></code>/<code class="docutils literal notranslate"><span class="pre">.via()</span></code>/<code class="docutils literal notranslate"><span class="pre">.pick()</span></code>/<code class="docutils literal notranslate"><span class="pre">.drop()</span></code>/<code class="docutils literal notranslate"><span class="pre">.collect()</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">Nexus::query()</span></code> returns a <a class="reference internal" href="nexus_query_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code></span></a>, the
+workspace SQL accessor for <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">...</span> <span class="pre">FROM</span> <span class="pre">...</span> <span class="pre">JOIN</span> <span class="pre">...</span></code> queries over the
+named tables already loaded into the <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>
@@ -118,6 +136,7 @@ the full method-by-method breakdown.</p>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -131,8 +150,8 @@ the full method-by-method breakdown.</p>
   <li><a href="index.html">Documentation overview</a><ul>
   <li><a href="api_reference.html">API Reference</a><ul>
   <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
-      <li>Previous: <a href="api/atlas/unique.html" title="previous chapter">Atlas::unique</a></li>
+  <li><a href="api/plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+      <li>Previous: <a href="api/plussmic_bundle.html" title="previous chapter">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a></li>
       <li>Next: <a href="api/nexus/add_relationship.html" title="next chapter">Nexus::add_relationship</a></li>
   </ul></li>
   </ul></li>

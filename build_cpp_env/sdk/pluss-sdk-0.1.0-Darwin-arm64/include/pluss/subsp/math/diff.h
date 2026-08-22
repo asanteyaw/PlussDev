@@ -57,11 +57,11 @@ inline void require_float_dtype_(const Series& x, const char* op) {
 }
 
 inline Series zeros_like_(const Series& like) {
-  return pluss::full_like(like, 0.0, like.scalar_type());
+  return pluss::series::full_like(like, 0.0, like.scalar_type());
 }
 
 inline Series ones_like_(const Series& like) {
-  return pluss::full_like(like, 1.0, like.scalar_type());
+  return pluss::series::full_like(like, 1.0, like.scalar_type());
 }
 
 inline void set_tracks_slope_(const Series& value, bool enabled) {
@@ -102,7 +102,7 @@ inline void reverse_with_context_(const Series& output, const Series& sensitivit
 inline Series flat_basis_like_(const Series& like, std::int64_t index) {
   require_defined_(like, "flat_basis_like");
   PLUSS_CHECK(index >= 0 && index < like.numel(), "subsp::math::diff::flat_basis_like: index out of range");
-  Series basis = pluss::arange(0, like.numel(), 1, ScalarType::Int64).to(like.platform());
+  Series basis = pluss::series::arange(0, like.numel(), 1, ScalarType::Int64).to(like.platform());
   basis = basis.eq(index).to(like.scalar_type());
   return basis.reshape(like.sizes());
 }
@@ -111,7 +111,7 @@ inline Series stack_rows_(const std::vector<Series>& rows,
                           std::int64_t ncols,
                           ScalarType dtype,
                           pluss::codem::Platform platform) {
-  if (rows.empty()) return pluss::empty({0, ncols}, dtype).to(platform);
+  if (rows.empty()) return pluss::series::empty({0, ncols}, dtype).to(platform);
   if (rows.size() == 1) return rows.front();
   return rows.front().unite(std::vector<Series>(rows.begin() + 1, rows.end()), 0);
 }
@@ -120,7 +120,7 @@ inline Series stack_cols_(const std::vector<Series>& cols,
                           std::int64_t nrows,
                           ScalarType dtype,
                           pluss::codem::Platform platform) {
-  if (cols.empty()) return pluss::empty({nrows, 0}, dtype).to(platform);
+  if (cols.empty()) return pluss::series::empty({nrows, 0}, dtype).to(platform);
   if (cols.size() == 1) return cols.front();
   return cols.front().unite(std::vector<Series>(cols.begin() + 1, cols.end()), 1);
 }
@@ -482,12 +482,12 @@ inline DualTrace constant_like(const DualTrace& like, const Series& value) {
 }
 
 inline Trace make_scalar_like_(const Trace& like, double value) {
-  return fixed(pluss::full_like(like.value(), value, like.value().scalar_type()));
+  return fixed(pluss::series::full_like(like.value(), value, like.value().scalar_type()));
 }
 
 inline DualTrace make_scalar_like_(const DualTrace& like, double value) {
   return DualTrace(
-      pluss::full_like(like.value(), value, like.value().scalar_type()),
+      pluss::series::full_like(like.value(), value, like.value().scalar_type()),
       detail::zeros_like_(like.value()));
 }
 
@@ -2057,7 +2057,7 @@ DerivativeAuditReport gradient_audit_report(
     const Series f_minus = primal_value(minus);
     const double numeric = detail::scalar_item_(f_plus.sub(f_minus).div(2.0 * opt.epsilon), "gradient_audit");
 
-    Series analytic_s = pluss::full({}, 0.0, base_value.scalar_type()).to(base_value.platform());
+    Series analytic_s = pluss::series::full({}, 0.0, base_value.scalar_type()).to(base_value.platform());
     for (std::size_t i = 0; i < grads.size(); ++i) {
       analytic_s = analytic_s.add(grads[i].mul(lane[i]).sum());
     }
@@ -2168,7 +2168,7 @@ DerivativeAuditReport curvature_audit_report(
         opt.policy);
     (void)ignored_value;
 
-    Series analytic_s = pluss::full({}, 0.0, base_value.scalar_type()).to(base_value.platform());
+    Series analytic_s = pluss::series::full({}, 0.0, base_value.scalar_type()).to(base_value.platform());
     for (std::size_t i = 0; i < hv.size(); ++i) {
       analytic_s = analytic_s.add(hv[i].mul(lane[i]).sum());
     }

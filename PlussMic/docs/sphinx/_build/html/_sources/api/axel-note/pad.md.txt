@@ -57,8 +57,8 @@ right; `Right` keeps the text flush right and adds padding on the left;
 Example 1. Default call: left-align, pad with spaces on the right.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("7")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("7")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"code"}).nt().pad(4);
 std::cout << "'" << std::get<pluss::Note>(out.registry(0).fields("code").at(0)).at(0) << "'";
@@ -74,8 +74,8 @@ Example 2. Right-align with a `'0'` fill — a common way to zero-pad
 numeric codes stored as text.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("7")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("7")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"code"}).nt().pad(4, pluss::table::TextAlign::Right, '0');
 std::cout << std::get<pluss::Note>(out.registry(0).fields("code").at(0)).at(0);
@@ -90,8 +90,8 @@ std::cout << std::get<pluss::Note>(out.registry(0).fields("code").at(0)).at(0);
 Example 3. Center alignment splits the padding across both sides.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("7")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("7")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"code"}).nt().pad(5, pluss::table::TextAlign::Center);
 std::cout << "'" << std::get<pluss::Note>(out.registry(0).fields("code").at(0)).at(0) << "'";

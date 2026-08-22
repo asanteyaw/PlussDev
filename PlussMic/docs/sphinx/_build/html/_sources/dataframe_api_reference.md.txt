@@ -49,7 +49,6 @@ api/dataframe/astype
 api/dataframe/bfill
 api/dataframe/bottom
 api/dataframe/bucketize
-api/dataframe/bundelize
 api/dataframe/case_study
 api/dataframe/cast
 api/dataframe/clip
@@ -182,6 +181,7 @@ api/dataframe/save_json
 api/dataframe/save_parquet
 api/dataframe/save_txt
 api/dataframe/scan
+api/dataframe/scribbelize
 api/dataframe/se
 api/dataframe/select
 api/dataframe/set

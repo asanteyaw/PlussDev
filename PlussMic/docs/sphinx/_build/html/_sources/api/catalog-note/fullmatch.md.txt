@@ -79,7 +79,7 @@ city                     | Series       | Series[bool]     | 3       | [true, fa
 - [`CatalogNoteAccessor::has`](has.md): a related pattern test with an optional literal
   mode, absent here.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::fullmatch`](../registry-note/fullmatch.md): the bundle-model
+- [`RegistryNoteAccessor::fullmatch`](../registry-note/fullmatch.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

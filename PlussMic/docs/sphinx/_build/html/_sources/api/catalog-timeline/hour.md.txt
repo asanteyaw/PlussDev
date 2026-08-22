@@ -75,7 +75,7 @@ ts                       | Series       | Series[int32]    | 2       | [9, 23]
   once.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::hour`](../registry-timeline/hour.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fmt.html">

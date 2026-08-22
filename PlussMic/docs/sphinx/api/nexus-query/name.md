@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# NexusQuery::name
+# NexusTraverse::name
 
-[Back to NexusQuery API Reference](../../nexus_query_api_reference)
+[Back to NexusTraverse API Reference](../../nexus_traverse_api_reference)
 
 ## Signature
 
 ```cpp
-NexusQuery::name(std::string_view value) const -> NexusQuery
+NexusTraverse::name(std::string_view value) const -> NexusTraverse
 ```
 
 ## What It Does
@@ -20,11 +20,11 @@ the automatic `root_table + "_" + <last table>`-style name the underlying
 
 **value** (`std::string_view`)
     The title to apply. Must be non-empty — an empty string throws
-    `"NexusQuery::name: title cannot be empty"`.
+    `"NexusTraverse::name: title cannot be empty"`.
 
 ## Returns
 
-`NexusQuery`
+`NexusTraverse`
     A new query with the title set (or replaced). The original query is unchanged.
 
 ## Examples
@@ -33,6 +33,7 @@ Example 1. Naming the result of a join.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -79,7 +80,7 @@ try {
 ### Output
 
 ```text
-NexusQuery::name: title cannot be empty
+NexusTraverse::name: title cannot be empty
 ```
 
 Note that the throw happens immediately when `.name("")` is called — before `.collect()`
@@ -96,7 +97,7 @@ even runs.
 
 ## See Also
 
-- [`NexusQuery::collect`](collect.md): where the title is actually applied, via
+- [`NexusTraverse::collect`](collect.md): where the title is actually applied, via
   [`DataFrame::title()`](../dataframe/title.md).
 - [`Nexus::plan`](../nexus/plan.md): the default naming rule this method overrides.
 

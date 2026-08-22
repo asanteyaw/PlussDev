@@ -20,14 +20,14 @@ pluss::table::Thread Stream::tabelize() const {
   return to_thread();
 }
 
-pluss::bundle::Slot Stream::bundelize() const {
-  PLUSS_CHECK(defined(), "Stream::bundelize: stream undefined");
+pluss::scribble::Slot Stream::scribbelize() const {
+  PLUSS_CHECK(defined(), "Stream::scribbelize: stream undefined");
   const auto n = size();
   const auto has_validity = pluss::kindle::detail::has_validity_mask(*this);
   const auto valid = has_validity
                          ? pluss::kindle::detail::validity_mask(*this)->to_vec<bool>()
                          : std::vector<bool>{};
-  std::vector<pluss::bundle::Slot::Value> out;
+  std::vector<pluss::scribble::Slot::Value> out;
   out.reserve(static_cast<std::size_t>(n));
 
   switch (kind()) {
@@ -106,7 +106,7 @@ pluss::bundle::Slot Stream::bundelize() const {
     }
   }
 
-  return pluss::bundle::Slot(std::move(out));
+  return pluss::scribble::Slot(std::move(out));
 }
 
 Stream Stream::head(std::int64_t n) const {

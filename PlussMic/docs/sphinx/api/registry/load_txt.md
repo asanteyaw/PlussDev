@@ -25,7 +25,7 @@ inference.
     The text file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying CSV-style reader
+    A generic configuration scribble, translated into the underlying CSV-style reader
     options — see [`load_csv()`](load_csv.md)'s important callout for the recognized
     `"ncases"` row-limit key.
 
@@ -39,7 +39,7 @@ inference.
 Example 1. Load a tab-separated text file.
 
 ```cpp
-auto rg = pluss::bundle::Registry::load_txt("cities.txt");
+auto rg = pluss::scribble::Registry::load_txt("cities.txt");
 std::cout << rg;
 ```
 

@@ -48,6 +48,7 @@ Example 1. Using the declared `primary_key`.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0, 3.0}))},

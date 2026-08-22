@@ -94,7 +94,7 @@ Timeline: unsupported unit (expected S/min/H/D)
 - [`CatalogTimelineAccessor::date`](date.md): shorthand for `floor("D")`.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::floor`](../registry-timeline/floor.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="epoch.html">

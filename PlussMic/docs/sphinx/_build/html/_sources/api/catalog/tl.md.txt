@@ -89,7 +89,7 @@ ts                       | Series       | Series[int32]    | 2       | [2024, 20
   text-processing and time-series operations.
 - [`Catalog::keyaxis`](keyaxis.md): filter down to just the `Timeline`-kind keys first,
   via `.timeline()`.
-- [`Registry::fields(keys).tl()`](../registry/tl.md): the bundle-model equivalent,
+- [`Registry::fields(keys).tl()`](../registry/tl.md): the scribble-model equivalent,
   which *does* let you narrow to a key subset before binding.
 
 <div class="pluss-inline-prev-next">

@@ -88,7 +88,7 @@ std::cout << fmted.keys("ts").as_note().at(0);
   instant (which *does* persist) rather than just the display label.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::tz`](../registry-timeline/tz.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="time.html">

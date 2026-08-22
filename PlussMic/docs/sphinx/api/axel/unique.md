@@ -41,8 +41,8 @@ storage is unique; copying it drops that to `false` on both handles
 until the copy goes out of scope.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
 std::cout << "before copy: " << std::boolalpha << axel.unique() << "\n";
 auto copy = axel;

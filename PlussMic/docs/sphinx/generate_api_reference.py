@@ -55,6 +55,12 @@ MANUAL_API_NAV = {
         'landing': 'nexus_api_reference.html',
         'index': DOCS / 'nexus_api_reference.md',
     },
+    'NexusTraverse': {
+        'title': 'NexusTraverse',
+        'slug': 'nexus-traverse',
+        'landing': 'nexus_traverse_api_reference.html',
+        'index': DOCS / 'nexus_traverse_api_reference.md',
+    },
     'NexusQuery': {
         'title': 'NexusQuery',
         'slug': 'nexus-query',
@@ -336,28 +342,28 @@ CLASS_CONFIG = {
         'intro': 'This page documents the full public `Archive` surface for depth-stacked catalogs.',
     },
     'Slot': {
-        'header': ROOT / 'PlussMic/src/bundle/Slot.h',
+        'header': ROOT / 'PlussMic/src/scribble/Slot.h',
         'output': DOCS / 'slot_api_reference.md',
         'title': 'Slot API Reference',
         'subtitle': 'Practical Slot API Reference',
-        'intro': 'This page documents the full public `Slot` surface for one-dimensional heterogeneous bundles.',
+        'intro': 'This page documents the full public `Slot` surface for one-dimensional heterogeneous scribbles.',
     },
     'Registry': {
-        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'header': ROOT / 'PlussMic/src/scribble/registry.h',
         'output': DOCS / 'registry_api_reference.md',
         'title': 'Registry API Reference',
         'subtitle': 'Practical Registry API Reference',
-        'intro': 'This page documents the full public `Registry` surface for named bundle slots.',
+        'intro': 'This page documents the full public `Registry` surface for named scribble slots.',
     },
     'Axel': {
-        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'header': ROOT / 'PlussMic/src/scribble/Axel.h',
         'output': DOCS / 'axel_api_reference.md',
         'title': 'Axel API Reference',
         'subtitle': 'Practical Axel API Reference',
         'intro': 'This page documents the full public `Axel` surface for depth-stacked registries.',
     },
     'SlotCastAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/Slot.h',
+        'header': ROOT / 'PlussMic/src/scribble/Slot.h',
         'output': DOCS / 'slot_cast_accessor_api_reference.md',
         'title': 'SlotCastAccessor API Reference',
         'subtitle': 'Practical SlotCastAccessor API Reference',
@@ -365,7 +371,7 @@ CLASS_CONFIG = {
         'binder': 'cast()',
     },
     'SlotNoteAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/Slot.h',
+        'header': ROOT / 'PlussMic/src/scribble/Slot.h',
         'output': DOCS / 'slot_note_accessor_api_reference.md',
         'title': 'SlotNoteAccessor API Reference',
         'subtitle': 'Practical SlotNoteAccessor API Reference',
@@ -373,7 +379,7 @@ CLASS_CONFIG = {
         'binder': 'nt()',
     },
     'SlotTimelineAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/Slot.h',
+        'header': ROOT / 'PlussMic/src/scribble/Slot.h',
         'output': DOCS / 'slot_timeline_accessor_api_reference.md',
         'title': 'SlotTimelineAccessor API Reference',
         'subtitle': 'Practical SlotTimelineAccessor API Reference',
@@ -381,7 +387,7 @@ CLASS_CONFIG = {
         'binder': 'tl()',
     },
     'RegistryFieldAxisAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'header': ROOT / 'PlussMic/src/scribble/registry.h',
         'output': DOCS / 'registry_fieldaxis_accessor_api_reference.md',
         'title': 'RegistryFieldAxisAccessor API Reference',
         'subtitle': 'Practical RegistryFieldAxisAccessor API Reference',
@@ -389,7 +395,7 @@ CLASS_CONFIG = {
         'binder': 'fieldaxis()',
     },
     'RegistryCastAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'header': ROOT / 'PlussMic/src/scribble/registry.h',
         'output': DOCS / 'registry_cast_accessor_api_reference.md',
         'title': 'RegistryCastAccessor API Reference',
         'subtitle': 'Practical RegistryCastAccessor API Reference',
@@ -397,7 +403,7 @@ CLASS_CONFIG = {
         'binder': 'fields(keys).cast()',
     },
     'RegistryNoteAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'header': ROOT / 'PlussMic/src/scribble/registry.h',
         'output': DOCS / 'registry_note_accessor_api_reference.md',
         'title': 'RegistryNoteAccessor API Reference',
         'subtitle': 'Practical RegistryNoteAccessor API Reference',
@@ -405,7 +411,7 @@ CLASS_CONFIG = {
         'binder': 'fields(keys).nt()',
     },
     'RegistryTimelineAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/registry.h',
+        'header': ROOT / 'PlussMic/src/scribble/registry.h',
         'output': DOCS / 'registry_timeline_accessor_api_reference.md',
         'title': 'RegistryTimelineAccessor API Reference',
         'subtitle': 'Practical RegistryTimelineAccessor API Reference',
@@ -413,7 +419,7 @@ CLASS_CONFIG = {
         'binder': 'fields(keys).tl()',
     },
     'AxelFieldAxisAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'header': ROOT / 'PlussMic/src/scribble/Axel.h',
         'output': DOCS / 'axel_fieldaxis_accessor_api_reference.md',
         'title': 'AxelFieldAxisAccessor API Reference',
         'subtitle': 'Practical AxelFieldAxisAccessor API Reference',
@@ -421,7 +427,7 @@ CLASS_CONFIG = {
         'binder': 'fieldaxis()',
     },
     'AxelCastAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'header': ROOT / 'PlussMic/src/scribble/Axel.h',
         'output': DOCS / 'axel_cast_accessor_api_reference.md',
         'title': 'AxelCastAccessor API Reference',
         'subtitle': 'Practical AxelCastAccessor API Reference',
@@ -429,7 +435,7 @@ CLASS_CONFIG = {
         'binder': 'fields(keys).cast()',
     },
     'AxelNoteAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'header': ROOT / 'PlussMic/src/scribble/Axel.h',
         'output': DOCS / 'axel_note_accessor_api_reference.md',
         'title': 'AxelNoteAccessor API Reference',
         'subtitle': 'Practical AxelNoteAccessor API Reference',
@@ -437,7 +443,7 @@ CLASS_CONFIG = {
         'binder': 'fields(keys).nt()',
     },
     'AxelTimelineAccessor': {
-        'header': ROOT / 'PlussMic/src/bundle/Axel.h',
+        'header': ROOT / 'PlussMic/src/scribble/Axel.h',
         'output': DOCS / 'axel_timeline_accessor_api_reference.md',
         'title': 'AxelTimelineAccessor API Reference',
         'subtitle': 'Practical AxelTimelineAccessor API Reference',
@@ -1026,7 +1032,7 @@ def returns_doc(ret: str) -> str:
         'MatrixValues': 'Grouped matrix blocks split by payload family (`Series`, `Note`, `Timeline`, and `TimeIndex`).',
         'DataFrame::MatrixValues': 'Grouped matrix blocks split by payload family (`Series`, `Note`, `Timeline`, and `TimeIndex`).',
         'FrameMatch': 'Pair containing matched `left` and `right` frames with identical case and feature axes.',
-        'pluss::loader::LoadResult': 'Multi-sheet Excel load bundle containing one frame per requested sheet.',
+        'pluss::loader::LoadResult': 'Multi-sheet Excel load scribble containing one frame per requested sheet.',
         'const std::vector<std::string>&': 'Borrowed list of names.',
         'std::vector<Thread>': 'Materialized collection of thread objects.',
         'std::vector<Stream>': 'Materialized collection of stream objects.',
@@ -1052,9 +1058,9 @@ def method_content_path(class_name: str, method_name: str) -> pathlib.Path:
         'Stream': 'kindle/Stream',
         'Catalog': 'kindle/Catalog',
         'Archive': 'kindle/Archive',
-        'Slot': 'bundle/Slot',
-        'Registry': 'bundle/Registry',
-        'Axel': 'bundle/Axel',
+        'Slot': 'scribble/Slot',
+        'Registry': 'scribble/Registry',
+        'Axel': 'scribble/Axel',
     }.get(class_name, class_name)
     return API_CONTENT / namespace / f'{method_name}.toml'
 
@@ -1448,7 +1454,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
     param_notes = {
         'filepath': 'File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.',
         'source_type': 'Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.',
-        'config': 'Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.',
+        'config': 'Loader or saver configuration object. Use this when you want to pass a prebuilt option scribble instead of positional arguments.',
         'config_entries': 'Inline configuration entries used to build a lightweight loader configuration without naming a separate config object.',
         'options': 'Typed loader, renderer, SQL, plotting, or policy options for this overload.',
         'engine': 'Backend selector. Use `"auto"` to let PlussMic choose, or pass an explicit engine name when you need predictable routing.',
@@ -1861,7 +1867,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         ('DataFrame', 'unstack', 'caselbl'):
             'Structured case label whose distinct values should become new output columns in the reshaped frame.',
         ('DataFrame', 'unstack', 'options'):
-            enum_note('Unstack behavior bundle.', [
+            enum_note('Unstack behavior scribble.', [
                 ('`caselbl`', 'Structured case label whose distinct values are pivoted into output columns.'),
                 ('`drop`', 'When `true`, the remaining case labels stay as case labels instead of also staying as ordinary columns.'),
                 ('`sort`', 'When `true`, the pivoted column labels are sorted before the new columns are built.'),
@@ -2615,7 +2621,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Use this when you want a summary view instead of carrying the full input forward unchanged.'
     if name in {'cast', 'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex'}:
         return 'This changes the semantic or numeric type so later operations route through the correct implementation path.'
-    if name in {'kindelize', 'tabelize', 'to_kindle', 'from_kindle', 'to_table', 'to_thread', 'as_kindle'}:
+    if name in {'kindelize', 'scribbelize', 'tabelize', 'to_thread'}:
         return 'This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.'
     if name in {'query', 'where', 'filter', 'select', 'drop', 'select_features', 'grep', 'keep'}:
         return 'Use this to reduce the current object to the rows or fields that matter for the next step.'
@@ -2853,7 +2859,7 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'const pluss::loader::Config&' in sig:
                 return 'Load one Excel sheet with a reusable loader configuration object.'
             if 'std::nullptr_t' in sig:
-                return 'Load every worksheet from an Excel workbook into one multi-sheet load bundle.'
+                return 'Load every worksheet from an Excel workbook into one multi-sheet load scribble.'
             if 'std::initializer_list<std::string_view> sheet_names' in sig:
                 return 'Load several worksheets by name using an inline list of sheet labels.'
             if 'const std::vector<std::string>& sheet_names' in sig:
@@ -6067,7 +6073,7 @@ out.label().values():
             return 'Series([20.0])'
         if n in {'group'}:
             return '{"Accra": Catalog(...), "Tema": Catalog(...)}'
-        if n in {'tabelize', 'to_table'}:
+        if n == 'tabelize':
             return DF_BASE_OUT
         if n.startswith('save_') or n == 'save_as':
             return 'saved: out.*'
@@ -6094,7 +6100,7 @@ out.label().values():
             return ARCHIVE_DLOC_OUT
         if n in {'aggregate_over_catalogs'}:
             return CATALOG_BASE_OUT
-        if n in {'tabelize', 'to_table'}:
+        if n == 'tabelize':
             return ATLAS_BASE_OUT
         if n in {'to_string', 'show', 'kindelize'}:
             return ARCHIVE_BASE_OUT
@@ -6115,10 +6121,8 @@ out.label().values():
             return SLOT_BASE_OUT
         if n == 'type_counts':
             return '{"Series": 2, "Note": 1}'
-        if n in {'to_kindle', 'as_kindle', 'kindelize'}:
+        if n == 'kindelize':
             return STREAM_SERIES_OUT
-        if n in {'from_kindle'}:
-            return SLOT_BASE_OUT
         if n in {'to_string', 'to_json', 'show'}:
             return SLOT_BASE_OUT
         return ''
@@ -6154,9 +6158,9 @@ out.label().values():
             return '{"ids": 3, "city": 3}'
         if n in {'profiles'}:
             return '{"ids": {"Series": 3}, "city": {"Note": 3}}'
-        if n in {'to_kindle', 'as_kindle', 'kindelize'}:
+        if n == 'kindelize':
             return CATALOG_BASE_OUT
-        if n in {'from_kindle'} or n.startswith('load'):
+        if n.startswith('load'):
             return f"out.head():\n{REGISTRY_BASE_OUT}"
         if n.startswith('save_') or n == 'save_as':
             return 'saved: out.*'
@@ -6179,10 +6183,8 @@ out.label().values():
             return AXEL_CONCAT_OUT
         if n in {'registry', 'head', 'tail', 'slice', 'map', 'select', 'apply_slot'}:
             return AXEL_BASE_OUT if ret.startswith('Axel') else REGISTRY_BASE_OUT
-        if n in {'to_kindle', 'as_kindle', 'kindelize'}:
+        if n == 'kindelize':
             return ARCHIVE_BASE_OUT
-        if n in {'from_kindle'}:
-            return AXEL_BASE_OUT
         if n in {'to_string', 'to_json', 'show'}:
             return AXEL_BASE_OUT
         return ''
@@ -6430,28 +6432,28 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 
 
 def slot_base() -> str:
-    return 'auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});'
+    return 'auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});'
 
 
 def slot_mixed() -> str:
-    return 'auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("ok"), pluss::make_series(3)});'
+    return 'auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_note("ok"), pluss::make_series(3)});'
 
 
 def registry_base() -> str:
-    return """auto rg = pluss::bundle::Registry({
-    {\"ids\", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {\"city\", pluss::bundle::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\"), pluss::make_note(\"Kumasi\")})},
+    return """auto rg = pluss::scribble::Registry({
+    {\"ids\", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {\"city\", pluss::scribble::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\"), pluss::make_note(\"Kumasi\")})},
 });"""
 
 
 def axel_base() -> str:
-    return """auto r0 = pluss::bundle::Registry({
-    {\"ids\", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    return """auto r0 = pluss::scribble::Registry({
+    {\"ids\", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
 });
-auto r1 = pluss::bundle::Registry({
-    {\"ids\", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
+auto r1 = pluss::scribble::Registry({
+    {\"ids\", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})},
 });
-auto axel = pluss::bundle::Axel({r0, r1});"""
+auto axel = pluss::scribble::Axel({r0, r1});"""
 
 
 def feature_ref_base() -> str:
@@ -6666,12 +6668,12 @@ def slot_cast_accessor_base() -> str:
 
 
 def slot_note_accessor_base() -> str:
-    return """auto slot = pluss::bundle::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\")});
+    return """auto slot = pluss::scribble::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\")});
 auto notes = slot.nt();"""
 
 
 def slot_timeline_accessor_base() -> str:
-    return """auto slot = pluss::bundle::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")});
+    return """auto slot = pluss::scribble::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")});
 auto timelines = slot.tl();"""
 
 
@@ -6692,9 +6694,9 @@ def registry_note_accessor_base() -> str:
 
 
 def registry_timeline_accessor_base() -> str:
-    return """auto rg = pluss::bundle::Registry({
-    {\"ids\", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {\"ts\", pluss::bundle::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")})},
+    return """auto rg = pluss::scribble::Registry({
+    {\"ids\", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {\"ts\", pluss::scribble::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")})},
 });
 auto timelines = rg.fields({\"ts\"}).tl();"""
 
@@ -6708,24 +6710,24 @@ def axel_cast_accessor_base() -> str:
 
 
 def axel_note_accessor_base() -> str:
-    return """auto r0 = pluss::bundle::Registry({
-    {\"city\", pluss::bundle::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\")})},
+    return """auto r0 = pluss::scribble::Registry({
+    {\"city\", pluss::scribble::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\")})},
 });
-auto r1 = pluss::bundle::Registry({
-    {\"city\", pluss::bundle::Slot({pluss::make_note(\"Kumasi\"), pluss::make_note(\"Takoradi\")})},
+auto r1 = pluss::scribble::Registry({
+    {\"city\", pluss::scribble::Slot({pluss::make_note(\"Kumasi\"), pluss::make_note(\"Takoradi\")})},
 });
-auto axel = pluss::bundle::Axel({r0, r1});
+auto axel = pluss::scribble::Axel({r0, r1});
 auto notes = axel.fields({\"city\"}).nt();"""
 
 
 def axel_timeline_accessor_base() -> str:
-    return """auto r0 = pluss::bundle::Registry({
-    {\"ts\", pluss::bundle::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-01T09:40:00Z\")})},
+    return """auto r0 = pluss::scribble::Registry({
+    {\"ts\", pluss::scribble::Slot({pluss::make_timeline(\"2024-01-01T09:10:00Z\"), pluss::make_timeline(\"2024-01-01T09:40:00Z\")})},
 });
-auto r1 = pluss::bundle::Registry({
-    {\"ts\", pluss::bundle::Slot({pluss::make_timeline(\"2024-01-02T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")})},
+auto r1 = pluss::scribble::Registry({
+    {\"ts\", pluss::scribble::Slot({pluss::make_timeline(\"2024-01-02T09:10:00Z\"), pluss::make_timeline(\"2024-01-02T09:40:00Z\")})},
 });
-auto axel = pluss::bundle::Axel({r0, r1});
+auto axel = pluss::scribble::Axel({r0, r1});
 auto timelines = axel.fields({\"ts\"}).tl();"""
 
 
@@ -8665,7 +8667,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'head': return base + '\n\nauto out = catalog.head(2);'
             if n == 'tail': return base + '\n\nauto out = catalog.tail(2);'
             return base + f'\n\nauto out = catalog.{n}();'
-        if n in {'slice','take','sample','filter','where','query','select','rename','rename_','sort','group','fillnull','cast','astype','sum','mean','min','max','merge','apply','apply_','map','map_','transform','clean','keywords','similarity','grep','featurize','stats','tfidf','set','set_','tabelize','to_table','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','begin','end'}:
+        if n in {'slice','take','sample','filter','where','query','select','rename','rename_','sort','group','fillnull','cast','astype','sum','mean','min','max','merge','apply','apply_','map','map_','transform','clean','keywords','similarity','grep','featurize','stats','tfidf','set','set_','tabelize','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','begin','end'}:
             if n == 'slice': return base + '\n\nauto out = catalog.slice(0, 2);'
             if n == 'take': return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = catalog.take(picks);'
             if n == 'sample': return base + '\n\nauto out = catalog.sample(2, 7);'
@@ -8717,8 +8719,8 @@ def example_for(class_name: str, method: Method) -> str:
                 return catalog_text() + f'\n\nauto out = catalog.{n}("text");'
             if n in {'set','set_'}:
                 return base + ('\n\nauto out = catalog.set("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));' if not n.endswith('_') else '\n\ncatalog.set_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));')
-            if n == 'tabelize' or n == 'to_table':
-                return base + f'\n\npluss::kindle::TabelizePolicy policy;\npolicy.align = pluss::kindle::Align::Inner;\nauto out = catalog.{n}(policy' + (', true' if n == 'to_table' else '') + ');'
+            if n == 'tabelize':
+                return base + '\n\npluss::kindle::TabelizePolicy policy;\npolicy.align = pluss::kindle::Align::Inner;\nauto out = catalog.tabelize(policy);'
             if n.startswith('save_') or n == 'save_as':
                 target = {'save_csv':f'"{GENERIC_OUTPUT_CSV_PATH}"','save_txt':f'"{GENERIC_OUTPUT_TXT_PATH}"','save_excel':f'"{GENERIC_OUTPUT_XLSX_PATH}"','save_json':f'"{GENERIC_OUTPUT_JSON_PATH}"','save_parquet':f'"{GENERIC_OUTPUT_PARQUET_PATH}"','save_as':f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'}[n]
                 return base + f'\n\ncatalog.{n}({target});'
@@ -8730,7 +8732,7 @@ def example_for(class_name: str, method: Method) -> str:
         base = archive_base()
         if n in {'defined','unique','depth','empty','depth_labels','catalogs','to_string'}:
             return base + f'\n\nauto out = archive.{n}();'
-        if n in {'catalog','iloc','loc','dloc','head','tail','slice_depth','sort_depth','relabel_depth','align_depth','map_catalogs','aggregate_over_catalogs','tabelize','to_table','show'}:
+        if n in {'catalog','iloc','loc','dloc','head','tail','slice_depth','sort_depth','relabel_depth','align_depth','map_catalogs','aggregate_over_catalogs','tabelize','show'}:
             if n == 'catalog' or n == 'iloc': return base + f'\n\nauto out = archive.{n}(0);'
             if n == 'dloc': return base + '\n\nauto out = archive.dloc(1);'
             if n == 'loc': return base + '\n\nauto out = archive.loc("test");'
@@ -8741,10 +8743,10 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'relabel_depth' or n == 'align_depth': return base + f'\n\nauto labels = pluss::kindle::Stream(pluss::make_note({{"baseline", "stress"}}));\nauto out = archive.{n}(labels);'
             if n == 'map_catalogs': return base + '\n\nauto out = archive.map_catalogs([](const pluss::kindle::Catalog& catalog) { return catalog.head(1); });'
             if n == 'aggregate_over_catalogs': return base + '\n\nauto out = archive.aggregate_over_catalogs([](const std::vector<pluss::kindle::Catalog>& catalogs) { return catalogs.front(); });'
-            if n == 'tabelize' or n == 'to_table': return base + f'\n\npluss::kindle::TabelizePolicy policy;\npolicy.align = pluss::kindle::AlignPolicy::Inner;\nauto out = archive.{n}(policy' + (', true' if n == 'to_table' else '') + ');'
+            if n == 'tabelize': return base + '\n\npluss::kindle::TabelizePolicy policy;\npolicy.align = pluss::kindle::AlignPolicy::Inner;\nauto out = archive.tabelize(policy);'
             if n == 'show': return base + '\n\narchive.show(std::cout);'
         if n == 'kindelize':
-            return atlas_base() + '\n\nauto out = pluss::kindle::Archive::kindelize(atlas);'
+            return atlas_base() + '\n\nauto out = atlas.kindelize();'
         return base + f'\n\nauto out = archive.{n}();'
 
     if class_name == 'Slot':
@@ -8753,29 +8755,27 @@ def example_for(class_name: str, method: Method) -> str:
             return base + f'\n\nauto out = slot.{n}();'
         if n == 'at':
             return base + '\n\nauto out = slot.at(0);'
-        if n in {'push','push_','head','tail','slice','take','filter','transform','concat','type_counts','to_kindle','as_kindle','kindelize','show'}:
+        if n in {'push','push_','head','tail','slice','take','filter','transform','concat','type_counts','kindelize','show'}:
             if n == 'push': return base + '\n\nauto out = slot.push(pluss::make_note("tail"));'
             if n == 'push_': return base + '\n\nslot.push_(pluss::make_note("tail"));'
             if n == 'head': return base + '\n\nauto out = slot.head(2);'
             if n == 'tail': return base + '\n\nauto out = slot.tail(2);'
             if n == 'slice': return base + '\n\nauto out = slot.slice(0, 2);'
             if n == 'take': return base + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = slot.take(picks);'
-            if n == 'filter': return slot_mixed() + '\n\nauto out = slot.filter([](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });'
-            if n == 'transform': return base + '\n\nauto out = slot.transform([](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });'
-            if n == 'concat': return base + '\n\nauto other = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nauto out = slot.concat(other);'
+            if n == 'filter': return slot_mixed() + '\n\nauto out = slot.filter([](const pluss::scribble::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });'
+            if n == 'transform': return base + '\n\nauto out = slot.transform([](const pluss::scribble::Slot::Value& value) -> pluss::scribble::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });'
+            if n == 'concat': return base + '\n\nauto other = pluss::scribble::Slot({pluss::make_series(4), pluss::make_series(5)});\nauto out = slot.concat(other);'
             if n == 'type_counts': return slot_mixed() + '\n\nauto out = slot.type_counts();'
-            if n in {'to_kindle','as_kindle','kindelize'}: return base + f'\n\nauto out = slot.{n}();'
+            if n == 'kindelize': return base + '\n\nauto out = slot.kindelize();'
             if n == 'show': return base + '\n\nslot.show(std::cout);'
-        if n == 'from_kindle':
-            return stream_series() + '\n\nauto out = pluss::bundle::Slot::from_kindle(stream);'
         return base + f'\n\nauto out = slot.{n}();'
 
     if class_name == 'Registry':
         base = registry_base()
         if n.startswith('load'):
-            if n == 'load': return f'auto out = pluss::bundle::Registry::load("csv", "{GENERIC_CSV_PATH}");'
-            if 'ReadCsvOptions' in sig: return f'pluss::loader::ReadCsvOptions options;\nauto out = pluss::bundle::Registry::load_csv("{GENERIC_CSV_PATH}", options);'
-            if 'ReadExcelOptions' in sig: return f'pluss::loader::ReadExcelOptions options;\nauto out = pluss::bundle::Registry::load_excel("{GENERIC_XLSX_PATH}", options);'
+            if n == 'load': return f'auto out = pluss::scribble::Registry::load("csv", "{GENERIC_CSV_PATH}");'
+            if 'ReadCsvOptions' in sig: return f'pluss::loader::ReadCsvOptions options;\nauto out = pluss::scribble::Registry::load_csv("{GENERIC_CSV_PATH}", options);'
+            if 'ReadExcelOptions' in sig: return f'pluss::loader::ReadExcelOptions options;\nauto out = pluss::scribble::Registry::load_excel("{GENERIC_XLSX_PATH}", options);'
             if 'Config' in sig:
                 path = GENERIC_CSV_PATH
                 if 'excel' in n:
@@ -8786,7 +8786,7 @@ def example_for(class_name: str, method: Method) -> str:
                     path = GENERIC_PARQUET_PATH
                 elif 'txt' in n:
                     path = GENERIC_TXT_PATH
-                return f'auto out = pluss::bundle::Registry::{n}("{path}", {{"nrows", 16}});'
+                return f'auto out = pluss::scribble::Registry::{n}("{path}", {{"nrows", 16}});'
             path = GENERIC_CSV_PATH
             if 'excel' in n:
                 path = GENERIC_XLSX_PATH
@@ -8796,10 +8796,10 @@ def example_for(class_name: str, method: Method) -> str:
                 path = GENERIC_PARQUET_PATH
             elif 'txt' in n:
                 path = GENERIC_TXT_PATH
-            return f'auto out = pluss::bundle::Registry::{n}("{path}");'
+            return f'auto out = pluss::scribble::Registry::{n}("{path}");'
         if n in {'defined','unique','nslots','nfields','empty','keys','field_names','slots','slot_sizes','profiles','to_string','to_json'}:
             return base + f'\n\nauto out = registry.{n}();'
-        if n in {'has','has_slot','slot','at','get','get_slot','select','drop','head','tail','slice','iloc','take','take_','sample','rename','rename_','apply','apply_','map','map_','combine','clear','clear_','prune','prune_','set_slot','set_slot_','set_slots','set_slots_','push','push_','keep','keep_','morph','morph_','concat','concat_','to_kindle','as_kindle','kindelize','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','show','begin','end'}:
+        if n in {'has','has_slot','slot','at','get','get_slot','select','drop','head','tail','slice','iloc','take','take_','sample','rename','rename_','apply','apply_','map','map_','combine','clear','clear_','prune','prune_','set_slot','set_slot_','set_slots','set_slots_','push','push_','keep','keep_','morph','morph_','concat','concat_','kindelize','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','show','begin','end'}:
             if n in {'has','has_slot','slot','at','get','get_slot'}: return base + f'\n\nauto out = registry.{n}("ids");'
             if n == 'select':
                 if 'std::string_view key' in sig: return base + '\n\nauto out = registry.select("ids");'
@@ -8825,39 +8825,39 @@ def example_for(class_name: str, method: Method) -> str:
                 return base + ('\n\nauto out = registry.rename("ids", "ids_new");' if not n.endswith('_') else '\n\nregistry.rename_("ids", "ids_new");')
             if n == 'apply' or n == 'apply_':
                 if 'initializer_list<std::string_view> keys' in sig:
-                    return base + (f'\n\nauto out = registry.{n}({{"ids"}}, [](const pluss::bundle::Slot& slot) {{ return slot; }});' if not n.endswith('_') else '\n\nregistry.apply_({"ids"}, [](const pluss::bundle::Slot& slot) { return slot; });')
-                return base + (f'\n\nauto out = registry.{n}("ids", [](const pluss::bundle::Slot& slot) {{ return slot; }});' if not n.endswith('_') else '\n\nregistry.apply_("ids", [](const pluss::bundle::Slot& slot) { return slot; });')
-            if n == 'map': return base + '\n\nauto out = registry.map([](const pluss::bundle::Slot& slot) { return slot; });'
-            if n == 'map_': return base + '\n\nregistry.map_([](const pluss::bundle::Slot& slot) { return slot; });'
-            if n == 'combine': return base + '\n\nauto other = pluss::bundle::Registry({{"flag", pluss::bundle::Slot({pluss::make_series(true, pluss::codem::ScalarType::Bool), pluss::make_series(false, pluss::codem::ScalarType::Bool), pluss::make_series(true, pluss::codem::ScalarType::Bool)})}});\nauto out = registry.combine(other, "_rhs");'
+                    return base + (f'\n\nauto out = registry.{n}({{"ids"}}, [](const pluss::scribble::Slot& slot) {{ return slot; }});' if not n.endswith('_') else '\n\nregistry.apply_({"ids"}, [](const pluss::scribble::Slot& slot) { return slot; });')
+                return base + (f'\n\nauto out = registry.{n}("ids", [](const pluss::scribble::Slot& slot) {{ return slot; }});' if not n.endswith('_') else '\n\nregistry.apply_("ids", [](const pluss::scribble::Slot& slot) { return slot; });')
+            if n == 'map': return base + '\n\nauto out = registry.map([](const pluss::scribble::Slot& slot) { return slot; });'
+            if n == 'map_': return base + '\n\nregistry.map_([](const pluss::scribble::Slot& slot) { return slot; });'
+            if n == 'combine': return base + '\n\nauto other = pluss::scribble::Registry({{"flag", pluss::scribble::Slot({pluss::make_series(true, pluss::codem::ScalarType::Bool), pluss::make_series(false, pluss::codem::ScalarType::Bool), pluss::make_series(true, pluss::codem::ScalarType::Bool)})}});\nauto out = registry.combine(other, "_rhs");'
             if n == 'clear' or n == 'clear_': return base + ('\n\nauto out = registry.clear();' if not n.endswith('_') else '\n\nregistry.clear_();')
             if n == 'prune':
                 return (
-                    'auto registry = pluss::bundle::Registry({\n'
-                    '    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},\n'
-                    '    {"empty", pluss::bundle::Slot({})},\n'
-                    '    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},\n'
+                    'auto registry = pluss::scribble::Registry({\n'
+                    '    {"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},\n'
+                    '    {"empty", pluss::scribble::Slot({})},\n'
+                    '    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},\n'
                     '});\n\n'
                     'auto out = registry.prune();'
                 )
             if n == 'prune_':
                 return (
-                    'auto registry = pluss::bundle::Registry({\n'
-                    '    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},\n'
-                    '    {"empty", pluss::bundle::Slot({})},\n'
-                    '    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},\n'
+                    'auto registry = pluss::scribble::Registry({\n'
+                    '    {"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},\n'
+                    '    {"empty", pluss::scribble::Slot({})},\n'
+                    '    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},\n'
                     '});\n\n'
                     'registry.prune_();'
                 )
-            if n in {'set_slot','set_slot_'}: return base + ('\n\nauto out = registry.set_slot("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));' if not n.endswith('_') else '\n\nregistry.set_slot_("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));')
+            if n in {'set_slot','set_slot_'}: return base + ('\n\nauto out = registry.set_slot("score", pluss::scribble::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));' if not n.endswith('_') else '\n\nregistry.set_slot_("score", pluss::scribble::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));')
             if n in {'set_slots','set_slots_'}:
                 return base + (
                     '\n\nauto out = registry.set_slots({\n'
-                    '    {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},\n'
+                    '    {"score", pluss::scribble::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},\n'
                     '});'
                     if not n.endswith('_') else
                     '\n\nregistry.set_slots_({\n'
-                    '    {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},\n'
+                    '    {"score", pluss::scribble::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},\n'
                     '});'
                 )
             if n == 'push':
@@ -8868,17 +8868,15 @@ def example_for(class_name: str, method: Method) -> str:
                 if 'std::string_view key' in sig:
                     return base + '\n\nregistry.push_("ids", pluss::make_series(4));'
                 return base + '\n\nregistry.push_(pluss::make_note("ok"));'
-            if n in {'keep','keep_'}: return base + ('\n\nauto out = registry.keep("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });' if not n.endswith('_') else '\n\nregistry.keep_("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });')
-            if n in {'morph','morph_'}: return base + ('\n\nauto out = registry.morph("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });' if not n.endswith('_') else '\n\nregistry.morph_("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });')
-            if n in {'concat','concat_'}: return base + ('\n\nauto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nauto out = registry.concat("ids", extra);' if not n.endswith('_') else '\n\nauto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nregistry.concat_("ids", extra);')
-            if n in {'to_kindle','as_kindle','kindelize'}: return base + f'\n\nauto out = registry.{n}();'
+            if n in {'keep','keep_'}: return base + ('\n\nauto out = registry.keep("ids", [](const pluss::scribble::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });' if not n.endswith('_') else '\n\nregistry.keep_("ids", [](const pluss::scribble::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });')
+            if n in {'morph','morph_'}: return base + ('\n\nauto out = registry.morph("ids", [](const pluss::scribble::Slot::Value& value) -> pluss::scribble::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });' if not n.endswith('_') else '\n\nregistry.morph_("ids", [](const pluss::scribble::Slot::Value& value) -> pluss::scribble::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });')
+            if n in {'concat','concat_'}: return base + ('\n\nauto extra = pluss::scribble::Slot({pluss::make_series(4), pluss::make_series(5)});\nauto out = registry.concat("ids", extra);' if not n.endswith('_') else '\n\nauto extra = pluss::scribble::Slot({pluss::make_series(4), pluss::make_series(5)});\nregistry.concat_("ids", extra);')
+            if n == 'kindelize': return base + '\n\nauto out = registry.kindelize();'
             if n.startswith('save_') or n == 'save_as':
                 target = {'save_csv':f'"{GENERIC_OUTPUT_CSV_PATH}"','save_txt':f'"{GENERIC_OUTPUT_TXT_PATH}"','save_excel':f'"{GENERIC_OUTPUT_XLSX_PATH}"','save_json':f'"{GENERIC_OUTPUT_JSON_PATH}"','save_parquet':f'"{GENERIC_OUTPUT_PARQUET_PATH}"','save_as':f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'}[n]
                 return base + f'\n\nregistry.{n}({target});'
             if n == 'show': return base + '\n\nregistry.show(std::cout);'
             if n in {'begin','end'}: return base + '\n\nfor (const auto& key : registry) {\n  (void)key;\n}'
-        if n == 'from_kindle':
-            return catalog_base() + '\n\nauto out = pluss::bundle::Registry::from_kindle(catalog);'
         if n in {'has_all','has_any'}:
             return base + f'\n\nauto out = registry.{n}({{"ids", "city"}});'
         return base + f'\n\nauto out = registry.{n}();'
@@ -8887,19 +8885,17 @@ def example_for(class_name: str, method: Method) -> str:
         base = axel_base()
         if n in {'defined','unique','depth','empty','registries','labels','to_string','to_json'}:
             return base + f'\n\nauto out = axel.{n}();'
-        if n in {'registry','head','tail','slice','map','select','apply_slot','concat_depth','to_kindle','as_kindle','kindelize','show'}:
+        if n in {'registry','head','tail','slice','map','select','apply_slot','concat_depth','kindelize','show'}:
             if n == 'registry': return base + '\n\nauto out = axel.registry(0);'
             if n == 'head': return base + '\n\nauto out = axel.head(1);'
             if n == 'tail': return base + '\n\nauto out = axel.tail(1);'
             if n == 'slice': return base + '\n\nauto out = axel.slice(0, 1);'
-            if n == 'map': return base + '\n\nauto out = axel.map([](const pluss::bundle::Registry& registry) { return registry; });'
+            if n == 'map': return base + '\n\nauto out = axel.map([](const pluss::scribble::Registry& registry) { return registry; });'
             if n == 'select': return base + '\n\nauto out = axel.select({"ids"});'
-            if n == 'apply_slot': return base + '\n\nauto out = axel.apply_slot("ids", [](const pluss::bundle::Slot& slot) { return slot; });'
+            if n == 'apply_slot': return base + '\n\nauto out = axel.apply_slot("ids", [](const pluss::scribble::Slot& slot) { return slot; });'
             if n == 'concat_depth': return base + '\n\nauto out = axel.concat_depth(axel);'
-            if n in {'to_kindle','as_kindle','kindelize'}: return base + f'\n\nauto out = axel.{n}();'
+            if n == 'kindelize': return base + '\n\nauto out = axel.kindelize();'
             if n == 'show': return base + '\n\naxel.show(std::cout);'
-        if n == 'from_kindle':
-            return archive_base() + '\n\nauto out = pluss::bundle::Axel::from_kindle(archive);'
         return base + f'\n\nauto out = axel.{n}();'
 
     if class_name in ACCESSOR_STUB_BASE:
@@ -9583,11 +9579,6 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'The transform must return a defined slot.',
                 'Use the underscore form when you want the mutation in place.',
             ])
-        if class_name == 'Registry' and n == 'as_kindle':
-            return bullets('Bridge Behavior', [
-                '`as_kindle()` converts the registry into the Kindle/Catalog model.',
-                'Use this when the next operation is stream-oriented rather than bundle-oriented.',
-            ])
         if class_name == 'Registry' and n == 'clear':
             return bullets('Practical Behavior', [
                 '`clear()` returns an empty registry with no slots.',
@@ -9621,11 +9612,6 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`apply_slot(key, fn)` walks every registry in the axel and rewrites that slot only where it exists.',
                 'Registries that do not have the requested key are left unchanged.',
-            ])
-        if class_name == 'Axel' and n == 'as_kindle':
-            return bullets('Bridge Behavior', [
-                '`as_kindle()` converts the axel into the Archive model.',
-                'Use this when the next workflow is archive/catalog based rather than bundle based.',
             ])
         if class_name == 'Axel' and n == 'concat_depth':
             return bullets('Practical Behavior', [

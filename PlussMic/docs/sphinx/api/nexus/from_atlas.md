@@ -47,6 +47,7 @@ Example 1. Building from an `Atlas` with explicit labels.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto orders_q1 = DataFrame({
     {"order_id", Thread(pluss::make_series({101.0, 102.0}))},

@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=052b4a34"></script>
+    <script src="_static/api_nav.js?v=bd236ad6"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -41,17 +41,19 @@
 <p>This manual is the long-form guide for PlussMic, the data-analysis layer of the
 Pluss ecosystem. It is written for readers who want to use PlussMic as a daily
 tool, not only look up signatures.</p>
-<p>PlussMic has three related models:</p>
+<p>PlussMic has four related models:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>table  -&gt; DataFrame, Thread, Atlas
 kindle -&gt; Stream, Catalog, Archive
-bundle -&gt; Slot, Registry, Axel
+bundle -&gt; Nexus, NexusTraverse, NexusQuery
+scribble -&gt; Slot, Registry, Axel
 </pre></div>
 </div>
 <p>Most users start with <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, because it is the table abstraction used for
 CSV, Excel, JSON, Parquet, feature engineering, exploratory analysis, plotting,
 and export. <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is the typed column model underneath <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
-stacks related frames. <code class="docutils literal notranslate"><span class="pre">Kindle</span></code> and <code class="docutils literal notranslate"><span class="pre">Bundle</span></code> are lower-level record/stream
-models used when the data is not naturally just a rectangular table.</p>
+stacks related frames. <code class="docutils literal notranslate"><span class="pre">Kindle</span></code> is the aligned stream layer. <code class="docutils literal notranslate"><span class="pre">Scribble</span></code> covers
+heterogeneous records, while <code class="docutils literal notranslate"><span class="pre">Bundle</span></code> covers the multi-table <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> workbench
+when the job is broader than one rectangular table.</p>
 <section id="how-to-read-this-manual">
 <h2>How to read this manual<a class="headerlink" href="#how-to-read-this-manual" title="Link to this heading">¶</a></h2>
 <p>Read Part I and Part II in order. After that, jump to the chapters that match
@@ -65,7 +67,7 @@ your task:</p>
 <li><p>Time series: Part VIII.</p></li>
 <li><p>Plotting: Part IX.</p></li>
 <li><p>Multi-frame Atlas data: Part X.</p></li>
-<li><p>Kindle and Bundle models: Part XI and Part XII.</p></li>
+<li><p>Kindle, Scribble, and Bundle models: Part XI, Part XII, and Part XII-B.</p></li>
 <li><p>Recipes: Part XIII.</p></li>
 <li><p>Production debugging: Part XIV.</p></li>
 </ul>
@@ -118,7 +120,7 @@ fixed before the manual teaches the behavior as correct.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="manual/part01_orientation.html">Part I: Orientation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="manual/part01_orientation.html#what-plussmic-is-for">What PlussMic is for</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part01_orientation.html#the-three-plussmic-layers">The three PlussMic layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part01_orientation.html#the-four-plussmic-layers">The four PlussMic layers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part01_orientation.html#the-core-table-model">The core table model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part01_orientation.html#cases-and-features">Cases and features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part01_orientation.html#functional-style">Functional style</a></li>
@@ -303,12 +305,19 @@ fixed before the manual teaches the behavior as correct.</p>
 <li class="toctree-l2"><a class="reference internal" href="manual/part11_kindle.html#kindle-and-dataframe-policy">Kindle and DataFrame policy</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="manual/part12_bundle.html">Part XII: Bundle: Slot, Registry, and Axel</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#slot">Slot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#registry">Registry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#kindle-bridge">Kindle bridge</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#axel">Axel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#bundle-conversion-strategy">Bundle conversion strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/part12_scribble.html">Part XII: Scribble: Slot, Registry, and Axel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_scribble.html#slot">Slot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_scribble.html#registry">Registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_scribble.html#kindle-bridge">Kindle bridge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_scribble.html#axel">Axel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_scribble.html#scribble-conversion-strategy">Scribble conversion strategy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="manual/part12_bundle.html">Part XII-B: Bundle: Nexus, NexusTraverse, and NexusQuery</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#when-to-use-bundle">When to use Bundle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#nexus">Nexus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#nexustraverse">NexusTraverse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part12_bundle.html#nexusquery">NexusQuery</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="manual/part13_recipes.html">Part XIII: Recipes</a><ul>
@@ -323,8 +332,8 @@ fixed before the manual teaches the behavior as correct.</p>
 <li class="toctree-l2"><a class="reference internal" href="manual/part13_recipes.html#daily-resample">Daily resample</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part13_recipes.html#excel-workbook-ingestion">Excel workbook ingestion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part13_recipes.html#multi-scenario-atlas">Multi-scenario Atlas</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part13_recipes.html#round-trip-through-kindle-and-bundle">Round-trip through Kindle and Bundle</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part13_recipes.html#save-a-report-bundle">Save a report bundle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part13_recipes.html#round-trip-through-kindle-and-scribble">Round-trip through Kindle and Scribble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part13_recipes.html#save-a-report-scribble">Save a report scribble</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="manual/part14_troubleshooting.html">Part XIV: Troubleshooting and Production Notes</a><ul>
@@ -349,6 +358,7 @@ fixed before the manual teaches the behavior as correct.</p>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#loader-api-areas">Loader API areas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#atlas-api-areas">Atlas API areas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#kindle-api-areas">Kindle API areas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#scribble-api-areas">Scribble API areas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#bundle-api-areas">Bundle API areas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#example-source-map">Example source map</a></li>
 </ul>
@@ -396,6 +406,7 @@ fixed before the manual teaches the behavior as correct.</p>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
 </ul>

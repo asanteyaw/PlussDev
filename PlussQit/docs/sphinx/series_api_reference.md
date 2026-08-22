@@ -40,6 +40,8 @@ The current handwritten shape and slice/indexing cluster now covers:
   `extract_put_`, `index_put`, `index_put_`
 - flat gather/scatter primitives: `take`, `put_`
 - elementwise comparison/bounds helpers and a few load-bearing utility ops
+- reduction and scan core: `sum`, `mean`, `prod`, `max`, `min`, `argmax`,
+  `argmin`, `cumsum`, `cumprod`
 
 ```{toctree}
 :hidden:
@@ -77,6 +79,15 @@ api/series/gather
 api/series/index_select
 api/series/maximum
 api/series/minimum
+api/series/sum
+api/series/mean
+api/series/prod
+api/series/cumsum
+api/series/cumprod
+api/series/max
+api/series/min
+api/series/argmax
+api/series/argmin
 ```
 
 <div class="pluss-inline-prev-next">

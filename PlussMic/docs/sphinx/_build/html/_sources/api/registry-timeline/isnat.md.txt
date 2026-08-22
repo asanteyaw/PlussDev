@@ -46,8 +46,8 @@ passed to [`pluss::make_timeline`](../registry/tl.md) produces `NaT` rather
 than throwing.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline(""), pluss::make_timeline("2024-01-01T00:00:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline(""), pluss::make_timeline("2024-01-01T00:00:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().isnat();
@@ -67,8 +67,8 @@ Example 2. A non-`Timeline` field bound to `.tl()` throws — see the important
 callout above.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 
 try {

@@ -45,8 +45,8 @@ Example 1. `tz()` relabels the display timezone, and the relabeling is
 still in effect on the very next `.tl()` read.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto shifted = axel.fields({"ts"}).tl().tz("America/New_York");
 auto fmted = shifted.fields({"ts"}).tl().fmt("%Y-%m-%d %H:%M:%S");

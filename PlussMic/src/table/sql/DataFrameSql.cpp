@@ -919,6 +919,11 @@ const DataFrame& resolve_source(std::string_view source_name,
   if (iequals(source_name, "df")) {
     return primary_frame;
   }
+  for (const auto& alias : options.primary_source_names) {
+    if (iequals(source_name, alias)) {
+      return primary_frame;
+    }
+  }
   for (const auto& binding : options.sources) {
     if (iequals(source_name, binding.name)) {
       PLUSS_CHECK(binding.frame != nullptr,
@@ -1035,6 +1040,16 @@ DataFrame project_frame(const DataFrame& frame,
 }
 
 } // namespace
+
+namespace detail {
+
+std::string sql_primary_source_name(std::string_view statement, const DataFrame::SqlOptions& options) {
+  const auto rendered_statement = apply_sql_params(statement, options);
+  const auto spec = parse_select_sql_cached(rendered_statement, options);
+  return spec.primary_source.name;
+}
+
+} // namespace detail
 
 DataFrameSqlAccessor::DataFrameSqlAccessor(DataFrame frame, DataFrame::SqlOptions options)
     : frame_(std::move(frame)), options_(std::move(options)) {}

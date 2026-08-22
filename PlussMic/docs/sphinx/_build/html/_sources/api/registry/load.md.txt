@@ -32,7 +32,7 @@ otherwise.
     The file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic, format-agnostic configuration bundle, translated internally into the
+    A generic, format-agnostic configuration scribble, translated internally into the
     format-specific options struct.
 
 ## Returns
@@ -45,7 +45,7 @@ otherwise.
 Example 1. Load a CSV file by naming the format explicitly.
 
 ```cpp
-auto rg = pluss::bundle::Registry::load("csv", "cities.csv");
+auto rg = pluss::scribble::Registry::load("csv", "cities.csv");
 std::cout << rg;
 ```
 
@@ -83,7 +83,7 @@ Example 2. An unrecognized format name throws.
 
 ```cpp
 try {
-  auto rg = pluss::bundle::Registry::load("xml", "cities.csv");
+  auto rg = pluss::scribble::Registry::load("xml", "cities.csv");
 } catch (const std::exception& e) {
   std::cout << e.what();
 }
@@ -99,7 +99,7 @@ Registry::load: unsupported source type 'xml'
 
 - `source_type` matching is case-insensitive.
 - The two-argument overload dispatches directly to the matching no-config `load_*()`
-  method; the three-argument overload additionally accepts a generic `Config` bundle.
+  method; the three-argument overload additionally accepts a generic `Config` scribble.
 - Every underlying `load_*()` method's own throw conditions (missing file, malformed
   content, unsupported build configuration for Excel/Parquet) apply once dispatched.
 - Unlike [`Catalog`](../catalog/load.md), `Registry`'s printed form is a JSON summary

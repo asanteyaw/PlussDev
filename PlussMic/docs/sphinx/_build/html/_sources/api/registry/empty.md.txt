@@ -38,8 +38,8 @@ slots, they're just short. See Example 2.
 Example 1. A registry with fields is not empty.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
 std::cout << std::boolalpha << rg.empty();
@@ -55,8 +55,8 @@ Example 2. A slot with zero values still counts as a field — the registry is n
 `empty()`, even though the slot itself is short.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot(std::vector<pluss::bundle::Slot::Value>{})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot(std::vector<pluss::scribble::Slot::Value>{})},
 });
 
 std::cout << std::boolalpha << rg.empty() << "\n";
@@ -73,7 +73,7 @@ false
 Example 3. An explicitly empty field list (zero fields) is `empty()`.
 
 ```cpp
-pluss::bundle::Registry rg(std::vector<std::pair<std::string, pluss::bundle::Slot>>{});
+pluss::scribble::Registry rg(std::vector<std::pair<std::string, pluss::scribble::Slot>>{});
 std::cout << std::boolalpha << rg.empty();
 ```
 

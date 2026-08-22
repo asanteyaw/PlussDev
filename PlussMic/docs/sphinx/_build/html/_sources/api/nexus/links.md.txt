@@ -44,6 +44,7 @@ Example 1. `links()` and `relationships()` always agree; `links(rel)` behaves ex
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},

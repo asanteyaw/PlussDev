@@ -1,12 +1,19 @@
 #pragma once
 
 #include <array>
+#include <concepts>
+#include <cctype>
 #include <cstdint>
+#include <iomanip>
 #include <initializer_list>
+#include <sstream>
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "MSharp/RangeView.h"
@@ -40,6 +47,330 @@
 // This collapses what was previously 12 make_note overloads (and 7
 // bytes_content + 3 make_bytes_note overloads) down to 3 each.
 namespace pluss::note {
+
+class FormatValue {
+public:
+  using storage_type = std::variant<bool, std::int64_t, std::uint64_t, double, std::string>;
+
+  FormatValue(bool value) : storage_(value) {}
+  FormatValue(char value) : storage_(std::string(1, value)) {}
+  FormatValue(const char* value) : storage_(std::string(value != nullptr ? value : "")) {}
+  FormatValue(std::string_view value) : storage_(std::string(value)) {}
+  FormatValue(std::string value) : storage_(std::move(value)) {}
+
+  template <std::signed_integral Int>
+    requires (!std::same_as<std::remove_cvref_t<Int>, bool> &&
+              !std::same_as<std::remove_cvref_t<Int>, char>)
+  FormatValue(Int value) : storage_(static_cast<std::int64_t>(value)) {}
+
+  template <std::unsigned_integral UInt>
+    requires (!std::same_as<std::remove_cvref_t<UInt>, bool> &&
+              !std::same_as<std::remove_cvref_t<UInt>, char>)
+  FormatValue(UInt value) : storage_(static_cast<std::uint64_t>(value)) {}
+
+  template <std::floating_point Float>
+  FormatValue(Float value) : storage_(static_cast<double>(value)) {}
+
+  const storage_type& storage() const noexcept { return storage_; }
+
+private:
+  storage_type storage_;
+};
+
+struct Binding {
+  std::string name;
+  FormatValue value;
+
+  template <class T>
+  Binding(std::string_view key, T&& bound_value)
+      : name(key), value(std::forward<T>(bound_value)) {}
+};
+
+namespace detail {
+
+inline bool note_format_is_ident_start(char ch) {
+  const unsigned char u = static_cast<unsigned char>(ch);
+  return std::isalpha(u) || ch == '_';
+}
+
+inline bool note_format_is_ident_continue(char ch) {
+  const unsigned char u = static_cast<unsigned char>(ch);
+  return std::isalnum(u) || ch == '_';
+}
+
+inline std::string_view note_format_trim(std::string_view text) {
+  std::size_t begin = 0;
+  while (begin < text.size() && std::isspace(static_cast<unsigned char>(text[begin]))) {
+    ++begin;
+  }
+  std::size_t end = text.size();
+  while (end > begin && std::isspace(static_cast<unsigned char>(text[end - 1]))) {
+    --end;
+  }
+  return text.substr(begin, end - begin);
+}
+
+inline std::string note_format_double_to_string(double value) {
+  std::ostringstream oss;
+  oss << std::setprecision(15) << value;
+  return oss.str();
+}
+
+inline std::string note_format_stringify(const FormatValue& value) {
+  return std::visit(
+      [](const auto& cell) -> std::string {
+        using T = std::decay_t<decltype(cell)>;
+        if constexpr (std::same_as<T, bool>) {
+          return cell ? "true" : "false";
+        } else if constexpr (std::same_as<T, std::string>) {
+          return cell;
+        } else if constexpr (std::same_as<T, std::int64_t>) {
+          return std::to_string(cell);
+        } else if constexpr (std::same_as<T, std::uint64_t>) {
+          return std::to_string(cell);
+        } else {
+          return note_format_double_to_string(cell);
+        }
+      },
+      value.storage());
+}
+
+inline double note_format_as_numeric(const Binding& binding, std::string_view expr) {
+  return std::visit(
+      [&](const auto& cell) -> double {
+        using T = std::decay_t<decltype(cell)>;
+        if constexpr (std::same_as<T, std::int64_t> || std::same_as<T, std::uint64_t> ||
+                      std::same_as<T, double>) {
+          return static_cast<double>(cell);
+        } else {
+          PLUSS_FAIL("pluss::note::format: binding '" + binding.name +
+                     "' is not numeric and cannot be used in expression {" +
+                     std::string(expr) + "}");
+        }
+      },
+      binding.value.storage());
+}
+
+inline const Binding& note_format_lookup_binding(
+    const std::unordered_map<std::string_view, const Binding*>& bindings,
+    std::string_view name) {
+  const auto it = bindings.find(name);
+  PLUSS_CHECK(it != bindings.end(),
+              "pluss::note::format: missing binding '" + std::string(name) + "'");
+  return *it->second;
+}
+
+class NoteFormatExprParser {
+public:
+  NoteFormatExprParser(std::string_view expr,
+                       const std::unordered_map<std::string_view, const Binding*>& bindings)
+      : expr_(expr), bindings_(bindings) {}
+
+  double parse() {
+    const double value = parse_expr();
+    skip_ws();
+    PLUSS_CHECK(pos_ == expr_.size(),
+                "pluss::note::format: unexpected trailing input in expression {" +
+                    std::string(expr_) + "}");
+    return value;
+  }
+
+private:
+  double parse_expr() {
+    double lhs = parse_term();
+    while (true) {
+      skip_ws();
+      if (match('+')) {
+        lhs += parse_term();
+      } else if (match('-')) {
+        lhs -= parse_term();
+      } else {
+        return lhs;
+      }
+    }
+  }
+
+  double parse_term() {
+    double lhs = parse_factor();
+    while (true) {
+      skip_ws();
+      if (match('*')) {
+        lhs *= parse_factor();
+      } else if (match('/')) {
+        const double rhs = parse_factor();
+        PLUSS_CHECK(rhs != 0.0,
+                    "pluss::note::format: division by zero in expression {" +
+                        std::string(expr_) + "}");
+        lhs /= rhs;
+      } else {
+        return lhs;
+      }
+    }
+  }
+
+  double parse_factor() {
+    skip_ws();
+    if (match('+')) return parse_factor();
+    if (match('-')) return -parse_factor();
+
+    if (match('(')) {
+      const double value = parse_expr();
+      skip_ws();
+      PLUSS_CHECK(match(')'),
+                  "pluss::note::format: expected ')' in expression {" +
+                      std::string(expr_) + "}");
+      return value;
+    }
+
+    if (peek_is_number_start()) return parse_number();
+    if (peek_is_identifier_start()) return parse_identifier();
+
+    PLUSS_FAIL("pluss::note::format: expected number, identifier, or '(' in expression {" +
+               std::string(expr_) + "}");
+  }
+
+  double parse_number() {
+    const std::size_t begin = pos_;
+    bool saw_digit = false;
+
+    while (pos_ < expr_.size() && std::isdigit(static_cast<unsigned char>(expr_[pos_]))) {
+      ++pos_;
+      saw_digit = true;
+    }
+    if (pos_ < expr_.size() && expr_[pos_] == '.') {
+      ++pos_;
+      while (pos_ < expr_.size() && std::isdigit(static_cast<unsigned char>(expr_[pos_]))) {
+        ++pos_;
+        saw_digit = true;
+      }
+    }
+    if (pos_ < expr_.size() && (expr_[pos_] == 'e' || expr_[pos_] == 'E')) {
+      const std::size_t exp_pos = pos_;
+      ++pos_;
+      if (pos_ < expr_.size() && (expr_[pos_] == '+' || expr_[pos_] == '-')) ++pos_;
+      const std::size_t exp_digits = pos_;
+      while (pos_ < expr_.size() && std::isdigit(static_cast<unsigned char>(expr_[pos_]))) {
+        ++pos_;
+      }
+      PLUSS_CHECK(pos_ > exp_digits,
+                  "pluss::note::format: malformed exponent in expression {" +
+                      std::string(expr_) + "}");
+      saw_digit = true;
+      (void)exp_pos;
+    }
+
+    PLUSS_CHECK(saw_digit,
+                "pluss::note::format: malformed numeric literal in expression {" +
+                    std::string(expr_) + "}");
+    return std::stod(std::string(expr_.substr(begin, pos_ - begin)));
+  }
+
+  double parse_identifier() {
+    const std::size_t begin = pos_;
+    ++pos_;
+    while (pos_ < expr_.size() && note_format_is_ident_continue(expr_[pos_])) ++pos_;
+    const std::string_view name = expr_.substr(begin, pos_ - begin);
+    const auto& binding = note_format_lookup_binding(bindings_, name);
+    return note_format_as_numeric(binding, expr_);
+  }
+
+  bool peek_is_number_start() const {
+    if (pos_ >= expr_.size()) return false;
+    const char ch = expr_[pos_];
+    if (std::isdigit(static_cast<unsigned char>(ch))) return true;
+    return ch == '.' && pos_ + 1 < expr_.size() &&
+           std::isdigit(static_cast<unsigned char>(expr_[pos_ + 1]));
+  }
+
+  bool peek_is_identifier_start() const {
+    return pos_ < expr_.size() && note_format_is_ident_start(expr_[pos_]);
+  }
+
+  void skip_ws() {
+    while (pos_ < expr_.size() && std::isspace(static_cast<unsigned char>(expr_[pos_]))) ++pos_;
+  }
+
+  bool match(char ch) {
+    if (pos_ < expr_.size() && expr_[pos_] == ch) {
+      ++pos_;
+      return true;
+    }
+    return false;
+  }
+
+  std::string_view expr_;
+  const std::unordered_map<std::string_view, const Binding*>& bindings_;
+  std::size_t pos_ = 0;
+};
+
+inline bool note_format_is_plain_identifier(std::string_view expr) {
+  const auto trimmed = note_format_trim(expr);
+  if (trimmed.empty() || !note_format_is_ident_start(trimmed.front())) return false;
+  for (std::size_t i = 1; i < trimmed.size(); ++i) {
+    if (!note_format_is_ident_continue(trimmed[i])) return false;
+  }
+  return true;
+}
+
+inline std::string note_format_eval_placeholder(
+    std::string_view placeholder,
+    const std::unordered_map<std::string_view, const Binding*>& bindings) {
+  const auto trimmed = note_format_trim(placeholder);
+  PLUSS_CHECK(!trimmed.empty(), "pluss::note::format: empty placeholder is not allowed");
+
+  if (note_format_is_plain_identifier(trimmed)) {
+    return note_format_stringify(note_format_lookup_binding(bindings, trimmed).value);
+  }
+
+  NoteFormatExprParser parser(trimmed, bindings);
+  return note_format_double_to_string(parser.parse());
+}
+
+inline std::string note_format_render(
+    std::string_view tpl,
+    const std::unordered_map<std::string_view, const Binding*>& bindings) {
+  std::string out;
+  out.reserve(tpl.size());
+
+  for (std::size_t i = 0; i < tpl.size(); ++i) {
+    const char ch = tpl[i];
+    if (ch == '{') {
+      if (i + 1 < tpl.size() && tpl[i + 1] == '{') {
+        out.push_back('{');
+        ++i;
+        continue;
+      }
+
+      const std::size_t open = i + 1;
+      std::size_t close = open;
+      while (close < tpl.size() && tpl[close] != '}') {
+        PLUSS_CHECK(tpl[close] != '{',
+                    "pluss::note::format: nested '{' is not allowed inside placeholders");
+        ++close;
+      }
+      PLUSS_CHECK(close < tpl.size(),
+                  "pluss::note::format: unmatched '{' in format template");
+      out += note_format_eval_placeholder(tpl.substr(open, close - open), bindings);
+      i = close;
+      continue;
+    }
+
+    if (ch == '}') {
+      if (i + 1 < tpl.size() && tpl[i + 1] == '}') {
+        out.push_back('}');
+        ++i;
+        continue;
+      }
+      PLUSS_FAIL("pluss::note::format: unmatched '}' in format template");
+    }
+
+    out.push_back(ch);
+  }
+
+  return out;
+}
+
+} // namespace detail
 
 inline pluss::Note make(pluss::coden::detail::NoteTextReader data) {
   return pluss::coden::factory_detail::make_note_from_textspan(data.flat(), data.shape());
@@ -193,6 +524,20 @@ inline pluss::Note from_words(std::string_view text) {
   const std::array<std::int64_t, 1> sizes{static_cast<std::int64_t>(flat.size())};
   return pluss::coden::ops_internal::note_from_utf8(
       std::span<const std::string_view>(flat.data(), flat.size()), sizes);
+}
+
+inline pluss::Note format(std::string_view tpl,
+                          std::initializer_list<Binding> bindings) {
+  std::unordered_map<std::string_view, const Binding*> binding_map;
+  binding_map.reserve(bindings.size());
+  for (const auto& binding : bindings) {
+    PLUSS_CHECK(!binding.name.empty(),
+                "pluss::note::format: binding names must not be empty");
+    const bool inserted = binding_map.emplace(std::string_view(binding.name), &binding).second;
+    PLUSS_CHECK(inserted,
+                "pluss::note::format: duplicate binding '" + binding.name + "'");
+  }
+  return make(detail::note_format_render(tpl, binding_map));
 }
 
 // pluss::note::print(n) -- human-readable rendering, mirroring

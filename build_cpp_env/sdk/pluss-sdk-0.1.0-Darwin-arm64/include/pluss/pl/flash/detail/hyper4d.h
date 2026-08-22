@@ -461,7 +461,7 @@ Trace& cloud4(
       ::pluss::make_series(px),
       ::pluss::make_series(py),
       ::pluss::make_series(pz),
-      ::pluss::full({static_cast<std::int64_t>(projected.size())}, size, ::pluss::ScalarType::Float64));
+      ::pluss::series::full({static_cast<std::int64_t>(projected.size())}, size, ::pluss::ScalarType::Float64));
 }
 
 template <class X, class Y, class Z, class W>

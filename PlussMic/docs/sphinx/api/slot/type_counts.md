@@ -31,7 +31,7 @@ Returns a tally of how many values fall under each value-type name
 Example 1. Tally a slot with two `Series` values and one `Note`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("ok"), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_note("ok"), pluss::make_series(3)});
 auto counts = slot.type_counts();
 std::cout << "Series=" << counts.at("Series") << " Note=" << counts.at("Note");
 ```

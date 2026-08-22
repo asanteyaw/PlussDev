@@ -5,7 +5,6 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/Thread.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DataFrame.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Atlas.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Nexus.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/io/ThreadIO.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/io/DataFrameIO.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/io/AtlasIO.cpp
@@ -24,7 +23,6 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/DFDataset.h
   ${CMAKE_CURRENT_SOURCE_DIR}/FlashDatasetInterop.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Atlas.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/Nexus.h
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/DataFramePlot.h
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/AtlasPlot.h
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/detail/Plot3DConfig.h

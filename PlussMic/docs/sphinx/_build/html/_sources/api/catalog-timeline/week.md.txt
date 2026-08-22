@@ -103,7 +103,7 @@ ts                       | Series       | Series[int32]    | 2       | [27, 9]
   week.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::week`](../registry-timeline/week.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="valid.html">

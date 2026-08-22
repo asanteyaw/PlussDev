@@ -67,6 +67,7 @@ dependency this build doesn't have.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -99,7 +100,7 @@ StoreOptions options;
 options.kind = StoreKind::Csv;
 linked.save("/tmp/nexus_biz_store", options);
 
-auto loaded = Nexus::load("/tmp/nexus_biz_store", options);
+auto loaded = Nexus::read("/tmp/nexus_biz_store", options);
 std::cout << loaded.ntables() << " " << loaded.nrelationships() << "\n";
 std::cout << std::boolalpha << (loaded.fingerprint() == linked.fingerprint());
 ```
@@ -139,7 +140,7 @@ loader::save_parquet: built without parquet-cpp support (install Arrow + Parquet
 
 ## See Also
 
-- [`Nexus::load`](load.md): the exact inverse of this method.
+- [`Nexus::read`](read.md): the exact inverse of this method.
 - [`Nexus::fingerprint`](fingerprint.md): recorded in the manifest, and useful for
   confirming a round trip preserved everything.
 - [`Nexus::schema`](schema.md) / [`graph`](graph.md): the exact content written to

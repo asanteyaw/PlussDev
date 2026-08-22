@@ -30,4 +30,3 @@ void print(std::ostream& os, const Catalog& catalog, const DisplayOptions& optio
 void print(std::ostream& os, const Archive& archive, const DisplayOptions& options = {});
 
 } // namespace pluss::kindle::display
-

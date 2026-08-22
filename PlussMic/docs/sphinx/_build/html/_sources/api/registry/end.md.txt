@@ -31,9 +31,9 @@ iterating field names.
 Example 1. Manual iteration using `begin()`/`end()` directly.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
 });
 
 for (auto it = rg.begin(); it != rg.end(); ++it) std::cout << *it << " ";

@@ -31,8 +31,8 @@ fields replaced.
 Example 1. Uppercase a single, projected field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 auto out = rg.fields({"city"}).nt().upper();
@@ -50,9 +50,9 @@ ACCRA TEMA
 Example 2. `nt()` with no projection binds every field of the registry.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
-    {"country", pluss::bundle::Slot({pluss::make_note("Ghana")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
+    {"country", pluss::scribble::Slot({pluss::make_note("Ghana")})},
 });
 
 auto out = rg.nt().upper();

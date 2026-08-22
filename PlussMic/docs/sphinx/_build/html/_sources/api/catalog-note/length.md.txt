@@ -71,7 +71,7 @@ city                     | Series       | Series[int64]    | 2       | [5, 6]
 - [`CatalogNoteAccessor::count`](count.md): the other method on this accessor that
   turns text into an `Int64` `Series`.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::length`](../registry-note/length.md): the bundle-model
+- [`RegistryNoteAccessor::length`](../registry-note/length.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

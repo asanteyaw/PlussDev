@@ -155,7 +155,9 @@ inline std::tuple<Series, Series> rnn(const Series& input,
   }
 
   const bool require_backward =
-      cfg.training && (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
+      cfg.training &&
+      ::pluss::codem::series_tape::recording_enabled() &&
+      (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_rnn(x0, state, params, cfg, require_backward); routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
@@ -178,7 +180,7 @@ inline std::tuple<Series, Series> rnn(const Series& input,
           detail::rnn_layer(detail::reverse_time_(layer_input), detail::select_dim_(state, 0, base + 1), params[base + 1], cfg);
       final_hidden.push_back(forward_h);
       final_hidden.push_back(backward_h);
-      layer_input = pluss::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
+      layer_input = pluss::series::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
     } else {
       auto [layer_out, layer_h] = detail::rnn_layer(layer_input, detail::select_dim_(state, 0, base), params[base], cfg);
       final_hidden.push_back(layer_h);
@@ -228,7 +230,9 @@ inline std::tuple<Series, Series> gru(const Series& input,
   }
 
   const bool require_backward =
-      cfg.training && (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
+      cfg.training &&
+      ::pluss::codem::series_tape::recording_enabled() &&
+      (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_gru(x0, state, params, cfg, require_backward); routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
@@ -251,7 +255,7 @@ inline std::tuple<Series, Series> gru(const Series& input,
           detail::gru_layer(detail::reverse_time_(layer_input), detail::select_dim_(state, 0, base + 1), params[base + 1], cfg);
       final_hidden.push_back(forward_h);
       final_hidden.push_back(backward_h);
-      layer_input = pluss::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
+      layer_input = pluss::series::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
     } else {
       auto [layer_out, layer_h] = detail::gru_layer(layer_input, detail::select_dim_(state, 0, base), params[base], cfg);
       final_hidden.push_back(layer_h);
@@ -309,7 +313,9 @@ inline std::tuple<Series, LSTMState> lstm(const Series& input,
 
   const bool require_backward =
       cfg.training &&
-      (x0.tracks_slope() || hidden.tracks_slope() || cell.tracks_slope() || detail::any_weight_tracks_slope_(params));
+      ::pluss::codem::series_tape::recording_enabled() &&
+      (x0.tracks_slope() || hidden.tracks_slope() || cell.tracks_slope() ||
+       detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_lstm(x0, hidden, cell, params, cfg, require_backward);
         routed.has_value()) {
@@ -343,7 +349,7 @@ inline std::tuple<Series, LSTMState> lstm(const Series& input,
       final_hidden.push_back(backward_h);
       final_cell.push_back(forward_c);
       final_cell.push_back(backward_c);
-      layer_input = pluss::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
+      layer_input = pluss::series::unite(pluss::StackArray<Series>{forward_out, detail::reverse_time_(backward_rev)}, 2);
     } else {
       auto [layer_out, layer_h, layer_c] = detail::lstm_layer(
           layer_input, detail::select_dim_(hidden, 0, base), detail::select_dim_(cell, 0, base), params[base], cfg);

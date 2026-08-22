@@ -31,7 +31,7 @@ Returns a new `Series[bool]` slot flagging each value that's missing —
 Example 1. Flag a null in the middle of a slot.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(3)});
 auto out = slot.isnull();
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "

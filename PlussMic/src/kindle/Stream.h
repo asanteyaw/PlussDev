@@ -29,7 +29,7 @@ struct DensityPlotOptions;
 struct AutoPlotOptions;
 }
 
-namespace pluss::bundle {
+namespace pluss::scribble {
 class Slot;
 }
 
@@ -143,7 +143,7 @@ public:
   pluss::table::Thread to_thread() const;
   pluss::table::Thread to_thread(std::int64_t start, std::int64_t stop) const;
   pluss::table::Thread tabelize() const;
-  pluss::bundle::Slot bundelize() const;
+  pluss::scribble::Slot scribbelize() const;
 
   // 1D row-space operations.
   Stream head(std::int64_t n) const;

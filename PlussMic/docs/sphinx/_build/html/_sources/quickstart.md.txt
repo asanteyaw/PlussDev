@@ -80,7 +80,7 @@ auto df = pluss::table::DataFrame::load_csv("path/to/data.csv", {{"nrows", 8}});
 auto catalog = df.kindelize();
 auto roundtrip_df = catalog.tabelize();
 
-auto registry = df.bundelize();
+auto registry = df.scribbelize();
 auto back_catalog = registry.kindelize();
 ```
 

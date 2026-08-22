@@ -38,7 +38,7 @@ registry at all, via its `to_json()` fallback.
     The destination file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying JSON writer
+    A generic configuration scribble, translated into the underlying JSON writer
     options. Ignored when the registry takes the `to_json()`
     fallback path).
 
@@ -53,9 +53,9 @@ Example 1. A stream-compatible registry writes a row-major array-of-objects JSON
 the same shape [`load_json()`](load_json.md) reads back.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 rg.save_json("cities.json");
@@ -87,9 +87,9 @@ Example 2. A registry with a genuinely mixed-type field falls back to `to_json()
 per-value output, rather than throwing.
 
 ```cpp
-auto mixed = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"mixed", pluss::bundle::Slot({pluss::make_series(10), pluss::make_note("hello"), pluss::make_series(3.5)})},
+auto mixed = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"mixed", pluss::scribble::Slot({pluss::make_series(10), pluss::make_note("hello"), pluss::make_series(3.5)})},
 });
 
 mixed.save_json("mixed.json");

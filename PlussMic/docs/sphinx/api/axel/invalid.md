@@ -38,8 +38,8 @@ Example 1. A `NaN` value is flagged `invalid()` even though it's not
 the sentinel null value `isnull()` looks for.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1.0), pluss::make_series(std::nan(""))})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1.0), pluss::make_series(std::nan(""))})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.invalid();
 auto vals = out.registry(0).fields("id");

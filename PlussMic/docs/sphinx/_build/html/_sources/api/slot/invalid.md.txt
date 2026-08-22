@@ -33,7 +33,7 @@ which only catches `NaN`, not `Inf`.
 Example 1. Flag a null and a `NaN` among finite values.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1.0), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(std::nan(""))});
+auto slot = pluss::scribble::Slot({pluss::make_series(1.0), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(std::nan(""))});
 auto out = slot.invalid();
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "

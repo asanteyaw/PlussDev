@@ -459,7 +459,7 @@ inline pluss::Series read_series_payload_(BinaryReader& reader, const LoadOption
   const auto strides = contiguous_strides_(sizes);
   pluss::Series out = pluss::Series::undefined();
   try {
-    out = pluss::from_buffer(raw, sizes, strides, deleter, dtype);
+    out = pluss::series::from_host(raw, sizes, strides, deleter, dtype);
   } catch (...) {
     delete[] raw;
     throw;
@@ -550,7 +550,7 @@ inline pluss::Note read_note_payload_(BinaryReader& reader, const LoadOptions& /
   }
 
   if (is_bytes) {
-    return pluss::make_bytes_note(std::span<const std::string_view>(views.data(), views.size()),
+    return pluss::note::bytes(std::span<const std::string_view>(views.data(), views.size()),
                                   std::span<const std::int64_t>(sizes.data(), sizes.size()));
   }
 
@@ -662,7 +662,7 @@ inline void write_timeindex_payload_(
 inline pluss::TimeIndex read_timeindex_payload_(BinaryReader& reader, const LoadOptions& options) {
   const bool require_sorted = reader.read_u8("timeindex.require_sorted") != 0;
   const auto timeline = read_value_<pluss::Timeline>(reader, options);
-  return pluss::make_timeindex(timeline, require_sorted);
+  return pluss::timeindex::make(timeline, require_sorted);
 }
 
 template <class T>

@@ -1,37 +1,15 @@
 #pragma once
 
 #include <array>
-#include <cctype>
 #include <cstdint>
-#include <initializer_list>
 #include <span>
 #include <string>
 #include <string_view>
-#include <vector>
 
-#include "MSharp/RangeView.h"
 #include "pluss/coden/coden.h"
-#include "pluss/detail/factory_containers.h"
-#include "pluss/detail/nested_note_literal.h"
+#include "pluss/coden/internal/note_factory_detail.h"
 
-namespace pluss::coden {
-
-enum class ContentMode : std::uint8_t {
-  Normalize = 0,
-  Lines = 1,
-  Words = 2,
-  Raw = 3,
-};
-
-struct ContentOptions {
-  ContentMode mode{ContentMode::Normalize};
-  bool trim{true};
-  bool collapse_whitespace{true};
-  bool drop_empty{true};
-  bool keep_line_endings{false};
-};
-
-namespace detail {
+namespace pluss::coden::detail {
 
 inline bool is_ascii_space(unsigned char c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
@@ -72,145 +50,86 @@ inline std::string normalize_ascii_whitespace(std::string_view s, bool trim, boo
   return out;
 }
 
-inline std::vector<std::string_view> split_lines_views(std::string_view text,
-                                                       bool keep_ends,
-                                                       bool drop_empty) {
-  std::vector<std::string_view> out;
-  std::size_t start = 0;
-  for (std::size_t i = 0; i < text.size(); ++i) {
-    if (text[i] != '\n') {
-      continue;
-    }
-    const std::size_t len = keep_ends ? (i - start + 1) : (i - start);
-    std::string_view item(text.data() + start, len);
-    if (!drop_empty || !item.empty()) {
-      out.push_back(item);
-    }
-    start = i + 1;
-  }
-  if (start < text.size()) {
-    std::string_view tail(text.data() + start, text.size() - start);
-    if (!drop_empty || !tail.empty()) {
-      out.push_back(tail);
-    }
-  }
-  return out;
-}
+} // namespace pluss::coden::detail
 
-inline std::vector<std::string_view> split_words_views(std::string_view text, bool drop_empty) {
-  std::vector<std::string_view> out;
-  std::size_t i = 0;
-  while (i < text.size()) {
-    while (i < text.size() && is_ascii_space(static_cast<unsigned char>(text[i]))) {
-      ++i;
-    }
-    if (i >= text.size()) {
-      break;
-    }
-    const std::size_t start = i;
-    while (i < text.size() && !is_ascii_space(static_cast<unsigned char>(text[i]))) {
-      ++i;
-    }
-    const std::string_view word(text.data() + start, i - start);
-    if (!drop_empty || !word.empty()) {
-      out.push_back(word);
-    }
-  }
-  return out;
-}
+// pluss::note::content(...) is not a general-purpose N-D constructor the way
+// pluss::note::make(...) is -- it takes exactly one piece of raw text and
+// derives the resulting Note's shape/content from it under a ContentOptions
+// policy: trim/collapse whitespace (Normalize, the default), split into
+// lines or words (delegating to pluss::note::from_lines/from_words -- see
+// note_factory.h -- so the actual splitting logic lives in exactly one
+// place), or pass through untouched (Raw). There is no `content` overload
+// for the RangeView/nested-literal input shapes make() already covers,
+// since those forms carry no whitespace/splitting policy to apply in the
+// first place -- they would just be a second spelling of make() with
+// nothing added. Likewise, there's no separate content_lines()/
+// content_words(): they'd just be content(text, {.mode = Lines/Words, ...})
+// under a different name, and pluss::note::from_lines/from_words already
+// are that name (with the two extra ContentMode-only knobs Lines/Words need
+// -- keep_line_endings, drop_empty -- as their own named parameters instead
+// of a ContentOptions struct).
+namespace pluss::note {
 
-inline Note content_from_textspan(::pluss::detail::TextSpan utf8_1d) {
-  const std::array<std::int64_t, 1> sizes{static_cast<std::int64_t>(utf8_1d.size())};
-  return ops_internal::note_from_utf8(utf8_1d.span(), sizes);
-}
+enum class ContentMode : std::uint8_t {
+  Normalize = 0,
+  Lines = 1,
+  Words = 2,
+  Raw = 3,
+};
 
-} // namespace detail
+struct ContentOptions {
+  ContentMode mode{ContentMode::Normalize};
+  bool trim{true};
+  bool collapse_whitespace{true};
+  bool drop_empty{true};
+  bool keep_line_endings{false};
+};
 
-inline Note content(std::string_view utf8, const ContentOptions& options = {}) {
+// Forward declarations -- defined in note_factory.h, included after this
+// file there. content()'s Lines/Words branches call these directly (not the
+// other way around) so note_factory.h doesn't need to include this file.
+pluss::Note from_lines(std::string_view text, bool keep_ends, bool drop_empty);
+pluss::Note from_words(std::string_view text);
+
+inline pluss::Note content(std::string_view utf8, const ContentOptions& options = {}) {
   if (options.mode == ContentMode::Raw) {
     const std::array<std::string_view, 1> flat{utf8};
-    return ops_internal::note_from_utf8(flat, {});
+    return pluss::coden::ops_internal::note_from_utf8(flat, {});
   }
 
   if (options.mode == ContentMode::Normalize) {
     const auto normalized =
-        detail::normalize_ascii_whitespace(utf8, options.trim, options.collapse_whitespace);
+        pluss::coden::detail::normalize_ascii_whitespace(utf8, options.trim, options.collapse_whitespace);
     const std::array<std::string_view, 1> flat{normalized};
-    return ops_internal::note_from_utf8(flat, {});
+    return pluss::coden::ops_internal::note_from_utf8(flat, {});
   }
 
   if (options.mode == ContentMode::Lines) {
-    auto lines = detail::split_lines_views(utf8, options.keep_line_endings, options.drop_empty);
-    const std::array<std::int64_t, 1> sizes{static_cast<std::int64_t>(lines.size())};
-    return ops_internal::note_from_utf8(std::span<const std::string_view>(lines.data(), lines.size()), sizes);
+    return from_lines(utf8, options.keep_line_endings, options.drop_empty);
   }
 
-  auto words = detail::split_words_views(utf8, options.drop_empty);
-  const std::array<std::int64_t, 1> sizes{static_cast<std::int64_t>(words.size())};
-  return ops_internal::note_from_utf8(std::span<const std::string_view>(words.data(), words.size()), sizes);
+  return from_words(utf8);
 }
 
-inline Note content(std::u8string_view utf8, const ContentOptions& options = {}) {
+inline pluss::Note content(std::u8string_view utf8, const ContentOptions& options = {}) {
   return content(std::string_view{reinterpret_cast<const char*>(utf8.data()), utf8.size()}, options);
 }
 
-inline Note content(const char* utf8, const ContentOptions& options = {}) {
+inline pluss::Note content(const char* utf8, const ContentOptions& options = {}) {
   return content(std::string_view{utf8 ? utf8 : ""}, options);
 }
 
-inline Note content(char c, const ContentOptions& options = {}) {
+inline pluss::Note content(char c, const ContentOptions& options = {}) {
   std::string s(1, c);
   return content(std::string_view{s}, options);
 }
 
-inline Note content(pluss::msharp::RangeView::Of<std::string_view> utf8_1d) {
-  return detail::content_from_textspan(::pluss::detail::TextSpan(
-      std::span<const std::string_view>(utf8_1d.data(), utf8_1d.size())));
-}
-
-inline Note content(pluss::msharp::RangeView::Of<std::string> utf8_1d) {
-  return detail::content_from_textspan(::pluss::detail::TextSpan::from_strings(
-      std::span<const std::string>(utf8_1d.data(), utf8_1d.size())));
-}
-
-inline Note content(std::initializer_list<::pluss::detail::NestedNoteLiteral> utf8_nd) {
-  auto flattened = ::pluss::detail::flatten_note_literal(utf8_nd, 3, "pluss::coden::content");
-  return ops_internal::note_from_utf8(
-      ::pluss::detail::TextSpan::from_strings(flattened.flat).span(),
-      std::span<const std::int64_t>(flattened.sizes.data(), flattened.sizes.size()));
-}
-
-inline Note content(std::string&& utf8, const ContentOptions& options = {}) {
+inline pluss::Note content(std::string&& utf8, const ContentOptions& options = {}) {
   return content(std::string_view{utf8}, options);
 }
 
-inline Note content(std::u8string&& utf8, const ContentOptions& options = {}) {
+inline pluss::Note content(std::u8string&& utf8, const ContentOptions& options = {}) {
   return content(std::string_view{reinterpret_cast<const char*>(utf8.data()), utf8.size()}, options);
 }
 
-inline Note content_lines(std::string_view utf8,
-                          bool keep_line_endings = false,
-                          bool drop_empty = true) {
-  ContentOptions options;
-  options.mode = ContentMode::Lines;
-  options.keep_line_endings = keep_line_endings;
-  options.drop_empty = drop_empty;
-  return content(utf8, options);
-}
-
-inline Note content_words(std::string_view utf8, bool drop_empty = true) {
-  ContentOptions options;
-  options.mode = ContentMode::Words;
-  options.drop_empty = drop_empty;
-  return content(utf8, options);
-}
-
-} // namespace pluss::coden
-
-namespace pluss {
-using coden::ContentMode;
-using coden::ContentOptions;
-using coden::content;
-using coden::content_lines;
-using coden::content_words;
-} // namespace pluss
+} // namespace pluss::note

@@ -1,0 +1,3 @@
+add_test( [==[CodeH extended Timeline factories cover strict date/time, repetition, random ranges, and arange]==] /Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_codeh_tests [==[CodeH extended Timeline factories cover strict date/time\, repetition\, random ranges\, and arange]==]  )
+set_tests_properties( [==[CodeH extended Timeline factories cover strict date/time, repetition, random ranges, and arange]==] PROPERTIES WORKING_DIRECTORY /Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit SKIP_RETURN_CODE 4)
+set( plussqit_codeh_tests_TESTS [==[CodeH extended Timeline factories cover strict date/time, repetition, random ranges, and arange]==])

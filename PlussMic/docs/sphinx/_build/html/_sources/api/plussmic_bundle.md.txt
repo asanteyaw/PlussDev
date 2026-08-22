@@ -1,26 +1,18 @@
 # PlussMic `bundle`
 
-The `bundle` model is the heterogeneous record surface.
+The `bundle` model is the multi-table workspace surface.
 
-- Use [`Slot`](../slot_api_reference.md) for one heterogeneous sequence.
-- Use [`Registry`](../registry_api_reference.md) for named slots.
-- Use [`Axel`](../axel_api_reference.md) for depth-stacked registries.
+- Use [`Nexus`](../nexus_api_reference.md) for a named workbench of related
+  `DataFrame` tables, declared relationships, join plans, and workspace audits.
+- Use [`NexusTraverse`](../nexus_traverse_api_reference.md) for the fluent
+  join-graph builder returned by `Nexus::from(...)`.
+- Use [`NexusQuery`](../nexus_query_api_reference.md) for SQL-style workspace
+  `SELECT` queries returned by `Nexus::query()`.
 
 ```{toctree}
 :maxdepth: 1
 
-../slot_api_reference
-../registry_api_reference
-../axel_api_reference
-../slot_cast_accessor_api_reference
-../slot_note_accessor_api_reference
-../slot_timeline_accessor_api_reference
-../registry_fieldaxis_accessor_api_reference
-../registry_cast_accessor_api_reference
-../registry_note_accessor_api_reference
-../registry_timeline_accessor_api_reference
-../axel_fieldaxis_accessor_api_reference
-../axel_cast_accessor_api_reference
-../axel_note_accessor_api_reference
-../axel_timeline_accessor_api_reference
+../nexus_api_reference
+../nexus_traverse_api_reference
+../nexus_query_api_reference
 ```

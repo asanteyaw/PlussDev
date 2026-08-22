@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>NexusQuery::join &#8212; PlussMic  documentation</title>
+    <title>NexusTraverse::join &#8212; PlussMic  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="NexusQuery::via" href="via.html" />
-    <link rel="prev" title="NexusQuery API Reference" href="../../nexus_query_api_reference.html" />
+    <link rel="next" title="NexusTraverse::via" href="via.html" />
+    <link rel="prev" title="NexusTraverse API Reference" href="../../nexus_traverse_api_reference.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -37,13 +37,13 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<section id="nexusquery-join">
-<h1>NexusQuery::join<a class="headerlink" href="#nexusquery-join" title="Link to this heading">¶</a></h1>
-<p><a class="reference internal" href="../../nexus_query_api_reference.html"><span class="doc std std-doc">Back to NexusQuery API Reference</span></a></p>
+<section id="nexustraverse-join">
+<h1>NexusTraverse::join<a class="headerlink" href="#nexustraverse-join" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../nexus_traverse_api_reference.html"><span class="doc std std-doc">Back to NexusTraverse API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">NexusQuery</span><span class="o">::</span><span class="n">join</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">right</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusQuery</span>
-<span class="n">NexusQuery</span><span class="o">::</span><span class="n">join</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">JoinSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusQuery</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">NexusTraverse</span><span class="o">::</span><span class="n">join</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">right</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusTraverse</span>
+<span class="n">NexusTraverse</span><span class="o">::</span><span class="n">join</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">JoinSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusTraverse</span>
 </pre></div>
 </div>
 </section>
@@ -59,7 +59,7 @@ calls builds up a multi-hop plan without you constructing
 <p class="admonition-title">Important</p>
 <p>The single-argument overload auto-detects the relationship — and defaults to Inner
 Unlike <a class="reference internal" href="../nexus/join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::join()</span></code></span></a>, which always requires an explicit <code class="docutils literal notranslate"><span class="pre">keys</span></code> list
-or <code class="docutils literal notranslate"><span class="pre">relationship_name</span></code> in its <code class="docutils literal notranslate"><span class="pre">JoinSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">NexusQuery::join(right)</span></code> (no <code class="docutils literal notranslate"><span class="pre">spec</span></code>) looks for
+or <code class="docutils literal notranslate"><span class="pre">relationship_name</span></code> in its <code class="docutils literal notranslate"><span class="pre">JoinSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">NexusTraverse::join(right)</span></code> (no <code class="docutils literal notranslate"><span class="pre">spec</span></code>) looks for
 exactly one relationship directly connecting the current anchor and <code class="docutils literal notranslate"><span class="pre">right</span></code>, using it
 automatically. If more than one relationship connects the same pair, the call throws,
 telling you to disambiguate via <code class="docutils literal notranslate"><span class="pre">JoinSpec::relationship_name</span></code>. Also note the resolved
@@ -80,7 +80,7 @@ empty, defaults to <code class="docutils literal notranslate"><span class="pre">
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code>
 A new query with the join step appended and the anchor moved to <code class="docutils literal notranslate"><span class="pre">right</span></code>. The original
 query is unchanged — like the rest of this class’s non-mutating, chainable design.</p>
 </section>
@@ -88,6 +88,7 @@ query is unchanged — like the rest of this class’s non-mutating, chainable d
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. A single auto-detected hop.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
@@ -169,7 +170,7 @@ overload throws.</p>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>NexusQuery::join: multiple direct relationships connect &#39;orders&#39; and &#39;customers&#39;. Specify JoinSpec.relationship_name explicitly
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>NexusTraverse::join: multiple direct relationships connect &#39;orders&#39; and &#39;customers&#39;. Specify JoinSpec.relationship_name explicitly
 </pre></div>
 </div>
 </section>
@@ -182,17 +183,17 @@ anchor and <code class="docutils literal notranslate"><span class="pre">right</s
 disambiguate with <code class="docutils literal notranslate"><span class="pre">spec.relationship_name</span></code> in the two-argument overload.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">spec.how</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">JoinHow::Inner</span></code> when left unset — different from
 <a class="reference internal" href="via.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.via()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">Left</span></code> default. See the important callout above.</p></li>
-<li><p>Non-mutating and chainable — each call returns a new <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code>.</p></li>
+<li><p>Non-mutating and chainable — each call returns a new <code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="via.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery::via</span></code></span></a>: reach a table by its shortest graph path (possibly several
+<li><p><a class="reference internal" href="via.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse::via</span></code></span></a>: reach a table by its shortest graph path (possibly several
 hops) in one call, defaulting to <code class="docutils literal notranslate"><span class="pre">Left</span></code>, instead of one explicit hop at a time.</p></li>
 <li><p><a class="reference internal" href="../nexus/join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::join</span></code></span></a>: the lower-level, non-auto-detecting primitive this
 method builds on.</p></li>
-<li><p><a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery::collect</span></code></span></a>: execute the accumulated plan.</p></li>
+<li><p><a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusTraverse::collect</span></code></span></a>: execute the accumulated plan.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="via.html">
@@ -239,6 +240,7 @@ method builds on.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -252,10 +254,10 @@ method builds on.</p></li>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
-  <li><a href="../../nexus_query_api_reference.html">NexusQuery API Reference</a><ul>
-      <li>Previous: <a href="../../nexus_query_api_reference.html" title="previous chapter">NexusQuery API Reference</a></li>
-      <li>Next: <a href="via.html" title="next chapter">NexusQuery::via</a></li>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../nexus_traverse_api_reference.html">NexusTraverse API Reference</a><ul>
+      <li>Previous: <a href="../../nexus_traverse_api_reference.html" title="previous chapter">NexusTraverse API Reference</a></li>
+      <li>Next: <a href="via.html" title="next chapter">NexusTraverse::via</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

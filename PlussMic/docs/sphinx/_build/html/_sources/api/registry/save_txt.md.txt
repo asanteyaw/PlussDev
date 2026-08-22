@@ -25,7 +25,7 @@ than comma.
     The destination file path.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying text writer
+    A generic configuration scribble, translated into the underlying text writer
     options — see [`save_csv()`](save_csv.md)'s important callout: every field must
     be stream-compatible, or this throws.
 
@@ -40,9 +40,9 @@ Example 1. Save a registry to a tab-separated text file and read the file back t
 confirm its contents.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 rg.save_txt("cities.txt");

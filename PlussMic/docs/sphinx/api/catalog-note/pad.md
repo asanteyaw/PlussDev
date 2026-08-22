@@ -84,7 +84,7 @@ code                     | Note         | Note             | 2       | [1   , 22
 - [`CatalogNoteAccessor::chars`](chars.md): extracts a character range instead of
   padding.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::pad`](../registry-note/pad.md): the bundle-model equivalent.
+- [`RegistryNoteAccessor::pad`](../registry-note/pad.md): the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="normalize.html">

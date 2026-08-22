@@ -38,10 +38,10 @@ removing them. Implemented as [`map()`](map.md) applying
 Example 1. Drop `"city"` from every frame, keeping `"ids"`.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({
-        {"ids", pluss::bundle::Slot({pluss::make_series(1)})},
-        {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({
+        {"ids", pluss::scribble::Slot({pluss::make_series(1)})},
+        {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
     }),
 });
 auto out = axel.drop({"city"});

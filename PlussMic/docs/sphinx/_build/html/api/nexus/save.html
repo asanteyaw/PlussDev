@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -97,6 +97,7 @@ File format and naming, as described above.</p>
 <p>Example 1. Saving with <code class="docutils literal notranslate"><span class="pre">StoreKind::Csv</span></code>, since the default <code class="docutils literal notranslate"><span class="pre">Parquet</span></code> needs an optional
 dependency this build doesn’t have.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
@@ -129,7 +130,7 @@ dependency this build doesn’t have.</p>
 <span class="n">options</span><span class="p">.</span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">StoreKind</span><span class="o">::</span><span class="n">Csv</span><span class="p">;</span>
 <span class="n">linked</span><span class="p">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;/tmp/nexus_biz_store&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">loaded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/nexus_biz_store&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">loaded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">read</span><span class="p">(</span><span class="s">&quot;/tmp/nexus_biz_store&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">loaded</span><span class="p">.</span><span class="n">ntables</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">loaded</span><span class="p">.</span><span class="n">nrelationships</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">loaded</span><span class="p">.</span><span class="n">fingerprint</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">fingerprint</span><span class="p">());</span>
 </pre></div>
@@ -171,7 +172,7 @@ of <code class="docutils literal notranslate"><span class="pre">kind</span></cod
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="load.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::load</span></code></span></a>: the exact inverse of this method.</p></li>
+<li><p><a class="reference internal" href="read.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::read</span></code></span></a>: the exact inverse of this method.</p></li>
 <li><p><a class="reference internal" href="fingerprint.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::fingerprint</span></code></span></a>: recorded in the manifest, and useful for
 confirming a round trip preserved everything.</p></li>
 <li><p><a class="reference internal" href="schema.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::schema</span></code></span></a> / <a class="reference internal" href="graph.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">graph</span></code></span></a>: the exact content written to
@@ -226,6 +227,7 @@ confirming a round trip preserved everything.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -239,7 +241,7 @@ confirming a round trip preserved everything.</p></li>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
       <li>Previous: <a href="run.html" title="previous chapter">Nexus::run</a></li>
       <li>Next: <a href="scan.html" title="next chapter">Nexus::scan</a></li>

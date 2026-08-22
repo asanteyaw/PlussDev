@@ -37,12 +37,12 @@ untouched. Built on [`Slot::filter()`](../slot/filter.md).
 Example 1. Keep only the odd values in `id`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.keep("id", [](const pluss::bundle::Slot::Value& v) {
+auto out = rg.keep("id", [](const pluss::scribble::Slot::Value& v) {
   return std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] % 2 == 1;
 });
 
@@ -64,12 +64,12 @@ std::cout << "] nfields=" << out.nfields();
 Example 2. Filtering an unknown field throws.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 
 try {
-  auto out = rg.keep("zzz", [](const pluss::bundle::Slot::Value&) { return true; });
+  auto out = rg.keep("zzz", [](const pluss::scribble::Slot::Value&) { return true; });
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

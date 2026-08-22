@@ -7,12 +7,12 @@
 ## Signature
 
 ```cpp
-Nexus::from(std::string_view table) const -> NexusQuery
+Nexus::from(std::string_view table) const -> NexusTraverse
 ```
 
 ## What It Does
 
-Enters the fluent [`NexusQuery`](../../nexus_query_api_reference) builder, anchored at
+Enters the fluent [`NexusTraverse`](../../nexus_traverse_api_reference) builder, anchored at
 `table`. `from()` itself does no joining — it just binds a starting table and hands back a
 builder whose methods (`.join()`, `.via()`, `.pick()`, `.drop()`, `.name()`) accumulate a
 [`JoinPlan`](plan.md) one call at a time, materialized only when you call
@@ -20,7 +20,7 @@ builder whose methods (`.join()`, `.via()`, `.pick()`, `.drop()`, `.name()`) acc
 
 This is the higher-level counterpart to building a [`JoinPlan`](plan.md) by hand via
 [`path()`](path.md)/[`plan()`](plan.md) and executing it with
-[`materialize()`](materialize.md) — `NexusQuery` covers the common case (a chain of joins
+[`materialize()`](materialize.md) — `NexusTraverse` covers the common case (a chain of joins
 from one anchor table) with a shorter, chainable spelling, and can auto-detect the
 relationship to use at each step when it's unambiguous.
 
@@ -32,7 +32,7 @@ relationship to use at each step when it's unambiguous.
 
 ## Returns
 
-`NexusQuery`
+`NexusTraverse`
     A query builder anchored at `table`, with an empty plan (zero steps) so far.
 
 ## Examples
@@ -42,6 +42,7 @@ equivalent to [`frame(table)`](frame.md).
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -79,17 +80,17 @@ Nexus::from: unknown table 'missing'
 ## Notes
 
 - Never touches table data itself — the anchor is validated (it must exist) but nothing is
-  read or joined until [`.collect()`](../../nexus_query_api_reference) runs.
-- See the [`NexusQuery API Reference`](../../nexus_query_api_reference) for the full
+  read or joined until [`.collect()`](../../nexus_traverse_api_reference) runs.
+- See the [`NexusTraverse API Reference`](../../nexus_traverse_api_reference) for the full
   builder method list (`.join()`, `.via()`, `.pick()`, `.drop()`, `.name()`, `.collect()`).
 
 ## See Also
 
-- [`NexusQuery API Reference`](../../nexus_query_api_reference): every method on the
+- [`NexusTraverse API Reference`](../../nexus_traverse_api_reference): every method on the
   builder this returns.
 - [`Nexus::path`](path.md) / [`plan`](plan.md) / [`materialize`](materialize.md): the
-  lower-level primitives `NexusQuery` is built on top of.
-- [`Nexus::join`](join.md): the single-hop primitive `NexusQuery::join` wraps.
+  lower-level primitives `NexusTraverse` is built on top of.
+- [`Nexus::join`](join.md): the single-hop primitive `NexusTraverse::join` wraps.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="frames.html">

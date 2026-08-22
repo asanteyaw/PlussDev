@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# NexusQuery::collect
+# NexusTraverse::collect
 
-[Back to NexusQuery API Reference](../../nexus_query_api_reference)
+[Back to NexusTraverse API Reference](../../nexus_traverse_api_reference)
 
 ## Signature
 
 ```cpp
-NexusQuery::collect() const -> DataFrame
+NexusTraverse::collect() const -> DataFrame
 ```
 
 ## What It Does
@@ -19,9 +19,9 @@ Executes the query's accumulated [`JoinPlan`](../nexus/plan.md) — via
 2. [`.drop()`](drop.md), if set — remove the named columns from what's left.
 3. [`.name()`](name.md), if set — retitle the result.
 
-This is the only `NexusQuery` method that actually touches table data; every other method
+This is the only `NexusTraverse` method that actually touches table data; every other method
 on this class (`.join()`, `.via()`, `.pick()`, `.drop()`, `.name()`) only builds up the
-plan and returns a new, still-unexecuted `NexusQuery`.
+plan and returns a new, still-unexecuted `NexusTraverse`.
 
 ## Parameters
 
@@ -38,6 +38,7 @@ Example 1. A query with no `.join()` calls collects to the anchor table itself.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
@@ -97,10 +98,10 @@ until this call runs it.
 
 ## Notes
 
-- The only data-touching method on `NexusQuery` — everything else builds the plan lazily.
+- The only data-touching method on `NexusTraverse` — everything else builds the plan lazily.
 - Applies `.pick()` before `.drop()`, and `.name()` last — see the numbered list above.
 - Calling `.collect()` twice on the same query re-executes the plan each time; nothing is
-  cached on the `NexusQuery` object itself (though [`Nexus::materialize()`](../nexus/materialize.md)'s
+  cached on the `NexusTraverse` object itself (though [`Nexus::materialize()`](../nexus/materialize.md)'s
   own internals may still benefit from the workspace-level caches
   [`path()`](../nexus/path.md)/[`plan()`](../nexus/plan.md) maintain).
 
@@ -108,7 +109,7 @@ until this call runs it.
 
 - [`Nexus::materialize`](../nexus/materialize.md): the underlying execution this method
   calls.
-- [`NexusQuery::pick`](pick.md) / [`drop`](drop.md) / [`name`](name.md): the three
+- [`NexusTraverse::pick`](pick.md) / [`drop`](drop.md) / [`name`](name.md): the three
   post-processing steps applied here, in order.
 
 <div class="pluss-inline-prev-next">

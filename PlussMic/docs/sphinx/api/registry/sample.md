@@ -51,9 +51,9 @@ require field-length agreement. See Example 2.
 Example 1. The same seed reproduces the same sample.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3), pluss::make_series(4)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi"), pluss::make_note("Ho")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi"), pluss::make_note("Ho")})},
 });
 
 auto first = rg.sample(2, 42);
@@ -78,9 +78,9 @@ size: 2, reproducible: true
 Example 2. A ragged registry (fields of different lengths) throws.
 
 ```cpp
-auto ragged = pluss::bundle::Registry({
-    {"a", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"b", pluss::bundle::Slot({pluss::make_series(10), pluss::make_series(20)})},
+auto ragged = pluss::scribble::Registry({
+    {"a", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"b", pluss::scribble::Slot({pluss::make_series(10), pluss::make_series(20)})},
 });
 
 try {

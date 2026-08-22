@@ -139,18 +139,18 @@ auto cleaned = scenarios.map_frames([](const DataFrame& frame) {
 });
 ```
 
-## Round-trip through Kindle and Bundle
+## Round-trip through Kindle and Scribble
 
 ```cpp
 auto catalog = df.kindelize();
-auto registry = catalog.bundelize();
+auto registry = catalog.scribbelize();
 
 registry.profiles();
 
 auto back = registry.tabelize();
 ```
 
-## Save a report bundle
+## Save a report scribble
 
 ```cpp
 auto clean = df.fillnull(0.0);

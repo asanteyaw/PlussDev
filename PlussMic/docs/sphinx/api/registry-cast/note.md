@@ -33,8 +33,8 @@ form.
 Example 1. Cast a numeric `id` field to text.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
 });
 
 auto out = rg.fields({"id"}).cast().note();

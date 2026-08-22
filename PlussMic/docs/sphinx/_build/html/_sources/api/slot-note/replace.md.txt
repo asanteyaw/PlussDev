@@ -46,7 +46,7 @@ Example 1. Default: literal, case-sensitive, unlimited substring
 replacement.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("banana")});
+auto slot = pluss::scribble::Slot({pluss::make_note("banana")});
 auto out = slot.nt().replace("a", "o");
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
@@ -61,7 +61,7 @@ Example 2. `case_sensitive = false` matches regardless of case, but `to`
 is still inserted exactly as written.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("BANANA")});
+auto slot = pluss::scribble::Slot({pluss::make_note("BANANA")});
 pluss::table::TextOptions opts;
 opts.case_sensitive = false;
 auto out = slot.nt().replace("A", "o", opts);

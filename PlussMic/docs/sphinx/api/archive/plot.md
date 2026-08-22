@@ -27,7 +27,7 @@ accessor has its own page, with real rendered charts, under
 
 ```{important} Reuses AtlasPlotOptions directly — there is no separate ArchivePlotOptions
 There is no `ArchivePlotOptions` type — this accessor reuses `pluss::table::AtlasPlotOptions`
-as-is, the same bundle of per-chart-type option structs (`figure`, `frames`, `depth_axis`,
+as-is, the same scribble of per-chart-type option structs (`figure`, `frames`, `depth_axis`,
 `surface`, `wireframe`, `cloud3`, `depth`, `depth_compare`, `depth_facet`, `depth_rolling`,
 `triplot`) [`Atlas::plot`](../atlas/plot.md) takes.
 ```
@@ -35,7 +35,7 @@ as-is, the same bundle of per-chart-type option structs (`figure`, `frames`, `de
 ## Parameters
 
 **options** (`const pluss::table::AtlasPlotOptions&`, optional)
-    A bundle of per-chart-type option structs — each field configures the corresponding
+    A scribble of per-chart-type option structs — each field configures the corresponding
     method on the returned accessor. See the important callout above.
 
 ## Returns

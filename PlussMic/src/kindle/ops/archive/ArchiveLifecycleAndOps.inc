@@ -358,16 +358,16 @@ pluss::table::Atlas Archive::tabelize(const TabelizePolicy& policy) const {
   return pluss::table::Atlas(std::move(frames), std::move(labels));
 }
 
-pluss::bundle::Axel Archive::bundelize() const {
-  PLUSS_CHECK(defined(), "Archive::bundelize: archive undefined");
-  std::vector<pluss::bundle::Registry> out;
+pluss::scribble::Axel Archive::scribbelize() const {
+  PLUSS_CHECK(defined(), "Archive::scribbelize: archive undefined");
+  std::vector<pluss::scribble::Registry> out;
   out.reserve(static_cast<std::size_t>(depth()));
   for (std::int64_t i = 0; i < depth(); ++i) {
-    out.push_back(catalog(i).bundelize());
+    out.push_back(catalog(i).scribbelize());
   }
-  std::optional<pluss::bundle::Slot> labels = std::nullopt;
+  std::optional<pluss::scribble::Slot> labels = std::nullopt;
   if (label().has()) {
-    labels = label().values().bundelize();
+    labels = label().values().scribbelize();
   }
-  return pluss::bundle::Axel(std::move(out), std::move(labels));
+  return pluss::scribble::Axel(std::move(out), std::move(labels));
 }

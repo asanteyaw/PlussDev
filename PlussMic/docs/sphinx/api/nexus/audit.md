@@ -7,29 +7,41 @@
 ## Signature
 
 ```cpp
+Nexus::audit() const -> DataFrame
 Nexus::audit(std::string_view name) const -> DataFrame
 ```
 
 ## What It Does
 
-An exact alias for [`relationship_audit()`](relationship_audit.md) — `audit` calls
-straight through with no behavioral difference. `audit` is the shorter, more
-conversational spelling.
+`audit()` now has two roles:
+
+- **`audit()` with no arguments** returns the workspace-wide integrity table — the same
+  combined table/relationship diagnostics returned by [`scan()`](scan.md)
+- **`audit(name)`** remains the shorter alias for
+  [`relationship_audit(name)`](relationship_audit.md)
+
+That split makes `audit()` the natural trust entry point for `Nexus`: one call to inspect
+the whole workspace, or one named call to zoom into a single declared relationship.
 
 ## Parameters
 
-See [`relationship_audit()`](relationship_audit.md) — identical here.
+For `audit()`: none.
+
+For `audit(name)`: see [`relationship_audit()`](relationship_audit.md) — identical here.
 
 ## Returns
 
-Identical to [`relationship_audit()`](relationship_audit.md).
+For `audit()`: the same combined diagnostics frame as [`scan()`](scan.md).
+
+For `audit(name)`: identical to [`relationship_audit()`](relationship_audit.md).
 
 ## Examples
 
-Example 1. `audit()` and `relationship_audit()` return identical results.
+Example 1. `audit()` with no arguments returns the workspace command-center audit.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
@@ -53,6 +65,21 @@ rel.keys = {{"customer_id", "customer_id"}};
 
 auto linked = biz.add_relationship(rel);
 
+std::cout << linked.audit().features("kind");
+```
+
+### Output
+
+```text
+0  table
+1  table
+2  relationship
+Name: kind, ptype: Note
+```
+
+Example 2. `audit(name)` still aliases the one-relationship summary.
+
+```cpp
 std::cout << linked.audit("orders_to_customers").features("valid");
 ```
 
@@ -65,11 +92,14 @@ Name: valid, ptype: Series
 
 ## Notes
 
-- Purely a naming alternative — see [`relationship_audit()`](relationship_audit.md) for the
-  full documentation, including every returned column.
+- `audit()` is now the short workspace-integrity entry point; it is not relationship-only
+  anymore.
+- `audit(name)` is still purely a naming alternative for
+  [`relationship_audit(name)`](relationship_audit.md).
 
 ## See Also
 
+- [`Nexus::scan`](scan.md): the canonical workspace-level audit table returned by `audit()`.
 - [`Nexus::relationship_audit`](relationship_audit.md): the canonical name this aliases.
 
 <div class="pluss-inline-prev-next">

@@ -16,7 +16,7 @@ class Archive;
 struct KindelizePolicy;
 struct TabelizePolicy;
 }
-namespace pluss::bundle {
+namespace pluss::scribble {
 class Axel;
 }
 
@@ -88,8 +88,8 @@ public:
   DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
   pluss::kindle::Archive kindelize() const;
   pluss::kindle::Archive kindelize(const pluss::kindle::KindelizePolicy& policy) const;
-  pluss::bundle::Axel bundelize() const;
-  pluss::bundle::Axel bundelize(const pluss::kindle::KindelizePolicy& policy) const;
+  pluss::scribble::Axel scribbelize() const;
+  pluss::scribble::Axel scribbelize(const pluss::kindle::KindelizePolicy& policy) const;
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   void show(const display::DisplayOptions& options = {}) const;

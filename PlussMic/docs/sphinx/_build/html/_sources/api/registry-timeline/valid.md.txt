@@ -32,8 +32,8 @@ the logical inverse of [`isnat()`](isnat.md).
 Example 1. Flag a valid timestamp alongside a `NaT` one.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline(""), pluss::make_timeline("2024-01-01T00:00:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline(""), pluss::make_timeline("2024-01-01T00:00:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().valid();

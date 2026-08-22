@@ -31,9 +31,9 @@ registry containing only the fields whose `Slot::kind()` is
 Example 1. Select the datetime field out of a mixed-kind registry.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"created_at", pluss::bundle::Slot({pluss::make_timeline("2024-01-01"), pluss::make_timeline("2024-01-02")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"created_at", pluss::scribble::Slot({pluss::make_timeline("2024-01-01"), pluss::make_timeline("2024-01-02")})},
 });
 
 auto out = rg.fieldaxis().timeline();

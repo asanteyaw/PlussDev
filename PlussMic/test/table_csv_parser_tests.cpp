@@ -1349,14 +1349,14 @@ void test_atlas_and_nexus_lvalue_name_range_surfaces() {
   expect(atlas_selected.frame(0).get("amount").has_value() && !atlas_selected.frame(0).get("status").has_value(),
          "Atlas::features(vector<string>) should project selected features");
 
-  pluss::table::Relationship rel;
+  pluss::bundle::nexus::Relationship rel;
   rel.name = "loan_account";
   rel.left_table = "loan";
   rel.right_table = "account";
   rel.keys = {{"id", "id"}};
-  rel.cardinality = pluss::table::RelationshipCardinality::OneToOne;
+  rel.cardinality = pluss::bundle::nexus::RelationshipCardinality::OneToOne;
 
-  auto nx = pluss::table::Nexus({
+  auto nx = pluss::bundle::Nexus({
                                     {"loan", loan},
                                     {"account", account},
                                 })
@@ -3959,7 +3959,7 @@ void test_nexus_basic_workspace_ops() {
       {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502, 503})},
   });
 
-  const auto nx = pluss::table::Nexus({
+  const auto nx = pluss::bundle::Nexus({
       {"loan", loan},
       {"account", account},
       {"disp", disp},
@@ -4025,7 +4025,7 @@ void test_nexus_delegation_and_atlas_interop() {
       {"temp", pluss::make_series(std::vector<double>{8.0, 6.0})},
   });
 
-  const auto nx = pluss::table::Nexus({
+  const auto nx = pluss::bundle::Nexus({
       {"weekday", weekday},
       {"weekend", weekend},
   });
@@ -4047,13 +4047,13 @@ void test_nexus_delegation_and_atlas_interop() {
   expect(atlas.label().values().as_note().at(0) == "weekday",
          "Nexus::to_atlas should default depth labels from table names");
 
-  const auto roundtrip = pluss::table::Nexus::from_atlas(atlas);
+  const auto roundtrip = pluss::bundle::Nexus::from_atlas(atlas);
   expect(roundtrip.keys() == std::vector<std::string>({"weekday", "weekend"}),
          "Nexus::from_atlas should recover named tables from depth labels");
   expect(roundtrip.frame("weekday").equals(weekday) && roundtrip.frame("weekend").equals(weekend),
          "Nexus Atlas roundtrip should preserve frame contents");
 
-  const auto flowed = nx.flow([](const pluss::table::Nexus& value) {
+  const auto flowed = nx.flow([](const pluss::bundle::Nexus& value) {
     return value.head(1);
   });
   expect(flowed.ntables() == 1 && flowed.keys().front() == "weekday",
@@ -4075,18 +4075,18 @@ void test_nexus_metadata_and_relationship_graph() {
       {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502})},
   });
 
-  const auto base = pluss::table::Nexus({
+  const auto base = pluss::bundle::Nexus({
       {"loan", loan},
       {"account", account},
       {"disp", disp},
   });
 
-  pluss::table::TableMeta loan_meta;
+  pluss::bundle::nexus::TableMeta loan_meta;
   loan_meta.grain = "one row per loan";
   loan_meta.primary_key = {"loan_id"};
   loan_meta.candidate_keys = {{"loan_id"}, {"account_id", "loan_id"}};
   loan_meta.time_field = "issued_at";
-  loan_meta.case_labels = pluss::table::CaseLabelPolicy::ImplicitRange;
+  loan_meta.case_labels = pluss::bundle::nexus::CaseLabelPolicy::ImplicitRange;
   loan_meta.source = "bank.csv";
   loan_meta.provenance = "loader";
   loan_meta.note = "core lending table";
@@ -4097,25 +4097,25 @@ void test_nexus_metadata_and_relationship_graph() {
   expect(with_meta.table_meta("loan")->primary_key == std::vector<std::string>({"loan_id"}),
          "Nexus::table_meta should expose stored primary key metadata");
 
-  pluss::table::Relationship loan_account;
+  pluss::bundle::nexus::Relationship loan_account;
   loan_account.name = "loan_account";
   loan_account.left_table = "loan";
   loan_account.right_table = "account";
   loan_account.keys = {{"account_id", "account_id"}};
-  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
   loan_account.confidence = 0.95;
-  loan_account.status = pluss::table::RelationshipValidationStatus::Declared;
+  loan_account.status = pluss::bundle::nexus::RelationshipValidationStatus::Declared;
 
-  pluss::table::Relationship account_disp;
+  pluss::bundle::nexus::Relationship account_disp;
   account_disp.name = "account_disp";
   account_disp.left_table = "account";
   account_disp.right_table = "disp";
   account_disp.keys = {{"account_id", "account_id"}};
-  account_disp.cardinality = pluss::table::RelationshipCardinality::OneToMany;
+  account_disp.cardinality = pluss::bundle::nexus::RelationshipCardinality::OneToMany;
   account_disp.left_optional = false;
   account_disp.right_optional = true;
   account_disp.confidence = 1.0;
-  account_disp.status = pluss::table::RelationshipValidationStatus::Validated;
+  account_disp.status = pluss::bundle::nexus::RelationshipValidationStatus::Validated;
 
   const auto graph = with_meta.add_relationships({loan_account, account_disp});
   expect(graph.nrelationships() == 2, "Nexus should track relationship count");
@@ -4166,28 +4166,28 @@ void test_nexus_validation_and_audit_layer() {
       {"client_id", pluss::make_series(std::vector<std::int64_t>{501, 502, 503})},
   });
 
-  pluss::table::TableMeta loan_meta;
+  pluss::bundle::nexus::TableMeta loan_meta;
   loan_meta.primary_key = {"loan_id"};
   loan_meta.candidate_keys = {{"account_id"}};
 
-  pluss::table::TableMeta account_meta;
+  pluss::bundle::nexus::TableMeta account_meta;
   account_meta.primary_key = {"account_id"};
   account_meta.candidate_keys = {{"account_id", "district_id"}};
 
-  pluss::table::TableMeta disp_meta;
+  pluss::bundle::nexus::TableMeta disp_meta;
   disp_meta.primary_key = {"disp_id"};
 
-  pluss::table::Relationship loan_account;
+  pluss::bundle::nexus::Relationship loan_account;
   loan_account.name = "loan_account";
   loan_account.left_table = "loan";
   loan_account.right_table = "account";
   loan_account.keys = {{"account_id", "account_id"}};
-  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
   loan_account.left_optional = true;
   loan_account.right_optional = false;
-  loan_account.status = pluss::table::RelationshipValidationStatus::Declared;
+  loan_account.status = pluss::bundle::nexus::RelationshipValidationStatus::Declared;
 
-  const auto nx = pluss::table::Nexus({
+  const auto nx = pluss::bundle::Nexus({
                         {"loan", loan},
                         {"account", account},
                         {"disp", disp},
@@ -4221,14 +4221,14 @@ void test_nexus_validation_and_audit_layer() {
          "Nexus::grain_audit should mark invalid and valid key declarations explicitly");
 
   const auto left_orphans =
-      nx.detect_orphans("loan_account", pluss::table::RelationshipSide::Left);
+      nx.detect_orphans("loan_account", pluss::bundle::nexus::RelationshipSide::Left);
   expect(left_orphans.ncases() == 1 &&
              left_orphans.features("loan_id").as_series().to_vec<std::int64_t>() ==
                  std::vector<std::int64_t>({3}),
          "Nexus::detect_orphans(left) should expose unmatched complete-key left rows and exclude missing keys");
 
   const auto right_orphans =
-      nx.detect_orphans("loan_account", pluss::table::RelationshipSide::Right);
+      nx.detect_orphans("loan_account", pluss::bundle::nexus::RelationshipSide::Right);
   expect(right_orphans.ncases() == 1 &&
              right_orphans.features("account_id").as_series().to_vec<std::int64_t>() ==
                  std::vector<std::int64_t>({12}),
@@ -4273,28 +4273,28 @@ void test_nexus_relational_execution_helpers() {
       {"name", pluss::make_note({"Ama", "Kojo", "Esi"})},
   });
 
-  pluss::table::Relationship loan_account;
+  pluss::bundle::nexus::Relationship loan_account;
   loan_account.name = "loan_account";
   loan_account.left_table = "loan";
   loan_account.right_table = "account";
   loan_account.keys = {{"account_id", "account_id"}};
-  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
 
-  pluss::table::Relationship account_disp;
+  pluss::bundle::nexus::Relationship account_disp;
   account_disp.name = "account_disp";
   account_disp.left_table = "account";
   account_disp.right_table = "disp";
   account_disp.keys = {{"account_id", "account_id"}};
-  account_disp.cardinality = pluss::table::RelationshipCardinality::OneToMany;
+  account_disp.cardinality = pluss::bundle::nexus::RelationshipCardinality::OneToMany;
 
-  pluss::table::Relationship disp_client;
+  pluss::bundle::nexus::Relationship disp_client;
   disp_client.name = "disp_client";
   disp_client.left_table = "disp";
   disp_client.right_table = "client";
   disp_client.keys = {{"client_id", "client_id"}};
-  disp_client.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  disp_client.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
 
-  const auto nx = pluss::table::Nexus({
+  const auto nx = pluss::bundle::Nexus({
                         {"loan", loan},
                         {"account", account},
                         {"disp", disp},
@@ -4302,9 +4302,9 @@ void test_nexus_relational_execution_helpers() {
                     })
                       .add_relationships({loan_account, account_disp, disp_client});
 
-  pluss::table::JoinSpec direct;
+  pluss::bundle::nexus::JoinSpec direct;
   direct.relationship_name = "loan_account";
-  direct.how = pluss::table::JoinHow::Left;
+  direct.how = pluss::bundle::nexus::JoinHow::Left;
 
   const auto joined = nx.join("loan", "account", direct);
   expect(joined.ncases() == 2, "Nexus::join should delegate a direct relationship-driven left join");
@@ -4331,7 +4331,7 @@ void test_nexus_relational_execution_helpers() {
              reverse_path.steps[1].reversed && reverse_path.steps[2].reversed,
          "Nexus::path should mark reverse traversal against relationship direction");
 
-  const auto plan = nx.plan(path, pluss::table::JoinHow::Left);
+  const auto plan = nx.plan(path, pluss::bundle::nexus::JoinHow::Left);
   expect(plan.root_table == "loan" && plan.steps.size() == 3,
          "Nexus::plan should convert a graph path into an executable join plan");
   expect(plan.result_name == "loan_client",
@@ -4376,28 +4376,28 @@ void test_nexus_query_surface() {
       {"tier", pluss::make_note({"A", "B", "A"})},
   });
 
-  pluss::table::Relationship loan_account;
+  pluss::bundle::nexus::Relationship loan_account;
   loan_account.name = "loan_account";
   loan_account.left_table = "loan";
   loan_account.right_table = "account";
   loan_account.keys = {{"account_id", "account_id"}};
-  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
 
-  pluss::table::Relationship account_disp;
+  pluss::bundle::nexus::Relationship account_disp;
   account_disp.name = "account_disp";
   account_disp.left_table = "account";
   account_disp.right_table = "disp";
   account_disp.keys = {{"account_id", "account_id"}};
-  account_disp.cardinality = pluss::table::RelationshipCardinality::OneToMany;
+  account_disp.cardinality = pluss::bundle::nexus::RelationshipCardinality::OneToMany;
 
-  pluss::table::Relationship disp_client;
+  pluss::bundle::nexus::Relationship disp_client;
   disp_client.name = "disp_client";
   disp_client.left_table = "disp";
   disp_client.right_table = "client";
   disp_client.keys = {{"client_id", "client_id"}};
-  disp_client.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  disp_client.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
 
-  const auto nx = pluss::table::Nexus({
+  const auto nx = pluss::bundle::Nexus({
                         {"loan", loan},
                         {"account", account},
                         {"disp", disp},
@@ -4470,28 +4470,28 @@ void test_nexus_pull_surface() {
       {"metric.value", pluss::make_series(std::vector<double>{100.0, 120.0, 80.0, 90.0, 110.0})},
   });
 
-  pluss::table::TableMeta customers_meta;
+  pluss::bundle::nexus::TableMeta customers_meta;
   customers_meta.primary_key = {"customer_id"};
   customers_meta.time_field = "observed_at";
 
-  pluss::table::TableMeta events_meta;
+  pluss::bundle::nexus::TableMeta events_meta;
   events_meta.time_field = "occurred_at";
 
-  pluss::table::Relationship customers_regions;
+  pluss::bundle::nexus::Relationship customers_regions;
   customers_regions.name = "customers_regions";
   customers_regions.left_table = "customers";
   customers_regions.right_table = "regions";
   customers_regions.keys = {{"region_id", "region_id"}};
-  customers_regions.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  customers_regions.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
 
-  pluss::table::Relationship customers_events;
+  pluss::bundle::nexus::Relationship customers_events;
   customers_events.name = "customers_events";
   customers_events.left_table = "customers";
   customers_events.right_table = "events";
   customers_events.keys = {{"customer_id", "customer_id"}};
-  customers_events.cardinality = pluss::table::RelationshipCardinality::OneToMany;
+  customers_events.cardinality = pluss::bundle::nexus::RelationshipCardinality::OneToMany;
 
-  const auto nx = pluss::table::Nexus({
+  const auto nx = pluss::bundle::Nexus({
                         {"customers", customers},
                         {"regions", regions},
                         {"events", events},
@@ -4537,6 +4537,66 @@ void test_nexus_pull_surface() {
                  pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(0),
          "Nexus::pull should aggregate one-to-many related rows back to root grain, including dotted feature names and explicit root-relative windows");
 
+  auto chained_pull = nx.pull("customers");
+  const auto built = chained_pull
+                         .take("customer_id")
+                         .take("regions", {{"zone", "zone"}})
+                         .agg("events")
+                             .count("event_id", "event_count")
+                             .sum("spend", "total_spend")
+                             .mean("spend", "mean_spend")
+                             .median("spend", "median_spend")
+                             .min("spend", "min_spend")
+                             .max("spend", "max_spend")
+                             .min("occurred_at", "first_event_at")
+                             .max("occurred_at", "last_event_at")
+                             .std("spend", "std_spend")
+                             .var("spend", "var_spend")
+                         .end()
+                         .add({pluss::bundle::nexus::sum("events.spend", "recent_spend").windowed(30, "d")})
+                         .collect();
+  expect(built.get("customer_id").has_value() &&
+             built.get("zone").has_value() &&
+             built.get("event_count").has_value() &&
+             built.get("median_spend").has_value() &&
+             built.get("first_event_at").has_value() &&
+             built.get("last_event_at").has_value() &&
+             built.get("std_spend").has_value() &&
+             built.get("var_spend").has_value() &&
+             built.get("recent_spend").has_value(),
+         "Nexus::pull(root).take(...).sum(...).collect() should assemble typed root-grain features without per-field namespace repetition");
+  expect(chained_pull.root() == "customers" &&
+             chained_pull.specs().empty(),
+         "Nexus::pull(root) should start as an empty fluent builder anchored on the requested root table");
+  expect(built.features("zone").as_note().at(0) == "west" &&
+             built.features("event_count").as_series().to_vec<std::int64_t>()
+                 == std::vector<std::int64_t>({2, 3, 0}) &&
+             built.features("median_spend").as_series().to_vec<double>(0) == 7.5 &&
+             built.features("median_spend").as_series().to_vec<double>(1) == 4.0 &&
+             built.features("min_spend").as_series().to_vec<double>(0) == 5.0 &&
+             built.features("max_spend").as_series().to_vec<double>(1) == 8.0 &&
+             built.features("first_event_at").as_timeline().to_epoch_nanos_vector()[0] ==
+                 events.features("occurred_at").as_timeline().to_epoch_nanos_vector()[0] &&
+             built.features("last_event_at").as_timeline().to_epoch_nanos_vector()[1] ==
+                 events.features("occurred_at").as_timeline().to_epoch_nanos_vector()[4] &&
+             built.features("std_spend").as_series().to_vec<double>(0) > 0.0 &&
+             built.features("var_spend").as_series().to_vec<double>(1) > 0.0 &&
+             built.features("recent_spend").as_series().to_vec<double>(1) == 12.0 &&
+             !pluss::table::detail::valid_at(built.features("total_spend"), 2) &&
+             !pluss::table::detail::valid_at(built.features("first_event_at"), 2) &&
+             !pluss::table::detail::valid_at(built.features("last_event_at"), 2),
+         "Fluent Nexus::pull builders should preserve root grain while exposing scalar lifts, grouped reducers, and advanced typed specs when needed");
+
+  const auto typed = nx.pull("customers", {
+      pluss::bundle::nexus::take("customer_id"),
+      pluss::bundle::nexus::count("events.event_id", "event_count"),
+      pluss::bundle::nexus::sum("events.spend", "total_spend"),
+  });
+  expect(typed.get("customer_id").has_value() &&
+             typed.get("event_count").has_value() &&
+             typed.get("total_spend").has_value(),
+         "Nexus::pull(initializer_list<PullSpec>) should remain available as the lower-level typed execution surface");
+
   expect_throw([&]() { (void)nx.pull("customers", {"events.event_id"}); },
                "Nexus::pull should still reject raw one-to-many projections that would break root grain");
 }
@@ -4558,26 +4618,26 @@ void test_nexus_workspace_insights_and_views() {
       {"amount", pluss::make_series(std::vector<double>{25.0, 40.0, 10.0})},
   });
 
-  pluss::table::TableMeta loan_meta;
+  pluss::bundle::nexus::TableMeta loan_meta;
   loan_meta.grain = "one row per loan";
   loan_meta.primary_key = {"loan_id"};
   loan_meta.candidate_keys = {{"account_id"}};
   loan_meta.time_field = "booked_at";
   loan_meta.source = "loan.csv";
 
-  pluss::table::TableMeta account_meta;
+  pluss::bundle::nexus::TableMeta account_meta;
   account_meta.grain = "one row per account";
   account_meta.primary_key = {"account_id"};
   account_meta.source = "account.csv";
 
-  pluss::table::Relationship loan_account;
+  pluss::bundle::nexus::Relationship loan_account;
   loan_account.name = "loan_account";
   loan_account.left_table = "loan";
   loan_account.right_table = "account";
   loan_account.keys = {{"account_id", "account_id"}};
-  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
 
-  const auto nx = pluss::table::Nexus({
+  const auto nx = pluss::bundle::Nexus({
                         {"loan", loan},
                         {"account", account},
                         {"trans", trans},
@@ -4599,6 +4659,10 @@ void test_nexus_workspace_insights_and_views() {
   expect(scan.features("kind").as_note().at(3) == "relationship" &&
              scan.features("computed_status").as_note().at(3) == "validated",
          "Nexus::scan should surface relationship validation state");
+  const auto audit = nx.audit();
+  expect(audit.ncases() == scan.ncases() &&
+             audit.features("computed_status").as_note().at(3) == "validated",
+         "Nexus::audit() should expose the workspace-level integrity audit without forcing a relationship-only query");
 
   const auto deduced = nx.deduce();
   expect(deduced.ncases() >= 1,
@@ -4650,7 +4714,7 @@ void test_nexus_persistence_and_alias_surface() {
       {"segment", pluss::make_note({"retail", "vip"})},
   });
 
-  pluss::table::TableMeta loan_meta;
+  pluss::bundle::nexus::TableMeta loan_meta;
   loan_meta.grain = "one row per loan";
   loan_meta.primary_key = {"loan_id"};
   loan_meta.candidate_keys = {{"loan_id"}, {"account_id", "loan_id"}};
@@ -4658,30 +4722,30 @@ void test_nexus_persistence_and_alias_surface() {
   loan_meta.provenance = "fixture";
   loan_meta.note = "lending";
 
-  pluss::table::Relationship loan_account;
+  pluss::bundle::nexus::Relationship loan_account;
   loan_account.name = "loan_account";
   loan_account.left_table = "loan";
   loan_account.right_table = "account";
   loan_account.keys = {{"account_id", "account_id"}};
-  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
-  loan_account.status = pluss::table::RelationshipValidationStatus::Validated;
+  loan_account.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
+  loan_account.status = pluss::bundle::nexus::RelationshipValidationStatus::Validated;
   loan_account.note = "primary join";
 
-  const auto nx = pluss::table::Nexus({
+  const auto nx = pluss::bundle::Nexus({
                         {"loan", loan},
                         {"account", account},
                     })
                       .meta("loan", loan_meta)
                       .links({loan_account})
-                      .store("loan_sheet", pluss::table::JoinPlan{
+                      .store("loan_sheet", pluss::bundle::nexus::JoinPlan{
                                               .root_table = "loan",
                                               .result_name = "loan_sheet",
                                               .steps = {{
                                                   .left_table = "loan",
                                                   .right_table = "account",
                                                   .spec =
-                                                      pluss::table::JoinSpec{
-                                                          .how = pluss::table::JoinHow::Left,
+                                                      pluss::bundle::nexus::JoinSpec{
+                                                          .how = pluss::bundle::nexus::JoinHow::Left,
                                                           .relationship_name = "loan_account",
                                                       },
                                               }},
@@ -4725,36 +4789,97 @@ void test_nexus_persistence_and_alias_surface() {
              std::filesystem::exists(dir / "tables" / "1_account.parquet"),
          "Nexus::save should persist a manifest, snapshots, and table payload files");
 
-  const auto loaded = pluss::table::Nexus::load(dir.string());
+  const auto loaded = pluss::bundle::Nexus::read(dir.string());
   expect(loaded.keys() == std::vector<std::string>({"loan", "account"}),
-         "Nexus::load should restore workspace ordering and table keys");
+         "Nexus::read should restore workspace ordering and table keys");
   expect(loaded.frame("loan").equals(loan) && loaded.frame("account").equals(account),
-         "Nexus::load should roundtrip saved DataFrame payloads");
+         "Nexus::read should roundtrip saved DataFrame payloads");
   expect(loaded.meta("loan")->primary_key == std::vector<std::string>({"loan_id"}) &&
              loaded.meta("loan")->candidate_keys == std::vector<std::vector<std::string>>({{"loan_id"}, {"account_id", "loan_id"}}) &&
              loaded.meta("loan")->source == std::optional<std::string>{"loan.csv"} &&
              loaded.meta("loan")->provenance == std::optional<std::string>{"fixture"} &&
              loaded.meta("loan")->note == std::optional<std::string>{"lending"},
-         "Nexus::load should restore per-table metadata");
+         "Nexus::read should restore per-table metadata");
   expect(loaded.links().size() == 1 &&
              loaded.links().front().keys == std::vector<std::pair<std::string, std::string>>({{"account_id", "account_id"}}) &&
-             loaded.links().front().cardinality == pluss::table::RelationshipCardinality::ManyToOne &&
-             loaded.links().front().status == pluss::table::RelationshipValidationStatus::Validated &&
+             loaded.links().front().cardinality == pluss::bundle::nexus::RelationshipCardinality::ManyToOne &&
+             loaded.links().front().status == pluss::bundle::nexus::RelationshipValidationStatus::Validated &&
              loaded.links().front().confidence == 1.0 &&
              loaded.links().front().note == std::optional<std::string>{"primary join"},
-         "Nexus::load should restore relationship graph metadata");
+         "Nexus::read should restore relationship graph metadata");
   expect(loaded.check("loan_account"),
-         "Nexus::load should preserve relationship join keys for validation");
+         "Nexus::read should preserve relationship join keys for validation");
   expect(loaded.schema().drop({"fingerprint"}).equals(nx.schema().drop({"fingerprint"})),
-         "Nexus::load should preserve the canonical schema snapshot");
+         "Nexus::read should preserve the canonical schema snapshot");
   expect(loaded.graph().equals(nx.graph()),
-         "Nexus::load should preserve the canonical relationship graph snapshot");
+         "Nexus::read should preserve the canonical relationship graph snapshot");
   expect(loaded.has_store("loan_sheet") &&
              loaded.run("loan_sheet").title() == "loan_sheet" &&
              loaded.run("loan_sheet").features("segment").as_note().at(0) == "retail",
-         "Nexus::load should restore persisted named workspace stores");
+         "Nexus::read should restore persisted named workspace stores");
   expect(loaded.fingerprint() == before_fp,
          "Nexus save/load roundtrips should preserve the workspace fingerprint");
+}
+
+void test_nexus_raw_directory_loader() {
+  const auto customers = DataFrame({
+      {"customer_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"name", pluss::make_note(std::vector<std::string>{"Ada", "Ben"})},
+  });
+  const auto orders = DataFrame({
+      {"order_id", pluss::make_series(std::vector<std::int64_t>{100, 101})},
+      {"customer_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
+      {"amount", pluss::make_series(std::vector<double>{12.5, 19.0})},
+  });
+  const auto ignore_me = DataFrame({
+      {"note_id", pluss::make_series(std::vector<std::int64_t>{1})},
+      {"text", pluss::make_note(std::vector<std::string>{"ignore"})},
+  });
+
+  const auto dir = std::filesystem::temp_directory_path() /
+      fmt::format("plussmic_nexus_raw_loader_{}", std::chrono::steady_clock::now().time_since_epoch().count());
+  std::filesystem::create_directories(dir);
+
+  customers.save_csv((dir / "customers.csv").string());
+  orders.save_as("json", (dir / "orders.json").string());
+  ignore_me.save_csv((dir / "ignore_me.csv").string());
+
+  pluss::bundle::nexus::LoadOptions load_only;
+  load_only.load = {"customers", "orders.json"};
+  load_only.formats = {"csv", "json"};
+  load_only.parallel = false;
+
+  const auto loaded_subset = pluss::bundle::Nexus::load(dir.string(), load_only);
+  expect(loaded_subset.ntables() == 2 &&
+             loaded_subset.has("customers") &&
+             loaded_subset.has("orders"),
+         "Nexus::load(directory, LoadOptions) should honor an explicit load list");
+  expect(loaded_subset.frame("customers").equals(customers) &&
+             loaded_subset.frame("orders").equals(orders),
+         "Nexus raw-directory loading should roundtrip mixed csv/json inputs");
+
+  pluss::bundle::nexus::LoadOptions ignore_only;
+  ignore_only.ignore = {"ignore_me"};
+  ignore_only.parallel = false;
+
+  const auto ignored = pluss::bundle::Nexus::load(dir.string(), ignore_only);
+  expect(ignored.ntables() == 2 &&
+             ignored.has("customers") &&
+             ignored.has("orders") &&
+             !ignored.has("ignore_me"),
+         "Nexus::load(directory, LoadOptions) should honor an ignore list");
+
+  pluss::bundle::nexus::LoadOptions invalid;
+  invalid.load = {"customers"};
+  invalid.ignore = {"orders"};
+  expect_throw([&]() { (void)pluss::bundle::Nexus::load(dir.string(), invalid); },
+               "Nexus::load should reject simultaneous load and ignore lists");
+
+  const auto auto_loaded = pluss::bundle::Nexus::load(dir.string());
+  expect(auto_loaded.keys() == std::vector<std::string>({"customers", "ignore_me", "orders"}),
+         "Nexus::load(directory) should load supported raw tables directly from a folder");
+  expect(auto_loaded.frame("ignore_me").equals(ignore_me),
+         "Nexus::load(directory) should load all supported top-level files by default");
 }
 
 void test_nexus_cache_invalidation_on_mutation() {
@@ -4767,14 +4892,14 @@ void test_nexus_cache_invalidation_on_mutation() {
       {"district_id", pluss::make_series(std::vector<std::int64_t>{1, 2})},
   });
 
-  pluss::table::Relationship loan_account;
+  pluss::bundle::nexus::Relationship loan_account;
   loan_account.name = "loan_account";
   loan_account.left_table = "loan";
   loan_account.right_table = "account";
   loan_account.keys = {{"account_id", "account_id"}};
-  loan_account.cardinality = pluss::table::RelationshipCardinality::ManyToOne;
+  loan_account.cardinality = pluss::bundle::nexus::RelationshipCardinality::ManyToOne;
 
-  auto nx = pluss::table::Nexus({
+  auto nx = pluss::bundle::Nexus({
                                      {"loan", loan},
                                      {"account", account},
                                  })
@@ -4798,7 +4923,7 @@ void test_nexus_cache_invalidation_on_mutation() {
   expect(nx.scan().features("computed_status").as_note().at(2) == "invalid",
          "Workspace scan caches should invalidate after in-place frame mutation");
 
-  auto renamed = pluss::table::Nexus({
+  auto renamed = pluss::bundle::Nexus({
                                            {"loan", loan},
                                            {"account", account},
                                        })
@@ -4875,6 +5000,7 @@ int main(int argc, char** argv) {
       {"nexus_pull_surface", test_nexus_pull_surface},
       {"nexus_workspace_insights_and_views", test_nexus_workspace_insights_and_views},
       {"nexus_persistence_and_alias_surface", test_nexus_persistence_and_alias_surface},
+      {"nexus_raw_directory_loader", test_nexus_raw_directory_loader},
       {"nexus_cache_invalidation_on_mutation", test_nexus_cache_invalidation_on_mutation},
   };
 

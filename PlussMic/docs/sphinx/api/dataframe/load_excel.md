@@ -32,7 +32,7 @@ can hold more than one sheet:
 - **Single sheet** (no sheet argument, or `sheet_name`/`sheet_index` named explicitly)
   — returns a plain `DataFrame`, exactly like every other loader.
 - **Several sheets at once** (`nullptr` for "all sheets", or an explicit list of sheet
-  names/indices) — returns a `pluss::loader::LoadResult`, a tagged bundle holding
+  names/indices) — returns a `pluss::loader::LoadResult`, a tagged scribble holding
   either a single frame or a whole `Workbook` (`std::vector<std::pair<std::string,
   DataFrame>>`) depending on which overload produced it.
 
@@ -83,7 +83,7 @@ chain of positional parameters.
     One fully typed frame for the requested sheet.
 
 `pluss::loader::LoadResult` (multi-sheet overloads)
-    A tagged bundle: `.is_frame()`/`.is_workbook()` report which case applies,
+    A tagged scribble: `.is_frame()`/`.is_workbook()` report which case applies,
     `.dataframe()` unwraps a single-frame result, `.workbook()` returns the full
     `std::vector<std::pair<std::string, DataFrame>>` for a multi-sheet result, and
     `.sheets("Name")` / `.sheet_by_index(i)` reach one sheet directly without

@@ -31,7 +31,7 @@ Returns a new slot holding the first `n` values.
 Example 1. Take the first two values.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.head(2);
 std::cout << "size=" << out.size() << " vals="
           << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << ","
@@ -47,7 +47,7 @@ size=2 vals=1,2
 Example 2. Requesting more than `size()` clamps rather than throwing.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.head(100);
 std::cout << out.size();
 ```

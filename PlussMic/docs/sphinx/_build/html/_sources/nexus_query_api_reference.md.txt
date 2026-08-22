@@ -1,19 +1,22 @@
 # NexusQuery API Reference
 
-This page documents the public `NexusQuery` surface — the fluent join-graph query
-builder returned by [`Nexus::from(table)`](nexus_api_reference.md).
+This page documents the public `NexusQuery` surface returned by
+[`Nexus::query()`](nexus_api_reference.md).
+
+`NexusQuery` lives in `pluss::bundle` beside `Nexus`, but it delegates to the
+same in-memory SQL engine used by
+[`DataFrame::sql()`](dataframe_sql_accessor_api_reference.md). The difference is
+scope: `DataFrame::sql()` starts from one frame, while `Nexus::query()` exposes
+the named tables already loaded into the workspace.
 
 ## What It Is
 
-Calling `nexus.from("table_name")` returns a `NexusQuery` anchored at that table.
-From there, `.join(other)` (optionally with a `JoinSpec`) or `.via(other, how)`
-extends the walk across the join graph, `.pick()`/`.drop()` narrow the result
-columns, `.name()` labels the result, and `.collect()` executes the accumulated plan
-and returns the joined [`DataFrame`](dataframe_api_reference.md).
+Calling `nexus.query()` returns a SQL accessor. Use `.execute("SELECT ...")` for
+one-off workspace queries, or `.prepare("SELECT ...")` when you want a reusable
+statement template with runtime parameter binding.
 
-Every method except `.collect()` is non-mutating and chainable, returning a new
-`NexusQuery` with one more step accumulated — nothing touches table data until
-`.collect()` actually runs.
+This SQL surface is currently read-oriented and in-memory. It is for querying a
+named table workspace, not for mutating persisted storage.
 
 ## Using This Reference
 
@@ -23,17 +26,12 @@ Every method except `.collect()` is non-mutating and chainable, returning a new
 
 ## Method Pages
 
-The sidebar lists methods in typical pipeline order: `join`, `via`, `pick`, `drop`,
-`name`, `collect`.
+The sidebar lists the two SQL entry points: `execute` and `prepare`.
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
-api/nexus-query/join
-api/nexus-query/via
-api/nexus-query/pick
-api/nexus-query/drop
-api/nexus-query/name
-api/nexus-query/collect
+api/nexus-sql/execute
+api/nexus-sql/prepare
 ```

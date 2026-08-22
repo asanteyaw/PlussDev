@@ -32,6 +32,7 @@ Example 1. `duplicates()` and `detect_duplicates()` return identical results.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0, 3.0}))},

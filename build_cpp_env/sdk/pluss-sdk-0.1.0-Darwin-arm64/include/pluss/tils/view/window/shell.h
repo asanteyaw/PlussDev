@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "pluss/tils/view/window/canvas.h"
@@ -20,12 +21,15 @@ enum class ShellEventKind : std::uint8_t {
   PointerDown = 7,
   TextInput = 8,
   Error = 9,
+  PointerUp = 10,
 };
 
 enum class ShellBackend : std::uint8_t {
   None = 0,
   Null = 1,
   Cocoa = 2,
+  X11 = 3,
+  Win32 = 4,
 };
 
 enum class ShellSelectionPolicy : std::uint8_t {
@@ -53,11 +57,19 @@ struct ShellEvent {
   double delta_y{0.0};
   double x{0.0};
   double y{0.0};
+  bool precise_delta{false};
+  bool shift_modifier{false};
+};
+
+struct ShellSaveFormat {
+  std::string label{};
+  std::string extension{};
 };
 
 struct ShellConfig {
   std::string title{"PlussTilsView"};
   SizeI initial_size{1280, 760};
+  std::vector<ShellSaveFormat> save_formats{};
 };
 
 class IWindowShell {
@@ -70,6 +82,27 @@ class IWindowShell {
   [[nodiscard]] virtual std::vector<ShellEvent> poll_events() = 0;
   [[nodiscard]] virtual ShellBackend backend() const noexcept = 0;
   [[nodiscard]] virtual ShellCapabilities capabilities() const noexcept = 0;
+  [[nodiscard]] virtual double backing_scale_factor() const noexcept {
+    return 1.0;
+  }
+  [[nodiscard]] virtual bool presentation_frame_due() noexcept {
+    return true;
+  }
+  virtual bool set_clipboard_text(std::string_view text) {
+    (void)text;
+    return false;
+  }
+  [[nodiscard]] virtual std::string choose_save_path(std::string_view suggested_name,
+                                                     std::string_view extension) {
+    (void)suggested_name;
+    (void)extension;
+    return {};
+  }
+  virtual bool save_canvas_pdf(const PixelCanvas& canvas, std::string_view path) {
+    (void)canvas;
+    (void)path;
+    return false;
+  }
 };
 
 class NullWindowShell final : public IWindowShell {

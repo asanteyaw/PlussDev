@@ -42,7 +42,7 @@ Example 1. `tz()` relabels the display timezone, and the relabeling is
 still in effect on the very next `.tl()` read.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
 auto shifted = slot.tl().tz("America/New_York");
 auto fmted = shifted.tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << std::get<pluss::Note>(fmted.at(0)).at(0);

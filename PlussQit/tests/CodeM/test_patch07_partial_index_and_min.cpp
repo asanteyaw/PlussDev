@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <pluss/pluss.h>
 
 using pluss::codem::Series;
@@ -64,4 +65,25 @@ TEST_CASE("amin/argmin", "[reduction]") {
   auto* ip = reinterpret_cast<const std::int64_t*>(am.raw_data());
   REQUIRE(ip[0] == 1);
   REQUIRE(ip[1] == 1);
+}
+
+TEST_CASE("argmax/argmin no-arg are global flat reductions and empty dims fail", "[reduction]") {
+  auto a = Series::zeros({2,3}, ScalarType::Float64);
+  auto* ap = reinterpret_cast<double*>(a.raw_data());
+  // [[1,7,3],[9,2,-4]]
+  ap[0]=1; ap[1]=7; ap[2]=3; ap[3]=9; ap[4]=2; ap[5]=-4;
+
+  auto global_max = a.argmax();
+  auto* gmaxp = reinterpret_cast<const std::int64_t*>(global_max.raw_data());
+  REQUIRE(global_max.dim() == 0);
+  REQUIRE(*gmaxp == 3);
+
+  auto global_min = a.argmin();
+  auto* gminp = reinterpret_cast<const std::int64_t*>(global_min.raw_data());
+  REQUIRE(global_min.dim() == 0);
+  REQUIRE(*gminp == 5);
+
+  auto empty = Series::zeros({0, 3}, ScalarType::Float64);
+  REQUIRE_THROWS_WITH(empty.argmax(0, false), Catch::Matchers::ContainsSubstring("argmax: cannot reduce an empty dimension"));
+  REQUIRE_THROWS_WITH(empty.argmin(0, false), Catch::Matchers::ContainsSubstring("argmin: cannot reduce an empty dimension"));
 }

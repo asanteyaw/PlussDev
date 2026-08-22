@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -68,7 +68,7 @@ can hold more than one sheet:</p>
 <li><p><strong>Single sheet</strong> (no sheet argument, or <code class="docutils literal notranslate"><span class="pre">sheet_name</span></code>/<code class="docutils literal notranslate"><span class="pre">sheet_index</span></code> named explicitly)
 — returns a plain <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, exactly like every other loader.</p></li>
 <li><p><strong>Several sheets at once</strong> (<code class="docutils literal notranslate"><span class="pre">nullptr</span></code> for “all sheets”, or an explicit list of sheet
-names/indices) — returns a <code class="docutils literal notranslate"><span class="pre">pluss::loader::LoadResult</span></code>, a tagged bundle holding
+names/indices) — returns a <code class="docutils literal notranslate"><span class="pre">pluss::loader::LoadResult</span></code>, a tagged scribble holding
 either a single frame or a whole <code class="docutils literal notranslate"><span class="pre">Workbook</span></code> (<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::pair&lt;std::string,</span> <span class="pre">DataFrame&gt;&gt;</span></code>) depending on which overload produced it.</p></li>
 </ul>
 </section>
@@ -105,7 +105,7 @@ chain of positional parameters.</p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> (single-sheet overloads)
 One fully typed frame for the requested sheet.</p>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::loader::LoadResult</span></code> (multi-sheet overloads)
-A tagged bundle: <code class="docutils literal notranslate"><span class="pre">.is_frame()</span></code>/<code class="docutils literal notranslate"><span class="pre">.is_workbook()</span></code> report which case applies,
+A tagged scribble: <code class="docutils literal notranslate"><span class="pre">.is_frame()</span></code>/<code class="docutils literal notranslate"><span class="pre">.is_workbook()</span></code> report which case applies,
 <code class="docutils literal notranslate"><span class="pre">.dataframe()</span></code> unwraps a single-frame result, <code class="docutils literal notranslate"><span class="pre">.workbook()</span></code> returns the full
 <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::pair&lt;std::string,</span> <span class="pre">DataFrame&gt;&gt;</span></code> for a multi-sheet result, and
 <code class="docutils literal notranslate"><span class="pre">.sheets(&quot;Name&quot;)</span></code> / <code class="docutils literal notranslate"><span class="pre">.sheet_by_index(i)</span></code> reach one sheet directly without
@@ -261,6 +261,7 @@ reach <code class="docutils literal notranslate"><span class="pre">load_excel()<
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>

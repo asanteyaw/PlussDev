@@ -34,10 +34,10 @@ Returns a new registry containing only the fields whose **name** contains
 Example 1. A case-insensitive search matches both `id` and `user_id`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"user_id", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"user_id", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 auto out = rg.fieldaxis().like("ID");
@@ -54,9 +54,9 @@ Example 2. A case-sensitive search against the same registry matches nothing,
 since no field name literally contains `"ID"` in that case.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"user_id", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"user_id", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})},
 });
 
 auto out = rg.fieldaxis().like("ID", true);

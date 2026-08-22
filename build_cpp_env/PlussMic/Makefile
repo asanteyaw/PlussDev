@@ -230,77 +230,29 @@ converters.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/converters.cpp.s
 .PHONY : converters.cpp.s
 
-src/bundle/Axel.o: src/bundle/Axel.cpp.o
-.PHONY : src/bundle/Axel.o
+src/bundle/Nexus.o: src/bundle/Nexus.cpp.o
+.PHONY : src/bundle/Nexus.o
 
 # target to build an object file
-src/bundle/Axel.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Axel.cpp.o
-.PHONY : src/bundle/Axel.cpp.o
+src/bundle/Nexus.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Nexus.cpp.o
+.PHONY : src/bundle/Nexus.cpp.o
 
-src/bundle/Axel.i: src/bundle/Axel.cpp.i
-.PHONY : src/bundle/Axel.i
-
-# target to preprocess a source file
-src/bundle/Axel.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Axel.cpp.i
-.PHONY : src/bundle/Axel.cpp.i
-
-src/bundle/Axel.s: src/bundle/Axel.cpp.s
-.PHONY : src/bundle/Axel.s
-
-# target to generate assembly for a file
-src/bundle/Axel.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Axel.cpp.s
-.PHONY : src/bundle/Axel.cpp.s
-
-src/bundle/Registry.o: src/bundle/Registry.cpp.o
-.PHONY : src/bundle/Registry.o
-
-# target to build an object file
-src/bundle/Registry.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Registry.cpp.o
-.PHONY : src/bundle/Registry.cpp.o
-
-src/bundle/Registry.i: src/bundle/Registry.cpp.i
-.PHONY : src/bundle/Registry.i
+src/bundle/Nexus.i: src/bundle/Nexus.cpp.i
+.PHONY : src/bundle/Nexus.i
 
 # target to preprocess a source file
-src/bundle/Registry.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Registry.cpp.i
-.PHONY : src/bundle/Registry.cpp.i
+src/bundle/Nexus.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Nexus.cpp.i
+.PHONY : src/bundle/Nexus.cpp.i
 
-src/bundle/Registry.s: src/bundle/Registry.cpp.s
-.PHONY : src/bundle/Registry.s
-
-# target to generate assembly for a file
-src/bundle/Registry.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Registry.cpp.s
-.PHONY : src/bundle/Registry.cpp.s
-
-src/bundle/Slot.o: src/bundle/Slot.cpp.o
-.PHONY : src/bundle/Slot.o
-
-# target to build an object file
-src/bundle/Slot.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Slot.cpp.o
-.PHONY : src/bundle/Slot.cpp.o
-
-src/bundle/Slot.i: src/bundle/Slot.cpp.i
-.PHONY : src/bundle/Slot.i
-
-# target to preprocess a source file
-src/bundle/Slot.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Slot.cpp.i
-.PHONY : src/bundle/Slot.cpp.i
-
-src/bundle/Slot.s: src/bundle/Slot.cpp.s
-.PHONY : src/bundle/Slot.s
+src/bundle/Nexus.s: src/bundle/Nexus.cpp.s
+.PHONY : src/bundle/Nexus.s
 
 # target to generate assembly for a file
-src/bundle/Slot.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Slot.cpp.s
-.PHONY : src/bundle/Slot.cpp.s
+src/bundle/Nexus.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Nexus.cpp.s
+.PHONY : src/bundle/Nexus.cpp.s
 
 src/kindle/Archive.o: src/kindle/Archive.cpp.o
 .PHONY : src/kindle/Archive.o
@@ -566,6 +518,78 @@ src/loader/parallel_csv_reader.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/loader/parallel_csv_reader.cpp.s
 .PHONY : src/loader/parallel_csv_reader.cpp.s
 
+src/scribble/Axel.o: src/scribble/Axel.cpp.o
+.PHONY : src/scribble/Axel.o
+
+# target to build an object file
+src/scribble/Axel.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Axel.cpp.o
+.PHONY : src/scribble/Axel.cpp.o
+
+src/scribble/Axel.i: src/scribble/Axel.cpp.i
+.PHONY : src/scribble/Axel.i
+
+# target to preprocess a source file
+src/scribble/Axel.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Axel.cpp.i
+.PHONY : src/scribble/Axel.cpp.i
+
+src/scribble/Axel.s: src/scribble/Axel.cpp.s
+.PHONY : src/scribble/Axel.s
+
+# target to generate assembly for a file
+src/scribble/Axel.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Axel.cpp.s
+.PHONY : src/scribble/Axel.cpp.s
+
+src/scribble/Registry.o: src/scribble/Registry.cpp.o
+.PHONY : src/scribble/Registry.o
+
+# target to build an object file
+src/scribble/Registry.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Registry.cpp.o
+.PHONY : src/scribble/Registry.cpp.o
+
+src/scribble/Registry.i: src/scribble/Registry.cpp.i
+.PHONY : src/scribble/Registry.i
+
+# target to preprocess a source file
+src/scribble/Registry.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Registry.cpp.i
+.PHONY : src/scribble/Registry.cpp.i
+
+src/scribble/Registry.s: src/scribble/Registry.cpp.s
+.PHONY : src/scribble/Registry.s
+
+# target to generate assembly for a file
+src/scribble/Registry.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Registry.cpp.s
+.PHONY : src/scribble/Registry.cpp.s
+
+src/scribble/Slot.o: src/scribble/Slot.cpp.o
+.PHONY : src/scribble/Slot.o
+
+# target to build an object file
+src/scribble/Slot.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Slot.cpp.o
+.PHONY : src/scribble/Slot.cpp.o
+
+src/scribble/Slot.i: src/scribble/Slot.cpp.i
+.PHONY : src/scribble/Slot.i
+
+# target to preprocess a source file
+src/scribble/Slot.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Slot.cpp.i
+.PHONY : src/scribble/Slot.cpp.i
+
+src/scribble/Slot.s: src/scribble/Slot.cpp.s
+.PHONY : src/scribble/Slot.s
+
+# target to generate assembly for a file
+src/scribble/Slot.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/scribble/Slot.cpp.s
+.PHONY : src/scribble/Slot.cpp.s
+
 src/table/Atlas.o: src/table/Atlas.cpp.o
 .PHONY : src/table/Atlas.o
 
@@ -613,30 +637,6 @@ src/table/DataFrame.s: src/table/DataFrame.cpp.s
 src/table/DataFrame.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/DataFrame.cpp.s
 .PHONY : src/table/DataFrame.cpp.s
-
-src/table/Nexus.o: src/table/Nexus.cpp.o
-.PHONY : src/table/Nexus.o
-
-# target to build an object file
-src/table/Nexus.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Nexus.cpp.o
-.PHONY : src/table/Nexus.cpp.o
-
-src/table/Nexus.i: src/table/Nexus.cpp.i
-.PHONY : src/table/Nexus.i
-
-# target to preprocess a source file
-src/table/Nexus.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Nexus.cpp.i
-.PHONY : src/table/Nexus.cpp.i
-
-src/table/Nexus.s: src/table/Nexus.cpp.s
-.PHONY : src/table/Nexus.s
-
-# target to generate assembly for a file
-src/table/Nexus.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Nexus.cpp.s
-.PHONY : src/table/Nexus.cpp.s
 
 src/table/Thread.o: src/table/Thread.cpp.o
 .PHONY : src/table/Thread.o
@@ -993,15 +993,9 @@ help:
 	@echo "... converters.o"
 	@echo "... converters.i"
 	@echo "... converters.s"
-	@echo "... src/bundle/Axel.o"
-	@echo "... src/bundle/Axel.i"
-	@echo "... src/bundle/Axel.s"
-	@echo "... src/bundle/Registry.o"
-	@echo "... src/bundle/Registry.i"
-	@echo "... src/bundle/Registry.s"
-	@echo "... src/bundle/Slot.o"
-	@echo "... src/bundle/Slot.i"
-	@echo "... src/bundle/Slot.s"
+	@echo "... src/bundle/Nexus.o"
+	@echo "... src/bundle/Nexus.i"
+	@echo "... src/bundle/Nexus.s"
 	@echo "... src/kindle/Archive.o"
 	@echo "... src/kindle/Archive.i"
 	@echo "... src/kindle/Archive.s"
@@ -1035,15 +1029,21 @@ help:
 	@echo "... src/loader/parallel_csv_reader.o"
 	@echo "... src/loader/parallel_csv_reader.i"
 	@echo "... src/loader/parallel_csv_reader.s"
+	@echo "... src/scribble/Axel.o"
+	@echo "... src/scribble/Axel.i"
+	@echo "... src/scribble/Axel.s"
+	@echo "... src/scribble/Registry.o"
+	@echo "... src/scribble/Registry.i"
+	@echo "... src/scribble/Registry.s"
+	@echo "... src/scribble/Slot.o"
+	@echo "... src/scribble/Slot.i"
+	@echo "... src/scribble/Slot.s"
 	@echo "... src/table/Atlas.o"
 	@echo "... src/table/Atlas.i"
 	@echo "... src/table/Atlas.s"
 	@echo "... src/table/DataFrame.o"
 	@echo "... src/table/DataFrame.i"
 	@echo "... src/table/DataFrame.s"
-	@echo "... src/table/Nexus.o"
-	@echo "... src/table/Nexus.i"
-	@echo "... src/table/Nexus.s"
 	@echo "... src/table/Thread.o"
 	@echo "... src/table/Thread.i"
 	@echo "... src/table/Thread.s"

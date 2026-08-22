@@ -36,11 +36,11 @@ Example 1. A default-constructed `Axel` is undefined; one built from a
 registry vector — even an empty one — is defined.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
 });
-pluss::bundle::Axel undef;
-auto empty_axel = pluss::bundle::Axel(std::vector<pluss::bundle::Registry>{});
+pluss::scribble::Axel undef;
+auto empty_axel = pluss::scribble::Axel(std::vector<pluss::scribble::Registry>{});
 std::cout << std::boolalpha << axel.defined() << " " << undef.defined() << " " << empty_axel.defined();
 ```
 

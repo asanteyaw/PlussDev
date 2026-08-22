@@ -40,7 +40,7 @@ void print_catalog_shape(std::string_view label, const pluss::kindle::Catalog& c
   fmt::print("{} -> [{} rows x {} streams]\n", label, catalog.nrows(), catalog.nkeys());
 }
 
-void print_registry_shape(std::string_view label, const pluss::bundle::Registry& registry) {
+void print_registry_shape(std::string_view label, const pluss::scribble::Registry& registry) {
   fmt::print("{} -> [{} slots]\n", label, registry.size());
 }
 
@@ -243,18 +243,18 @@ void demo_registry_io(const TextFixtures& fixtures) {
        {"header_ffill", true},
        {"header_joiner", "_"}});
 
-  const auto reg_csv = pluss::bundle::Registry::load(
+  const auto reg_csv = pluss::scribble::Registry::load(
       "csv",
       data_file("messy_data.csv").string(),
       pluss::loader::config_from({{"ncases", 6}}));
-  const auto reg_excel = pluss::bundle::Registry::load("excel", data_file("report.xlsx").string(), report_excel_cfg);
-  const auto reg_txt = pluss::bundle::Registry::load_txt(
+  const auto reg_excel = pluss::scribble::Registry::load("excel", data_file("report.xlsx").string(), report_excel_cfg);
+  const auto reg_txt = pluss::scribble::Registry::load_txt(
       fixtures.whitespace_txt.string(),
       pluss::loader::config_from({{"txt_mode", "whitespace"}, {"header", true}}));
-  const auto reg_json = pluss::bundle::Registry::load_json(fixtures.hetero_json.string());
+  const auto reg_json = pluss::scribble::Registry::load_json(fixtures.hetero_json.string());
   const auto reg_stream_compatible = pluss::kindle::Catalog::load_txt(
       fixtures.whitespace_txt.string(),
-      pluss::loader::config_from({{"txt_mode", "whitespace"}, {"header", true}})).bundelize();
+      pluss::loader::config_from({{"txt_mode", "whitespace"}, {"header", true}})).scribbelize();
 
   print_registry_shape("Registry::load(\"csv\", ...)", reg_csv);
   print_registry_shape("Registry::load(\"excel\", ...)", reg_excel);
@@ -262,7 +262,7 @@ void demo_registry_io(const TextFixtures& fixtures) {
   print_registry_shape("Registry::load_json(heterogeneous)", reg_json);
 
   try {
-    const auto reg_parquet = pluss::bundle::Registry::load_parquet(data_file("weather.parquet").string());
+    const auto reg_parquet = pluss::scribble::Registry::load_parquet(data_file("weather.parquet").string());
     print_registry_shape("Registry::load_parquet(...)", reg_parquet);
   } catch (const std::exception& e) {
     fmt::print("Registry::load_parquet(...) not available in this build: {}\n", e.what());

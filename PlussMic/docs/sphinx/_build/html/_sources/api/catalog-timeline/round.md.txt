@@ -75,7 +75,7 @@ it rounds up and rolls into `2024-03-01`.
   down, or always up, instead of nearest.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::round`](../registry-timeline/round.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="quarter.html">

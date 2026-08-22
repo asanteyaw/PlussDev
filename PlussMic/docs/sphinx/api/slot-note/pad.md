@@ -50,7 +50,7 @@ padding goes.
 Example 1. Default call: left-align, pad with spaces on the right.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("7")});
+auto slot = pluss::scribble::Slot({pluss::make_note("7")});
 auto out = slot.nt().pad(4);
 std::cout << "'" << std::get<pluss::Note>(out.at(0)).at(0) << "'";
 ```
@@ -64,7 +64,7 @@ std::cout << "'" << std::get<pluss::Note>(out.at(0)).at(0) << "'";
 Example 2. Right-align with a `'0'` fill.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("7")});
+auto slot = pluss::scribble::Slot({pluss::make_note("7")});
 auto out = slot.nt().pad(4, pluss::table::TextAlign::Right, '0');
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
@@ -78,7 +78,7 @@ std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 Example 3. Center alignment splits the padding across both sides.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("7")});
+auto slot = pluss::scribble::Slot({pluss::make_note("7")});
 auto out = slot.nt().pad(5, pluss::table::TextAlign::Center);
 std::cout << "'" << std::get<pluss::Note>(out.at(0)).at(0) << "'";
 ```

@@ -41,8 +41,8 @@ Example 1. `tz()` relabels the display timezone, and the relabeling is
 still in effect on the very next `.tl()` read.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})},
 });
 
 auto shifted = rg.fields({"ts"}).tl().tz("America/New_York");

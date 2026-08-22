@@ -36,7 +36,7 @@ matches the two-element convention used by [`Registry::shape()`](../registry/sha
 Example 1. A three-value slot reports `(3, 1)`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto sh = slot.shape();
 std::cout << "(" << sh.first << ", " << sh.second << ")";
 ```

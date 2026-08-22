@@ -58,7 +58,7 @@ the widest one is `NULL` in the extra features.
 Example 1. A plain literal split, no limit.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("a/b/c"), pluss::make_note("x/y"), pluss::make_note("solo")});
+auto slot = pluss::scribble::Slot({pluss::make_note("a/b/c"), pluss::make_note("x/y"), pluss::make_note("solo")});
 auto out = slot.nt().split("/");
 std::cout << out;
 ```
@@ -80,7 +80,7 @@ Example 2. `limit` caps the number of splits — the remainder stays
 joined in the last feature.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("a/b/c"), pluss::make_note("x/y"), pluss::make_note("solo")});
+auto slot = pluss::scribble::Slot({pluss::make_note("a/b/c"), pluss::make_note("x/y"), pluss::make_note("solo")});
 auto out = slot.nt().split("/", 1);
 std::cout << out;
 ```
@@ -102,7 +102,7 @@ Example 3. The second overload: a regex pattern with a custom feature
 prefix.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("a, b,c"), pluss::make_note("x , y"), pluss::make_note("single")});
+auto slot = pluss::scribble::Slot({pluss::make_note("a, b,c"), pluss::make_note("x , y"), pluss::make_note("single")});
 auto out = slot.nt().split(R"(\s*,\s*)", {.regex = true, .prefix = "field"});
 std::cout << out;
 ```

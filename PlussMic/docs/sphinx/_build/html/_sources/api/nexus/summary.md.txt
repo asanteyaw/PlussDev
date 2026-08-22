@@ -45,6 +45,7 @@ Example 1. `summary()` returns one compact row per table.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto loan = DataFrame({
     {"loan_id",    Thread(pluss::make_series({1.0, 2.0, 3.0}))},

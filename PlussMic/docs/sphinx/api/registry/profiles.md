@@ -42,9 +42,9 @@ Example 1. A registry with one uniform field and one genuinely mixed field, read
 back sorted for a deterministic printout.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"mixed", pluss::bundle::Slot({pluss::make_series(10), pluss::make_note("hello"), pluss::make_series(3.5)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"mixed", pluss::scribble::Slot({pluss::make_series(10), pluss::make_note("hello"), pluss::make_series(3.5)})},
 });
 
 auto profiles = rg.profiles();

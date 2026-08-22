@@ -30,10 +30,10 @@ size of the depth axis.
 Example 1. A three-frame `Axel` reports a depth of `3`.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
 });
 std::cout << axel.depth();
 ```
@@ -47,7 +47,7 @@ std::cout << axel.depth();
 Example 2. An undefined handle throws.
 
 ```cpp
-pluss::bundle::Axel undef;
+pluss::scribble::Axel undef;
 try {
   undef.depth();
 } catch (const std::exception& e) {

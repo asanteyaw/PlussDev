@@ -43,7 +43,7 @@ passed to [`pluss::make_timeline`](../slot/tl.md) produces `NaT` rather
 than throwing.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline(""), pluss::make_timeline("2024-01-01T00:00:00Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline(""), pluss::make_timeline("2024-01-01T00:00:00Z")});
 auto out = slot.tl().isnat();
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
@@ -60,7 +60,7 @@ Example 2. A non-`Timeline` slot throws — see the important callout
 above.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
   auto out = slot.tl().isnat();
 } catch (const std::exception& e) {

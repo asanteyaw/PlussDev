@@ -25,7 +25,7 @@ Declaring a relationship never touches the underlying tables or their data — i
 records an edge in the workspace's relationship graph, which downstream methods
 ([`path()`](path.md), [`plan()`](plan.md), [`neighbors()`](neighbors.md),
 [`relationship_audit()`](relationship_audit.md), [`pull()`](pull.md),
-[`NexusQuery::join`](../../nexus_query_api_reference)) then use to find and validate join
+[`NexusTraverse::join`](../../nexus_traverse_api_reference)) then use to find and validate join
 paths without you having to restate the join keys every time.
 
 ## Parameters
@@ -69,6 +69,7 @@ Example 1. Declare a single relationship, non-mutating form.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},

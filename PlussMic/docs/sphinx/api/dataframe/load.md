@@ -52,7 +52,7 @@ Path to the file to read.
 **config** (`const pluss::loader::Config&`) / **config_entries**
 (`std::initializer_list<pluss::loader::ConfigEntry>`)
 
-A reusable or inline settings bundle. Works with all five recognized `source_type`
+A reusable or inline settings scribble. Works with all five recognized `source_type`
 values — each format's own loader (for example [`load_json()`](load_json.md)'s
 `Config` overload) interprets the same key/value entries its dedicated loader would.
 
@@ -107,7 +107,7 @@ std::cout << orders;
 
 This produces exactly what `DataFrame::load_csv("orders.csv")` would.
 
-Example 2. Dispatch with a `Config` bundle — works for any of the five formats.
+Example 2. Dispatch with a `Config` scribble — works for any of the five formats.
 
 ```cpp
 pluss::loader::Config config{{"ncases", std::int64_t{2}}};

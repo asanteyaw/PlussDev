@@ -54,8 +54,8 @@ Example 1. Default: literal, case-sensitive, unlimited substring
 replacement.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("banana")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("banana")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().replace("a", "o");
 std::cout << std::get<pluss::Note>(out.registry(0).fields("city").at(0)).at(0);
@@ -74,8 +74,8 @@ Example 2. `case_sensitive = false` matches regardless of case, but
 `to` is still inserted exactly as written.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("BANANA")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("BANANA")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 pluss::table::TextOptions opts;
 opts.case_sensitive = false;

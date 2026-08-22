@@ -31,10 +31,10 @@ Example 1. A three-frame `Axel` is not empty; one built from an empty
 registry vector is.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
-auto empty_axel = pluss::bundle::Axel(std::vector<pluss::bundle::Registry>{});
+auto empty_axel = pluss::scribble::Axel(std::vector<pluss::scribble::Registry>{});
 std::cout << std::boolalpha << axel.empty() << " " << empty_axel.empty();
 ```
 

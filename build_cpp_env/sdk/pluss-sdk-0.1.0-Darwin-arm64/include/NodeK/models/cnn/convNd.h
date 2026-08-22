@@ -62,14 +62,14 @@ inline Series pad_2d_(const Series& input, const Pair& padding) {
   Series padded = input;
   if (padding[0] > 0) {
     const std::vector<std::int64_t> strip_sizes{input.sizes()[0], input.sizes()[1], padding[0], input.sizes()[3]};
-    const Series top = pluss::zeros(strip_sizes, cfg_like_(input));
-    const Series bottom = pluss::zeros(strip_sizes, cfg_like_(input));
+    const Series top = pluss::series::zeros(strip_sizes, cfg_like_(input));
+    const Series bottom = pluss::series::zeros(strip_sizes, cfg_like_(input));
     padded = top.unite(std::vector<Series>{padded, bottom}, 2);
   }
   if (padding[1] > 0) {
     const std::vector<std::int64_t> strip_sizes{padded.sizes()[0], padded.sizes()[1], padded.sizes()[2], padding[1]};
-    const Series left = pluss::zeros(strip_sizes, cfg_like_(input));
-    const Series right = pluss::zeros(strip_sizes, cfg_like_(input));
+    const Series left = pluss::series::zeros(strip_sizes, cfg_like_(input));
+    const Series right = pluss::series::zeros(strip_sizes, cfg_like_(input));
     padded = left.unite(std::vector<Series>{padded, right}, 3);
   }
   return padded;
@@ -83,20 +83,20 @@ inline Series pad_3d_(const Series& input, const Triplet& padding) {
   Series padded = input;
   if (padding[0] > 0) {
     const std::vector<std::int64_t> slab_sizes{input.sizes()[0], input.sizes()[1], padding[0], input.sizes()[3], input.sizes()[4]};
-    const Series front = pluss::zeros(slab_sizes, cfg_like_(input));
-    const Series back = pluss::zeros(slab_sizes, cfg_like_(input));
+    const Series front = pluss::series::zeros(slab_sizes, cfg_like_(input));
+    const Series back = pluss::series::zeros(slab_sizes, cfg_like_(input));
     padded = front.unite(std::vector<Series>{padded, back}, 2);
   }
   if (padding[1] > 0) {
     const std::vector<std::int64_t> slab_sizes{padded.sizes()[0], padded.sizes()[1], padded.sizes()[2], padding[1], padded.sizes()[4]};
-    const Series top = pluss::zeros(slab_sizes, cfg_like_(input));
-    const Series bottom = pluss::zeros(slab_sizes, cfg_like_(input));
+    const Series top = pluss::series::zeros(slab_sizes, cfg_like_(input));
+    const Series bottom = pluss::series::zeros(slab_sizes, cfg_like_(input));
     padded = top.unite(std::vector<Series>{padded, bottom}, 3);
   }
   if (padding[2] > 0) {
     const std::vector<std::int64_t> slab_sizes{padded.sizes()[0], padded.sizes()[1], padded.sizes()[2], padded.sizes()[3], padding[2]};
-    const Series left = pluss::zeros(slab_sizes, cfg_like_(input));
-    const Series right = pluss::zeros(slab_sizes, cfg_like_(input));
+    const Series left = pluss::series::zeros(slab_sizes, cfg_like_(input));
+    const Series right = pluss::series::zeros(slab_sizes, cfg_like_(input));
     padded = left.unite(std::vector<Series>{padded, right}, 4);
   }
   return padded;
@@ -157,7 +157,9 @@ inline Series conv2d_impl_(const Series& input,
     PLUSS_CHECK(b.dim() == 1 && b.sizes()[0] == out_channels, "pluss::ai::conv: bias size mismatch");
   }
 
-  const bool require_backward = x.tracks_slope() || w.tracks_slope();
+  const bool require_backward =
+      ::pluss::codem::series_tape::recording_enabled() &&
+      (x.tracks_slope() || w.tracks_slope());
   if (x.platform() == pluss::pCUDA) {
     const auto y = ::pluss::ai::kernels::cudnn::try_conv2d(
         x,
@@ -290,7 +292,9 @@ inline Series conv3d_impl_(const Series& input,
     PLUSS_CHECK(b.dim() == 1 && b.sizes()[0] == out_channels, "pluss::ai::conv3d: bias size mismatch");
   }
 
-  const bool require_backward = x.tracks_slope() || w.tracks_slope() || (b.defined() && b.tracks_slope());
+  const bool require_backward =
+      ::pluss::codem::series_tape::recording_enabled() &&
+      (x.tracks_slope() || w.tracks_slope() || (b.defined() && b.tracks_slope()));
   if (x.platform() == pluss::pMPS) {
     const auto routed = ::pluss::ai::kernels::mps::try_conv3d(x, w, b, stride, padding, dilation, groups, require_backward);
     if (routed.has_value()) {

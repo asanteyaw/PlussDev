@@ -22,6 +22,10 @@ struct HyperProjectedPoint {
   double w{0.0};
 };
 
+// Internal rotation/projection plumbing behind path4/cloud4/hyper_animation_sequence/
+// export4_frames -- not part of the flash:: public surface.
+namespace detail {
+
 [[nodiscard]] inline double deg_to_rad(double deg) noexcept {
   return deg * (3.14159265358979323846 / 180.0);
 }
@@ -61,10 +65,14 @@ inline HyperVector4 rotate4(
   return !w_slice.has_value() || (w >= w_slice->low && w <= w_slice->high);
 }
 
+} // namespace detail
+
 enum class HyperProjectionKind : std::uint8_t {
   Orthographic,
   PerspectiveW,
 };
+
+namespace detail {
 
 [[nodiscard]] inline std::optional<HyperProjectedPoint> project4(
     const HyperVector4& v,
@@ -126,3 +134,5 @@ enum class HyperProjectionKind : std::uint8_t {
 
   return out;
 }
+
+} // namespace detail

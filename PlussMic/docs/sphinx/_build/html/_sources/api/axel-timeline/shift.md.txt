@@ -45,8 +45,8 @@ Example 1. Shift two timestamps forward one calendar month, showing
 day-of-month clamping on the January value.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().shift(1, "months");
 auto fmted = out.fields({"ts"}).tl().fmt("%Y-%m-%d %H:%M:%S");
@@ -67,8 +67,8 @@ rather than overflowing into March.
 Example 2. An unrecognized frequency throws.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 try {
   auto out = axel.fields({"ts"}).tl().shift(1, "bogus");

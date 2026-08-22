@@ -139,8 +139,8 @@ pluss::kindle::Stream Thread::kindelize() const {
   return pluss::kindle::Stream::from_thread(*this);
 }
 
-pluss::bundle::Slot Thread::bundelize() const {
-  return kindelize().bundelize();
+pluss::scribble::Slot Thread::scribbelize() const {
+  return kindelize().scribbelize();
 }
 bool Thread::is_valid(std::int64_t row) const {
   const auto idx = normalize_index(row, size());

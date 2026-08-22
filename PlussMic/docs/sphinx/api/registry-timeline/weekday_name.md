@@ -32,8 +32,8 @@ replacing each `Timeline` field with a `Note` (text) `Series` field.
 Example 1. Render the weekday name for a Wednesday and a Thursday.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"ts", pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})},
+auto rg = pluss::scribble::Registry({
+    {"ts", pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")})},
 });
 
 auto out = rg.fields({"ts"}).tl().weekday_name();

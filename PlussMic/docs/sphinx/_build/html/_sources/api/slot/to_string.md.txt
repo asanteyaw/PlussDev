@@ -30,7 +30,7 @@ Renders the slot as a string. Byte-identical to
 Example 1. `to_string()` and `to_json()` produce identical output.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 std::cout << std::boolalpha << (slot.to_string() == slot.to_json());
 ```
 

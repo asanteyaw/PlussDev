@@ -1,139 +1,92 @@
-# Part XII: Bundle: Slot, Registry, and Axel
+# Part XII-B: Bundle: Nexus, NexusTraverse, and NexusQuery
 
-Bundle is PlussMic's heterogeneous record model. It is useful when values are
-not naturally represented as one typed `Thread`.
+Bundle is PlussMic's multi-table workbench model. It sits beside the table
+model rather than replacing it: each table is still a `DataFrame`, but the
+workspace that coordinates them is a `Nexus`.
 
-## Slot
+## When to use Bundle
 
-A `Slot` is a vector of values. Values can represent multiple scalar/value
-families depending on the Bundle API surface.
+Reach for Bundle when:
 
-Common Slot operations:
+- your analysis spans several named tables;
+- join rules should be declared once and reused;
+- you need root-grain feature assembly, key audits, orphan detection, or relationship validation;
+- a saved multi-hop join plan is part of the workflow.
 
-```cpp
-slot.defined();
-slot.size();
-slot.empty();
-slot.values();
-slot.at(0);
+## Nexus
 
-slot.head(10);
-slot.tail(10);
-slot.slice(10, 20);
-slot.take(indices);
-slot.filter(predicate);
-slot.transform(fn);
-```
-
-Slot mutation style follows the Pluss convention:
+`Nexus` stores a keyed set of `DataFrame` objects and relationship metadata.
 
 ```cpp
-auto next = slot.push(value);
-slot.push_(value);
-```
+using namespace pluss::table;
+using namespace pluss::bundle;
 
-Use non-mutating operations in pipelines and mutating operations when updating
-owned state.
-
-## Registry
-
-A `Registry` is a named collection of slots.
-
-```cpp
-auto registry = catalog.bundelize();
-auto catalog2 = registry.kindelize();
-```
-
-Load and save registry data:
-
-```cpp
-auto reg = pluss::bundle::Registry::load_csv("data.csv");
-reg.save_json("registry.json");
-```
-
-Inspect:
-
-```cpp
-registry.nfields();
-registry.fields();
-registry.has("field");
-registry.get("field");
-registry.sizes();
-registry.profiles();
-```
-
-Select and reshape:
-
-```cpp
-auto first = registry.head(10);
-auto rows = registry.slice(10, 20);
-auto one_row = registry.cloc(0);
-auto selected = registry.select({"name", "score"});
-auto dropped = registry.drop("temporary");
-auto renamed = registry.rename("old", "new");
-```
-
-Transform:
-
-```cpp
-auto changed = registry.apply("score", [](const pluss::bundle::Slot& slot) {
-  return slot;
+auto customers = DataFrame({
+    {"customer_id", pluss::make_series({1.0, 2.0, 3.0})},
+    {"name", pluss::make_note({"Ada", "Bola", "Chen"})},
 });
 
-auto all = registry.map([](const pluss::bundle::Slot& slot) {
-  return slot;
+auto orders = DataFrame({
+    {"order_id", pluss::make_series({100.0, 101.0, 102.0})},
+    {"customer_id", pluss::make_series({1.0, 2.0, 2.0})},
+    {"amount", pluss::make_series({50.0, 75.0, 20.0})},
+});
+
+auto biz = Nexus({
+    {"customers", customers},
+    {"orders", orders},
+}).add_relationship({
+    .name = "customer_orders",
+    .left_table = "customers",
+    .right_table = "orders",
+    .keys = {{"customer_id", "customer_id"}},
 });
 ```
 
-Update fields:
+From there you can:
+
+- fetch tables with `frame(...)`
+- inspect workspace state with `summary()`, `profile()`, and `schema()`
+- assemble root-grain feature tables with `pull(...)`
+- validate relationships and workspace health with `audit()`, `validate_keys(...)`, `validate_relationship(...)`, and `relationship_audit(...)`
+- persist the workspace with `save(...)`, `load(...)`, and `store(...)`
+
+The practical split is:
+
+- `pull(...)` for grain-preserving feature assembly back onto a root table
+- `from(...).join(...).collect()` when you actually want the expanded child rows
+- `audit()` when you want one command-center view of table-key and relationship integrity
+
+## NexusTraverse
+
+`NexusTraverse` is the fluent graph-walk builder returned by `Nexus::from(...)`.
 
 ```cpp
-auto with_slot = registry.set("new_field", slot);
-auto pushed = registry.push("events", value);
+auto joined = biz.from("customers")
+                 .join("orders")
+                 .pick({"customer_id", "name", "amount"})
+                 .collect();
 ```
 
-Combine:
+## NexusQuery
+
+`NexusQuery` is the SQL workspace accessor returned by `Nexus::query()`.
 
 ```cpp
-auto merged = registry.combine(other, "_other");
+auto totals = biz.query().execute(
+    "SELECT customers.customer_id, orders.amount "
+    "FROM customers "
+    "JOIN orders ON customers.customer_id = orders.customer_id");
 ```
 
-## Kindle bridge
+The important distinction is now architectural:
 
-Some Registry operations require slots that can map cleanly to streams. The public
-surface no longer exposes separate compatibility checkers; `kindelize()` is the
-single contract point.
+- `Nexus` is the retained workspace object
+- `NexusTraverse` is the lazy graph-walk builder returned by `from(...)`
+- `NexusQuery` is the SQL-facing workspace query accessor returned by `query()`
+- `DataFrame` is still the concrete result after either `.collect()` or SQL execution
 
-```cpp
-try {
-  auto catalog = registry.kindelize();
-} catch (const std::exception& e) {
-  std::cout << e.what();
-}
-```
-
-## Axel
-
-`Axel` is the higher collection-oriented bundle type. Use it when you need to
-organize registries/slots into a broader bundle workflow. See the
-[Axel API Reference](../axel_api_reference.md) for exact constructors and
-operations.
-
-## Bundle conversion strategy
-
-DataFrame path:
-
-```cpp
-auto catalog = df.kindelize();
-auto registry = catalog.bundelize();
-```
-
-Back to table:
-
-```cpp
-auto catalog = registry.kindelize();
-auto df = catalog.tabelize();
-```
-
-Use Bundle for heterogeneous data, but return to DataFrame when you need
-rectangular analysis, group-by, plotting, or file export.
+For exact signatures and verified examples, use the
+[Nexus API Reference](../nexus_api_reference.md) and
+[NexusTraverse API Reference](../nexus_traverse_api_reference.md) and
+[NexusQuery API Reference](../nexus_query_api_reference.md).

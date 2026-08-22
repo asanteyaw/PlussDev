@@ -29,7 +29,7 @@ Returns the number of values held in the slot.
 Example 1. A three-value slot reports size `3`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 std::cout << slot.size();
 ```
 
@@ -42,7 +42,7 @@ std::cout << slot.size();
 Example 2. An empty (but defined) slot reports size `0`.
 
 ```cpp
-auto slot = pluss::bundle::Slot(std::vector<pluss::bundle::Slot::Value>{});
+auto slot = pluss::scribble::Slot(std::vector<pluss::scribble::Slot::Value>{});
 std::cout << slot.size();
 ```
 

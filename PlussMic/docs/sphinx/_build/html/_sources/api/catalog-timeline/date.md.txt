@@ -65,7 +65,7 @@ std::cout << fmted.keys("ts").as_note().at(0) << " | " << fmted.keys("ts").as_no
   fixed `"D"` unit of.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::date`](../registry-timeline/date.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ceil.html">

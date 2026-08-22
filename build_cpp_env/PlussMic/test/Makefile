@@ -221,18 +221,18 @@ plussmic_kindle_catalog_tests/fast:
 .PHONY : plussmic_kindle_catalog_tests/fast
 
 # Convenience name for target.
-PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/rule
-.PHONY : PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/rule
+PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/rule
 
 # Convenience name for target.
-plussmic_bundle_model_tests: PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/rule
-.PHONY : plussmic_bundle_model_tests
+plussmic_scribble_model_tests: PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/rule
+.PHONY : plussmic_scribble_model_tests
 
 # fast build rule for target.
-plussmic_bundle_model_tests/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/build
-.PHONY : plussmic_bundle_model_tests/fast
+plussmic_scribble_model_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/build
+.PHONY : plussmic_scribble_model_tests/fast
 
 # Convenience name for target.
 PlussMic/test/CMakeFiles/plussmic_table_dataframe_plot_api_tests.dir/rule:
@@ -305,6 +305,20 @@ plussmic_table_flash_dataset_bridge_tests/fast:
 .PHONY : plussmic_table_flash_dataset_bridge_tests/fast
 
 # Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/rule
+
+# Convenience name for target.
+plussmic_bi_tests: PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/rule
+.PHONY : plussmic_bi_tests
+
+# fast build rule for target.
+plussmic_bi_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build
+.PHONY : plussmic_bi_tests/fast
+
+# Convenience name for target.
 PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule
 .PHONY : PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule
@@ -319,66 +333,18 @@ plussmic_table_gap_benchmark/fast:
 .PHONY : plussmic_table_gap_benchmark/fast
 
 # Convenience name for target.
-PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/rule
-.PHONY : PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/rule
+PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/rule
 
 # Convenience name for target.
-plussmic_bundle_gap_benchmark: PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/rule
-.PHONY : plussmic_bundle_gap_benchmark
+plussmic_scribble_gap_benchmark: PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/rule
+.PHONY : plussmic_scribble_gap_benchmark
 
 # fast build rule for target.
-plussmic_bundle_gap_benchmark/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build
-.PHONY : plussmic_bundle_gap_benchmark/fast
-
-bundle_gap_benchmark.o: bundle_gap_benchmark.cpp.o
-.PHONY : bundle_gap_benchmark.o
-
-# target to build an object file
-bundle_gap_benchmark.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/bundle_gap_benchmark.cpp.o
-.PHONY : bundle_gap_benchmark.cpp.o
-
-bundle_gap_benchmark.i: bundle_gap_benchmark.cpp.i
-.PHONY : bundle_gap_benchmark.i
-
-# target to preprocess a source file
-bundle_gap_benchmark.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/bundle_gap_benchmark.cpp.i
-.PHONY : bundle_gap_benchmark.cpp.i
-
-bundle_gap_benchmark.s: bundle_gap_benchmark.cpp.s
-.PHONY : bundle_gap_benchmark.s
-
-# target to generate assembly for a file
-bundle_gap_benchmark.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_gap_benchmark.dir/bundle_gap_benchmark.cpp.s
-.PHONY : bundle_gap_benchmark.cpp.s
-
-bundle_model_tests.o: bundle_model_tests.cpp.o
-.PHONY : bundle_model_tests.o
-
-# target to build an object file
-bundle_model_tests.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/bundle_model_tests.cpp.o
-.PHONY : bundle_model_tests.cpp.o
-
-bundle_model_tests.i: bundle_model_tests.cpp.i
-.PHONY : bundle_model_tests.i
-
-# target to preprocess a source file
-bundle_model_tests.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/bundle_model_tests.cpp.i
-.PHONY : bundle_model_tests.cpp.i
-
-bundle_model_tests.s: bundle_model_tests.cpp.s
-.PHONY : bundle_model_tests.s
-
-# target to generate assembly for a file
-bundle_model_tests.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_model_tests.dir/bundle_model_tests.cpp.s
-.PHONY : bundle_model_tests.cpp.s
+plussmic_scribble_gap_benchmark/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/build
+.PHONY : plussmic_scribble_gap_benchmark/fast
 
 kindle_catalog_tests.o: kindle_catalog_tests.cpp.o
 .PHONY : kindle_catalog_tests.o
@@ -403,6 +369,78 @@ kindle_catalog_tests.s: kindle_catalog_tests.cpp.s
 kindle_catalog_tests.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_kindle_catalog_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_kindle_catalog_tests.dir/kindle_catalog_tests.cpp.s
 .PHONY : kindle_catalog_tests.cpp.s
+
+pluss_bi_tests.o: pluss_bi_tests.cpp.o
+.PHONY : pluss_bi_tests.o
+
+# target to build an object file
+pluss_bi_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/pluss_bi_tests.cpp.o
+.PHONY : pluss_bi_tests.cpp.o
+
+pluss_bi_tests.i: pluss_bi_tests.cpp.i
+.PHONY : pluss_bi_tests.i
+
+# target to preprocess a source file
+pluss_bi_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/pluss_bi_tests.cpp.i
+.PHONY : pluss_bi_tests.cpp.i
+
+pluss_bi_tests.s: pluss_bi_tests.cpp.s
+.PHONY : pluss_bi_tests.s
+
+# target to generate assembly for a file
+pluss_bi_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/pluss_bi_tests.cpp.s
+.PHONY : pluss_bi_tests.cpp.s
+
+scribble_gap_benchmark.o: scribble_gap_benchmark.cpp.o
+.PHONY : scribble_gap_benchmark.o
+
+# target to build an object file
+scribble_gap_benchmark.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/scribble_gap_benchmark.cpp.o
+.PHONY : scribble_gap_benchmark.cpp.o
+
+scribble_gap_benchmark.i: scribble_gap_benchmark.cpp.i
+.PHONY : scribble_gap_benchmark.i
+
+# target to preprocess a source file
+scribble_gap_benchmark.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/scribble_gap_benchmark.cpp.i
+.PHONY : scribble_gap_benchmark.cpp.i
+
+scribble_gap_benchmark.s: scribble_gap_benchmark.cpp.s
+.PHONY : scribble_gap_benchmark.s
+
+# target to generate assembly for a file
+scribble_gap_benchmark.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/scribble_gap_benchmark.cpp.s
+.PHONY : scribble_gap_benchmark.cpp.s
+
+scribble_model_tests.o: scribble_model_tests.cpp.o
+.PHONY : scribble_model_tests.o
+
+# target to build an object file
+scribble_model_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/scribble_model_tests.cpp.o
+.PHONY : scribble_model_tests.cpp.o
+
+scribble_model_tests.i: scribble_model_tests.cpp.i
+.PHONY : scribble_model_tests.i
+
+# target to preprocess a source file
+scribble_model_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/scribble_model_tests.cpp.i
+.PHONY : scribble_model_tests.cpp.i
+
+scribble_model_tests.s: scribble_model_tests.cpp.s
+.PHONY : scribble_model_tests.s
+
+# target to generate assembly for a file
+scribble_model_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/scribble_model_tests.cpp.s
+.PHONY : scribble_model_tests.cpp.s
 
 table_axis_match_tests.o: table_axis_match_tests.cpp.o
 .PHONY : table_axis_match_tests.o
@@ -587,9 +625,10 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
-	@echo "... plussmic_bundle_gap_benchmark"
-	@echo "... plussmic_bundle_model_tests"
+	@echo "... plussmic_bi_tests"
 	@echo "... plussmic_kindle_catalog_tests"
+	@echo "... plussmic_scribble_gap_benchmark"
+	@echo "... plussmic_scribble_model_tests"
 	@echo "... plussmic_table_axis_match_tests"
 	@echo "... plussmic_table_csv_tests"
 	@echo "... plussmic_table_dataframe_plot_api_tests"
@@ -597,15 +636,18 @@ help:
 	@echo "... plussmic_table_gap_benchmark"
 	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
-	@echo "... bundle_gap_benchmark.o"
-	@echo "... bundle_gap_benchmark.i"
-	@echo "... bundle_gap_benchmark.s"
-	@echo "... bundle_model_tests.o"
-	@echo "... bundle_model_tests.i"
-	@echo "... bundle_model_tests.s"
 	@echo "... kindle_catalog_tests.o"
 	@echo "... kindle_catalog_tests.i"
 	@echo "... kindle_catalog_tests.s"
+	@echo "... pluss_bi_tests.o"
+	@echo "... pluss_bi_tests.i"
+	@echo "... pluss_bi_tests.s"
+	@echo "... scribble_gap_benchmark.o"
+	@echo "... scribble_gap_benchmark.i"
+	@echo "... scribble_gap_benchmark.s"
+	@echo "... scribble_model_tests.o"
+	@echo "... scribble_model_tests.i"
+	@echo "... scribble_model_tests.s"
 	@echo "... table_axis_match_tests.o"
 	@echo "... table_axis_match_tests.i"
 	@echo "... table_axis_match_tests.s"

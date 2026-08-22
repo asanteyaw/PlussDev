@@ -67,6 +67,10 @@ struct FlashThemeOptions {
   std::optional<double> height{std::nullopt};
 };
 
+// Internal palette-resolution plumbing behind flash_palette/flash_theme -- not part of
+// the flash:: public surface.
+namespace detail {
+
 [[nodiscard]] inline FlashPalette flash_palette_kind(std::string_view name) {
   if (name == "muted") return FlashPalette::Muted;
   if (name == "pastel") return FlashPalette::Pastel;
@@ -186,12 +190,14 @@ struct FlashThemeOptions {
   return PaletteRamp(std::move(name), flash_palette_colors(palette));
 }
 
+} // namespace detail
+
 [[nodiscard]] inline PaletteRamp flash_palette(FlashPalette palette = FlashPalette::Deep) {
-  return flash_palette_ramp(palette);
+  return detail::flash_palette_ramp(palette);
 }
 
 [[nodiscard]] inline PaletteRamp flash_palette(std::string_view name) {
-  return flash_palette(flash_palette_kind(name));
+  return flash_palette(detail::flash_palette_kind(name));
 }
 
 [[nodiscard]] inline Theme flash_theme(FlashStyle style = FlashStyle::Lightgrid,
@@ -236,12 +242,14 @@ struct FlashThemeOptions {
   }
   return Theme{
       std::move(theme_name),
-      flash_palette_colors(palette),
+      detail::flash_palette_colors(palette),
       background,
       foreground,
-      flash_palette_ramp(palette),
+      detail::flash_palette_ramp(palette),
   };
 }
+
+namespace detail {
 
 [[nodiscard]] inline std::tuple<double, double, double, double> flash_context_values(
     FlashContext context) {
@@ -260,6 +268,8 @@ struct FlashThemeOptions {
       return {1200.0, 780.0, 1.0, 1.0};
   }
 }
+
+} // namespace detail
 
 inline Studio& set(Studio& studio, Theme theme = Theme::paper()) {
   studio.theme(std::move(theme));
@@ -346,6 +356,8 @@ inline Pane& axes_style(Pane& pane, FlashStyle style) {
   return set_style(pane, style);
 }
 
+namespace detail {
+
 inline Pane& apply_horizontal_grid_policy(Pane& pane, bool enable) noexcept {
   if (pane.kind() != PaneKind::Planar) {
     return pane;
@@ -385,10 +397,12 @@ inline Pane& apply_horizontal_grid_policy(Pane& pane, bool enable) noexcept {
   return pane;
 }
 
+} // namespace detail
+
 inline Pane& set_theme(Pane& pane, const FlashThemeOptions& options) {
   set_style(pane, options.style);
   if (options.context != FlashContext::Inherit) {
-    const auto [base_w, base_h, tick_scale, axis_scale] = flash_context_values(options.context);
+    const auto [base_w, base_h, tick_scale, axis_scale] = detail::flash_context_values(options.context);
     (void)base_w;
     (void)base_h;
     detail::apply_tick_font_scale(pane, tick_scale, axis_scale);
@@ -402,7 +416,7 @@ inline Pane& set_theme(Pane& pane, const FlashThemeOptions& options) {
   if (options.legend_shape.has_value()) {
     pane.legend_shape(*options.legend_shape);
   }
-  apply_horizontal_grid_policy(pane, options.horizontal_grid);
+  detail::apply_horizontal_grid_policy(pane, options.horizontal_grid);
   return pane;
 }
 
@@ -455,7 +469,7 @@ inline Studio& set_context(
     }
     return studio;
   }
-  const auto [base_w, base_h, tick_scale, axis_scale] = flash_context_values(context);
+  const auto [base_w, base_h, tick_scale, axis_scale] = detail::flash_context_values(context);
   return set_context(
       studio,
       width.value_or(base_w),
@@ -484,7 +498,7 @@ inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
   if (options.legend_shape.has_value()) {
     pane_defaults.legend_shape(*options.legend_shape);
   }
-  apply_horizontal_grid_policy(pane_defaults, options.horizontal_grid);
+  detail::apply_horizontal_grid_policy(pane_defaults, options.horizontal_grid);
   studio.pane_style_defaults(pane_defaults);
   for (const Pane& pane_const : studio.panes()) {
     auto& pane = const_cast<Pane&>(pane_const);
@@ -498,7 +512,7 @@ inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
     if (options.legend_shape.has_value()) {
       pane.legend_shape(*options.legend_shape);
     }
-    apply_horizontal_grid_policy(pane, options.horizontal_grid);
+    detail::apply_horizontal_grid_policy(pane, options.horizontal_grid);
   }
   return studio;
 }
@@ -521,7 +535,7 @@ inline Pane& tickless(Pane& pane, bool enable = true) {
 }
 
 inline Pane& horizontal_grid(Pane& pane, bool enable = true) noexcept {
-  return apply_horizontal_grid_policy(pane, enable);
+  return detail::apply_horizontal_grid_policy(pane, enable);
 }
 
 inline Pane& move_legend(Pane& pane, KeyPlace place) noexcept {

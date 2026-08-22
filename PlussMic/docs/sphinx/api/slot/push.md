@@ -32,7 +32,7 @@ slot is left unchanged.
 Example 1. Append a fourth value.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.push(pluss::make_series(4));
 std::cout << "orig=" << slot.size() << " new=" << out.size();
 ```

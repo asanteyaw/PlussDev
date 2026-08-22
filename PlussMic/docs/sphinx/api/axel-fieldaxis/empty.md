@@ -31,11 +31,11 @@ fields — fields whose `Slot` holds zero values.
 Example 1. Keep only the zero-value field in every frame.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"emptyfield", pluss::bundle::Slot(std::vector<pluss::bundle::Slot::Value>{})},
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto r0 = pluss::scribble::Registry({
+    {"emptyfield", pluss::scribble::Slot(std::vector<pluss::scribble::Slot::Value>{})},
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
-auto axel = pluss::bundle::Axel({r0});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fieldaxis().empty();
 for (const auto& key : out.registry(0).fields()) std::cout << key << " ";

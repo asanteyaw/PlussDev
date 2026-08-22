@@ -39,8 +39,8 @@ a default-constructed `Registry{}`, which is **undefined**. See
 Example 1. Clearing a registry produces a defined-but-empty result.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 
 auto cleared = rg.clear();

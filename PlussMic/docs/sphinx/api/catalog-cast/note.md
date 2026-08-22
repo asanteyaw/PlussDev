@@ -68,7 +68,7 @@ id                       | Note         | Note             | 3       | [1, 2, 3]
   silent-null failure mode for unparseable text.
 - [`Catalog::cast`](../catalog/cast.md): the entry point this accessor is
   reached from.
-- [`RegistryCastAccessor::note`](../registry-cast/note.md): the bundle-model
+- [`RegistryCastAccessor::note`](../registry-cast/note.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

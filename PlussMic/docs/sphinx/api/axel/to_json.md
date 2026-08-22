@@ -40,8 +40,8 @@ Example 1. A small, unlabeled, two-frame `Axel` — every value is
 present in the output.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})}}),
 });
 std::cout << axel.to_json();
 ```
@@ -83,7 +83,7 @@ spliced in verbatim rather than re-indented.
 Example 2. An undefined `Axel`.
 
 ```cpp
-pluss::bundle::Axel undef;
+pluss::scribble::Axel undef;
 std::cout << undef.to_json();
 ```
 

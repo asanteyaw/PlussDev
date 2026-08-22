@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,7 +52,7 @@
 combining structural facts (row/column counts, feature names, dtypes) with whatever
 <a class="reference internal" href="table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TableMeta</span></code></span></a> has been declared. This is the format
 <a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save()</span></code></span></a> writes to disk (as <code class="docutils literal notranslate"><span class="pre">schema.csv</span></code> by default) and
-<a class="reference internal" href="load.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load()</span></code></span></a> reads back to reconstruct declared metadata.</p>
+<a class="reference internal" href="read.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">read()</span></code></span></a> reads back to reconstruct declared metadata.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -79,6 +79,7 @@ One row per table, with columns:</p>
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. A workspace with metadata on one table, none on the other.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
@@ -120,7 +121,7 @@ One row per table, with columns:</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>This is exactly the format <a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save()</span></code></span></a>/<a class="reference internal" href="load.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load()</span></code></span></a> round-trip through
+<li><p>This is exactly the format <a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save()</span></code></span></a>/<a class="reference internal" href="read.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">read()</span></code></span></a> round-trip through
 disk for table-level metadata.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">feats</span></code>/<code class="docutils literal notranslate"><span class="pre">dtypes</span></code> are joined strings meant for the save/load round trip, not for reading
 directly — inspect a table’s actual feature list via
@@ -132,7 +133,7 @@ directly — inspect a table’s actual feature list via
 <ul class="simple">
 <li><p><a class="reference internal" href="graph.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::graph</span></code></span></a>: the relationship-level counterpart to this table-level view.</p></li>
 <li><p><a class="reference internal" href="table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::table_meta</span></code></span></a>: the source of most of this method’s columns.</p></li>
-<li><p><a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::save</span></code></span></a> / <a class="reference internal" href="load.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load</span></code></span></a>: where this exact format is persisted and
+<li><p><a class="reference internal" href="save.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::save</span></code></span></a> / <a class="reference internal" href="read.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">read</span></code></span></a>: where this exact format is persisted and
 restored.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -184,6 +185,7 @@ restored.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -197,7 +199,7 @@ restored.</p></li>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
       <li>Previous: <a href="scan.html" title="previous chapter">Nexus::scan</a></li>
       <li>Next: <a href="select.html" title="next chapter">Nexus::select</a></li>

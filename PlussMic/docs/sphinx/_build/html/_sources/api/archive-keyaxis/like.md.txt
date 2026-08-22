@@ -30,7 +30,7 @@ might match keys with entirely different names. See Example 2.
 
 ```{important} Defaults to case-sensitive, unlike RegistryFieldAxisAccessor::like
 Same default as [`CatalogKeyAxisAccessor::like`](../catalog-keyaxis/like.md):
-`case_sensitive` defaults to `true`. The bundle-model equivalent,
+`case_sensitive` defaults to `true`. The scribble-model equivalent,
 [`RegistryFieldAxisAccessor::like`](../registry-fieldaxis/like.md), defaults to `false`
 instead. Pass `false` explicitly here for a case-insensitive substring search.
 ```

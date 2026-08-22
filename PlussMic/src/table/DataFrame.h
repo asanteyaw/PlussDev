@@ -38,7 +38,7 @@ class Catalog;
 struct KindelizePolicy;
 struct TabelizePolicy;
 }
-namespace pluss::bundle {
+namespace pluss::scribble {
 class Registry;
 }
 
@@ -684,6 +684,8 @@ public:
 
     using SqlParam = std::variant<std::nullptr_t, bool, std::int64_t, double, std::string>;
 
+    // Additional names that resolve to the calling frame. `df` is always accepted.
+    std::vector<std::string> primary_source_names{};
     // Additional named sources available to JOIN in SQL.
     std::vector<SourceBinding> sources{};
     // Template-style parameters used in SQL via `{param_name}` placeholders.
@@ -816,8 +818,8 @@ public:
                              std::initializer_list<pluss::loader::ConfigEntry> config_entries);
   pluss::kindle::Catalog kindelize() const;
   pluss::kindle::Catalog kindelize(const pluss::kindle::KindelizePolicy& policy) const;
-  pluss::bundle::Registry bundelize() const;
-  pluss::bundle::Registry bundelize(const pluss::kindle::KindelizePolicy& policy) const;
+  pluss::scribble::Registry scribbelize() const;
+  pluss::scribble::Registry scribbelize(const pluss::kindle::KindelizePolicy& policy) const;
   static DataFrame select(pluss::msharp::RangeView::Of<Thread> conditions,
                           pluss::msharp::RangeView::Of<DataFrame> choices,
                           const DataFrame& default_value);

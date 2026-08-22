@@ -24,7 +24,7 @@ key across the objects, with per-column dtype inference — the same underlying 
     The JSON file to read. Expected shape: a top-level array of flat (non-nested) objects.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying reader options.
+    A generic configuration scribble, translated into the underlying reader options.
 
 ## Returns
 

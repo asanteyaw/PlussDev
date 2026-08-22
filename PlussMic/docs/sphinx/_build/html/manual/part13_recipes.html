@@ -13,12 +13,12 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part XIV: Troubleshooting and Production Notes" href="part14_troubleshooting.html" />
-    <link rel="prev" title="Part XII: Bundle: Slot, Registry, and Axel" href="part12_bundle.html" />
+    <link rel="prev" title="Part XII-B: Bundle: Nexus, NexusTraverse, and NexusQuery" href="part12_bundle.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -176,10 +176,10 @@ names and options.</p>
 </pre></div>
 </div>
 </section>
-<section id="round-trip-through-kindle-and-bundle">
-<h2>Round-trip through Kindle and Bundle<a class="headerlink" href="#round-trip-through-kindle-and-bundle" title="Link to this heading">¶</a></h2>
+<section id="round-trip-through-kindle-and-scribble">
+<h2>Round-trip through Kindle and Scribble<a class="headerlink" href="#round-trip-through-kindle-and-scribble" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">scribbelize</span><span class="p">();</span>
 
 <span class="n">registry</span><span class="p">.</span><span class="n">profiles</span><span class="p">();</span>
 
@@ -187,8 +187,8 @@ names and options.</p>
 </pre></div>
 </div>
 </section>
-<section id="save-a-report-bundle">
-<h2>Save a report bundle<a class="headerlink" href="#save-a-report-bundle" title="Link to this heading">¶</a></h2>
+<section id="save-a-report-scribble">
+<h2>Save a report scribble<a class="headerlink" href="#save-a-report-scribble" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clean</span><span class="p">.</span><span class="n">describe</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clean</span><span class="p">.</span><span class="n">group</span><span class="p">({.</span><span class="n">dropnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
@@ -241,6 +241,7 @@ names and options.</p>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -253,7 +254,7 @@ names and options.</p>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../manual.html">PlussMic User Manual</a><ul>
-      <li>Previous: <a href="part12_bundle.html" title="previous chapter">Part XII: Bundle: Slot, Registry, and Axel</a></li>
+      <li>Previous: <a href="part12_bundle.html" title="previous chapter">Part XII-B: Bundle: Nexus, NexusTraverse, and NexusQuery</a></li>
       <li>Next: <a href="part14_troubleshooting.html" title="next chapter">Part XIV: Troubleshooting and Production Notes</a></li>
   </ul></li>
   </ul></li>

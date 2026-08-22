@@ -45,9 +45,9 @@ of every frame. To cast only one field, chain
 Example 1. Cast the `"ids"` field of every frame to `Note` (text).
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})}});
-auto r1 = pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})}});
-auto axel = pluss::bundle::Axel({r0, r1});
+auto r0 = pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})}});
+auto r1 = pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})}});
+auto axel = pluss::scribble::Axel({r0, r1});
 
 auto out = axel.fields({"ids"}).cast().note();
 std::cout << std::get<pluss::Note>(out.registry(0).fields("ids").at(0)).at(0);

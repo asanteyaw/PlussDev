@@ -71,7 +71,9 @@ class SessionController {
                                         std::int64_t height,
                                         const std::string& snapshot_name,
                                         const std::string& svg_payload,
-                                        const std::string& svg_snapshot_name) const;
+                                        const std::string& svg_snapshot_name,
+                                        const std::shared_ptr<const VirtualTableModel>&
+                                            virtual_table_model) const;
 
   HtmlWindowOptions options_{};
   SessionEventSink sink_{};

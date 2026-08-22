@@ -78,7 +78,7 @@ ts                       | Series       | Series[int32]    | 2       | [1, 2]
   month.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::month`](../registry-timeline/month.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="minute.html">

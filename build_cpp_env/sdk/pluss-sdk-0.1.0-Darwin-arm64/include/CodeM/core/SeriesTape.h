@@ -45,6 +45,40 @@ public:
   PauseRecording& operator=(const PauseRecording&) = delete;
 };
 
+// Thread-local grad-mode control, mirroring the core libtorch shape:
+// a process-wide API would be wrong here because one thread's inference
+// scope must not silently affect another thread's training work.
+bool grad_mode_enabled() noexcept;
+void set_grad_mode_enabled(bool enabled) noexcept;
+
+class AutoGradMode final {
+public:
+  explicit AutoGradMode(bool enabled) noexcept;
+  ~AutoGradMode();
+
+  AutoGradMode(const AutoGradMode&) = delete;
+  AutoGradMode& operator=(const AutoGradMode&) = delete;
+  AutoGradMode(AutoGradMode&&) = delete;
+  AutoGradMode& operator=(AutoGradMode&&) = delete;
+
+private:
+  bool previous_{true};
+};
+
+class NoGradGuard final {
+public:
+  NoGradGuard() noexcept;
+  ~NoGradGuard() = default;
+
+  NoGradGuard(const NoGradGuard&) = delete;
+  NoGradGuard& operator=(const NoGradGuard&) = delete;
+  NoGradGuard(NoGradGuard&&) = delete;
+  NoGradGuard& operator=(NoGradGuard&&) = delete;
+
+private:
+  AutoGradMode guard_;
+};
+
 struct ReverseDiagnostics {
   bool enabled{false};
   bool check_non_finite{true};

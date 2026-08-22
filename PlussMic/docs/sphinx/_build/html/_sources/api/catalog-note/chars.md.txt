@@ -83,7 +83,7 @@ city                     | Note         | Note             | 2       | [Acc, Kum
 - [`CatalogNoteAccessor::pad`](pad.md): the complementary operation — extends text
   rather than extracting a slice of it.
 - [`Catalog::nt`](../catalog/nt.md): the entry point this accessor is reached from.
-- [`RegistryNoteAccessor::chars`](../registry-note/chars.md): the bundle-model
+- [`RegistryNoteAccessor::chars`](../registry-note/chars.md): the scribble-model
   equivalent.
 
 <div class="pluss-inline-prev-next">

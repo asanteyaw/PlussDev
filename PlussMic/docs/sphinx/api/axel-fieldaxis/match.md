@@ -38,12 +38,12 @@ every frame via [`Axel::map`](../axel/map.md).
 Example 1. Select every field name ending in `_id`, in every frame.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"user_id", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto r0 = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"user_id", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
-auto axel = pluss::bundle::Axel({r0, r0});
+auto axel = pluss::scribble::Axel({r0, r0});
 
 auto out = axel.fieldaxis().match("^.*_id$");
 for (const auto& key : out.registry(0).fields()) std::cout << key << " ";
@@ -60,8 +60,8 @@ Example 2. An invalid regex pattern throws — the same message
 would throw for that frame.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1)})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1)})}});
+auto axel = pluss::scribble::Axel({r0});
 
 try {
   axel.fieldaxis().match("(unterminated");

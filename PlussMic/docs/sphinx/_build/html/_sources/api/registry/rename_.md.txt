@@ -37,9 +37,9 @@ mapping overloads and reassign, if you need to rename several fields in place.
 Example 1. Rename a field in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
 });
 
 rg.rename_("city", "location");

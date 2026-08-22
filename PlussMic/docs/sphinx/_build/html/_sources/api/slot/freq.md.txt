@@ -35,7 +35,7 @@ frequency.
 Example 1. A repeated value's count sorts before the singleton's.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)});
 auto out = slot.freq();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
           << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
@@ -50,7 +50,7 @@ std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
 Example 2. Limit to the single most frequent value's count via `top`.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)});
 pluss::kindle::FreqOptions options;
 options.top = 1;
 auto out = slot.freq(options);

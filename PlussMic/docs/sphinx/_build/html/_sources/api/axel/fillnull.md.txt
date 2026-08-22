@@ -52,8 +52,8 @@ Example 1. On an axel where every field is numeric, `fillnull(double)`
 succeeds and fills the null.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"id", pluss::bundle::Slot({pluss::make_series(1), pluss::bundle::Slot::Value{std::monostate{}}, pluss::make_series(3)})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"id", pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(3)})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fillnull(99.0);
 std::cout << out.registry(0).fields("id").to_json();

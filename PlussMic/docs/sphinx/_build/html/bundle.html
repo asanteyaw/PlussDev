@@ -13,11 +13,11 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=052b4a34"></script>
+    <script src="_static/api_nav.js?v=bd236ad6"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Demo Catalog" href="demo_catalog.html" />
+    <link rel="next" title="Scribble Model Guide" href="scribble.html" />
     <link rel="prev" title="Kindle Model Guide" href="kindle.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -40,72 +40,59 @@
 <h1>Bundle Model Guide<a class="headerlink" href="#bundle-model-guide" title="Link to this heading">¶</a></h1>
 <section id="when-to-use-bundle-types">
 <h2>When To Use Bundle Types<a class="headerlink" href="#when-to-use-bundle-types" title="Link to this heading">¶</a></h2>
-<p>The bundle model is the heterogeneous record layer:</p>
+<p>The bundle model is the multi-table workbench layer:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>: sequence of heterogeneous Pluss values</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Registry</span></code>: named set of slots</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Axel</span></code>: depth stack of registries</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code>: named collection of related <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> tables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code>: fluent join-graph builder returned by <code class="docutils literal notranslate"><span class="pre">Nexus::from(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code>: workspace SQL accessor returned by <code class="docutils literal notranslate"><span class="pre">Nexus::query()</span></code></p></li>
 </ul>
-<p>Use it when one field can hold different domain types, or when you want a lighter record/batch abstraction than <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<p>Use it when the job is bigger than one table: several frames must be coordinated,
+relationships should be declared once and reused, and join plans or audits should
+belong to the workspace itself rather than be rebuilt ad hoc each time.</p>
 </section>
-<section id="slot">
-<h2>Slot<a class="headerlink" href="#slot" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">),</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">),</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">),</span>
+<section id="nexus">
+<h2>Nexus<a class="headerlink" href="#nexus" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})},</span>
 <span class="p">});</span>
 
-<span class="n">ids</span><span class="p">.</span><span class="n">push_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">even</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">filter</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">).</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})},</span>
 <span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
+<span class="p">}).</span><span class="n">add_relationship</span><span class="p">({</span>
+<span class="w">    </span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customer_orders&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">joined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
-<section id="registry">
-<h2>Registry<a class="headerlink" href="#registry" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Accra&quot;</span><span class="p">),</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">),</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Kumasi&quot;</span><span class="p">),</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ids</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cities</span><span class="p">},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">selected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">fields</span><span class="p">({</span><span class="s">&quot;id&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">renamed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">rename</span><span class="p">({{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;location&quot;</span><span class="p">}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">profiled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">profiles</span><span class="p">();</span>
-</pre></div>
-</div>
-</section>
-<section id="axel">
-<h2>Axel<a class="headerlink" href="#axel" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">train</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">rename</span><span class="p">({{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city_test&quot;</span><span class="p">}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;train&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">)});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Axel</span><span class="p">({</span><span class="n">train</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">},</span><span class="w"> </span><span class="n">labels</span><span class="p">);</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">combined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">concat_depth</span><span class="p">(</span><span class="n">first</span><span class="p">);</span>
-</pre></div>
-</div>
-</section>
-<section id="kindle-bridge">
-<h2>Kindle Bridge<a class="headerlink" href="#kindle-bridge" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">axel</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">back_slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">back_registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">back_axel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">archive</span><span class="p">.</span><span class="n">bundelize</span><span class="p">();</span>
-</pre></div>
-</div>
+<section id="what-nexus-adds-beyond-dataframe">
+<h2>What Nexus Adds Beyond DataFrame<a class="headerlink" href="#what-nexus-adds-beyond-dataframe" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>keyed table storage with <code class="docutils literal notranslate"><span class="pre">frame(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">select(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">drop(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">inject(...)</span></code></p></li>
+<li><p>declared relationship metadata with <code class="docutils literal notranslate"><span class="pre">add_relationship(...)</span></code></p></li>
+<li><p>root-grain feature assembly with <code class="docutils literal notranslate"><span class="pre">pull(...)</span></code></p></li>
+<li><p>audit surfaces such as <code class="docutils literal notranslate"><span class="pre">audit()</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_keys(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_relationship(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">detect_orphans(...)</span></code></p></li>
+<li><p>graph navigation with <code class="docutils literal notranslate"><span class="pre">path(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">plan(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">materialize(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">from(...).via(...)</span></code></p></li>
+<li><p>persistence with <code class="docutils literal notranslate"><span class="pre">save(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">load(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">store(...)</span></code></p></li>
+</ul>
+<p>See the <a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc">Nexus API Reference</span></a> and
+<a class="reference internal" href="nexus_traverse_api_reference.html"><span class="std std-doc">NexusTraverse API Reference</span></a> and
+<a class="reference internal" href="nexus_query_api_reference.html"><span class="std std-doc">NexusQuery API Reference</span></a> for the full public surface.</p>
 </section>
 </section>
 
@@ -143,12 +130,11 @@
 <li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Bundle Model Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#when-to-use-bundle-types">When To Use Bundle Types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#slot">Slot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#registry">Registry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#axel">Axel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#kindle-bridge">Kindle Bridge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nexus">Nexus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-nexus-adds-beyond-dataframe">What Nexus Adds Beyond DataFrame</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
 </ul>
@@ -161,7 +147,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="kindle.html" title="previous chapter">Kindle Model Guide</a></li>
-      <li>Next: <a href="demo_catalog.html" title="next chapter">Demo Catalog</a></li>
+      <li>Next: <a href="scribble.html" title="next chapter">Scribble Model Guide</a></li>
   </ul></li>
 </ul>
 </div>

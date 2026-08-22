@@ -44,8 +44,8 @@ which throws `"Slot::at: index out of bounds"` for any index `< 0` or
 Example 1. Select a single position from `id`, in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
 std::vector<std::int64_t> picks{1};

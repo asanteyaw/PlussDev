@@ -30,7 +30,7 @@ Reports whether the slot holds zero values. Shorthand for
 Example 1. A slot with values is not empty.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 std::cout << std::boolalpha << slot.empty();
 ```
 
@@ -43,7 +43,7 @@ false
 Example 2. A zero-value (but defined) slot is empty.
 
 ```cpp
-auto slot = pluss::bundle::Slot(std::vector<pluss::bundle::Slot::Value>{});
+auto slot = pluss::scribble::Slot(std::vector<pluss::scribble::Slot::Value>{});
 std::cout << std::boolalpha << slot.empty();
 ```
 

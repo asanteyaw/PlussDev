@@ -39,12 +39,12 @@ and reinsert with [`set_()`](set_.md): `rg.set_("population", fn(rg.fields("popu
 Example 1. Add 5 to every value in a registry, in place.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
 });
 
-rg.map_([](const pluss::bundle::Slot& s) {
-  return s.transform([](const pluss::bundle::Slot::Value& v) -> pluss::bundle::Slot::Value {
+rg.map_([](const pluss::scribble::Slot& s) {
+  return s.transform([](const pluss::scribble::Slot::Value& v) -> pluss::scribble::Slot::Value {
     return pluss::make_series(std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] + 5);
   });
 });

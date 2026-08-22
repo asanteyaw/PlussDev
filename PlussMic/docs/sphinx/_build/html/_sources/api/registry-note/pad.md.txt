@@ -55,8 +55,8 @@ splits the padding between both sides.
 Example 1. Default call: left-align, pad with spaces on the right.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"code", pluss::bundle::Slot({pluss::make_note("7")})},
+auto rg = pluss::scribble::Registry({
+    {"code", pluss::scribble::Slot({pluss::make_note("7")})},
 });
 
 auto out = rg.fields({"code"}).nt().pad(4);
@@ -73,8 +73,8 @@ Example 2. Right-align with a `'0'` fill — a common way to zero-pad numeric
 codes stored as text.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"code", pluss::bundle::Slot({pluss::make_note("7")})},
+auto rg = pluss::scribble::Registry({
+    {"code", pluss::scribble::Slot({pluss::make_note("7")})},
 });
 
 auto out = rg.fields({"code"}).nt().pad(4, pluss::table::TextAlign::Right, '0');
@@ -90,8 +90,8 @@ std::cout << std::get<pluss::Note>(out.fields("code").at(0)).at(0);
 Example 3. Center alignment splits the padding across both sides.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"code", pluss::bundle::Slot({pluss::make_note("7")})},
+auto rg = pluss::scribble::Registry({
+    {"code", pluss::scribble::Slot({pluss::make_note("7")})},
 });
 
 auto out = rg.fields({"code"}).nt().pad(5, pluss::table::TextAlign::Center);

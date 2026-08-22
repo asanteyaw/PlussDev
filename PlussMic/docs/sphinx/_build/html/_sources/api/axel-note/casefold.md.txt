@@ -45,8 +45,8 @@ compare two text fields for equality regardless of case, prefer
 Example 1. Case-fold a projected `city` field.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"city", pluss::bundle::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"city", pluss::scribble::Slot({pluss::make_note("Accra City"), pluss::make_note("TEMA town")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"city"}).nt().casefold();
 auto city = out.registry(0).fields("city");

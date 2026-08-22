@@ -44,9 +44,9 @@ Example 1. A registry with a uniform-kind field and a genuinely mixed field —
 each value's own type is listed individually.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"mixed", pluss::bundle::Slot({pluss::make_series(10), pluss::make_note("hello"), pluss::make_series(3.5)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"mixed", pluss::scribble::Slot({pluss::make_series(10), pluss::make_note("hello"), pluss::make_series(3.5)})},
 });
 
 std::cout << rg.to_json();

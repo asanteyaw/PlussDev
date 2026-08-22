@@ -43,12 +43,12 @@ fetching a field via [`fields(key)`](fields.md) and transforming it directly.
 Example 1. Overwrite an existing field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = rg.set("id", pluss::bundle::Slot({pluss::make_series(99)}));
+auto out = rg.set("id", pluss::scribble::Slot({pluss::make_series(99)}));
 auto ids = out.fields("id");
 std::cout << "[" << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0] << "] nfields=" << out.nfields();
 ```
@@ -62,11 +62,11 @@ std::cout << "[" << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0]
 Example 2. Setting a name that doesn't exist yet adds it as a new field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
 });
 
-auto out = rg.set("population", pluss::bundle::Slot({pluss::make_series(100), pluss::make_series(200), pluss::make_series(300)}));
+auto out = rg.set("population", pluss::scribble::Slot({pluss::make_series(100), pluss::make_series(200), pluss::make_series(300)}));
 std::cout << "nfields=" << out.nfields() << " fields: ";
 for (const auto& key : out.fields()) std::cout << key << " ";
 ```
@@ -81,11 +81,11 @@ Example 3. The scoped fetch-transform-reinsert idiom this method enables — see
 [`map()`](map.md)'s important callout.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"population", pluss::bundle::Slot({pluss::make_series(100), pluss::make_series(200), pluss::make_series(300)})},
+auto rg = pluss::scribble::Registry({
+    {"population", pluss::scribble::Slot({pluss::make_series(100), pluss::make_series(200), pluss::make_series(300)})},
 });
 
-auto doubled = rg.fields("population").transform([](const pluss::bundle::Slot::Value& v) -> pluss::bundle::Slot::Value {
+auto doubled = rg.fields("population").transform([](const pluss::scribble::Slot::Value& v) -> pluss::scribble::Slot::Value {
   return pluss::make_series(std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] * 2);
 });
 auto out = rg.set("population", doubled);

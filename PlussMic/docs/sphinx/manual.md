@@ -4,19 +4,21 @@ This manual is the long-form guide for PlussMic, the data-analysis layer of the
 Pluss ecosystem. It is written for readers who want to use PlussMic as a daily
 tool, not only look up signatures.
 
-PlussMic has three related models:
+PlussMic has four related models:
 
 ```text
 table  -> DataFrame, Thread, Atlas
 kindle -> Stream, Catalog, Archive
-bundle -> Slot, Registry, Axel
+bundle -> Nexus, NexusTraverse, NexusQuery
+scribble -> Slot, Registry, Axel
 ```
 
 Most users start with `DataFrame`, because it is the table abstraction used for
 CSV, Excel, JSON, Parquet, feature engineering, exploratory analysis, plotting,
 and export. `Thread` is the typed column model underneath `DataFrame`. `Atlas`
-stacks related frames. `Kindle` and `Bundle` are lower-level record/stream
-models used when the data is not naturally just a rectangular table.
+stacks related frames. `Kindle` is the aligned stream layer. `Scribble` covers
+heterogeneous records, while `Bundle` covers the multi-table `Nexus` workbench
+when the job is broader than one rectangular table.
 
 ## How to read this manual
 
@@ -31,7 +33,7 @@ your task:
 - Time series: Part VIII.
 - Plotting: Part IX.
 - Multi-frame Atlas data: Part X.
-- Kindle and Bundle models: Part XI and Part XII.
+- Kindle, Scribble, and Bundle models: Part XI, Part XII, and Part XII-B.
 - Recipes: Part XIII.
 - Production debugging: Part XIV.
 
@@ -103,6 +105,7 @@ manual/part08_time_series
 manual/part09_plotting
 manual/part10_atlas
 manual/part11_kindle
+manual/part12_scribble
 manual/part12_bundle
 manual/part13_recipes
 manual/part14_troubleshooting

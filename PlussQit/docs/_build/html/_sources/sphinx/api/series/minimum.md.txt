@@ -158,4 +158,8 @@ the derivative still belongs to `a`.
     <span class="label">Previous</span>
     <span class="title">maximum</span>
   </a>
+  <a class="next-link" href="sum.html">
+    <span class="label">Next</span>
+    <span class="title">sum</span>
+  </a>
 </div>

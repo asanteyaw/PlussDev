@@ -35,7 +35,7 @@ it back to `"UTC"`, and that too is visible on the next read — the
 instant itself never changes across either call.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
+auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z")});
 
 auto ny = slot.tl().tz("America/New_York");
 std::cout << "NY-relabeled: "

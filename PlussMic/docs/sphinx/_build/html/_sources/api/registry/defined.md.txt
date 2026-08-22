@@ -43,9 +43,9 @@ normally, reporting zero fields. See Example 3.
 Example 1. A registry built from named fields is defined.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::cout << std::boolalpha << rg.defined();
@@ -61,7 +61,7 @@ Example 2. A default-constructed registry is undefined, and most other methods t
 when called on it.
 
 ```cpp
-pluss::bundle::Registry rg;
+pluss::scribble::Registry rg;
 std::cout << std::boolalpha << rg.defined() << "\n";
 
 try {
@@ -82,7 +82,7 @@ Example 3. An explicitly empty field list produces a *defined* registry with zer
 fields — not an undefined one. Compare with Example 2.
 
 ```cpp
-pluss::bundle::Registry rg(std::vector<std::pair<std::string, pluss::bundle::Slot>>{});
+pluss::scribble::Registry rg(std::vector<std::pair<std::string, pluss::scribble::Slot>>{});
 std::cout << std::boolalpha << rg.defined() << "\n";
 std::cout << std::boolalpha << rg.empty() << "\n";
 std::cout << rg.nfields();

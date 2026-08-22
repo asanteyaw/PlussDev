@@ -44,8 +44,8 @@ public:
 
 private:
   static pluss::Series cast_column_(const DataFrame& df, std::string_view feature, const DFDatasetOptions& options) {
-    PLUSS_CHECK(df.has_feature(feature), "pluss::DFDataset: missing feature '" + std::string(feature) + "'");
-    auto out = df.features(feature).cast(ThreadCastTarget::Series).as_series();
+    PLUSS_CHECK(df.get(feature).has_value(), "pluss::DFDataset: missing feature '" + std::string(feature) + "'");
+    auto out = df.features(feature).cast().series().as_series();
     if (options.platform.has_value() || options.dtype.has_value()) {
       const auto platform = options.platform.value_or(out.platform());
       const auto dtype = options.dtype.value_or(out.scalar_type());
@@ -63,7 +63,7 @@ private:
     for (const auto& name : options.extra_features) blocked.insert(name);
 
     std::vector<std::string> out;
-    for (const auto& name : df.feature_names()) {
+    for (const auto& name : df.features()) {
       if (blocked.contains(name)) continue;
       if (df.features(name).kind() == ThreadKind::Series) out.push_back(name);
     }
@@ -90,7 +90,7 @@ private:
 
     pluss::Series x = (x_cols.size() == 1)
         ? x_cols.front().reshape({df.ncases(), 1})
-        : pluss::pile(x_cols, 0).transpose(0, 1);
+        : pluss::series::pile(x_cols, 0).transpose(0, 1);
 
     std::vector<pluss::Series> fields;
     fields.push_back(std::move(x));

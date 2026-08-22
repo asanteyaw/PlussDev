@@ -41,8 +41,8 @@ Example 1. A code pattern that matches one value fully and not the
 other.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({{"code", pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})}});
-auto axel = pluss::bundle::Axel({r0});
+auto r0 = pluss::scribble::Registry({{"code", pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")})}});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"code"}).nt().fullmatch("[A-Z]{2}-[0-9]{3}");
 auto code = out.registry(0).fields("code");

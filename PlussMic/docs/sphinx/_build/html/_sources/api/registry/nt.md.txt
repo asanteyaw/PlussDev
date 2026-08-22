@@ -42,8 +42,8 @@ operates on every field. To scope text operations to one field, project first:
 Example 1. Uppercase a single, projected field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto rg = pluss::scribble::Registry({
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
 
 auto out = rg.fields({"city"}).nt().upper();

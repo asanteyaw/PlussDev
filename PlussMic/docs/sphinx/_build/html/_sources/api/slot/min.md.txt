@@ -30,7 +30,7 @@ values.
 Example 1. Find the minimum of three values.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.min();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
 ```

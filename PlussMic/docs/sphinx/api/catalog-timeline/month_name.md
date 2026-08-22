@@ -74,7 +74,7 @@ ts                       | Note         | Note             | 2       | [January,
   weekdays.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::month_name`](../registry-timeline/month_name.md):
-  the bundle-model equivalent.
+  the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month_end.html">

@@ -42,7 +42,7 @@ Every method on this accessor — not just `strip()` — routes through
 Example 1. No-argument overload trims leading and trailing whitespace.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("  Accra  "), pluss::make_note("  Tema  ")});
+auto slot = pluss::scribble::Slot({pluss::make_note("  Accra  "), pluss::make_note("  Tema  ")});
 auto out = slot.nt().strip();
 std::cout << "'" << std::get<pluss::Note>(out.at(0)).at(0) << "' '"
           << std::get<pluss::Note>(out.at(1)).at(0) << "'";
@@ -58,7 +58,7 @@ Example 2. `chars`-argument overload trims a specific character set from
 both edges.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("xxAccraxx")});
+auto slot = pluss::scribble::Slot({pluss::make_note("xxAccraxx")});
 auto out = slot.nt().strip("x");
 std::cout << std::get<pluss::Note>(out.at(0)).at(0);
 ```
@@ -73,7 +73,7 @@ Example 3. Calling any method on this accessor with a non-`Note` slot
 throws — see the important callout above.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_series(1)});
+auto slot = pluss::scribble::Slot({pluss::make_series(1)});
 try {
   auto out = slot.nt().strip();
 } catch (const std::exception& e) {

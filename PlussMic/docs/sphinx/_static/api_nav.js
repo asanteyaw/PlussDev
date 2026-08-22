@@ -16,7 +16,6 @@ window.PLUSS_API_NAV = {
       "bfill",
       "bottom",
       "bucketize",
-      "bundelize",
       "case_study",
       "cast",
       "clip",
@@ -149,6 +148,7 @@ window.PLUSS_API_NAV = {
       "save_parquet",
       "save_txt",
       "scan",
+      "scribbelize",
       "se",
       "select",
       "set",
@@ -487,7 +487,6 @@ window.PLUSS_API_NAV = {
       "bounded",
       "btw",
       "bucketize",
-      "bundelize",
       "casefold",
       "cast",
       "chars",
@@ -594,6 +593,7 @@ window.PLUSS_API_NAV = {
       "rxor",
       "sample",
       "scan",
+      "scribbelize",
       "se",
       "select",
       "shape",
@@ -693,7 +693,6 @@ window.PLUSS_API_NAV = {
       "aggregate_over_frames",
       "align_depth",
       "axis0_labels",
-      "bundelize",
       "column_names",
       "defined",
       "depth",
@@ -713,6 +712,7 @@ window.PLUSS_API_NAV = {
       "nfeatures",
       "plot",
       "relabel_depth",
+      "scribbelize",
       "show",
       "slice_frames",
       "sort_depth",
@@ -907,7 +907,6 @@ window.PLUSS_API_NAV = {
       "as_timeline",
       "astype",
       "bfill",
-      "bundelize",
       "cast",
       "clear_label",
       "clear_label_",
@@ -945,6 +944,7 @@ window.PLUSS_API_NAV = {
       "nt",
       "plot",
       "ptype",
+      "scribbelize",
       "select",
       "shape",
       "show",
@@ -976,7 +976,6 @@ window.PLUSS_API_NAV = {
       "astype",
       "begin",
       "bfill",
-      "bundelize",
       "cast",
       "clean",
       "cloc",
@@ -1036,6 +1035,7 @@ window.PLUSS_API_NAV = {
       "save_json",
       "save_parquet",
       "save_txt",
+      "scribbelize",
       "select",
       "set",
       "set_",
@@ -1070,7 +1070,6 @@ window.PLUSS_API_NAV = {
       "aggregate_over_catalogs",
       "astype",
       "bfill",
-      "bundelize",
       "cast",
       "catalog",
       "catalogs",
@@ -1103,6 +1102,7 @@ window.PLUSS_API_NAV = {
       "nrecords",
       "plot",
       "rename",
+      "scribbelize",
       "shape",
       "show",
       "size",
@@ -1919,6 +1919,8 @@ window.PLUSS_API_NAV = {
       "plan",
       "profile",
       "pull",
+      "query",
+      "read",
       "relationship",
       "relationship_audit",
       "relationships",
@@ -1942,10 +1944,10 @@ window.PLUSS_API_NAV = {
       "validate_relationship"
     ]
   },
-  "NexusQuery": {
-    "title": "NexusQuery",
-    "slug": "nexus-query",
-    "landing": "nexus_query_api_reference.html",
+  "NexusTraverse": {
+    "title": "NexusTraverse",
+    "slug": "nexus-traverse",
+    "landing": "nexus_traverse_api_reference.html",
     "methods": [
       "join",
       "via",
@@ -1953,6 +1955,15 @@ window.PLUSS_API_NAV = {
       "drop",
       "name",
       "collect"
+    ]
+  },
+  "NexusQuery": {
+    "title": "NexusQuery",
+    "slug": "nexus-query",
+    "landing": "nexus_query_api_reference.html",
+    "methods": [
+      "execute",
+      "prepare"
     ]
   }
 };

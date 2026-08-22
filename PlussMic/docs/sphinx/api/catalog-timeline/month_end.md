@@ -84,7 +84,7 @@ February depends on whether the year is a leap year.
   changes February's last valid day.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::month_end`](../registry-timeline/month_end.md):
-  the bundle-model equivalent.
+  the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month.html">

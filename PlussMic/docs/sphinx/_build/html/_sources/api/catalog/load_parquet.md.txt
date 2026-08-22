@@ -34,7 +34,7 @@ Arrow + Parquet C++ available.
     The `.parquet` file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying reader options.
+    A generic configuration scribble, translated into the underlying reader options.
 
 ## Returns
 

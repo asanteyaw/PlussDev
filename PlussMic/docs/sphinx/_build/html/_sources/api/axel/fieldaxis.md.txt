@@ -36,15 +36,15 @@ than by exact name (which is what [`fields()`](fields.md) does).
 Example 1. Keep only `Series`-kind fields in every frame.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
+auto r0 = pluss::scribble::Registry({
+    {"ids", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema")})},
 });
-auto r1 = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(3), pluss::make_series(4)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Kumasi"), pluss::make_note("Takoradi")})},
+auto r1 = pluss::scribble::Registry({
+    {"ids", pluss::scribble::Slot({pluss::make_series(3), pluss::make_series(4)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Kumasi"), pluss::make_note("Takoradi")})},
 });
-auto axel = pluss::bundle::Axel({r0, r1});
+auto axel = pluss::scribble::Axel({r0, r1});
 
 auto out = axel.fieldaxis().series();
 std::cout << out.registry(0).nfields();

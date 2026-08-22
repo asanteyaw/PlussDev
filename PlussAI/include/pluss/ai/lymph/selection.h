@@ -1219,5 +1219,9 @@ class GridPoint {
 
 } // namespace selection
 
+using Candidate = selection::Candidate;
+using Trial = selection::Trial;
+using CompareReport = selection::CompareReport;
+
 
 } // namespace pluss::ai::lymph

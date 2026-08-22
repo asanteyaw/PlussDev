@@ -33,11 +33,11 @@ Example 1. Keep only the field mixing `Series` and `Note` values in
 every frame.
 
 ```cpp
-auto r0 = pluss::bundle::Registry({
-    {"mixed", pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("x")})},
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
+auto r0 = pluss::scribble::Registry({
+    {"mixed", pluss::scribble::Slot({pluss::make_series(1), pluss::make_note("x")})},
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
-auto axel = pluss::bundle::Axel({r0});
+auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fieldaxis().mixed();
 for (const auto& key : out.registry(0).fields()) std::cout << key << " ";

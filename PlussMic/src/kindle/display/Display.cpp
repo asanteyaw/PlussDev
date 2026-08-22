@@ -312,7 +312,8 @@ std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions&
   return oss.str();
 }
 
-std::string render_archive_frame(const Archive& archive, const EffectiveOptions& options) {
+std::string render_archive_frame(const pluss::kindle::Archive& archive,
+                                 const EffectiveOptions& options) {
   if (!archive.defined()) {
     return "kindle::Archive <undefined>\n";
   }
@@ -415,7 +416,7 @@ std::string render(const Catalog& catalog, const DisplayOptions& options) {
   return render_catalog_frame(catalog, resolve_options(options));
 }
 
-std::string render(const Archive& archive, const DisplayOptions& options) {
+std::string render(const pluss::kindle::Archive& archive, const DisplayOptions& options) {
   return render_archive_frame(archive, resolve_options(options));
 }
 
@@ -427,7 +428,9 @@ void print(std::ostream& os, const Catalog& catalog, const DisplayOptions& optio
   os << render(catalog, options) << '\n';
 }
 
-void print(std::ostream& os, const Archive& archive, const DisplayOptions& options) {
+void print(std::ostream& os,
+           const pluss::kindle::Archive& archive,
+           const DisplayOptions& options) {
   os << render(archive, options) << '\n';
 }
 

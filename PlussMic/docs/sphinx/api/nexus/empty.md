@@ -33,6 +33,7 @@ Example 1. A workspace with tables in it is not empty.
 
 ```cpp
 using namespace pluss::table;
+using namespace pluss::bundle;
 
 auto customers = DataFrame({
     {"customer_id", pluss::make_series({1.0, 2.0, 3.0})},

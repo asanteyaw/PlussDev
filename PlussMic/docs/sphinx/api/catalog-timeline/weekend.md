@@ -78,7 +78,7 @@ ts                       | Series       | Series[bool]     | 2       | [true, fa
   spelled out as a full English name.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::weekend`](../registry-timeline/weekend.md): the
-  bundle-model equivalent.
+  scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="weekday_name.html">

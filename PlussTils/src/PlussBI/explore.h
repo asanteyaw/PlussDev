@@ -18,10 +18,10 @@ See:
 
 namespace pluss::bi {
 
-class Portfolio;
+class Studio;
 class Board;
 class Tile;
-class Visual;
+class View;
 class Control;
 class Filter;
 class Session;

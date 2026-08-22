@@ -74,7 +74,7 @@ ts                       | Note         | Note             | 2       | [Wednesda
   months.
 - [`Catalog::tl`](../catalog/tl.md): the entry point this accessor is reached from.
 - [`RegistryTimelineAccessor::weekday_name`](../registry-timeline/weekday_name.md):
-  the bundle-model equivalent.
+  the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="weekday.html">

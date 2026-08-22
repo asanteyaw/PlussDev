@@ -55,7 +55,7 @@ Example 1. Extract every run of digits, producing a ragged, `NULL`-padded
 result.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("1 2 3 4"), pluss::make_note("10 20")});
+auto slot = pluss::scribble::Slot({pluss::make_note("1 2 3 4"), pluss::make_note("10 20")});
 auto out = slot.nt().findall(R"(\d+)", {.regex = true});
 std::cout << out;
 ```

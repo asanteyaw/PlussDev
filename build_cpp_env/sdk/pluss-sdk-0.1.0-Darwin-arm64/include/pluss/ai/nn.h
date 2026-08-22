@@ -1,12 +1,15 @@
 #pragma once
 
+#include "pluss/ai/nn_grad.h"
 #include "pluss/ai/nn_functional.h"
 
 #include "NodeK/NN/modules/Module.h"
 #include "NodeK/NN/modules/activation/Activation.h"
 #include "NodeK/NN/modules/container/Schedule.h"
+#include "NodeK/NN/modules/embedding/Embedding.h"
 #include "NodeK/NN/modules/loss/Loss.h"
 #include "NodeK/NN/modules/fusion/fusion.h"
+#include "NodeK/NN/modules/normalization/LayerNorm.h"
 #include "NodeK/NN/modules/rnn/RNNBase.h"
 #include "NodeK/NN/modules/rnn/RNNImpl.h"
 #include "NodeK/NN/modules/rnn/GRUImpl.h"

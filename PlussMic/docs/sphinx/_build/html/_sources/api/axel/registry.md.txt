@@ -33,10 +33,10 @@ Example 1. Fetch the second frame (index `1`) from a three-frame
 `Axel`.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(2)})}}),
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(3)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}}),
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
 });
 auto reg = axel.registry(1);
 std::cout << std::get<pluss::Series>(reg.fields("ids").at(0)).to_vec<std::int64_t>()[0];
@@ -51,8 +51,8 @@ std::cout << std::get<pluss::Series>(reg.fields("ids").at(0)).to_vec<std::int64_
 Example 2. An out-of-range index throws.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
 try {
   axel.registry(3);

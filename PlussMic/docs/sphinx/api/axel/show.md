@@ -32,8 +32,8 @@ Example 1. `show()`'s output matches `to_string()`'s return value
 exactly.
 
 ```cpp
-auto axel = pluss::bundle::Axel({
-    pluss::bundle::Registry({{"ids", pluss::bundle::Slot({pluss::make_series(1)})}}),
+auto axel = pluss::scribble::Axel({
+    pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(1)})}}),
 });
 std::ostringstream oss;
 axel.show(oss);

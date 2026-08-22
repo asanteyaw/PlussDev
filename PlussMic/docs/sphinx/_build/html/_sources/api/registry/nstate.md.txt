@@ -39,9 +39,9 @@ specifically want to assert alignment, not merely inspect size.
 Example 1. A registry whose fields all share the same length.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::cout << rg.nstate();
@@ -56,9 +56,9 @@ std::cout << rg.nstate();
 Example 2. A ragged registry (fields of different lengths) throws.
 
 ```cpp
-auto ragged = pluss::bundle::Registry({
-    {"a", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"b", pluss::bundle::Slot({pluss::make_series(10), pluss::make_series(20)})},
+auto ragged = pluss::scribble::Registry({
+    {"a", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"b", pluss::scribble::Slot({pluss::make_series(10), pluss::make_series(20)})},
 });
 
 try {
@@ -77,7 +77,7 @@ Registry::nstate: registry has ragged slot lengths; use minstate()/maxstate() or
 Example 3. An explicitly empty registry reports `0`, not a throw.
 
 ```cpp
-pluss::bundle::Registry rg(std::vector<std::pair<std::string, pluss::bundle::Slot>>{});
+pluss::scribble::Registry rg(std::vector<std::pair<std::string, pluss::scribble::Slot>>{});
 std::cout << rg.nstate();
 ```
 

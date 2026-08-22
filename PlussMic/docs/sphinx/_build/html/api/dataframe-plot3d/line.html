@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=052b4a34"></script>
+    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -135,7 +135,7 @@ struct Plot3DSceneOptions {
 Every field in `Plot3DSceneOptions` is a `std::optional` that defaults to
 `std::nullopt`, meaning &quot;leave the pane&#39;s built-in default alone.&quot; When several
 fields *are* set, they&#39;re applied in a fixed order, each one layering on top of
-(and able to override) whatever came before: **`preset`** first (a bundle that sets
+(and able to override) whatever came before: **`preset`** first (a scribble that sets
 a theme, grid style, camera angle, and a lighting rig all at once — see the preset
 table below), then **`theme`** (overrides just the color theme), then
 **`grid_style`** (`None`, `Major`, or `MajorMinor`), then **`camera_preset`**
@@ -167,7 +167,7 @@ struct Plot3DTraceOptions {
 };
 ```
 
-Same layering rule as `Plot3DSceneOptions`: **`preset`** applies first (a bundle of
+Same layering rule as `Plot3DSceneOptions`: **`preset`** applies first (a scribble of
 shade/lighting/material/width/transparency tuned for one trace shape — `Path` is
 tuned for line traces, `Cloud` for scatter, `Surface` for filled meshes,
 `Wireframe` for mesh edges, `Spire` for 3D-bar histograms, `Volume` for
@@ -342,6 +342,7 @@ connected path, with optional size/color encoding.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
 </ul>

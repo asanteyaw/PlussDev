@@ -45,10 +45,29 @@ struct DataFramePlotOptions {
   double tight_layout_padding{6.0};
 };
 
+enum class XYAlignMode : std::uint8_t {
+  Strict = 0,
+  Inner = 1,
+  PadScalar = 2,
+};
+
+enum class XYAlignBy : std::uint8_t {
+  Auto = 0,
+  Label = 1,
+  Pos = 2,
+};
+
+struct XYAlignOptions {
+  XYAlignMode mode{XYAlignMode::Strict};
+  XYAlignBy align_by{XYAlignBy::Auto};
+  double pad_scalar{0.0};
+};
+
 struct BarPlotOptions {
   bool ci_enabled{false};
   double ci_level{0.95};
   bool horizontal{false};
+  XYAlignOptions align{};
 };
 
 struct HeatmapPlotOptions {
@@ -151,11 +170,13 @@ struct Scatter3DPlotOptions {
   Plot3DSceneOptions scene{};
   Plot3DTraceOptions trace{};
   double default_marker_size{12.0};
+  XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
 };
 
 struct Line3DPlotOptions {
   Plot3DSceneOptions scene{};
   Plot3DTraceOptions trace{};
+  XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
 };
 
 struct Hist3DPlotOptions {
@@ -168,6 +189,7 @@ struct Hist3DPlotOptions {
   bool as_wireframe{false};
   Plot3DSceneOptions scene{};
   Plot3DTraceOptions trace{};
+  XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
 };
 
 struct Surface3DPlotOptions {
@@ -196,16 +218,19 @@ struct LinePlotOptions {
   double alpha{1.0};
   double line_width{1.6};
   std::optional<pluss::pl::LimitMethod> y_limit_method{pluss::pl::LimitMethod::Padded};
+  XYAlignOptions align{};
 };
 
 struct StepPlotOptions {
   double alpha{1.0};
   double line_width{1.5};
+  XYAlignOptions align{};
 };
 
 struct AreaPlotOptions {
   double alpha{0.88};
   double line_width{1.3};
+  XYAlignOptions align{};
 };
 
 struct AreaStackedPlotOptions {
@@ -216,6 +241,10 @@ struct AreaStackedPlotOptions {
 struct ScatterPlotOptions {
   double alpha{0.92};
   double line_width{1.1};
+  bool fit_line{false};
+  std::int64_t fit_order{1};
+  bool fit_ci{false};
+  double fit_confidence_level{0.95};
 };
 
 struct BarStackedPlotOptions {
@@ -260,6 +289,65 @@ struct PiePlotOptions {
 };
 
 struct AutoPlotOptions {};
+
+class ThreadPlotAccessor {
+public:
+  explicit ThreadPlotAccessor(Thread value, DataFramePlotOptions options = {});
+
+  pluss::pl::Studio line() const;
+  pluss::pl::Studio line(const Thread& x) const;
+  pluss::pl::Studio line(const LinePlotOptions& options) const;
+  pluss::pl::Studio line(const Thread& x, const LinePlotOptions& options) const;
+
+  pluss::pl::Studio step() const;
+  pluss::pl::Studio step(const Thread& x) const;
+  pluss::pl::Studio step(const StepPlotOptions& options) const;
+  pluss::pl::Studio step(const Thread& x, const StepPlotOptions& options) const;
+
+  pluss::pl::Studio area() const;
+  pluss::pl::Studio area(const Thread& x) const;
+  pluss::pl::Studio area(const AreaPlotOptions& options) const;
+  pluss::pl::Studio area(const Thread& x, const AreaPlotOptions& options) const;
+
+  pluss::pl::Studio scatter(const Thread& x) const;
+  pluss::pl::Studio scatter(const Thread& x, const ScatterPlotOptions& options) const;
+  pluss::pl::Studio scatter(const Thread& x, const Thread& hue) const;
+  pluss::pl::Studio scatter(const Thread& x, const Thread& hue, const ScatterPlotOptions& options) const;
+
+  pluss::pl::Studio bar() const;
+  pluss::pl::Studio bar(const Thread& x) const;
+  pluss::pl::Studio bar(const BarPlotOptions& options) const;
+  pluss::pl::Studio bar(const Thread& x, const BarPlotOptions& options) const;
+
+  pluss::pl::Studio box(const BoxPlotOptions& options = {}) const;
+  pluss::pl::Studio violin(const ViolinPlotOptions& options = {}) const;
+  pluss::pl::Studio violin(const Thread& group) const;
+  pluss::pl::Studio violin(const Thread& group, const ViolinPlotOptions& options) const;
+
+  pluss::pl::Studio hist(std::int64_t bins = 20) const;
+  pluss::pl::Studio hist(const HistPlotOptions& options) const;
+
+  pluss::pl::Studio density(std::int64_t points = 128) const;
+  pluss::pl::Studio density(const DensityPlotOptions& options) const;
+
+  pluss::pl::Studio pie() const;
+  pluss::pl::Studio pie(const PiePlotOptions& options) const;
+  pluss::pl::Studio pie(const Thread& labels) const;
+  pluss::pl::Studio pie(const Thread& labels, const PiePlotOptions& options) const;
+
+  pluss::pl::Studio lag(const LagPlotOptions& options = {}) const;
+  pluss::pl::Studio act(const ActPlotOptions& options = {}) const;
+  pluss::pl::Studio bootstrap(const BootstrapPlotOptions& options = {}) const;
+  pluss::pl::Studio brief(const BriefPlotOptions& options = {}) const;
+  pluss::pl::Studio& brief(pluss::pl::Studio& figure,
+                           const BriefPlotOptions& options = {}) const;
+  pluss::pl::Studio auto_plot() const;
+  pluss::pl::Studio auto_plot(const AutoPlotOptions& options) const;
+
+private:
+  Thread base_{};
+  DataFramePlotOptions options_{};
+};
 
 class DataFramePlotAccessor {
 public:
@@ -478,6 +566,8 @@ public:
                               const AutoPlotOptions& options) const;
 
 private:
+  friend class ThreadPlotAccessor;
+
   pluss::pl::Studio impl_line(pluss::msharp::RangeView::Of<std::string_view> y_features,
                               std::optional<std::string_view> x_feature) const;
   pluss::pl::Studio impl_step(pluss::msharp::RangeView::Of<std::string_view> y_features,

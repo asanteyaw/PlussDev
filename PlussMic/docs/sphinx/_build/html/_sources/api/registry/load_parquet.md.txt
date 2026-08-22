@@ -35,7 +35,7 @@ build-support check.
     The `.parquet` file to read.
 
 **config** (`const pluss::loader::Config&`, optional)
-    A generic configuration bundle, translated into the underlying reader options.
+    A generic configuration scribble, translated into the underlying reader options.
 
 ## Returns
 
@@ -50,7 +50,7 @@ since it was built without Arrow/Parquet C++.
 
 ```cpp
 try {
-  auto rg = pluss::bundle::Registry::load_parquet("cities.parquet");
+  auto rg = pluss::scribble::Registry::load_parquet("cities.parquet");
 } catch (const std::exception& e) {
   std::cout << e.what();
 }
@@ -67,7 +67,7 @@ checked before the build-support requirement.
 
 ```cpp
 try {
-  auto rg = pluss::bundle::Registry::load_parquet("does_not_exist.parquet");
+  auto rg = pluss::scribble::Registry::load_parquet("does_not_exist.parquet");
 } catch (const std::exception& e) {
   std::cout << e.what();
 }

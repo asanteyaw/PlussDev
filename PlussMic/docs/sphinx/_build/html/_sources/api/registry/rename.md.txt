@@ -51,10 +51,10 @@ succeeds trivially, returning the registry unchanged.
 Example 1. Rename several fields at once via an initializer list of pairs.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"population", pluss::bundle::Slot({pluss::make_series(100), pluss::make_series(200), pluss::make_series(300)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"population", pluss::scribble::Slot({pluss::make_series(100), pluss::make_series(200), pluss::make_series(300)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 auto out = rg.rename({{"city", "location"}, {"id", "identifier"}});
@@ -70,9 +70,9 @@ identifier population location
 Example 2. The same rename via an `unordered_map`.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
 });
 
 std::unordered_map<std::string, std::string> mapping{{"city", "location"}};
@@ -89,9 +89,9 @@ id location
 Example 3. The single-pair overload for renaming exactly one field.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
 });
 
 auto out = rg.rename("city", "location");
@@ -107,9 +107,9 @@ id location
 Example 4. Renaming to a name that already belongs to another field throws.
 
 ```cpp
-auto rg = pluss::bundle::Registry({
-    {"id", pluss::bundle::Slot({pluss::make_series(1)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra")})},
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1)})},
+    {"city", pluss::scribble::Slot({pluss::make_note("Accra")})},
 });
 
 try {

@@ -34,7 +34,7 @@ always anchors the pattern to both ends of the value.
 Example 1. A code pattern that matches one value fully and not the other.
 
 ```cpp
-auto slot = pluss::bundle::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")});
+auto slot = pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")});
 auto out = slot.nt().fullmatch("[A-Z]{2}-[0-9]{3}");
 std::cout << std::boolalpha
           << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
