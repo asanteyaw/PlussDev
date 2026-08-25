@@ -127,8 +127,35 @@ data=[10, 7, 4, 1]
 
 The sequence stops before it would cross the exclusive lower boundary `0`.
 
-Example 4. The `Config` overload currently preserves integer `arange` semantics
-even when the config asks for `Float32`.
+Example 4. Positive multi-step ranges stop before the exclusive end as well.
+
+```cpp
+std::cout << pluss::series::arange(0, 10, 2);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[5], strides=[1], dtype=int64, platform=cpu, numel=5, contiguous=true)
+data=[0, 2, 4, 6, 8]
+```
+
+Example 5. When the interval is already exhausted, `arange()` returns an empty
+range object.
+
+```cpp
+std::cout << pluss::series::arange(5, 5);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[0], strides=[1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+```
+
+Example 6. The `Config` overload currently preserves integer `arange`
+semantics even when the config asks for `Float32`.
 
 ```cpp
 std::cout << pluss::series::arange(

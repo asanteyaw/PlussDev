@@ -21,12 +21,15 @@ DataFrameSqlAccessor::execute(std::string_view statement) -> DataFrame
 
 #### What It Does
 
-Runs a SQL query against the current frame and returns the result as a new `DataFrame`.
+Runs a SQL query against the current frame and returns the result as a new
+`DataFrame`. The accessor uses an in-memory SQLite workspace under the hood, so the
+surface is much closer to normal SQL than the old parser-only version.
 
 #### Parameters
 
 **statement**
-    SQL query text run against the current frame. The frame is exposed to the statement as `self`.
+    SQL query text run against the current frame. The frame is exposed to the
+    statement as `df`.
 
 #### Returns
 
@@ -45,7 +48,7 @@ auto df = pluss::table::DataFrame({
 });
 auto sql = df.sql();
 
-auto out = sql.execute("SELECT id, sales FROM self WHERE sales > 95");
+auto out = sql.execute("SELECT id, sales FROM df WHERE sales > 95");
 ```
 
 ##### Output
@@ -59,7 +62,10 @@ id  sales
 #### Practical Behavior
 
 - `execute(statement)` runs the SQL immediately against the current frame.
-- The current frame is exposed inside the statement as `self`.
+- The current frame is exposed inside the statement as `df`.
+- Additional named frames can be bound through `SqlOptions::sources`.
+- This now executes against an in-memory SQLite workspace, so grouped aggregates,
+  CTEs, `LEFT JOIN`, `DISTINCT`, and similar query shapes are valid.
 - Use this for one-off queries. Use `prepare(...)` when the same statement shape will be executed repeatedly with different parameter values.
 
 <div class="pluss-inline-prev-next">
@@ -105,7 +111,7 @@ auto df = pluss::table::DataFrame({
 });
 auto sql = df.sql();
 
-auto out = sql.prepare("SELECT id, sales FROM self WHERE sales > {min_sales}");
+auto out = sql.prepare("SELECT id, sales FROM df WHERE sales > {min_sales}");
 ```
 
 ##### Output

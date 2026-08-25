@@ -1949,5 +1949,3 @@ procedure_phase8_test 4 12.9469
 procedure_system_test 2 9.11693
 plussmic_scribble_model 1 0.0337124
 ---
-plussmic_table_csv
-plussmic_table_axis_match

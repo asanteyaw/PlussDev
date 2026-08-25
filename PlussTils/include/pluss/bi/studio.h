@@ -24,6 +24,9 @@ struct TileRender {
   std::string key{};
   LayoutSpec layout{};
   ViewKind kind{ViewKind::DetailTable};
+  bool is_control{false};
+  std::optional<Control> control{};
+  std::optional<Filter> active_filter{};
   std::shared_ptr<pluss::pl::Studio> plot{};
   std::shared_ptr<pluss::table::DataFrame> table{};
   std::optional<pluss::table::ThreadValue> scalar{};
@@ -84,6 +87,25 @@ namespace detail {
     return pluss::make_timeindex(std::vector<std::string>{std::get<std::string>(value)}, false);
   }
   PLUSS_FAIL("pluss::bi: temporal filter expected TimeIndex, Timeline, or ISO string");
+}
+
+[[nodiscard]] inline std::string scalar_temporal_iso_(const FilterScalar& value) {
+  if (std::holds_alternative<std::string>(value)) {
+    return std::get<std::string>(value);
+  }
+  if (std::holds_alternative<pluss::Timeline>(value)) {
+    const auto& timeline = std::get<pluss::Timeline>(value);
+    PLUSS_CHECK(timeline.numel() == 1,
+                "pluss::bi: temporal scalar filters require a size-1 Timeline bound");
+    return std::string(timeline.to_note_iso().at(0));
+  }
+  if (std::holds_alternative<pluss::TimeIndex>(value)) {
+    const auto& index = std::get<pluss::TimeIndex>(value);
+    PLUSS_CHECK(index.size() == 1,
+                "pluss::bi: temporal scalar filters require a size-1 TimeIndex bound");
+    return std::string(index.to_note_iso().at(0));
+  }
+  PLUSS_FAIL("pluss::bi: temporal filter expected Timeline, TimeIndex, or ISO string");
 }
 
 [[nodiscard]] inline pluss::table::Thread apply_scalar_filter_(
@@ -162,11 +184,9 @@ namespace detail {
       return (column >= std::get<double>(range.low)) &
              (column <= std::get<double>(range.high));
     case pluss::table::ThreadKind::Timeline:
-      return (column >= scalar_timeline_(range.low)) &
-             (column <= scalar_timeline_(range.high));
+      return column.btw(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
     case pluss::table::ThreadKind::TimeIndex:
-      return (column >= scalar_timeindex_(range.low)) &
-             (column <= scalar_timeindex_(range.high));
+      return column.btw(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
     case pluss::table::ThreadKind::Note:
       PLUSS_FAIL("pluss::bi: between filter is not supported for text features");
   }
@@ -231,6 +251,7 @@ namespace detail {
     const pluss::table::DataFrame& frame,
     const std::vector<Filter>& filters,
     const std::optional<std::string>& query_scope,
+    bool strict_missing,
     bool strict_scoped_missing) {
   auto out = frame;
   for (const auto& filter : filters) {
@@ -242,8 +263,8 @@ namespace detail {
     }
     const bool exists = frame_has_feature_(out, filter.feature);
     if (!exists) {
-      if (strict_scoped_missing && filter.scope.has_value()) {
-        PLUSS_FAIL("pluss::bi: scoped filter '" + filter.key +
+      if (strict_missing || (strict_scoped_missing && filter.scope.has_value())) {
+        PLUSS_FAIL("pluss::bi: filter '" + filter.key +
                    "' targets missing feature '" + filter.feature + "'");
       }
       continue;
@@ -288,14 +309,29 @@ namespace detail {
     }
   }
 
-  out = apply_filter_list_(out, query.filters, query.scope, true);
+  out = apply_filter_list_(out, query.filters, query.scope, true, true);
 
   std::vector<Filter> session_filters;
   session_filters.reserve(session.filters().size());
   for (const auto& [_, value] : session.filters()) {
     session_filters.push_back(value);
   }
-  out = apply_filter_list_(out, session_filters, query.scope, true);
+  out = apply_filter_list_(out, session_filters, query.scope, false, true);
+
+  if (!query.sort_specs.empty()) {
+    std::vector<pluss::table::DataFrame::ArrangeSpec> specs;
+    specs.reserve(query.sort_specs.size());
+    for (const auto& spec : query.sort_specs) {
+      PLUSS_CHECK(!spec.feature.empty(),
+                  "pluss::bi: sort feature name cannot be empty");
+      specs.push_back(pluss::table::DataFrame::ArrangeSpec{
+          .feature = spec.feature,
+          .ascending = spec.ascending,
+          .nulls_last = spec.nulls_last,
+      });
+    }
+    out = out.arrange(pluss::msharp::RangeView::Of<pluss::table::DataFrame::ArrangeSpec>(specs));
+  }
 
   if (!query.select_features.empty()) {
     const auto views = string_views_(query.select_features);
@@ -394,6 +430,36 @@ namespace detail {
   return out;
 }
 
+[[nodiscard]] inline TileRender render_control_tile_(
+    const Tile& tile,
+    const Session& session) {
+  PLUSS_CHECK(tile.control.has_value(), "pluss::bi: expected a control tile");
+
+  TileRender out;
+  out.key = tile.key;
+  out.layout = tile.layout;
+  out.is_control = true;
+  out.control = tile.control;
+  if (const auto active = session.filter(tile.control->key); active.has_value()) {
+    out.active_filter = std::move(active);
+    return out;
+  }
+
+  for (const auto& [_, value] : session.filters()) {
+    if (value.feature != tile.control->feature) {
+      continue;
+    }
+    if (tile.control->scope.has_value()) {
+      if (!value.scope.has_value() || value.scope != tile.control->scope) {
+        continue;
+      }
+    }
+    out.active_filter = value;
+    break;
+  }
+  return out;
+}
+
 inline void validate_tile_(const Tile& tile, std::int64_t rows, std::int64_t cols) {
   PLUSS_CHECK(!tile.key.empty(), "pluss::bi: tile key cannot be empty");
   PLUSS_CHECK(tile.layout.row >= 0 && tile.layout.col >= 0,
@@ -483,6 +549,8 @@ public:
       for (const auto& tile : board.tiles) {
         if (tile.view.has_value()) {
           board_out.tiles.push_back(detail::render_view_tile_(tile, *nexus_, session_));
+        } else if (tile.control.has_value()) {
+          board_out.tiles.push_back(detail::render_control_tile_(tile, session_));
         }
       }
       out.boards.push_back(std::move(board_out));

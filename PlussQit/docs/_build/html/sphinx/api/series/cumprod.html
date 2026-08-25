@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::max" href="max.html" />
@@ -56,11 +56,25 @@
 stays the same, but each position becomes the product of all earlier positions
 in the lane, including itself.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>, the rowwise cumulative product is <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">6]</span></code>.</p>
+<p>The prefix idea is the same as <a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumsum()</span></code></span></a>, but multiplication
+changes the behavior materially:</p>
+<ul class="simple">
+<li><p>early zeros wipe out later prefixes</p></li>
+<li><p>large values grow faster</p></li>
+<li><p>tiny values vanish faster</p></li>
+</ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
 <p>The axis along which the running product is accumulated.</p>
+<p>Important details:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code> scans down the first axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code> scans across the second axis</p></li>
+<li><p>negative dims count from the back</p></li>
+<li><p>the result keeps the same shape because this is a scan, not a reduction</p></li>
+</ul>
 <p><strong>keepdim</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>)</p>
 <p>Accepted for API parity, but currently ignored for shape because scans preserve
 shape already.</p>
@@ -112,17 +126,67 @@ data=[[1, 2, 3],
 </pre></div>
 </div>
 <p>The first row is unchanged because each column scan starts there.</p>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">keepdim</span></code> is currently shape-neutral here too.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">mat</span><span class="p">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">sizes</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">).</span><span class="n">sizes</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">);</span>
+<p>Example 3. Negative dimensions count from the back, so <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last
+axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2, 6],
+  [4, 20, 120]]
+</pre></div>
+</div>
+<p>On this shape, that matches <code class="docutils literal notranslate"><span class="pre">cumprod(1)</span></code> because the last axis is the row-local
+column axis.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">keepdim</span></code> is currently shape-neutral here too.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">mat</span><span class="p">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">sizes</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">).</span><span class="n">sizes</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
-<p>Example 4. The current reverse-mode path does not populate source sensitivity.</p>
+<p>Example 5. Once a zero appears in a lane, later prefixes in that lane stay zero.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_zero</span><span class="p">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 0, 0],
+  [3, 15, 15]]
+</pre></div>
+</div>
+<p>This is one of the most important practical quirks of cumulative products:
+after multiplication by zero, the later prefixes in that lane cannot recover.</p>
+<p>Example 6. The in-place overload mutates the current <code class="docutils literal notranslate"><span class="pre">Series</span></code> but keeps the same
+scan semantics.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">inplace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
+<span class="n">inplace</span><span class="p">.</span><span class="n">cumprod_</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">inplace</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2, 6],
+  [4, 20, 120]]
+</pre></div>
+</div>
+<p>Example 7. The current reverse-mode path does not populate source sensitivity.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_cumprod</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
 <span class="n">tracked_cumprod</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
@@ -137,8 +201,8 @@ data=[[1, 2, 3],
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
 data=[[1, 2, 6],
   [4, 20, 120]]
@@ -147,12 +211,27 @@ has_dx=false
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cumprod()</span></code> is the multiplicative scan counterpart to <a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumsum()</span></code></span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">keepdim</span></code> is currently accepted but shape-neutral.</p></li>
 <li><p>Reverse-mode users should treat <code class="docutils literal notranslate"><span class="pre">cumprod()</span></code> as a current limitation point.</p></li>
+<li><p>Early zeros flatten later prefixes in the same lane.</p></li>
+<li><p>Choosing the wrong axis changes the meaning completely.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">dim</span></code> outside the valid axis range fails.</p></li>
+</ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">cumprod()</span></code> when you need every multiplicative prefix, not just the final
+product:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cumprod(dim)</span></code> preserves shape and stores all prefixes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepdim</span></code> is currently accepted but does not change shape</p></li>
+<li><p>zeros propagate forward through the rest of a lane</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cumprod_</span></code> mutates the current <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
+<li><p>reverse-mode support is currently a limitation on this surface</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -236,6 +315,7 @@ has_dx=false
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series Factory API Reference" href="../../series_factory_api_reference.html" />
+    <link rel="next" title="Series::stat" href="stat.html" />
     <link rel="prev" title="Series::argmax" href="argmax.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -50,25 +50,34 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the index of the smallest value rather than the value itself.</p>
+<p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> returns the index of the smallest value rather than the value
+itself.</p>
 <p>This is the index-returning companion to <a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">min()</span></code></span></a>:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">min()</span></code> tells you the winning value</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> tells you where that winning value lives</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min()</span></code> answers “what is the smallest value?”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> answers “where is the smallest value?”</p></li>
 </ul>
-<p>Like <a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argmax()</span></code></span></a>, this is a reduction-only family. There is no
-binary comparison overload because index selection only makes sense after
-choosing a single winning lane.</p>
+<p>That difference affects both dtype and interpretation:</p>
+<ul class="simple">
+<li><p>the result dtype is <code class="docutils literal notranslate"><span class="pre">int64</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> with no arguments returns one flat global index</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmin(dim)</span></code> returns local indices inside the reduced axis</p></li>
+</ul>
+<p>So the central lesson is the same as with <a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argmax()</span></code></span></a>: always keep
+track of which index space the method is returning.</p>
 </section>
 <section id="overload-map">
 <h2>Overload Map<a class="headerlink" href="#overload-map" title="Link to this heading">¶</a></h2>
 <p><strong><code class="docutils literal notranslate"><span class="pre">argmin()</span></code></strong></p>
-<p>Reduces across the entire series and returns one flat global index in contiguous
-row-major order.</p>
+<p>Reduces across the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> and returns one flat global index in
+row-major traversal order.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">argmin(dim)</span></code></strong></p>
-<p>Reduces one axis and returns the local winner index inside that axis.</p>
+<p>Reduces one axis and returns the local winning index inside that axis.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">argmin(dim,</span> <span class="pre">keepdim)</span></code></strong></p>
-<p>Same reduction as <code class="docutils literal notranslate"><span class="pre">argmin(dim)</span></code>, with optional axis retention as size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Same reduction as <code class="docutils literal notranslate"><span class="pre">argmin(dim)</span></code>, but optionally keeps the reduced axis as size
+<code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>There is no binary <code class="docutils literal notranslate"><span class="pre">argmin(other)</span></code> overload because index-returning selection
+is a reduction-only concept.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -79,42 +88,51 @@ row-major order.</p>
 <li><p>negative dims count from the back</p></li>
 <li><p>the dim must exist</p></li>
 </ul>
-<p>For the dimension overloads, returned indices are local offsets along the
-reduced axis, not global flattened positions.</p>
+<p>Changing <code class="docutils literal notranslate"><span class="pre">dim</span></code> changes what the returned numbers mean.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> returns a flat index into the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmin(dim)</span></code> returns local offsets along the chosen axis</p></li>
+</ul>
+<p>Those are different answers to different questions.</p>
 <p><strong>keepdim</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>)</p>
-<p>Whether the reduced axis is kept in the output shape.</p>
+<p>Controls whether the reduced axis remains in the output shape.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: remove the axis</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: preserve it as size <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: keep the axis as size <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
+<p>This toggle helps when shape alignment matters after the reduction.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-An <code class="docutils literal notranslate"><span class="pre">int64</span></code> index result. The no-argument overload returns one scalar index;
-the dimension overloads return reduced <code class="docutils literal notranslate"><span class="pre">int64</span></code> series.</p>
+An <code class="docutils literal notranslate"><span class="pre">int64</span></code> index <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>- scalar `Series` for `argmin()`
+- reduced `int64` `Series` for `argmin(dim, ...)`
+</pre></div>
+</div>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> is not a differentiable value op.</p>
-<p>Like <a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argmax()</span></code></span></a>, it does not currently attach a reverse-mode
-source link. Treat it as an index-selection primitive.</p>
+<p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> is an index-selection primitive, not a differentiable value-returning
+reduction.</p>
+<p>As currently implemented, it does not attach a useful reverse-mode source link.
+Treat it as control information for downstream selection, routing, or analysis.</p>
 </section>
 <section id="tie-policy">
 <h2>Tie Policy<a class="headerlink" href="#tie-policy" title="Link to this heading">¶</a></h2>
 <p>Ties go to the first winning position encountered.</p>
-<p>So:</p>
+<p>That means:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> chooses the first winning flat position</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> chooses the first winning flat position in row-major order</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">argmin(dim,</span> <span class="pre">...)</span></code> chooses the first winning position along the reduced axis</p></li>
 </ul>
-<p>This is deliberate selector behavior, not the tie-sharing semantics of
-<a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">min()</span></code></span></a>.</p>
+<p>This is first-winner behavior, not tie-sharing.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>The examples on this page build incrementally.</p>
-<p>Example 1. With no arguments, <code class="docutils literal notranslate"><span class="pre">argmin()</span></code> returns a flat global index.</p>
+<p>The examples below emphasize the difference between flat global indices and
+axis-local indices, then cover tie handling and failure behavior.</p>
+<p>Example 1. With no arguments, <code class="docutils literal notranslate"><span class="pre">argmin()</span></code> returns one flat global index.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">-9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
@@ -129,54 +147,52 @@ source link. Treat it as an index-selection primitive.</p>
 data=3
 </pre></div>
 </div>
-<p>The flattened order is <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">-7,</span> <span class="pre">3,</span> <span class="pre">-9,</span> <span class="pre">-7,</span> <span class="pre">6]</span></code>, so the global minimum <code class="docutils literal notranslate"><span class="pre">-9</span></code>
+<p>The flattened row-major order is <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">-7,</span> <span class="pre">3,</span> <span class="pre">-9,</span> <span class="pre">-7,</span> <span class="pre">6]</span></code>, so the minimum <code class="docutils literal notranslate"><span class="pre">-9</span></code>
 appears at flat index <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">argmin(dim)</span></code> returns local lane indices instead of one flat global
-offset.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cold</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">argmin(0)</span></code> returns the winning row index for each column.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cold</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[1, 0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[1, 0, 0]
 </pre></div>
 </div>
-<p>Row <code class="docutils literal notranslate"><span class="pre">0</span></code> wins at column <code class="docutils literal notranslate"><span class="pre">1</span></code>; row <code class="docutils literal notranslate"><span class="pre">1</span></code> wins at column <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> keeps the reduced axis available for downstream shape
-alignment.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cold</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<p>Column by column:</p>
+<ul class="simple">
+<li><p>column <code class="docutils literal notranslate"><span class="pre">0</span></code>: <code class="docutils literal notranslate"><span class="pre">-9</span></code> wins from row <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p>column <code class="docutils literal notranslate"><span class="pre">1</span></code>: <code class="docutils literal notranslate"><span class="pre">-7</span></code> ties, so the first winner is row <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p>column <code class="docutils literal notranslate"><span class="pre">2</span></code>: <code class="docutils literal notranslate"><span class="pre">3</span></code> wins from row <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+</ul>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">argmin(1)</span></code> returns the winning column index for each row.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cold</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,1], strides=[1,1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[[1],
-  [0]]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[1, 0]
 </pre></div>
 </div>
-<p>Again, the indices are unchanged; only the shape policy changes.</p>
-<p>Example 4. Negative dims normalize from the back.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cold</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
+<p>These are column offsets inside each row, not row offsets inside each column.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> preserves the reduced axis as size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cold</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[1, 0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,1], strides=[1,1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[[1],
+  [0]]
 </pre></div>
 </div>
-<p>For a rank-2 series, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this matches <code class="docutils literal notranslate"><span class="pre">argmin(1)</span></code>.</p>
-<p>Example 5. Tied minima go to the first winning position.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">argmin_ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">-4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-9.0</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
-<span class="p">});</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argmin_ties</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<p>Only the shape changed. The winning local indices did not.</p>
+<p>Example 5. Negative dims count from the back.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cold</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -186,22 +202,74 @@ data=[1, 0]
 data=[1, 0]
 </pre></div>
 </div>
-<p>The tied <code class="docutils literal notranslate"><span class="pre">-9</span></code>s in the first row choose column <code class="docutils literal notranslate"><span class="pre">1</span></code>, not column <code class="docutils literal notranslate"><span class="pre">2</span></code>, because the
-selector keeps the first winner it sees.</p>
-<p>Example 6. A scalar again has only one possible winning position.</p>
+<p>For this rank-2 input, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this matches <code class="docutils literal notranslate"><span class="pre">argmin(1)</span></code>.</p>
+<p>Example 6. Ties along a reduced axis go to the first winning position.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">argmin_ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">-4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-9.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argmin_ties</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[1, 0]
+</pre></div>
+</div>
+<p>In the first row, columns <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> tie at <code class="docutils literal notranslate"><span class="pre">-9</span></code>, and column <code class="docutils literal notranslate"><span class="pre">1</span></code> wins because
+it appears first along the reduced axis.</p>
+<p>Example 7. Global ties also choose the first winning flat position.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">argmin_global_ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">-9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-9.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-9.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argmin_global_ties</span><span class="p">.</span><span class="n">argmin</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=0
+</pre></div>
+</div>
+<p>Several entries tie for the global minimum, but the first flat position wins.</p>
+<p>Example 8. A scalar again has only one legal winning position.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">42.0</span><span class="p">);</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scalar</span><span class="p">.</span><span class="n">argmin</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
 data=0
 </pre></div>
 </div>
-<p>Example 7. Empty-dimension reduction fails explicitly.</p>
+<p>This keeps index semantics consistent even when the input rank is zero.</p>
+<p>Example 9. The reduction dim must exist.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cold</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>argmin: dim out of range
+</pre></div>
+</div>
+<p>This is the expected failure mode for an invalid axis request.</p>
+<p>Example 10. Empty-dimension reduction fails explicitly because no valid winner
+exists.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">empty_cols</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
 
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -213,38 +281,53 @@ data=0
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>argmin: cannot reduce an empty dimension
 </pre></div>
 </div>
-<p>That is the correct failure mode for an index-returning reduction: an empty
-lane has no legal winning element.</p>
+<p>An index reduction cannot legally return an answer when the reduction lane has
+no elements at all.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">argmin()</span></code> returns indices, not values.</p></li>
-<li><p>The no-argument overload is a full flat reduction across the whole series.</p></li>
-<li><p>The returned dtype is <code class="docutils literal notranslate"><span class="pre">int64</span></code>.</p></li>
-<li><p>Ties go to the first winner.</p></li>
+<li><p>The no-argument overload returns one flat global index.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmin(0)</span></code> and <code class="docutils literal notranslate"><span class="pre">argmin(1)</span></code> return indices in different local spaces.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> changes only the result shape.</p></li>
+<li><p>Ties are first-winner, not tie-sharing.</p></li>
+<li><p>Invalid dims and empty-dimension reductions fail explicitly.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">argmin()</span></code> when you need to know where the smallest value lives.</p>
+<ul class="simple">
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">argmin()</span></code> for one flat global winner.</p></li>
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">argmin(dim)</span></code> when each lane along an axis should report its own local
+winning index.</p></li>
+<li><p>Keep the axis with <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> when alignment with other reduced results
+matters.</p></li>
+</ul>
+<p>The main habit to build is simple: always ask whether the returned numbers are
+flat global positions or local axis positions.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::min</span></code></span></a>: the value-returning ordered-minimum counterpart.</p></li>
-<li><p><a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmax</span></code></span></a>: the upper-winner index counterpart.</p></li>
+<li><p><a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::min</span></code></span></a>: returns winning values instead of indices.</p></li>
+<li><p><a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmax</span></code></span></a>: upper-winner index counterpart.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="argmax.html">
     <span class="label">Previous</span>
     <span class="title">argmax</span>
   </a>
-  <a class="next-link" href="../../series_factory_api_reference.html">
+  <a class="next-link" href="var.html">
     <span class="label">Next</span>
-    <span class="title">Series Factory API Reference</span>
+    <span class="title">var</span>
   </a>
 </div>
 </section>
@@ -312,6 +395,7 @@ lane has no legal winning element.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
@@ -338,7 +422,7 @@ lane has no legal winning element.</p>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="argmax.html" title="previous chapter">Series::argmax</a></li>
-      <li>Next: <a href="../../series_factory_api_reference.html" title="next chapter">Series Factory API Reference</a></li>
+      <li>Next: <a href="stat.html" title="next chapter">Series::stat</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

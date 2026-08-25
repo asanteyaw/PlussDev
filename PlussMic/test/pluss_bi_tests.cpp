@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
@@ -21,6 +22,19 @@ void expect(bool condition, std::string_view message) {
   if (!condition) {
     fail(message);
   }
+}
+
+void expect_throws_contains(
+    const std::function<void()>& fn,
+    std::string_view needle,
+    std::string_view message) {
+  bool matched = false;
+  try {
+    fn();
+  } catch (const std::exception& e) {
+    matched = std::string(e.what()).find(std::string(needle)) != std::string::npos;
+  }
+  expect(matched, message);
 }
 
 bool has_feature(const DataFrame& frame, std::string_view name) {
@@ -154,9 +168,7 @@ void test_scoped_session_filters_skip_or_throw_correctly() {
   board = board.add(pluss::bi::Tile::from_view("loans_tile", pluss::bi::LayoutSpec::at(0, 1), loan_view));
 
   studio.add(board);
-  std::cerr << "  scoped render 1\n";
   const auto render = studio.render();
-  std::cerr << "  scoped render 1 done\n";
   expect(render.boards[0].tiles[0].table->ncases() == 2,
          "scoped session filters should apply when the query scope matches");
   expect(render.boards[0].tiles[1].table->ncases() == 4,
@@ -174,16 +186,152 @@ void test_scoped_session_filters_skip_or_throw_correctly() {
               pluss::bi::QuerySpec::from("loans").scope_as("loans_scope"),
               pluss::bi::BindSpec::detail_table("Loans")))));
 
-  bool threw = false;
-  try {
-    std::cerr << "  scoped render 2\n";
-    (void)bad.render();
-  } catch (const std::exception& e) {
-    std::cerr << "  scoped render 2 threw: " << e.what() << "\n";
-    threw = std::string(e.what()).find("missing feature 'segment'") != std::string::npos;
-  }
-  expect(threw,
-         "scoped session filters should throw when they target a missing feature on a matching query scope");
+  expect_throws_contains(
+      [&]() { (void)bad.render(); },
+      "missing feature 'segment'",
+      "scoped session filters should throw when they target a missing feature on a matching query scope");
+}
+
+void test_unscoped_session_filters_skip_missing_features() {
+  const auto nexus = make_bi_nexus();
+
+  pluss::bi::Studio studio("unscoped_skip");
+  studio.source(nexus);
+  studio.set_filter(pluss::bi::Filter::eq("segment", "retail"));
+  studio.add(pluss::bi::Board("loans_board").shape(1, 1).add(
+      pluss::bi::Tile::from_view(
+          "loans_tile",
+          pluss::bi::LayoutSpec::at(0, 0),
+          pluss::bi::View::make(
+              "loans_view",
+              pluss::bi::QuerySpec::from("loans"),
+              pluss::bi::BindSpec::detail_table("Loans")))));
+
+  const auto render = studio.render();
+  expect(render.boards[0].tiles[0].table->ncases() == 4,
+         "unscoped session filters should skip views that do not carry the target feature");
+}
+
+void test_temporal_filters_and_query_windowing() {
+  const auto nexus = make_bi_nexus();
+
+  pluss::bi::Studio studio("temporal");
+  studio.source(nexus);
+
+  const auto opened_range =
+      pluss::bi::Control::temporal_range("opened_range", "opened_at", "Opened")
+          .scoped("loans_scope");
+  pluss::bi::Session session;
+  pluss::bi::apply_time(
+      session,
+      opened_range,
+      pluss::make_timeline({"2026-01-02T00:00:00Z"}),
+      pluss::make_timeline({"2026-01-03T00:00:00Z"}));
+  studio.session(session);
+
+  studio.add(pluss::bi::Board("window").shape(1, 1).add(
+      pluss::bi::Tile::from_view(
+          "window_tile",
+          pluss::bi::LayoutSpec::at(0, 0),
+          pluss::bi::View::make(
+              "window_view",
+              pluss::bi::QuerySpec::from("loans")
+                  .scope_as("loans_scope")
+                  .drop({"customer_id"})
+                  .head(2)
+                  .named("Loan Window"),
+              pluss::bi::BindSpec::detail_table("Loan Window")))));
+
+  const auto render = studio.render();
+  expect(render.boards[0].tiles[0].table->title() == "Loan Window",
+         "named() should retitle the materialized query result");
+  expect(!has_feature(*render.boards[0].tiles[0].table, "customer_id"),
+         "drop() should remove unwanted features after filtering");
+  expect(render.boards[0].tiles[0].table->ncases() == 2,
+         "temporal filters followed by head() should keep the requested window size");
+}
+
+void test_query_arrange_orders_results_before_windowing() {
+  const auto nexus = make_bi_nexus();
+
+  pluss::bi::Studio studio("arrange");
+  studio.source(nexus).add(
+      pluss::bi::Board("board").shape(1, 1).add(
+          pluss::bi::Tile::from_view(
+              "tile",
+              pluss::bi::LayoutSpec::at(0, 0),
+              pluss::bi::View::make(
+                  "view",
+                  pluss::bi::QuerySpec::from("loans")
+                      .arrange("principal", false)
+                      .head(2)
+                      .select({"loan_id", "principal"}),
+                  pluss::bi::BindSpec::detail_table("Top Loans")))));
+
+  const auto render = studio.render();
+  const auto top = *render.boards[0].tiles[0].table;
+  const auto principal = top.features("principal").as_series().to_vec<double>();
+  expect(top.ncases() == 2,
+         "arrange() combined with head() should keep only the requested top rows");
+  expect(std::fabs(principal[0] - 1500.0) < 1e-12,
+         "arrange(descending) should place the largest numeric value first");
+  expect(std::fabs(principal[1] - 1200.0) < 1e-12,
+         "arrange(descending) should preserve the correct second-ranked row");
+}
+
+void test_control_tiles_materialize_active_state() {
+  const auto nexus = make_bi_nexus();
+
+  const auto segment = pluss::bi::Control::category("segment_filter", "segment", "Segment");
+
+  pluss::bi::Studio studio("controls");
+  studio.source(nexus);
+  studio.set_filter(pluss::bi::Filter::eq("segment", "retail"));
+  studio.add(
+      pluss::bi::Board("board").shape(1, 2)
+          .add(pluss::bi::Tile::from_control("segment_tile", pluss::bi::LayoutSpec::at(0, 0), segment))
+          .add(pluss::bi::Tile::from_view(
+              "customers_tile",
+              pluss::bi::LayoutSpec::at(0, 1),
+              pluss::bi::View::make(
+                  "customers_view",
+                  pluss::bi::QuerySpec::from("customers"),
+                  pluss::bi::BindSpec::detail_table("Customers")))));
+
+  const auto render = studio.render();
+  expect(render.boards[0].tiles.size() == 2,
+         "render() should include both control tiles and view tiles");
+  expect(render.boards[0].tiles[0].is_control,
+         "control tiles should be materialized explicitly in render output");
+  expect(render.boards[0].tiles[0].control.has_value(),
+         "control tile render output should expose the control definition");
+  expect(render.boards[0].tiles[0].active_filter.has_value(),
+         "control tile render output should expose the active session filter");
+  expect(render.boards[0].tiles[0].active_filter->feature == "segment",
+         "control tile render output should preserve the active filter feature");
+  expect(render.boards[0].tiles[1].table->ncases() == 2,
+         "view tiles should continue to honor the shared session filter");
+}
+
+void test_query_filters_throw_on_missing_features() {
+  const auto nexus = make_bi_nexus();
+
+  pluss::bi::Studio studio("bad_query");
+  studio.source(nexus).add(
+      pluss::bi::Board("board").shape(1, 1).add(
+          pluss::bi::Tile::from_view(
+              "tile",
+              pluss::bi::LayoutSpec::at(0, 0),
+              pluss::bi::View::make(
+                  "view",
+                  pluss::bi::QuerySpec::from("loans")
+                      .where(pluss::bi::Filter::eq("segment", "retail")),
+                  pluss::bi::BindSpec::detail_table("Loans")))));
+
+  expect_throws_contains(
+      [&]() { (void)studio.render(); },
+      "missing feature 'segment'",
+      "query-local filters should throw when they target missing features");
 }
 
 void test_kpi_and_plot_tiles() {
@@ -344,20 +492,17 @@ void test_board_validation() {
 
 int main() {
   (void)::setenv("PLUSS_ERROR_NATIVE_TRACE", "0", 1);
-  std::cerr << "test_session_and_controls\n";
   test_session_and_controls();
-  std::cerr << "test_source_query_and_projection_after_filters\n";
   test_source_query_and_projection_after_filters();
-  std::cerr << "test_scoped_session_filters_skip_or_throw_correctly\n";
   test_scoped_session_filters_skip_or_throw_correctly();
-  std::cerr << "test_kpi_and_plot_tiles\n";
+  test_unscoped_session_filters_skip_missing_features();
+  test_temporal_filters_and_query_windowing();
+  test_query_arrange_orders_results_before_windowing();
+  test_control_tiles_materialize_active_state();
+  test_query_filters_throw_on_missing_features();
   test_kpi_and_plot_tiles();
-  std::cerr << "test_pivot_tile\n";
   test_pivot_tile();
-  std::cerr << "test_stored_plan_sql_and_traverse_queries\n";
   test_stored_plan_sql_and_traverse_queries();
-  std::cerr << "test_board_validation\n";
   test_board_validation();
-  std::cerr << "done\n";
   return 0;
 }

@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::put_" href="put_.html" />
@@ -48,16 +48,16 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reads values by <strong>flattened linear position</strong> and reshapes the result to exactly
+<p><code class="docutils literal notranslate"><span class="pre">take()</span></code> reads values by flattened linear position and reshapes the result to
 match <code class="docutils literal notranslate"><span class="pre">index</span></code>.</p>
-<p>That is the entire contract:</p>
+<p>That is the whole contract:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">self</span></code> is treated as one flat logical sequence</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> contains absolute positions into that sequence</p></li>
-<li><p>the output shape is <code class="docutils literal notranslate"><span class="pre">index.sizes()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> contains linear positions into that sequence</p></li>
+<li><p>the result shape is exactly <code class="docutils literal notranslate"><span class="pre">index.sizes()</span></code></p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">take()</span></code> does not mean “take along this dimension.” It means “read these flat
-positions.” If you need dimension-aware behavior, use <a class="reference internal" href="gather.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">gather()</span></code></span></a>,
+<p>This method does not mean “take along this dimension.” It means “read these
+flat positions.” If you need axis-aware behavior, use <a class="reference internal" href="gather.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">gather()</span></code></span></a>,
 <a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_select()</span></code></span></a>, or <a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a> instead.</p>
 </section>
 <section id="parameters">
@@ -66,21 +66,21 @@ positions.” If you need dimension-aware behavior, use <a class="reference inte
 <p>The linear positions to read.</p>
 <p>Important rules:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> must be <code class="docutils literal notranslate"><span class="pre">Int64</span></code> on CPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> must be <code class="docutils literal notranslate"><span class="pre">int64</span></code></p></li>
 <li><p>negative indices are allowed and count from the end</p></li>
 <li><p>repeated positions are allowed</p></li>
-<li><p>the index tensor must be on the same platform as the source</p></li>
+<li><p>the index tensor must live on the same platform as the source</p></li>
 <li><p>the output shape is exactly <code class="docutils literal notranslate"><span class="pre">index.sizes()</span></code></p></li>
 </ul>
 <p>One subtle but important detail is what “flattened” means for non-contiguous
-inputs. <code class="docutils literal notranslate"><span class="pre">take()</span></code> first resolves the source into its logical element order, then
-reads flat positions from that order. It is not exposing arbitrary raw-stride
-storage bytes.</p>
+inputs. <code class="docutils literal notranslate"><span class="pre">take()</span></code> resolves the source in its logical element order first, then
+reads flat positions from that order. It is not exposing arbitrary raw storage
+layout.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A new series with the same shape as <code class="docutils literal notranslate"><span class="pre">index</span></code>.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code> with the same shape as <code class="docutils literal notranslate"><span class="pre">index</span></code>.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
@@ -91,17 +91,24 @@ A new series with the same shape as <code class="docutils literal notranslate"><
 <li><p>a source position read once gets one contribution</p></li>
 <li><p>a source position read multiple times gets the sum of every contribution</p></li>
 </ul>
-<p>That repeated-position accumulation is the most important write-side symmetry:
-<code class="docutils literal notranslate"><span class="pre">take()</span></code> is the read counterpart of additive flat scattering.</p>
+<p>That repeated-position accumulation is the most important backward rule on the
+page.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. <code class="docutils literal notranslate"><span class="pre">take()</span></code> reads from the flattened logical order of the source, then
-arranges the answer into <code class="docutils literal notranslate"><span class="pre">index</span></code>’s shape.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">take_src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">take_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<p>The examples below build from basic flat reads to negative indices,
+non-contiguous sources, output-shape behavior, gradient accumulation, and
+failure cases.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">take()</span></code> reads from flat logical order and reshapes the answer to
+match <code class="docutils literal notranslate"><span class="pre">index</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">take_src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">take_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">5L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">0L</span><span class="n">L</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">3L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">1L</span><span class="n">L</span><span class="p">},</span>
+<span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">take_src</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">take_idx</span><span class="p">);</span>
 </pre></div>
@@ -115,8 +122,9 @@ data=[[22, 10],
 </div>
 <p>The flattened source is <code class="docutils literal notranslate"><span class="pre">[10,</span> <span class="pre">11,</span> <span class="pre">12,</span> <span class="pre">20,</span> <span class="pre">21,</span> <span class="pre">22]</span></code>, so the reads are
 <code class="docutils literal notranslate"><span class="pre">5</span> <span class="pre">-&gt;</span> <span class="pre">22</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">-&gt;</span> <span class="pre">10</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">-&gt;</span> <span class="pre">20</span></code>, and <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-&gt;</span> <span class="pre">11</span></code>.</p>
-<p>Example 2. Negative indices count from the end of that same flattened logical order.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">negative_take_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<p>Example 2. Negative indices count from the end of that same flat logical order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">negative_take_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">-1LL</span><span class="p">,</span><span class="w"> </span><span class="mi">-3LL</span><span class="p">,</span><span class="w"> </span><span class="mf">0L</span><span class="n">L</span><span class="p">});</span>
+
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">take_src</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">negative_take_idx</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -127,29 +135,47 @@ data=[[22, 10],
 data=[22, 20, 10]
 </pre></div>
 </div>
-<p>Example 3. When the source is non-contiguous, <code class="docutils literal notranslate"><span class="pre">take()</span></code> still works from logical
-element order, not raw storage order.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">transposed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">take_src</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">transposed_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<p>Example 3. The output shape always comes from <code class="docutils literal notranslate"><span class="pre">index</span></code>, not from the source.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">one_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4L</span><span class="n">L</span><span class="p">});</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">transposed</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">transposed_idx</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">take_src</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">one_idx</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[21]
+</pre></div>
+</div>
+<p>Even though only one position is read, the result shape is <code class="docutils literal notranslate"><span class="pre">[1]</span></code> because that
+is the shape of the index <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p>Example 4. On a non-contiguous source, <code class="docutils literal notranslate"><span class="pre">take()</span></code> still uses logical element
+order, not raw storage order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">transposed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">take_src</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">transposed_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">0L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">1L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">2L</span><span class="n">L</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">3L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">4L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">5L</span><span class="n">L</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">transposed</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">transposed_idx</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
 data=[[10, 20, 11],
   [21, 12, 22]]
 </pre></div>
 </div>
-<p>The transposed logical order is <code class="docutils literal notranslate"><span class="pre">[10,</span> <span class="pre">20,</span> <span class="pre">11,</span> <span class="pre">21,</span> <span class="pre">12,</span> <span class="pre">22]</span></code>, which is why the
-result differs from simply flattening the original <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">3]</span></code> source.</p>
-<p>Example 4. Repeated positions accumulate gradient on the backward pass.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
+<p>The transposed logical order is <code class="docutils literal notranslate"><span class="pre">[10,</span> <span class="pre">20,</span> <span class="pre">11,</span> <span class="pre">21,</span> <span class="pre">12,</span> <span class="pre">22]</span></code>, which is why this
+result differs from flattening the original <code class="docutils literal notranslate"><span class="pre">[2,3]</span></code> source.</p>
+<p>Example 5. Repeated positions accumulate gradient on the backward pass.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
 <span class="n">tracked</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">repeat_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">repeat_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">0L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">3L</span><span class="n">L</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">gathered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tracked</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">repeat_idx</span><span class="p">);</span>
 <span class="n">gathered</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
 
@@ -158,17 +184,33 @@ result differs from simply flattening the original <code class="docutils literal
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[1, 1, 4]
 dx=pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[2, 0, 0, 1]
 </pre></div>
 </div>
-<p>Position <code class="docutils literal notranslate"><span class="pre">0</span></code> was read twice, so its gradient is <code class="docutils literal notranslate"><span class="pre">2</span></code>. Position <code class="docutils literal notranslate"><span class="pre">3</span></code> was read once,
-so its gradient is <code class="docutils literal notranslate"><span class="pre">1</span></code>. Positions <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> were never read, so they remain <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
-<p>Example 5. On CPU, the public method requires an <code class="docutils literal notranslate"><span class="pre">Int64</span></code> index tensor.</p>
+<p>Position <code class="docutils literal notranslate"><span class="pre">0</span></code> was read twice, so its gradient is <code class="docutils literal notranslate"><span class="pre">2</span></code>. Position <code class="docutils literal notranslate"><span class="pre">3</span></code> was read
+once, so its gradient is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Example 6. Out-of-range positions fail explicitly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad_pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">6L</span><span class="n">L</span><span class="p">});</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">take_src</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">bad_pos</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>take: index out of range
+</pre></div>
+</div>
+<p>Example 7. The public method requires an <code class="docutils literal notranslate"><span class="pre">int64</span></code> index tensor.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">take_src</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">bad_idx</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -179,27 +221,45 @@ so its gradient is <code class="docutils literal notranslate"><span class="pre">
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>take: index must be int64
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">take()</span></code> is flat-addressed; it is not an alias for row/column selection.</p></li>
-<li><p>Repeated indices are legal and accumulate gradient.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">take()</span></code> is flat-addressed, not axis-aware.</p></li>
 <li><p>The result shape comes from <code class="docutils literal notranslate"><span class="pre">index</span></code>, not from the source.</p></li>
+<li><p>Negative indices are legal and count from the end.</p></li>
+<li><p>Non-contiguous sources are read in logical element order.</p></li>
+<li><p>Repeated positions accumulate gradient.</p></li>
+<li><p>Out-of-range and wrong-dtype indices fail explicitly.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">take()</span></code> when your selector is best understood as a list of flat logical
+positions.</p>
+<ul class="simple">
+<li><p>Use it for flat linear reads.</p></li>
+<li><p>Use negative indices when end-relative flat positions are clearer.</p></li>
+<li><p>Expect output shape to mirror the index <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+<li><p>Use axis-aware methods instead when dimension meaning matters.</p></li>
+</ul>
+<p>The key habit is to ask one question first: “am I selecting by flat position or
+by axis meaning?” If the answer is flat position, <code class="docutils literal notranslate"><span class="pre">take()</span></code> is the right
+surface.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::put_</span></code></span></a>: in-place flat write counterpart.</p></li>
 <li><p><a class="reference internal" href="gather.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::gather</span></code></span></a>: dimension-aware value collection.</p></li>
-<li><p><a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_select</span></code></span></a>: one shared index list along a named axis.</p></li>
+<li><p><a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_select</span></code></span></a>: one shared index list along a
+named axis.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="index_put_.html">
@@ -276,6 +336,7 @@ so its gradient is <code class="docutils literal notranslate"><span class="pre">
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

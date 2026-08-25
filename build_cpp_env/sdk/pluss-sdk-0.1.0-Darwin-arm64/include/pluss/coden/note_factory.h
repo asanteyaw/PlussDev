@@ -1,16 +1,21 @@
 #pragma once
 
 #include <array>
+#include <algorithm>
 #include <concepts>
 #include <cctype>
+#include <cmath>
 #include <cstdint>
+#include <functional>
 #include <iomanip>
 #include <initializer_list>
+#include <optional>
 #include <sstream>
 #include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -50,13 +55,23 @@ namespace pluss::note {
 
 class FormatValue {
 public:
-  using storage_type = std::variant<bool, std::int64_t, std::uint64_t, double, std::string>;
+  using scalar_type = std::variant<bool, std::int64_t, std::uint64_t, double, std::string>;
+  using list_type = std::vector<scalar_type>;
+  using storage_type = std::variant<bool, std::int64_t, std::uint64_t, double, std::string, list_type>;
 
   FormatValue(bool value) : storage_(value) {}
   FormatValue(char value) : storage_(std::string(1, value)) {}
   FormatValue(const char* value) : storage_(std::string(value != nullptr ? value : "")) {}
   FormatValue(std::string_view value) : storage_(std::string(value)) {}
   FormatValue(std::string value) : storage_(std::move(value)) {}
+  FormatValue(scalar_type value) {
+    storage_ = std::visit(
+        [](auto&& cell) -> storage_type {
+          return storage_type(std::forward<decltype(cell)>(cell));
+        },
+        std::move(value));
+  }
+  FormatValue(list_type value) : storage_(std::move(value)) {}
 
   template <std::signed_integral Int>
     requires (!std::same_as<std::remove_cvref_t<Int>, bool> &&
@@ -71,19 +86,255 @@ public:
   template <std::floating_point Float>
   FormatValue(Float value) : storage_(static_cast<double>(value)) {}
 
+  template <class T, class Alloc>
+  FormatValue(const std::vector<T, Alloc>& values) {
+    list_type list;
+    list.reserve(values.size());
+    for (const auto& value : values) {
+      list.push_back(to_scalar(value));
+    }
+    storage_ = std::move(list);
+  }
+
   const storage_type& storage() const noexcept { return storage_; }
 
 private:
+  template <class T>
+  static scalar_type to_scalar(T&& value) {
+    FormatValue wrapped(std::forward<T>(value));
+    return std::visit(
+        [](auto&& cell) -> scalar_type {
+          using U = std::decay_t<decltype(cell)>;
+          if constexpr (std::same_as<U, list_type>) {
+            PLUSS_FAIL("pluss::note::format: nested vector bindings are not supported");
+          } else {
+            return scalar_type(std::forward<decltype(cell)>(cell));
+          }
+        },
+        std::move(wrapped.storage_));
+  }
+
   storage_type storage_;
 };
 
+namespace detail {
+
+template <class T, class = void>
+struct note_format_function_traits;
+
+template <class R, class... Args>
+struct note_format_function_traits<R (*)(Args...), void> {
+  using return_type = R;
+  using args_tuple = std::tuple<Args...>;
+  static constexpr std::size_t arity = sizeof...(Args);
+};
+
+template <class R, class... Args>
+struct note_format_function_traits<R(Args...), void>
+    : note_format_function_traits<R (*)(Args...)> {};
+
+template <class R, class... Args>
+struct note_format_function_traits<std::function<R(Args...)>, void>
+    : note_format_function_traits<R (*)(Args...)> {};
+
+template <class C, class R, class... Args>
+struct note_format_function_traits<R (C::*)(Args...), void>
+    : note_format_function_traits<R (*)(Args...)> {};
+
+template <class C, class R, class... Args>
+struct note_format_function_traits<R (C::*)(Args...) const, void>
+    : note_format_function_traits<R (*)(Args...)> {};
+
+template <class F>
+struct note_format_function_traits<F, std::void_t<decltype(&F::operator())>>
+    : note_format_function_traits<decltype(&F::operator())> {};
+
+template <class F, class = void>
+struct is_note_format_callable : std::false_type {};
+
+template <class F>
+struct is_note_format_callable<F, std::void_t<typename note_format_function_traits<F>::return_type>>
+    : std::true_type {};
+
+template <class F>
+inline constexpr bool is_note_format_callable_v =
+    is_note_format_callable<std::remove_cvref_t<F>>::value;
+
+template <class T>
+inline constexpr bool is_vector_v = false;
+
+template <class T, class Alloc>
+inline constexpr bool is_vector_v<std::vector<T, Alloc>> = true;
+
+template <class T>
+struct vector_value_type;
+
+template <class T, class Alloc>
+struct vector_value_type<std::vector<T, Alloc>> {
+  using type = T;
+};
+
+inline std::string note_format_scalar_to_string(const FormatValue::scalar_type& value) {
+  return std::visit(
+      [](const auto& cell) -> std::string {
+        using T = std::decay_t<decltype(cell)>;
+        if constexpr (std::same_as<T, bool>) {
+          return cell ? "true" : "false";
+        } else if constexpr (std::same_as<T, std::string>) {
+          return cell;
+        } else if constexpr (std::same_as<T, std::int64_t>) {
+          return std::to_string(cell);
+        } else if constexpr (std::same_as<T, std::uint64_t>) {
+          return std::to_string(cell);
+        } else {
+          std::ostringstream oss;
+          oss << std::setprecision(15) << cell;
+          return oss.str();
+        }
+      },
+      value);
+}
+
+template <class T>
+T note_format_convert_scalar(const FormatValue::scalar_type& value, std::string_view expr) {
+  using U = std::remove_cvref_t<T>;
+  if constexpr (std::same_as<U, FormatValue::scalar_type>) {
+    return value;
+  } else if constexpr (std::same_as<U, std::string>) {
+    return note_format_scalar_to_string(value);
+  } else if constexpr (std::same_as<U, std::string_view>) {
+    const auto* text = std::get_if<std::string>(&value);
+    PLUSS_CHECK(text != nullptr,
+                "pluss::note::format: lambda string_view argument requires a string value in expression {" +
+                    std::string(expr) + "}");
+    return std::string_view(*text);
+  } else if constexpr (std::same_as<U, bool>) {
+    return std::visit(
+        [&](const auto& cell) -> bool {
+          using V = std::decay_t<decltype(cell)>;
+          if constexpr (std::same_as<V, bool>) {
+            return cell;
+          } else if constexpr (std::same_as<V, std::int64_t> || std::same_as<V, std::uint64_t> ||
+                               std::same_as<V, double>) {
+            return cell != 0;
+          } else if constexpr (std::same_as<V, std::string>) {
+            return !cell.empty();
+          }
+        },
+        value);
+  } else if constexpr (std::integral<U> && !std::same_as<U, bool> && !std::same_as<U, char>) {
+    return static_cast<U>(std::visit(
+        [&](const auto& cell) -> double {
+          using V = std::decay_t<decltype(cell)>;
+          if constexpr (std::same_as<V, bool>) {
+            return cell ? 1.0 : 0.0;
+          } else if constexpr (std::same_as<V, std::int64_t> || std::same_as<V, std::uint64_t> ||
+                               std::same_as<V, double>) {
+            return static_cast<double>(cell);
+          } else {
+            PLUSS_FAIL("pluss::note::format: lambda argument is not numeric in expression {" +
+                       std::string(expr) + "}");
+          }
+        },
+        value));
+  } else if constexpr (std::floating_point<U>) {
+    return static_cast<U>(std::visit(
+        [&](const auto& cell) -> double {
+          using V = std::decay_t<decltype(cell)>;
+          if constexpr (std::same_as<V, bool>) {
+            return cell ? 1.0 : 0.0;
+          } else if constexpr (std::same_as<V, std::int64_t> || std::same_as<V, std::uint64_t> ||
+                               std::same_as<V, double>) {
+            return static_cast<double>(cell);
+          } else {
+            PLUSS_FAIL("pluss::note::format: lambda argument is not numeric in expression {" +
+                       std::string(expr) + "}");
+          }
+        },
+        value));
+  } else {
+    static_assert(!sizeof(T), "unsupported pluss::note::format lambda argument type");
+  }
+}
+
+template <class T>
+auto note_format_convert_arg(const FormatValue& value, std::string_view expr) {
+  using U = std::remove_cvref_t<T>;
+  if constexpr (std::same_as<U, FormatValue>) {
+    return value;
+  } else if constexpr (is_vector_v<U>) {
+    using Item = typename vector_value_type<U>::type;
+    const auto* list = std::get_if<FormatValue::list_type>(&value.storage());
+    PLUSS_CHECK(list != nullptr,
+                "pluss::note::format: lambda argument requires a vector/list value in expression {" +
+                    std::string(expr) + "}");
+    U out;
+    out.reserve(list->size());
+    for (const auto& item : *list) {
+      out.push_back(note_format_convert_scalar<Item>(item, expr));
+    }
+    return out;
+  } else {
+    return std::visit(
+        [&](const auto& cell) -> U {
+          using V = std::decay_t<decltype(cell)>;
+          if constexpr (std::same_as<V, FormatValue::list_type>) {
+            PLUSS_FAIL("pluss::note::format: lambda argument expected a scalar in expression {" +
+                       std::string(expr) + "}");
+          } else {
+            return note_format_convert_scalar<U>(FormatValue::scalar_type(cell), expr);
+          }
+        },
+        value.storage());
+  }
+}
+
+template <class F, class Tuple, std::size_t... I>
+FormatValue note_format_invoke_callable(F& fn,
+                                        const std::vector<FormatValue>& args,
+                                        std::string_view expr,
+                                        std::index_sequence<I...>) {
+  using R = std::invoke_result_t<F&, std::tuple_element_t<I, Tuple>...>;
+  static_assert(!std::same_as<R, void>, "pluss::note::format lambdas must return a value");
+  return FormatValue(std::invoke(fn, note_format_convert_arg<std::tuple_element_t<I, Tuple>>(args[I], expr)...));
+}
+
+template <class F>
+auto note_format_make_callable(F&& fn) {
+  // Decay a free function to a copyable function pointer before capturing it.
+  using Fn = std::decay_t<F>;
+  using Traits = note_format_function_traits<Fn>;
+  using Args = typename Traits::args_tuple;
+  return [callable = Fn(std::forward<F>(fn))](const std::vector<FormatValue>& args,
+                                             std::string_view expr) mutable -> FormatValue {
+    PLUSS_CHECK(args.size() == Traits::arity,
+                "pluss::note::format: callable expected " + std::to_string(Traits::arity) +
+                    " argument(s) in expression {" + std::string(expr) + "}");
+    return note_format_invoke_callable<Fn, Args>(
+        callable, args, expr, std::make_index_sequence<Traits::arity>{});
+  };
+}
+
+} // namespace detail
+
 struct Binding {
+  using Callable = std::function<FormatValue(const std::vector<FormatValue>&, std::string_view)>;
+
   std::string name;
   FormatValue value;
+  std::optional<Callable> callable;
 
   template <class T>
+    requires (!detail::is_note_format_callable_v<T>)
   Binding(std::string_view key, T&& bound_value)
       : name(key), value(std::forward<T>(bound_value)) {}
+
+  template <class F>
+    requires detail::is_note_format_callable_v<F>
+  Binding(std::string_view key, F&& bound_callable)
+      : name(key),
+        value("<callable>"),
+        callable(detail::note_format_make_callable(std::forward<F>(bound_callable))) {}
 };
 
 namespace detail {
@@ -116,7 +367,7 @@ inline std::string note_format_double_to_string(double value) {
   return oss.str();
 }
 
-inline std::string note_format_stringify(const FormatValue& value) {
+inline std::string note_format_scalar_stringify(const FormatValue::scalar_type& value) {
   return std::visit(
       [](const auto& cell) -> std::string {
         using T = std::decay_t<decltype(cell)>;
@@ -132,23 +383,96 @@ inline std::string note_format_stringify(const FormatValue& value) {
           return note_format_double_to_string(cell);
         }
       },
+      value);
+}
+
+inline std::string note_format_stringify(const FormatValue& value) {
+  return std::visit(
+      [](const auto& cell) -> std::string {
+        using T = std::decay_t<decltype(cell)>;
+        if constexpr (std::same_as<T, bool>) {
+          return cell ? "true" : "false";
+        } else if constexpr (std::same_as<T, std::string>) {
+          return cell;
+        } else if constexpr (std::same_as<T, std::int64_t>) {
+          return std::to_string(cell);
+        } else if constexpr (std::same_as<T, std::uint64_t>) {
+          return std::to_string(cell);
+        } else if constexpr (std::same_as<T, FormatValue::list_type>) {
+          std::string out = "[";
+          for (std::size_t i = 0; i < cell.size(); ++i) {
+            if (i != 0) out += ", ";
+            out += note_format_scalar_stringify(cell[i]);
+          }
+          out += "]";
+          return out;
+        } else {
+          return note_format_double_to_string(cell);
+        }
+      },
       value.storage());
 }
 
-inline double note_format_as_numeric(const Binding& binding, std::string_view expr) {
+inline double note_format_as_numeric(const FormatValue& value, std::string_view expr) {
   return std::visit(
       [&](const auto& cell) -> double {
         using T = std::decay_t<decltype(cell)>;
         if constexpr (std::same_as<T, std::int64_t> || std::same_as<T, std::uint64_t> ||
                       std::same_as<T, double>) {
           return static_cast<double>(cell);
+        } else if constexpr (std::same_as<T, bool>) {
+          return cell ? 1.0 : 0.0;
         } else {
-          PLUSS_FAIL("pluss::note::format: binding '" + binding.name +
-                     "' is not numeric and cannot be used in expression {" +
+          PLUSS_FAIL("pluss::note::format: value is not numeric in expression {" +
                      std::string(expr) + "}");
         }
       },
-      binding.value.storage());
+      value.storage());
+}
+
+inline double note_format_as_numeric(const Binding& binding, std::string_view expr) {
+  try {
+    return note_format_as_numeric(binding.value, expr);
+  } catch (const std::exception&) {
+    PLUSS_FAIL("pluss::note::format: binding '" + binding.name +
+               "' is not numeric and cannot be used in expression {" +
+               std::string(expr) + "}");
+  }
+}
+
+inline bool note_format_truthy(const FormatValue& value) {
+  return std::visit(
+      [](const auto& cell) -> bool {
+        using T = std::decay_t<decltype(cell)>;
+        if constexpr (std::same_as<T, bool>) {
+          return cell;
+        } else if constexpr (std::same_as<T, std::int64_t> || std::same_as<T, std::uint64_t> ||
+                             std::same_as<T, double>) {
+          return cell != 0;
+        } else if constexpr (std::same_as<T, std::string>) {
+          return !cell.empty();
+        } else {
+          return !cell.empty();
+        }
+      },
+      value.storage());
+}
+
+inline const FormatValue::list_type& note_format_as_list(const FormatValue& value,
+                                                         std::string_view expr) {
+  const auto* list = std::get_if<FormatValue::list_type>(&value.storage());
+  PLUSS_CHECK(list != nullptr,
+              "pluss::note::format: expected a vector/list value in expression {" +
+                  std::string(expr) + "}");
+  return *list;
+}
+
+inline FormatValue note_format_number_result(double value) {
+  return FormatValue(value);
+}
+
+inline FormatValue note_format_bool_result(bool value) {
+  return FormatValue(value);
 }
 
 inline const Binding& note_format_lookup_binding(
@@ -166,8 +490,8 @@ public:
                        const std::unordered_map<std::string_view, const Binding*>& bindings)
       : expr_(expr), bindings_(bindings) {}
 
-  double parse() {
-    const double value = parse_expr();
+  FormatValue parse() {
+    const FormatValue value = parse_ternary();
     skip_ws();
     PLUSS_CHECK(pos_ == expr_.size(),
                 "pluss::note::format: unexpected trailing input in expression {" +
@@ -176,45 +500,152 @@ public:
   }
 
 private:
-  double parse_expr() {
-    double lhs = parse_term();
+  FormatValue parse_ternary() {
+    FormatValue condition = parse_logical_or();
+    skip_ws();
+    if (!match('?')) return condition;
+
+    FormatValue when_true = parse_ternary();
+    skip_ws();
+    PLUSS_CHECK(match(':'),
+                "pluss::note::format: expected ':' in conditional expression {" +
+                    std::string(expr_) + "}");
+    FormatValue when_false = parse_ternary();
+    return note_format_truthy(condition) ? when_true : when_false;
+  }
+
+  FormatValue parse_logical_or() {
+    FormatValue lhs = parse_logical_and();
+    while (true) {
+      skip_ws();
+      if (match_string("||")) {
+        const bool left = note_format_truthy(lhs);
+        FormatValue rhs = parse_logical_and();
+        lhs = note_format_bool_result(left || note_format_truthy(rhs));
+      } else {
+        return lhs;
+      }
+    }
+  }
+
+  FormatValue parse_logical_and() {
+    FormatValue lhs = parse_equality();
+    while (true) {
+      skip_ws();
+      if (match_string("&&")) {
+        const bool left = note_format_truthy(lhs);
+        FormatValue rhs = parse_equality();
+        lhs = note_format_bool_result(left && note_format_truthy(rhs));
+      } else {
+        return lhs;
+      }
+    }
+  }
+
+  FormatValue parse_equality() {
+    FormatValue lhs = parse_comparison();
+    while (true) {
+      skip_ws();
+      if (match_string("==")) {
+        FormatValue rhs = parse_comparison();
+        lhs = note_format_bool_result(note_format_stringify(lhs) == note_format_stringify(rhs));
+      } else if (match_string("!=")) {
+        FormatValue rhs = parse_comparison();
+        lhs = note_format_bool_result(note_format_stringify(lhs) != note_format_stringify(rhs));
+      } else {
+        return lhs;
+      }
+    }
+  }
+
+  FormatValue parse_comparison() {
+    FormatValue lhs = parse_expr();
+    while (true) {
+      skip_ws();
+      if (match_string("<=")) {
+        FormatValue rhs = parse_expr();
+        lhs = note_format_bool_result(note_format_as_numeric(lhs, expr_) <=
+                                      note_format_as_numeric(rhs, expr_));
+      } else if (match_string(">=")) {
+        FormatValue rhs = parse_expr();
+        lhs = note_format_bool_result(note_format_as_numeric(lhs, expr_) >=
+                                      note_format_as_numeric(rhs, expr_));
+      } else if (match('<')) {
+        FormatValue rhs = parse_expr();
+        lhs = note_format_bool_result(note_format_as_numeric(lhs, expr_) <
+                                      note_format_as_numeric(rhs, expr_));
+      } else if (match('>')) {
+        FormatValue rhs = parse_expr();
+        lhs = note_format_bool_result(note_format_as_numeric(lhs, expr_) >
+                                      note_format_as_numeric(rhs, expr_));
+      } else {
+        return lhs;
+      }
+    }
+  }
+
+  FormatValue parse_expr() {
+    FormatValue lhs = parse_term();
     while (true) {
       skip_ws();
       if (match('+')) {
-        lhs += parse_term();
+        FormatValue rhs = parse_term();
+        if (std::holds_alternative<std::string>(lhs.storage()) ||
+            std::holds_alternative<std::string>(rhs.storage())) {
+          lhs = FormatValue(note_format_stringify(lhs) + note_format_stringify(rhs));
+        } else {
+          lhs = note_format_number_result(note_format_as_numeric(lhs, expr_) +
+                                          note_format_as_numeric(rhs, expr_));
+        }
       } else if (match('-')) {
-        lhs -= parse_term();
+        FormatValue rhs = parse_term();
+        lhs = note_format_number_result(note_format_as_numeric(lhs, expr_) -
+                                        note_format_as_numeric(rhs, expr_));
       } else {
         return lhs;
       }
     }
   }
 
-  double parse_term() {
-    double lhs = parse_factor();
+  FormatValue parse_term() {
+    FormatValue lhs = parse_factor();
     while (true) {
       skip_ws();
       if (match('*')) {
-        lhs *= parse_factor();
+        FormatValue rhs = parse_factor();
+        lhs = note_format_number_result(note_format_as_numeric(lhs, expr_) *
+                                        note_format_as_numeric(rhs, expr_));
       } else if (match('/')) {
-        const double rhs = parse_factor();
+        const double rhs = note_format_as_numeric(parse_factor(), expr_);
         PLUSS_CHECK(rhs != 0.0,
                     "pluss::note::format: division by zero in expression {" +
                         std::string(expr_) + "}");
-        lhs /= rhs;
+        lhs = note_format_number_result(note_format_as_numeric(lhs, expr_) / rhs);
+      } else if (match('%')) {
+        const double rhs = note_format_as_numeric(parse_factor(), expr_);
+        PLUSS_CHECK(rhs != 0.0,
+                    "pluss::note::format: modulo by zero in expression {" +
+                        std::string(expr_) + "}");
+        lhs = note_format_number_result(std::fmod(note_format_as_numeric(lhs, expr_), rhs));
       } else {
         return lhs;
       }
     }
   }
 
-  double parse_factor() {
+  FormatValue parse_factor() {
     skip_ws();
     if (match('+')) return parse_factor();
-    if (match('-')) return -parse_factor();
+    if (match('-')) return note_format_number_result(-note_format_as_numeric(parse_factor(), expr_));
+    if (match('!')) return note_format_bool_result(!note_format_truthy(parse_factor()));
 
+    return parse_postfix(parse_primary());
+  }
+
+  FormatValue parse_primary() {
+    skip_ws();
     if (match('(')) {
-      const double value = parse_expr();
+      const FormatValue value = parse_ternary();
       skip_ws();
       PLUSS_CHECK(match(')'),
                   "pluss::note::format: expected ')' in expression {" +
@@ -223,13 +654,39 @@ private:
     }
 
     if (peek_is_number_start()) return parse_number();
+    if (peek_is_quote()) return parse_string_literal();
     if (peek_is_identifier_start()) return parse_identifier();
 
-    PLUSS_FAIL("pluss::note::format: expected number, identifier, or '(' in expression {" +
+    PLUSS_FAIL("pluss::note::format: expected number, string, identifier, or '(' in expression {" +
                std::string(expr_) + "}");
   }
 
-  double parse_number() {
+  FormatValue parse_postfix(FormatValue value) {
+    while (true) {
+      skip_ws();
+      if (match('[')) {
+        const auto index_value = parse_ternary();
+        skip_ws();
+        PLUSS_CHECK(match(']'),
+                    "pluss::note::format: expected ']' in expression {" +
+                        std::string(expr_) + "}");
+        value = apply_index(value, index_value);
+        continue;
+      }
+      if (match('.')) {
+        const std::string_view method = parse_member_name();
+        skip_ws();
+        PLUSS_CHECK(match('('),
+                    "pluss::note::format: expected '(' after member function '" +
+                        std::string(method) + "' in expression {" + std::string(expr_) + "}");
+        value = parse_member_call(std::move(value), method);
+        continue;
+      }
+      return value;
+    }
+  }
+
+  FormatValue parse_number() {
     const std::size_t begin = pos_;
     bool saw_digit = false;
 
@@ -262,16 +719,248 @@ private:
     PLUSS_CHECK(saw_digit,
                 "pluss::note::format: malformed numeric literal in expression {" +
                     std::string(expr_) + "}");
-    return std::stod(std::string(expr_.substr(begin, pos_ - begin)));
+    return FormatValue(std::stod(std::string(expr_.substr(begin, pos_ - begin))));
   }
 
-  double parse_identifier() {
+  FormatValue parse_string_literal() {
+    const char quote = expr_[pos_++];
+    std::string out;
+    while (pos_ < expr_.size() && expr_[pos_] != quote) {
+      if (expr_[pos_] == '\\') {
+        ++pos_;
+        PLUSS_CHECK(pos_ < expr_.size(),
+                    "pluss::note::format: dangling escape in string literal {" +
+                        std::string(expr_) + "}");
+        const char escaped = expr_[pos_++];
+        switch (escaped) {
+          case 'n': out.push_back('\n'); break;
+          case 't': out.push_back('\t'); break;
+          case '\\': out.push_back('\\'); break;
+          case '"': out.push_back('"'); break;
+          case '\'': out.push_back('\''); break;
+          default: out.push_back(escaped); break;
+        }
+      } else {
+        out.push_back(expr_[pos_++]);
+      }
+    }
+    PLUSS_CHECK(pos_ < expr_.size() && expr_[pos_] == quote,
+                "pluss::note::format: unterminated string literal {" +
+                    std::string(expr_) + "}");
+    ++pos_;
+    return FormatValue(std::move(out));
+  }
+
+  FormatValue parse_identifier() {
+    const std::string_view name = parse_qualified_identifier();
+    skip_ws();
+    if (match('(')) return parse_function_call(name);
+    const auto& binding = note_format_lookup_binding(bindings_, name);
+    PLUSS_CHECK(!binding.callable.has_value(),
+                "pluss::note::format: callable binding '" + binding.name +
+                    "' must be called in expression {" + std::string(expr_) + "}");
+    return binding.value;
+  }
+
+  FormatValue parse_function_call(std::string_view name) {
+    std::vector<FormatValue> args;
+    skip_ws();
+    if (!match(')')) {
+      while (true) {
+        args.push_back(parse_ternary());
+        skip_ws();
+        if (match(')')) break;
+        PLUSS_CHECK(match(','),
+                    "pluss::note::format: expected ',' or ')' in function call {" +
+                        std::string(expr_) + "}");
+      }
+    }
+
+    const auto callable_it = bindings_.find(name);
+    if (callable_it != bindings_.end() && callable_it->second->callable.has_value()) {
+      return (*(callable_it->second->callable))(args, expr_);
+    }
+
+    const auto require_arity = [&](std::size_t n) {
+      PLUSS_CHECK(args.size() == n,
+                  "pluss::note::format: function '" + std::string(name) +
+                      "' expected " + std::to_string(n) + " argument(s) in expression {" +
+                      std::string(expr_) + "}");
+    };
+    const auto require_min_arity = [&](std::size_t n) {
+      PLUSS_CHECK(args.size() >= n,
+                  "pluss::note::format: function '" + std::string(name) +
+                      "' expected at least " + std::to_string(n) +
+                      " argument(s) in expression {" + std::string(expr_) + "}");
+    };
+
+    if (name == "std::abs" || name == "std::fabs") {
+      require_arity(1);
+      return note_format_number_result(std::fabs(note_format_as_numeric(args[0], expr_)));
+    }
+    if (name == "std::sqrt") {
+      require_arity(1);
+      const double value = note_format_as_numeric(args[0], expr_);
+      PLUSS_CHECK(value >= 0.0,
+                  "pluss::note::format: std::sqrt() received a negative value in expression {" +
+                      std::string(expr_) + "}");
+      return note_format_number_result(std::sqrt(value));
+    }
+    if (name == "std::floor") {
+      require_arity(1);
+      return note_format_number_result(std::floor(note_format_as_numeric(args[0], expr_)));
+    }
+    if (name == "std::ceil") {
+      require_arity(1);
+      return note_format_number_result(std::ceil(note_format_as_numeric(args[0], expr_)));
+    }
+    if (name == "std::round") {
+      require_arity(1);
+      return note_format_number_result(std::round(note_format_as_numeric(args[0], expr_)));
+    }
+    if (name == "std::pow") {
+      require_arity(2);
+      return note_format_number_result(std::pow(note_format_as_numeric(args[0], expr_),
+                                                note_format_as_numeric(args[1], expr_)));
+    }
+    if (name == "std::min" || name == "std::max") {
+      require_min_arity(2);
+      double best = note_format_as_numeric(args.front(), expr_);
+      for (std::size_t i = 1; i < args.size(); ++i) {
+        const double value = note_format_as_numeric(args[i], expr_);
+        best = name == "std::min" ? std::min(best, value) : std::max(best, value);
+      }
+      return note_format_number_result(best);
+    }
+    if (name == "std::accumulate") {
+      require_arity(2);
+      const auto& list = note_format_as_list(args[0], expr_);
+      double total = note_format_as_numeric(args[1], expr_);
+      for (const auto& item : list) total += note_format_as_numeric(FormatValue(item), expr_);
+      return note_format_number_result(total);
+    }
+    if (name == "pluss::join") {
+      PLUSS_CHECK(args.size() == 1 || args.size() == 2,
+                  "pluss::note::format: pluss::join() expected one list and optional delimiter in expression {" +
+                      std::string(expr_) + "}");
+      const auto& list = note_format_as_list(args[0], expr_);
+      const std::string delim = args.size() == 2 ? note_format_stringify(args[1]) : std::string(", ");
+      std::string out;
+      for (std::size_t i = 0; i < list.size(); ++i) {
+        if (i != 0) out += delim;
+        out += note_format_scalar_stringify(list[i]);
+      }
+      return FormatValue(std::move(out));
+    }
+    if (name == "std::to_string" || name == "pluss::str") {
+      require_arity(1);
+      return FormatValue(note_format_stringify(args[0]));
+    }
+
+    PLUSS_FAIL("pluss::note::format: unknown function '" + std::string(name) +
+               "' in expression {" + std::string(expr_) + "}");
+  }
+
+  std::string_view parse_member_name() {
+    skip_ws();
+    PLUSS_CHECK(peek_is_identifier_start(),
+                "pluss::note::format: expected member function name in expression {" +
+                    std::string(expr_) + "}");
     const std::size_t begin = pos_;
     ++pos_;
     while (pos_ < expr_.size() && note_format_is_ident_continue(expr_[pos_])) ++pos_;
-    const std::string_view name = expr_.substr(begin, pos_ - begin);
-    const auto& binding = note_format_lookup_binding(bindings_, name);
-    return note_format_as_numeric(binding, expr_);
+    return expr_.substr(begin, pos_ - begin);
+  }
+
+  std::string_view parse_qualified_identifier() {
+    const std::size_t begin = pos_;
+    ++pos_;
+    while (pos_ < expr_.size() && note_format_is_ident_continue(expr_[pos_])) ++pos_;
+
+    // A qualified name may use `::`; a lone ':' belongs to the ternary operator.
+    while (pos_ + 1 < expr_.size() && expr_[pos_] == ':' && expr_[pos_ + 1] == ':') {
+      pos_ += 2;
+      PLUSS_CHECK(pos_ < expr_.size() && note_format_is_ident_start(expr_[pos_]),
+                  "pluss::note::format: expected identifier after '::' in expression {" +
+                      std::string(expr_) + "}");
+      ++pos_;
+      while (pos_ < expr_.size() && note_format_is_ident_continue(expr_[pos_])) ++pos_;
+    }
+    return expr_.substr(begin, pos_ - begin);
+  }
+
+  FormatValue parse_member_call(FormatValue value, std::string_view method) {
+    std::vector<FormatValue> args;
+    skip_ws();
+    if (!match(')')) {
+      while (true) {
+        args.push_back(parse_ternary());
+        skip_ws();
+        if (match(')')) break;
+        PLUSS_CHECK(match(','),
+                    "pluss::note::format: expected ',' or ')' in member function call {" +
+                        std::string(expr_) + "}");
+      }
+    }
+
+    const auto require_arity = [&](std::size_t n) {
+      PLUSS_CHECK(args.size() == n,
+                  "pluss::note::format: member function '" + std::string(method) +
+                      "' expected " + std::to_string(n) + " argument(s) in expression {" +
+                      std::string(expr_) + "}");
+    };
+
+    if (method == "size") {
+      require_arity(0);
+      if (const auto* list = std::get_if<FormatValue::list_type>(&value.storage())) {
+        return FormatValue(static_cast<std::int64_t>(list->size()));
+      }
+      if (const auto* text = std::get_if<std::string>(&value.storage())) {
+        return FormatValue(static_cast<std::int64_t>(text->size()));
+      }
+      PLUSS_FAIL("pluss::note::format: .size() requires a string or vector/list in expression {" +
+                 std::string(expr_) + "}");
+    }
+    if (method == "empty") {
+      require_arity(0);
+      if (const auto* list = std::get_if<FormatValue::list_type>(&value.storage())) {
+        return FormatValue(list->empty());
+      }
+      if (const auto* text = std::get_if<std::string>(&value.storage())) {
+        return FormatValue(text->empty());
+      }
+      PLUSS_FAIL("pluss::note::format: .empty() requires a string or vector/list in expression {" +
+                 std::string(expr_) + "}");
+    }
+    if (method == "at") {
+      require_arity(1);
+      return apply_index(value, args[0]);
+    }
+
+    PLUSS_FAIL("pluss::note::format: unknown member function '" + std::string(method) +
+               "' in expression {" + std::string(expr_) + "}");
+  }
+
+  FormatValue apply_index(const FormatValue& value, const FormatValue& index_value) {
+    const double raw = note_format_as_numeric(index_value, expr_);
+    const auto index = static_cast<std::int64_t>(raw);
+    PLUSS_CHECK(static_cast<double>(index) == raw && index >= 0,
+                "pluss::note::format: index must be a non-negative integer in expression {" +
+                    std::string(expr_) + "}");
+    if (const auto* list = std::get_if<FormatValue::list_type>(&value.storage())) {
+      PLUSS_CHECK(static_cast<std::size_t>(index) < list->size(),
+                  "pluss::note::format: vector/list index out of range in expression {" +
+                      std::string(expr_) + "}");
+      return FormatValue((*list)[static_cast<std::size_t>(index)]);
+    }
+    if (const auto* text = std::get_if<std::string>(&value.storage())) {
+      PLUSS_CHECK(static_cast<std::size_t>(index) < text->size(),
+                  "pluss::note::format: string index out of range in expression {" +
+                      std::string(expr_) + "}");
+      return FormatValue(std::string(1, (*text)[static_cast<std::size_t>(index)]));
+    }
+    PLUSS_FAIL("pluss::note::format: indexing requires a string or vector/list in expression {" +
+               std::string(expr_) + "}");
   }
 
   bool peek_is_number_start() const {
@@ -286,6 +975,10 @@ private:
     return pos_ < expr_.size() && note_format_is_ident_start(expr_[pos_]);
   }
 
+  bool peek_is_quote() const {
+    return pos_ < expr_.size() && (expr_[pos_] == '"' || expr_[pos_] == '\'');
+  }
+
   void skip_ws() {
     while (pos_ < expr_.size() && std::isspace(static_cast<unsigned char>(expr_[pos_]))) ++pos_;
   }
@@ -293,6 +986,14 @@ private:
   bool match(char ch) {
     if (pos_ < expr_.size() && expr_[pos_] == ch) {
       ++pos_;
+      return true;
+    }
+    return false;
+  }
+
+  bool match_string(std::string_view text) {
+    if (expr_.substr(pos_, text.size()) == text) {
+      pos_ += text.size();
       return true;
     }
     return false;
@@ -319,11 +1020,15 @@ inline std::string note_format_eval_placeholder(
   PLUSS_CHECK(!trimmed.empty(), "pluss::note::format: empty placeholder is not allowed");
 
   if (note_format_is_plain_identifier(trimmed)) {
-    return note_format_stringify(note_format_lookup_binding(bindings, trimmed).value);
+    const auto& binding = note_format_lookup_binding(bindings, trimmed);
+    PLUSS_CHECK(!binding.callable.has_value(),
+                "pluss::note::format: callable binding '" + binding.name +
+                    "' must be called in expression {" + std::string(trimmed) + "}");
+    return note_format_stringify(binding.value);
   }
 
   NoteFormatExprParser parser(trimmed, bindings);
-  return note_format_double_to_string(parser.parse());
+  return note_format_stringify(parser.parse());
 }
 
 inline std::string note_format_render(

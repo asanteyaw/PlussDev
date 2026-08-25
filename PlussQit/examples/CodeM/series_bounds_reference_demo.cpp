@@ -24,6 +24,14 @@ int main() {
   heading("maximum_scalar");
   std::cout << grid.maximum(4.5) << "\n\n";
 
+  auto column_peer = pluss::make_series(std::vector<double>{2, 6}, {2, 1});
+  heading("maximum_column_broadcast");
+  std::cout << grid.maximum(column_peer) << "\n\n";
+
+  auto int_grid = pluss::make_series(std::vector<int>{1, 5, 3, 4, 2, 8}, {2, 3});
+  heading("maximum_scalar_int_input");
+  std::cout << int_grid.maximum(4.5) << "\n\n";
+
   auto max_a = pluss::make_series(std::vector<double>{1, 5, 2}, {3});
   auto max_b = pluss::make_series(std::vector<double>{4, 2, 2}, {3});
   max_a.tracks_slope_(true);
@@ -40,6 +48,12 @@ int main() {
 
   heading("minimum_scalar");
   std::cout << grid.minimum(4.5) << "\n\n";
+
+  heading("minimum_column_broadcast");
+  std::cout << grid.minimum(column_peer) << "\n\n";
+
+  heading("minimum_scalar_int_input");
+  std::cout << int_grid.minimum(4.5) << "\n\n";
 
   auto min_a = pluss::make_series(std::vector<double>{1, 5, 2}, {3});
   auto min_b = pluss::make_series(std::vector<double>{4, 2, 2}, {3});

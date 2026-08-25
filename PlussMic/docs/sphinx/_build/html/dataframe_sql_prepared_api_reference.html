@@ -64,7 +64,8 @@
 </section>
 <section id="what-it-does">
 <h4>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h4>
-<p>Runs the prepared SQL statement with the supplied parameters and returns the result as a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<p>Runs the prepared SQL statement with the supplied parameters and returns the result as a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.
+The execution path is the same SQLite-backed one used by <code class="docutils literal notranslate"><span class="pre">DataFrame::sql()</span></code>; preparing the statement stores the template plus options, then each call renders and executes it.</p>
 </section>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
@@ -86,16 +87,20 @@ Value produced by this call.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">prep_sql</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; 95&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">prep_sql</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM df WHERE sales &gt; 95&quot;</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="n">execute</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h5>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales
-1   100.0
-2   120.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | id    sales
+------------------
+0    | 1     100  
+1    | 2     120  
+------------------
+[2 cs x 2 feat]
 </pre></div>
 </div>
 <p>Example 2. Run the prepared SQL statement while binding named scalar placeholders.</p>
@@ -104,7 +109,7 @@ Value produced by this call.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">prep_sql</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">prep_sql</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM df WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;min_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">}});</span>
 </pre></div>
@@ -112,9 +117,13 @@ Value produced by this call.</p>
 </section>
 <section id="id1">
 <h5>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales
-1   100.0
-2   120.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | id    sales
+------------------
+0    | 1     100  
+1    | 2     120  
+------------------
+[2 cs x 2 feat]
 </pre></div>
 </div>
 <p>Example 3. Run the prepared SQL statement while binding both scalar placeholders and SQL identifier placeholders.</p>
@@ -123,17 +132,21 @@ Value produced by this call.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">prep_sql</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">prep_sql</span><span class="p">(</span><span class="s">&quot;SELECT id, {@feature_name} FROM df WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;min_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">}},</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;table_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;self&quot;</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;min_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">}},</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;feature_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">}});</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h5>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales
-1   100.0
-2   120.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | id    sales
+------------------
+0    | 1     100  
+1    | 2     120  
+------------------
+[2 cs x 2 feat]
 </pre></div>
 </div>
 </section>

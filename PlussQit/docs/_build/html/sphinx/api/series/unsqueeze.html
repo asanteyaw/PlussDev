@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::squeeze" href="squeeze.html" />
@@ -49,41 +49,56 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Inserts a size-<code class="docutils literal notranslate"><span class="pre">1</span></code> axis at <code class="docutils literal notranslate"><span class="pre">dim</span></code> and returns the result as a view.</p>
-<p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> does not change the values in the <code class="docutils literal notranslate"><span class="pre">Series</span></code> and does not change
-<code class="docutils literal notranslate"><span class="pre">numel()</span></code>. It only changes rank and indexing structure. In practice this makes
-it one of the main broadcasting-preparation tools: if another operation expects
-an axis that your current <code class="docutils literal notranslate"><span class="pre">Series</span></code> does not explicitly have, <code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> is
-how you add it without copying data.</p>
+<p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> is one of the most important shape-preparation tools in the whole
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> API because it changes rank without changing values or <code class="docutils literal notranslate"><span class="pre">numel()</span></code>.</p>
+<p>That makes it ideal for:</p>
+<ul class="simple">
+<li><p>broadcast preparation</p></li>
+<li><p>explicit batch axis insertion</p></li>
+<li><p>explicit feature axis insertion</p></li>
+<li><p>making later axis-oriented code line up with the mental model you want</p></li>
+</ul>
+<p>The central teaching point is simple:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> adds structure</p></li>
+<li><p>it does not add data</p></li>
+</ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>Where the new axis should be inserted.</p>
-<p>Valid positions are in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">self.dim()</span> <span class="pre">+</span> <span class="pre">1]</span></code> after negative-dimension
-normalization. So for a 2-D series:</p>
+<p>Where to insert the new axis.</p>
+<p>For a rank-2 series, the legal insertion positions after normalization are:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code> inserts a new leading axis</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> inserts between the two existing axes</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> or <code class="docutils literal notranslate"><span class="pre">-1</span></code> inserts at the end</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code>: before both existing axes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code>: between them</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> or <code class="docutils literal notranslate"><span class="pre">-1</span></code>: after them</p></li>
 </ul>
+<p>So <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not “which existing axis should become bigger.” It is “where should
+the new size-1 axis live in the final rank.”</p>
+<p>That is the mental model that prevents most off-by-one mistakes.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A view with one additional axis of length <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+A view with one more axis, where the inserted axis has extent <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Because this is a view:</p>
+<ul class="simple">
+<li><p>no values are copied</p></li>
+<li><p>no values are repeated</p></li>
+<li><p>only shape and stride metadata change</p></li>
+</ul>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> is differentiable. Backward simply reshapes the outgoing
-sensitivity back to the original shape, because no values were duplicated or
-dropped in the forward pass.</p>
-<p>This is why <code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> is safe to use freely in broadcast preparation: it is
-pure shape bookkeeping, not a numerical transformation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> is differentiable.</p>
+<p>Backward simply removes the inserted axis from the outgoing sensitivity because
+the forward pass never duplicated or destroyed any values. It only changed how
+the same values are indexed.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>The examples on this page build incrementally.</p>
-<p>Example 1. Insert a leading axis.</p>
+<section id="verified-examples">
+<h2>Verified Examples<a class="headerlink" href="#verified-examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Insert a new leading axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
@@ -98,10 +113,8 @@ data=[[[1, 2, 3],
   [4, 5, 6]]]
 </pre></div>
 </div>
-<p>Nothing numerical changed. The same <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> payload is now wrapped in an outer
-axis of length <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
-<p>Example 2. Inserting in the middle is often the most useful form for
-broadcast-alignment code.</p>
+<p>This is the common “wrap the whole tensor in a batch-like axis” form.</p>
+<p>Example 2. Insert the axis in the middle.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -113,8 +126,9 @@ data=[[[1, 2, 3]],
   [[4, 5, 6]]]
 </pre></div>
 </div>
-<p>This turns each row into a length-<code class="docutils literal notranslate"><span class="pre">1</span></code> group containing a <code class="docutils literal notranslate"><span class="pre">3</span></code>-element lane.</p>
-<p>Example 3. Negative indexing can be used to append the axis at the end.</p>
+<p>This is often the most useful form for broadcast alignment because it separates
+existing outer lanes from existing inner lanes.</p>
+<p>Example 3. Negative indexing can append the new axis at the end.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -130,22 +144,43 @@ data=[[[1],
   [6]]]
 </pre></div>
 </div>
-<p>This is the common “turn each scalar into a length-1 feature axis” form.</p>
+<p>This is the common “turn each scalar feature into a length-1 feature axis”
+shape edit.</p>
+<p>Example 4. Scalars can also gain rank explicitly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">42.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scalar</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[42]
+</pre></div>
+</div>
+<p>That example matters because it teaches the shape distinction clearly:</p>
+<ul class="simple">
+<li><p>scalar shape: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p></li>
+<li><p>length-1 vector shape after unsqueeze: <code class="docutils literal notranslate"><span class="pre">[1]</span></code></p></li>
+</ul>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> always inserts exactly one axis.</p></li>
-<li><p>The new axis always has length <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p>The result is a view, not a copy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code> inserts exactly one axis.</p></li>
+<li><p>The inserted axis always has size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>It is a structural view operation, not a numerical transformation.</p></li>
+<li><p>Use it when later code wants an explicit axis that your current tensor does
+not yet expose.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="squeeze.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::squeeze</span></code></span></a>: remove size-<code class="docutils literal notranslate"><span class="pre">1</span></code> axes again.</p></li>
-<li><p><a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::permute</span></code></span></a>: reorder axes after rank alignment.</p></li>
+<li><p><a class="reference internal" href="squeeze.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::squeeze</span></code></span></a>: remove size-<code class="docutils literal notranslate"><span class="pre">1</span></code> axes.</p></li>
+<li><p><a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::permute</span></code></span></a>: reorder axes after rank editing.</p></li>
+<li><p><a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::sizes</span></code></span></a>: inspect the resulting shape immediately.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="permute.html">
@@ -222,6 +257,7 @@ data=[[[1],
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

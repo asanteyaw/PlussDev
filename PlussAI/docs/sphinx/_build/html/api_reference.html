@@ -13,10 +13,12 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=d93d25b8"></script>
+    <script src="_static/layout.js?v=5c2e594e"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="NodeJ Overview" href="nodej_overview.html" />
-    <link rel="prev" title="API Reference" href="index.html" />
+    <link rel="next" title="PlussAI API Reference" href="api/plussai_root.html" />
+    <link rel="prev" title="PlussAI" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -36,20 +38,81 @@
             
   <section id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="nodej_overview.html"><span class="std std-doc">NodeJ Overview</span></a></p></li>
-<li><p><a class="reference internal" href="lymph_overview.html"><span class="std std-doc">Lymph Overview</span></a></p></li>
-<li><p><a class="reference internal" href="nodej_full_api.html"><span class="std std-doc">NodeJ Full API Reference</span></a></p></li>
-<li><p><a class="reference internal" href="lymph_full_api.html"><span class="std std-doc">Lymph Full API Reference</span></a></p></li>
+<p>This section is organized by public family first, not by internal implementation
+names or generated header dumps.</p>
+<p>The goal is simple: enter through the family you are using in code, then move into
+its handwritten reference pages without needing to know the private <code class="docutils literal notranslate"><span class="pre">node*</span></code> names
+that sit underneath the public surface.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/plussai_root.html">PlussAI API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/plussai_classic.html">PlussAI <code class="docutils literal notranslate"><span class="pre">classic</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_classic.html#what-lives-here">What Lives Here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_classic.html#public-positioning">Public Positioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_classic.html#include-surface">Include Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_classic.html#public-namespace">Public Namespace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_classic.html#relationship-to-other-families">Relationship To Other Families</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_classic.html#documentation-status">Documentation Status</a></li>
 </ul>
-<section id="coverage-snapshot">
-<h2>Coverage Snapshot<a class="headerlink" href="#coverage-snapshot" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>NodeJ pages: <strong>230</strong> (methods: 186, data-types: 44)</p></li>
-<li><p>Lymph pages: <strong>419</strong> (methods: 380, data-types: 39)</p></li>
-<li><p>Combined pages: <strong>649</strong></p></li>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/plussai_nets.html">PlussAI <code class="docutils literal notranslate"><span class="pre">nets</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nets.html#what-lives-here">What Lives Here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nets.html#public-positioning">Public Positioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nets.html#include-surface">Include Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nets.html#public-namespace">Public Namespace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nets.html#relationship-to-other-families">Relationship To Other Families</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nets.html#documentation-status">Documentation Status</a></li>
 </ul>
-</section>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/plussai_nlp.html">PlussAI <code class="docutils literal notranslate"><span class="pre">nlp</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nlp.html#what-lives-here">What Lives Here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nlp.html#public-positioning">Public Positioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nlp.html#include-surface">Include Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nlp.html#public-namespace">Public Namespace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nlp.html#relationship-to-other-families">Relationship To Other Families</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_nlp.html#documentation-status">Documentation Status</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/plussai_lymph.html">PlussAI <code class="docutils literal notranslate"><span class="pre">lymph</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#public-positioning">Public Positioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#include-surface">Include Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#public-namespace">Public Namespace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#relationship-to-other-frameworks">Relationship To Other Frameworks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#mental-model">Mental Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#typical-project-flow">Typical Project Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#lymph-families">Lymph Families</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/lymph/metrics.html">Lymph <code class="docutils literal notranslate"><span class="pre">metrics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/lymph/split.html">validate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/lymph/prep.html">Lymph <code class="docutils literal notranslate"><span class="pre">prep</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/lymph/model.html">Lymph <code class="docutils literal notranslate"><span class="pre">model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/lymph/tune.html">Lymph <code class="docutils literal notranslate"><span class="pre">tune</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/lymph/io.html">Lymph <code class="docutils literal notranslate"><span class="pre">io</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#reading-strategy">Reading Strategy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_lymph.html#documentation-standard-for-this-branch">Documentation Standard For This Branch</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/plussai_ice.html">PlussAI <code class="docutils literal notranslate"><span class="pre">ice</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_ice.html#public-positioning">Public Positioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_ice.html#include-surface">Include Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_ice.html#public-namespace">Public Namespace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_ice.html#relationship-to-other-families">Relationship To Other Families</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_ice.html#documentation-status">Documentation Status</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/plussai_procedure.html">PlussAI <code class="docutils literal notranslate"><span class="pre">procedure</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_procedure.html#public-positioning">Public Positioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_procedure.html#include-surface">Include Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_procedure.html#public-namespace">Public Namespace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_procedure.html#relationship-to-other-families">Relationship To Other Families</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/plussai_procedure.html#documentation-status">Documentation Status</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
 </section>
 
 
@@ -59,57 +122,28 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">PlussAI</a></h1>
-
-
-
-
-
-
-
-
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/plussai_root.html">PlussAI API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
 
 <search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </search>
-<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#coverage-snapshot">Coverage Snapshot</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="nodej_overview.html">NodeJ Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="lymph_overview.html">Lymph Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nodej_full_api.html">NodeJ Full API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="lymph_full_api.html">Lymph Full API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="_local/NodeB/README.html">docs</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">API Reference</a></li>
-      <li>Next: <a href="nodej_overview.html" title="next chapter">NodeJ Overview</a></li>
-  </ul></li>
-</ul>
-</div>
-
-
-
-
-
-
-
-
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>

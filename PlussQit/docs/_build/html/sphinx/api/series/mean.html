@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::prod" href="prod.html" />
@@ -50,13 +50,20 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes the arithmetic mean, either over the whole series or along one axis.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mean()</span></code> computes the arithmetic mean, either over the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> or along
+one axis.</p>
 <p>Shape-wise, <code class="docutils literal notranslate"><span class="pre">mean()</span></code> behaves like <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a>: full reduction returns a
 scalar, and <code class="docutils literal notranslate"><span class="pre">mean(dim,</span> <span class="pre">keepdim)</span></code> removes or preserves the reduced axis
 depending on <code class="docutils literal notranslate"><span class="pre">keepdim</span></code>.</p>
 <p>The main extra detail is dtype behavior. A mean is inherently fractional, so
 integral inputs are promoted in the current CPU implementation instead of
 staying integral.</p>
+<p>That gives <code class="docutils literal notranslate"><span class="pre">mean()</span></code> two teaching jobs at once:</p>
+<ul class="simple">
+<li><p>it is a reduction, so axis choice and <code class="docutils literal notranslate"><span class="pre">keepdim</span></code> matter</p></li>
+<li><p>it is a normalization-by-count operation, so output dtype and gradient scale
+differ from <code class="docutils literal notranslate"><span class="pre">sum()</span></code></p></li>
+</ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -124,7 +131,21 @@ data=[[2],
   [5]]
 </pre></div>
 </div>
-<p>Example 4. Integral input promotes to floating output in the current CPU path.</p>
+<p>Example 4. Negative dimensions count from the back, so <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last
+axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[2, 5]
+</pre></div>
+</div>
+<p>On this shape, that matches the row-wise mean because the last axis is the
+column axis inside each row.</p>
+<p>Example 5. Integral input promotes to floating output in the current CPU path.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">int_mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span>
@@ -134,15 +155,15 @@ data=[[2],
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=float32, platform=cpu, numel=1, contiguous=true)
 data=3.5
 </pre></div>
 </div>
 <p>That promotion is worth knowing because it affects downstream dtype expectations.
 You are no longer in integer space after the mean.</p>
-<p>Example 5. The backward pass divides the upstream sensitivity by the reduced
+<p>Example 6. The backward pass divides the upstream sensitivity by the reduced
 lane length.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
 <span class="n">tracked_mean</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
@@ -155,8 +176,8 @@ lane length.</p>
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[2, 5]
 dx=pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
@@ -167,13 +188,26 @@ data=[[0.33333333, 0.33333333, 0.33333333],
 <p>Each row has length <code class="docutils literal notranslate"><span class="pre">3</span></code>, so each contributing element receives <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">3</span></code>.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">mean()</span></code> follows <code class="docutils literal notranslate"><span class="pre">sum()</span></code>’s shape rules.</p></li>
 <li><p>Integer input does not imply integer output.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">mean()</span></code> is often preferable to <code class="docutils literal notranslate"><span class="pre">sum()</span></code> inside losses because the gradient is
 normalized by lane size.</p></li>
+<li><p>Choosing the wrong axis changes the meaning. <code class="docutils literal notranslate"><span class="pre">mean(0)</span></code> answers “column means”;
+<code class="docutils literal notranslate"><span class="pre">mean(1)</span></code> answers “row means.”</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">dim</span></code> outside the valid axis range fails through the shared reduction path.</p></li>
+</ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">mean()</span></code> when you want a size-normalized reduction:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mean()</span></code> collapses the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> to one average</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean(dim)</span></code> gives one average per surviving lane</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> is mostly about later broadcasting</p></li>
+<li><p>integer input is promoted because averages are inherently fractional</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -257,6 +291,7 @@ normalized by lane size.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

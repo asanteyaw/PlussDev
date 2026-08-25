@@ -110,11 +110,34 @@
       return null;
     }
     const slug = methodMatch[1];
-    const key = Object.keys(navData).find((k) => navData[k].slug === slug);
-    if (!key) {
+    const candidates = Object.keys(navData).filter((k) => navData[k].slug === slug);
+    if (!candidates.length) {
       return null;
     }
-    return { key, slug, landing: false, method: methodMatch[2] };
+
+    if (candidates.length === 1) {
+      const key = candidates[0];
+      return { key, slug, landing: false, method: methodMatch[2] };
+    }
+
+    // Some families share the same method-page directory while still wanting
+    // distinct sidebars. In those cases, the authored "Back to ..." link tells
+    // us which landing page owns the current method page.
+    const bodyLinks = Array.from(document.querySelectorAll("div.body a.reference.internal"));
+    const hrefs = bodyLinks
+      .map((link) => link.getAttribute("href") || "")
+      .filter(Boolean);
+
+    const matchedKey = candidates.find((key) => {
+      const landing = navData[key].landing || "";
+      return hrefs.some((href) => href === landing || href.endsWith("/" + landing));
+    });
+
+    if (!matchedKey) {
+      return null;
+    }
+
+    return { key: matchedKey, slug, landing: false, method: methodMatch[2] };
   }
 
   function buildApiMethodSidebar() {

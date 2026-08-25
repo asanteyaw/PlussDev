@@ -48,18 +48,30 @@ the overload quirks that materially change the result.
 
 ## Current Coverage
 
-This first handwritten factory batch covers the core constructors users touch
-immediately:
+The current handwritten factory batch now covers the public constructor families
+most users actually reach first and second:
 
-- `arange`
-- `empty`
-- `full`
-- `make`
-- `ones`
-- `zeros`
+- direct value construction: `make`
+- shape-first constants and layouts: `empty`, `zeros`, `ones`, `full`, `eye`
+- range/grid builders: `arange`, `linspace`
+- like-factories: `empty_like`, `zeros_like`, `ones_like`, `full_like`,
+  `rand_like`, `randn_like`, `randint_like`, `eye_like`
+- stochastic constructors: `rand`, `randn`, `rand_btw`, `randint`, `normal`,
+  `randperm`, `bernoulli`, `poisson`, `multinomial`
+- complex constructors: `complex`, `polar`
 
-The next batch should extend this landing page into `eye`, `linspace`, the
-stochastic families, like-factories, and the complex constructors.
+Those pages are split this way on purpose.
+
+- The core random pages (`rand`, `randn`) teach seed and dtype policy.
+- The interval/discrete pages (`rand_btw`, `randint`, `randperm`) teach how
+  those rules change once bounds or uniqueness matter.
+- The like-factory pages teach "same geometry as this existing tensor" as a
+  separate mental model from ordinary shape-first construction.
+- The complex pages teach the pairwise "two real tensors in, one complex tensor
+  out" surface, which behaves differently from the scalar-fill factories.
+
+What is still out of scope for this handwritten batch is the unsupported sparse
+and quantized constructor stub family.
 
 ```{toctree}
 :hidden:
@@ -67,10 +79,31 @@ stochastic families, like-factories, and the complex constructors.
 
 api/series_factory/arange
 api/series_factory/empty
+api/series_factory/eye
 api/series_factory/full
+api/series_factory/linspace
 api/series_factory/make
 api/series_factory/ones
 api/series_factory/zeros
+api/series_factory/rand
+api/series_factory/rand_btw
+api/series_factory/randint
+api/series_factory/randn
+api/series_factory/normal
+api/series_factory/randperm
+api/series_factory/empty_like
+api/series_factory/zeros_like
+api/series_factory/ones_like
+api/series_factory/full_like
+api/series_factory/rand_like
+api/series_factory/randn_like
+api/series_factory/randint_like
+api/series_factory/eye_like
+api/series_factory/bernoulli
+api/series_factory/poisson
+api/series_factory/multinomial
+api/series_factory/complex
+api/series_factory/polar
 ```
 
 <div class="pluss-inline-prev-next">

@@ -15,107 +15,120 @@ Series::min(const Series& other) const -> Series
 
 ## What It Does
 
-`min()` is the lower-bound counterpart to [`max()`](max.md), and it has the
-same overload split:
+`min()` is the lower-bound companion to [`max()`](max.md), and it has the same
+overload split:
 
-- `min()` with no arguments is a full ordered reduction
-- `min(dim, keepdim)` is an ordered reduction along one axis
-- `min(other)` is an elementwise comparison against another series
+- reduction overloads answer "what is the smallest value?"
+- the binary overload answers "at each position, which input is smaller?"
 
-That is worth stating plainly because these overloads are not variations of the
-same operation. Two of them summarize values; one of them compares peers
-position by position.
+That makes `min()` another method where the public name stays the same while the
+mental model changes with the overload family.
 
-If the question is "what is the smallest value here?", stay on the reduction
-overloads. If the question is "for each position, keep the lower of these two
-inputs", use the binary overload.
+- `min()` reduces the whole `Series` to one scalar winner
+- `min(dim)` and `min(dim, keepdim)` reduce one axis
+- `min(other)` performs an elementwise lower-of-two comparison under
+  broadcasting
+
+If you are teaching yourself to read the API fluently, it helps to separate
+"ordered reduction" from "pairwise comparison" every time you see this method.
 
 ## Overload Map
 
 **`min()`**
 
-Reduces across every element and returns one scalar `Series`.
+Reduces across the entire `Series` and returns one scalar minimum.
 
 **`min(dim)`**
 
-Reduces one axis and removes that axis from the result.
+Reduces one axis and removes that axis from the output shape.
 
 **`min(dim, keepdim)`**
 
-Reduces one axis and optionally keeps that axis as size `1`.
+Reduces one axis and optionally keeps it as size `1`.
 
 **`min(other)`**
 
-Performs an elementwise lower-of-two comparison under broadcasting. Numerically,
-this is the same job as [`minimum()`](minimum.md).
+Returns the elementwise smaller value between `self` and `other` under
+broadcasting. Forward values match [`minimum()`](minimum.md).
 
 ## Parameters
 
 **dim** (`std::int64_t`)
 
-The axis to reduce for the reduction overloads.
+The axis used by the reduction overloads.
 
 - positive dims count from the front
 - negative dims count from the back
-- the dim must refer to a real axis
+- the dim must refer to an existing axis
+
+Changing the dim changes which values compete to become the minimum. On a rank-2
+`Series`, `dim = 0` compares within each column, while `dim = 1` compares
+within each row.
 
 **keepdim** (`bool`)
 
-Controls whether the reduced axis survives in the output shape.
+Controls shape retention for the reduced axis.
 
-- `false`: remove the axis entirely
-- `true`: keep that axis as size `1`
+- `false`: remove the axis
+- `true`: keep the axis as size `1`
 
-The `keepdim=true` result is often easier to broadcast back against the
-original shape, so it is not just cosmetic.
+This toggle matters when the reduced output will be reused in shape-sensitive
+operations later on.
 
 **other** (`const Series&`)
 
-The peer operand for the binary overload.
+The peer `Series` for the binary overload.
 
 - `other` is broadcast against `self`
-- the result shape is the broadcasted shape
-- this overload does not reduce anything
+- the result takes the broadcasted shape
+- no axis is reduced in this overload
+
+So `min(other)` is best understood as a comparison surface, not as a special
+case of reduction.
 
 ## Returns
 
 `Series`
-    A scalar, a reduced series, or a broadcasted comparison result depending on
-    the overload.
+    The returned `Series` is:
+
+    - scalar for `min()`
+    - reduced for `min(dim, ...)`
+    - broadcasted for `min(other)`
 
 ## Gradient
 
-The backward rule again depends on which overload family you call.
+Like `max()`, `min()` has different backward behavior for reduction and binary
+comparison overloads.
 
 ### Reduction Overloads
 
 For `min()`, `min(dim)`, and `min(dim, keepdim)`:
 
 - only winning minima receive sensitivity
-- if several equal minima share the same reduced lane, the incoming derivative
-  is split evenly across those tied winners
-- for a full reduction, the split is across every global minimum
+- equal minima inside one reduced lane split the incoming derivative evenly
+- the full reduction overload splits across every global minimum in the whole
+  `Series`
 
-So the reduction family is tie-sharing, not first-winner-takes-all.
+So reduction `min(...)` is tie-sharing.
 
 ### Binary Overload
 
 For `min(other)`:
 
-- the rule is the same as [`minimum()`](minimum.md)
+- backward routing matches [`minimum()`](minimum.md)
 - gradient flows to `self` where `self <= other`
 - gradient flows to `other` where `self > other`
 - at an exact tie, the derivative stays with `self`
 
-That means the binary overload is not symmetric in backward routing at the tie
-boundary even though the forward values are symmetric.
+So the binary overload is again left-biased at the tie boundary.
 
 ## Examples
 
-The examples on this page build incrementally.
+The examples below build from the simplest scalar reduction through axis-aware
+reductions, then on to broadcasting, gradient behavior, and failure modes.
 
-Example 1. With no arguments, `min()` returns one scalar winner for the whole
-series.
+Example 1. `min()` with no arguments returns the single smallest value in the
+whole `Series`.
 
 ```cpp
 auto lows = pluss::make_series({
@@ -133,9 +146,25 @@ pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contig
 data=1
 ```
 
-This is a true full reduction result: one 0-D `Series`.
+This is a scalar `Series`, so the entire input has been reduced to one global
+winner.
 
-Example 2. `min(dim)` reduces one axis instead of the entire object.
+Example 2. `min(0)` reduces down columns.
+
+```cpp
+std::cout << lows.min(0);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2, 1, 3]
+```
+
+Each column contributes one minimum, which is why the result shape is `[3]`.
+
+Example 3. `min(1)` reduces across columns within each row.
 
 ```cpp
 std::cout << lows.min(1);
@@ -148,10 +177,9 @@ pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, cont
 data=[1, 1]
 ```
 
-`dim = 1` means each row reduces across its columns, so each row contributes one
-minimum.
+Now the shape is `[2]` because each row contributes one winner.
 
-Example 3. `keepdim=true` preserves the reduced axis as size `1`.
+Example 4. `keepdim=true` keeps the reduced axis available as size `1`.
 
 ```cpp
 std::cout << lows.min(1, true);
@@ -165,9 +193,9 @@ data=[[1],
   [1]]
 ```
 
-The values are the same as Example 2; only the retained axis differs.
+The values are unchanged from Example 3. Only the shape policy changed.
 
-Example 4. Negative dims are normalized from the back.
+Example 5. Negative dims count from the back.
 
 ```cpp
 std::cout << lows.min(-1);
@@ -180,9 +208,9 @@ pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, cont
 data=[1, 1]
 ```
 
-For a rank-2 series, `-1` is the last axis, so this matches `min(1)`.
+For this rank-2 input, `-1` means the last axis, so this matches `min(1)`.
 
-Example 5. `min(other)` is an elementwise comparison, not a reduction.
+Example 6. `min(other)` is an elementwise comparison under broadcasting.
 
 ```cpp
 auto ceilings = pluss::make_series({3.0, 2.0, 4.0});
@@ -198,10 +226,10 @@ data=[[3, 1, 3],
   [2, 1, 4]]
 ```
 
-The right-hand input is broadcast across rows, and each position keeps the lower
-of the two values.
+The right-hand input is broadcast across rows, and each position keeps the
+smaller contender.
 
-Example 6. `min(other)` is numerically the same as `minimum(other)`.
+Example 7. `min(other)` and `minimum(other)` have the same forward values.
 
 ```cpp
 std::cout << lows.minimum(ceilings);
@@ -215,10 +243,10 @@ data=[[3, 1, 3],
   [2, 1, 4]]
 ```
 
-So `min(other)` is best read as a compatibility-style spelling for the
-elementwise comparison family, not as a cousin of the reduction overloads.
+This is a helpful equivalence because it shows that the binary overload belongs
+to the elementwise comparison family, not the reduction family.
 
-Example 7. On a dimension reduction, tied minima split the derivative evenly.
+Example 8. On an axis reduction, tied minima split the derivative evenly.
 
 ```cpp
 auto reduced_ties = pluss::make_series({
@@ -244,10 +272,11 @@ data=[[0, 0.5, 0.5],
   [0, 0.5, 0.5]]
 ```
 
-Each reduced row has two equal minima, so the unit upstream derivative is split
-`0.5 / 0.5` across those tied winners.
+Each row has two equal minima, so each winner receives half of that row's
+upstream sensitivity.
 
-Example 8. Full reduction also splits across every global minimum.
+Example 9. Full reduction splits the derivative across every global minimum in
+the entire `Series`.
 
 ```cpp
 auto global_ties = pluss::make_series({
@@ -273,9 +302,41 @@ data=[[0.33333333, 0, 0],
   [0.33333333, 0.33333333, 0]]
 ```
 
-There are three global minima, so each receives one third of the derivative.
+There are three global minima, so each one receives one third of the upstream
+sensitivity.
 
-Example 9. An invalid dimension fails through the shared reduction validator.
+Example 10. The binary overload does not split ties. At equal values, the left
+operand keeps the gradient.
+
+```cpp
+auto lhs = pluss::make_series({1.0, 5.0, 2.0});
+auto rhs = pluss::make_series({1.0, 2.0, 2.0});
+lhs.tracks_slope_(true);
+rhs.tracks_slope_(true);
+
+auto binary = lhs.min(rhs);
+binary.sum().reverse();
+
+std::cout << "y=" << binary << "\n";
+std::cout << "dlhs=" << lhs.sensitivity() << "\n";
+std::cout << "drhs=" << rhs.sensitivity();
+```
+
+### Output
+
+```text
+y=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, 2]
+dlhs=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 0, 1]
+drhs=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 1, 0]
+```
+
+Positions `0` and `2` tie, and both gradients stay with `lhs`. That is the
+main backward quirk to remember for the binary overload.
+
+Example 11. A reduction dim must refer to a real axis.
 
 ```cpp
 try {
@@ -292,22 +353,43 @@ try {
 reduce: dim out of range
 ```
 
-That generic text is coming from the common reduction shape-normalization path,
-not from a `min`-specific formatter.
+This is the expected failure mode when the dim does not exist.
 
-## Notes
+## Gotchas And Failure Modes
 
-- `min()` spans two different ideas: ordered reduction and elementwise
-  comparison.
-- `min(other)` is numerically equivalent to [`minimum(other)`](minimum.md).
-- Ordered reduction requires an orderable dtype; complex series are not valid
-  reduction inputs here.
+- `min()` and `min(other)` are different operation families that happen to
+  share a name.
+- `dim = 0` and `dim = 1` compare different lanes and usually produce
+  different shapes.
+- `keepdim=true` preserves the reduced axis but does not change which values
+  win.
+- Reduction overloads split ties evenly; binary `min(other)` sends tie
+  gradients to the left operand.
+- Broadcastability matters for `min(other)`.
+- Out-of-range dims throw immediately.
+
+## Teaching Summary
+
+Use `min()` when you need the smallest value itself.
+
+- Choose `min()` for one global minimum.
+- Choose `min(dim)` when each axis lane should contribute its own local
+  minimum.
+- Choose `keepdim=true` when you need the reduced result to stay easy to align
+  with the original shape.
+- Choose `min(other)` when the task is elementwise lower-of-two selection under
+  broadcasting.
+
+Once that overload choice is clear, the rest follows naturally: reductions
+change shape and share ties, while pairwise comparison preserves a broadcasted
+shape and keeps tie gradients on the left operand.
 
 ## See Also
 
-- [`Series::max`](max.md): the upper-bound counterpart.
-- [`Series::minimum`](minimum.md): the explicit elementwise comparison spelling.
-- [`Series::argmin`](argmin.md): the index-returning ordered-minimum companion.
+- [`Series::minimum`](minimum.md): explicit elementwise minimum surface.
+- [`Series::max`](max.md): upper-bound counterpart with the same overload map.
+- [`Series::argmin`](argmin.md): returns winning indices instead of winning
+  values.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="max.html">

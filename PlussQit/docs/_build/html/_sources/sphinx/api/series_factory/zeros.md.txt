@@ -82,6 +82,32 @@ data=[false, false, false, false]
 
 For `bool`, the zero constructor naturally means `false`.
 
+Example 3. A scalar shape gives a scalar zero.
+
+```cpp
+std::cout << pluss::series::zeros({}, pluss::ScalarType::Float64);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0
+```
+
+Example 4. Integer dtypes keep the same initialization contract.
+
+```cpp
+std::cout << pluss::series::zeros({4}, pluss::ScalarType::Int16);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[4], strides=[1], dtype=int16, platform=cpu, numel=4, contiguous=true)
+data=[0, 0, 0, 0]
+```
+
 ## Notes
 
 - `zeros()` is the predictable-initialization alternative to [`empty()`](empty.md).
@@ -98,5 +124,9 @@ For `bool`, the zero constructor naturally means `false`.
   <a class="prev-link" href="ones.html">
     <span class="label">Previous</span>
     <span class="title">ones</span>
+  </a>
+  <a class="next-link" href="rand.html">
+    <span class="label">Next</span>
+    <span class="title">rand</span>
   </a>
 </div>

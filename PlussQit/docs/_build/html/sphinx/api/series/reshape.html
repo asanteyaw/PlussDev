@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::transpose" href="transpose.html" />
@@ -42,53 +42,80 @@
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">reshape</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span><span class="w"> </span><span class="n">new_sizes</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">reshape</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">new_sizes</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Changes shape with a view-if-possible, contiguous-copy-if-necessary policy.</p>
-<p>This is the high-level “I need this logical shape” API. <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> first asks
-whether the current <code class="docutils literal notranslate"><span class="pre">Series</span></code> can be reinterpreted directly. If yes, it behaves
-like <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>. If not, it materializes a contiguous layout for the
-current logical values and then produces the requested shape from that.</p>
-<p>That difference is not cosmetic:</p>
+<p>Changes the logical shape with a view-if-possible, contiguous-copy-if-needed
+policy.</p>
+<p>This is the forgiving shape API.</p>
+<p>That wording matters because <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> is often taught too loosely as “the
+same as <code class="docutils literal notranslate"><span class="pre">view()</span></code>, but maybe slower.” That is not the right mental model. The
+right mental model is:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">view()</span></code> means “fail unless this can stay a true alias”</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> means “give me the requested logical shape, even if layout must
-be normalized first”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">view()</span></code> protects aliasing</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> protects the requested final logical result</p></li>
 </ul>
+<p>So if your real contract is “I need these values under this final shape,”
+<code class="docutils literal notranslate"><span class="pre">reshape()</span></code> is usually the correct default.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>new_sizes</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Int</span></code>)</p>
-<p>The desired output shape.</p>
-<p>In ordinary use you can pass brace literals such as <code class="docutils literal notranslate"><span class="pre">{3,</span> <span class="pre">2}</span></code> directly, or reuse
-another tensor’s <a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes()</span></code></span></a> result. The requested shape must
-preserve total <code class="docutils literal notranslate"><span class="pre">numel()</span></code>.</p>
+<p><strong>new_sizes</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::int64_t&gt;</span></code>)</p>
+<p>The target logical shape.</p>
+<p>Common call forms:</p>
+<ul class="simple">
+<li><p>brace literals such as <code class="docutils literal notranslate"><span class="pre">{3,</span> <span class="pre">2}</span></code></p></li>
+<li><p>another series’ <a class="reference internal" href="sizes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes()</span></code></span></a> result</p></li>
+</ul>
+<p>The requested shape must preserve total <code class="docutils literal notranslate"><span class="pre">numel()</span></code>. <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> is flexible
+about layout, not flexible about how many values exist.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A <code class="docutils literal notranslate"><span class="pre">Series</span></code> with the requested logical shape. This may be a true alias if the
-source was already view-compatible, or a new contiguous result if it was not.</p>
+A series with the requested logical shape.</p>
+<p>That returned series may be:</p>
+<ul class="simple">
+<li><p>a true aliasing view, if the source is already view-compatible</p></li>
+<li><p>a new contiguous result, if the source must be normalized first</p></li>
+</ul>
+<p>So the promise is about the final logical shape, not about which storage route
+was taken to get there.</p>
 </section>
 <section id="autograd-behavior">
 <h2>Autograd Behavior<a class="headerlink" href="#autograd-behavior" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> preserves reverse-mode connectivity in both paths:</p>
-<ul class="simple">
-<li><p>direct-view path: backward is the same shape-only mapping as <code class="docutils literal notranslate"><span class="pre">view()</span></code></p></li>
-<li><p>fallback path: the internal contiguous staging copy is explicitly linked back
-to the source before the final view is created</p></li>
-</ul>
-<p>That second point matters because it means a reshape of a non-contiguous tensor
-still backpropagates to the original source rather than dead-ending at the
-materialized temporary.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> preserves reverse-mode connectivity in both execution paths.</p>
+<p>There are really two forward stories:</p>
+<ol class="arabic simple">
+<li><p>direct view path</p></li>
+<li><p>fallback contiguous-materialization path</p></li>
+</ol>
+<p>The important guarantee is that both remain connected to the original source.
+Even when <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> has to normalize a non-contiguous input, gradients still
+flow back to the original tensor rather than stopping at the staging copy.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>The examples on this page build incrementally.</p>
+<section id="shape-policy">
+<h2>Shape Policy<a class="headerlink" href="#shape-policy" title="Link to this heading">¶</a></h2>
+<p>The key teaching distinction is between logical value order and physical
+storage order.</p>
+<p>When the input is already contiguous:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">view()</span></code></p></li>
+</ul>
+<p>When the input is non-contiguous:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> preserves the current logical value order</p></li>
+<li><p>materializes that order contiguously</p></li>
+<li><p>then applies the requested final shape</p></li>
+</ul>
+<p>That is why reshaping a transpose does not jump back to the pre-transpose
+row-major interpretation.</p>
+</section>
+<section id="verified-examples">
+<h2>Verified Examples<a class="headerlink" href="#verified-examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. On a contiguous source, <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">view()</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
@@ -106,8 +133,9 @@ data=[[1, 2],
   [5, 6]]
 </pre></div>
 </div>
-<p>Example 2. On a non-contiguous transpose, <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> succeeds by materializing
-the transposed logical order first, then reshaping that order.</p>
+<p>So on already-compatible storage, <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> does not invent extra work. It
+simply takes the direct route.</p>
+<p>Example 2. A non-contiguous transpose still reshapes successfully.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="n">reshape</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
 </pre></div>
 </div>
@@ -120,10 +148,28 @@ data=[[1, 4],
   [3, 6]]
 </pre></div>
 </div>
-<p>This is the core difference from Example 1. <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> did <strong>not</strong> go back to
-<code class="docutils literal notranslate"><span class="pre">mat</span></code>’s original row-major reading order. It preserved the transposed logical
-values, made <em>that</em> layout contiguous, and then reshaped the result.</p>
-<p>Example 3. Gradients still flow back through that non-contiguous fallback path.</p>
+<p>This is the example that teaches the method correctly. The result follows the
+transposed logical order, not the original row-major order of <code class="docutils literal notranslate"><span class="pre">mat</span></code>.</p>
+<p>Example 3. Borrowed shape metadata can be passed directly here too.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">shape_template</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape_template</span><span class="p">.</span><span class="n">sizes</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2],
+  [3, 4],
+  [5, 6]]
+</pre></div>
+</div>
+<p>Example 4. Gradients still flow through the non-contiguous fallback path.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
@@ -140,27 +186,26 @@ values, made <em>that</em> layout contiguous, and then reshaped the result.</p>
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[1,2], dtype=float64, platform=cpu, numel=6, contiguous=false)
 data=[[0, 1, 0],
   [0, 1, 0]]
 </pre></div>
 </div>
-<p>The selected row in the reshaped result was <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">5]</span></code>, so the gradient lands on
-the original positions of <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">5</span></code> in <code class="docutils literal notranslate"><span class="pre">tracked_mat</span></code>. That confirms the
-fallback path is not just numerically correct in the forward pass; it also stays
-connected for reverse-mode autodiff.</p>
+<p>The selected row of the reshaped result corresponds to the original values <code class="docutils literal notranslate"><span class="pre">2</span></code>
+and <code class="docutils literal notranslate"><span class="pre">5</span></code>, so those are exactly the source positions that receive gradient.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> is the safe default when you care about the final logical shape
-more than whether the operation stays a true alias.</p></li>
-<li><p>Equal <code class="docutils literal notranslate"><span class="pre">numel()</span></code> is still required; <code class="docutils literal notranslate"><span class="pre">reshape()</span></code> is flexible about layout, not
-about element count.</p></li>
-<li><p>On already contiguous inputs, it routes straight to <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reshape()</span></code> is usually the safer default when your contract is about the
+final logical shape.</p></li>
+<li><p>Equal <code class="docutils literal notranslate"><span class="pre">numel()</span></code> is still mandatory.</p></li>
+<li><p>Non-contiguous inputs can force materialization, but the method remains
+differentiable.</p></li>
+<li><p>If true aliasing is the requirement, use <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a> instead.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -246,6 +291,7 @@ fallback path.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

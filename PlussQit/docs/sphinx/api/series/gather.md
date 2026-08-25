@@ -14,16 +14,18 @@ Series::gather(std::int64_t dim, const Series& index) const -> Series
 
 Reads values from `self` by looking up positions along one chosen axis.
 
-`gather()` is easiest to understand as "positional alignment everywhere except
-one axis." Along every axis other than `dim`, `self` and `index` move in
-lockstep. Along `dim`, the integer stored in `index` decides which source
-position to read.
+`gather()` is easiest to understand as "aligned everywhere except one lookup
+axis." Along every axis other than `dim`, `self` and `index` move in lockstep.
+Along `dim`, the integer stored in `index` decides which source position to
+read.
 
-That gives `gather()` a different role from [`index_select`](index_select.md):
+That is why `gather()` and [`index_select()`](index_select.md) both exist:
 
-- `index_select()` reuses one index list everywhere
-- `gather()` can vary the lookup pattern from row to row, column to column, or
-  more generally from lane to lane
+- `index_select()` uses one shared index list uniformly
+- `gather()` allows the lookup pattern itself to vary from lane to lane
+
+If the desired read pattern changes per row, per column, or per batch lane,
+that is usually `gather()`, not `index_select()`.
 
 ## Parameters
 
@@ -34,6 +36,9 @@ The axis along which lookup happens.
 If `dim == 1` for a 2-D series, then each output position chooses a column from
 its own row. If `dim == 0`, each output position chooses a row for its own
 column slot.
+
+Negative dims are allowed and normalize from the back in the usual `Series`
+style.
 
 **index** (`const Series&`)
 
@@ -46,11 +51,20 @@ Important constraints:
 - every non-`dim` axis must already line up positionally with `self`
 - repeated positions are allowed
 
+The last two bullets are the real gotchas. Many users expect gather-like APIs
+to broadcast the index tensor. This one does not. The output shape follows the
+index shape directly, so the index tensor must already describe the exact
+per-lane lookup pattern you want.
+
 ## Returns
 
 `Series`
     A new series with the same shape as `index`, filled from `self` according
     to the requested lookup positions.
+
+That "same shape as `index`" rule is one of the most important usage rules on
+the page. `gather()` is not shape-preserving in the way `clamp_max()` or
+`maximum()` are. It is index-shape-preserving.
 
 ## Gradient
 
@@ -113,7 +127,24 @@ data=[[1, 5, 3],
 The axis toggle changes the meaning completely even though the source table is
 the same.
 
-Example 3. Repeated indices accumulate gradient on the source position they
+Example 3. Negative dims are just another way to name the same lookup axis.
+
+```cpp
+std::cout << table.gather(-1, gather_cols);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 3],
+  [5, 4]]
+```
+
+For a matrix, `-1` means the last axis, so this is the same lookup as
+`gather(1, gather_cols)`.
+
+Example 4. Repeated indices accumulate gradient on the source position they
 read from more than once.
 
 ```cpp
@@ -145,6 +176,8 @@ never read, so it receives `0`.
 - If the same index list should apply uniformly everywhere, use
   [`index_select`](index_select.md) instead.
 - The output shape follows `index`, not `self`.
+- Repeated indices are legal in the forward pass and additive in the backward
+  pass.
 
 ## See Also
 

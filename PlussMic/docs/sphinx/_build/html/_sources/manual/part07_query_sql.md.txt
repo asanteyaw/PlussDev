@@ -87,14 +87,20 @@ Use masks when:
 
 ## SQL is a PlussMic SELECT language
 
-`DataFrame::sql()` returns a `DataFrameSqlAccessor`. The accessor executes `SELECT` statements over the calling frame and optional bound sources.
+`DataFrame::sql()` returns a `DataFrameSqlAccessor`. The accessor binds the
+calling frame and optional extra sources into an in-memory SQLite workspace,
+executes the SQL there, and converts the result back into a `DataFrame`.
 
 ```cpp
 auto result = df.sql().execute(
     "SELECT age, job, balance FROM df WHERE age >= 45");
 ```
 
-The current SQL implementation supports `SELECT` statements only. Non-`SELECT` statements such as `DELETE FROM df` are rejected. This SQL layer is for shaping in-memory frames, not mutating databases.
+This SQL layer is still query-oriented. Statements that do not produce a result
+set, such as `DELETE FROM df`, are rejected. But within result-producing SQL, the
+surface is much broader than the old parser-only engine: grouped aggregates,
+common table expressions, subqueries, `LEFT JOIN`, `DISTINCT`, and ordinary SQLite
+expressions now work.
 
 The calling frame is named `df` by default:
 
@@ -108,26 +114,14 @@ You may alias the calling frame:
 SELECT customers.age FROM df AS customers
 ```
 
-The parser supports:
+Pluss-specific conveniences still remain on top of the SQLite backend:
 
-- `SELECT *`
-- `SELECT feature`
-- `SELECT feature AS alias`
-- qualified names such as `df.age`
-- `FROM df`
-- `FROM df AS alias`
-- `JOIN name ON left_feature = right_feature`
-- `WHERE ...`
-- `ORDER BY feature ASC`
-- `ORDER BY feature DESC`
-- `ORDER BY feature ASC NULLS FIRST`
-- `ORDER BY feature ASC NULLS LAST`
-- `LIMIT n`
-- `OFFSET n`
-- scalar parameters such as `{min_age}`
-- identifier parameters such as `{@feature_name}`
-
-There are deliberate limits. `ORDER BY` accepts one feature key. Projection items are feature names or aliases, not arbitrary expressions. `WHERE` expressions are handled by `DataFrame::query`, so use the query predicate language there rather than expecting a full external SQL dialect.
+- the calling frame is available as `df`
+- scalar parameters such as `{min_age}` still work
+- identifier parameters such as `{@feature_name}` still work
+- `case_axis_aliases` still expose the case axis as selectable SQL columns
+- bare source-name shorthand such as `df.sql().execute("df")` expands to
+  `SELECT * FROM df`
 
 ## Verified SQL example
 
@@ -236,16 +230,16 @@ Important options:
 | `missing_param_policy` | Choose whether missing parameters are errors or render as SQL null. |
 | `reject_unused_params` | Fail if a supplied scalar or identifier parameter is never used. |
 | `collision_policy` | Control duplicate projection names: error, suffix, or overwrite. |
-| `max_intermediate_rows` | Guard intermediate frames after joins, filtering, ordering, or projection. |
+| `max_intermediate_rows` | Legacy guard field. The SQLite backend materializes the final query result rather than exposing parser-stage intermediate frames. |
 | `max_result_rows` | Cap the returned result. |
 | `memory_budget_mb` | Estimate and guard result memory. |
 | `timeout_ms` | Check execution time at SQL execution stages. |
 | `diagnostics_explain` | Print a statement plan through Pluss diagnostics. |
 | `diagnostics_profile` | Print stage timing. |
 | `diagnostics_trace_tokens` | Print tokenization output. |
-| `diagnostics_trace_plan` | Print the parsed plan. |
-| `enable_plan_cache` | Enable or disable parsed statement caching. |
-| `plan_cache_capacity` | Set the statement plan cache capacity. |
+| `diagnostics_trace_plan` | Print the SQLite query plan. |
+| `enable_plan_cache` | Legacy field kept for API stability. |
+| `plan_cache_capacity` | Legacy field kept for API stability. |
 | `result_mode` | Request materialized or chunked behavior. Current `execute()` still returns a materialized `DataFrame`. |
 | `chunk_rows` | Chunk size used with chunked result mode diagnostics. |
 | `case_axis_aliases` | Names that expose the case axis as a projected output feature. |

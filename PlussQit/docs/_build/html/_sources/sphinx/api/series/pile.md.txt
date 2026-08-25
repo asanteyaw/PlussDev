@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::pile(pluss::msharp::RangeView::Of<Series> others,
+Series::pile(pluss::RangeView<Series> others,
              std::int64_t dim = 0) const -> Series
 ```
 
@@ -25,7 +25,7 @@ that axis.
 
 ## Parameters
 
-**others** (`pluss::msharp::RangeView::Of<Series>`)
+**others** (`pluss::RangeView<Series>`)
 
 The additional series to stack after `self`.
 
@@ -71,8 +71,8 @@ This is the exact structural mirror of the forward op:
 Example 1. Stack two `2 x 2` inputs along a new leading axis.
 
 ```cpp
-auto left = pluss::make_series(std::vector<double>{1, 2, 3, 4}, {2, 2});
-auto right = pluss::make_series(std::vector<double>{10, 20, 30, 40}, {2, 2});
+auto left = pluss::make_series({1, 2, 3, 4}, {2, 2});
+auto right = pluss::make_series({10, 20, 30, 40}, {2, 2});
 std::cout << left.pile({right}, 0);
 ```
 
@@ -112,7 +112,7 @@ Example 3. Shape mismatch is rejected.
 
 ```cpp
 try {
-  auto bad_shape = pluss::make_series(std::vector<double>{5, 6, 7, 8, 9, 10}, {3, 2});
+  auto bad_shape = pluss::make_series({5, 6, 7, 8, 9, 10}, {3, 2});
   std::cout << left.pile({bad_shape}, 0);
 } catch (const std::exception& e) {
   std::string msg = e.what();
@@ -134,9 +134,9 @@ Example 4. Backward selects each input's slice along the new axis.
 
 ```cpp
 auto tracked_left = pluss::make_series(
-    std::vector<double>{1.0, 2.0, 3.0, 4.0}, {2, 2});
+    {1.0, 2.0, 3.0, 4.0}, {2, 2});
 auto tracked_right = pluss::make_series(
-    std::vector<double>{10.0, 20.0, 30.0, 40.0}, {2, 2});
+    {10.0, 20.0, 30.0, 40.0}, {2, 2});
 tracked_left.tracks_slope_(true);
 tracked_right.tracks_slope_(true);
 

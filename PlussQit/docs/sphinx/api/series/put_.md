@@ -74,8 +74,8 @@ This toggle is the most important behavioral switch on the method.
 Example 1. A scalar source broadcasts across every indexed flat position.
 
 ```cpp
-auto put_idx = pluss::make_series(std::vector<std::int64_t>{0, 2, 5}, {3});
-auto flat = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4, 5}, {6});
+auto put_idx = pluss::make_series({0, 2, 5}, {3});
+auto flat = pluss::make_series({0, 1, 2, 3, 4, 5}, {6});
 
 flat.put_(put_idx, pluss::make_series(-1.0), false);
 std::cout << flat;
@@ -91,8 +91,8 @@ data=[-1, 1, -1, 3, 4, -1]
 Example 2. Negative indices count from the end of the same flattened logical order.
 
 ```cpp
-auto negative_idx = pluss::make_series(std::vector<std::int64_t>{-1, -3}, {2});
-auto negative_values = pluss::make_series(std::vector<double>{99, 77}, {2});
+auto negative_idx = pluss::make_series({-1, -3}, {2});
+auto negative_values = pluss::make_series({99, 77}, {2});
 
 flat.put_(negative_idx, negative_values, false);
 std::cout << flat;
@@ -114,9 +114,9 @@ Example 3. With `accumulate=false`, repeated indices behave like repeated
 replacements, so later writes to the same position win.
 
 ```cpp
-auto replace_idx = pluss::make_series(std::vector<std::int64_t>{1, 1, 4}, {3});
-auto replace_base = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4, 5}, {6});
-auto replace_values = pluss::make_series(std::vector<double>{50, 60, 90}, {3});
+auto replace_idx = pluss::make_series({1, 1, 4}, {3});
+auto replace_base = pluss::make_series({0, 1, 2, 3, 4, 5}, {6});
+auto replace_values = pluss::make_series({50, 60, 90}, {3});
 
 replace_base.put_(replace_idx, replace_values, false);
 std::cout << replace_base;
@@ -136,8 +136,8 @@ Example 4. With `accumulate=true`, repeated indices add into the destination
 instead of replacing it.
 
 ```cpp
-auto accum_base = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4, 5}, {6});
-auto accum_values = pluss::make_series(std::vector<double>{10, 20, 30}, {3});
+auto accum_base = pluss::make_series({0, 1, 2, 3, 4, 5}, {6});
+auto accum_values = pluss::make_series({10, 20, 30}, {3});
 
 accum_base.put_(replace_idx, accum_values, true);
 std::cout << accum_base;
@@ -160,7 +160,7 @@ indexed writes exactly.
 
 ```cpp
 try {
-  auto bad_values = pluss::make_series(std::vector<double>{1, 2}, {2});
+  auto bad_values = pluss::make_series({1, 2}, {2});
   flat.put_(put_idx, bad_values, false);
 } catch (const std::exception& e) {
   std::string msg = e.what();

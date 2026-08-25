@@ -28,6 +28,9 @@ int main() {
   heading("min_dim1");
   std::cout << lows.min(1) << "\n\n";
 
+  heading("min_dim0");
+  std::cout << lows.min(0) << "\n\n";
+
   heading("min_dim1_keepdim");
   std::cout << lows.min(1, true) << "\n\n";
 
@@ -63,6 +66,17 @@ int main() {
   std::cout << "y=" << global_winner << "\n";
   std::cout << "dx=" << global_ties.sensitivity() << "\n\n";
 
+  auto lhs = pluss::make_series({1.0, 5.0, 2.0});
+  auto rhs = pluss::make_series({1.0, 2.0, 2.0});
+  lhs.tracks_slope_(true);
+  rhs.tracks_slope_(true);
+  auto binary = lhs.min(rhs);
+  binary.sum().reverse();
+  heading("min_binary_tie_gradient");
+  std::cout << "y=" << binary << "\n";
+  std::cout << "dlhs=" << lhs.sensitivity() << "\n";
+  std::cout << "drhs=" << rhs.sensitivity() << "\n\n";
+
   heading("min_bad_dim_error");
   try {
     std::cout << lows.min(2) << "\n";
@@ -82,6 +96,9 @@ int main() {
   heading("argmax_dim1");
   std::cout << highs.argmax(1) << "\n\n";
 
+  heading("argmax_dim0");
+  std::cout << highs.argmax(0) << "\n\n";
+
   heading("argmax_dim1_keepdim");
   std::cout << highs.argmax(1, true) << "\n\n";
 
@@ -95,9 +112,24 @@ int main() {
   heading("argmax_first_tie");
   std::cout << argmax_ties.argmax(1) << "\n\n";
 
+  auto argmax_global_ties = pluss::make_series({
+      {9.0, 9.0},
+      {8.0, 9.0},
+  });
+  heading("argmax_global_first_tie");
+  std::cout << argmax_global_ties.argmax() << "\n\n";
+
   auto scalar = pluss::make_series(42.0);
   heading("argmax_scalar");
   std::cout << scalar.argmax() << "\n\n";
+
+  heading("argmax_bad_dim_error");
+  try {
+    std::cout << highs.argmax(2) << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
 
   auto empty_rows = pluss::series::zeros({0, 3});
   heading("argmax_empty_error");
@@ -119,6 +151,9 @@ int main() {
   heading("argmin_dim1");
   std::cout << cold.argmin(1) << "\n\n";
 
+  heading("argmin_dim0");
+  std::cout << cold.argmin(0) << "\n\n";
+
   heading("argmin_dim1_keepdim");
   std::cout << cold.argmin(1, true) << "\n\n";
 
@@ -132,8 +167,23 @@ int main() {
   heading("argmin_first_tie");
   std::cout << argmin_ties.argmin(1) << "\n\n";
 
+  auto argmin_global_ties = pluss::make_series({
+      {-9.0, -9.0},
+      {0.0, -9.0},
+  });
+  heading("argmin_global_first_tie");
+  std::cout << argmin_global_ties.argmin() << "\n\n";
+
   heading("argmin_scalar");
   std::cout << scalar.argmin() << "\n\n";
+
+  heading("argmin_bad_dim_error");
+  try {
+    std::cout << cold.argmin(2) << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
 
   auto empty_cols = pluss::series::zeros({3, 0});
   heading("argmin_empty_error");

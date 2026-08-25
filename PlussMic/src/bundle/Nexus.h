@@ -4,10 +4,12 @@
 #include <functional>
 #include <initializer_list>
 #include <iosfwd>
+#include <map>
 #include <optional>
-#include <utility>
 #include <string>
 #include <string_view>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "MSharp/IntrusivePtr.h"
@@ -278,7 +280,35 @@ public:
   Nexus& set_table_meta_(std::string_view key, const nexus::TableMeta& meta);
   std::optional<nexus::TableMeta> meta(std::string_view key) const;
   Nexus meta(std::string_view key, const nexus::TableMeta& value) const;
+  Nexus meta(std::initializer_list<std::pair<std::string_view, nexus::TableMeta>> values) const;
+  template <class Key, class Compare, class Alloc>
+  Nexus meta(const std::map<Key, nexus::TableMeta, Compare, Alloc>& values) const {
+    auto out = *this;
+    out.meta_(values);
+    return out;
+  }
+  template <class Key, class Hash, class Eq, class Alloc>
+  Nexus meta(const std::unordered_map<Key, nexus::TableMeta, Hash, Eq, Alloc>& values) const {
+    auto out = *this;
+    out.meta_(values);
+    return out;
+  }
   Nexus& meta_(std::string_view key, const nexus::TableMeta& value);
+  Nexus& meta_(std::initializer_list<std::pair<std::string_view, nexus::TableMeta>> values);
+  template <class Key, class Compare, class Alloc>
+  Nexus& meta_(const std::map<Key, nexus::TableMeta, Compare, Alloc>& values) {
+    for (const auto& [key, value] : values) {
+      meta_(std::string_view(key), value);
+    }
+    return *this;
+  }
+  template <class Key, class Hash, class Eq, class Alloc>
+  Nexus& meta_(const std::unordered_map<Key, nexus::TableMeta, Hash, Eq, Alloc>& values) {
+    for (const auto& [key, value] : values) {
+      meta_(std::string_view(key), value);
+    }
+    return *this;
+  }
 
   std::int64_t nrelationships() const;
   const std::vector<nexus::Relationship>& relationships() const;
@@ -424,10 +454,38 @@ public:
   NexusPull& take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
     return take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
   }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPull& take(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [source, alias] : fields) {
+      this->take(std::string_view(source), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPull& take(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [source, alias] : fields) {
+      this->take(std::string_view(source), std::string_view(alias));
+    }
+    return *this;
+  }
   NexusPull& take(std::string_view table,
                   std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
     return take(table,
                 pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPull& take(std::string_view table, const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [source, alias] : fields) {
+      this->take(table, {{std::string_view(source), std::string_view(alias)}});
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPull& take(std::string_view table, const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [source, alias] : fields) {
+      this->take(table, {{std::string_view(source), std::string_view(alias)}});
+    }
+    return *this;
   }
   NexusPull& take(std::string_view source, std::string_view alias = {});
   NexusPull& count(std::string_view source, std::string_view alias = {});
@@ -456,19 +514,184 @@ public:
   NexusPullAgg(NexusPull& pull, std::string table_name);
 
   NexusPullAgg& count(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& count(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& count(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return count(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   NexusPullAgg& ndistinct(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& ndistinct(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& ndistinct(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return ndistinct(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   NexusPullAgg& sum(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& sum(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& sum(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return sum(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   NexusPullAgg& mean(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& mean(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& mean(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return mean(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   NexusPullAgg& median(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& median(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& median(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return median(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   NexusPullAgg& min(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& min(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& min(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return min(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   NexusPullAgg& max(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& max(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& max(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return max(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   NexusPullAgg& std(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& std(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& std(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return std(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   NexusPullAgg& var(std::string_view feature, std::string_view alias = {});
+  NexusPullAgg& var(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  NexusPullAgg& var(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return var(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& count(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->count(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& count(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->count(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& ndistinct(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->ndistinct(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& ndistinct(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->ndistinct(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& sum(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->sum(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& sum(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->sum(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& mean(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->mean(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& mean(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->mean(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& median(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->median(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& median(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->median(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& min(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->min(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& min(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->min(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& max(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->max(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& max(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->max(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& std(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->std(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& std(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->std(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Compare, class Alloc>
+  NexusPullAgg& var(const std::map<Key, Value, Compare, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->var(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
+  template <class Key, class Value, class Hash, class Eq, class Alloc>
+  NexusPullAgg& var(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) {
+    for (const auto& [feature, alias] : fields) {
+      this->var(std::string_view(feature), std::string_view(alias));
+    }
+    return *this;
+  }
 
   NexusPull& end() const;
 
 private:
   NexusPullAgg& add_scoped(nexus::PullOp op, std::string_view feature, std::string_view alias);
+  NexusPullAgg& add_scoped(
+      nexus::PullOp op,
+      pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
 
   NexusPull* pull_{nullptr};
   std::string table_name_{};

@@ -45,8 +45,10 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">meta</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">TableMeta</span><span class="o">&gt;</span>
 
 <span class="n">Nexus</span><span class="o">::</span><span class="n">meta</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TableMeta</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">meta</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">TableMeta</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
 
 <span class="n">Nexus</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">meta_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TableMeta</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+<span class="n">Nexus</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">meta_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">TableMeta</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -57,7 +59,10 @@
 <a class="reference internal" href="set_table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set_table_meta(key,</span> <span class="pre">value)</span></code></span></a>, and <code class="docutils literal notranslate"><span class="pre">meta_(key,</span> <span class="pre">value)</span></code> calls
 <a class="reference internal" href="set_table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set_table_meta_(key,</span> <span class="pre">value)</span></code></span></a>. All three behave identically to their
 canonical counterparts — same throws, same non-mutating/mutating split, same return types.
-<code class="docutils literal notranslate"><span class="pre">meta</span></code> exists purely as a shorter, more conversational spelling for the same three calls.</p>
+<code class="docutils literal notranslate"><span class="pre">meta</span></code> exists purely as a shorter, more conversational spelling for the same three calls.
+The bulk setter overload mirrors <a class="reference internal" href="inject.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">inject()</span></code></span></a>: if you already know several
+table metadata records at once, pass them as one brace list, <code class="docutils literal notranslate"><span class="pre">std::map</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">std::unordered_map</span></code> instead of chaining <code class="docutils literal notranslate"><span class="pre">.meta(...).meta(...).meta(...)</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -100,6 +105,48 @@ counterparts.</p>
 one row per customer
 </pre></div>
 </div>
+<p>Example 2. Bulk metadata declaration keeps multi-table setup shorter.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ordered_at&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2026-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2026-01-03T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">customers_meta</span><span class="p">;</span>
+<span class="n">customers_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">orders_meta</span><span class="p">;</span>
+<span class="n">orders_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">};</span>
+<span class="n">orders_meta</span><span class="p">.</span><span class="n">time_field</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ordered_at&quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
+<span class="p">}).</span><span class="n">meta</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers_meta</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders_meta</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">meta</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">primary_key</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">meta</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">time_field</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>customer_id
+ordered_at
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">
@@ -108,6 +155,9 @@ one row per customer
 <li><p>Purely a naming alternative — see <a class="reference internal" href="table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">table_meta()</span></code></span></a> and
 <a class="reference internal" href="set_table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set_table_meta()</span></code></span></a> for the full documentation, including throw
 conditions and the read-modify-write pattern for partial updates.</p></li>
+<li><p>The bulk setter is still validated one table at a time. An unknown key throws the same
+<code class="docutils literal notranslate"><span class="pre">&quot;Nexus::set_table_meta:</span> <span class="pre">unknown</span> <span class="pre">table</span> <span class="pre">'&lt;name&gt;'&quot;</span></code> error you would get from the
+one-table form.</p></li>
 </ul>
 </section>
 <section id="see-also">

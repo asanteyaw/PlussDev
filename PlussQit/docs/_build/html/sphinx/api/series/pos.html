@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::size" href="size.html" />
@@ -50,35 +50,35 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns exactly one element as a rank-0 scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> is the narrowest scalar-read surface on <code class="docutils literal notranslate"><span class="pre">Series</span></code>. It does not accept
-selector objects, it does not preserve length-1 axes, and it does not try to
-flatten mismatched ranks into “something sensible.” You choose the overload that
-matches the rank you mean, and <code class="docutils literal notranslate"><span class="pre">pos()</span></code> returns the single scalar at that
-coordinate.</p>
-<p>That narrowness is useful. If the intent is “read one cell,” <code class="docutils literal notranslate"><span class="pre">pos()</span></code> states
-that directly and enforces it directly.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> reads exactly one element and returns it as a scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p>This is the narrowest coordinate-based read surface on <code class="docutils literal notranslate"><span class="pre">Series</span></code>. It does not
+accept selector objects, it does not preserve length-1 axes, and it does not
+reinterpret rank for you. You choose the overload that matches the rank you
+mean, and <code class="docutils literal notranslate"><span class="pre">pos()</span></code> returns the single value at that coordinate.</p>
+<p>That narrowness is useful. If your intent is truly “read one cell,” <code class="docutils literal notranslate"><span class="pre">pos()</span></code>
+states that intent more clearly than any broader indexing surface.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>index / row / col / i / j / k</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The scalar coordinate(s) to read.</p>
-<p>Each coordinate accepts negative indexing on its own axis:</p>
+<p>The coordinate or coordinates to read.</p>
+<p>Each coordinate supports negative indexing on its own axis:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last element on that axis</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-2</span></code> means the second from the end</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last position on that axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-2</span></code> means the second-to-last position</p></li>
 </ul>
 <p>After negative-index normalization, each coordinate is bounds-checked.</p>
 </section>
 <section id="rank-contract">
 <h2>Rank Contract<a class="headerlink" href="#rank-contract" title="Link to this heading">¶</a></h2>
-<p>The overload and the <code class="docutils literal notranslate"><span class="pre">Series</span></code> rank must match exactly:</p>
+<p>The overload and the source rank must match exactly:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">pos(index)</span></code> requires a 1D <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pos(row,</span> <span class="pre">col)</span></code> requires a 2D <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pos(i,</span> <span class="pre">j,</span> <span class="pre">k)</span></code> requires a 3D <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> does not implicitly flatten, squeeze, or reinterpret rank.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> does not implicitly flatten, squeeze, or reinterpret rank. If the rank
+does not match the overload, the call fails.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -87,21 +87,18 @@ A rank-0 scalar <code class="docutils literal notranslate"><span class="pre">Ser
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> is differentiable. In reverse mode, the incoming scalar sensitivity is
-scattered back to exactly one source position, and every other source element
-gets zero.</p>
-<p>That makes <code class="docutils literal notranslate"><span class="pre">pos()</span></code> the scalar-read analogue of <a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select()</span></code></span></a> and
-other view-style selectors: the value path narrows to one cell, and the
-backward path widens back out to a sparse mask at that cell.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> is differentiable.</p>
+<p>In reverse mode, the incoming scalar sensitivity is scattered back to exactly
+one source position, and every other element receives zero. So <code class="docutils literal notranslate"><span class="pre">pos()</span></code> is a
+single-cell read in the forward pass and a one-hot write-back in the backward
+pass.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Shared setup for the three rank-specific overloads.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<p>The examples below build from simple scalar reads to rank matching and gradient
+behavior.</p>
+<p>Example 1. On a 1D <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">pos(-1)</span></code> reads the last element.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 </pre></div>
@@ -112,8 +109,14 @@ backward path widens back out to a sparse mask at that cell.</p>
 data=40
 </pre></div>
 </div>
-<p>Example 2. The 2D overload normalizes each axis independently.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+<p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> always returns a scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>, so the shape is <code class="docutils literal notranslate"><span class="pre">[]</span></code>.</p>
+<p>Example 2. On a matrix, each axis is normalized independently.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -123,19 +126,42 @@ data=40
 data=6
 </pre></div>
 </div>
-<p>Row <code class="docutils literal notranslate"><span class="pre">1</span></code> means the second row; column <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last column of that row.</p>
-<p>Example 3. The 3D overload follows the same rule on all three axes.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+<p>Row <code class="docutils literal notranslate"><span class="pre">1</span></code> means the second row. Column <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last column of that row.</p>
+<p>Example 3. Negative indexing also works on earlier axes, not just the last one.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=4
+</pre></div>
+</div>
+<p>This is the first element of the last row.</p>
+<p>Example 4. The 3D overload follows the same per-axis normalization rule.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
 data=8
 </pre></div>
 </div>
-<p>Example 4. Rank mismatch is an error, not an implicit flatten.</p>
+<p>Example 5. Rank mismatch is an error, not an invitation to flatten or guess.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -145,13 +171,15 @@ data=8
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::pos: expected 2-D Series for scalar selection
 </pre></div>
 </div>
-<p>Example 5. Backpropagating through <code class="docutils literal notranslate"><span class="pre">pos()</span></code> produces a one-hot sensitivity map.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
+<p>This is deliberate. <code class="docutils literal notranslate"><span class="pre">pos()</span></code> only works when the rank contract is explicit and
+correct.</p>
+<p>Example 6. Backpropagating through <code class="docutils literal notranslate"><span class="pre">pos()</span></code> produces a one-hot sensitivity map.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
 <span class="n">tracked_vec</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
 <span class="n">tracked_vec</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">-1</span><span class="p">).</span><span class="n">reverse</span><span class="p">();</span>
@@ -159,8 +187,8 @@ data=8
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[0, 0, 0, 1]
 </pre></div>
@@ -168,22 +196,34 @@ data=[0, 0, 0, 1]
 <p>Only the selected element receives gradient.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> always returns a scalar rank-0 <code class="docutils literal notranslate"><span class="pre">Series</span></code>, never a retained length-1
-axis.</p></li>
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">pos()</span></code> when rank is part of the meaning of the call, not just incidental.</p></li>
-<li><p>If you need dynamic selector grammar, use <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> or
-<a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a> instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> always returns a scalar rank-0 <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+<li><p>Negative indices are normalized separately on each axis.</p></li>
+<li><p>The overload must match the source rank exactly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pos()</span></code> does not flatten or reinterpret the source shape for you.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">pos()</span></code> when the meaning of your code is “read one element at this exact
+coordinate.”</p>
+<ul class="simple">
+<li><p>Use the overload that matches the actual rank.</p></li>
+<li><p>Use negative indices when end-relative access is clearer.</p></li>
+<li><p>Expect a scalar result every time.</p></li>
+</ul>
+<p>If you need anything more dynamic than a fixed scalar coordinate, move up to a
+broader indexing surface such as <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>, <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a>,
+or <a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a>.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::slice</span></code></span></a>: keep a range instead of collapsing to one scalar.</p></li>
-<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract</span></code></span></a>: dynamic indexing with richer selector kinds.</p></li>
-<li><p><a class="reference internal" href="block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::block</span></code></span></a>: rectangular 2D selection rather than a single
+<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract</span></code></span></a>: dynamic mixed-selector indexing.</p></li>
+<li><p><a class="reference internal" href="block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::block</span></code></span></a>: rectangular 2D selection instead of a single
 scalar cell.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -257,6 +297,7 @@ scalar cell.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

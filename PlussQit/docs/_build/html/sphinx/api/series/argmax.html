@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::argmin" href="argmin.html" />
@@ -50,79 +50,91 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the index of the largest value rather than the value itself.</p>
-<p>That distinction is the whole point of <code class="docutils literal notranslate"><span class="pre">argmax()</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">argmax()</span></code> returns the winning index, not the winning value.</p>
+<p>That sounds simple, but it changes how you should read every overload:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max()</span></code></span></a> answers “what is the winning value?”</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">argmax()</span></code> answers “where is the winning value?”</p></li>
+<li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max()</span></code></span></a> asks “what is the largest value?”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmax()</span></code> asks “where is the largest value?”</p></li>
 </ul>
-<p>Those are often used together, but they are not interchangeable. <code class="docutils literal notranslate"><span class="pre">argmax()</span></code>
-returns <code class="docutils literal notranslate"><span class="pre">int64</span></code> indices, not the source dtype, and its no-argument overload uses
-flat index semantics rather than coordinate semantics.</p>
+<p>Because the result is an index, there are two especially important ideas to
+keep straight:</p>
+<ul class="simple">
+<li><p>the output dtype is <code class="docutils literal notranslate"><span class="pre">int64</span></code></p></li>
+<li><p>the no-argument overload returns one flat global index, while the dimension
+overloads return local indices inside the reduced axis</p></li>
+</ul>
+<p>So <code class="docutils literal notranslate"><span class="pre">argmax()</span></code> is not just “<code class="docutils literal notranslate"><span class="pre">max()</span></code> but with numbers swapped out.” It is an
+index-selection family with its own axis semantics and failure behavior.</p>
 </section>
 <section id="overload-map">
 <h2>Overload Map<a class="headerlink" href="#overload-map" title="Link to this heading">¶</a></h2>
 <p><strong><code class="docutils literal notranslate"><span class="pre">argmax()</span></code></strong></p>
-<p>Finds the largest value across the entire series and returns its flat index in
-contiguous row-major order.</p>
+<p>Reduces across the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> and returns one flat global index in
+row-major traversal order.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">argmax(dim)</span></code></strong></p>
 <p>Reduces one axis and returns the local winning index inside that axis.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">argmax(dim,</span> <span class="pre">keepdim)</span></code></strong></p>
-<p>Same reduction as <code class="docutils literal notranslate"><span class="pre">argmax(dim)</span></code>, but optionally keeps the reduced axis as size
-<code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
-<p>There is no binary <code class="docutils literal notranslate"><span class="pre">argmax(other)</span></code> overload. <code class="docutils literal notranslate"><span class="pre">argmax()</span></code> is purely a reduction
-family.</p>
+<p>Same axis reduction as <code class="docutils literal notranslate"><span class="pre">argmax(dim)</span></code>, but optionally keeps the reduced axis as
+size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>There is no binary <code class="docutils literal notranslate"><span class="pre">argmax(other)</span></code> overload because an index winner only makes
+sense after selecting from one reduction lane.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The axis whose local winner you want.</p>
+<p>The axis whose local winning index should be returned.</p>
 <ul class="simple">
 <li><p>positive dims count from the front</p></li>
 <li><p>negative dims count from the back</p></li>
-<li><p>the dim must refer to an existing axis</p></li>
+<li><p>the dim must exist</p></li>
 </ul>
-<p>For <code class="docutils literal notranslate"><span class="pre">argmax(dim,</span> <span class="pre">...)</span></code>, the returned indices are always local to that reduced
-axis. They are not global offsets into the full buffer.</p>
+<p>This parameter changes the meaning of the returned numbers.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">argmax()</span></code> returns one flat offset into the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmax(dim)</span></code> returns local offsets along that one axis</p></li>
+</ul>
+<p>Those are different index spaces, so do not read them interchangeably.</p>
 <p><strong>keepdim</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>)</p>
-<p>Whether the reduced axis is retained as size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Controls whether the reduced axis remains in the result shape.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: remove the axis</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: keep the axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: keep it as size <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
-<p>This is mainly useful when the index result needs to stay shape-aligned with
-another reduced output.</p>
+<p>This is mostly a shape-alignment tool. It does not change which indices win.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-An <code class="docutils literal notranslate"><span class="pre">int64</span></code> index series. The output is scalar for <code class="docutils literal notranslate"><span class="pre">argmax()</span></code>, or a reduced
-<code class="docutils literal notranslate"><span class="pre">int64</span></code> series for the dimension overloads.</p>
+An <code class="docutils literal notranslate"><span class="pre">int64</span></code> index <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>- scalar `Series` for `argmax()`
+- reduced `int64` `Series` for `argmax(dim, ...)`
+</pre></div>
+</div>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">argmax()</span></code> is an index-producing selection op, not a differentiable value
-reduction.</p>
-<p>As currently implemented, it does not attach a reverse-mode source link. Treat
-it as a control/selection primitive rather than something that participates in a
-useful gradient path.</p>
+<p><code class="docutils literal notranslate"><span class="pre">argmax()</span></code> is an index-producing selection primitive, not a differentiable
+value reduction.</p>
+<p>As currently implemented, it does not attach a useful reverse-mode path. In
+practice, treat <code class="docutils literal notranslate"><span class="pre">argmax()</span></code> as control information for downstream logic rather
+than something you differentiate through.</p>
 </section>
 <section id="tie-policy">
 <h2>Tie Policy<a class="headerlink" href="#tie-policy" title="Link to this heading">¶</a></h2>
-<p>Ties go to the first winner encountered in the traversal order.</p>
+<p>Ties go to the first winning position encountered.</p>
 <p>That means:</p>
 <ul class="simple">
-<li><p>for <code class="docutils literal notranslate"><span class="pre">argmax()</span></code>, ties resolve to the first winning flat position</p></li>
-<li><p>for <code class="docutils literal notranslate"><span class="pre">argmax(dim,</span> <span class="pre">...)</span></code>, ties resolve to the first winning position along the
-reduced axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmax()</span></code> chooses the first winning flat position in row-major order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmax(dim,</span> <span class="pre">...)</span></code> chooses the first winning position along the reduced axis</p></li>
 </ul>
-<p>This is a first-winner selector, not a tie-sharing operation like
-<a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max()</span></code></span></a>.</p>
+<p>This is first-winner selection, not tie-sharing.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>The examples on this page build incrementally.</p>
-<p>Example 1. With no arguments, <code class="docutils literal notranslate"><span class="pre">argmax()</span></code> returns a flat global index.</p>
+<p>The examples below deliberately contrast global indices with axis-local indices,
+because that is the most common source of confusion when first learning
+<code class="docutils literal notranslate"><span class="pre">argmax()</span></code>.</p>
+<p>Example 1. With no arguments, <code class="docutils literal notranslate"><span class="pre">argmax()</span></code> returns one flat global index.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">highs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
@@ -138,51 +150,52 @@ data=3
 </pre></div>
 </div>
 <p>The flattened row-major order is <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">7,</span> <span class="pre">3,</span> <span class="pre">9,</span> <span class="pre">7,</span> <span class="pre">6]</span></code>, so the winning <code class="docutils literal notranslate"><span class="pre">9</span></code>
-lives at flat index <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">argmax(dim)</span></code> returns local axis indices instead.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">highs</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+appears at flat index <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">argmax(0)</span></code> returns the winning row index for each column.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">highs</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[1, 0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[1, 0, 1]
 </pre></div>
 </div>
-<p>Row <code class="docutils literal notranslate"><span class="pre">0</span></code> wins at column <code class="docutils literal notranslate"><span class="pre">1</span></code>; row <code class="docutils literal notranslate"><span class="pre">1</span></code> wins at column <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> preserves the reduced axis for later shape alignment.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">highs</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<p>Column by column:</p>
+<ul class="simple">
+<li><p>column <code class="docutils literal notranslate"><span class="pre">0</span></code>: <code class="docutils literal notranslate"><span class="pre">9</span></code> wins from row <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p>column <code class="docutils literal notranslate"><span class="pre">1</span></code>: <code class="docutils literal notranslate"><span class="pre">7</span></code> ties, so the first winner is row <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p>column <code class="docutils literal notranslate"><span class="pre">2</span></code>: <code class="docutils literal notranslate"><span class="pre">6</span></code> wins from row <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+</ul>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">argmax(1)</span></code> returns the winning column index for each row.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">highs</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,1], strides=[1,1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[[1],
-  [0]]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[1, 0]
 </pre></div>
 </div>
-<p>Only the shape changes here, not the local winning indices.</p>
-<p>Example 4. Negative dims work the same way they do on value reductions.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">highs</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
+<p>This is a different index space from Example 2. The output numbers are now
+column offsets, not row offsets.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> keeps the reduced axis as size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">highs</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[1, 0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,1], strides=[1,1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[[1],
+  [0]]
 </pre></div>
 </div>
-<p>For a rank-2 series, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this matches <code class="docutils literal notranslate"><span class="pre">argmax(1)</span></code>.</p>
-<p>Example 5. Ties resolve to the first winning position, not all winners.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">argmax_ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
-<span class="p">});</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argmax_ties</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<p>Only the shape changed. The winning local indices are the same as in Example 3.</p>
+<p>Example 5. Negative dims are normalized from the back.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">highs</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -192,26 +205,76 @@ data=[1, 0]
 data=[1, 0]
 </pre></div>
 </div>
-<p>The first row has equal maxima at columns <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code>, but <code class="docutils literal notranslate"><span class="pre">1</span></code> wins because it
-appears first along the reduced axis. The same thing happens in the second row:
-the first <code class="docutils literal notranslate"><span class="pre">2</span></code> wins over the second <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
-<p>Example 6. A scalar has only one legal winning position, so the answer is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>For this rank-2 input, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this matches <code class="docutils literal notranslate"><span class="pre">argmax(1)</span></code>.</p>
+<p>Example 6. Ties along a reduced axis go to the first winning position.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">argmax_ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argmax_ties</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[1, 0]
+</pre></div>
+</div>
+<p>In the first row, columns <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> tie at <code class="docutils literal notranslate"><span class="pre">9</span></code>, and column <code class="docutils literal notranslate"><span class="pre">1</span></code> wins because
+it appears first along the reduced axis.</p>
+<p>Example 7. Global ties also follow first-winner semantics, but now in flat
+row-major order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">argmax_global_ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argmax_global_ties</span><span class="p">.</span><span class="n">argmax</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=0
+</pre></div>
+</div>
+<p>There are several equal global maxima, but the first flat position wins.</p>
+<p>Example 8. A scalar has only one legal winning position, so the answer is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">42.0</span><span class="p">);</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scalar</span><span class="p">.</span><span class="n">argmax</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
 data=0
 </pre></div>
 </div>
-<p>This is the natural scalar convention: a single element is both the first and
-only winner.</p>
-<p>Example 7. Reducing an empty dimension now fails explicitly instead of silently
-returning a meaningless index.</p>
+<p>This scalar convention is useful because it keeps index semantics uniform even
+when rank collapses to zero.</p>
+<p>Example 9. The reduction dim must exist.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">highs</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>argmax: dim out of range
+</pre></div>
+</div>
+<p>This is the expected failure mode when the requested axis does not exist.</p>
+<p>Example 10. Reducing an empty lane fails explicitly because there is no valid
+winner to point at.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">empty_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
 
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -223,30 +286,44 @@ returning a meaningless index.</p>
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>argmax: cannot reduce an empty dimension
 </pre></div>
 </div>
-<p>That failure mode matters because an index result must point to a real element.
-On an empty lane, there is no valid winner to point at.</p>
+<p>Index-returning reductions cannot fabricate a winner for an empty lane, so this
+failure is both expected and useful.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">argmax()</span></code> returns indices, not values.</p></li>
-<li><p>The no-argument overload is a full-series flat reduction.</p></li>
-<li><p>The returned dtype is <code class="docutils literal notranslate"><span class="pre">int64</span></code>.</p></li>
-<li><p>Tie handling is first-winner, not tie-sharing.</p></li>
+<li><p>The no-argument overload returns a flat global index, not a coordinate tuple.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argmax(0)</span></code> and <code class="docutils literal notranslate"><span class="pre">argmax(1)</span></code> return indices in different local index spaces.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> changes shape only.</p></li>
+<li><p>Ties are first-winner, not tie-sharing.</p></li>
+<li><p>Out-of-range dims and empty-dimension reductions both fail explicitly.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">argmax()</span></code> when you need to know where the largest value lives.</p>
+<ul class="simple">
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">argmax()</span></code> for one flat global winner.</p></li>
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">argmax(dim)</span></code> when each lane along an axis should produce its own
+local winning index.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> when the reduced index result should remain easier to align
+with other reduced outputs.</p></li>
+</ul>
+<p>The most important habit is to always ask yourself which index space you are
+working in: flat global position or local axis position.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::max</span></code></span></a>: the value-returning counterpart.</p></li>
-<li><p><a class="reference internal" href="argmin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmin</span></code></span></a>: the lower-winner index counterpart.</p></li>
-<li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::max(dim,</span> <span class="pre">keepdim)</span></code></span></a>: same shape rules, but returns values.</p></li>
+<li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::max</span></code></span></a>: returns winning values instead of indices.</p></li>
+<li><p><a class="reference internal" href="argmin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmin</span></code></span></a>: lower-winner index counterpart.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="min.html">
@@ -323,6 +400,7 @@ On an empty lane, there is no valid winner to point at.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::extract_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) const -> Series
+Series::extract_put(pluss::RangeView<ExtractSpec> specs, const Series& values) const -> Series
 ```
 
 ## What It Does
@@ -28,7 +28,7 @@ reads better than "mutate this object first, then keep going."
 
 ## Parameters
 
-**specs** (`pluss::msharp::RangeView::Of<ExtractSpec>`)
+**specs** (`pluss::RangeView<ExtractSpec>`)
 
 The destination selector.
 
@@ -104,7 +104,7 @@ const auto right_two = std::vector<ExtractSpec>{
     pluss::Slicing::SliceRange(2, 4, 1)};
 
 auto patched = grid.extract_put(
-    pluss::msharp::RangeView::Of<ExtractSpec>(right_two),
+    right_two,
     pluss::make_series(5.0));
 
 std::cout << patched;
@@ -152,7 +152,7 @@ const auto mask_specs = std::vector<ExtractSpec>{
     pluss::Slicing::SliceAll()};
 
 std::cout << grid.extract_put(
-    pluss::msharp::RangeView::Of<ExtractSpec>(mask_specs),
+    mask_specs,
     pluss::make_series(0.0));
 ```
 
@@ -176,7 +176,7 @@ const auto reverse_write = std::vector<ExtractSpec>{
     pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -2)};
 
 std::cout << grid.extract_put(
-    pluss::msharp::RangeView::Of<ExtractSpec>(reverse_write),
+    reverse_write,
     pluss::make_series({900.0, 700.0}, {2}));
 ```
 

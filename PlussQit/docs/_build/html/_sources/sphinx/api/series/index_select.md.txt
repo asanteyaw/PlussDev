@@ -14,24 +14,27 @@ Series::index_select(std::int64_t dim, const Series& index) const -> Series
 
 Selects positions along one axis using one shared index list.
 
-This is the uniform-index sibling of [`gather`](gather.md). The same `index`
-list is applied everywhere across the non-selected axes.
+This is the uniform-index sibling of [`gather()`](gather.md). The same `index`
+list is reused everywhere across the non-selected axes.
 
 That makes `index_select()` the natural spelling for:
 
 - "pick these rows"
 - "pick these columns"
 - embedding-table row lookup
-- reordering or repeating one axis uniformly
+- reorder one axis uniformly
+- repeat one axis uniformly
 
-If the lookup pattern should change from row to row or lane to lane, that is no
-longer `index_select()`; that is [`gather`](gather.md).
+If the lookup pattern should vary from row to row, column to column, or lane to
+lane, that is no longer `index_select()`. That is `gather()`.
 
 ## Parameters
 
 **dim** (`std::int64_t`)
 
 The axis to index into.
+
+Negative dims are allowed and normalize from the back.
 
 **index** (`const Series&`)
 
@@ -43,6 +46,9 @@ Practical contract:
 - its order becomes the order of the selected axis in the result
 - repeated positions are legal
 - unselected positions simply do not appear in the output
+
+This is the key distinction from `gather()`: `index_select()` does not ask for
+a full lane-by-lane index tensor. It asks for one shared axis list.
 
 ## Returns
 
@@ -91,7 +97,46 @@ data=[[1, 2, 3],
 The chosen order is preserved exactly. `index_select()` is not limited to
 keeping source order.
 
-Example 2. Sparse gradient: rows never looked up receive exactly zero.
+Example 2. The same idea works on columns by changing `dim`.
+
+```cpp
+auto column_index = pluss::make_series({2, 0}, {2});
+std::cout << weight.index_select(1, column_index);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[4,2], strides=[2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[3, 1],
+  [6, 4],
+  [9, 7],
+  [12, 10]]
+```
+
+The same `column_index` list is reused for every row. That is exactly the
+uniform-axis contract.
+
+Example 3. Negative dims are just another spelling for the same chosen axis.
+
+```cpp
+std::cout << weight.index_select(-1, column_index);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[4,2], strides=[2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[3, 1],
+  [6, 4],
+  [9, 7],
+  [12, 10]]
+```
+
+For this rank-2 series, `-1` means the last axis, so it matches
+`index_select(1, column_index)`.
+
+Example 4. Sparse gradient: rows never looked up receive exactly zero.
 
 ```cpp
 auto tracked_weight = pluss::make_series({
@@ -128,7 +173,7 @@ data=[[1, 1, 1],
 Rows `1` and `3` were never selected, so they stay exactly zero in the
 backward pass.
 
-Example 3. Repeated indices repeat data in the forward pass and accumulate
+Example 5. Repeated indices repeat data in the forward pass and accumulate
 gradient in the backward pass.
 
 ```cpp
@@ -170,6 +215,8 @@ Row `0` was selected twice, so every element in that row receives gradient `2`.
 - It is one of the most common lookup primitives in learned-table code.
 - If you find yourself wanting a different index pattern per row, move to
   [`gather`](gather.md).
+- Output rank matches `self`, but the selected axis length becomes
+  `index.numel()`.
 
 ## See Also
 

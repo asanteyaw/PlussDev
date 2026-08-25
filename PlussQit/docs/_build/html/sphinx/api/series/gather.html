@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::index_select" href="index_select.html" />
@@ -49,16 +49,17 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Reads values from <code class="docutils literal notranslate"><span class="pre">self</span></code> by looking up positions along one chosen axis.</p>
-<p><code class="docutils literal notranslate"><span class="pre">gather()</span></code> is easiest to understand as “positional alignment everywhere except
-one axis.” Along every axis other than <code class="docutils literal notranslate"><span class="pre">dim</span></code>, <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">index</span></code> move in
-lockstep. Along <code class="docutils literal notranslate"><span class="pre">dim</span></code>, the integer stored in <code class="docutils literal notranslate"><span class="pre">index</span></code> decides which source
-position to read.</p>
-<p>That gives <code class="docutils literal notranslate"><span class="pre">gather()</span></code> a different role from <a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_select</span></code></span></a>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">gather()</span></code> is easiest to understand as “aligned everywhere except one lookup
+axis.” Along every axis other than <code class="docutils literal notranslate"><span class="pre">dim</span></code>, <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">index</span></code> move in lockstep.
+Along <code class="docutils literal notranslate"><span class="pre">dim</span></code>, the integer stored in <code class="docutils literal notranslate"><span class="pre">index</span></code> decides which source position to
+read.</p>
+<p>That is why <code class="docutils literal notranslate"><span class="pre">gather()</span></code> and <a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_select()</span></code></span></a> both exist:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">index_select()</span></code> reuses one index list everywhere</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">gather()</span></code> can vary the lookup pattern from row to row, column to column, or
-more generally from lane to lane</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index_select()</span></code> uses one shared index list uniformly</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gather()</span></code> allows the lookup pattern itself to vary from lane to lane</p></li>
 </ul>
+<p>If the desired read pattern changes per row, per column, or per batch lane,
+that is usually <code class="docutils literal notranslate"><span class="pre">gather()</span></code>, not <code class="docutils literal notranslate"><span class="pre">index_select()</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -67,6 +68,8 @@ more generally from lane to lane</p></li>
 <p>If <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">==</span> <span class="pre">1</span></code> for a 2-D series, then each output position chooses a column from
 its own row. If <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">==</span> <span class="pre">0</span></code>, each output position chooses a row for its own
 column slot.</p>
+<p>Negative dims are allowed and normalize from the back in the usual <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+style.</p>
 <p><strong>index</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
 <p>Integer positions to read from <code class="docutils literal notranslate"><span class="pre">self</span></code> along <code class="docutils literal notranslate"><span class="pre">dim</span></code>.</p>
 <p>Important constraints:</p>
@@ -76,12 +79,19 @@ column slot.</p>
 <li><p>every non-<code class="docutils literal notranslate"><span class="pre">dim</span></code> axis must already line up positionally with <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
 <li><p>repeated positions are allowed</p></li>
 </ul>
+<p>The last two bullets are the real gotchas. Many users expect gather-like APIs
+to broadcast the index tensor. This one does not. The output shape follows the
+index shape directly, so the index tensor must already describe the exact
+per-lane lookup pattern you want.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
 A new series with the same shape as <code class="docutils literal notranslate"><span class="pre">index</span></code>, filled from <code class="docutils literal notranslate"><span class="pre">self</span></code> according
 to the requested lookup positions.</p>
+<p>That “same shape as <code class="docutils literal notranslate"><span class="pre">index</span></code>” rule is one of the most important usage rules on
+the page. <code class="docutils literal notranslate"><span class="pre">gather()</span></code> is not shape-preserving in the way <code class="docutils literal notranslate"><span class="pre">clamp_max()</span></code> or
+<code class="docutils literal notranslate"><span class="pre">maximum()</span></code> are. It is index-shape-preserving.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
@@ -135,7 +145,21 @@ data=[[1, 5, 3],
 </div>
 <p>The axis toggle changes the meaning completely even though the source table is
 the same.</p>
-<p>Example 3. Repeated indices accumulate gradient on the source position they
+<p>Example 3. Negative dims are just another way to name the same lookup axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">gather_cols</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 3],
+  [5, 4]]
+</pre></div>
+</div>
+<p>For a matrix, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this is the same lookup as
+<code class="docutils literal notranslate"><span class="pre">gather(1,</span> <span class="pre">gather_cols)</span></code>.</p>
+<p>Example 4. Repeated indices accumulate gradient on the source position they
 read from more than once.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
 <span class="n">input</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
@@ -148,8 +172,8 @@ read from more than once.</p>
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[10, 10, 30]
 dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
@@ -167,6 +191,8 @@ never read, so it receives <code class="docutils literal notranslate"><span clas
 <li><p>If the same index list should apply uniformly everywhere, use
 <a class="reference internal" href="index_select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_select</span></code></span></a> instead.</p></li>
 <li><p>The output shape follows <code class="docutils literal notranslate"><span class="pre">index</span></code>, not <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></li>
+<li><p>Repeated indices are legal in the forward pass and additive in the backward
+pass.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -251,6 +277,7 @@ gathering.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

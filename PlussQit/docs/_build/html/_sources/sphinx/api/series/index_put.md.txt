@@ -7,7 +7,7 @@
 ## Signatures
 
 ```cpp
-Series::index_put(pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate) const -> Series
+Series::index_put(pluss::RangeView<Series> indices, const Series& values, bool accumulate) const -> Series
 Series::index_put(std::initializer_list<Series> indices, const Series& values, bool accumulate) const -> Series
 Series::index_put(std::int64_t index, const Series& values) const -> Series
 ```
@@ -43,7 +43,7 @@ copy-returning writes, use [`extract_put()`](extract_put.md).
 
 ## Parameters
 
-**indices** (`pluss::msharp::RangeView::Of<Series>` or `std::initializer_list<Series>`)
+**indices** (`pluss::RangeView<Series>` or `std::initializer_list<Series>`)
 
 The explicit index tensors for the general overloads.
 
@@ -103,9 +103,9 @@ Example 1. The initializer-list overload is the shortest copy-returning form
 for a basic integer index write.
 
 ```cpp
-auto vec = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4}, {5});
-auto idx = pluss::make_series(std::vector<std::int64_t>{1, 3}, {2});
-auto picked = pluss::make_series(std::vector<double>{90, 70}, {2});
+auto vec = pluss::make_series({0, 1, 2, 3, 4}, {5});
+auto idx = pluss::make_series({1, 3}, {2});
+auto picked = pluss::make_series({90, 70}, {2});
 
 std::cout << vec.index_put({idx}, picked, false);
 ```
@@ -135,12 +135,12 @@ Example 3. The `RangeView` overload is useful when the index list already lives
 in a container, and `accumulate=true` turns the update into an additive write.
 
 ```cpp
-auto overlap_idx = pluss::make_series(std::vector<std::int64_t>{1, 1, 3}, {3});
-auto overlap_values = pluss::make_series(std::vector<double>{10, 20, 30}, {3});
+auto overlap_idx = pluss::make_series({1, 1, 3}, {3});
+auto overlap_values = pluss::make_series({10, 20, 30}, {3});
 std::vector<pluss::Series> overlap_indices{overlap_idx};
 
 std::cout << vec.index_put(
-    pluss::msharp::RangeView::Of<pluss::Series>(overlap_indices),
+    overlap_indices,
     overlap_values,
     true);
 ```
@@ -155,7 +155,7 @@ data=[0, 31, 2, 33, 4]
 Example 4. A bool mask write is also part of the general overload family.
 
 ```cpp
-auto mask = pluss::make_series(std::vector<bool>{false, true, false, true, false}, {5});
+auto mask = pluss::make_series({false, true, false, true, false}, {5});
 std::cout << vec.index_put({mask}, pluss::make_series(-1.0), false);
 ```
 
@@ -174,10 +174,10 @@ every selected head.
 
 ```cpp
 auto mat = pluss::make_series(
-    std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9},
+    {1, 2, 3, 4, 5, 6, 7, 8, 9},
     {3, 3});
-auto row_idx = pluss::make_series(std::vector<std::int64_t>{0, 2}, {2});
-auto tail_pattern = pluss::make_series(std::vector<double>{100, 200, 300}, {3});
+auto row_idx = pluss::make_series({0, 2}, {2});
+auto tail_pattern = pluss::make_series({100, 200, 300}, {3});
 
 std::cout << mat.index_put({row_idx}, tail_pattern, false);
 ```

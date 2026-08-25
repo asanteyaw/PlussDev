@@ -80,6 +80,32 @@ pluss::Series(shape=[4], strides=[1], dtype=int16, platform=cpu, numel=4, contig
 data=[1, 1, 1, 1]
 ```
 
+Example 3. A scalar shape gives a scalar one rather than a length-1 vector.
+
+```cpp
+std::cout << pluss::series::ones({}, pluss::ScalarType::Float64);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=1
+```
+
+Example 4. Boolean outputs interpret the unit value as `true`.
+
+```cpp
+std::cout << pluss::series::ones({4}, pluss::ScalarType::Bool);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, true, true, true]
+```
+
 ## Notes
 
 - `ones()` is just the constant-1 specialization of the broader shape-first

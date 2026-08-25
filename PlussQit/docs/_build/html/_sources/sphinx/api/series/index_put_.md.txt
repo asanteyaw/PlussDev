@@ -7,7 +7,7 @@
 ## Signatures
 
 ```cpp
-Series::index_put_(pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate) const -> Series&
+Series::index_put_(pluss::RangeView<Series> indices, const Series& values, bool accumulate) const -> Series&
 Series::index_put_(std::initializer_list<Series> indices, const Series& values, bool accumulate) const -> Series&
 Series::index_put_(std::int64_t index, const Series& values, bool accumulate = false) const -> Series&
 Series::index_put_(std::initializer_list<ExtractSpec> specs, const Series& values, bool accumulate = false) const -> Series&
@@ -33,7 +33,7 @@ constness does not imply value immutability.
 
 ## Parameters
 
-**indices** (`pluss::msharp::RangeView::Of<Series>` or `std::initializer_list<Series>`)
+**indices** (`pluss::RangeView<Series>` or `std::initializer_list<Series>`)
 
 The general explicit-index overload family.
 
@@ -97,9 +97,9 @@ Example 1. The initializer-list `Series` overload is the shortest way to do a
 basic integer advanced-index write in place.
 
 ```cpp
-auto idx = pluss::make_series(std::vector<std::int64_t>{1, 3}, {2});
-auto picked = pluss::make_series(std::vector<double>{90, 70}, {2});
-auto inplace = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4}, {5});
+auto idx = pluss::make_series({1, 3}, {2});
+auto picked = pluss::make_series({90, 70}, {2});
+auto inplace = pluss::make_series({0, 1, 2, 3, 4}, {5});
 
 inplace.index_put_({idx}, picked, false);
 std::cout << inplace;
@@ -115,8 +115,8 @@ data=[0, 90, 2, 70, 4]
 Example 2. A bool mask write is part of the same general overload family.
 
 ```cpp
-auto mask = pluss::make_series(std::vector<bool>{false, true, false, true, false}, {5});
-auto mask_inplace = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4}, {5});
+auto mask = pluss::make_series({false, true, false, true, false}, {5});
+auto mask_inplace = pluss::make_series({0, 1, 2, 3, 4}, {5});
 
 mask_inplace.index_put_({mask}, pluss::make_series(-1.0), false);
 std::cout << mask_inplace;
@@ -133,13 +133,13 @@ Example 3. The `RangeView` overload is convenient when the index list already
 exists in a container, and `accumulate=true` turns the update additive.
 
 ```cpp
-auto overlap_idx = pluss::make_series(std::vector<std::int64_t>{1, 1, 3}, {3});
-auto overlap_values = pluss::make_series(std::vector<double>{10, 20, 30}, {3});
+auto overlap_idx = pluss::make_series({1, 1, 3}, {3});
+auto overlap_values = pluss::make_series({10, 20, 30}, {3});
 std::vector<pluss::Series> overlap_indices{overlap_idx};
-auto accum_inplace = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4}, {5});
+auto accum_inplace = pluss::make_series({0, 1, 2, 3, 4}, {5});
 
 accum_inplace.index_put_(
-    pluss::msharp::RangeView::Of<pluss::Series>(overlap_indices),
+    overlap_indices,
     overlap_values,
     true);
 std::cout << accum_inplace;
@@ -185,10 +185,9 @@ Example 6. The 2D `ExtractSpec` shorthand is for whole-column replacement:
 `{SliceAll(), j}` plus a length-`size(0)` source vector.
 
 ```cpp
-auto column_base = pluss::make_series(
-    std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9},
+auto column_base = pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8, 9},
     {3, 3});
-auto column_values = pluss::make_series(std::vector<double>{30, 60, 90}, {3});
+auto column_values = pluss::make_series({30, 60, 90}, {3});
 
 column_base.index_put_({pluss::Slicing::SliceAll(), std::int64_t{2}}, column_values);
 std::cout << column_base;
@@ -225,7 +224,7 @@ Example 8. On the 1D single-integer-list path, duplicate integer indices with
 `accumulate=false` keep last-write behavior, just like [`put_()`](put_.md).
 
 ```cpp
-auto overlap_inplace = pluss::make_series(std::vector<double>{0, 1, 2, 3, 4}, {5});
+auto overlap_inplace = pluss::make_series({0, 1, 2, 3, 4}, {5});
 overlap_inplace.index_put_({overlap_idx}, overlap_values, false);
 std::cout << overlap_inplace;
 ```

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::traverse_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) -> Series&
+Series::traverse_put_(pluss::RangeView<ExtractSpec> specs, const Series& values) -> Series&
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ materialized destination positions.
 
 ## Parameters
 
-**specs** (`pluss::msharp::RangeView::Of<ExtractSpec>`)
+**specs** (`pluss::RangeView<ExtractSpec>`)
 
 The destination selector.
 
@@ -98,7 +98,7 @@ const auto middle_column = std::vector<ExtractSpec>{
     std::int64_t{1}};
 
 grid.traverse_put_(
-    pluss::msharp::RangeView::Of<ExtractSpec>(middle_column),
+    middle_column,
     pluss::make_series({100.0, 200.0, 300.0}, {3}));
 
 std::cout << grid;
@@ -123,7 +123,7 @@ const auto with_newaxis = std::vector<ExtractSpec>{
     std::int64_t{0}};
 
 grid.traverse_put_(
-    pluss::msharp::RangeView::Of<ExtractSpec>(with_newaxis),
+    with_newaxis,
     pluss::make_series({1.0, 2.0, 3.0}, {3}));
 
 std::cout << grid;
@@ -147,7 +147,7 @@ const auto row_tail = std::vector<ExtractSpec>{
     pluss::Slicing::SliceRange(2, 4, 1)};
 
 grid.traverse_put_(
-    pluss::msharp::RangeView::Of<ExtractSpec>(row_tail),
+    row_tail,
     pluss::make_series(-5.0));
 
 std::cout << grid;
@@ -172,7 +172,7 @@ try {
       pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)};
 
   grid.traverse_put_(
-      pluss::msharp::RangeView::Of<ExtractSpec>(reverse_specs),
+      reverse_specs,
       pluss::make_series(0.0));
 } catch (const std::exception& e) {
   std::string msg = e.what();
@@ -197,7 +197,7 @@ try {
       pluss::Slicing::SliceAll()};
 
   grid.traverse_put_(
-      pluss::msharp::RangeView::Of<ExtractSpec>(mask_specs),
+      mask_specs,
       pluss::make_series(0.0));
 } catch (const std::exception& e) {
   std::string msg = e.what();

@@ -149,8 +149,10 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series any(const Series& a);
   Series any(const Series& a, std::int64_t dim, bool keepdim=false);
 
-  Series argmax(const Series& a, std::int64_t dim=-1, bool keepdim=false);
-  Series argmin(const Series& a, std::int64_t dim=-1, bool keepdim=false);
+  Series argmax(const Series& a);
+  Series argmax(const Series& a, std::int64_t dim, bool keepdim=false);
+  Series argmin(const Series& a);
+  Series argmin(const Series& a, std::int64_t dim, bool keepdim=false);
 
   // Complex helpers
   Series conj(const Series& a);

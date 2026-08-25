@@ -54,8 +54,8 @@
 together with the current frame and <code class="docutils literal notranslate"><span class="pre">options</span></code>, returning a <code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code>
 object you can <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> repeatedly with different parameter bindings, without
 re-typing (or re-templating) the statement text each time. This is the reusable-query
-counterpart to <a class="reference internal" href="sql.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sql().execute(statement)</span></code></span></a>, which parses and runs a statement
-in one shot and is a better fit when a query only runs once.</p>
+counterpart to <a class="reference internal" href="sql.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sql().execute(statement)</span></code></span></a>, which prepares a fresh in-memory
+SQLite workspace and runs the statement in one shot.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>A pure convenience wrapper, nothing more
@@ -70,12 +70,10 @@ applies identically here.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> itself does not parse the statement — no validation happens until the
-returned value’s <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> is actually called. What it saves you is retyping the
-statement text at each call site, not a parse step: PlussMic’s SQL engine already
-caches parsed plans by their exact rendered text (<code class="docutils literal notranslate"><span class="pre">SqlOptions::enable_plan_cache</span></code>,
-on by default), so identical statement text is never re-parsed whether it arrives via
-<code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> or repeated <code class="docutils literal notranslate"><span class="pre">sql().execute(...)</span></code> calls.</p>
+<p><code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> itself does not validate the statement — no SQL preparation happens until
+the returned value’s <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> is actually called. What it saves you is repeated
+statement templating at the call site, not execution work: every <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> still
+builds a fresh in-memory SQLite workspace for the current frame and options.</p>
 </div>
 </section>
 <section id="parameters">
@@ -145,8 +143,7 @@ different parameter bindings.</p>
 <em>value</em> changes between the two <code class="docutils literal notranslate"><span class="pre">.execute({...})</span></code> calls, each of which renders the
 template fresh and re-runs the <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> filter. Case <code class="docutils literal notranslate"><span class="pre">2</span></code>’s row survives both times
 (<code class="docutils literal notranslate"><span class="pre">120</span></code> is greater than both <code class="docutils literal notranslate"><span class="pre">95</span></code> and <code class="docutils literal notranslate"><span class="pre">110</span></code>), while case <code class="docutils literal notranslate"><span class="pre">0</span></code>’s row (<code class="docutils literal notranslate"><span class="pre">sales</span> <span class="pre">=</span> <span class="pre">100</span></code>) only
-survives the looser <code class="docutils literal notranslate"><span class="pre">95</span></code> threshold. Both result frames keep the original case labels
-of whichever <code class="docutils literal notranslate"><span class="pre">orders</span></code> rows matched.</p>
+survives the looser <code class="docutils literal notranslate"><span class="pre">95</span></code> threshold.</p>
 </section>
 </section>
 <section id="notes">
@@ -158,8 +155,8 @@ parameter <em>values</em> can change between <code class="docutils literal notra
 were already set in <code class="docutils literal notranslate"><span class="pre">options</span></code> at <code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> time.</p></li>
 <li><p>Prefer <code class="docutils literal notranslate"><span class="pre">prep_sql()</span></code> over <code class="docutils literal notranslate"><span class="pre">sql().execute(statement)</span></code> when the same query <em>text</em>
 needs to be reused across several call sites with different bindings — it saves
-retyping/re-templating the statement, not a parse step the automatic plan cache
-wasn’t already saving you (see the <a class="reference internal" href="../../dataframe_sql_prepared_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code> reference</span></a>
+repeated statement templating and keeps the binding site smaller (see the
+<a class="reference internal" href="../../dataframe_sql_prepared_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code> reference</span></a>
 for the full explanation).</p></li>
 </ul>
 </section>

@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::extract" href="extract.html" />
@@ -51,35 +51,50 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Extracts one rectangular 2D sub-block as a view.</p>
-<p><code class="docutils literal notranslate"><span class="pre">block()</span></code> is the matrix-specialized counterpart to nested basic slices. It is
-conceptually equivalent to:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">row_start</span><span class="p">,</span><span class="w"> </span><span class="n">row_start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row_count</span><span class="p">)</span>
-<span class="w"> </span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">col_start</span><span class="p">,</span><span class="w"> </span><span class="n">col_start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">col_count</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>but it states the intent more directly when the operation is really “give me a
-row/column rectangle from this matrix.”</p>
+<p><code class="docutils literal notranslate"><span class="pre">block()</span></code> extracts one rectangular 2D sub-block as a view.</p>
+<p>This is the matrix-specialized counterpart to chaining basic slices. It is
+conceptually equivalent to taking a row slice and then a column slice, but it
+states the intent more directly when the operation is really “give me this
+rectangle from the matrix.”</p>
+<p>That directness matters. When code is thinking in matrix windows, patches,
+regions, or rectangular selections, <code class="docutils literal notranslate"><span class="pre">block()</span></code> usually communicates the intent
+better than two separate <code class="docutils literal notranslate"><span class="pre">slice()</span></code> calls.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>row_start</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The first row to include. Negative values count from the end.</p>
+<p>The first row to include.</p>
+<ul class="simple">
+<li><p>negative values count from the end</p></li>
+<li><p>after normalization, the start row must still be valid</p></li>
+</ul>
 <p><strong>row_count</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>How many rows to keep from <code class="docutils literal notranslate"><span class="pre">row_start</span></code>. Must be <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code>.</p>
+<p>How many rows to keep from <code class="docutils literal notranslate"><span class="pre">row_start</span></code>.</p>
+<ul class="simple">
+<li><p>must be <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code></p></li>
+<li><p>the requested rectangle is not clamped for you</p></li>
+</ul>
 <p><strong>col_start</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The first column to include. Negative values count from the end.</p>
+<p>The first column to include.</p>
+<ul class="simple">
+<li><p>negative values count from the end</p></li>
+<li><p>after normalization, the start column must still be valid</p></li>
+</ul>
 <p><strong>col_count</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>How many columns to keep from <code class="docutils literal notranslate"><span class="pre">col_start</span></code>. Must be <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code>.</p>
+<p>How many columns to keep from <code class="docutils literal notranslate"><span class="pre">col_start</span></code>.</p>
+<ul class="simple">
+<li><p>must be <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code></p></li>
+<li><p>again, the request is not silently shrunk for you</p></li>
+</ul>
 </section>
 <section id="bounds-behavior">
 <h2>Bounds Behavior<a class="headerlink" href="#bounds-behavior" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">block()</span></code> does not clamp or shrink the request for you. After negative-start
-normalization:</p>
+<p><code class="docutils literal notranslate"><span class="pre">block()</span></code> does not clamp or shrink the request.</p>
+<p>After negative-start normalization:</p>
 <ul class="simple">
 <li><p>the start coordinates must still be in range</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">row_start</span> <span class="pre">+</span> <span class="pre">row_count</span></code> must stay inside dim <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">col_start</span> <span class="pre">+</span> <span class="pre">col_count</span></code> must stay inside dim <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">row_start</span> <span class="pre">+</span> <span class="pre">row_count</span></code> must stay inside dimension <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">col_start</span> <span class="pre">+</span> <span class="pre">col_count</span></code> must stay inside dimension <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
 <p>Zero-sized rectangles are allowed as long as the start coordinate itself is
 valid.</p>
@@ -91,15 +106,20 @@ A 2D view over the requested rectangle.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">block()</span></code> is differentiable. Reverse-mode sensitivity flows only to the selected
-rectangle and stays zero everywhere else in the parent matrix.</p>
+<p><code class="docutils literal notranslate"><span class="pre">block()</span></code> is differentiable.</p>
+<p>Reverse-mode sensitivity flows only to the selected rectangle and remains zero
+everywhere else in the parent matrix.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Shared setup plus a center-right <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> rectangle.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">31</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">33</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<p>The examples below build from ordinary rectangular reads to negative starts,
+empty rectangles, failure modes, and gradient behavior.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">block()</span></code> reads a center-right <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> rectangle as a view.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
+<span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">block</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
 </pre></div>
@@ -111,8 +131,8 @@ data=[[21, 22, 23],
   [31, 32, 33]]
 </pre></div>
 </div>
-<p>The view keeps the parent row stride of <code class="docutils literal notranslate"><span class="pre">4</span></code>, which is why it is non-contiguous
-even though the visible rectangle itself is dense.</p>
+<p>The result is non-contiguous because it inherits the parent row stride of <code class="docutils literal notranslate"><span class="pre">4</span></code>
+instead of being repacked.</p>
 <p>Example 2. Negative starts are normalized from the end before the rectangle is
 checked.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">block</span><span class="p">(</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">-3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
@@ -126,7 +146,7 @@ data=[[21, 22],
   [31, 32]]
 </pre></div>
 </div>
-<p>Example 3. Zero-sized rectangles are valid if the start itself is valid.</p>
+<p>Example 3. Zero-height rectangles are legal if the start itself is valid.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">block</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -138,8 +158,37 @@ data=[[21, 22],
 </pre></div>
 </div>
 <p>That is not an error. It is an empty 2D view with zero rows and two columns.</p>
-<p>Example 4. <code class="docutils literal notranslate"><span class="pre">block()</span></code> is strictly 2D.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
+<p>Example 4. Zero-width rectangles are also legal under the same rule.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">block</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,0], strides=[4,1], dtype=float64, platform=cpu, numel=0, contiguous=false)
+[]
+</pre></div>
+</div>
+<p>This time the rectangle has rows but no columns.</p>
+<p>Example 5. Requests that run out of bounds fail explicitly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">block</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>block: requested rows exceed dim-0 bounds
+</pre></div>
+</div>
+<p>This is an important difference from forgiving slicing APIs in other systems:
+<code class="docutils literal notranslate"><span class="pre">block()</span></code> does not silently shrink the request.</p>
+<p>Example 6. <code class="docutils literal notranslate"><span class="pre">block()</span></code> is strictly 2D.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">});</span>
 
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec</span><span class="p">.</span><span class="n">block</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -150,15 +199,19 @@ data=[[21, 22],
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>block: expected a 2D Series
 </pre></div>
 </div>
-<p>Example 5. Backpropagation only marks the selected rectangle.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<p><code class="docutils literal notranslate"><span class="pre">block()</span></code> is not a generic rank-N rectangle helper. It is intentionally a
+matrix-only API.</p>
+<p>Example 7. Backpropagation only marks the selected rectangle.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
+<span class="p">});</span>
 <span class="n">tracked_grid</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
 <span class="n">tracked_grid</span><span class="p">.</span><span class="n">block</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
@@ -166,26 +219,40 @@ data=[[21, 22],
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
 data=[[0, 0, 0, 0],
   [0, 1, 1, 1],
   [0, 1, 1, 1]]
 </pre></div>
 </div>
-<p>Only the <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> selected rectangle receives gradient.</p>
+<p>Only the selected <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> rectangle receives gradient.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">block()</span></code> is 2D-only by design.</p></li>
-<li><p>It is often the clearest API when the caller thinks in matrix rectangles,
-rather than in one-axis slices chained together.</p></li>
-<li><p>The result usually inherits the parent row stride and is therefore frequently
+<li><p>Negative starts are normalized, but requests are not clamped.</p></li>
+<li><p>Zero-sized rectangles are legal if their starts are valid.</p></li>
+<li><p>Out-of-bounds rectangles fail instead of silently shrinking.</p></li>
+<li><p>The result usually inherits parent stride and is therefore often
 non-contiguous.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">block()</span></code> when your mental model is genuinely “a rectangle inside a
+matrix.”</p>
+<ul class="simple">
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">row_start</span></code> and <code class="docutils literal notranslate"><span class="pre">col_start</span></code> as the rectangle origin.</p></li>
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">row_count</span></code> and <code class="docutils literal notranslate"><span class="pre">col_count</span></code> as its height and width.</p></li>
+<li><p>Expect a view, not a repacked copy.</p></li>
+<li><p>Expect strict 2D semantics and strict bounds checking.</p></li>
+</ul>
+<p>If your indexing problem sounds like a matrix region instead of a generic slice
+expression, <code class="docutils literal notranslate"><span class="pre">block()</span></code> is usually the clearest public surface.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
@@ -269,6 +336,7 @@ non-contiguous.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

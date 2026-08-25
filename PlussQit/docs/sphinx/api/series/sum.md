@@ -14,7 +14,8 @@ Series::sum(std::int64_t dim, bool keepdim) const -> Series
 
 ## What It Does
 
-Adds values together, either across the whole series or along one chosen axis.
+`sum()` adds values together, either across the whole `Series` or along one
+chosen axis.
 
 `sum()` is the most direct reduction in the `Series` surface, but there are
 three details that matter in practice:
@@ -203,11 +204,22 @@ try {
 reduce: dim out of range
 ```
 
-## Notes
+## Gotchas And Failure Modes
 
 - `sum()` is a reduction, not a scan.
 - `sum()` over booleans counts `true` values and returns `int64`.
 - `keepdim=true` is mostly about downstream shape compatibility.
+- A `dim` outside the valid axis range fails with the shared reduction
+  validator.
+
+## Teaching Summary
+
+Use `sum()` when you want totals, not averages and not running prefixes:
+
+- `sum()` reduces the whole `Series` to one scalar
+- `sum(dim)` reduces one axis
+- `sum(dim, true)` keeps the reduced axis as size `1`
+- `cumsum(dim)` is the scan variant when every prefix matters
 
 ## See Also
 

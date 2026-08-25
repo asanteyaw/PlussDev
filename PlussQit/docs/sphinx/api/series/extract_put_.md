@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::extract_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) -> Series&
+Series::extract_put_(pluss::RangeView<ExtractSpec> specs, const Series& values) -> Series&
 ```
 
 ## What It Does
@@ -36,7 +36,7 @@ mental model is simple even if the lowering path is not:
 
 ## Parameters
 
-**specs** (`pluss::msharp::RangeView::Of<ExtractSpec>`)
+**specs** (`pluss::RangeView<ExtractSpec>`)
 
 The destination selector.
 
@@ -111,7 +111,7 @@ const auto fill_column = std::vector<ExtractSpec>{
     std::int64_t{1}};
 
 grid.extract_put_(
-    pluss::msharp::RangeView::Of<ExtractSpec>(fill_column),
+    fill_column,
     pluss::make_series(-1.0));
 
 std::cout << grid;
@@ -135,7 +135,7 @@ const auto reverse_write = std::vector<ExtractSpec>{
     pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -2)};
 
 grid.extract_put_(
-    pluss::msharp::RangeView::Of<ExtractSpec>(reverse_write),
+    reverse_write,
     pluss::make_series({90.0, 70.0}, {2}));
 
 std::cout << grid;
@@ -163,7 +163,7 @@ const auto with_newaxis = std::vector<ExtractSpec>{
     std::int64_t{0}};
 
 grid.extract_put_(
-    pluss::msharp::RangeView::Of<ExtractSpec>(with_newaxis),
+    with_newaxis,
     pluss::make_series({100.0, 200.0, 300.0}, {3}));
 
 std::cout << grid;
@@ -191,7 +191,7 @@ const auto mask_specs = std::vector<ExtractSpec>{
     pluss::Slicing::SliceAll()};
 
 grid.extract_put_(
-    pluss::msharp::RangeView::Of<ExtractSpec>(mask_specs),
+    mask_specs,
     pluss::make_series(0.0));
 
 std::cout << grid;
@@ -215,7 +215,7 @@ try {
       pluss::Slicing::SliceRange(0, 4, 2)};
 
   grid.extract_put_(
-      pluss::msharp::RangeView::Of<ExtractSpec>(mismatch_specs),
+      mismatch_specs,
       pluss::make_series({1.0, 2.0, 3.0}, {3}));
 } catch (const std::exception& e) {
   std::string msg = e.what();

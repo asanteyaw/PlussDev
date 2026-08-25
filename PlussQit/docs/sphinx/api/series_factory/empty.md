@@ -87,9 +87,7 @@ data=[[5, 6],
   [7, 8]]
 ```
 
-The important part is not the copied values themselves; it is the usage pattern.
-`empty()` allocated the destination, and `copy_()` established a known payload
-before the first read.
+The important part is the order: allocate first, read later.
 
 Example 2. `empty()` is equally valid for non-floating dtypes.
 
@@ -105,6 +103,39 @@ std::cout << ids;
 ```text
 pluss::Series(shape=[3], strides=[1], dtype=int32, platform=cpu, numel=3, contiguous=true)
 data=[10, 20, 30]
+```
+
+Example 3. Scalar scratch buffers follow the same write-first rule.
+
+```cpp
+auto scratch_scalar = pluss::series::empty({}, pluss::ScalarType::Float64);
+scratch_scalar.copy_(pluss::series::make(3.25));
+
+std::cout << scratch_scalar;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=3.25
+```
+
+Example 4. The config path changes metadata policy, not the "allocate only"
+contract.
+
+```cpp
+auto mask = pluss::series::empty({2}, pluss::Config{}.with_dtype(pluss::ScalarType::Bool));
+mask.copy_(pluss::series::make({true, false}, pluss::ScalarType::Bool));
+
+std::cout << mask;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
 ```
 
 ## Notes

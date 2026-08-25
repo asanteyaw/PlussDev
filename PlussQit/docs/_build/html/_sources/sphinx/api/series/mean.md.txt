@@ -14,7 +14,8 @@ Series::mean(std::int64_t dim, bool keepdim) const -> Series
 
 ## What It Does
 
-Computes the arithmetic mean, either over the whole series or along one axis.
+`mean()` computes the arithmetic mean, either over the whole `Series` or along
+one axis.
 
 Shape-wise, `mean()` behaves like [`sum()`](sum.md): full reduction returns a
 scalar, and `mean(dim, keepdim)` removes or preserves the reduced axis
@@ -23,6 +24,12 @@ depending on `keepdim`.
 The main extra detail is dtype behavior. A mean is inherently fractional, so
 integral inputs are promoted in the current CPU implementation instead of
 staying integral.
+
+That gives `mean()` two teaching jobs at once:
+
+- it is a reduction, so axis choice and `keepdim` matter
+- it is a normalization-by-count operation, so output dtype and gradient scale
+  differ from `sum()`
 
 ## Parameters
 
@@ -103,7 +110,24 @@ data=[[2],
   [5]]
 ```
 
-Example 4. Integral input promotes to floating output in the current CPU path.
+Example 4. Negative dimensions count from the back, so `-1` means the last
+axis.
+
+```cpp
+std::cout << mat.mean(-1);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[2, 5]
+```
+
+On this shape, that matches the row-wise mean because the last axis is the
+column axis inside each row.
+
+Example 5. Integral input promotes to floating output in the current CPU path.
 
 ```cpp
 auto int_mat = pluss::make_series({
@@ -124,7 +148,7 @@ data=3.5
 That promotion is worth knowing because it affects downstream dtype expectations.
 You are no longer in integer space after the mean.
 
-Example 5. The backward pass divides the upstream sensitivity by the reduced
+Example 6. The backward pass divides the upstream sensitivity by the reduced
 lane length.
 
 ```cpp
@@ -150,12 +174,24 @@ data=[[0.33333333, 0.33333333, 0.33333333],
 
 Each row has length `3`, so each contributing element receives `1 / 3`.
 
-## Notes
+## Gotchas And Failure Modes
 
 - `mean()` follows `sum()`'s shape rules.
 - Integer input does not imply integer output.
 - `mean()` is often preferable to `sum()` inside losses because the gradient is
   normalized by lane size.
+- Choosing the wrong axis changes the meaning. `mean(0)` answers "column means";
+  `mean(1)` answers "row means."
+- A `dim` outside the valid axis range fails through the shared reduction path.
+
+## Teaching Summary
+
+Use `mean()` when you want a size-normalized reduction:
+
+- `mean()` collapses the whole `Series` to one average
+- `mean(dim)` gives one average per surviving lane
+- `keepdim=true` is mostly about later broadcasting
+- integer input is promoted because averages are inherently fractional
 
 ## See Also
 

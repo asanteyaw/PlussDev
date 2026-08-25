@@ -6865,17 +6865,21 @@ Series Series::var(bool unbiased) const {
 
 Series Series::var(std::int64_t dim_, bool unbiased, bool keepdim) const {
   check_float_for_var(*this, "var(dim)");
+  const std::int64_t rank = dim();
+  const std::int64_t normalized_dim = dim_ < 0 ? dim_ + rank : dim_;
+  PLUSS_CHECK(normalized_dim >= 0 && normalized_dim < rank, "var(dim): dim out of range");
+  const double n = static_cast<double>(sizes()[static_cast<std::size_t>(normalized_dim)]);
+  if (unbiased) {
+    PLUSS_CHECK(n > 1.0, "var(dim, unbiased): reduced dimension must have more than one element");
+  }
   auto m = mean(dim_, true);
   auto diff = this->sub(m);
   auto v = diff.mul(diff).mean(dim_, keepdim);
   if (unbiased) {
-    const double n = (double)sizes()[(std::size_t)((dim_<0)?(dim_+dim()):dim_)];
-    if (n > 1.0) {
-      const std::array<std::int64_t, 1> one{1};
-      auto corr = Series::full(std::span<const std::int64_t>(one.data(), one.size()), n/(n-1.0), v.scalar_type())
-                      .to(v.platform());
-      v = v.mul(corr);
-    }
+    const std::array<std::int64_t, 1> one{1};
+    auto corr = Series::full(std::span<const std::int64_t>(one.data(), one.size()), n / (n - 1.0), v.scalar_type())
+                    .to(v.platform());
+    v = v.mul(corr);
   }
   return v;
 }

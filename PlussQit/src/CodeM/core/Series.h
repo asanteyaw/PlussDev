@@ -542,9 +542,17 @@ public:
       return pluss::subsp::stats::std(self(), dim, unbiased, keepdim);
     }
     Series nanvar() const { return pluss::subsp::stats::nanvar(self()); }
+    Series nanvar(std::int64_t dim, bool keepdim = false) const {
+      return pluss::subsp::stats::nanvar(self(), dim, keepdim);
+    }
     Series nanstd() const { return pluss::subsp::stats::nanstd(self()); }
+    Series nanstd(std::int64_t dim, bool keepdim = false) const {
+      return pluss::subsp::stats::nanstd(self(), dim, keepdim);
+    }
     Series skewness() const { return pluss::subsp::stats::skewness(self()); }
+    Series skewness(std::int64_t dim) const { return pluss::subsp::stats::skewness(self(), dim); }
     Series kurtosis() const { return pluss::subsp::stats::kurtosis(self()); }
+    Series kurtosis(std::int64_t dim) const { return pluss::subsp::stats::kurtosis(self(), dim); }
 
     // Distribution helpers (kept on stat surface; not on core Series surface).
     Series pdf() const { return _compat::invoke("pdf", self()); }
@@ -599,7 +607,11 @@ public:
     Series normr() const { return pluss::subsp::stats::normr(self()); }
     Series normc() const { return pluss::subsp::stats::normc(self()); }
     Series standardize() const { return pluss::subsp::stats::standardize(self()); }
+    Series standardize(std::int64_t dim) const {
+      return pluss::subsp::stats::standardize(self(), dim);
+    }
     Series center() const { return pluss::subsp::stats::center(self()); }
+    Series center(std::int64_t dim) const { return pluss::subsp::stats::center(self(), dim); }
 
     // Pairwise stats (require one peer Series either bound via stat(peer) or passed directly).
     Series pdist2() const { return pluss::subsp::stats::pdist2(self(), peer1()); }
@@ -650,9 +662,17 @@ public:
       return (*this)().std(dim, unbiased, keepdim);
     }
     Series nanvar() const { return (*this)().nanvar(); }
+    Series nanvar(std::int64_t dim, bool keepdim = false) const {
+      return (*this)().nanvar(dim, keepdim);
+    }
     Series nanstd() const { return (*this)().nanstd(); }
+    Series nanstd(std::int64_t dim, bool keepdim = false) const {
+      return (*this)().nanstd(dim, keepdim);
+    }
     Series skewness() const { return (*this)().skewness(); }
+    Series skewness(std::int64_t dim) const { return (*this)().skewness(dim); }
     Series kurtosis() const { return (*this)().kurtosis(); }
+    Series kurtosis(std::int64_t dim) const { return (*this)().kurtosis(dim); }
     Series pdf() const { return (*this)().pdf(); }
     Series pdf(double sigma) const { return (*this)().pdf(sigma); }
     Series pdf(double mu, double sigma) const { return (*this)().pdf(mu, sigma); }
@@ -686,7 +706,9 @@ public:
     Series normr() const { return (*this)().normr(); }
     Series normc() const { return (*this)().normc(); }
     Series standardize() const { return (*this)().standardize(); }
+    Series standardize(std::int64_t dim) const { return (*this)().standardize(dim); }
     Series center() const { return (*this)().center(); }
+    Series center(std::int64_t dim) const { return (*this)().center(dim); }
     Series pdist2() const { return (*this)().pdist2(); }
     Series pdist2(const Series& other) const { return (*this)().pdist2(other); }
     Series cdist() const { return (*this)().cdist(); }

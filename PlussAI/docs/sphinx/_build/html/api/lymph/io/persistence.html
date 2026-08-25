@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Lymph persistence &#8212; PlussAI  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d93d25b8"></script>
+    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="PlussAI ice" href="../../plussai_ice.html" />
+    <link rel="prev" title="load" href="load.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="lymph-persistence">
+<h1>Lymph persistence<a class="headerlink" href="#lymph-persistence" title="Link to this heading">¶</a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p>This page describes the persistence contract around Lymph artifacts at a high level.</p>
+<p>Use it when you want to understand:</p>
+<ul class="simple">
+<li><p>what gets saved</p></li>
+<li><p>what kind of reproducibility is intended</p></li>
+<li><p>where Lymph persistence meets Procedure persistence</p></li>
+</ul>
+</section>
+<section id="the-core-persistence-promise">
+<h2>The Core Persistence Promise<a class="headerlink" href="#the-core-persistence-promise" title="Link to this heading">¶</a></h2>
+<p>Lymph persistence is meant to preserve a modeling artifact faithfully enough that
+the artifact can be restored and reused without retraining.</p>
+<p>That does not mean “every possible runtime situation is automatically compatible
+forever.”</p>
+<p>It means:</p>
+<ul class="simple">
+<li><p>the artifact carries its learned state and owned modeling contract</p></li>
+<li><p>the restore path is explicit</p></li>
+<li><p>compatibility and artifact ownership are treated seriously</p></li>
+</ul>
+</section>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">lymph::Model::save</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">lymph</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="nf">lymph::Model::load</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">);</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">lymph::Workflow::save</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">lymph</span><span class="o">::</span><span class="n">Workflow</span><span class="w"> </span><span class="nf">lymph::workflow::load</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="what-persistence-is-for">
+<h2>What Persistence Is For<a class="headerlink" href="#what-persistence-is-for" title="Link to this heading">¶</a></h2>
+<p>Use persistence when the project needs:</p>
+<ul class="simple">
+<li><p>repeatable inference</p></li>
+<li><p>artifact handoff between training and deployment steps</p></li>
+<li><p>long-running experiment preservation</p></li>
+<li><p>reproducible evaluation on a chosen fitted object</p></li>
+</ul>
+<p>If the project only needs an in-memory experimental object for the current process,
+save/load may be unnecessary. The moment the artifact must outlive the process,
+persistence stops being optional.</p>
+</section>
+<section id="model-artifact-versus-workflow-artifact">
+<h2>Model Artifact Versus Workflow Artifact<a class="headerlink" href="#model-artifact-versus-workflow-artifact" title="Link to this heading">¶</a></h2>
+<p>This distinction is one of the most important in the whole Lymph documentation.</p>
+<section id="model-artifact">
+<h3>Model artifact<a class="headerlink" href="#model-artifact" title="Link to this heading">¶</a></h3>
+<p>A saved <code class="docutils literal notranslate"><span class="pre">Model</span></code> preserves the trainable pipeline artifact.</p>
+<p>That is appropriate when the model itself is the meaningful reusable unit.</p>
+</section>
+<section id="workflow-artifact">
+<h3>Workflow artifact<a class="headerlink" href="#workflow-artifact" title="Link to this heading">¶</a></h3>
+<p>A saved <code class="docutils literal notranslate"><span class="pre">Workflow</span></code> preserves the trainable pipeline plus the runtime contract around
+it.</p>
+<p>That is appropriate when the deployable behavior matters, not just the fitted
+learner state.</p>
+<p>In many production situations, the workflow artifact is the stronger truth.</p>
+</section>
+</section>
+<section id="end-to-end-roundtrip-example">
+<h2>End-To-End Roundtrip Example<a class="headerlink" href="#end-to-end-roundtrip-example" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">lymph</span><span class="o">::</span><span class="n">Workflow</span><span class="w"> </span><span class="n">workflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="w"> </span><span class="n">policy</span><span class="p">);</span>
+<span class="n">workflow</span><span class="p">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;artifacts/default_workflow&quot;</span><span class="p">);</span>
+
+<span class="n">lymph</span><span class="o">::</span><span class="n">Workflow</span><span class="w"> </span><span class="n">loaded</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;artifacts/default_workflow&quot;</span><span class="p">);</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">predicted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loaded</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">incoming</span><span class="p">,</span><span class="w"> </span><span class="n">data_options</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<p>Copied from an executed run of
+<code class="docutils literal notranslate"><span class="pre">plussai_lymph_model_prep_io_docverify_demo</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>== workflow ==
+predictions=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 1, 0]
+roundtrip_match=1
+== io ==
+model_roundtrip=1
+workflow_roundtrip=1
+loaded_workflow_trained=1
+</pre></div>
+</div>
+<p>This is the persistence promise rendered concretely. The saved workflow comes back
+as the same trained runtime contract, not just a vaguely similar object.</p>
+</section>
+</section>
+<section id="persistence-and-reproducibility">
+<h2>Persistence And Reproducibility<a class="headerlink" href="#persistence-and-reproducibility" title="Link to this heading">¶</a></h2>
+<p>Persistence improves reproducibility because it lets you reuse the actual selected
+artifact rather than reconstructing it from memory.</p>
+<p>But persistence is not magic.</p>
+<p>Good reproducibility still depends on:</p>
+<ul class="simple">
+<li><p>disciplined artifact versioning</p></li>
+<li><p>stable save paths and naming</p></li>
+<li><p>explicit runtime contracts</p></li>
+<li><p>clear distinction between training-time and deployment-time objects</p></li>
+</ul>
+<p>Lymph gives you the persistence surface; teams still need sound artifact hygiene.</p>
+</section>
+<section id="relationship-to-procedure">
+<h2>Relationship To Procedure<a class="headerlink" href="#relationship-to-procedure" title="Link to this heading">¶</a></h2>
+<p>Lymph persistence and Procedure persistence are related but not identical.</p>
+<ul class="simple">
+<li><p>Lymph owns the model/workflow artifact layer</p></li>
+<li><p>Procedure owns the broader multi-component orchestration layer</p></li>
+</ul>
+<p>That means a user can work productively with Lymph persistence without needing the
+full Procedure system, while Procedure can still build on top of Lymph artifacts
+when the project grows.</p>
+</section>
+<section id="related-pages">
+<h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="save.html"><span class="std std-doc">save</span></a></p></li>
+<li><p><a class="reference internal" href="load.html"><span class="std std-doc">load</span></a></p></li>
+<li><p><a class="reference internal" href="../../plussai_procedure.html"><span class="std std-doc">PlussAI <code class="docutils literal notranslate"><span class="pre">procedure</span></code></span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../plussai_root.html">PlussAI API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/api/lymph/io/persistence.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

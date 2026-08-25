@@ -234,7 +234,10 @@
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/lib/libPlussTilsView.a
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/lib/libPlussTilsCore.a
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/tils.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/bi/studio.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/bi/specs.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/bi/bi.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/bi/session.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/tils/env.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/tils/view.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/tils/view/window.h

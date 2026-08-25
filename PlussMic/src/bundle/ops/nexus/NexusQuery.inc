@@ -163,21 +163,11 @@ NexusQuery::NexusQuery(Nexus nexus, pluss::table::DataFrame::SqlOptions options)
       options_(std::move(options)) {}
 
 pluss::table::DataFrame NexusQuery::execute(std::string_view statement) const {
-  auto primary_name = pluss::table::detail::sql_primary_source_name(statement, options_);
-  PLUSS_CHECK(!primary_name.empty(), "Nexus::query().execute: SQL statement must include a root table");
-  PLUSS_CHECK(primary_name != "df",
-              "Nexus::query().execute: use a Nexus table name in FROM instead of 'df'");
-
   const auto& src = nexus_.impl_ref_();
-  require_known_table(src, primary_name, "Nexus::query().execute");
 
   auto sql_options = options_;
-  sql_options.primary_source_names.push_back(primary_name);
   sql_options.sources.reserve(sql_options.sources.size() + src.keys_.size());
   for (std::size_t i = 0; i < src.keys_.size(); ++i) {
-    if (src.keys_[i] == primary_name) {
-      continue;
-    }
     sql_options.sources.push_back(
         pluss::table::DataFrame::SqlOptions::SourceBinding{
             .name = src.keys_[i],
@@ -185,7 +175,8 @@ pluss::table::DataFrame NexusQuery::execute(std::string_view statement) const {
         });
   }
 
-  return src.frames_[src.name_to_pos_.at(primary_name)].sql(std::move(sql_options)).execute(statement);
+  const auto seed = src.frames_.empty() ? pluss::table::DataFrame{} : src.frames_.front();
+  return seed.sql(std::move(sql_options)).execute(statement);
 }
 
 NexusQueryPrepared NexusQuery::prepare(std::string_view statement) const {

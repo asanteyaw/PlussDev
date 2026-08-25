@@ -28,6 +28,9 @@ int main() {
   heading("max_dim1");
   std::cout << scores.max(1) << "\n\n";
 
+  heading("max_dim0");
+  std::cout << scores.max(0) << "\n\n";
+
   heading("max_dim1_keepdim");
   std::cout << scores.max(1, true) << "\n\n";
 

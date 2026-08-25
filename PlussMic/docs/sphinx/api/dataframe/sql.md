@@ -14,18 +14,20 @@ DataFrame::sql(SqlOptions options) const -> DataFrameSqlAccessor
 
 ## What It Does
 
-Enters the frame's built-in SQL accessor — a small, self-contained SQL engine that
-runs `SELECT` statements directly against the frame (referenced in the statement as
-the source table `df`), returning an ordinary `DataFrame` result. Use this when a
-transformation reads more naturally as a `SELECT`/`WHERE`/`JOIN`/`ORDER BY` statement
-than as a chained sequence of table verbs. `sql()` itself does no work beyond binding
-the frame (and, optionally, execution `options`); the real work happens on
-`.execute(statement)`.
+Enters the frame's built-in SQL accessor. The accessor binds the current frame and
+optional extra sources, loads them into an in-memory SQLite workspace, and executes
+the SQL statement there before converting the result back into a `DataFrame`.
+
+That makes `sql()` much broader than the old parser-only implementation: ordinary
+`SELECT` queries, aliases, expressions, `GROUP BY`, `HAVING`, common table
+expressions (`WITH`), subqueries, `LEFT JOIN`, `DISTINCT`, and similar SQLite query
+shapes now work without PlussMic having to special-case each clause itself.
+
+`sql()` itself still does no work beyond binding the frame and options; the real work
+happens on `.execute(statement)`.
 
 [`prep_sql(statement)`](prep_sql.md) is the sibling entry point for a statement
-that will run many times with different bound parameter values — it parses the
-statement once up front, rather than on every `.execute()` call the way
-`sql().execute(statement)` does each time it's called fresh.
+that will run many times with different bound parameter values.
 
 See the [DataFrameSqlAccessor API Reference](../../dataframe_sql_accessor_api_reference)
 for `.execute()`'s full parameter and behavior details.
@@ -34,10 +36,10 @@ for `.execute()`'s full parameter and behavior details.
 
 **options** (`SqlOptions`, optional)
 
-Execution options for the returned accessor: additional joinable `sources`, default
+Execution options for the returned accessor: additional joinable `sources`,
 `params`/`identifier_params` for `{...}`-style placeholders, missing-parameter and
-name-collision policies, row/memory/timeout limits, and diagnostics toggles. Omit it
-entirely to use every default.
+name-collision policies, result/memory/timeout guards, and diagnostics toggles.
+Omit it entirely to use every default.
 
 ## Returns
 
@@ -75,10 +77,7 @@ std::cout << high_sales;
 [2 cs x 2 feat]
 ```
 
-The `WHERE` clause behaves like [`query()`](query.md)'s filtering — case `2`
-(`sales = 90`) doesn't satisfy `sales > 95`, so it's dropped, while cases `0` and `1`
-survive with their original case labels intact. The `SELECT id, sales` projection
-means `city` never appears in the result at all.
+The `SELECT id, sales` projection means `city` never appears in the result at all.
 
 Example 2. Pass an `{param}` placeholder value through `SqlOptions`.
 
@@ -96,7 +95,7 @@ std::cout << matched;
 ========================
      | id    sales  city
 ------------------------
-1    | 2     120    Tema
+0    | 2     120    Tema
 ------------------------
 [1 cs x 3 feat]
 ```
@@ -105,14 +104,44 @@ std::cout << matched;
 runs, matching only case `1`. `SELECT *` keeps every column this time, unlike Example
 1's explicit projection.
 
+Example 3. Use grouped SQL directly instead of spelling the aggregation as chained
+table verbs.
+
+```cpp
+auto grouped = orders.sql().execute(
+    "SELECT city, COUNT(*) AS n, AVG(sales) AS mean_sales "
+    "FROM df "
+    "GROUP BY city "
+    "ORDER BY mean_sales DESC");
+std::cout << grouped;
+```
+
+### Output
+
+```text
+==============================
+     | city    n      mean_sales
+------------------------------
+0    | Tema    1      120
+1    | Accra   1      100
+2    | Kumasi  1      90
+------------------------------
+[3 cs x 3 feat]
+```
+
+This is the main reason to use `sql()`: when the operation reads more clearly as SQL
+than as a long sequence of C++ table verbs, you can just write the query.
+
 ## Notes
 
 - `sql()` returns the accessor only; it never executes a statement by itself — you
   must call `.execute(statement)` to get a result.
 - The calling frame is always available in the statement as the source table
   `df`; `options.sources` can bind additional named frames for joins.
-- Use [`prep_sql(statement)`](prep_sql.md) instead when the same statement text runs
-  repeatedly with different parameter bindings, to avoid re-parsing it every time.
+- Bare source-name shorthand is accepted: `df.sql().execute("df")` is treated like
+  `SELECT * FROM df`, similar in spirit to pandas' `read_sql(table_name, ...)`.
+- Statements still need to produce a result set. This surface is query-oriented, not
+  a mutation API for arbitrary DDL/DML workflows.
 
 ## See Also
 

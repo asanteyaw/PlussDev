@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::mean" href="mean.html" />
@@ -50,7 +50,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Adds values together, either across the whole series or along one chosen axis.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sum()</span></code> adds values together, either across the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> or along one
+chosen axis.</p>
 <p><code class="docutils literal notranslate"><span class="pre">sum()</span></code> is the most direct reduction in the <code class="docutils literal notranslate"><span class="pre">Series</span></code> surface, but there are
 three details that matter in practice:</p>
 <ul class="simple">
@@ -216,12 +217,24 @@ gets <code class="docutils literal notranslate"><span class="pre">1</span></code
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">sum()</span></code> is a reduction, not a scan.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sum()</span></code> over booleans counts <code class="docutils literal notranslate"><span class="pre">true</span></code> values and returns <code class="docutils literal notranslate"><span class="pre">int64</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> is mostly about downstream shape compatibility.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">dim</span></code> outside the valid axis range fails with the shared reduction
+validator.</p></li>
+</ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">sum()</span></code> when you want totals, not averages and not running prefixes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sum()</span></code> reduces the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> to one scalar</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sum(dim)</span></code> reduces one axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sum(dim,</span> <span class="pre">true)</span></code> keeps the reduced axis as size <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cumsum(dim)</span></code> is the scan variant when every prefix matters</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -306,6 +319,7 @@ gets <code class="docutils literal notranslate"><span class="pre">1</span></code
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

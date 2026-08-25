@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Series::pos" href="api/series/pos.html" />
@@ -40,21 +40,22 @@
 <section id="series-api-reference">
 <h1>Series API Reference<a class="headerlink" href="#series-api-reference" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../api_reference.html"><span class="std std-doc">Back to PlussQit API Reference</span></a></p>
-<p>This page documents <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code> — the numeric/boolean tensor object underneath
-every numeric <code class="docutils literal notranslate"><span class="pre">Thread</span></code> column — one method page at a time, with real, compiled-and-run
-examples under every code block.</p>
+<p>This page documents <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code> — the numeric/boolean tensor object
+underneath numeric <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> columns — one method page at a time, with real,
+compiled-and-run examples under every code block.</p>
 <section id="using-this-reference">
 <h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Use the left sidebar to open one method page at a time.</p></li>
+<li><p>Use the left sidebar to open one method page at a time. The method rail is
+intentionally alphabetized A-Z so it behaves like a fast lookup index rather
+than a tutorial sequence.</p></li>
 <li><p>Each method page contains its signature(s), parameter details, a <strong>Gradient</strong>
 section for anything differentiable, verified output under every example, and
 working previous/next navigation.</p></li>
 <li><p>This landing page stays intentionally short so the content panel is not one giant
-scroll of every method — see <a class="reference internal" href="../Series_Methods.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series_Methods</span></code></span></a> for the
-full method-naming-philosophy note and <a class="reference internal" href="../coden_method_index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">coden_method_index</span></code></span></a>
-for a flat cross-referenced index of the entire surface, documented and not yet
-documented alike.</p></li>
+scroll of every method. Use the left sidebar as the primary lookup index, and
+see <a class="reference internal" href="../Series_Methods.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series_Methods</span></code></span></a> for the broader method
+naming-and-organization note.</p></li>
 </ul>
 </section>
 <section id="coverage">
@@ -78,7 +79,28 @@ stub.</p>
 <li><p>elementwise comparison/bounds helpers and a few load-bearing utility ops</p></li>
 <li><p>reduction and scan core: <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">prod</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">argmax</span></code>,
 <code class="docutils literal notranslate"><span class="pre">argmin</span></code>, <code class="docutils literal notranslate"><span class="pre">cumsum</span></code>, <code class="docutils literal notranslate"><span class="pre">cumprod</span></code></p></li>
+<li><p>accessors: <code class="docutils literal notranslate"><span class="pre">stat</span></code></p></li>
 </ul>
+<p>The current handwritten <code class="docutils literal notranslate"><span class="pre">SeriesStatAccessor</span></code> subset covers:</p>
+<ul class="simple">
+<li><p>statistical dispersion: <code class="docutils literal notranslate"><span class="pre">var</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">nanvar</span></code>, <code class="docutils literal notranslate"><span class="pre">nanstd</span></code></p></li>
+<li><p>statistical transforms and higher moments: <code class="docutils literal notranslate"><span class="pre">center</span></code>, <code class="docutils literal notranslate"><span class="pre">standardize</span></code>,
+<code class="docutils literal notranslate"><span class="pre">skewness</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> also exposes <code class="docutils literal notranslate"><span class="pre">linearalg</span></code> and <code class="docutils literal notranslate"><span class="pre">traverse</span></code> accessors on the public
+surface. Their dedicated handwritten accessor references should land with their
+own batches rather than being stubbed prematurely here.</p>
+</section>
+<section id="accessors">
+<h2>Accessors<a class="headerlink" href="#accessors" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> has namespace-like accessors for related method families:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stat</span></code> -&gt; <a class="reference internal" href="series_stat_accessor_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesStatAccessor</span></code></span></a></p></li>
+</ul>
+<p>The current handwritten accessor batch is <code class="docutils literal notranslate"><span class="pre">stat</span></code>: reduction statistics,
+normalization transforms, and higher-moment summaries. Start with
+<a class="reference internal" href="api/series/stat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::stat</span></code></span></a> if you want the entrypoint itself explained,
+or jump straight to the dedicated accessor reference from the sidebar.</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="pluss-inline-prev-next">
@@ -152,6 +174,7 @@ stub.</p>
 <li class="toctree-l1"><a class="reference internal" href="../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Stats.html">Statistics: var / std</a></li>

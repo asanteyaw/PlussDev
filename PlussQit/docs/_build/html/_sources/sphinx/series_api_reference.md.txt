@@ -4,21 +4,22 @@
 
 [Back to PlussQit API Reference](../api_reference.md)
 
-This page documents `pluss::Series` — the numeric/boolean tensor object underneath
-every numeric `Thread` column — one method page at a time, with real, compiled-and-run
-examples under every code block.
+This page documents `pluss::Series` — the numeric/boolean tensor object
+underneath numeric `Timeline` columns — one method page at a time, with real,
+compiled-and-run examples under every code block.
 
 ## Using This Reference
 
-- Use the left sidebar to open one method page at a time.
+- Use the left sidebar to open one method page at a time. The method rail is
+  intentionally alphabetized A-Z so it behaves like a fast lookup index rather
+  than a tutorial sequence.
 - Each method page contains its signature(s), parameter details, a **Gradient**
   section for anything differentiable, verified output under every example, and
   working previous/next navigation.
 - This landing page stays intentionally short so the content panel is not one giant
-  scroll of every method — see [`Series_Methods`](../Series_Methods.md) for the
-  full method-naming-philosophy note and [`coden_method_index`](../coden_method_index.md)
-  for a flat cross-referenced index of the entire surface, documented and not yet
-  documented alike.
+  scroll of every method. Use the left sidebar as the primary lookup index, and
+  see [`Series_Methods`](../Series_Methods.md) for the broader method
+  naming-and-organization note.
 
 ## Coverage
 
@@ -42,6 +43,28 @@ The current handwritten shape and slice/indexing cluster now covers:
 - elementwise comparison/bounds helpers and a few load-bearing utility ops
 - reduction and scan core: `sum`, `mean`, `prod`, `max`, `min`, `argmax`,
   `argmin`, `cumsum`, `cumprod`
+- accessors: `stat`
+
+The current handwritten `SeriesStatAccessor` subset covers:
+
+- statistical dispersion: `var`, `std`, `nanvar`, `nanstd`
+- statistical transforms and higher moments: `center`, `standardize`,
+  `skewness`, `kurtosis`
+
+`Series` also exposes `linearalg` and `traverse` accessors on the public
+surface. Their dedicated handwritten accessor references should land with their
+own batches rather than being stubbed prematurely here.
+
+## Accessors
+
+`Series` has namespace-like accessors for related method families:
+
+- `stat` -> [`SeriesStatAccessor`](series_stat_accessor_api_reference.md)
+
+The current handwritten accessor batch is `stat`: reduction statistics,
+normalization transforms, and higher-moment summaries. Start with
+[`Series::stat`](api/series/stat.md) if you want the entrypoint itself explained,
+or jump straight to the dedicated accessor reference from the sidebar.
 
 ```{toctree}
 :hidden:
@@ -88,6 +111,8 @@ api/series/max
 api/series/min
 api/series/argmax
 api/series/argmin
+api/series/stat
+series_stat_accessor_api_reference
 ```
 
 <div class="pluss-inline-prev-next">

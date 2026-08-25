@@ -7,42 +7,65 @@
 ## Signature
 
 ```cpp
-Series::sizes() const -> pluss::msharp::RangeView::Int
+Series::sizes() const -> pluss::RangeView<std::int64_t>
 ```
 
 ## What It Does
 
-Returns the full current shape as a lightweight borrowed view.
+Returns the full logical shape of the current `Series` as a borrowed
+range-like view.
 
-This is the shape-wide counterpart to [`size()`](size.md). Instead of asking
-for one axis at a time, you receive the entire rank-ordered shape in one call.
+This is the whole-shape counterpart to [`size()`](size.md):
 
-The important behavior is not just "you get the sizes", but "you get them
-cheaply." `sizes()` does not build a fresh owning container just to report
-metadata. It exposes a borrowed view over the `Series`’s existing shape
-storage, which makes it useful both for inspection and for wiring shape data
-directly into other APIs such as [`view()`](view.md) or
-[`reshape()`](reshape.md).
+- `size(dim)` asks for one axis
+- `sizes()` asks for the entire rank in order
+
+That sounds simple, but it is one of the load-bearing metadata APIs in the
+entire `Series` surface because it is both:
+
+- an inspection tool
+- a wiring tool for other shape-taking methods
+
+In practice, `sizes()` is how you answer questions like:
+
+- "what rank and extents does this handle currently expose?"
+- "what shape did that transpose or unsqueeze produce?"
+- "can I feed this shape directly into `view()` or `reshape()`?"
 
 ## Parameters
 
 This method takes no parameters.
 
+There are no toggles because `sizes()` is pure metadata inspection. If you want
+per-axis choice, you are already in [`size()`](size.md) territory instead.
+
 ## Returns
 
-`pluss::msharp::RangeView::Int`
-    A borrowed view of the current axis extents.
+`pluss::RangeView<std::int64_t>`
+    A lightweight borrowed view of the current axis extents.
 
-## Lifetime Notes
+The teaching point here is not the exact type spelling. The teaching point is:
 
-Because the return value is borrowed, treat it as metadata tied to the `Series`
-it came from. It is ideal for immediate inspection and for passing directly
-into another method call; it is not an owning snapshot meant to be stored
-indefinitely after the source object changes or disappears.
+- cheap to inspect
+- cheap to pass onward
+- not an owning snapshot
 
-## Examples
+## Borrowed Lifetime
 
-The examples on this page build incrementally.
+Treat the returned object as metadata tied to the `Series` it came from.
+
+That usually means it is excellent for:
+
+- immediate printing
+- immediate looping
+- immediate argument passing into another API
+
+It is not meant to behave like an independent shape vector that you store long
+after the originating `Series` changes or disappears.
+
+## Verified Examples
+
+The examples on this page build from plain inspection into practical reuse.
 
 Example 1. Read the whole base shape at once.
 
@@ -79,11 +102,12 @@ print_shape(cube.sizes());
 [2, 3, 4]
 ```
 
-Example 2. `sizes()` tracks the current logical view immediately after a shape
+The order is rank order: axis `0`, then axis `1`, then axis `2`.
+
+Example 2. `sizes()` reports the current logical interpretation after an axis
 operation.
 
 ```cpp
-std::cout << "";
 print_shape(cube.transpose(0, 2).sizes());
 ```
 
@@ -93,14 +117,13 @@ print_shape(cube.transpose(0, 2).sizes());
 [4, 3, 2]
 ```
 
-The physical storage did not move there. Only the logical interpretation
-changed, and `sizes()` reports that interpreted shape immediately.
+That matters because `sizes()` is not reporting the construction-time shape. It
+is reporting the shape of the handle you are actually holding now.
 
-Example 3. Scalars report an empty shape, not a fake length-`1` vector shape.
+Example 3. Scalars report an empty shape, not a fake `[1]`.
 
 ```cpp
 auto scalar = pluss::make_series(42.0);
-std::cout << "";
 print_shape(scalar.sizes());
 ```
 
@@ -110,15 +133,39 @@ print_shape(scalar.sizes());
 []
 ```
 
+This is a real semantic distinction in `Series`: rank-`0` scalar and rank-`1`
+length-`1` vector are different shapes.
+
+Example 4. Rank-editing methods update the reported shape immediately.
+
+```cpp
+auto mat = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+});
+
+print_shape(mat.unsqueeze(1).sizes());
+```
+
+### Output
+
+```text
+[2, 1, 3]
+```
+
+That is why `sizes()` is such a practical teaching and debugging tool: it lets
+you inspect the exact shape consequence of a structural method before moving on.
+
 ## Notes
 
-- `sizes()` is borrowed metadata, not an owning snapshot.
-- If you only need one axis, [`size()`](size.md) is the clearer API.
-- `sizes()` reports extents only. It does not expose strides or contiguity.
+- `sizes()` reports logical extents only.
+- It does not expose strides, contiguity, dtype, or platform.
+- Use [`size()`](size.md) when one axis is the real subject of the code.
+- Use `sizes()` when the full shape is what you need to reason about or reuse.
 
 ## See Also
 
-- [`Series::size`](size.md): query one axis.
+- [`Series::size`](size.md): inspect one axis at a time.
 - [`Series::view`](view.md), [`Series::reshape`](reshape.md): consume shape-like
   ranges directly.
 

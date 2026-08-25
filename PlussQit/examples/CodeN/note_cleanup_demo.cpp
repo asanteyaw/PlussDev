@@ -22,5 +22,6 @@ int main() {
   for (std::int64_t i = 0; i < cleaned.numel(); ++i) {
     std::cout << i << ": " << cleaned.at(i) << "\n";
   }
+
   return 0;
 }

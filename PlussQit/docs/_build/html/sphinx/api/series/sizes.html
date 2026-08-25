@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::view" href="view.html" />
@@ -42,41 +42,64 @@
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">sizes</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">sizes</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the full current shape as a lightweight borrowed view.</p>
-<p>This is the shape-wide counterpart to <a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">size()</span></code></span></a>. Instead of asking
-for one axis at a time, you receive the entire rank-ordered shape in one call.</p>
-<p>The important behavior is not just “you get the sizes”, but “you get them
-cheaply.” <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> does not build a fresh owning container just to report
-metadata. It exposes a borrowed view over the <code class="docutils literal notranslate"><span class="pre">Series</span></code>’s existing shape
-storage, which makes it useful both for inspection and for wiring shape data
-directly into other APIs such as <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a> or
-<a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a>.</p>
+<p>Returns the full logical shape of the current <code class="docutils literal notranslate"><span class="pre">Series</span></code> as a borrowed
+range-like view.</p>
+<p>This is the whole-shape counterpart to <a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">size()</span></code></span></a>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size(dim)</span></code> asks for one axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sizes()</span></code> asks for the entire rank in order</p></li>
+</ul>
+<p>That sounds simple, but it is one of the load-bearing metadata APIs in the
+entire <code class="docutils literal notranslate"><span class="pre">Series</span></code> surface because it is both:</p>
+<ul class="simple">
+<li><p>an inspection tool</p></li>
+<li><p>a wiring tool for other shape-taking methods</p></li>
+</ul>
+<p>In practice, <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> is how you answer questions like:</p>
+<ul class="simple">
+<li><p>“what rank and extents does this handle currently expose?”</p></li>
+<li><p>“what shape did that transpose or unsqueeze produce?”</p></li>
+<li><p>“can I feed this shape directly into <code class="docutils literal notranslate"><span class="pre">view()</span></code> or <code class="docutils literal notranslate"><span class="pre">reshape()</span></code>?”</p></li>
+</ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p>This method takes no parameters.</p>
+<p>There are no toggles because <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> is pure metadata inspection. If you want
+per-axis choice, you are already in <a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">size()</span></code></span></a> territory instead.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Int</span></code>
-A borrowed view of the current axis extents.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::int64_t&gt;</span></code>
+A lightweight borrowed view of the current axis extents.</p>
+<p>The teaching point here is not the exact type spelling. The teaching point is:</p>
+<ul class="simple">
+<li><p>cheap to inspect</p></li>
+<li><p>cheap to pass onward</p></li>
+<li><p>not an owning snapshot</p></li>
+</ul>
 </section>
-<section id="lifetime-notes">
-<h2>Lifetime Notes<a class="headerlink" href="#lifetime-notes" title="Link to this heading">¶</a></h2>
-<p>Because the return value is borrowed, treat it as metadata tied to the <code class="docutils literal notranslate"><span class="pre">Series</span></code>
-it came from. It is ideal for immediate inspection and for passing directly
-into another method call; it is not an owning snapshot meant to be stored
-indefinitely after the source object changes or disappears.</p>
+<section id="borrowed-lifetime">
+<h2>Borrowed Lifetime<a class="headerlink" href="#borrowed-lifetime" title="Link to this heading">¶</a></h2>
+<p>Treat the returned object as metadata tied to the <code class="docutils literal notranslate"><span class="pre">Series</span></code> it came from.</p>
+<p>That usually means it is excellent for:</p>
+<ul class="simple">
+<li><p>immediate printing</p></li>
+<li><p>immediate looping</p></li>
+<li><p>immediate argument passing into another API</p></li>
+</ul>
+<p>It is not meant to behave like an independent shape vector that you store long
+after the originating <code class="docutils literal notranslate"><span class="pre">Series</span></code> changes or disappears.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>The examples on this page build incrementally.</p>
+<section id="verified-examples">
+<h2>Verified Examples<a class="headerlink" href="#verified-examples" title="Link to this heading">¶</a></h2>
+<p>The examples on this page build from plain inspection into practical reuse.</p>
 <p>Example 1. Read the whole base shape at once.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">print_shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">shape</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
@@ -109,10 +132,10 @@ indefinitely after the source object changes or disappears.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[2, 3, 4]
 </pre></div>
 </div>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> tracks the current logical view immediately after a shape
+<p>The order is rank order: axis <code class="docutils literal notranslate"><span class="pre">0</span></code>, then axis <code class="docutils literal notranslate"><span class="pre">1</span></code>, then axis <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> reports the current logical interpretation after an axis
 operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
-<span class="n">print_shape</span><span class="p">(</span><span class="n">cube</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">).</span><span class="n">sizes</span><span class="p">());</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_shape</span><span class="p">(</span><span class="n">cube</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">).</span><span class="n">sizes</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -121,11 +144,10 @@ operation.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[4, 3, 2]
 </pre></div>
 </div>
-<p>The physical storage did not move there. Only the logical interpretation
-changed, and <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> reports that interpreted shape immediately.</p>
-<p>Example 3. Scalars report an empty shape, not a fake length-<code class="docutils literal notranslate"><span class="pre">1</span></code> vector shape.</p>
+<p>That matters because <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> is not reporting the construction-time shape. It
+is reporting the shape of the handle you are actually holding now.</p>
+<p>Example 3. Scalars report an empty shape, not a fake <code class="docutils literal notranslate"><span class="pre">[1]</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">42.0</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
 <span class="n">print_shape</span><span class="p">(</span><span class="n">scalar</span><span class="p">.</span><span class="n">sizes</span><span class="p">());</span>
 </pre></div>
 </div>
@@ -135,20 +157,40 @@ changed, and <code class="docutils literal notranslate"><span class="pre">sizes(
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[]
 </pre></div>
 </div>
+<p>This is a real semantic distinction in <code class="docutils literal notranslate"><span class="pre">Series</span></code>: rank-<code class="docutils literal notranslate"><span class="pre">0</span></code> scalar and rank-<code class="docutils literal notranslate"><span class="pre">1</span></code>
+length-<code class="docutils literal notranslate"><span class="pre">1</span></code> vector are different shapes.</p>
+<p>Example 4. Rank-editing methods update the reported shape immediately.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">print_shape</span><span class="p">(</span><span class="n">mat</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">sizes</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[2, 1, 3]
+</pre></div>
+</div>
+<p>That is why <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> is such a practical teaching and debugging tool: it lets
+you inspect the exact shape consequence of a structural method before moving on.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">sizes()</span></code> is borrowed metadata, not an owning snapshot.</p></li>
-<li><p>If you only need one axis, <a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">size()</span></code></span></a> is the clearer API.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sizes()</span></code> reports extents only. It does not expose strides or contiguity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sizes()</span></code> reports logical extents only.</p></li>
+<li><p>It does not expose strides, contiguity, dtype, or platform.</p></li>
+<li><p>Use <a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">size()</span></code></span></a> when one axis is the real subject of the code.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> when the full shape is what you need to reason about or reuse.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::size</span></code></span></a>: query one axis.</p></li>
+<li><p><a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::size</span></code></span></a>: inspect one axis at a time.</p></li>
 <li><p><a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::view</span></code></span></a>, <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::reshape</span></code></span></a>: consume shape-like
 ranges directly.</p></li>
 </ul>
@@ -227,6 +269,7 @@ ranges directly.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

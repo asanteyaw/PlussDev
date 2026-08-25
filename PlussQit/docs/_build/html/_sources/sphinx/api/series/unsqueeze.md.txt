@@ -14,44 +14,60 @@ Series::unsqueeze(std::int64_t dim) const -> Series
 
 Inserts a size-`1` axis at `dim` and returns the result as a view.
 
-`unsqueeze()` does not change the values in the `Series` and does not change
-`numel()`. It only changes rank and indexing structure. In practice this makes
-it one of the main broadcasting-preparation tools: if another operation expects
-an axis that your current `Series` does not explicitly have, `unsqueeze()` is
-how you add it without copying data.
+`unsqueeze()` is one of the most important shape-preparation tools in the whole
+`Series` API because it changes rank without changing values or `numel()`.
+
+That makes it ideal for:
+
+- broadcast preparation
+- explicit batch axis insertion
+- explicit feature axis insertion
+- making later axis-oriented code line up with the mental model you want
+
+The central teaching point is simple:
+
+- `unsqueeze()` adds structure
+- it does not add data
 
 ## Parameters
 
 **dim** (`std::int64_t`)
 
-Where the new axis should be inserted.
+Where to insert the new axis.
 
-Valid positions are in `[0, self.dim() + 1]` after negative-dimension
-normalization. So for a 2-D series:
+For a rank-2 series, the legal insertion positions after normalization are:
 
-- `0` inserts a new leading axis
-- `1` inserts between the two existing axes
-- `2` or `-1` inserts at the end
+- `0`: before both existing axes
+- `1`: between them
+- `2` or `-1`: after them
+
+So `dim` is not "which existing axis should become bigger." It is "where should
+the new size-1 axis live in the final rank."
+
+That is the mental model that prevents most off-by-one mistakes.
 
 ## Returns
 
 `Series`
-    A view with one additional axis of length `1`.
+    A view with one more axis, where the inserted axis has extent `1`.
+
+Because this is a view:
+
+- no values are copied
+- no values are repeated
+- only shape and stride metadata change
 
 ## Gradient
 
-`unsqueeze()` is differentiable. Backward simply reshapes the outgoing
-sensitivity back to the original shape, because no values were duplicated or
-dropped in the forward pass.
+`unsqueeze()` is differentiable.
 
-This is why `unsqueeze()` is safe to use freely in broadcast preparation: it is
-pure shape bookkeeping, not a numerical transformation.
+Backward simply removes the inserted axis from the outgoing sensitivity because
+the forward pass never duplicated or destroyed any values. It only changed how
+the same values are indexed.
 
-## Examples
+## Verified Examples
 
-The examples on this page build incrementally.
-
-Example 1. Insert a leading axis.
+Example 1. Insert a new leading axis.
 
 ```cpp
 auto mat = pluss::make_series({
@@ -69,11 +85,9 @@ data=[[[1, 2, 3],
   [4, 5, 6]]]
 ```
 
-Nothing numerical changed. The same `2 x 3` payload is now wrapped in an outer
-axis of length `1`.
+This is the common "wrap the whole tensor in a batch-like axis" form.
 
-Example 2. Inserting in the middle is often the most useful form for
-broadcast-alignment code.
+Example 2. Insert the axis in the middle.
 
 ```cpp
 std::cout << mat.unsqueeze(1);
@@ -87,9 +101,10 @@ data=[[[1, 2, 3]],
   [[4, 5, 6]]]
 ```
 
-This turns each row into a length-`1` group containing a `3`-element lane.
+This is often the most useful form for broadcast alignment because it separates
+existing outer lanes from existing inner lanes.
 
-Example 3. Negative indexing can be used to append the axis at the end.
+Example 3. Negative indexing can append the new axis at the end.
 
 ```cpp
 std::cout << mat.unsqueeze(-1);
@@ -107,18 +122,41 @@ data=[[[1],
   [6]]]
 ```
 
-This is the common "turn each scalar into a length-1 feature axis" form.
+This is the common "turn each scalar feature into a length-1 feature axis"
+shape edit.
+
+Example 4. Scalars can also gain rank explicitly.
+
+```cpp
+auto scalar = pluss::make_series(42.0);
+std::cout << scalar.unsqueeze(0);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[42]
+```
+
+That example matters because it teaches the shape distinction clearly:
+
+- scalar shape: `[]`
+- length-1 vector shape after unsqueeze: `[1]`
 
 ## Notes
 
-- `unsqueeze()` always inserts exactly one axis.
-- The new axis always has length `1`.
-- The result is a view, not a copy.
+- `unsqueeze()` inserts exactly one axis.
+- The inserted axis always has size `1`.
+- It is a structural view operation, not a numerical transformation.
+- Use it when later code wants an explicit axis that your current tensor does
+  not yet expose.
 
 ## See Also
 
-- [`Series::squeeze`](squeeze.md): remove size-`1` axes again.
-- [`Series::permute`](permute.md): reorder axes after rank alignment.
+- [`Series::squeeze`](squeeze.md): remove size-`1` axes.
+- [`Series::permute`](permute.md): reorder axes after rank editing.
+- [`Series::sizes`](sizes.md): inspect the resulting shape immediately.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="permute.html">

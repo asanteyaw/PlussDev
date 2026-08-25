@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 project(PlussMic LANGUAGES CXX)
+find_package(SQLite3 REQUIRED)
 
 add_library(PlussMic STATIC)
 add_library(Pluss::PlussMic ALIAS PlussMic)
@@ -36,6 +37,7 @@ target_link_libraries(PlussMic PUBLIC
     plussqit_codem
     plussqit_coden
 )
+target_link_libraries(PlussMic PRIVATE SQLite::SQLite3)
 
 set_target_properties(PlussMic PROPERTIES CXX_STANDARD 20)
 

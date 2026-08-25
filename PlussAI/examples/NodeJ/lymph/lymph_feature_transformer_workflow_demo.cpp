@@ -43,7 +43,7 @@ int main() {
       },
       lymph::prep::FeatureRemainderPolicy::PassThrough);
 
-  auto reg = lymph::models::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
+  auto reg = lymph::model::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
       .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
       .regularization = pluss::ai::nodej::RegularizationKind::None,
       .regularization_strength = 0.0,

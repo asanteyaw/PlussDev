@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>lymph::selection::TuneReport &#8212; PlussAI  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d93d25b8"></script>
+    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Lymph io" href="../io.html" />
+    <link rel="prev" title="lymph::selection::CompareReport" href="CompareReport.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="lymph-selection-tunereport">
+<h1><code class="docutils literal notranslate"><span class="pre">lymph::selection::TuneReport</span></code><a class="headerlink" href="#lymph-selection-tunereport" title="Link to this heading">¶</a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TuneReport</span></code> is the structured output of tuning or sweep-style model selection in
+Lymph.</p>
+<p>Use it when you need the search history, winning configuration, and supporting
+metrics in one object.</p>
+</section>
+<section id="what-it-represents">
+<h2>What It Represents<a class="headerlink" href="#what-it-represents" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TuneReport</span></code> is the search-history artifact.</p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">CompareReport</span></code> is about ranking a set of named finished candidates,
+<code class="docutils literal notranslate"><span class="pre">TuneReport</span></code> is about ranking trial points inside a tuning or sweep process.</p>
+<p>That means it is the right object when the key question is:</p>
+<p>“which parameter configuration won, and what did the rest of the search space look
+like?”</p>
+</section>
+<section id="why-it-matters">
+<h2>Why It Matters<a class="headerlink" href="#why-it-matters" title="Link to this heading">¶</a></h2>
+<p>Tuning should never be treated as a black box that emits a winner and discards the
+path taken to get there.</p>
+<p>A useful tuning report preserves:</p>
+<ul class="simple">
+<li><p>the objective history</p></li>
+<li><p>the trial ordering</p></li>
+<li><p>parameter encodings or traces</p></li>
+<li><p>the winning configuration</p></li>
+</ul>
+<p>This is what lets users review not just the result, but the search behavior.</p>
+</section>
+<section id="relationship-to-search">
+<h2>Relationship To Search<a class="headerlink" href="#relationship-to-search" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Search</span></code> is the execution surface.
+<code class="docutils literal notranslate"><span class="pre">TuneReport</span></code> is the evidence artifact.</p>
+<p>That split is healthy because it keeps the search API focused on running trials
+while leaving inspection to a report object purpose-built for that job.</p>
+</section>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">lymph</span><span class="o">::</span><span class="n">TuneReport</span><span class="w"> </span><span class="n">report</span><span class="p">{};</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">lymph::objective_series</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">TuneReport</span><span class="o">&amp;</span><span class="w"> </span><span class="n">report</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">lymph::objective_rank_series</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">TuneReport</span><span class="o">&amp;</span><span class="w"> </span><span class="n">report</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-use-it">
+<h2>How To Use It<a class="headerlink" href="#how-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use a tuning report when you want to answer:</p>
+<ul class="simple">
+<li><p>was the best result clearly better or only marginally better?</p></li>
+<li><p>did the objective stabilize or remain noisy?</p></li>
+<li><p>which region of the search space looked promising?</p></li>
+<li><p>what should I try next if another search pass is needed?</p></li>
+</ul>
+</section>
+<section id="related-pages">
+<h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="Search.html"><span class="std std-doc">Search</span></a></p></li>
+<li><p><a class="reference internal" href="CompareReport.html"><span class="std std-doc">CompareReport</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../plussai_root.html">PlussAI API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/api/lymph/tune/TuneReport.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

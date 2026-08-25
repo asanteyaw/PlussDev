@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::permute" href="permute.html" />
@@ -49,14 +49,24 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Swaps exactly two axes and returns the result as a view.</p>
-<p>That last point is the real contract. <code class="docutils literal notranslate"><span class="pre">transpose()</span></code> does not numerically
-reorder values in storage. It swaps the selected sizes and strides, so the same
-storage is reread under a different axis interpretation. That is why the result
-is usually non-contiguous, and why downstream calls such as <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a>
-may reject it while <a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> may need to materialize a
-contiguous copy.</p>
-<p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is the narrow, explicit two-axis operation. If you need to reorder
-an entire rank at once, use <a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permute()</span></code></span></a>.</p>
+<p>That last clause is the part users need to internalize. <code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is not
+“rebuild the tensor with values moved somewhere else.” It is:</p>
+<ul class="simple">
+<li><p>same storage</p></li>
+<li><p>same values</p></li>
+<li><p>same <code class="docutils literal notranslate"><span class="pre">numel()</span></code></p></li>
+<li><p>different axis interpretation</p></li>
+</ul>
+<p>Because of that:</p>
+<ul class="simple">
+<li><p>the result is often non-contiguous</p></li>
+<li><p><a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a> may reject it afterward</p></li>
+<li><p><a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> may need to materialize if you ask for a later final
+shape</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is the two-axis special case of <a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permute()</span></code></span></a>. Use it
+when the operation is conceptually “swap these two axes,” not “rewrite the
+entire axis order.”</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -64,32 +74,42 @@ an entire rank at once, use <a class="reference internal" href="permute.html"><s
 <p>The first axis to swap.</p>
 <p><strong>d1</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
 <p>The second axis to swap.</p>
-<p>Both parameters accept negative indexing. <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, <code class="docutils literal notranslate"><span class="pre">-2</span></code> the
-second-to-last, and so on. After normalization, both axes must be in
+<p>Both parameters accept:</p>
+<ul class="simple">
+<li><p>positive indexing from the front</p></li>
+<li><p>negative indexing from the back</p></li>
+</ul>
+<p>After normalization, each dimension must refer to a real axis in
 <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">self.dim())</span></code>.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">d0</span> <span class="pre">==</span> <span class="pre">d1</span></code>, the operation is a no-op and the returned handle has the same
-logical layout as <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>One toggle-like behavior matters here:</p>
+<ul class="simple">
+<li><p>if <code class="docutils literal notranslate"><span class="pre">d0</span> <span class="pre">==</span> <span class="pre">d1</span></code>, the method is a logical no-op</p></li>
+</ul>
+<p>That makes the API predictable instead of forcing callers to special-case equal
+axes outside the method.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A view with the two selected axes exchanged.</p>
+A view whose two selected axes have been exchanged.</p>
+<p>The return contract is structural:</p>
+<ul class="simple">
+<li><p>shape changes</p></li>
+<li><p>stride pattern usually changes</p></li>
+<li><p>contiguity may be lost</p></li>
+<li><p>values are not numerically recomputed</p></li>
+</ul>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is differentiable and exact. Its backward pass is simply the same
-axis swap applied to the outgoing sensitivity:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>transpose(d0, d1).backward == transpose(d0, d1)
-</pre></div>
-</div>
-<p>That means no approximation, no averaging, and no data-dependent rule: whatever
-position moved from <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j,</span> <span class="pre">...)</span></code> to <code class="docutils literal notranslate"><span class="pre">(j,</span> <span class="pre">i,</span> <span class="pre">...)</span></code> in the forward pass receives
-its gradient back through the inverse layout change in the backward pass.</p>
+<p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is differentiable and exact.</p>
+<p>Backward is just the inverse axis swap, which for a simple two-axis exchange is
+the same swap again. That is why <code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is safe structural code in
+autograd pipelines: it is metadata movement, not lossy arithmetic.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>The examples on this page build incrementally.</p>
-<p>Example 1. Transpose a <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> matrix by swapping rows and columns.</p>
+<section id="verified-examples">
+<h2>Verified Examples<a class="headerlink" href="#verified-examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Swap the row and column axes of a <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> matrix.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
@@ -105,9 +125,8 @@ data=[[1, 4],
   [3, 6]]
 </pre></div>
 </div>
-<p>The values are not copied into a fresh contiguous <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">2]</span></code> buffer. The original
-storage is being reread through swapped strides, which is why the result is
-non-contiguous.</p>
+<p>The non-contiguous result is not an implementation accident. It is the natural
+consequence of rereading the same storage through swapped strides.</p>
 <p>Example 2. Negative dimensions are normalized from the end.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
 <span class="w">    </span><span class="p">{</span>
@@ -139,10 +158,22 @@ data=[[[1, 5, 9],
   [16, 20, 24]]]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">-1</span></code> and <code class="docutils literal notranslate"><span class="pre">-2</span></code> refer to the last two axes, so this swaps the trailing
-<code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">4]</span></code> layout into <code class="docutils literal notranslate"><span class="pre">[4,</span> <span class="pre">3]</span></code> without touching the leading axis.</p>
-<p>Example 3. Backpropagating through a transpose routes sensitivity back to the
-corresponding source positions.</p>
+<p>So <code class="docutils literal notranslate"><span class="pre">-1</span></code> and <code class="docutils literal notranslate"><span class="pre">-2</span></code> are just another way to name the last two axes.</p>
+<p>Example 3. Swapping an axis with itself is a no-op.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2, 3],
+  [4, 5, 6]]
+</pre></div>
+</div>
+<p>This is worth documenting because it shows there is no hidden “dims must be
+different” precondition.</p>
+<p>Example 4. Gradients route back to the original source positions.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
@@ -155,32 +186,33 @@ corresponding source positions.</p>
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[1,2], dtype=float64, platform=cpu, numel=6, contiguous=false)
 data=[[0, 1, 0],
   [0, 1, 0]]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">t.select(0,</span> <span class="pre">1)</span></code> selects the second row of the transposed result, which is the
-second column of the original matrix. The gradient therefore lands exactly on
-that original column and nowhere else.</p>
+<p>The selected row of the transposed result corresponds to the second column of
+the original matrix, so that is exactly where the gradient lands.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is a two-axis view op, not a copy.</p></li>
-<li><p>Negative dimensions are supported.</p></li>
-<li><p>For a full axis permutation, use <a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permute()</span></code></span></a> instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transpose()</span></code> is a two-axis view op.</p></li>
+<li><p>It preserves values and <code class="docutils literal notranslate"><span class="pre">numel()</span></code>, but often changes contiguity.</p></li>
+<li><p>For a full axis permutation, use <a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permute()</span></code></span></a>.</p></li>
+<li><p>If you later need a specific final shape, remember that the transposed result
+may no longer be directly view-compatible.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::permute</span></code></span></a>: reorder more than two axes at once.</p></li>
-<li><p><a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::reshape</span></code></span></a>: if you need a final target shape rather than
-a pure axis swap.</p></li>
+<li><p><a class="reference internal" href="permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::permute</span></code></span></a>: full axis reordering.</p></li>
+<li><p><a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::reshape</span></code></span></a>: target-shape-first reshape with fallback.</p></li>
+<li><p><a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::view</span></code></span></a>: strict aliasing reinterpretation.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="reshape.html">
@@ -257,6 +289,7 @@ a pure axis swap.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::min" href="min.html" />
@@ -51,95 +51,111 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">max()</span></code> is one of the few <code class="docutils literal notranslate"><span class="pre">Series</span></code> methods whose meaning changes materially
-with the overload you choose.</p>
+<p><code class="docutils literal notranslate"><span class="pre">max()</span></code> answers one of two related but importantly different questions:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">max()</span></code> with no arguments is a full ordered reduction</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max(dim,</span> <span class="pre">keepdim)</span></code> is an ordered reduction along one axis</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max(other)</span></code> is not a reduction at all; it is an elementwise comparison</p></li>
+<li><p>“What is the largest value?”</p></li>
+<li><p>“At each position, which of these two values is larger?”</p></li>
 </ul>
-<p>That split matters because the shape rules, autograd behavior, and even the
-mental model are different.</p>
-<p>If you want “the largest value inside this series,” stay on the reduction
-overloads. If you want “compare this series against another one position by
-position,” the binary overload is the right surface.</p>
+<p>The reduction overloads answer the first question. The binary overload answers
+the second.</p>
+<p>That split matters because the result shape, axis behavior, and gradient rules
+change with the overload family:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max()</span></code> reduces everything to one scalar winner</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max(dim)</span></code> and <code class="docutils literal notranslate"><span class="pre">max(dim,</span> <span class="pre">keepdim)</span></code> reduce one axis at a time</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max(other)</span></code> does not reduce at all; it compares peers element by element</p></li>
+</ul>
+<p>If you carry only one mental model away from this page, let it be this:
+reduction <code class="docutils literal notranslate"><span class="pre">max(...)</span></code> summarizes values, while binary <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> selects
+winners position by position.</p>
 </section>
 <section id="overload-map">
 <h2>Overload Map<a class="headerlink" href="#overload-map" title="Link to this heading">¶</a></h2>
 <p><strong><code class="docutils literal notranslate"><span class="pre">max()</span></code></strong></p>
-<p>Reduces across every element and returns one scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p>Reduces across the entire <code class="docutils literal notranslate"><span class="pre">Series</span></code> and returns one scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">max(dim)</span></code></strong></p>
-<p>Reduces along one axis and removes that axis from the result.</p>
+<p>Reduces one axis and removes that axis from the result shape.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">max(dim,</span> <span class="pre">keepdim)</span></code></strong></p>
-<p>Reduces along one axis and optionally preserves that axis as size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Reduces one axis and optionally keeps that axis as size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">max(other)</span></code></strong></p>
-<p>Returns the elementwise winner between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code> under broadcasting.
-Numerically, this is the same job as <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum()</span></code></span></a>.</p>
+<p>Returns the elementwise larger value between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code> under
+broadcasting. Forward values match <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum()</span></code></span></a>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The axis to reduce for the reduction overloads.</p>
+<p>The axis used by the reduction overloads.</p>
 <ul class="simple">
 <li><p>positive dims count from the front</p></li>
 <li><p>negative dims count from the back</p></li>
-<li><p>the dim must refer to an existing axis</p></li>
+<li><p>the dim must refer to a real axis of the source <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
 </ul>
+<p>Changing <code class="docutils literal notranslate"><span class="pre">dim</span></code> changes which lanes compete with each other. On a rank-2
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code> compares down each column, while <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code> compares across
+each row.</p>
 <p><strong>keepdim</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>)</p>
-<p>Whether the reduced axis is retained as size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Controls whether the reduced axis survives in the output shape.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: the axis disappears</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: the axis stays, which is often more convenient if the result will be
-broadcast back against the original shape</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: remove the axis entirely</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: keep the axis as size <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
+<p>This toggle is not just cosmetic. <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> is often the better choice
+when you plan to broadcast the reduced result back against the original shape.</p>
 <p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
 <p>The peer operand for the binary overload.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">other</span></code> is broadcast against <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
-<li><p>the result shape is the broadcasted shape, not a reduced shape</p></li>
-<li><p>this overload has no scalar sibling; if the other side is a scalar, the
-clearer surface is <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum()</span></code></span></a></p></li>
+<li><p>nothing is reduced in this overload</p></li>
+<li><p>the result shape is the broadcasted shape</p></li>
 </ul>
+<p>So <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> should be read as a comparison surface, not as a reduction with
+an unusual second parameter.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A scalar, a reduced series, or a broadcasted comparison result depending on
-the overload.</p>
+The returned <code class="docutils literal notranslate"><span class="pre">Series</span></code> depends on the overload:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>- scalar `Series` for `max()`
+- reduced `Series` for `max(dim, ...)`
+- broadcasted comparison result for `max(other)`
+</pre></div>
+</div>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p>The autograd story depends on the overload family.</p>
+<p><code class="docutils literal notranslate"><span class="pre">max()</span></code> is one of the clearer places to see that forward similarity does not
+guarantee identical backward behavior.</p>
 <section id="reduction-overloads">
 <h3>Reduction Overloads<a class="headerlink" href="#reduction-overloads" title="Link to this heading">¶</a></h3>
 <p>For <code class="docutils literal notranslate"><span class="pre">max()</span></code>, <code class="docutils literal notranslate"><span class="pre">max(dim)</span></code>, and <code class="docutils literal notranslate"><span class="pre">max(dim,</span> <span class="pre">keepdim)</span></code>:</p>
 <ul class="simple">
-<li><p>only winning values receive sensitivity</p></li>
-<li><p>if a reduced lane has multiple equal maxima, the incoming derivative is split
-evenly across those ties</p></li>
-<li><p>for full reduction, the split is across every global maximum, not just within
-one intermediate axis-wise step</p></li>
+<li><p>only winning maxima receive sensitivity</p></li>
+<li><p>if multiple equal maxima tie inside one reduced lane, the incoming
+sensitivity is split evenly across those tied winners</p></li>
+<li><p>for the full reduction overload, that split happens across every global
+maximum in the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
 </ul>
-<p>That last point is worth being explicit about because it is exactly what users
-normally expect from a full extrema reduction.</p>
+<p>So reduction <code class="docutils literal notranslate"><span class="pre">max(...)</span></code> is tie-sharing.</p>
 </section>
 <section id="binary-overload">
 <h3>Binary Overload<a class="headerlink" href="#binary-overload" title="Link to this heading">¶</a></h3>
 <p>For <code class="docutils literal notranslate"><span class="pre">max(other)</span></code>:</p>
 <ul class="simple">
-<li><p>the backward rule is the same as <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum()</span></code></span></a></p></li>
+<li><p>backward routing matches <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum()</span></code></span></a></p></li>
 <li><p>gradient flows to <code class="docutils literal notranslate"><span class="pre">self</span></code> where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&gt;=</span> <span class="pre">other</span></code></p></li>
 <li><p>gradient flows to <code class="docutils literal notranslate"><span class="pre">other</span></code> where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&lt;</span> <span class="pre">other</span></code></p></li>
-<li><p>at an exact tie, the full gradient goes to <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
+<li><p>at an exact tie, the full gradient stays with <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
 </ul>
-<p>So the reduction overloads split ties, while the binary overload does not.
-Those are different operations that happen to share one public name.</p>
+<p>So binary <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> is first-operand-wins at the tie boundary, not
+tie-sharing.</p>
 </section>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>The examples on this page build incrementally.</p>
-<p>Example 1. With no arguments, <code class="docutils literal notranslate"><span class="pre">max()</span></code> collapses the whole series to one scalar
+<p>The examples below move from the simplest reduction to shape-sensitive
+reductions, then to broadcasting behavior, and finally to gradient and failure
+cases.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">max()</span></code> with no arguments reduces the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> to one scalar
 winner.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
@@ -155,66 +171,66 @@ winner.</p>
 data=7
 </pre></div>
 </div>
-<p>This is a true reduction result: one 0-D <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not a row or column.</p>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">max(dim)</span></code> reduces one axis instead of the whole object.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<p>The result has shape <code class="docutils literal notranslate"><span class="pre">[]</span></code>, which means this is a true scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not a
+row or column wrapper.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">max(0)</span></code> reduces down columns, so each column contributes one
+winner.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[7, 7]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[4, 7, 6]
 </pre></div>
 </div>
-<p>Here <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code> means “reduce across columns,” so each row contributes one
-winner.</p>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> keeps the reduced axis available for later
-broadcasting.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<p>This example is worth comparing directly with the next one because changing
+<code class="docutils literal notranslate"><span class="pre">dim</span></code> changes which values compete.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">max(1)</span></code> reduces across columns inside each row.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,1], strides=[1,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[[7],
-  [7]]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[7, 7]
 </pre></div>
 </div>
-<p>This is the same value result as Example 2, but with a shape that still
-remembers where the reduction happened.</p>
-<p>Example 4. Negative dims are normalized from the back.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
+<p>Now each row contributes one winner, so the output shape is <code class="docutils literal notranslate"><span class="pre">[2]</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">[3]</span></code>.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> preserves the reduced axis as size <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[7, 7]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,1], strides=[1,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[[7],
+  [7]]
 </pre></div>
 </div>
-<p>For a rank-2 series, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this is the same reduction
-as <code class="docutils literal notranslate"><span class="pre">max(1)</span></code>.</p>
-<p>Example 5. The binary overload is an elementwise comparison, not a reduction.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">floor_by_column</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">});</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="n">floor_by_column</span><span class="p">);</span>
+<p>The values match Example 3, but the retained axis makes the shape easier to
+align with the original <code class="docutils literal notranslate"><span class="pre">[2,3]</span></code> layout in later broadcasting steps.</p>
+<p>Example 5. Negative dims count from the back.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id4">
 <h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
-data=[[2, 7, 8],
-  [4, 7, 8]]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[7, 7]
 </pre></div>
 </div>
-<p>Every row of <code class="docutils literal notranslate"><span class="pre">scores</span></code> is compared against the same <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">6,</span> <span class="pre">8]</span></code> peer under
-ordinary broadcasting. No axis disappears because nothing is being reduced.</p>
-<p>Example 6. <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> is numerically the same operation as <code class="docutils literal notranslate"><span class="pre">maximum(other)</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">floor_by_column</span><span class="p">);</span>
+<p>For a rank-2 <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this matches <code class="docutils literal notranslate"><span class="pre">max(1)</span></code>.</p>
+<p>Example 6. <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> compares element by element under broadcasting instead
+of reducing anything.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">floor_by_column</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="n">floor_by_column</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -225,10 +241,23 @@ data=[[2, 7, 8],
   [4, 7, 8]]
 </pre></div>
 </div>
-<p>This is why it helps to think of <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> as a compatibility-style spelling
-that lands on the same comparison family as <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum()</span></code></span></a>.</p>
-<p>Example 7. On a dimension reduction, ties split the derivative across the
-winning lane.</p>
+<p>The right-hand <code class="docutils literal notranslate"><span class="pre">Series</span></code> is broadcast across rows. Every position keeps the
+larger of the two contenders.</p>
+<p>Example 7. <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> and <code class="docutils literal notranslate"><span class="pre">maximum(other)</span></code> produce the same forward values.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">floor_by_column</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 7, 8],
+  [4, 7, 8]]
+</pre></div>
+</div>
+<p>That equivalence is useful to know because it makes the overload boundary
+clearer: <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> belongs to the elementwise comparison family.</p>
+<p>Example 8. On an axis reduction, tied winners split the derivative evenly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">reduced_ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span>
@@ -243,8 +272,8 @@ winning lane.</p>
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[5, 2]
 dx=pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
@@ -252,10 +281,10 @@ data=[[0, 0.5, 0.5],
   [0.5, 0, 0.5]]
 </pre></div>
 </div>
-<p>The first row has two equal winners (<code class="docutils literal notranslate"><span class="pre">5</span></code> and <code class="docutils literal notranslate"><span class="pre">5</span></code>), so that row’s unit upstream
-derivative becomes <code class="docutils literal notranslate"><span class="pre">0.5</span></code> and <code class="docutils literal notranslate"><span class="pre">0.5</span></code>. The second row does the same thing across
-its tied <code class="docutils literal notranslate"><span class="pre">2</span></code>s.</p>
-<p>Example 8. Full reduction also splits evenly across every global winner.</p>
+<p>Each row has two winning maxima, so the upstream unit sensitivity is split
+<code class="docutils literal notranslate"><span class="pre">0.5</span> <span class="pre">/</span> <span class="pre">0.5</span></code> across those tied locations.</p>
+<p>Example 9. Full reduction also splits evenly, but now across every global
+winner in the entire <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">global_ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
@@ -270,8 +299,8 @@ its tied <code class="docutils literal notranslate"><span class="pre">2</span></
 </pre></div>
 </div>
 </section>
-<section id="id7">
-<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
 data=7
 dx=pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
@@ -279,10 +308,10 @@ data=[[0.33333333, 0, 0],
   [0.33333333, 0.33333333, 0]]
 </pre></div>
 </div>
-<p>There are three global maxima, so each receives one third of the derivative.
-This is the behavior you usually want from a true full reduction.</p>
-<p>Example 9. The binary overload does not split ties; exact equality still
-attributes the derivative to <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>There are three global maxima, so each one receives one third of the upstream
+sensitivity.</p>
+<p>Example 10. The binary overload does not split ties. At an equal value, the
+left operand keeps the gradient.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
 <span class="n">lhs</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
@@ -297,8 +326,8 @@ attributes the derivative to <code class="docutils literal notranslate"><span cl
 </pre></div>
 </div>
 </section>
-<section id="id8">
-<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[4, 5, 2]
 dlhs=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
@@ -307,10 +336,10 @@ drhs=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3,
 data=[1, 0, 0]
 </pre></div>
 </div>
-<p>Index <code class="docutils literal notranslate"><span class="pre">2</span></code> is the boundary case: both values are <code class="docutils literal notranslate"><span class="pre">2</span></code>, but the derivative still
-belongs entirely to <code class="docutils literal notranslate"><span class="pre">lhs</span></code> because the binary rule uses the inclusive
-<code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&gt;=</span> <span class="pre">other</span></code> boundary.</p>
-<p>Example 10. An invalid dimension fails through the shared reduction validator.</p>
+<p>The last position ties at <code class="docutils literal notranslate"><span class="pre">2</span></code>, and the derivative stays entirely with <code class="docutils literal notranslate"><span class="pre">lhs</span></code>.
+That is the key backward difference between reduction <code class="docutils literal notranslate"><span class="pre">max(...)</span></code> and binary
+<code class="docutils literal notranslate"><span class="pre">max(other)</span></code>.</p>
+<p>Example 11. A reduction dim must exist. Out-of-range dims fail immediately.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -320,41 +349,56 @@ belongs entirely to <code class="docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 </section>
-<section id="id9">
-<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<section id="id10">
+<h3>Output<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>reduce: dim out of range
 </pre></div>
 </div>
-<p>That generic message is not a typo in the docs. <code class="docutils literal notranslate"><span class="pre">max(dim,</span> <span class="pre">...)</span></code> uses the shared
-reduction shape-normalization path, so the error text comes from the common
-reduction validator rather than a <code class="docutils literal notranslate"><span class="pre">max</span></code>-specific formatter.</p>
+<p>This is one of the easiest mistakes to make when working with dynamic ranks, so
+it is worth treating as part of the normal usage story.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">max()</span></code> is overloaded across two different ideas: ordered reduction and
-elementwise comparison.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max(other)</span></code> is comparison-family behavior and is numerically equivalent to
-<a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum(other)</span></code></span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max(other)</span></code> does not have a scalar overload. For scalar thresholds or
-scalar-vs-series comparison, prefer <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">maximum()</span></code></span></a>.</p></li>
-<li><p>Ordered reduction requires an orderable dtype. Complex tensors are not valid
-reduction operands here.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max()</span></code> and <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> are not the same kind of operation. One reduces,
+the other compares elementwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code> can produce different shapes and different winners
+even on the same data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> changes shape only, not values.</p></li>
+<li><p>Reduction overloads split ties; binary <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> does not.</p></li>
+<li><p>The binary overload follows broadcasting rules, so shape mismatches fail at
+broadcast time rather than reduction time.</p></li>
+<li><p>Out-of-range dims throw instead of being silently clamped.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">max()</span></code> when you want the winning value itself.</p>
+<ul class="simple">
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">max()</span></code> for one global winner.</p></li>
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">max(dim)</span></code> when each row, column, or axis lane should produce its own
+winner.</p></li>
+<li><p>Turn on <code class="docutils literal notranslate"><span class="pre">keepdim</span></code> when that reduced result needs to stay easy to broadcast.</p></li>
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> only when you want an elementwise larger-of-two
+comparison.</p></li>
+</ul>
+<p>That distinction makes the rest of the behavior predictable: reductions change
+shape and split ties, while elementwise comparisons preserve a broadcasted shape
+and route tie gradients to the left operand.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::maximum</span></code></span></a>: the explicit elementwise comparison spelling.</p></li>
-<li><p><a class="reference internal" href="minimum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::minimum</span></code></span></a>: the elementwise lower counterpart.</p></li>
-<li><p><a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::sum</span></code></span></a>: reduction with the same shape rules but additive
-rather than order-based.</p></li>
+<li><p><a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::maximum</span></code></span></a>: explicit elementwise maximum surface.</p></li>
+<li><p><a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::min</span></code></span></a>: lower-bound counterpart with the same overload map.</p></li>
+<li><p><a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmax</span></code></span></a>: returns winning indices instead of winning
+values.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cumprod.html">
+  <a class="prev-link" href="gather.html">
     <span class="label">Previous</span>
-    <span class="title">cumprod</span>
+    <span class="title">gather</span>
   </a>
   <a class="next-link" href="min.html">
     <span class="label">Next</span>
@@ -426,6 +470,7 @@ rather than order-based.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

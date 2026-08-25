@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Lymph io &#8212; PlussAI  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=d93d25b8"></script>
+    <script src="../../_static/layout.js?v=5c2e594e"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="save" href="io/save.html" />
+    <link rel="prev" title="lymph::selection::TuneReport" href="tune/TuneReport.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="lymph-io">
+<h1>Lymph <code class="docutils literal notranslate"><span class="pre">io</span></code><a class="headerlink" href="#lymph-io" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">io</span></code> is the Lymph family for persistence, restore, reproducibility, and saved
+workflow artifacts.</p>
+<p>Use this branch when you are deciding:</p>
+<ul class="simple">
+<li><p>how to save and reload trained models or workflows</p></li>
+<li><p>what persistence guarantees exist</p></li>
+<li><p>how artifacts fit into larger Procedure-based execution</p></li>
+</ul>
+<section id="why-this-family-exists">
+<h2>Why This Family Exists<a class="headerlink" href="#why-this-family-exists" title="Link to this heading">¶</a></h2>
+<p>Training a model is only part of the job.</p>
+<p>Sooner or later every serious project asks:</p>
+<ul class="simple">
+<li><p>how do I save this artifact?</p></li>
+<li><p>what exactly gets saved?</p></li>
+<li><p>can I trust the loaded object to behave the same way?</p></li>
+<li><p>where does this stop being a modeling concern and become a deployment concern?</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">io</span></code> family answers those questions.</p>
+</section>
+<section id="what-gets-persisted-conceptually">
+<h2>What Gets Persisted Conceptually<a class="headerlink" href="#what-gets-persisted-conceptually" title="Link to this heading">¶</a></h2>
+<p>At a high level, Lymph persistence is about preserving the modeling artifact that
+matters, not just arbitrary in-memory state.</p>
+<p>Depending on the object, that can include:</p>
+<ul class="simple">
+<li><p>learned model state</p></li>
+<li><p>prep-stage state</p></li>
+<li><p>workflow-level structure</p></li>
+<li><p>policy sidecars</p></li>
+<li><p>runtime compatibility metadata</p></li>
+</ul>
+<p>This is why the <code class="docutils literal notranslate"><span class="pre">io</span></code> docs matter even for users who think they only care about
+training. If the artifact cannot be saved and restored honestly, the project still
+has a deployment gap.</p>
+</section>
+<section id="save-versus-load">
+<h2>Save Versus Load<a class="headerlink" href="#save-versus-load" title="Link to this heading">¶</a></h2>
+<section id="save">
+<h3>Save<a class="headerlink" href="#save" title="Link to this heading">¶</a></h3>
+<p>Saving answers:</p>
+<p>“how do I turn this trained object into a reusable artifact?”</p>
+</section>
+<section id="load">
+<h3>Load<a class="headerlink" href="#load" title="Link to this heading">¶</a></h3>
+<p>Loading answers:</p>
+<p>“how do I restore that artifact later without retraining it?”</p>
+<p>These are separate concerns because persistence quality is judged not just by
+whether save succeeds, but by whether load produces a faithful and compatible
+object.</p>
+</section>
+</section>
+<section id="relationship-to-workflow">
+<h2>Relationship To <code class="docutils literal notranslate"><span class="pre">Workflow</span></code><a class="headerlink" href="#relationship-to-workflow" title="Link to this heading">¶</a></h2>
+<p>Persistence becomes especially important once you use <code class="docutils literal notranslate"><span class="pre">Workflow</span></code>.</p>
+<p>Why:</p>
+<ul class="simple">
+<li><p>a saved <code class="docutils literal notranslate"><span class="pre">Model</span></code> is a trained engine</p></li>
+<li><p>a saved <code class="docutils literal notranslate"><span class="pre">Workflow</span></code> is a trained engine plus its runtime contract</p></li>
+</ul>
+<p>If the deployment boundary matters, the workflow artifact is often the more honest
+thing to persist.</p>
+</section>
+<section id="relationship-to-procedure">
+<h2>Relationship To <code class="docutils literal notranslate"><span class="pre">procedure</span></code><a class="headerlink" href="#relationship-to-procedure" title="Link to this heading">¶</a></h2>
+<p>Lymph persistence is about model/workflow artifact ownership.</p>
+<p>Procedure persistence is about broader pipeline orchestration and component routing.</p>
+<p>The two meet, but they do not own the same abstraction layer.</p>
+<p>That distinction is useful because it prevents a modeling user from needing the
+full Procedure machinery just to save a trained learner or workflow artifact.</p>
+</section>
+<section id="how-to-read-this-family">
+<h2>How To Read This Family<a class="headerlink" href="#how-to-read-this-family" title="Link to this heading">¶</a></h2>
+<p>Use the pages in this order:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="io/persistence.html"><span class="std std-doc">persistence</span></a> for the contract</p></li>
+<li><p><a class="reference internal" href="io/save.html"><span class="std std-doc">save</span></a> for artifact emission</p></li>
+<li><p><a class="reference internal" href="io/load.html"><span class="std std-doc">load</span></a> for restoration</p></li>
+</ol>
+<p>That order moves from concept, to write path, to read path.</p>
+</section>
+<section id="main-objects">
+<h2>Main Objects<a class="headerlink" href="#main-objects" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="io/save.html"><code class="docutils literal notranslate"><span class="pre">save</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io/save.html#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/save.html#what-save-means-in-lymph">What “Save” Means In Lymph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/save.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/save.html#typical-save-targets">Typical Save Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/save.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/save.html#save-discipline">Save Discipline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/save.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io/load.html"><code class="docutils literal notranslate"><span class="pre">load</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io/load.html#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/load.html#what-load-means-in-practice">What “Load” Means In Practice</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/load.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/load.html#typical-load-shapes">Typical Load Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/load.html#what-to-check-after-loading">What To Check After Loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/load.html#why-load-is-better-than-rebuild-for-reuse">Why Load Is Better Than Rebuild For Reuse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/load.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io/persistence.html">Lymph persistence</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#the-core-persistence-promise">The Core Persistence Promise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#what-persistence-is-for">What Persistence Is For</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#model-artifact-versus-workflow-artifact">Model Artifact Versus Workflow Artifact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#end-to-end-roundtrip-example">End-To-End Roundtrip Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#persistence-and-reproducibility">Persistence And Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#relationship-to-procedure">Relationship To Procedure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/persistence.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussai_root.html">PlussAI API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/lymph/io.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

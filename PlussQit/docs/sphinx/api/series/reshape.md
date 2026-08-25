@@ -7,55 +7,85 @@
 ## Signature
 
 ```cpp
-Series::reshape(pluss::msharp::RangeView::Int new_sizes) const -> Series
+Series::reshape(pluss::RangeView<std::int64_t> new_sizes) const -> Series
 ```
 
 ## What It Does
 
-Changes shape with a view-if-possible, contiguous-copy-if-necessary policy.
+Changes the logical shape with a view-if-possible, contiguous-copy-if-needed
+policy.
 
-This is the high-level "I need this logical shape" API. `reshape()` first asks
-whether the current `Series` can be reinterpreted directly. If yes, it behaves
-like [`view()`](view.md). If not, it materializes a contiguous layout for the
-current logical values and then produces the requested shape from that.
+This is the forgiving shape API.
 
-That difference is not cosmetic:
+That wording matters because `reshape()` is often taught too loosely as "the
+same as `view()`, but maybe slower." That is not the right mental model. The
+right mental model is:
 
-- `view()` means "fail unless this can stay a true alias"
-- `reshape()` means "give me the requested logical shape, even if layout must
-  be normalized first"
+- `view()` protects aliasing
+- `reshape()` protects the requested final logical result
+
+So if your real contract is "I need these values under this final shape,"
+`reshape()` is usually the correct default.
 
 ## Parameters
 
-**new_sizes** (`pluss::msharp::RangeView::Int`)
+**new_sizes** (`pluss::RangeView<std::int64_t>`)
 
-The desired output shape.
+The target logical shape.
 
-In ordinary use you can pass brace literals such as `{3, 2}` directly, or reuse
-another tensor’s [`sizes()`](sizes.md) result. The requested shape must
-preserve total `numel()`.
+Common call forms:
+
+- brace literals such as `{3, 2}`
+- another series' [`sizes()`](sizes.md) result
+
+The requested shape must preserve total `numel()`. `reshape()` is flexible
+about layout, not flexible about how many values exist.
 
 ## Returns
 
 `Series`
-    A `Series` with the requested logical shape. This may be a true alias if the
-    source was already view-compatible, or a new contiguous result if it was not.
+    A series with the requested logical shape.
+
+That returned series may be:
+
+- a true aliasing view, if the source is already view-compatible
+- a new contiguous result, if the source must be normalized first
+
+So the promise is about the final logical shape, not about which storage route
+was taken to get there.
 
 ## Autograd Behavior
 
-`reshape()` preserves reverse-mode connectivity in both paths:
+`reshape()` preserves reverse-mode connectivity in both execution paths.
 
-- direct-view path: backward is the same shape-only mapping as `view()`
-- fallback path: the internal contiguous staging copy is explicitly linked back
-  to the source before the final view is created
+There are really two forward stories:
 
-That second point matters because it means a reshape of a non-contiguous tensor
-still backpropagates to the original source rather than dead-ending at the
-materialized temporary.
+1. direct view path
+2. fallback contiguous-materialization path
 
-## Examples
+The important guarantee is that both remain connected to the original source.
+Even when `reshape()` has to normalize a non-contiguous input, gradients still
+flow back to the original tensor rather than stopping at the staging copy.
 
-The examples on this page build incrementally.
+## Shape Policy
+
+The key teaching distinction is between logical value order and physical
+storage order.
+
+When the input is already contiguous:
+
+- `reshape()` behaves like `view()`
+
+When the input is non-contiguous:
+
+- `reshape()` preserves the current logical value order
+- materializes that order contiguously
+- then applies the requested final shape
+
+That is why reshaping a transpose does not jump back to the pre-transpose
+row-major interpretation.
+
+## Verified Examples
 
 Example 1. On a contiguous source, `reshape()` behaves like `view()`.
 
@@ -77,8 +107,10 @@ data=[[1, 2],
   [5, 6]]
 ```
 
-Example 2. On a non-contiguous transpose, `reshape()` succeeds by materializing
-the transposed logical order first, then reshaping that order.
+So on already-compatible storage, `reshape()` does not invent extra work. It
+simply takes the direct route.
+
+Example 2. A non-contiguous transpose still reshapes successfully.
 
 ```cpp
 std::cout << mat.transpose(0, 1).reshape({3, 2});
@@ -93,11 +125,31 @@ data=[[1, 4],
   [3, 6]]
 ```
 
-This is the core difference from Example 1. `reshape()` did **not** go back to
-`mat`'s original row-major reading order. It preserved the transposed logical
-values, made *that* layout contiguous, and then reshaped the result.
+This is the example that teaches the method correctly. The result follows the
+transposed logical order, not the original row-major order of `mat`.
 
-Example 3. Gradients still flow back through that non-contiguous fallback path.
+Example 3. Borrowed shape metadata can be passed directly here too.
+
+```cpp
+auto shape_template = pluss::make_series({
+    {10.0, 20.0},
+    {30.0, 40.0},
+    {50.0, 60.0},
+});
+
+std::cout << mat.reshape(shape_template.sizes());
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2],
+  [3, 4],
+  [5, 6]]
+```
+
+Example 4. Gradients still flow through the non-contiguous fallback path.
 
 ```cpp
 auto tracked_mat = pluss::make_series({
@@ -123,18 +175,17 @@ data=[[0, 1, 0],
   [0, 1, 0]]
 ```
 
-The selected row in the reshaped result was `[2, 5]`, so the gradient lands on
-the original positions of `2` and `5` in `tracked_mat`. That confirms the
-fallback path is not just numerically correct in the forward pass; it also stays
-connected for reverse-mode autodiff.
+The selected row of the reshaped result corresponds to the original values `2`
+and `5`, so those are exactly the source positions that receive gradient.
 
 ## Notes
 
-- `reshape()` is the safe default when you care about the final logical shape
-  more than whether the operation stays a true alias.
-- Equal `numel()` is still required; `reshape()` is flexible about layout, not
-  about element count.
-- On already contiguous inputs, it routes straight to [`view()`](view.md).
+- `reshape()` is usually the safer default when your contract is about the
+  final logical shape.
+- Equal `numel()` is still mandatory.
+- Non-contiguous inputs can force materialization, but the method remains
+  differentiable.
+- If true aliasing is the requirement, use [`view()`](view.md) instead.
 
 ## See Also
 

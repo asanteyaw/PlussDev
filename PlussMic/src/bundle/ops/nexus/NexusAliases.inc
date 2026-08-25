@@ -207,40 +207,94 @@ NexusPullAgg& NexusPullAgg::add_scoped(PullOp op, std::string_view feature, std:
   return *this;
 }
 
+NexusPullAgg& NexusPullAgg::add_scoped(
+    PullOp op,
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  for (const auto& [feature, alias] : fields) {
+    add_scoped(op, feature, alias);
+  }
+  return *this;
+}
+
 NexusPullAgg& NexusPullAgg::count(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Count, feature, alias);
+}
+
+NexusPullAgg& NexusPullAgg::count(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Count, fields);
 }
 
 NexusPullAgg& NexusPullAgg::ndistinct(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Ndistinct, feature, alias);
 }
 
+NexusPullAgg& NexusPullAgg::ndistinct(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Ndistinct, fields);
+}
+
 NexusPullAgg& NexusPullAgg::sum(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Sum, feature, alias);
+}
+
+NexusPullAgg& NexusPullAgg::sum(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Sum, fields);
 }
 
 NexusPullAgg& NexusPullAgg::mean(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Mean, feature, alias);
 }
 
+NexusPullAgg& NexusPullAgg::mean(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Mean, fields);
+}
+
 NexusPullAgg& NexusPullAgg::median(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Median, feature, alias);
+}
+
+NexusPullAgg& NexusPullAgg::median(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Median, fields);
 }
 
 NexusPullAgg& NexusPullAgg::min(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Min, feature, alias);
 }
 
+NexusPullAgg& NexusPullAgg::min(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Min, fields);
+}
+
 NexusPullAgg& NexusPullAgg::max(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Max, feature, alias);
+}
+
+NexusPullAgg& NexusPullAgg::max(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Max, fields);
 }
 
 NexusPullAgg& NexusPullAgg::std(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Std, feature, alias);
 }
 
+NexusPullAgg& NexusPullAgg::std(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Std, fields);
+}
+
 NexusPullAgg& NexusPullAgg::var(std::string_view feature, std::string_view alias) {
   return add_scoped(PullOp::Var, feature, alias);
+}
+
+NexusPullAgg& NexusPullAgg::var(
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
+  return add_scoped(PullOp::Var, fields);
 }
 
 NexusPull& NexusPullAgg::end() const {
@@ -256,8 +310,21 @@ Nexus Nexus::meta(std::string_view key, const TableMeta& value) const {
   return set_table_meta(key, value);
 }
 
+Nexus Nexus::meta(std::initializer_list<std::pair<std::string_view, nexus::TableMeta>> values) const {
+  auto out = *this;
+  out.meta_(values);
+  return out;
+}
+
 Nexus& Nexus::meta_(std::string_view key, const TableMeta& value) {
   return set_table_meta_(key, value);
+}
+
+Nexus& Nexus::meta_(std::initializer_list<std::pair<std::string_view, nexus::TableMeta>> values) {
+  for (const auto& [key, value] : values) {
+    meta_(key, value);
+  }
+  return *this;
 }
 
 const std::vector<Relationship>& Nexus::links() const {

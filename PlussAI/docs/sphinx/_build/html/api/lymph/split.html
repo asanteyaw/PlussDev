@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Lymph validate &#8212; PlussAI  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=d93d25b8"></script>
+    <script src="../../_static/layout.js?v=5c2e594e"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="lymph::validate::Plan" href="split/Plan.html" />
+    <link rel="prev" title="lymph::classification_summary" href="metrics/classification_summary.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="lymph-validate">
+<h1>Lymph <code class="docutils literal notranslate"><span class="pre">validate</span></code><a class="headerlink" href="#lymph-validate" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">validate</span></code> is the Lymph family for validation planning.</p>
+<p>This is where you decide how evidence is earned.</p>
+<p>In other words, the <code class="docutils literal notranslate"><span class="pre">validate</span></code> family does not define the model itself. It defines
+the rules under which the model is allowed to prove itself:</p>
+<ul class="simple">
+<li><p>simple holdout</p></li>
+<li><p>repeated or unrepeated cross-validation</p></li>
+<li><p>grouped validation</p></li>
+<li><p>chronological validation</p></li>
+<li><p>last-block time holdout</p></li>
+</ul>
+<p>That distinction matters because a good model trained under the wrong validation
+policy is still a bad experiment.</p>
+<section id="what-this-family-owns">
+<h2>What This Family Owns<a class="headerlink" href="#what-this-family-owns" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">validate</span></code> family owns the public planning and execution surfaces that turn
+validation intent into a reusable contract:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::validate::Plan</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::validate::cross(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::validate::time(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::validate::holdout(...)</span></code></p></li>
+</ul>
+<p>This family answers questions like:</p>
+<ul class="simple">
+<li><p>how should the data be partitioned?</p></li>
+<li><p>should order be preserved?</p></li>
+<li><p>should the final chronological block be pulled directly?</p></li>
+<li><p>should I keep the full fold report, only fold scores, or one summary score?</p></li>
+</ul>
+</section>
+<section id="what-this-family-does-not-own">
+<h2>What This Family Does Not Own<a class="headerlink" href="#what-this-family-does-not-own" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">validate</span></code> does not own the validation options bag.</p>
+<p>That object is:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="metrics/ValidationOptions.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lymph::metrics::ValidationOptions</span></code></span></a></p></li>
+</ul>
+<p>The ownership split is intentional:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">metrics::ValidationOptions</span></code> is the reusable public contract object</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">validate::*</span></code> is the family that consumes that contract to build executable
+validation plans</p></li>
+</ul>
+<p>So:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code> owns the options object</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">validate</span></code> owns the planning surface</p></li>
+</ul>
+</section>
+<section id="common-questions-this-family-answers">
+<h2>Common Questions This Family Answers<a class="headerlink" href="#common-questions-this-family-answers" title="Link to this heading">¶</a></h2>
+<p>Use this family when you need to answer questions like:</p>
+<ul class="simple">
+<li><p>how many folds should I run?</p></li>
+<li><p>should I shuffle or preserve order?</p></li>
+<li><p>do I need grouped evaluation?</p></li>
+<li><p>is this a time-aware workflow that must use chronological splits?</p></li>
+<li><p>do I want the full fold report, only the fold scores, or only the summary score?</p></li>
+<li><p>do I need the last chronological block directly as a holdout artifact?</p></li>
+</ul>
+</section>
+<section id="main-objects">
+<h2>Main Objects<a class="headerlink" href="#main-objects" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="split/Plan.html"><code class="docutils literal notranslate"><span class="pre">lymph::validate::Plan</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#core-idea">Core Idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#construction">Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#mutator-reference">Mutator Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#execution-surfaces">Execution Surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#practical-examples">Practical Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#time-aware-guardrails">Time-Aware Guardrails</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/Plan.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="split/cross.html"><code class="docutils literal notranslate"><span class="pre">lymph::validate::cross</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="split/cross.html#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/cross.html#what-it-means">What It Means</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/cross.html#high-value-options">High-Value Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/cross.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/cross.html#practical-examples">Practical Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/cross.html#when-not-to-use-it">When Not To Use It</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/cross.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="split/time.html"><code class="docutils literal notranslate"><span class="pre">lymph::validate::time</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="split/time.html#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/time.html#what-it-means">What It Means</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/time.html#high-value-time-toggles">High-Value Time Toggles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/time.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/time.html#practical-examples">Practical Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/time.html#guardrails">Guardrails</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/time.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="split/holdout.html"><code class="docutils literal notranslate"><span class="pre">lymph::validate::holdout</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="split/holdout.html#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/holdout.html#what-it-means">What It Means</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/holdout.html#high-value-toggle">High-Value Toggle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/holdout.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/holdout.html#practical-examples">Practical Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/holdout.html#when-holdout-is-not-enough">When Holdout Is Not Enough</a></li>
+<li class="toctree-l2"><a class="reference internal" href="split/holdout.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="practical-reading-order">
+<h2>Practical Reading Order<a class="headerlink" href="#practical-reading-order" title="Link to this heading">¶</a></h2>
+<p>Read this branch in this order if you are learning it:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="metrics/ValidationOptions.html"><span class="std std-doc">ValidationOptions</span></a></p></li>
+<li><p><a class="reference internal" href="split/Plan.html"><span class="std std-doc">Plan</span></a></p></li>
+<li><p><a class="reference internal" href="split/cross.html"><span class="std std-doc">cross</span></a></p></li>
+<li><p><a class="reference internal" href="split/time.html"><span class="std std-doc">time</span></a></p></li>
+<li><p><a class="reference internal" href="split/holdout.html"><span class="std std-doc">holdout</span></a></p></li>
+</ol>
+<p>That order moves from public validation policy, to reusable plan, to specialized
+entrypoints.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussai_root.html">PlussAI API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/lymph/split.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

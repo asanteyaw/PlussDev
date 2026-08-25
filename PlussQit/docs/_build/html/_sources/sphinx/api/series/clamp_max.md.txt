@@ -78,7 +78,7 @@ path.
 Example 1. A scalar ceiling pulls only the values above the bound downward.
 
 ```cpp
-auto line = pluss::make_series(std::vector<double>{-2.0, -0.5, 0.0, 1.0, 3.0}, {5});
+auto line = pluss::make_series({-2.0, -0.5, 0.0, 1.0, 3.0}, {5});
 
 std::cout << line.clamp_max(0.0);
 ```
@@ -119,9 +119,8 @@ Example 3. The `Series` overload broadcasts a row-shaped ceiling across the
 leading dimension.
 
 ```cpp
-auto highs = pluss::make_series(std::vector<double>{2, 4, 3}, {3});
-auto grid = pluss::make_series(
-    std::vector<double>{1, 5, 3, 0, 7, 2},
+auto highs = pluss::make_series({2, 4, 3}, {3});
+auto grid = pluss::make_series({1, 5, 3, 0, 7, 2},
     {2, 3});
 
 std::cout << grid.clamp_max(highs);

@@ -22,6 +22,11 @@ Use `query()` when you want SQL-style `SELECT ... FROM ... JOIN ...` over the
 workspace. Use [`from()`](from.md) when you want relationship-graph traversal
 without SQL.
 
+Unlike the older root-table-proxy behavior, `query()` no longer requires you to
+anchor the statement to one special workspace table first. Any named Nexus table can
+appear in `FROM`, `JOIN`, CTEs, or subqueries, and the whole statement runs through
+the same in-memory SQLite backend that powers [`DataFrame::sql()`](../dataframe/sql.md).
+
 ## Example
 
 ```cpp
@@ -42,4 +47,13 @@ std::cout << out.ncases() << " " << out.nfeatures();
 
 ```text
 3 1
+```
+
+Because this is now a genuine workspace SQL surface, richer statements are also
+valid:
+
+```cpp
+auto out = nx.query().execute(
+    "WITH named AS (SELECT customer_id, name FROM customers) "
+    "SELECT DISTINCT name FROM named ORDER BY name");
 ```

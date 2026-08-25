@@ -26,6 +26,7 @@ DataFrameSqlPrepared::execute(std::unordered_map<std::string, DataFrame::SqlOpti
 #### What It Does
 
 Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.
+The execution path is the same SQLite-backed one used by `DataFrame::sql()`; preparing the statement stores the template plus options, then each call renders and executes it.
 
 #### Parameters
 
@@ -50,7 +51,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > 95");
+auto stmt = df.prep_sql("SELECT id, sales FROM df WHERE sales > 95");
 
 auto out = stmt.execute();
 ```
@@ -58,9 +59,13 @@ auto out = stmt.execute();
 ##### Output
 
 ```text
-id  sales
-1   100.0
-2   120.0
+==================
+     | id    sales
+------------------
+0    | 1     100  
+1    | 2     120  
+------------------
+[2 cs x 2 feat]
 ```
 Example 2. Run the prepared SQL statement while binding named scalar placeholders.
 
@@ -70,7 +75,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
+auto stmt = df.prep_sql("SELECT id, sales FROM df WHERE sales > {min_sales}");
 
 auto out = stmt.execute({{"min_sales", 95.0}});
 ```
@@ -78,9 +83,13 @@ auto out = stmt.execute({{"min_sales", 95.0}});
 ##### Output
 
 ```text
-id  sales
-1   100.0
-2   120.0
+==================
+     | id    sales
+------------------
+0    | 1     100  
+1    | 2     120  
+------------------
+[2 cs x 2 feat]
 ```
 Example 3. Run the prepared SQL statement while binding both scalar placeholders and SQL identifier placeholders.
 
@@ -90,15 +99,19 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
+auto stmt = df.prep_sql("SELECT id, {@feature_name} FROM df WHERE sales > {min_sales}");
 
-auto out = stmt.execute({{"min_sales", 95.0}}, {{"table_name", "self"}});
+auto out = stmt.execute({{"min_sales", 95.0}}, {{"feature_name", "sales"}});
 ```
 
 ##### Output
 
 ```text
-id  sales
-1   100.0
-2   120.0
+==================
+     | id    sales
+------------------
+0    | 1     100  
+1    | 2     120  
+------------------
+[2 cs x 2 feat]
 ```

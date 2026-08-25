@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::extract_put" href="extract_put.html" />
@@ -42,7 +42,7 @@
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">extract</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">extract</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">extract</span><span class="p">(</span><span class="n">ExtractSpec</span><span class="w"> </span><span class="n">a0</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">extract</span><span class="p">(</span><span class="n">ExtractSpec</span><span class="w"> </span><span class="n">a0</span><span class="p">,</span><span class="w"> </span><span class="n">ExtractSpec</span><span class="w"> </span><span class="n">a1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">extract</span><span class="p">(</span><span class="n">ExtractSpec</span><span class="w"> </span><span class="n">a0</span><span class="p">,</span><span class="w"> </span><span class="n">ExtractSpec</span><span class="w"> </span><span class="n">a1</span><span class="p">,</span><span class="w"> </span><span class="n">ExtractSpec</span><span class="w"> </span><span class="n">a2</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
@@ -52,24 +52,37 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Evaluates a heterogeneous selector list against a <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">extract()</span></code> is the broad, dynamic indexing surface. It is the method to reach for
-when the selector itself is part of your program state instead of being hard-coded
-into a simpler helper like <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>, <a class="reference internal" href="pos.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pos()</span></code></span></a>, or
-<a class="reference internal" href="block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">block()</span></code></span></a>.</p>
-<p>It understands all of the selector forms exposed by <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">extract()</span></code> evaluates a heterogeneous selector list against a <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p>This is the broad, dynamic indexing surface. Use it when the selector itself is
+part of your program state instead of being hard-coded into a simpler helper
+such as <a class="reference internal" href="pos.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pos()</span></code></span></a>, <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>, or <a class="reference internal" href="block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">block()</span></code></span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">extract()</span></code> understands the full <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> family:</p>
 <ul class="simple">
 <li><p>scalar indices</p></li>
-<li><p>slice selectors such as <code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code>, <code class="docutils literal notranslate"><span class="pre">SliceFrom()</span></code>, <code class="docutils literal notranslate"><span class="pre">SliceTo()</span></code>, and <code class="docutils literal notranslate"><span class="pre">SliceRange()</span></code></p></li>
+<li><p>slice selectors such as <code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code>, <code class="docutils literal notranslate"><span class="pre">SliceFrom()</span></code>, <code class="docutils literal notranslate"><span class="pre">SliceTo()</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">SliceRange()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code></p></li>
-<li><p>advanced index <code class="docutils literal notranslate"><span class="pre">Series</span></code> of bool or integer dtype</p></li>
+<li><p>advanced bool and integer index <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
 </ul>
-<p>The important behavioral boundary is that <code class="docutils literal notranslate"><span class="pre">extract()</span></code> works <strong>axis by axis</strong>.
-When a selector can stay a cheap view, it does. When it cannot, <code class="docutils literal notranslate"><span class="pre">extract()</span></code> materializes
-the needed position list and continues. That is why <code class="docutils literal notranslate"><span class="pre">extract()</span></code> can express things
-that <a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_slice()</span></code></span></a> deliberately rejects, such as negative-step
-reversal and advanced index tensors.</p>
+<p>The most important mental model is this:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">extract()</span></code> works axis by axis</p></li>
+<li><p>when a selector can remain a cheap view, it does</p></li>
+<li><p>when a selector cannot remain a view, <code class="docutils literal notranslate"><span class="pre">extract()</span></code> materializes the needed
+position list and continues</p></li>
+</ul>
+<p>That is why <code class="docutils literal notranslate"><span class="pre">extract()</span></code> can express things that <a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_slice()</span></code></span></a>
+deliberately rejects, such as reverse slices and advanced index tensors.</p>
+</section>
+<section id="overload-map">
+<h2>Overload Map<a class="headerlink" href="#overload-map" title="Link to this heading">¶</a></h2>
+<p><strong><code class="docutils literal notranslate"><span class="pre">extract(a0)</span></code> through <code class="docutils literal notranslate"><span class="pre">extract(a0,</span> <span class="pre">a1,</span> <span class="pre">a2,</span> <span class="pre">a3)</span></code></strong></p>
+<p>Convenience overloads for small fixed selector lists.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">extract(specs)</span></code></strong></p>
+<p>The general form for dynamic selector lists and lists longer than four entries.</p>
+<p>The overloads differ only in how the selector sequence is supplied. The
+selection semantics are the same.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -77,50 +90,62 @@ reversal and advanced index tensors.</p>
 <p>The selector sequence.</p>
 <p>Each selector kind changes rank traversal differently:</p>
 <ul class="simple">
-<li><p>A scalar index consumes one existing axis and removes it from the result.</p></li>
-<li><p>A slice consumes one existing axis and keeps it, possibly with a different length.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> inserts a new size-1 dimension and consumes no source axis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code> expands to however many trailing <code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code> selectors are needed.</p></li>
-<li><p>A bool advanced index consumes one axis and keeps only the positions where the mask is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
-<li><p>An integer advanced index consumes one axis and selects explicit positions on that axis.</p></li>
+<li><p>scalar index: consumes one existing axis and removes it from the result</p></li>
+<li><p>slice selector: consumes one existing axis and keeps it, possibly with a
+different length</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code>: inserts a new size-1 axis and consumes no source axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code>: expands to however many trailing identity slices are needed</p></li>
+<li><p>bool advanced index: consumes one axis and keeps only the <code class="docutils literal notranslate"><span class="pre">true</span></code> positions</p></li>
+<li><p>integer advanced index: consumes one axis and selects explicit positions</p></li>
 </ul>
-<p>Normalization rules:</p>
+<p>Normalization rules that matter in real use:</p>
 <ul class="simple">
-<li><p>If you omit trailing axes, <code class="docutils literal notranslate"><span class="pre">extract()</span></code> fills them with <code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code>.</p></li>
-<li><p>At most one <code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code> is allowed.</p></li>
-<li><p>Negative scalar indices count from the end of the indexed axis.</p></li>
-<li><p>Slice steps may be positive or negative, but may not be <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
-<li><p>Bool advanced indices must be 1-D and match the indexed axis length.</p></li>
-<li><p>Integer advanced indices are normalized to <code class="docutils literal notranslate"><span class="pre">Int64</span></code>, and negative values count from the end.</p></li>
+<li><p>omitted trailing axes are filled with <code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code></p></li>
+<li><p>at most one <code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code> is allowed</p></li>
+<li><p>negative scalar indices count from the end of the indexed axis</p></li>
+<li><p>slice steps may be positive or negative, but may not be <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p>bool advanced indices must be 1D and match the indexed axis length</p></li>
+<li><p>integer advanced indices are normalized to <code class="docutils literal notranslate"><span class="pre">int64</span></code>, and negative values count
+from the end</p></li>
 </ul>
-<p>The overloads differ only in how the selectors are supplied:</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
+The selected result.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Depending on the selector path, this may be:
+
+- a view
+- a partially materialized result
+- a fully materialized result
+</pre></div>
+</div>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">extract()</span></code> is differentiable when the selected value path is differentiable.</p>
+<p>Backward follows the normalized selection path:</p>
 <ul class="simple">
-<li><p>The fixed-arity overloads are convenience wrappers for 1 to 4 selectors.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload is the general form for dynamic selector lists and for lists longer than 4.</p></li>
+<li><p>positions not selected receive zero sensitivity</p></li>
+<li><p>positions selected once receive one contribution</p></li>
+<li><p>positions selected multiple times accumulate contributions</p></li>
 </ul>
-<p>```{note} <code class="docutils literal notranslate"><span class="pre">extract()</span></code> is not the same advanced-index surface as <a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a>
-<code class="docutils literal notranslate"><span class="pre">extract()</span></code> applies advanced selectors one axis at a time. A shaped integer index
-therefore becomes a flat position list on the axis being selected. If you want
-Torch-style advanced indexing that preserves the advanced index tensor’s own shape,
-use <a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a> instead.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-## Returns
+<p>That accumulation behavior matters most for advanced integer indexing, where the
+same source location may be read repeatedly.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>The examples below start with ordinary slice-like use, then move into rank
+changes, reverse traversal, advanced selectors, and the important difference
+between <code class="docutils literal notranslate"><span class="pre">extract()</span></code> and <a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a>.</p>
+<p>Example 1. A single selector is enough when only one axis is being narrowed.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
+<span class="p">});</span>
 
-`Series`
-    The selected result. Depending on the selector, this may be a view or a
-    materialized series.
-
-## Examples
-
-Example 1. The 1-selector convenience overload is the shortest form when you are
-only consuming one axis.
-
-```cpp
-auto grid = pluss::make_series(
-    std::vector&lt;double&gt;{10, 11, 12, 13, 20, 21, 22, 23, 30, 31, 32, 33},
-    {3, 4});
-
-std::cout &lt;&lt; grid.extract(pluss::Slicing::SliceRange(0, 2, 1));
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
 </pre></div>
 </div>
 <section id="output">
@@ -131,9 +156,8 @@ data=[[10, 11, 12, 13],
 </pre></div>
 </div>
 <p>Because only the first axis is mentioned, <code class="docutils literal notranslate"><span class="pre">extract()</span></code> implicitly appends
-<code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code> for the remaining axis.</p>
-<p>Example 2. The 2-selector convenience overload is the natural form for ordinary
-row/column slicing.</p>
+identity slices for the remaining axes.</p>
+<p>Example 2. Two selectors give ordinary row/column slicing.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
@@ -148,8 +172,8 @@ data=[[12, 13],
   [32, 33]]
 </pre></div>
 </div>
-<p>Example 3. <code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> inserts a size-1 dimension, while a scalar selector still
-consumes the axis it indexes.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> inserts a size-1 dimension, while a scalar selector
+still consumes the axis it indexes.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">NewAxis</span><span class="p">(),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
@@ -164,15 +188,20 @@ data=[[11, 21, 31]]
 </pre></div>
 </div>
 <p>The inserted axis survives in the result. The scalar column index does not.</p>
-<p>Example 4. The 4-selector convenience overload is useful once the selector starts
-mixing rank-changing and rank-preserving operations.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">        </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span>
-<span class="w">        </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<p>Example 4. Mixed rank-changing and rank-preserving selectors are often easiest
+to read in the fixed-arity overloads.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">13.0</span><span class="p">,</span><span class="w"> </span><span class="mf">14.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">17.0</span><span class="p">,</span><span class="w"> </span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">,</span><span class="w"> </span><span class="mf">24.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">},</span>
@@ -193,57 +222,67 @@ data=[[[13],
   [23]]]
 </pre></div>
 </div>
-<p>Example 5. A negative slice step is legal on <code class="docutils literal notranslate"><span class="pre">extract()</span></code>. This is one of the
-places where it intentionally goes beyond <a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_slice()</span></code></span></a>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">reverse_cols</span><span class="p">{</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Slice</span><span class="o">::</span><span class="n">kUnbounded</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">)};</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">(</span><span class="n">reverse_cols</span><span class="p">));</span>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code> expands to the needed identity slices.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Ellipsis</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
 </pre></div>
 </div>
 </section>
 <section id="id4">
 <h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[4], dtype=float64, platform=cpu, numel=3, contiguous=false)
+data=[12, 22, 32]
+</pre></div>
+</div>
+<p>On this rank-2 input, that means “keep all earlier axes, then take column <code class="docutils literal notranslate"><span class="pre">2</span></code>.”</p>
+<p>Example 6. Reverse slicing is legal on <code class="docutils literal notranslate"><span class="pre">extract()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Slice</span><span class="o">::</span><span class="n">kUnbounded</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">)});</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
 data=[[13, 12, 11, 10],
   [23, 22, 21, 20],
   [33, 32, 31, 30]]
 </pre></div>
 </div>
-<p>Example 6. A bool advanced index acts as a 1-D mask over the consumed axis.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-<span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bool_pick</span><span class="p">{</span>
+<p>This is one of the places where <code class="docutils literal notranslate"><span class="pre">extract()</span></code> intentionally goes beyond
+<a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_slice()</span></code></span></a>.</p>
+<p>Example 7. A bool advanced index acts as a mask over the consumed axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">({</span>
 <span class="w">    </span><span class="n">row_mask</span><span class="p">,</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">()};</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">(</span><span class="n">bool_pick</span><span class="p">));</span>
-</pre></div>
-</div>
-</section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
-data=[[10, 11, 12, 13],
-  [30, 31, 32, 33]]
-</pre></div>
-</div>
-<p>Example 7. A shaped integer advanced index is flattened by <code class="docutils literal notranslate"><span class="pre">extract()</span></code> because
-the method materializes a single axis-worth of positions before continuing.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row_pick_2d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
-<span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">shaped_int_pick</span><span class="p">{</span>
-<span class="w">    </span><span class="n">row_pick_2d</span><span class="p">,</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">()};</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">(</span><span class="n">shaped_int_pick</span><span class="p">));</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">()});</span>
 </pre></div>
 </div>
 </section>
 <section id="id6">
 <h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[10, 11, 12, 13],
+  [30, 31, 32, 33]]
+</pre></div>
+</div>
+<p>Example 8. A shaped integer advanced index is flattened by <code class="docutils literal notranslate"><span class="pre">extract()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row_pick_2d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">2L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">0L</span><span class="n">L</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">2L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">1L</span><span class="n">L</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">({</span>
+<span class="w">    </span><span class="n">row_pick_2d</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">()});</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[4,4], strides=[4,1], dtype=float64, platform=cpu, numel=16, contiguous=true)
 data=[[30, 31, 32, 33],
   [10, 11, 12, 13],
@@ -251,26 +290,62 @@ data=[[30, 31, 32, 33],
   [20, 21, 22, 23]]
 </pre></div>
 </div>
-<p>The source index tensor had shape <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">2]</span></code>, but <code class="docutils literal notranslate"><span class="pre">extract()</span></code> used its flattened
-position list and replaced the row axis with length <code class="docutils literal notranslate"><span class="pre">4</span></code>. This is correct for
-<code class="docutils literal notranslate"><span class="pre">extract()</span></code>, but it is exactly the case where <a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a> behaves
-differently.</p>
+<p>This is the key behavior to remember: <code class="docutils literal notranslate"><span class="pre">extract()</span></code> consumes one axis at a time,
+so the shaped integer tensor becomes a flat list of positions on that axis.</p>
+<p>Example 9. Zero-step slices are invalid.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">extract</span><span class="p">({</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)})</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::extract: step cannot be 0
+</pre></div>
+</div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">extract()</span></code> when the selector is heterogeneous, dynamic, or may need to materialize.</p></li>
-<li><p>Use <a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_slice()</span></code></span></a> when you want to enforce cheap-view-only traversal.</p></li>
-<li><p>Use <a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a> when the main intent is Torch-style advanced indexing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">extract()</span></code> is dynamic and broad, but not vague. Each selector kind has a
+precise rank effect.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> adds rank. Scalar indices remove rank.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code> is normalized into ordinary identity slices.</p></li>
+<li><p>Reverse slices are legal here even though they are rejected by
+<a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_slice()</span></code></span></a>.</p></li>
+<li><p>Shaped integer advanced indices are flattened one axis at a time on this
+surface.</p></li>
+<li><p>Zero-step slices fail explicitly.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">extract()</span></code> when your indexing problem is heterogeneous, dynamic, or rich
+enough that the smaller helpers stop being expressive.</p>
+<ul class="simple">
+<li><p>Use it for mixed selectors.</p></li>
+<li><p>Use it for reverse slices.</p></li>
+<li><p>Use it when advanced indices are part of a general selector list.</p></li>
+<li><p>Prefer <a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a> when advanced index tensor shape preservation is
+the main story.</p></li>
+</ul>
+<p>The single most important habit is to ask whether your selector should be read
+axis by axis. If yes, <code class="docutils literal notranslate"><span class="pre">extract()</span></code> is usually the right surface.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index</span></code></span></a>: advanced-index-first routing, especially for integer index tensors.</p></li>
-<li><p><a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_slice</span></code></span></a>: the view-only sibling surface.</p></li>
-<li><p><a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put</span></code></span></a>: copy-returning write-side counterpart.</p></li>
+<li><p><a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index</span></code></span></a>: advanced-index-preserving routing.</p></li>
+<li><p><a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_slice</span></code></span></a>: the stricter view-only sibling.</p></li>
+<li><p><a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put</span></code></span></a>: copy-returning write-side
+counterpart.</p></li>
 <li><p><a class="reference internal" href="extract_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put_</span></code></span></a>: in-place write-side counterpart.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -278,9 +353,9 @@ differently.</p>
     <span class="label">Previous</span>
     <span class="title">block</span>
   </a>
-  <a class="next-link" href="extract_put.html">
+  <a class="next-link" href="index.html">
     <span class="label">Next</span>
-    <span class="title">extract_put</span>
+    <span class="title">index</span>
   </a>
 </div>
 </section>
@@ -348,6 +423,7 @@ differently.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

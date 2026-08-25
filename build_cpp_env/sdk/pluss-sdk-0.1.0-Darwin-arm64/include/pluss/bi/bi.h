@@ -1,32 +1,5 @@
 #pragma once
 
-/*
-PlussBI public surface seed.
-
-PlussBI is the programmatic dashboard and analytics layer built around:
-  - pluss::bundle::Nexus as the data workbench
-  - Flash / PlussPl as the visualization engine
-  - PlussView as the first native runtime host
-
-This header intentionally stays small at the start. The implementation should
-centralize shared behavior instead of duplicating query, filter, rendering, and
-serialization logic across many UI objects.
-*/
-
-namespace pluss::bi {
-
-class Studio;
-class Board;
-class Tile;
-class View;
-class Control;
-class Filter;
-class Session;
-
-struct LayoutSpec;
-struct ThemeSpec;
-struct QuerySpec;
-struct BindSpec;
-struct ExportSpec;
-
-} // namespace pluss::bi
+#include "pluss/bi/specs.h"
+#include "pluss/bi/session.h"
+#include "pluss/bi/studio.h"

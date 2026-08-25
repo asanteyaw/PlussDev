@@ -1,13 +1,13 @@
 #include "table/sql/DataFrameSql.h"
 
 #include <algorithm>
-#include <cctype>
-#include <cstdint>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <iomanip>
 #include <limits>
-#include <mutex>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -15,7 +15,10 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
+
+#include <sqlite3.h>
 
 #include "CodeM/core/Errors.h"
 #include <fmt/format.h>
@@ -23,6 +26,9 @@
 namespace pluss::table {
 
 namespace {
+
+constexpr std::string_view kPrimarySourceName = "df";
+constexpr std::string_view kInternalCaseColumn = "__pluss_case__";
 
 enum class SqlTokenKind : std::uint8_t { Word = 0, String = 1, Backtick = 2, Punct = 3 };
 
@@ -33,50 +39,65 @@ struct SqlToken {
   std::size_t end{0};
 };
 
-enum class SqlClauseKind : std::uint8_t { Where = 0, OrderBy = 1, Limit = 2, Offset = 3 };
-
-struct SqlClause {
-  SqlClauseKind kind{SqlClauseKind::Where};
-  std::size_t token_index{0};
-  std::size_t keyword_tokens{1};
+struct ProjectionHints {
+  bool parsed{false};
+  bool star_only{false};
+  std::vector<std::string> output_names{};
 };
 
-struct SqlProjection {
-  bool star{false};
-  std::string source{};
-  std::string output{};
+struct TimeoutContext {
+  std::chrono::steady_clock::time_point start{};
+  const DataFrame::SqlOptions* options{nullptr};
 };
 
-struct SqlOrderSpec {
-  std::string feature{};
-  bool ascending{true};
-  bool nulls_last{true};
-};
+using SqlCell = std::variant<std::monostate, std::int64_t, double, std::string>;
 
-struct SqlSourceRef {
+struct ColumnCollector {
   std::string name{};
-  std::string alias{};
+  std::optional<std::string> declared_type{};
+  std::vector<SqlCell> values{};
 };
 
-struct SqlJoinSpec {
-  SqlSourceRef source{};
-  std::string on_left{};
-  std::string on_right{};
+struct SqliteDbCloser {
+  void operator()(sqlite3* db) const noexcept {
+    if (db != nullptr) {
+      sqlite3_close(db);
+    }
+  }
 };
 
-struct SqlSelectSpec {
-  bool select_all{false};
-  SqlSourceRef primary_source{};
-  std::vector<SqlJoinSpec> joins{};
-  std::vector<SqlProjection> projections{};
-  std::optional<std::string> where{};
-  std::optional<SqlOrderSpec> order{};
-  std::optional<std::int64_t> limit{};
-  std::optional<std::int64_t> offset{};
+struct SqliteStmtFinalizer {
+  void operator()(sqlite3_stmt* stmt) const noexcept {
+    if (stmt != nullptr) {
+      sqlite3_finalize(stmt);
+    }
+  }
 };
 
-bool is_punct_char(const char ch) {
-  return ch == '(' || ch == ')' || ch == ',' || ch == ';';
+using SqliteDb = std::unique_ptr<sqlite3, SqliteDbCloser>;
+using SqliteStmt = std::unique_ptr<sqlite3_stmt, SqliteStmtFinalizer>;
+
+bool iequals(std::string_view a, std::string_view b) {
+  if (a.size() != b.size()) {
+    return false;
+  }
+  for (std::size_t i = 0; i < a.size(); ++i) {
+    const auto lhs = static_cast<unsigned char>(a[i]);
+    const auto rhs = static_cast<unsigned char>(b[i]);
+    if (std::tolower(lhs) != std::tolower(rhs)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::string lower_ascii_copy(std::string_view s) {
+  std::string out;
+  out.reserve(s.size());
+  for (const auto ch : s) {
+    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
+  }
+  return out;
 }
 
 std::string trim_ascii(std::string_view s) {
@@ -91,18 +112,8 @@ std::string trim_ascii(std::string_view s) {
   return std::string(s.substr(b, e - b));
 }
 
-bool iequals(std::string_view a, std::string_view b) {
-  if (a.size() != b.size()) {
-    return false;
-  }
-  for (std::size_t i = 0; i < a.size(); ++i) {
-    const auto lhs = static_cast<unsigned char>(a[i]);
-    const auto rhs = static_cast<unsigned char>(b[i]);
-    if (std::tolower(lhs) != std::tolower(rhs)) {
-      return false;
-    }
-  }
-  return true;
+bool is_punct_char(const char ch) {
+  return ch == '(' || ch == ')' || ch == ',' || ch == ';';
 }
 
 std::vector<SqlToken> tokenize_sql(std::string_view sql) {
@@ -244,6 +255,7 @@ std::vector<std::string> split_top_level_commas(std::string_view text) {
       part_start = i + 1;
     }
   }
+
   PLUSS_CHECK(!in_single && !in_backtick && !in_double, "DataFrame::sql().execute: unterminated quoted token");
   PLUSS_CHECK(depth == 0, "DataFrame::sql().execute: unbalanced parentheses");
   out.push_back(trim_ascii(text.substr(part_start)));
@@ -253,100 +265,16 @@ std::vector<std::string> split_top_level_commas(std::string_view text) {
 std::string parse_identifier_token(const SqlToken& tok, std::string_view context) {
   if (tok.kind == SqlTokenKind::Word || tok.kind == SqlTokenKind::Backtick) {
     PLUSS_CHECK(!tok.text.empty(), std::string(context) + ": identifier cannot be empty");
+    if (tok.text.size() >= 2) {
+      const auto first = tok.text.front();
+      const auto last = tok.text.back();
+      if ((first == '"' && last == '"') || (first == '`' && last == '`')) {
+        return tok.text.substr(1, tok.text.size() - 2);
+      }
+    }
     return tok.text;
   }
   PLUSS_FAIL(std::string(context) + ": expected identifier");
-}
-
-SqlProjection parse_projection(std::string_view item_text) {
-  const auto item = trim_ascii(item_text);
-  PLUSS_CHECK(!item.empty(), "DataFrame::sql().execute: empty projection item");
-  const auto toks = tokenize_sql(item);
-  PLUSS_CHECK(!toks.empty(), "DataFrame::sql().execute: empty projection item");
-
-  if (toks.size() == 1 && toks[0].kind == SqlTokenKind::Word && toks[0].text == "*") {
-    return SqlProjection{true, "", ""};
-  }
-
-  if (toks.size() == 1) {
-    const auto ident = parse_identifier_token(toks[0], "DataFrame::sql().execute SELECT");
-    return SqlProjection{false, ident, ident};
-  }
-
-  if (toks.size() == 3 && token_is_word(toks[1], "as")) {
-    const auto src = parse_identifier_token(toks[0], "DataFrame::sql().execute SELECT");
-    const auto alias = parse_identifier_token(toks[2], "DataFrame::sql().execute SELECT AS");
-    return SqlProjection{false, src, alias};
-  }
-
-  PLUSS_FAIL("DataFrame::sql().execute: unsupported projection item '" + item + "'");
-}
-
-SqlOrderSpec parse_order_clause(std::string_view clause_text) {
-  const auto item = trim_ascii(clause_text);
-  PLUSS_CHECK(!item.empty(), "DataFrame::sql().execute: ORDER BY clause cannot be empty");
-  const auto parts = split_top_level_commas(item);
-  PLUSS_CHECK(parts.size() == 1,
-              "DataFrame::sql().execute: ORDER BY currently supports one feature key");
-
-  const auto toks = tokenize_sql(parts[0]);
-  PLUSS_CHECK(!toks.empty(), "DataFrame::sql().execute: ORDER BY clause cannot be empty");
-
-  SqlOrderSpec spec;
-  spec.feature = parse_identifier_token(toks[0], "DataFrame::sql().execute ORDER BY");
-
-  bool seen_dir = false;
-  bool seen_nulls = false;
-  for (std::size_t i = 1; i < toks.size();) {
-    const auto& tok = toks[i];
-    PLUSS_CHECK(tok.kind == SqlTokenKind::Word,
-                "DataFrame::sql().execute: unsupported ORDER BY token '" + tok.text + "'");
-    if (token_is_word(tok, "asc")) {
-      PLUSS_CHECK(!seen_dir, "DataFrame::sql().execute: duplicate ASC/DESC in ORDER BY");
-      spec.ascending = true;
-      seen_dir = true;
-      ++i;
-      continue;
-    }
-    if (token_is_word(tok, "desc")) {
-      PLUSS_CHECK(!seen_dir, "DataFrame::sql().execute: duplicate ASC/DESC in ORDER BY");
-      spec.ascending = false;
-      seen_dir = true;
-      ++i;
-      continue;
-    }
-    if (token_is_word(tok, "nulls")) {
-      PLUSS_CHECK(!seen_nulls, "DataFrame::sql().execute: duplicate NULLS FIRST/LAST in ORDER BY");
-      PLUSS_CHECK(i + 1 < toks.size(), "DataFrame::sql().execute: NULLS must be followed by FIRST or LAST");
-      if (token_is_word(toks[i + 1], "first")) {
-        spec.nulls_last = false;
-      } else if (token_is_word(toks[i + 1], "last")) {
-        spec.nulls_last = true;
-      } else {
-        PLUSS_FAIL("DataFrame::sql().execute: NULLS must be followed by FIRST or LAST");
-      }
-      seen_nulls = true;
-      i += 2;
-      continue;
-    }
-    PLUSS_FAIL("DataFrame::sql().execute: unsupported ORDER BY token '" + tok.text + "'");
-  }
-  return spec;
-}
-
-std::int64_t parse_non_negative_int(std::string_view text, std::string_view context) {
-  const auto t = trim_ascii(text);
-  PLUSS_CHECK(!t.empty(), std::string(context) + " cannot be empty");
-  std::size_t idx = 0;
-  std::int64_t value = 0;
-  try {
-    value = std::stoll(t, &idx);
-  } catch (...) {
-    PLUSS_FAIL(std::string(context) + " must be an integer");
-  }
-  PLUSS_CHECK(idx == t.size(), std::string(context) + " must be an integer");
-  PLUSS_CHECK(value >= 0, std::string(context) + " must be non-negative");
-  return value;
 }
 
 std::string escape_sql_string_literal(std::string_view s) {
@@ -366,8 +294,8 @@ std::string escape_sql_identifier(std::string_view s) {
   out.reserve(s.size() + 8);
   for (const auto ch : s) {
     out.push_back(ch);
-    if (ch == '`') {
-      out.push_back('`');
+    if (ch == '"') {
+      out.push_back('"');
     }
   }
   return out;
@@ -446,7 +374,7 @@ std::string apply_sql_params(std::string_view statement, const DataFrame::SqlOpt
         } else {
           validate_identifier_value(ident_key, ident_it->second);
           used_identifier.insert(ident_key);
-          out += "`" + escape_sql_identifier(ident_it->second) + "`";
+          out += "`" + ident_it->second + "`";
         }
       } else {
         const auto it = options.params.find(key);
@@ -491,102 +419,57 @@ std::string apply_sql_params(std::string_view statement, const DataFrame::SqlOpt
   return out;
 }
 
-bool is_identifier_token(const SqlToken& tok) {
-  return tok.kind == SqlTokenKind::Word || tok.kind == SqlTokenKind::Backtick;
-}
-
-bool is_join_boundary_keyword(const SqlToken& tok) {
-  return token_is_word(tok, "join") || token_is_word(tok, "inner") || token_is_word(tok, "left")
-         || token_is_word(tok, "on");
-}
-
-SqlSourceRef parse_source_ref(const std::vector<SqlToken>& toks,
-                              std::size_t* idx,
-                              std::string_view context) {
-  PLUSS_CHECK(idx != nullptr, std::string(context) + ": parser index cannot be null");
-  PLUSS_CHECK(*idx < toks.size(), std::string(context) + ": missing source name");
-
-  SqlSourceRef out;
-  out.name = parse_identifier_token(toks[*idx], context);
-  out.alias = out.name;
-  ++(*idx);
-
-  if (*idx < toks.size() && token_is_word(toks[*idx], "as")) {
-    ++(*idx);
-    PLUSS_CHECK(*idx < toks.size(), std::string(context) + ": missing source alias after AS");
-    out.alias = parse_identifier_token(toks[*idx], context);
-    ++(*idx);
-    return out;
+bool is_simple_identifier(std::string_view text) {
+  if (text.empty()) {
+    return false;
   }
-
-  if (*idx < toks.size() && is_identifier_token(toks[*idx]) && !is_join_boundary_keyword(toks[*idx])) {
-    out.alias = parse_identifier_token(toks[*idx], context);
-    ++(*idx);
-  }
-  return out;
-}
-
-void parse_from_segment(std::string_view table_segment, SqlSelectSpec* spec) {
-  PLUSS_CHECK(spec != nullptr, "DataFrame::sql().execute: internal parser state is null");
-  const auto table_toks = tokenize_sql(table_segment);
-  PLUSS_CHECK(!table_toks.empty(), "DataFrame::sql().execute: invalid FROM clause");
-
-  std::size_t idx = 0;
-  spec->primary_source = parse_source_ref(table_toks, &idx, "DataFrame::sql().execute FROM");
-  spec->joins.clear();
-
-  while (idx < table_toks.size()) {
-    bool saw_left = false;
-    if (token_is_word(table_toks[idx], "inner")) {
-      ++idx;
-    } else if (token_is_word(table_toks[idx], "left")) {
-      saw_left = true;
-      ++idx;
+  for (const auto ch : text) {
+    if (!is_safe_identifier_char(ch)) {
+      return false;
     }
-
-    PLUSS_CHECK(idx < table_toks.size() && token_is_word(table_toks[idx], "join"),
-                "DataFrame::sql().execute: expected JOIN in FROM clause");
-    PLUSS_CHECK(!saw_left, "DataFrame::sql().execute: LEFT JOIN is not supported yet (use INNER JOIN)");
-    ++idx;
-
-    SqlJoinSpec join;
-    join.source = parse_source_ref(table_toks, &idx, "DataFrame::sql().execute JOIN");
-
-    PLUSS_CHECK(idx < table_toks.size() && token_is_word(table_toks[idx], "on"),
-                "DataFrame::sql().execute: JOIN must include ON");
-    ++idx;
-
-    PLUSS_CHECK(idx < table_toks.size(), "DataFrame::sql().execute: JOIN ON missing left expression");
-    join.on_left = parse_identifier_token(table_toks[idx], "DataFrame::sql().execute JOIN ON");
-    ++idx;
-
-    PLUSS_CHECK(idx < table_toks.size() && table_toks[idx].kind == SqlTokenKind::Word
-                    && table_toks[idx].text == "=",
-                "DataFrame::sql().execute: JOIN ON currently supports equality (`=`) only");
-    ++idx;
-
-    PLUSS_CHECK(idx < table_toks.size(), "DataFrame::sql().execute: JOIN ON missing right expression");
-    join.on_right = parse_identifier_token(table_toks[idx], "DataFrame::sql().execute JOIN ON");
-    ++idx;
-
-    spec->joins.push_back(std::move(join));
   }
+  return true;
 }
 
-SqlSelectSpec parse_select_sql(std::string_view statement) {
-  auto sql = trim_ascii(statement);
-  while (!sql.empty() && sql.back() == ';') {
-    sql.pop_back();
-    sql = trim_ascii(sql);
+std::string maybe_expand_table_name(std::string_view statement, const DataFrame::SqlOptions& options) {
+  const auto trimmed = trim_ascii(statement);
+  if (trimmed.empty()) {
+    return trimmed;
   }
-  PLUSS_CHECK(!sql.empty(), "DataFrame::sql().execute: SQL statement cannot be empty");
+  if (!is_simple_identifier(trimmed)) {
+    return trimmed;
+  }
+
+  if (iequals(trimmed, kPrimarySourceName)) {
+    return "SELECT * FROM df";
+  }
+  for (const auto& alias : options.primary_source_names) {
+    if (iequals(trimmed, alias)) {
+      return "SELECT * FROM \"" + escape_sql_identifier(alias) + "\"";
+    }
+  }
+  for (const auto& binding : options.sources) {
+    if (iequals(trimmed, binding.name)) {
+      return "SELECT * FROM \"" + escape_sql_identifier(binding.name) + "\"";
+    }
+  }
+  return trimmed;
+}
+
+ProjectionHints parse_projection_hints(std::string_view statement) {
+  ProjectionHints hints;
+  const auto sql = trim_ascii(statement);
+  if (sql.empty()) {
+    return hints;
+  }
 
   const auto toks = tokenize_sql(sql);
-  PLUSS_CHECK(!toks.empty(), "DataFrame::sql().execute: SQL statement cannot be empty");
-  PLUSS_CHECK(token_is_word(toks.front(), "select"),
-              "DataFrame::sql().execute currently supports only SELECT statements");
+  if (toks.empty()) {
+    return hints;
+  }
 
   std::int64_t depth = 0;
+  std::optional<std::size_t> select_idx;
   std::optional<std::size_t> from_idx;
   for (std::size_t i = 0; i < toks.size(); ++i) {
     const auto& tok = toks[i];
@@ -599,296 +482,394 @@ SqlSelectSpec parse_select_sql(std::string_view statement) {
       PLUSS_CHECK(depth >= 0, "DataFrame::sql().execute: unbalanced parentheses");
       continue;
     }
-    if (depth == 0 && i > 0 && token_is_word(tok, "from")) {
+    if (depth == 0 && !select_idx.has_value() && token_is_word(tok, "select")) {
+      select_idx = i;
+      continue;
+    }
+    if (depth == 0 && select_idx.has_value() && i > *select_idx && token_is_word(tok, "from")) {
       from_idx = i;
       break;
     }
   }
-  PLUSS_CHECK(from_idx.has_value(), "DataFrame::sql().execute: SELECT statement must include FROM clause");
-
-  const auto select_segment = trim_ascii(sql.substr(toks[0].end, toks[*from_idx].begin - toks[0].end));
-  PLUSS_CHECK(!select_segment.empty(), "DataFrame::sql().execute: SELECT projection list cannot be empty");
-
-  std::vector<SqlProjection> projections;
-  for (const auto& item : split_top_level_commas(select_segment)) {
-    projections.push_back(parse_projection(item));
-  }
-  PLUSS_CHECK(!projections.empty(), "DataFrame::sql().execute: SELECT projection list cannot be empty");
-  const bool has_star = std::any_of(projections.begin(), projections.end(), [](const SqlProjection& p) {
-    return p.star;
-  });
-  PLUSS_CHECK(!has_star || projections.size() == 1,
-              "DataFrame::sql().execute: '*' cannot be mixed with named projections");
-
-  depth = 0;
-  std::vector<SqlClause> clauses;
-  clauses.reserve(4);
-  std::unordered_set<std::uint8_t> seen_clause;
-  for (std::size_t i = *from_idx + 1; i < toks.size(); ++i) {
-    const auto& tok = toks[i];
-    if (tok.kind == SqlTokenKind::Punct && tok.text == "(") {
-      ++depth;
-      continue;
-    }
-    if (tok.kind == SqlTokenKind::Punct && tok.text == ")") {
-      --depth;
-      PLUSS_CHECK(depth >= 0, "DataFrame::sql().execute: unbalanced parentheses");
-      continue;
-    }
-    if (depth != 0) {
-      continue;
-    }
-
-    auto push_clause = [&](const SqlClauseKind kind, const std::size_t idx, const std::size_t kw_tokens) {
-      const auto key = static_cast<std::uint8_t>(kind);
-      PLUSS_CHECK(seen_clause.insert(key).second, "DataFrame::sql().execute: duplicate SQL clause");
-      clauses.push_back(SqlClause{kind, idx, kw_tokens});
-    };
-
-    if (token_is_word(tok, "where")) {
-      push_clause(SqlClauseKind::Where, i, 1);
-      continue;
-    }
-    if (token_is_word(tok, "limit")) {
-      push_clause(SqlClauseKind::Limit, i, 1);
-      continue;
-    }
-    if (token_is_word(tok, "offset")) {
-      push_clause(SqlClauseKind::Offset, i, 1);
-      continue;
-    }
-    if (token_is_word(tok, "order")) {
-      PLUSS_CHECK(i + 1 < toks.size() && token_is_word(toks[i + 1], "by"),
-                  "DataFrame::sql().execute: ORDER clause must be followed by BY");
-      push_clause(SqlClauseKind::OrderBy, i, 2);
-      ++i;
-      continue;
-    }
+  if (!select_idx.has_value() || !from_idx.has_value()) {
+    return hints;
   }
 
-  std::sort(clauses.begin(), clauses.end(), [](const SqlClause& a, const SqlClause& b) {
-    return a.token_index < b.token_index;
-  });
-
-  const auto table_end = clauses.empty() ? sql.size() : toks[clauses.front().token_index].begin;
-  const auto table_segment = trim_ascii(sql.substr(toks[*from_idx].end, table_end - toks[*from_idx].end));
-  PLUSS_CHECK(!table_segment.empty(), "DataFrame::sql().execute: FROM clause must include a source name");
-
-  SqlSelectSpec spec;
-  spec.select_all = has_star;
-  spec.projections = std::move(projections);
-  parse_from_segment(table_segment, &spec);
-
-  std::unordered_set<std::string> seen_aliases;
-  auto alias_key = [&](const std::string& s) {
-    std::string low;
-    low.reserve(s.size());
-    for (const auto ch : s) {
-      low.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
-    }
-    return low;
-  };
-  PLUSS_CHECK(seen_aliases.insert(alias_key(spec.primary_source.alias)).second,
-              "DataFrame::sql().execute: duplicate source alias '" + spec.primary_source.alias + "'");
-  for (const auto& join : spec.joins) {
-    PLUSS_CHECK(seen_aliases.insert(alias_key(join.source.alias)).second,
-                "DataFrame::sql().execute: duplicate source alias '" + join.source.alias + "'");
+  const auto select_segment =
+      trim_ascii(sql.substr(toks[*select_idx].end, toks[*from_idx].begin - toks[*select_idx].end));
+  if (select_segment.empty()) {
+    return hints;
   }
 
-  for (std::size_t i = 0; i < clauses.size(); ++i) {
-    const auto clause = clauses[i];
-    const auto clause_keyword_end = toks[clause.token_index + clause.keyword_tokens - 1].end;
-    const auto next_clause_start = (i + 1 < clauses.size()) ? toks[clauses[i + 1].token_index].begin : sql.size();
-    const auto clause_body = trim_ascii(sql.substr(clause_keyword_end, next_clause_start - clause_keyword_end));
-    PLUSS_CHECK(!clause_body.empty(), "DataFrame::sql().execute: SQL clause cannot be empty");
-
-    switch (clause.kind) {
-      case SqlClauseKind::Where:
-        spec.where = clause_body;
-        break;
-      case SqlClauseKind::OrderBy:
-        spec.order = parse_order_clause(clause_body);
-        break;
-      case SqlClauseKind::Limit:
-        spec.limit = parse_non_negative_int(clause_body, "DataFrame::sql().execute LIMIT");
-        break;
-      case SqlClauseKind::Offset:
-        spec.offset = parse_non_negative_int(clause_body, "DataFrame::sql().execute OFFSET");
-        break;
+  hints.parsed = true;
+  const auto items = split_top_level_commas(select_segment);
+  hints.star_only = !items.empty();
+  for (const auto& item_raw : items) {
+    const auto item = trim_ascii(item_raw);
+    if (item == "*" || (item.size() > 2 && item.substr(item.size() - 2) == ".*")) {
+      continue;
     }
+    hints.star_only = false;
+    const auto ptoks = tokenize_sql(item);
+    if (ptoks.size() == 1 && (ptoks[0].kind == SqlTokenKind::Word || ptoks[0].kind == SqlTokenKind::Backtick)) {
+      hints.output_names.push_back(parse_identifier_token(ptoks[0], "DataFrame::sql().execute SELECT"));
+      continue;
+    }
+    if (ptoks.size() >= 3 && token_is_word(ptoks[ptoks.size() - 2], "as")
+        && (ptoks.back().kind == SqlTokenKind::Word || ptoks.back().kind == SqlTokenKind::Backtick)) {
+      hints.output_names.push_back(parse_identifier_token(ptoks.back(), "DataFrame::sql().execute SELECT AS"));
+      continue;
+    }
+    hints.output_names.clear();
+    return hints;
   }
 
-  return spec;
+  if (items.size() == 1 && (trim_ascii(items.front()) == "*" || trim_ascii(items.front()).ends_with(".*"))) {
+    hints.star_only = true;
+  }
+  return hints;
 }
 
-std::string explain_spec(const SqlSelectSpec& spec) {
+std::string format_explain_query_plan(sqlite3* db, const std::string& statement) {
+  sqlite3_stmt* raw = nullptr;
+  const auto explain_sql = "EXPLAIN QUERY PLAN " + statement;
+  const auto rc = sqlite3_prepare_v2(db, explain_sql.c_str(), -1, &raw, nullptr);
+  PLUSS_CHECK(rc == SQLITE_OK,
+              "DataFrame::sql().execute: failed to explain SQL plan: " + std::string(sqlite3_errmsg(db)));
+  SqliteStmt stmt(raw);
+
   std::vector<std::string> lines;
-  lines.push_back("SQL Plan:");
-  lines.push_back(fmt::format("  from: {} as {}", spec.primary_source.name, spec.primary_source.alias));
-  for (const auto& join : spec.joins) {
-    lines.push_back(fmt::format("  join: {} as {} on {} = {}",
-                                join.source.name,
-                                join.source.alias,
-                                join.on_left,
-                                join.on_right));
+  while ((sqlite3_step(stmt.get())) == SQLITE_ROW) {
+    const auto* detail = reinterpret_cast<const char*>(sqlite3_column_text(stmt.get(), 3));
+    lines.push_back(detail != nullptr ? std::string(detail) : std::string());
   }
-  if (spec.select_all) {
-    lines.push_back("  select: *");
-  } else {
-    std::vector<std::string> pieces;
-    pieces.reserve(spec.projections.size());
-    for (const auto& p : spec.projections) {
-      if (p.output == p.source) {
-        pieces.push_back(p.source);
+
+  std::string out = "SQL Plan:";
+  for (const auto& line : lines) {
+    out += "\n  " + line;
+  }
+  return out;
+}
+
+std::string sql_identifier(std::string_view value) {
+  return "\"" + escape_sql_identifier(value) + "\"";
+}
+
+std::string source_internal_table_name(std::size_t index) {
+  return fmt::format("__pluss_src_{}__", index);
+}
+
+bool has_feature_named(const DataFrame& frame, std::string_view name) {
+  return frame.get(name).has_value();
+}
+
+std::vector<std::string> visible_case_aliases(const DataFrame& frame,
+                                              const std::vector<std::string>& aliases) {
+  std::vector<std::string> out;
+  out.reserve(aliases.size());
+  for (const auto& alias : aliases) {
+    if (!has_feature_named(frame, alias)) {
+      out.push_back(alias);
+    }
+  }
+  return out;
+}
+
+std::string series_scalar_text(const pluss::Series& s, std::int64_t row) {
+  const auto* base = s.raw_data();
+  switch (s.scalar_type()) {
+    case pluss::codem::ScalarType::Bool:
+      return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
+    case pluss::codem::ScalarType::Int8:
+      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+    case pluss::codem::ScalarType::Int16:
+      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+    case pluss::codem::ScalarType::Int32:
+      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+    case pluss::codem::ScalarType::Int64:
+      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt8:
+      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+    case pluss::codem::ScalarType::UInt16:
+      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt32:
+      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt64:
+      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+    case pluss::codem::ScalarType::Float16:
+      return fmt::format("{:.6g}",
+                         pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
+    case pluss::codem::ScalarType::BFloat16:
+      return fmt::format("{:.6g}",
+                         pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
+    case pluss::codem::ScalarType::Float32:
+      return fmt::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
+    case pluss::codem::ScalarType::Float64:
+      return fmt::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
+    case pluss::codem::ScalarType::Complex64: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
+      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+    }
+    case pluss::codem::ScalarType::Complex128: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
+      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+    }
+    default:
+      return "";
+  }
+}
+
+bool row_is_valid(const Thread& thread, std::int64_t row) {
+  if (!detail::has_validity_mask(thread)) {
+    return true;
+  }
+  return detail::validity_mask(thread)->to_vec<bool>()[static_cast<std::size_t>(row)];
+}
+
+void bind_sqlite_null(sqlite3_stmt* stmt, const int index) {
+  PLUSS_CHECK(sqlite3_bind_null(stmt, index) == SQLITE_OK,
+              "DataFrame::sql().execute: sqlite bind null failed");
+}
+
+void bind_sqlite_text(sqlite3_stmt* stmt, const int index, const std::string& text) {
+  PLUSS_CHECK(sqlite3_bind_text(stmt, index, text.c_str(), static_cast<int>(text.size()), SQLITE_TRANSIENT) == SQLITE_OK,
+              "DataFrame::sql().execute: sqlite bind text failed");
+}
+
+void bind_thread_value(sqlite3_stmt* stmt, const int index, const Thread& thread, const std::int64_t row) {
+  if (!row_is_valid(thread, row)) {
+    bind_sqlite_null(stmt, index);
+    return;
+  }
+
+  switch (thread.kind()) {
+    case ThreadKind::Series: {
+      const auto& series = thread.as_series();
+      const auto* base = series.raw_data();
+      switch (series.scalar_type()) {
+        case pluss::codem::ScalarType::Bool:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, reinterpret_cast<const bool*>(base)[row] ? 1 : 0) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind bool failed");
+          return;
+        case pluss::codem::ScalarType::Int8:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, reinterpret_cast<const std::int8_t*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind int8 failed");
+          return;
+        case pluss::codem::ScalarType::Int16:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, reinterpret_cast<const std::int16_t*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind int16 failed");
+          return;
+        case pluss::codem::ScalarType::Int32:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, reinterpret_cast<const std::int32_t*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind int32 failed");
+          return;
+        case pluss::codem::ScalarType::Int64:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, reinterpret_cast<const std::int64_t*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind int64 failed");
+          return;
+        case pluss::codem::ScalarType::UInt8:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, reinterpret_cast<const std::uint8_t*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind uint8 failed");
+          return;
+        case pluss::codem::ScalarType::UInt16:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, reinterpret_cast<const std::uint16_t*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind uint16 failed");
+          return;
+        case pluss::codem::ScalarType::UInt32:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, reinterpret_cast<const std::uint32_t*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind uint32 failed");
+          return;
+        case pluss::codem::ScalarType::UInt64:
+          PLUSS_CHECK(sqlite3_bind_int64(stmt, index, static_cast<sqlite3_int64>(reinterpret_cast<const std::uint64_t*>(base)[row])) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind uint64 failed");
+          return;
+        case pluss::codem::ScalarType::Float16:
+          PLUSS_CHECK(sqlite3_bind_double(stmt,
+                                          index,
+                                          pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row])) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind float16 failed");
+          return;
+        case pluss::codem::ScalarType::BFloat16:
+          PLUSS_CHECK(sqlite3_bind_double(stmt,
+                                          index,
+                                          pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row])) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind bfloat16 failed");
+          return;
+        case pluss::codem::ScalarType::Float32:
+          PLUSS_CHECK(sqlite3_bind_double(stmt, index, reinterpret_cast<const float*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind float32 failed");
+          return;
+        case pluss::codem::ScalarType::Float64:
+          PLUSS_CHECK(sqlite3_bind_double(stmt, index, reinterpret_cast<const double*>(base)[row]) == SQLITE_OK,
+                      "DataFrame::sql().execute: sqlite bind float64 failed");
+          return;
+        default:
+          bind_sqlite_text(stmt, index, series_scalar_text(series, row));
+          return;
+      }
+    }
+    case ThreadKind::Note:
+      bind_sqlite_text(stmt, index, std::string(thread.as_note().at(row)));
+      return;
+    case ThreadKind::Timeline:
+      PLUSS_CHECK(sqlite3_bind_int64(
+                      stmt,
+                      index,
+                      static_cast<sqlite3_int64>(thread.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]))
+                      == SQLITE_OK,
+                  "DataFrame::sql().execute: sqlite bind timeline failed");
+      return;
+    case ThreadKind::TimeIndex:
+      PLUSS_CHECK(sqlite3_bind_int64(
+                      stmt,
+                      index,
+                      static_cast<sqlite3_int64>(
+                          thread.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]))
+                      == SQLITE_OK,
+                  "DataFrame::sql().execute: sqlite bind timeindex failed");
+      return;
+    default:
+      bind_sqlite_null(stmt, index);
+      return;
+  }
+}
+
+std::string sqlite_declared_type(const Thread& thread) {
+  switch (thread.kind()) {
+    case ThreadKind::Series: {
+      const auto dt = thread.as_series().dtype();
+      if (dt.scalar == pluss::codem::ScalarType::Bool || dt.is_integral()) {
+        return "INTEGER";
+      }
+      if (dt.is_floating()) {
+        return "REAL";
+      }
+      return "TEXT";
+    }
+    case ThreadKind::Timeline:
+    case ThreadKind::TimeIndex:
+      return "INTEGER";
+    case ThreadKind::Note:
+    default:
+      return "TEXT";
+  }
+}
+
+void exec_sql(sqlite3* db, std::string_view sql, std::string_view where) {
+  char* errmsg = nullptr;
+  const auto rc = sqlite3_exec(db, std::string(sql).c_str(), nullptr, nullptr, &errmsg);
+  if (rc != SQLITE_OK) {
+    const std::string detail = (errmsg != nullptr) ? std::string(errmsg) : std::string(sqlite3_errmsg(db));
+    if (errmsg != nullptr) {
+      sqlite3_free(errmsg);
+    }
+    PLUSS_FAIL(std::string(where) + ": " + detail);
+  }
+}
+
+std::optional<pluss::Series> maybe_validity(const std::vector<bool>& valid) {
+  if (std::all_of(valid.begin(), valid.end(), [](const bool v) { return v; })) {
+    return std::nullopt;
+  }
+  return pluss::make_series(valid);
+}
+
+std::string hex_blob(const void* data, const int nbytes) {
+  const auto* bytes = reinterpret_cast<const unsigned char*>(data);
+  static constexpr char kHex[] = "0123456789ABCDEF";
+  std::string out;
+  out.reserve(static_cast<std::size_t>(nbytes) * 2);
+  for (int i = 0; i < nbytes; ++i) {
+    out.push_back(kHex[(bytes[i] >> 4) & 0xF]);
+    out.push_back(kHex[bytes[i] & 0xF]);
+  }
+  return out;
+}
+
+bool declared_type_is_integer(std::string_view decl) {
+  const auto low = lower_ascii_copy(decl);
+  return low.find("int") != std::string::npos;
+}
+
+bool declared_type_is_float(std::string_view decl) {
+  const auto low = lower_ascii_copy(decl);
+  return low.find("real") != std::string::npos || low.find("float") != std::string::npos
+         || low.find("double") != std::string::npos || low.find("numeric") != std::string::npos
+         || low.find("decimal") != std::string::npos;
+}
+
+Thread build_column_thread(const ColumnCollector& collector) {
+  bool saw_text = false;
+  bool saw_double = false;
+  bool saw_int = false;
+  for (const auto& cell : collector.values) {
+    if (std::holds_alternative<std::string>(cell)) {
+      saw_text = true;
+      break;
+    }
+    if (std::holds_alternative<double>(cell)) {
+      saw_double = true;
+    } else if (std::holds_alternative<std::int64_t>(cell)) {
+      saw_int = true;
+    }
+  }
+
+  if (!saw_text && !saw_double && !saw_int && collector.declared_type.has_value()) {
+    saw_int = declared_type_is_integer(*collector.declared_type);
+    saw_double = !saw_int && declared_type_is_float(*collector.declared_type);
+  }
+
+  std::vector<bool> valid;
+  valid.reserve(collector.values.size());
+  for (const auto& cell : collector.values) {
+    valid.push_back(!std::holds_alternative<std::monostate>(cell));
+  }
+  const auto valid_mask = maybe_validity(valid);
+
+  if (saw_text || (!saw_double && !saw_int)) {
+    std::vector<std::string> values;
+    values.reserve(collector.values.size());
+    for (const auto& cell : collector.values) {
+      if (const auto* p = std::get_if<std::string>(&cell)) {
+        values.push_back(*p);
+      } else if (const auto* p = std::get_if<double>(&cell)) {
+        values.push_back(fmt::format("{:.17g}", *p));
+      } else if (const auto* p = std::get_if<std::int64_t>(&cell)) {
+        values.push_back(std::to_string(*p));
       } else {
-        pieces.push_back(fmt::format("{} AS {}", p.source, p.output));
+        values.emplace_back();
       }
     }
-    std::string joined;
-    for (std::size_t i = 0; i < pieces.size(); ++i) {
-      joined += pieces[i];
-      if (i + 1 < pieces.size()) joined += ", ";
-    }
-    lines.push_back("  select: " + joined);
-  }
-  if (spec.where.has_value()) lines.push_back("  where: " + *spec.where);
-  if (spec.order.has_value()) {
-    lines.push_back(fmt::format("  order: {} {} {}",
-                                spec.order->feature,
-                                spec.order->ascending ? "asc" : "desc",
-                                spec.order->nulls_last ? "nulls last" : "nulls first"));
-  }
-  if (spec.offset.has_value()) lines.push_back(fmt::format("  offset: {}", *spec.offset));
-  if (spec.limit.has_value()) lines.push_back(fmt::format("  limit: {}", *spec.limit));
-
-  std::string out;
-  for (std::size_t i = 0; i < lines.size(); ++i) {
-    out += lines[i];
-    if (i + 1 < lines.size()) out.push_back('\n');
-  }
-  return out;
-}
-
-using PlanCacheMap = std::unordered_map<std::string, SqlSelectSpec>;
-
-PlanCacheMap& sql_plan_cache() {
-  static PlanCacheMap cache;
-  return cache;
-}
-
-std::vector<std::string>& sql_plan_cache_order() {
-  static std::vector<std::string> order;
-  return order;
-}
-
-std::mutex& sql_plan_cache_mutex() {
-  static std::mutex m;
-  return m;
-}
-
-SqlSelectSpec parse_select_sql_cached(std::string_view statement, const DataFrame::SqlOptions& options) {
-  if (!options.enable_plan_cache || options.plan_cache_capacity == 0) {
-    return parse_select_sql(statement);
+    return valid_mask.has_value() ? Thread(pluss::make_note(values), *valid_mask) : Thread(pluss::make_note(values));
   }
 
-  const auto key = std::string(statement);
-  {
-    std::lock_guard<std::mutex> lock(sql_plan_cache_mutex());
-    const auto it = sql_plan_cache().find(key);
-    if (it != sql_plan_cache().end()) {
-      return it->second;
-    }
-  }
-
-  auto parsed = parse_select_sql(statement);
-  {
-    std::lock_guard<std::mutex> lock(sql_plan_cache_mutex());
-    auto& cache = sql_plan_cache();
-    auto& order = sql_plan_cache_order();
-    auto [it, inserted] = cache.emplace(key, parsed);
-    if (inserted) {
-      order.push_back(key);
-      while (cache.size() > options.plan_cache_capacity && !order.empty()) {
-        cache.erase(order.front());
-        order.erase(order.begin());
+  if (saw_double) {
+    std::vector<double> values;
+    values.reserve(collector.values.size());
+    for (const auto& cell : collector.values) {
+      if (const auto* p = std::get_if<double>(&cell)) {
+        values.push_back(*p);
+      } else if (const auto* p = std::get_if<std::int64_t>(&cell)) {
+        values.push_back(static_cast<double>(*p));
+      } else {
+        values.push_back(0.0);
       }
+    }
+    return valid_mask.has_value() ? Thread(pluss::make_series(values), *valid_mask) : Thread(pluss::make_series(values));
+  }
+
+  std::vector<std::int64_t> values;
+  values.reserve(collector.values.size());
+  for (const auto& cell : collector.values) {
+    if (const auto* p = std::get_if<std::int64_t>(&cell)) {
+      values.push_back(*p);
+    } else if (const auto* p = std::get_if<double>(&cell)) {
+      values.push_back(static_cast<std::int64_t>(*p));
     } else {
-      it->second = parsed;
+      values.push_back(0);
     }
   }
-  return parsed;
-}
-
-bool is_case_projection(std::string_view source_name, const DataFrame::SqlOptions& options) {
-  for (const auto& alias : options.case_axis_aliases) {
-    if (iequals(source_name, alias)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-std::string lower_ascii_copy(std::string_view s) {
-  std::string out;
-  out.reserve(s.size());
-  for (const auto ch : s) {
-    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
-  }
-  return out;
-}
-
-std::pair<std::optional<std::string>, std::string> split_qualified_identifier(std::string_view ident) {
-  const auto dot = ident.find('.');
-  if (dot == std::string_view::npos) {
-    return {std::nullopt, std::string(ident)};
-  }
-  PLUSS_CHECK(dot > 0 && dot + 1 < ident.size(),
-              "DataFrame::sql().execute: invalid qualified identifier '" + std::string(ident) + "'");
-  return {std::string(ident.substr(0, dot)), std::string(ident.substr(dot + 1))};
-}
-
-std::string resolve_feature_reference(std::string_view ident,
-                                      const std::unordered_map<std::string, std::string>& source_prefixes) {
-  const auto [prefix, feature] = split_qualified_identifier(ident);
-  if (!prefix.has_value()) {
-    return std::string(ident);
-  }
-  const auto it = source_prefixes.find(lower_ascii_copy(*prefix));
-  if (it == source_prefixes.end()) {
-    return std::string(ident);
-  }
-  if (it->second.empty()) {
-    return feature;
-  }
-  return it->second + "." + feature;
-}
-
-using SqlClock = std::chrono::steady_clock;
-
-std::int64_t elapsed_ms(const SqlClock::time_point& start) {
-  return static_cast<std::int64_t>(
-      std::chrono::duration_cast<std::chrono::milliseconds>(SqlClock::now() - start).count());
-}
-
-void enforce_timeout(const DataFrame::SqlOptions& options, const SqlClock::time_point& start, std::string_view stage) {
-  if (!options.timeout_ms.has_value()) {
-    return;
-  }
-  PLUSS_CHECK(*options.timeout_ms >= 0, "DataFrame::sql().execute: timeout_ms must be >= 0");
-  PLUSS_CHECK(elapsed_ms(start) <= *options.timeout_ms,
-              "DataFrame::sql().execute: timeout exceeded at stage '" + std::string(stage) + "'");
-}
-
-void enforce_row_limit(const DataFrame::SqlOptions& options,
-                       const DataFrame& frame,
-                       std::optional<std::int64_t> limit,
-                       std::string_view stage) {
-  if (!limit.has_value()) {
-    return;
-  }
-  PLUSS_CHECK(*limit >= 0, "DataFrame::sql().execute: row limit must be >= 0");
-  PLUSS_CHECK(frame.ncases() <= *limit,
-              "DataFrame::sql().execute: " + std::string(stage) + " rows exceed configured limit");
+  return valid_mask.has_value() ? Thread(pluss::make_series(values), *valid_mask) : Thread(pluss::make_series(values));
 }
 
 std::int64_t estimate_frame_bytes(const DataFrame& frame) {
@@ -913,130 +894,329 @@ void enforce_memory_budget(const DataFrame::SqlOptions& options, const DataFrame
               "DataFrame::sql().execute: estimated memory exceeds budget at stage '" + std::string(stage) + "'");
 }
 
-const DataFrame& resolve_source(std::string_view source_name,
-                                const DataFrame& primary_frame,
-                                const DataFrame::SqlOptions& options) {
-  if (iequals(source_name, "df")) {
-    return primary_frame;
+int sqlite_progress_callback(void* raw) {
+  auto* ctx = static_cast<TimeoutContext*>(raw);
+  if (ctx == nullptr || ctx->options == nullptr || !ctx->options->timeout_ms.has_value()) {
+    return 0;
   }
-  for (const auto& alias : options.primary_source_names) {
-    if (iequals(source_name, alias)) {
-      return primary_frame;
-    }
-  }
-  for (const auto& binding : options.sources) {
-    if (iequals(source_name, binding.name)) {
-      PLUSS_CHECK(binding.frame != nullptr,
-                  "DataFrame::sql().execute: source '" + binding.name + "' is bound to null DataFrame");
-      return *binding.frame;
-    }
-  }
-  PLUSS_FAIL("DataFrame::sql().execute: unknown source '" + std::string(source_name) + "'");
+  const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now() - ctx->start).count();
+  return elapsed > *ctx->options->timeout_ms ? 1 : 0;
 }
 
-DataFrame with_prefixed_columns(const DataFrame& frame, std::string_view prefix) {
-  std::vector<std::pair<std::string, Thread>> cols;
-  const auto names = frame.features();
-  cols.reserve(names.size());
-  for (const auto& name : names) {
-    cols.emplace_back(std::string(prefix) + name, frame.features(name));
+void attach_timeout_handler(sqlite3* db, TimeoutContext* ctx) {
+  if (ctx == nullptr || ctx->options == nullptr || !ctx->options->timeout_ms.has_value()) {
+    sqlite3_progress_handler(db, 0, nullptr, nullptr);
+    return;
   }
-  return DataFrame(std::move(cols), frame.label().values());
+  PLUSS_CHECK(*ctx->options->timeout_ms >= 0, "DataFrame::sql().execute: timeout_ms must be >= 0");
+  sqlite3_progress_handler(db, 1000, sqlite_progress_callback, ctx);
 }
 
-std::pair<std::string, std::string> resolve_join_keys(const DataFrame& left_frame,
-                                                      const DataFrame& right_frame,
-                                                      const std::string& right_source_name,
-                                                      const std::string& right_alias,
-                                                      std::string_view on_left,
-                                                      std::string_view on_right,
-                                                      const std::unordered_map<std::string, std::string>&
-                                                          source_prefixes) {
-  const auto [l_prefix, l_name] = split_qualified_identifier(on_left);
-  const auto [r_prefix, r_name] = split_qualified_identifier(on_right);
-  const auto right_alias_low = lower_ascii_copy(right_alias);
-  const auto right_source_low = lower_ascii_copy(right_source_name);
+void load_source(sqlite3* db,
+                 const std::string& source_name,
+                 const DataFrame& frame,
+                 const std::vector<std::string>& case_aliases,
+                 const std::size_t source_index) {
+  const auto internal_name = source_internal_table_name(source_index);
+  std::vector<std::string> create_parts;
+  const auto feature_names = frame.features();
+  create_parts.reserve(feature_names.size() + 1);
+  for (const auto& feature_name : feature_names) {
+    create_parts.push_back(sql_identifier(feature_name) + " " + sqlite_declared_type(frame.features(feature_name)));
+  }
+  create_parts.push_back(sql_identifier(kInternalCaseColumn) + " TEXT");
 
-  auto belongs_to_right = [&](const std::optional<std::string>& prefix) {
-    if (!prefix.has_value()) {
-      return false;
+  std::string create_sql = "CREATE TEMP TABLE " + sql_identifier(internal_name) + " (";
+  for (std::size_t i = 0; i < create_parts.size(); ++i) {
+    create_sql += create_parts[i];
+    if (i + 1 < create_parts.size()) {
+      create_sql += ", ";
     }
-    const auto low = lower_ascii_copy(*prefix);
-    return low == right_alias_low || low == right_source_low;
-  };
+  }
+  create_sql += ")";
+  exec_sql(db, create_sql, "DataFrame::sql().execute");
 
-  const bool left_is_right = belongs_to_right(l_prefix);
-  const bool right_is_right = belongs_to_right(r_prefix);
-  PLUSS_CHECK(left_is_right != right_is_right,
-              "DataFrame::sql().execute: JOIN ON must reference the joined source on exactly one side");
+  std::string insert_sql = "INSERT INTO " + sql_identifier(internal_name) + " VALUES (";
+  for (std::size_t i = 0; i < create_parts.size(); ++i) {
+    insert_sql += "?";
+    if (i + 1 < create_parts.size()) {
+      insert_sql += ", ";
+    }
+  }
+  insert_sql += ")";
 
-  std::string left_feature;
-  std::string right_feature;
-  if (left_is_right) {
-    right_feature = l_name;
-    left_feature = resolve_feature_reference(on_right, source_prefixes);
-  } else {
-    right_feature = r_name;
-    left_feature = resolve_feature_reference(on_left, source_prefixes);
+  sqlite3_stmt* raw_stmt = nullptr;
+  PLUSS_CHECK(sqlite3_prepare_v2(db, insert_sql.c_str(), -1, &raw_stmt, nullptr) == SQLITE_OK,
+              "DataFrame::sql().execute: failed to prepare sqlite insert");
+  SqliteStmt stmt(raw_stmt);
+
+  const auto labels = frame.label().values();
+  for (std::int64_t row = 0; row < frame.ncases(); ++row) {
+    PLUSS_CHECK(sqlite3_reset(stmt.get()) == SQLITE_OK, "DataFrame::sql().execute: sqlite reset failed");
+    PLUSS_CHECK(sqlite3_clear_bindings(stmt.get()) == SQLITE_OK,
+                "DataFrame::sql().execute: sqlite clear bindings failed");
+    int bind_index = 1;
+    for (const auto& feature_name : feature_names) {
+      bind_thread_value(stmt.get(), bind_index++, frame.features(feature_name), row);
+    }
+
+    std::string case_text;
+    if (row_is_valid(labels, row)) {
+      switch (labels.kind()) {
+        case ThreadKind::Series:
+          case_text = series_scalar_text(labels.as_series(), row);
+          break;
+        case ThreadKind::Note:
+          case_text = std::string(labels.as_note().at(row));
+          break;
+        case ThreadKind::Timeline:
+          case_text = fmt::format("{}", labels.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+          break;
+        case ThreadKind::TimeIndex:
+          case_text = fmt::format("{}",
+                                  labels.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+          break;
+        default:
+          break;
+      }
+    }
+    bind_sqlite_text(stmt.get(), bind_index, case_text);
+
+    const auto rc = sqlite3_step(stmt.get());
+    PLUSS_CHECK(rc == SQLITE_DONE, "DataFrame::sql().execute: sqlite insert failed");
   }
 
-  PLUSS_CHECK(left_frame.get(left_feature).has_value(),
-              "DataFrame::sql().execute: JOIN left key not found '" + left_feature + "'");
-  PLUSS_CHECK(right_frame.get(right_feature).has_value(),
-              "DataFrame::sql().execute: JOIN right key not found '" + right_feature + "'");
-  return {left_feature, right_feature};
+  std::string view_sql = "CREATE TEMP VIEW " + sql_identifier(source_name) + " AS SELECT ";
+  bool first = true;
+  for (const auto& feature_name : feature_names) {
+    if (!first) {
+      view_sql += ", ";
+    }
+    first = false;
+    view_sql += sql_identifier(feature_name);
+  }
+  for (const auto& alias : visible_case_aliases(frame, case_aliases)) {
+    if (!first) {
+      view_sql += ", ";
+    }
+    first = false;
+    view_sql += sql_identifier(kInternalCaseColumn) + " AS " + sql_identifier(alias);
+  }
+  view_sql += " FROM " + sql_identifier(internal_name);
+  exec_sql(db, view_sql, "DataFrame::sql().execute");
 }
 
-DataFrame project_frame(const DataFrame& frame,
-                        const SqlSelectSpec& spec,
-                        const DataFrame::SqlOptions& options,
-                        const std::unordered_map<std::string, std::string>& source_prefixes) {
-  if (spec.select_all) {
-    return frame;
+std::string rewrite_case_alias_references(std::string_view statement,
+                                          const std::vector<std::string>& case_aliases) {
+  if (case_aliases.empty()) {
+    return std::string(statement);
   }
 
-  std::vector<std::pair<std::string, Thread>> cols;
-  std::unordered_map<std::string, std::size_t> name_to_idx;
-  name_to_idx.reserve(spec.projections.size());
-  cols.reserve(spec.projections.size());
-  for (const auto& proj : spec.projections) {
-    PLUSS_CHECK(!proj.star, "DataFrame::sql().execute: invalid '*' projection state");
-    const auto resolved_source = resolve_feature_reference(proj.source, source_prefixes);
-    Thread col;
-    if (is_case_projection(proj.source, options) && !frame.get(resolved_source).has_value()) {
-      col = frame.label().values();
-    } else {
-      col = frame.features(resolved_source);
-    }
-    auto out_name = proj.output;
-    const auto it = name_to_idx.find(out_name);
-    if (it == name_to_idx.end()) {
-      name_to_idx.emplace(out_name, cols.size());
-      cols.emplace_back(std::move(out_name), std::move(col));
-      continue;
-    }
+  std::unordered_set<std::string> alias_lookup;
+  alias_lookup.reserve(case_aliases.size());
+  for (const auto& alias : case_aliases) {
+    alias_lookup.insert(lower_ascii_copy(alias));
+  }
 
-    switch (options.collision_policy) {
-      case DataFrame::SqlOptions::CollisionPolicy::Error:
-        PLUSS_FAIL("DataFrame::sql().execute: duplicate projected column name '" + out_name + "'");
-      case DataFrame::SqlOptions::CollisionPolicy::Overwrite:
-        cols[it->second].second = std::move(col);
-        break;
-      case DataFrame::SqlOptions::CollisionPolicy::Suffix: {
-        std::size_t k = 2;
-        std::string candidate = fmt::format("{}_{}", out_name, k);
-        while (name_to_idx.find(candidate) != name_to_idx.end()) {
-          ++k;
-          candidate = fmt::format("{}_{}", out_name, k);
+  const auto toks = tokenize_sql(statement);
+  if (toks.empty()) {
+    return std::string(statement);
+  }
+
+  std::string out;
+  out.reserve(statement.size() + case_aliases.size() * 8);
+  std::size_t cursor = 0;
+  for (std::size_t i = 0; i < toks.size(); ++i) {
+    const auto& tok = toks[i];
+    out.append(statement.substr(cursor, tok.begin - cursor));
+    cursor = tok.end;
+
+    std::string replacement = tok.text;
+    bool changed = false;
+
+    if (tok.kind == SqlTokenKind::Word) {
+      const auto dot = tok.text.rfind('.');
+      if (dot != std::string::npos && dot + 1 < tok.text.size()) {
+        const auto suffix = lower_ascii_copy(std::string_view(tok.text).substr(dot + 1));
+        if (alias_lookup.contains(suffix)) {
+          replacement = tok.text.substr(0, dot + 1) + "\"" + tok.text.substr(dot + 1) + "\"";
+          changed = true;
         }
-        name_to_idx.emplace(candidate, cols.size());
-        cols.emplace_back(std::move(candidate), std::move(col));
-        break;
+      } else if (alias_lookup.contains(lower_ascii_copy(tok.text))) {
+        const bool is_case_when = token_is_word(tok, "case") && i + 1 < toks.size() && token_is_word(toks[i + 1], "when");
+        if (!is_case_when) {
+          replacement = "\"" + tok.text + "\"";
+          changed = true;
+        }
+      }
+    }
+
+    out += changed ? replacement : std::string(statement.substr(tok.begin, tok.end - tok.begin));
+  }
+  out.append(statement.substr(cursor));
+  return out;
+}
+
+std::vector<ColumnCollector> collect_sqlite_rows(sqlite3* db,
+                                                 std::string_view statement,
+                                                 const DataFrame::SqlOptions& options,
+                                                 TimeoutContext* timeout) {
+  sqlite3_stmt* raw = nullptr;
+  const char* tail = nullptr;
+  const auto rc = sqlite3_prepare_v2(db, std::string(statement).c_str(), -1, &raw, &tail);
+  PLUSS_CHECK(rc == SQLITE_OK,
+              "DataFrame::sql().execute: sqlite prepare failed: " + std::string(sqlite3_errmsg(db)));
+  SqliteStmt stmt(raw);
+
+  PLUSS_CHECK(trim_ascii(tail != nullptr ? std::string_view(tail) : std::string_view()).empty(),
+              "DataFrame::sql().execute: only one SQL statement is allowed per execute() call");
+
+  const auto ncols = sqlite3_column_count(stmt.get());
+  PLUSS_CHECK(ncols > 0,
+              "DataFrame::sql().execute: statement did not produce a result set");
+
+  std::vector<ColumnCollector> collectors;
+  collectors.reserve(static_cast<std::size_t>(ncols));
+  for (int i = 0; i < ncols; ++i) {
+    const auto* raw_name = sqlite3_column_name(stmt.get(), i);
+    const auto* raw_decl = sqlite3_column_decltype(stmt.get(), i);
+    collectors.push_back(ColumnCollector{
+        .name = raw_name != nullptr ? std::string(raw_name) : fmt::format("column_{}", i),
+        .declared_type = raw_decl != nullptr ? std::optional<std::string>(raw_decl) : std::nullopt,
+        .values = {},
+    });
+  }
+
+  while (true) {
+    const auto step_rc = sqlite3_step(stmt.get());
+    if (step_rc == SQLITE_DONE) {
+      break;
+    }
+    if (step_rc == SQLITE_INTERRUPT && options.timeout_ms.has_value()) {
+      const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now() - timeout->start).count();
+      PLUSS_CHECK(elapsed <= *options.timeout_ms,
+                  "DataFrame::sql().execute: timeout exceeded during SQL execution");
+    }
+    PLUSS_CHECK(step_rc == SQLITE_ROW,
+                "DataFrame::sql().execute: sqlite step failed: " + std::string(sqlite3_errmsg(db)));
+
+    for (int i = 0; i < ncols; ++i) {
+      auto& collector = collectors[static_cast<std::size_t>(i)];
+      switch (sqlite3_column_type(stmt.get(), i)) {
+        case SQLITE_NULL:
+          collector.values.emplace_back(std::monostate{});
+          break;
+        case SQLITE_INTEGER:
+          collector.values.emplace_back(static_cast<std::int64_t>(sqlite3_column_int64(stmt.get(), i)));
+          break;
+        case SQLITE_FLOAT:
+          collector.values.emplace_back(sqlite3_column_double(stmt.get(), i));
+          break;
+        case SQLITE_TEXT: {
+          const auto* raw_text = reinterpret_cast<const char*>(sqlite3_column_text(stmt.get(), i));
+          const auto nbytes = sqlite3_column_bytes(stmt.get(), i);
+          collector.values.emplace_back(
+              raw_text != nullptr ? std::string(raw_text, raw_text + nbytes) : std::string());
+          break;
+        }
+        case SQLITE_BLOB:
+        default:
+          collector.values.emplace_back(hex_blob(sqlite3_column_blob(stmt.get(), i), sqlite3_column_bytes(stmt.get(), i)));
+          break;
       }
     }
   }
 
-  return DataFrame(std::move(cols), frame.label().values());
+  return collectors;
+}
+
+DataFrame build_result_frame(std::vector<ColumnCollector> collectors,
+                             const DataFrame::SqlOptions& options,
+                             const ProjectionHints& projection_hints) {
+  if (projection_hints.parsed && !projection_hints.star_only
+      && projection_hints.output_names.size() == collectors.size()) {
+    for (std::size_t i = 0; i < collectors.size(); ++i) {
+      collectors[i].name = projection_hints.output_names[i];
+    }
+  }
+
+  std::vector<ColumnCollector> filtered;
+  filtered.reserve(collectors.size());
+  for (auto& collector : collectors) {
+    if (projection_hints.star_only
+        && std::find(options.case_axis_aliases.begin(), options.case_axis_aliases.end(), collector.name)
+               != options.case_axis_aliases.end()) {
+      continue;
+    }
+    filtered.push_back(std::move(collector));
+  }
+
+  std::unordered_map<std::string, std::size_t> name_to_pos;
+  std::vector<std::pair<std::string, Thread>> cols;
+  cols.reserve(filtered.size());
+  for (auto& collector : filtered) {
+    auto out_name = collector.name;
+    const auto it = name_to_pos.find(out_name);
+    if (it != name_to_pos.end()) {
+      switch (options.collision_policy) {
+        case DataFrame::SqlOptions::CollisionPolicy::Error:
+          PLUSS_FAIL("DataFrame::sql().execute: duplicate projected column name '" + out_name + "'");
+        case DataFrame::SqlOptions::CollisionPolicy::Overwrite:
+          cols[it->second].second = build_column_thread(collector);
+          continue;
+        case DataFrame::SqlOptions::CollisionPolicy::Suffix: {
+          std::size_t k = 2;
+          std::string candidate = fmt::format("{}_{}", out_name, k);
+          while (name_to_pos.find(candidate) != name_to_pos.end()) {
+            ++k;
+            candidate = fmt::format("{}_{}", out_name, k);
+          }
+          out_name = std::move(candidate);
+          break;
+        }
+      }
+    }
+
+    name_to_pos.emplace(out_name, cols.size());
+    cols.emplace_back(out_name, build_column_thread(collector));
+  }
+
+  auto out = DataFrame(std::move(cols));
+  if (options.max_result_rows.has_value() && out.ncases() > *options.max_result_rows) {
+    out = out.slice(0, *options.max_result_rows);
+  }
+  enforce_memory_budget(options, out, "result");
+  return out;
+}
+
+SqliteDb build_sqlite_workspace(const DataFrame& primary_frame,
+                                const DataFrame::SqlOptions& options) {
+  sqlite3* raw_db = nullptr;
+  PLUSS_CHECK(sqlite3_open(":memory:", &raw_db) == SQLITE_OK,
+              "DataFrame::sql().execute: failed to open in-memory sqlite database");
+  SqliteDb db(raw_db);
+
+  exec_sql(db.get(), "PRAGMA temp_store = MEMORY", "DataFrame::sql().execute");
+  exec_sql(db.get(), "PRAGMA synchronous = OFF", "DataFrame::sql().execute");
+  exec_sql(db.get(), "BEGIN", "DataFrame::sql().execute");
+
+  std::size_t source_index = 0;
+  load_source(db.get(), std::string(kPrimarySourceName), primary_frame, options.case_axis_aliases, source_index++);
+  for (const auto& alias : options.primary_source_names) {
+    exec_sql(db.get(),
+             "CREATE TEMP VIEW " + sql_identifier(alias) + " AS SELECT * FROM " + sql_identifier(kPrimarySourceName),
+             "DataFrame::sql().execute");
+  }
+  for (const auto& binding : options.sources) {
+    PLUSS_CHECK(binding.frame != nullptr,
+                "DataFrame::sql().execute: source '" + binding.name + "' is bound to null DataFrame");
+    load_source(db.get(), binding.name, *binding.frame, options.case_axis_aliases, source_index++);
+  }
+
+  exec_sql(db.get(), "COMMIT", "DataFrame::sql().execute");
+  return db;
 }
 
 } // namespace
@@ -1044,137 +1224,88 @@ DataFrame project_frame(const DataFrame& frame,
 namespace detail {
 
 std::string sql_primary_source_name(std::string_view statement, const DataFrame::SqlOptions& options) {
-  const auto rendered_statement = apply_sql_params(statement, options);
-  const auto spec = parse_select_sql_cached(rendered_statement, options);
-  return spec.primary_source.name;
+  const auto rendered = apply_sql_params(statement, options);
+  const auto expanded = maybe_expand_table_name(rendered, options);
+  const auto trimmed = trim_ascii(expanded);
+  if (trimmed.empty()) {
+    return {};
+  }
+  if (is_simple_identifier(trimmed)) {
+    return trimmed;
+  }
+
+  const auto toks = tokenize_sql(trimmed);
+  std::int64_t depth = 0;
+  for (std::size_t i = 0; i + 1 < toks.size(); ++i) {
+    const auto& tok = toks[i];
+    if (tok.kind == SqlTokenKind::Punct && tok.text == "(") {
+      ++depth;
+      continue;
+    }
+    if (tok.kind == SqlTokenKind::Punct && tok.text == ")") {
+      --depth;
+      continue;
+    }
+    if (depth == 0 && token_is_word(tok, "from")) {
+      return parse_identifier_token(toks[i + 1], "DataFrame::sql().execute FROM");
+    }
+  }
+  return {};
 }
 
 } // namespace detail
 
 DataFrameSqlAccessor::DataFrameSqlAccessor(DataFrame frame, DataFrame::SqlOptions options)
-    : frame_(std::move(frame)), options_(std::move(options)) {}
+    : frame_(std::move(frame)),
+      options_(std::move(options)) {}
 
 DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
-  const auto t0 = SqlClock::now();
-  const auto rendered_statement = apply_sql_params(statement, options_);
-  const auto t1 = SqlClock::now();
-  const auto spec = parse_select_sql_cached(rendered_statement, options_);
-  const auto t2 = SqlClock::now();
+  const auto t0 = std::chrono::steady_clock::now();
+  const auto rendered = apply_sql_params(statement, options_);
+  auto sql = maybe_expand_table_name(rendered, options_);
+  sql = rewrite_case_alias_references(sql, options_.case_axis_aliases);
+  sql = trim_ascii(sql);
+  PLUSS_CHECK(!sql.empty(), "DataFrame::sql().execute: SQL statement cannot be empty");
 
   if (options_.diagnostics_trace_tokens) {
-    const auto toks = tokenize_sql(rendered_statement);
+    const auto toks = tokenize_sql(sql);
     std::string token_dump;
     token_dump.reserve(toks.size() * 12);
     for (std::size_t i = 0; i < toks.size(); ++i) {
       token_dump += toks[i].text;
-      if (i + 1 < toks.size()) token_dump += " | ";
+      if (i + 1 < toks.size()) {
+        token_dump += " | ";
+      }
     }
     ::pluss::codem::warn("sql.trace.tokens: " + token_dump);
   }
+
+  auto db = build_sqlite_workspace(frame_, options_);
+  TimeoutContext timeout{
+      .start = t0,
+      .options = &options_,
+  };
+  attach_timeout_handler(db.get(), &timeout);
+
   if (options_.diagnostics_explain || options_.diagnostics_trace_plan) {
-    ::pluss::codem::warn(explain_spec(spec));
+    ::pluss::codem::warn(format_explain_query_plan(db.get(), sql));
   }
 
-  const auto& primary = resolve_source(spec.primary_source.name, frame_, options_);
-  DataFrame out = primary;
-  enforce_row_limit(options_, out, options_.max_intermediate_rows, "intermediate");
-  enforce_memory_budget(options_, out, "initial");
+  const auto projection_hints = parse_projection_hints(sql);
+  auto collectors = collect_sqlite_rows(db.get(), sql, options_, &timeout);
+  auto out = build_result_frame(std::move(collectors), options_, projection_hints);
 
-  std::unordered_map<std::string, std::string> source_prefixes;
-  source_prefixes.emplace(lower_ascii_copy(spec.primary_source.name), "");
-  source_prefixes.emplace(lower_ascii_copy(spec.primary_source.alias), "");
-
-  bool includes_calling_frame = (&primary == &frame_);
-  for (const auto& join : spec.joins) {
-    enforce_timeout(options_, t0, "before_join");
-    const auto& right_src = resolve_source(join.source.name, frame_, options_);
-    includes_calling_frame = includes_calling_frame || (&right_src == &frame_);
-
-    auto [left_key, right_key] =
-        resolve_join_keys(out, right_src, join.source.name, join.source.alias, join.on_left, join.on_right, source_prefixes);
-    const auto right_prefixed = with_prefixed_columns(right_src, join.source.alias + ".");
-    out = out.unify(left_key, right_prefixed, join.source.alias + "." + right_key, "common", "_" + join.source.alias);
-
-    source_prefixes[lower_ascii_copy(join.source.name)] = join.source.alias;
-    source_prefixes[lower_ascii_copy(join.source.alias)] = join.source.alias;
-    enforce_row_limit(options_, out, options_.max_intermediate_rows, "intermediate");
-    enforce_memory_budget(options_, out, "join");
-  }
-
-  PLUSS_CHECK(includes_calling_frame,
-              "DataFrame::sql().execute: calling dataframe source is not part of FROM/JOIN sources");
-
-  enforce_timeout(options_, t0, "before_where");
-  if (spec.where.has_value()) {
-    out = out.query(*spec.where);
-    enforce_row_limit(options_, out, options_.max_intermediate_rows, "intermediate");
-    enforce_memory_budget(options_, out, "where");
-  }
-  enforce_timeout(options_, t0, "before_order");
-  if (spec.order.has_value()) {
-    auto order_feature = resolve_feature_reference(spec.order->feature, source_prefixes);
-    if (iequals(order_feature, "case") && !out.get("case").has_value()) {
-      out = out.label().sort(spec.order->ascending, spec.order->nulls_last);
-    } else {
-      out = out.arrange({
-          DataFrame::ArrangeSpec{order_feature, spec.order->ascending, spec.order->nulls_last},
-      });
-    }
-    enforce_row_limit(options_, out, options_.max_intermediate_rows, "intermediate");
-    enforce_memory_budget(options_, out, "order");
-  }
-
-  enforce_timeout(options_, t0, "before_projection");
-  out = project_frame(out, spec, options_, source_prefixes);
-  enforce_row_limit(options_, out, options_.max_intermediate_rows, "intermediate");
-  enforce_memory_budget(options_, out, "projection");
-
-  const auto nrows = out.ncases();
-  auto start = spec.offset.value_or(0);
-  if (start > nrows) {
-    start = nrows;
-  }
-
-  std::int64_t stop = nrows;
-  if (spec.limit.has_value()) {
-    if (*spec.limit > std::numeric_limits<std::int64_t>::max() - start) {
-      stop = nrows;
-    } else {
-      stop = start + *spec.limit;
-      if (stop > nrows) {
-        stop = nrows;
-      }
-    }
-  }
-
-  if (start != 0 || stop != nrows) {
-    out = out.slice(start, stop);
-  }
-
-  if (options_.max_result_rows.has_value() && out.ncases() > *options_.max_result_rows) {
-    out = out.slice(0, *options_.max_result_rows);
-  }
   if (options_.result_mode == DataFrame::SqlOptions::ResultMode::Chunked) {
     ::pluss::codem::warn(fmt::format("sql.result_mode=Chunked requested (chunk_rows={}) but execute() "
                                      "returns a materialized DataFrame",
                                      options_.chunk_rows));
   }
-  enforce_memory_budget(options_, out, "result");
 
-  enforce_timeout(options_, t0, "finalize");
-  const auto t3 = SqlClock::now();
   if (options_.diagnostics_profile) {
-    const auto render_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-    const auto parse_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    const auto exec_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
-    const auto total_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t0).count();
+    const auto total_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - t0).count();
     ::pluss::codem::warn(
-        fmt::format("sql.profile: render={}ms parse={}ms exec={}ms total={}ms rows={}",
-                    render_ms,
-                    parse_ms,
-                    exec_ms,
-                    total_ms,
-                    out.ncases()));
+        fmt::format("sql.profile: total={}ms rows={}", total_ms, out.ncases()));
   }
 
   return out;
@@ -1226,11 +1357,11 @@ DataFrameSqlAccessor DataFrame::sql() const {
 }
 
 DataFrameSqlPrepared DataFrame::prep_sql(std::string_view statement) const {
-  return DataFrameSqlAccessor(*this, SqlOptions{}).prepare(statement);
+  return sql().prepare(statement);
 }
 
 DataFrameSqlPrepared DataFrame::prep_sql(std::string_view statement, SqlOptions options) const {
-  return DataFrameSqlAccessor(*this, std::move(options)).prepare(statement);
+  return sql(std::move(options)).prepare(statement);
 }
 
 } // namespace pluss::table

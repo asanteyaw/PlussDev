@@ -65,6 +65,9 @@ int main() {
   heading("gather_dim0_per_column");
   std::cout << table.gather(0, gather_rows) << "\n\n";
 
+  heading("gather_negative_dim");
+  std::cout << table.gather(-1, gather_cols) << "\n\n";
+
   auto gather_input = pluss::make_series({10.0, 20.0, 30.0}, {3});
   gather_input.tracks_slope_(true);
   auto repeated = pluss::make_series({0, 0, 2}, {3});
@@ -83,6 +86,13 @@ int main() {
   auto row_index = pluss::make_series({0, 2, 3}, {3});
   heading("index_select_rows");
   std::cout << weight.index_select(0, row_index) << "\n\n";
+
+  auto column_index = pluss::make_series({2, 0}, {2});
+  heading("index_select_columns");
+  std::cout << weight.index_select(1, column_index) << "\n\n";
+
+  heading("index_select_negative_dim");
+  std::cout << weight.index_select(-1, column_index) << "\n\n";
 
   auto tracked_weight = pluss::make_series({
       {1.0, 1.0, 1.0},

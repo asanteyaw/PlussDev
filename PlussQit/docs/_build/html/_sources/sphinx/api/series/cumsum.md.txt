@@ -23,11 +23,26 @@ that position along `dim`.
 
 For a row `[1, 2, 3]`, the rowwise cumulative sum is `[1, 3, 6]`.
 
+That prefix idea is the important mental model:
+
+- position `0` sees only the first value
+- position `1` sees the first two values
+- position `2` sees the first three values
+
+Unlike a reduction, every intermediate running total survives in the output.
+
 ## Parameters
 
 **dim** (`std::int64_t`)
 
 The axis along which the running total is accumulated.
+
+Important details:
+
+- `dim = 0` scans down the first axis
+- `dim = 1` scans across the second axis
+- negative dims count from the back
+- the result keeps the same shape because a scan does not remove axes
 
 **keepdim** (`bool`)
 
@@ -93,7 +108,25 @@ data=[[1, 2, 3],
 
 Now the running total is vertical rather than horizontal.
 
-Example 3. `keepdim` is currently accepted but shape-neutral.
+Example 3. Negative dimensions count from the back, so `-1` means the last
+axis.
+
+```cpp
+std::cout << mat.cumsum(-1);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 3, 6],
+  [4, 9, 15]]
+```
+
+On this shape, that matches `cumsum(1)` because the last axis is the row-local
+column axis.
+
+Example 4. `keepdim` is currently accepted but shape-neutral.
 
 ```cpp
 std::cout << (mat.cumsum(1, false).sizes() == mat.cumsum(1, true).sizes() ? "true" : "false");
@@ -108,7 +141,28 @@ true
 That is not a coincidence. A scan already preserves rank and extent, so there
 is no axis to reinsert.
 
-Example 4. The backward pass is a reverse scan of the upstream sensitivity.
+Example 5. The in-place overload mutates the current `Series` but keeps the same
+scan semantics.
+
+```cpp
+auto inplace = mat.clone();
+inplace.cumsum_(1);
+
+std::cout << inplace;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 3, 6],
+  [4, 9, 15]]
+```
+
+Use the underscore form when you explicitly want to overwrite the source
+storage.
+
+Example 6. The backward pass is a reverse scan of the upstream sensitivity.
 
 ```cpp
 auto tracked_cumsum = mat.clone();
@@ -136,11 +190,23 @@ The first element in each row contributes to all three scanned outputs, so it
 receives derivative `3`. The last element contributes only to the last output,
 so it receives derivative `1`.
 
-## Notes
+## Gotchas And Failure Modes
 
 - `cumsum()` is a scan, not a reduction.
 - `keepdim` is currently shape-neutral.
 - The underscore overloads mutate storage but preserve the same scan semantics.
+- Choosing the wrong axis changes the meaning completely. Horizontal and
+  vertical scans answer different questions.
+- A `dim` outside the valid axis range fails.
+
+## Teaching Summary
+
+Use `cumsum()` when every running total matters, not just the final one:
+
+- `cumsum(dim)` preserves shape and stores all prefixes
+- `keepdim` is currently accepted but does not change the shape
+- `cumsum_` mutates the current `Series`
+- backward sensitivity runs in the reverse prefix direction
 
 ## See Also
 

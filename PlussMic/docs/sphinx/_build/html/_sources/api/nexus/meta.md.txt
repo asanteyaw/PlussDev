@@ -10,8 +10,10 @@
 Nexus::meta(std::string_view key) const -> std::optional<TableMeta>
 
 Nexus::meta(std::string_view key, const TableMeta& value) const -> Nexus
+Nexus::meta(std::initializer_list<std::pair<std::string_view, TableMeta>> values) const -> Nexus
 
 Nexus& Nexus::meta_(std::string_view key, const TableMeta& value)
+Nexus& Nexus::meta_(std::initializer_list<std::pair<std::string_view, TableMeta>> values)
 ```
 
 ## What It Does
@@ -22,6 +24,9 @@ A trio of exact aliases: the one-argument `meta(key)` calls
 [`set_table_meta_(key, value)`](set_table_meta.md). All three behave identically to their
 canonical counterparts — same throws, same non-mutating/mutating split, same return types.
 `meta` exists purely as a shorter, more conversational spelling for the same three calls.
+The bulk setter overload mirrors [`inject()`](inject.md): if you already know several
+table metadata records at once, pass them as one brace list, `std::map`, or
+`std::unordered_map` instead of chaining `.meta(...).meta(...).meta(...)`.
 
 ## Parameters
 
@@ -67,11 +72,58 @@ true
 one row per customer
 ```
 
+Example 2. Bulk metadata declaration keeps multi-table setup shorter.
+
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
+
+auto customers = DataFrame({
+    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+});
+auto orders = DataFrame({
+    {"order_id",    Thread(pluss::make_series({10.0, 11.0}))},
+    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"ordered_at",  Thread(pluss::make_timeline({
+        "2026-01-01T00:00:00Z",
+        "2026-01-03T00:00:00Z",
+    }))},
+});
+
+TableMeta customers_meta;
+customers_meta.primary_key = {"customer_id"};
+
+TableMeta orders_meta;
+orders_meta.primary_key = {"order_id"};
+orders_meta.time_field = "ordered_at";
+
+auto tagged = Nexus({
+    {"customers", customers},
+    {"orders", orders},
+}).meta({
+    {"customers", customers_meta},
+    {"orders", orders_meta},
+});
+
+std::cout << tagged.meta("customers")->primary_key.front() << "\n";
+std::cout << tagged.meta("orders")->time_field.value();
+```
+
+### Output
+
+```text
+customer_id
+ordered_at
+```
+
 ## Notes
 
 - Purely a naming alternative — see [`table_meta()`](table_meta.md) and
   [`set_table_meta()`](set_table_meta.md) for the full documentation, including throw
   conditions and the read-modify-write pattern for partial updates.
+- The bulk setter is still validated one table at a time. An unknown key throws the same
+  `"Nexus::set_table_meta: unknown table '<name>'"` error you would get from the
+  one-table form.
 
 ## See Also
 

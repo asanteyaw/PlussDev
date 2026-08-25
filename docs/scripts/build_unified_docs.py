@@ -87,11 +87,6 @@ SITES: dict[str, Site] = {
         docs_dir=REPO_ROOT / "PlussAI/docs/sphinx",
         scan_root=REPO_ROOT / "PlussAI",
         hub_slug="PlussAI",
-        generators=(
-            GeneratorStep(
-                script=REPO_ROOT / "PlussAI/docs/sphinx/generate_nodej_lymph_api_docs.py",
-            ),
-        ),
     ),
     "plusstils": Site(
         key="plusstils",

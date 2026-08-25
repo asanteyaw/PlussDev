@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::unite(pluss::msharp::RangeView::Of<Series> others,
+Series::unite(pluss::RangeView<Series> others,
               std::int64_t dim = 0,
               bool strict_dtype = true) const -> Series
 ```
@@ -27,7 +27,7 @@ which often preserve aliasing instead of allocating.
 
 ## Parameters
 
-**others** (`pluss::msharp::RangeView::Of<Series>`)
+**others** (`pluss::RangeView<Series>`)
 
 The additional series to concatenate after `self`.
 
@@ -83,8 +83,8 @@ by each input's width along the concatenated axis.
 Example 1. Concatenate along rows (`dim = 0`).
 
 ```cpp
-auto left = pluss::make_series(std::vector<double>{1, 2, 3, 4}, {2, 2});
-auto right = pluss::make_series(std::vector<double>{10, 20, 30, 40}, {2, 2});
+auto left = pluss::make_series({1, 2, 3, 4}, {2, 2});
+auto right = pluss::make_series({10, 20, 30, 40}, {2, 2});
 std::cout << left.unite({right}, 0, true);
 ```
 
@@ -122,7 +122,7 @@ Example 3. With `strict_dtype = true`, dtype mismatch is an error.
 
 ```cpp
 try {
-  auto ints = pluss::make_series(std::vector<std::int64_t>{7, 8, 9, 10}, {2, 2});
+  auto ints = pluss::make_series({7, 8, 9, 10}, {2, 2});
   std::cout << left.unite({ints}, 0, true);
 } catch (const std::exception& e) {
   std::string msg = e.what();
@@ -142,7 +142,7 @@ silent promotion when exact dtype parity matters.
 Example 4. Setting `strict_dtype = false` enables promotion/coercion.
 
 ```cpp
-auto ints = pluss::make_series(std::vector<std::int64_t>{7, 8, 9, 10}, {2, 2});
+auto ints = pluss::make_series({7, 8, 9, 10}, {2, 2});
 std::cout << left.unite({ints}, 0, false);
 ```
 
@@ -162,10 +162,8 @@ The result is `float64`, because that is the promoted common dtype between
 Example 5. Backward splits the output sensitivity into one slice per input.
 
 ```cpp
-auto tracked_left = pluss::make_series(
-    std::vector<double>{1.0, 2.0, 3.0, 4.0}, {2, 2});
-auto tracked_right = pluss::make_series(
-    std::vector<double>{10.0, 20.0, 30.0, 40.0}, {2, 2});
+auto tracked_left = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {2, 2});
+auto tracked_right = pluss::make_series({10.0, 20.0, 30.0, 40.0}, {2, 2});
 tracked_left.tracks_slope_(true);
 tracked_right.tracks_slope_(true);
 

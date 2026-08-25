@@ -225,6 +225,7 @@ namespace pluss::series {
         route_supported);
   }
   inline Series eye(std::int64_t n, std::int64_t m = -1, ScalarType dt = ScalarType::Float32) { return Series::eye(n, m, dt); }
+  inline Series eye(std::int64_t n, ScalarType dt) { return Series::eye(n, -1, dt); }
   inline Series eye(std::int64_t n, Config cfg) {
     const bool route_supported = pluss::cuda::supports_eye_factory_baseline(cfg.dtype);
     if (FactoryCore::should_construct_native_cuda_factory(cfg, route_supported)) {

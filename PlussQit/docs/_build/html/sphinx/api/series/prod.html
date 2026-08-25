@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::cumsum" href="cumsum.html" />
@@ -50,8 +50,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Multiplies values together, either across the whole series or along one chosen
-axis.</p>
+<p><code class="docutils literal notranslate"><span class="pre">prod()</span></code> multiplies values together, either across the whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> or along
+one chosen axis.</p>
 <p>Shape-wise, <code class="docutils literal notranslate"><span class="pre">prod()</span></code> follows the same reduction rules as
 <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a>/<a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a>:</p>
 <ul class="simple">
@@ -61,6 +61,9 @@ axis.</p>
 </ul>
 <p>The numerical intuition is different, though. <code class="docutils literal notranslate"><span class="pre">prod()</span></code> is very sensitive to
 zeros and large magnitudes. One zero in a lane zeros the whole lane product.</p>
+<p>That sensitivity is not an implementation quirk. It is the actual mathematical
+character of a multiplicative reduction, so <code class="docutils literal notranslate"><span class="pre">prod()</span></code> deserves more caution than
+<code class="docutils literal notranslate"><span class="pre">sum()</span></code> or <code class="docutils literal notranslate"><span class="pre">mean()</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -127,7 +130,21 @@ data=[[6],
   [120]]
 </pre></div>
 </div>
-<p>Example 4. One zero is enough to zero the whole lane product.</p>
+<p>Example 4. Negative dimensions count from the back, so <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last
+axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">prod</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[6, 120]
+</pre></div>
+</div>
+<p>On this shape, that matches the row-wise product because the last axis is the
+row-local column axis.</p>
+<p>Example 5. One zero is enough to zero the whole lane product.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">prod_with_zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
@@ -137,15 +154,15 @@ data=[[6],
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[0, 15]
 </pre></div>
 </div>
 <p>This is one of the main reasons <code class="docutils literal notranslate"><span class="pre">prod()</span></code> is numerically and algorithmically
 less forgiving than <code class="docutils literal notranslate"><span class="pre">sum()</span></code> or <code class="docutils literal notranslate"><span class="pre">mean()</span></code>.</p>
-<p>Example 5. The current reverse-mode path does not populate source sensitivity.</p>
+<p>Example 6. The current reverse-mode path does not populate source sensitivity.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_prod</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mat</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
 <span class="n">tracked_prod</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
@@ -160,8 +177,8 @@ less forgiving than <code class="docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[6, 120]
 has_dx=false
@@ -170,12 +187,25 @@ has_dx=false
 <p>That is current behavior, not a typo in the example.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">prod()</span></code> has the same shape contract as other reductions.</p></li>
 <li><p>Zeros dominate multiplicatively.</p></li>
 <li><p>Reverse-mode users should treat <code class="docutils literal notranslate"><span class="pre">prod()</span></code> as a current limitation point.</p></li>
+<li><p>Large magnitudes can grow or underflow quickly because the operation is
+multiplicative rather than additive.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">dim</span></code> outside the valid axis range fails through the shared reduction path.</p></li>
+</ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">prod()</span></code> when multiplication itself is the statistic you need:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prod()</span></code> is the multiplicative analogue of <code class="docutils literal notranslate"><span class="pre">sum()</span></code></p></li>
+<li><p>one zero wipes out the rest of a lane product</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> is only about shape retention</p></li>
+<li><p>reverse-mode support is currently a limitation on this surface</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -260,6 +290,7 @@ has_dx=false
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::permute(pluss::msharp::RangeView::Int dims) const -> Series
+Series::permute(pluss::RangeView<std::int64_t> dims) const -> Series
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ This is the right method when the intent is "move the last axis to the front",
 
 ## Parameters
 
-**dims** (`pluss::msharp::RangeView::Int`)
+**dims** (`pluss::RangeView<std::int64_t>`)
 
 The destination axis order.
 

@@ -1,7 +1,7 @@
 # Build Outputs
 
 - HTML root: `PlussAI/docs/sphinx/_build/html/index.html`
-- PDF output: `PlussAI/docs/sphinx/_build/latex/plussai_nodej_lymph_api_docs.pdf`
+- PDF output: `PlussAI/docs/sphinx/_build/latex/plussai_api_docs.pdf`
 
 Build commands:
 

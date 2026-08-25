@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>lymph::ColumnRouter &#8212; PlussAI  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d93d25b8"></script>
+    <script src="../../../_static/layout.js?v=5c2e594e"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="lymph::Stage" href="Stage.html" />
+    <link rel="prev" title="Lymph prep" href="../prep.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="lymph-columnrouter">
+<h1><code class="docutils literal notranslate"><span class="pre">lymph::ColumnRouter</span></code><a class="headerlink" href="#lymph-columnrouter" title="Link to this heading">¶</a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ColumnRouter</span></code> describes how feature columns are routed into stages or workflow
+branches.</p>
+<p>Use it when different feature subsets should follow different preprocessing paths.</p>
+</section>
+<section id="what-it-solves">
+<h2>What It Solves<a class="headerlink" href="#what-it-solves" title="Link to this heading">¶</a></h2>
+<p>Real tabular preprocessing is rarely “apply one thing to every column.”</p>
+<p>It is usually closer to:</p>
+<ul class="simple">
+<li><p>standardize the numeric columns</p></li>
+<li><p>one-hot encode the categoricals</p></li>
+<li><p>pass some columns through untouched</p></li>
+<li><p>define a remainder branch for “everything else”</p></li>
+</ul>
+<p>If that routing logic lives only as loose name lists near fit calls, it becomes
+hard to audit and easy to drift. <code class="docutils literal notranslate"><span class="pre">ColumnRouter</span></code> turns routing itself into an
+explicit reusable object.</p>
+</section>
+<section id="main-construction-styles">
+<h2>Main Construction Styles<a class="headerlink" href="#main-construction-styles" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ColumnRouter</span></code> is usually built through:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::columnrouter::names(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::columnrouter::where(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::columnrouter::remaining_of(...)</span></code></p></li>
+</ul>
+<p>The important split is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">names(...)</span></code> when the route is explicit and stable</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">where(...)</span></code> when the route is derived from column metadata</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">remaining_of(...)</span></code> when one branch should consume everything not already
+claimed</p></li>
+</ul>
+</section>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">lymph</span><span class="o">::</span><span class="n">ColumnRouter</span><span class="w"> </span><span class="nf">lymph::columnrouter::names</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">);</span>
+<span class="n">lymph</span><span class="o">::</span><span class="n">ColumnRouter</span><span class="w"> </span><span class="nf">lymph::columnrouter::where</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature_name</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">dtype</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">predicate</span><span class="p">);</span>
+<span class="n">lymph</span><span class="o">::</span><span class="n">ColumnRouter</span><span class="w"> </span><span class="nf">lymph::columnrouter::remaining_of</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">ColumnRouter</span><span class="o">::</span><span class="n">resolve</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">ordered_names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="practical-examples">
+<h2>Practical Examples<a class="headerlink" href="#practical-examples" title="Link to this heading">¶</a></h2>
+<p>This page uses the exact verifier program
+<code class="docutils literal notranslate"><span class="pre">lymph_prep_column_router_docverify_demo.cpp</span></code>.</p>
+<section id="example-1">
+<h3>Example 1<a class="headerlink" href="#example-1" title="Link to this heading">¶</a></h3>
+<p>This example shows both the explicit-name route and the predicate-plus-remainder
+route in one executable so you can compare them directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/lymph.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sstream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="p">{</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">join_i64</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">ostringstream</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">str</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="p">}</span><span class="w"> </span><span class="c1">// namespace</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">lymph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">lymph</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">).</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">raw</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.4</span><span class="p">,</span><span class="w"> </span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="mf">2.2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;balance&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="mf">0.9</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;late&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">}))},</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ordered_names</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;balance&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;late&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">};</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">ColumnRouter</span><span class="w"> </span><span class="n">named</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">columnrouter</span><span class="o">::</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;balance&quot;</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">ColumnRouter</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">columnrouter</span><span class="o">::</span><span class="n">where</span><span class="p">(</span>
+<span class="w">      </span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">dtype</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dtype</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;float64&quot;</span><span class="p">;</span>
+<span class="w">      </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">ColumnRouter</span><span class="w"> </span><span class="n">categorical</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">columnrouter</span><span class="o">::</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">ColumnRouter</span><span class="w"> </span><span class="n">remainder</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">columnrouter</span><span class="o">::</span><span class="n">remaining_of</span><span class="p">(</span><span class="n">categorical</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== names ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;named=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">join_i64</span><span class="p">(</span><span class="n">named</span><span class="p">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">ordered_names</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== where_and_remainder ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;numeric=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">join_i64</span><span class="p">(</span><span class="n">numeric</span><span class="p">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">ordered_names</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;categorical=&quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">join_i64</span><span class="p">(</span><span class="n">categorical</span><span class="p">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">ordered_names</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;remainder=&quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">join_i64</span><span class="p">(</span><span class="n">remainder</span><span class="p">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">ordered_names</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>== names ==
+named=[0, 1]
+== where_and_remainder ==
+numeric=[0, 1, 2]
+categorical=[3]
+remainder=[0, 1, 2]
+</pre></div>
+</div>
+<p>Read that output carefully:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">names(...)</span></code> is exact positional routing of the requested features</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">where(...)</span></code> resolved all <code class="docutils literal notranslate"><span class="pre">float64</span></code> columns in the ordered feature list</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">remaining_of(categorical)</span></code> captured the complement of the categorical route</p></li>
+</ul>
+<p>That is the normal <code class="docutils literal notranslate"><span class="pre">ColumnRouter</span></code> mental model:</p>
+<ul class="simple">
+<li><p>construction describes intent</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resolve(...)</span></code> turns that intent into concrete feature positions against a
+real frame</p></li>
+</ul>
+</section>
+</section>
+<section id="related-pages">
+<h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="Stage.html"><span class="std std-doc">Stage</span></a></p></li>
+<li><p><a class="reference internal" href="FeatureTransformer.html"><span class="std std-doc">FeatureTransformer</span></a></p></li>
+<li><p><a class="reference internal" href="../model/Workflow.html"><span class="std std-doc">Workflow</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../plussai_root.html">PlussAI API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/api/lymph/prep/ColumnRouter.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

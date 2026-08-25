@@ -113,12 +113,18 @@
 </section>
 <section id="sql-is-a-plussmic-select-language">
 <h2>SQL is a PlussMic SELECT language<a class="headerlink" href="#sql-is-a-plussmic-select-language" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame::sql()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFrameSqlAccessor</span></code>. The accessor executes <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> statements over the calling frame and optional bound sources.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame::sql()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFrameSqlAccessor</span></code>. The accessor binds the
+calling frame and optional extra sources into an in-memory SQLite workspace,
+executes the SQL there, and converts the result back into a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;SELECT age, job, balance FROM df WHERE age &gt;= 45&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The current SQL implementation supports <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> statements only. Non-<code class="docutils literal notranslate"><span class="pre">SELECT</span></code> statements such as <code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">FROM</span> <span class="pre">df</span></code> are rejected. This SQL layer is for shaping in-memory frames, not mutating databases.</p>
+<p>This SQL layer is still query-oriented. Statements that do not produce a result
+set, such as <code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">FROM</span> <span class="pre">df</span></code>, are rejected. But within result-producing SQL, the
+surface is much broader than the old parser-only engine: grouped aggregates,
+common table expressions, subqueries, <code class="docutils literal notranslate"><span class="pre">LEFT</span> <span class="pre">JOIN</span></code>, <code class="docutils literal notranslate"><span class="pre">DISTINCT</span></code>, and ordinary SQLite
+expressions now work.</p>
 <p>The calling frame is named <code class="docutils literal notranslate"><span class="pre">df</span></code> by default:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">age</span><span class="p">,</span><span class="w"> </span><span class="n">job</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">df</span>
 </pre></div>
@@ -127,26 +133,15 @@
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">customers</span><span class="p">.</span><span class="n">age</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">customers</span>
 </pre></div>
 </div>
-<p>The parser supports:</p>
+<p>Pluss-specific conveniences still remain on top of the SQLite backend:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">feature</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">feature</span> <span class="pre">AS</span> <span class="pre">alias</span></code></p></li>
-<li><p>qualified names such as <code class="docutils literal notranslate"><span class="pre">df.age</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">FROM</span> <span class="pre">df</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">FROM</span> <span class="pre">df</span> <span class="pre">AS</span> <span class="pre">alias</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">JOIN</span> <span class="pre">name</span> <span class="pre">ON</span> <span class="pre">left_feature</span> <span class="pre">=</span> <span class="pre">right_feature</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">WHERE</span> <span class="pre">...</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">feature</span> <span class="pre">ASC</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">feature</span> <span class="pre">DESC</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">feature</span> <span class="pre">ASC</span> <span class="pre">NULLS</span> <span class="pre">FIRST</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">feature</span> <span class="pre">ASC</span> <span class="pre">NULLS</span> <span class="pre">LAST</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">LIMIT</span> <span class="pre">n</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">OFFSET</span> <span class="pre">n</span></code></p></li>
-<li><p>scalar parameters such as <code class="docutils literal notranslate"><span class="pre">{min_age}</span></code></p></li>
-<li><p>identifier parameters such as <code class="docutils literal notranslate"><span class="pre">{&#64;feature_name}</span></code></p></li>
+<li><p>the calling frame is available as <code class="docutils literal notranslate"><span class="pre">df</span></code></p></li>
+<li><p>scalar parameters such as <code class="docutils literal notranslate"><span class="pre">{min_age}</span></code> still work</p></li>
+<li><p>identifier parameters such as <code class="docutils literal notranslate"><span class="pre">{&#64;feature_name}</span></code> still work</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">case_axis_aliases</span></code> still expose the case axis as selectable SQL columns</p></li>
+<li><p>bare source-name shorthand such as <code class="docutils literal notranslate"><span class="pre">df.sql().execute(&quot;df&quot;)</span></code> expands to
+<code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">df</span></code></p></li>
 </ul>
-<p>There are deliberate limits. <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> accepts one feature key. Projection items are feature names or aliases, not arbitrary expressions. <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> expressions are handled by <code class="docutils literal notranslate"><span class="pre">DataFrame::query</span></code>, so use the query predicate language there rather than expecting a full external SQL dialect.</p>
 </section>
 <section id="verified-sql-example">
 <h2>Verified SQL example<a class="headerlink" href="#verified-sql-example" title="Link to this heading">¶</a></h2>
@@ -261,7 +256,7 @@ Tamale  north   5      5
 <td><p>Control duplicate projection names: error, suffix, or overwrite.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_intermediate_rows</span></code></p></td>
-<td><p>Guard intermediate frames after joins, filtering, ordering, or projection.</p></td>
+<td><p>Legacy guard field. The SQLite backend materializes the final query result rather than exposing parser-stage intermediate frames.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_result_rows</span></code></p></td>
 <td><p>Cap the returned result.</p></td>
@@ -282,13 +277,13 @@ Tamale  north   5      5
 <td><p>Print tokenization output.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">diagnostics_trace_plan</span></code></p></td>
-<td><p>Print the parsed plan.</p></td>
+<td><p>Print the SQLite query plan.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enable_plan_cache</span></code></p></td>
-<td><p>Enable or disable parsed statement caching.</p></td>
+<td><p>Legacy field kept for API stability.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">plan_cache_capacity</span></code></p></td>
-<td><p>Set the statement plan cache capacity.</p></td>
+<td><p>Legacy field kept for API stability.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">result_mode</span></code></p></td>
 <td><p>Request materialized or chunked behavior. Current <code class="docutils literal notranslate"><span class="pre">execute()</span></code> still returns a materialized <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></td>

@@ -1,0 +1,61 @@
+#include <pluss/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::Series;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const DataFrame raw({
+      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
+      {"region", Thread(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
+      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
+  });
+
+  lymph::DataFrameBatchOptions options{};
+  options.feature_names = {"income", "region", "balance"};
+  options.note_policy = lymph::DataNotePolicy::Factorize;
+  options.layout = lymph::ObservationLayout::Rows;
+
+  lymph::FeatureTransformer transformer = lymph::make_feature_transformer(
+      raw,
+      options,
+      {
+          lymph::workflow::feature::compose(
+              {
+                  lymph::workflow::stage::standard_scaler(),
+              },
+              {"income"}),
+          lymph::workflow::feature::one_hot_encoder(
+              lymph::prep::OneHotEncoderOptions{
+                  .max_categories = 8,
+                  .overflow = lymph::prep::CategoryOverflowPolicy::KeepMostFrequent,
+                  .include_unknown_bucket = true,
+              },
+              {"region"}),
+      },
+      lymph::prep::FeatureRemainderPolicy::PassThrough);
+
+  const lymph::Payload payload = lymph::payload::make(raw)
+                                     .features({"income", "region", "balance"})
+                                     .note(lymph::DataNotePolicy::Factorize);
+  const lymph::FeatureBatch batch = payload.feature_batch();
+  const Series transformed =
+      lymph::resolve(transformer.learn_map(batch), "feature_transformer.learn_map");
+
+  std::cout << "== feature_transformer ==\n";
+  std::cout << "trained=" << transformer.trained()
+            << " stage_count=" << transformer.stage_count()
+            << " rows=" << transformed.sizes()[0]
+            << " features=" << transformed.sizes()[1] << "\n";
+  std::cout << transformed << "\n";
+
+  return 0;
+}

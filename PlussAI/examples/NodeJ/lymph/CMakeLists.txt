@@ -3,6 +3,20 @@ set(NODEJ_LYMPH_DEMOS
   lymph_end_to_end_hour_workflow_showcase
   lymph_feature_transformer_workflow_demo
   lymph_housing_ch2_end_to_end_notebook
+  lymph_api_reference_docverify_demo
+  lymph_model_prep_io_docverify_demo
+  lymph_validate_docverify_demo
+  lymph_metrics_docverify_demo
+  lymph_model_builder_docverify_demo
+  lymph_policy_docverify_demo
+  lymph_tune_docverify_demo
+  lymph_workflow_payload_docverify_demo
+  lymph_prep_docverify_demo
+  lymph_prep_column_router_docverify_demo
+  lymph_prep_standard_scaler_docverify_demo
+  lymph_prep_one_hot_encoder_docverify_demo
+  lymph_prep_feature_transformer_docverify_demo
+  lymph_prep_stage_docverify_demo
 )
 
 foreach(demo ${NODEJ_LYMPH_DEMOS})

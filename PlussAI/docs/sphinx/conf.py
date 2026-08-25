@@ -1,5 +1,3 @@
-import importlib.util
-
 project = 'PlussAI'
 author = 'Pluss Contributors'
 
@@ -15,19 +13,17 @@ master_doc = 'index'
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'README.md']
 
-if importlib.util.find_spec('pydata_sphinx_theme'):
-    html_theme = 'pydata_sphinx_theme'
-    html_theme_options = {
-        'show_toc_level': 2,
-        'show_nav_level': 2,
-        'navigation_depth': 3,
-        'secondary_sidebar_items': ['page-toc'],
-    }
-else:
-    html_theme = 'alabaster'
-
+html_theme = 'alabaster'
+html_theme_options = {
+    'sidebar_collapse': False,
+    'globaltoc_includehidden': True,
+}
+html_sidebars = {
+    '**': ['globaltoc.html', 'searchbox.html'],
+}
 html_static_path = ['_static']
 html_css_files = ['api_ref.css']
+html_js_files = ['api_nav.js', 'layout.js']
 pygments_style = "sphinx"
 pygments_dark_style = "native"
 
@@ -39,5 +35,5 @@ myst_enable_extensions = [
 
 latex_engine = 'pdflatex'
 latex_documents = [
-    ('index', 'plussai_nodej_lymph_api_docs.tex', 'PlussAI NodeJ + Lymph API Documentation', 'Pluss Contributors', 'manual'),
+    ('index', 'plussai_api_docs.tex', 'PlussAI API Documentation', 'Pluss Contributors', 'manual'),
 ]

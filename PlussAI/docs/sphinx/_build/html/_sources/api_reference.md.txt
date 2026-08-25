@@ -1,12 +1,14 @@
 # API Reference
 
-- [NodeJ Overview](nodej_overview.md)
-- [Lymph Overview](lymph_overview.md)
-- [NodeJ Full API Reference](nodej_full_api.md)
-- [Lymph Full API Reference](lymph_full_api.md)
+This section is organized by public family first, not by internal implementation
+names or generated header dumps.
 
-## Coverage Snapshot
+The goal is simple: enter through the family you are using in code, then move into
+its handwritten reference pages without needing to know the private `node*` names
+that sit underneath the public surface.
 
-- NodeJ pages: **230** (methods: 186, data-types: 44)
-- Lymph pages: **419** (methods: 380, data-types: 39)
-- Combined pages: **649**
+```{toctree}
+:maxdepth: 4
+
+api/plussai_root
+```

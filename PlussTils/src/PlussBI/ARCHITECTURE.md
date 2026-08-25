@@ -99,6 +99,18 @@ questions.
     API. PlussBI should not grow one execution path for `NexusQuery` and a
     second unrelated execution path for SQL text.
 
+13. The primary public BI authoring style is staged, not one giant chain.
+    The locked downstream shape is a staged C++ object-builder flow:
+    create a `Studio`, bind a `Nexus`, request a `Board`, configure that board
+    in place, build controls and views as named local objects, register them
+    explicitly, then render. This keeps small examples clean while staying
+    readable and maintainable for larger production dashboards.
+
+14. Ergonomic sugar is deferred until the staged surface is proven stable.
+    Shorter convenience forms can come later, but current implementation work
+    should optimize first for correctness, scalability, testability, and clear
+    ownership boundaries on the approved staged public surface.
+
 ## Open Product Decisions
 
 The following still need deliberate discussion before implementation grows
@@ -143,6 +155,12 @@ around them:
    materialized join plans, and registered derived views; it should not clone
    relationship planning or source coordination privately.
 
+7. Large dashboards must remain readable as code.
+   The public surface should favor named intermediate objects and staged
+   registration over a single endlessly chained expression. Fluent sub-builders
+   on a control or view are acceptable, but the top-level dashboard assembly
+   should stay readable, inspectable, and scalable.
+
 ## `Nexus` As Bundle Workbench Root
 
 `pluss::bundle::Nexus` is not merely "where the tables happen to sit." It is
@@ -160,6 +178,60 @@ PlussBI should explicitly rely on these existing workbench responsibilities:
 
 This matters because BI should not privately recreate any of that. The BI layer
 should add dashboard semantics, not a shadow workbench.
+
+## Locked Public Authoring Contract
+
+The approved downstream authoring contract for the current BI implementation
+track is:
+
+```cpp
+using namespace pluss::bi;
+
+Studio studio("credit");
+studio.source(nexus);
+
+auto& board = studio.board("overview");
+board.title("Credit Overview");
+board.grid(12, 8);
+
+auto segment = category("segment");
+segment.feature("segment").label("Segment").place(0, 0, 3, 1);
+board.control(segment);
+
+auto principal = range("principal");
+principal.feature("principal").label("Principal").place(3, 0, 4, 1);
+board.control(principal);
+
+auto risk = bar("risk_mix");
+risk.query(from("loans")).x("risk_band").title("Risk Mix").place(0, 1, 6, 3);
+board.view(risk);
+
+studio.show();
+```
+
+This shape is intentionally locked for the next BI phases.
+
+Why this is the primary public style:
+
+- It scales from small demos to enterprise dashboards without becoming a
+  visually noisy mega-chain.
+- Controls and views can be named, reused, configured conditionally, tested,
+  and passed around before registration.
+- `Studio`, `Board`, `Control`, and `View` each keep a clear ownership role.
+- Shared spec structs can still power the implementation underneath without
+  forcing that internal shape directly onto users.
+
+What is intentionally not the primary public style right now:
+
+- `Studio(...).source(...).board(...).control(...).view(...).show()` as the
+  main downstream authoring pattern
+- sugar added purely for terseness before the stable staged API is complete
+- `add(...)`-style registration that obscures whether the board received a
+  control, a view, or some other tile kind
+
+The implementation may still use builder semantics on each object, but the
+root composition model should stay staged: acquire object, configure object,
+register object, render studio.
 
 ## Proposed Object Model
 
@@ -181,8 +253,10 @@ namespace pluss::bi {
 
 class Studio {
 public:
+  explicit Studio(std::string id);
+
   Studio& source(const pluss::bundle::Nexus& nexus);
-  Studio& add(Board board);
+  Board& board(std::string id);
   Studio& theme(ThemeSpec spec);
   Studio& refresh();
   Studio& show();
@@ -191,6 +265,14 @@ public:
 
 } // namespace pluss::bi
 ```
+
+Notes:
+
+- `Studio` is the root coordinator, not a passive list of dashboards.
+- `board(...)` should return a stable board reference so downstream code can
+  configure a board incrementally over many lines.
+- The current public contract should favor `board(id)` over `add(Board{...})`
+  because staged assembly is the locked scalable authoring style.
 
 ### `Board`
 
@@ -201,6 +283,25 @@ Responsibilities:
 - owns layout metadata
 - owns tiles/cards
 - can be refreshed independently
+- accepts explicit `control(...)` and `view(...)` registration
+
+Suggested downstream shape:
+
+```cpp
+auto& board = studio.board("overview");
+board.title("Credit Overview");
+board.grid(12, 8);
+
+board.control(segment);
+board.view(risk);
+```
+
+Notes:
+
+- `Board` is the stable assembly surface for one dashboard page.
+- Explicit `control(...)` and `view(...)` registration is preferred over one
+  undifferentiated `add(...)` because BI needs to preserve the semantic
+  distinction between inputs and rendered analytic surfaces.
 
 ### `Tile`
 
@@ -211,6 +312,10 @@ Responsibilities:
 - holds one `View` or one `Control`
 - stores layout coordinates and sizing rules
 - exposes title/subtitle/footnote chrome
+
+`Tile` is primarily the internal placement abstraction that `Board` manages.
+Common downstream code should usually configure placement through `.place(...)`
+on controls and views rather than constructing `Tile` directly.
 
 ### `View`
 
@@ -234,6 +339,18 @@ Examples:
 - KPI card visual
 - scatter matrix visual
 
+Suggested downstream shape:
+
+```cpp
+auto risk = bar("risk_mix");
+risk.query(from("loans"))
+    .x("risk_band")
+    .title("Risk Mix")
+    .place(0, 1, 6, 3);
+
+board.view(risk);
+```
+
 ### `Control`
 
 Declarative interaction input.
@@ -243,6 +360,17 @@ Responsibilities:
 - binds to one or more source features
 - writes into shared session state
 - supports category filters, ranges, search, date windows, and toggles
+
+Suggested downstream shape:
+
+```cpp
+auto segment = category("segment");
+segment.feature("segment")
+       .label("Segment")
+       .place(0, 0, 3, 1);
+
+board.control(segment);
+```
 
 ### `Filter`
 
@@ -355,12 +483,13 @@ Fields should cover:
 The intended dashboard pipeline should be:
 
 1. `Studio` references a `pluss::bundle::Nexus`
-2. each `View` names a source, stored plan, or derived query path inside that
+2. `Board`s are requested from `Studio` and configured in place
+3. each `View` names a source, stored plan, or derived query path inside that
    `Nexus`
-3. `Session` contributes active shared filters and parameters
-4. `QuerySpec` resolves to a `DataFrame`
-5. `BindSpec` converts the frame into the correct Flash plot call
-6. the runtime host renders the result and wires interaction events back into
+4. `Session` contributes active shared filters and parameters
+5. `QuerySpec` resolves to a `DataFrame`
+6. `BindSpec` converts the frame into the correct Flash plot call
+7. the runtime host renders the result and wires interaction events back into
    `Session`
 
 That means Flash now benefiting from direct `DataFrame` plot overloads is not a
@@ -456,6 +585,50 @@ The first real implementation tranche should be:
 8. one working cross-filter control
 
 That produces a real usable BI seed instead of a large but inert type graph.
+
+## Execution Roadmap
+
+For implementation tracking, PlussBI should be treated as a 9-phase program.
+
+1. Core public surface.
+   `Studio`, `Board`, `Tile`, `View`, `Control`, `Filter`, `Session`,
+   `QuerySpec`, and `BindSpec` exist as usable public types.
+   The staged public authoring contract is the reference surface.
+
+2. First executable seed.
+   The shared planner resolves source, stored-plan, SQL, and traverse queries;
+   KPI, line, bar, pivot-table, and detail-table views render; session-driven
+   filters work end to end under tests.
+
+3. Planner ordering and control materialization.
+   The planner gains explicit query ordering, and control tiles appear in
+   render output with their active shared-state bindings exposed.
+
+4. Native host board runtime.
+   PlussView-native board composition, board-level refresh, and dashboard
+   chrome become real instead of each plot tile returning an isolated studio.
+   This phase should make the locked `Studio` / `Board` / `control(...)` /
+   `view(...)` staged downstream contract fully real.
+
+5. Shared cache and invalidation graph.
+   Query-result caching, render caching, and dependency-aware invalidation are
+   introduced centrally.
+
+6. Richer query planner.
+   Grouping, windowing, reshape planning, and reusable derived-query flows are
+   expanded while staying inside one planner path.
+
+7. Richer visual surface.
+   Heatmap, scatter, table styling, and higher-order analytic views are added
+   without forking data-flow semantics.
+
+8. Export and serialization.
+   Native save/export plus browser-ready artifact packaging are added from the
+   same studio definition.
+
+9. Hardening pass.
+   Broader tests, stricter guards, performance audits, and API tightening land
+   before the BI surface is treated as stable.
 
 ## Immediate Implementation Split
 

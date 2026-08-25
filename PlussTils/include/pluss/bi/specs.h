@@ -242,12 +242,19 @@ struct TraverseStep {
   pluss::bundle::nexus::JoinHow how{pluss::bundle::nexus::JoinHow::Left};
 };
 
+struct SortSpec {
+  std::string feature{};
+  bool ascending{true};
+  bool nulls_last{true};
+};
+
 struct QuerySpec {
   QueryMode mode{QueryMode::Source};
   std::string source{};
   std::string statement{};
   std::vector<TraverseStep> traverse{};
   std::vector<Filter> filters{};
+  std::vector<SortSpec> sort_specs{};
   std::vector<std::string> select_features{};
   std::vector<std::string> drop_features{};
   std::optional<std::int64_t> head_n{};
@@ -286,6 +293,19 @@ struct QuerySpec {
   [[nodiscard]] QuerySpec where(const Filter& value) const {
     QuerySpec out = *this;
     out.filters.push_back(value);
+    return out;
+  }
+
+  [[nodiscard]] QuerySpec arrange(
+      std::string_view feature,
+      bool ascending = true,
+      bool nulls_last = true) const {
+    QuerySpec out = *this;
+    out.sort_specs.push_back(SortSpec{
+        .feature = std::string(feature),
+        .ascending = ascending,
+        .nulls_last = nulls_last,
+    });
     return out;
   }
 

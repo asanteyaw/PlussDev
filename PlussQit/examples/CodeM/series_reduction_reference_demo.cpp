@@ -58,6 +58,9 @@ int main() {
   heading("mean_dim1_keepdim");
   std::cout << mat.mean(1, true) << "\n\n";
 
+  heading("mean_negative_dim");
+  std::cout << mat.mean(-1) << "\n\n";
+
   auto int_mat = pluss::make_series({
       {1, 2, 3},
       {4, 5, 6},
@@ -81,6 +84,9 @@ int main() {
 
   heading("prod_dim1_keepdim");
   std::cout << mat.prod(1, true) << "\n\n";
+
+  heading("prod_negative_dim");
+  std::cout << mat.prod(-1) << "\n\n";
 
   auto prod_with_zero = pluss::make_series({
       {2.0, 0.0, 4.0},
@@ -107,8 +113,16 @@ int main() {
   heading("cumsum_dim0");
   std::cout << mat.cumsum(0) << "\n\n";
 
+  heading("cumsum_negative_dim");
+  std::cout << mat.cumsum(-1) << "\n\n";
+
   heading("cumsum_keepdim_ignored");
   std::cout << (mat.cumsum(1, false).sizes() == mat.cumsum(1, true).sizes() ? "true" : "false") << "\n\n";
+
+  auto cumsum_inplace = mat.clone();
+  cumsum_inplace.cumsum_(1);
+  heading("cumsum_inplace");
+  std::cout << cumsum_inplace << "\n\n";
 
   auto tracked_cumsum = mat.clone();
   tracked_cumsum.tracks_slope_(true);
@@ -124,8 +138,23 @@ int main() {
   heading("cumprod_dim0");
   std::cout << mat.cumprod(0) << "\n\n";
 
+  heading("cumprod_negative_dim");
+  std::cout << mat.cumprod(-1) << "\n\n";
+
   heading("cumprod_keepdim_ignored");
   std::cout << (mat.cumprod(1, false).sizes() == mat.cumprod(1, true).sizes() ? "true" : "false") << "\n\n";
+
+  auto cumprod_with_zero = pluss::make_series({
+      {2.0, 0.0, 4.0},
+      {3.0, 5.0, 1.0},
+  });
+  heading("cumprod_zero_lane");
+  std::cout << cumprod_with_zero.cumprod(1) << "\n\n";
+
+  auto cumprod_inplace = mat.clone();
+  cumprod_inplace.cumprod_(1);
+  heading("cumprod_inplace");
+  std::cout << cumprod_inplace << "\n\n";
 
   auto tracked_cumprod = mat.clone();
   tracked_cumprod.tracks_slope_(true);

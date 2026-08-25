@@ -49,7 +49,7 @@ requiring half a dozen separate constructor families.
 
 ## Examples
 
-Example 1. A scalar input becomes a scalar `Series`.
+Example 1. A floating scalar becomes a scalar `Series`.
 
 ```cpp
 std::cout << pluss::series::make(42.5);
@@ -62,7 +62,20 @@ pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contig
 data=42.5
 ```
 
-Example 2. A 1D initializer list becomes a 1D series.
+Example 2. Integer scalars keep integer dtype by default.
+
+```cpp
+std::cout << pluss::series::make(7);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=7
+```
+
+Example 3. A 1D initializer list becomes a 1D series.
 
 ```cpp
 std::cout << pluss::series::make({10.0, 12.5, 9.0});
@@ -75,7 +88,20 @@ pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, cont
 data=[10, 12.5, 9]
 ```
 
-Example 3. Nested initializer lists infer a higher-rank shape directly.
+Example 4. Boolean initializer lists stay boolean.
+
+```cpp
+std::cout << pluss::series::make({true, false, true, true});
+```
+
+### Output
+
+```text
+pluss::Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, false, true, true]
+```
+
+Example 5. Nested initializer lists infer a higher-rank shape directly.
 
 ```cpp
 std::cout << pluss::series::make({
@@ -92,7 +118,24 @@ data=[[1, 2],
   [3, 4]]
 ```
 
-Example 4. Flat host data can be paired with an explicit shape option.
+Example 6. Integer nested lists infer integer dtype by policy.
+
+```cpp
+std::cout << pluss::series::make({
+    {1, 2},
+    {3, 4},
+});
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 2],
+  [3, 4]]
+```
+
+Example 7. Flat host data can be paired with an explicit shape option.
 
 ```cpp
 std::cout << pluss::series::make(
@@ -113,7 +156,23 @@ This is the important split inside `make()`:
 - nested values imply shape naturally
 - flat values need a shape hint if you want more than rank 1
 
-Example 5. A dtype override changes how the incoming values are stored.
+Example 8. The explicit-shape path can build higher-rank results too.
+
+```cpp
+std::cout << pluss::series::make(
+    std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0},
+    {1, 2, 3});
+```
+
+### Output
+
+```text
+pluss::Series(shape=[1,2,3], strides=[6,3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[[1, 2, 3],
+  [4, 5, 6]]]
+```
+
+Example 9. A dtype override changes how the incoming values are stored.
 
 ```cpp
 std::cout << pluss::series::make(
@@ -133,6 +192,23 @@ data=[[1, 2],
 The source values were integers, but the explicit dtype override stored them as
 `float64`.
 
+Example 10. The config path can override dtype as well.
+
+```cpp
+std::cout << pluss::series::make(
+    std::vector<int>{1, 2, 3, 4},
+    {2, 2},
+    pluss::Config{}.with_dtype(pluss::ScalarType::Int16));
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=int16, platform=cpu, numel=4, contiguous=true)
+data=[[1, 2],
+  [3, 4]]
+```
+
 ## Notes
 
 - `make()` is the most flexible value-first constructor on the public Series
@@ -149,9 +225,9 @@ The source values were integers, but the explicit dtype override stored them as
   values.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="full.html">
+  <a class="prev-link" href="linspace.html">
     <span class="label">Previous</span>
-    <span class="title">full</span>
+    <span class="title">linspace</span>
   </a>
   <a class="next-link" href="ones.html">
     <span class="label">Next</span>

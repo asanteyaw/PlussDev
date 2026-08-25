@@ -79,11 +79,18 @@ int main() {
   print_shape(scalar.sizes());
   std::cout << "\n\n";
 
+  heading("sizes_after_unsqueeze");
+  print_shape(mat.unsqueeze(1).sizes());
+  std::cout << "\n\n";
+
   heading("view_contiguous");
   std::cout << mat.view({3, 2}) << "\n\n";
 
   heading("view_reuse_other_sizes");
   std::cout << mat.view(shape_template.sizes()) << "\n\n";
+
+  heading("view_flatten_to_vector");
+  std::cout << mat.view({6}) << "\n\n";
 
   heading("view_noncontiguous_error");
   try {
@@ -108,6 +115,9 @@ int main() {
   heading("reshape_noncontiguous");
   std::cout << mat.transpose(0, 1).reshape({3, 2}) << "\n\n";
 
+  heading("reshape_reuse_other_sizes");
+  std::cout << mat.reshape(shape_template.sizes()) << "\n\n";
+
   auto tracked_mat = pluss::make_series({
       {1.0, 2.0, 3.0},
       {4.0, 5.0, 6.0},
@@ -127,6 +137,9 @@ int main() {
 
   heading("transpose_negative_dims");
   std::cout << cube.transpose(-1, -2) << "\n\n";
+
+  heading("transpose_same_dim_noop");
+  std::cout << mat.transpose(1, 1) << "\n\n";
 
   tracked_mat = pluss::make_series({
       {1.0, 2.0, 3.0},
@@ -161,6 +174,9 @@ int main() {
 
   heading("unsqueeze_end_negative");
   std::cout << mat.unsqueeze(-1) << "\n\n";
+
+  heading("unsqueeze_scalar");
+  std::cout << scalar.unsqueeze(0) << "\n\n";
 
   auto singleton = pluss::make_series({
       {

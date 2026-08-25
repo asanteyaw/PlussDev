@@ -1664,12 +1664,48 @@ void test_dataframe_sql_accessor() {
   expect(prepared_out.ncases() <= 3 && prepared_out.get("age").has_value(),
          "prepare_sql().execute(params): prepared query should execute with late-bound params");
 
-  expect_throw([&]() {
-                (void)df.sql(DataFrame::SqlOptions{
-                    .sources = {{"m", &metrics}},
-                }).execute("SELECT m.score FROM m LIMIT 1");
-              },
-              "sql(options).execute: calling dataframe source must be part of FROM/JOIN");
+  const auto source_only = df.sql(DataFrame::SqlOptions{
+      .sources = {{"m", &metrics}},
+  }).execute("SELECT m.score FROM m LIMIT 1");
+  expect(source_only.ncases() == 1 && source_only.get("m.score").has_value(),
+         "sql(options).execute: real SQL backend should allow querying a bound source directly");
+
+  const auto grouped = df.sql().execute(
+      "SELECT job, COUNT(*) AS n, AVG(age) AS mean_age "
+      "FROM df "
+      "WHERE job != 'unknown' "
+      "GROUP BY job "
+      "HAVING COUNT(*) >= 1 "
+      "ORDER BY n DESC, mean_age DESC "
+      "LIMIT 5");
+  expect(grouped.nfeatures() == 3 && grouped.get("job").has_value() && grouped.get("n").has_value()
+             && grouped.get("mean_age").has_value() && grouped.ncases() > 0,
+         "sql().execute: GROUP BY/HAVING aggregates should materialize through the sqlite backend");
+
+  const auto distinct_cte = df.sql().execute(
+      "WITH older AS ("
+      "  SELECT job "
+      "  FROM df "
+      "  WHERE age >= 45 AND job != 'unknown'"
+      ") "
+      "SELECT DISTINCT job FROM older ORDER BY job LIMIT 5");
+  expect(distinct_cte.nfeatures() == 1 && distinct_cte.get("job").has_value() && distinct_cte.ncases() > 0,
+         "sql().execute: CTEs and DISTINCT should execute through the sqlite backend");
+
+  const auto left_joined = df.sql(DataFrame::SqlOptions{
+      .sources = {{"m", &metrics}},
+  }).execute(
+      "SELECT df.age, m.score "
+      "FROM df LEFT JOIN m ON df.age = m.age "
+      "ORDER BY df.age DESC "
+      "LIMIT 6");
+  expect(left_joined.nfeatures() == 2 && left_joined.get("df.age").has_value()
+             && left_joined.get("m.score").has_value() && left_joined.ncases() == 6,
+         "sql().execute: LEFT JOIN should work through the embedded sqlite backend");
+
+  const auto table_name_shortcut = df.sql().execute("df");
+  expect(table_name_shortcut.nfeatures() == df.nfeatures() && table_name_shortcut.ncases() == df.ncases(),
+         "sql().execute: bare table-name shorthand should mirror pandas-style read_sql(table_name, ...)");
 }
 
 void test_versatile_dataframe_families() {
@@ -4491,13 +4527,16 @@ void test_nexus_pull_surface() {
   customers_events.keys = {{"customer_id", "customer_id"}};
   customers_events.cardinality = pluss::bundle::nexus::RelationshipCardinality::OneToMany;
 
+  std::unordered_map<std::string, pluss::bundle::nexus::TableMeta> meta_batch;
+  meta_batch.emplace("customers", customers_meta);
+  meta_batch.emplace("events", events_meta);
+
   const auto nx = pluss::bundle::Nexus({
                         {"customers", customers},
                         {"regions", regions},
                         {"events", events},
                     })
-                      .meta("customers", customers_meta)
-                      .meta("events", events_meta)
+                      .meta(meta_batch)
                       .links({customers_regions, customers_events});
 
   const auto pulled = nx.pull("customers", {
@@ -4587,6 +4626,40 @@ void test_nexus_pull_surface() {
              !pluss::table::detail::valid_at(built.features("last_event_at"), 2),
          "Fluent Nexus::pull builders should preserve root grain while exposing scalar lifts, grouped reducers, and advanced typed specs when needed");
 
+  const auto batched = nx.pull("customers")
+                           .take(std::map<std::string, std::string>{
+                               {"customer_id", "customer_id"},
+                               {"tier", "tier"},
+                           })
+                           .take("regions", std::map<std::string, std::string>{
+                               {"zone", "zone"},
+                           })
+                           .agg("events")
+                               .count(std::map<std::string, std::string>{
+                                   {"event_id", "event_count"},
+                                   {"occurred_at", "dated_event_count"},
+                               })
+                               .sum(std::unordered_map<std::string, std::string>{
+                                   {"spend", "total_spend"},
+                               })
+                               .max(std::unordered_map<std::string, std::string>{
+                                   {"spend", "max_spend"},
+                               })
+                           .end()
+                           .collect();
+  expect(batched.get("customer_id").has_value() &&
+             batched.get("tier").has_value() &&
+             batched.get("zone").has_value() &&
+             batched.get("event_count").has_value() &&
+             batched.get("dated_event_count").has_value() &&
+             batched.get("total_spend").has_value() &&
+             batched.get("max_spend").has_value() &&
+             batched.features("dated_event_count").as_series().to_vec<std::int64_t>()
+                 == std::vector<std::int64_t>({2, 3, 0}) &&
+             batched.features("total_spend").as_series().to_vec<double>(0) == 15.0 &&
+             batched.features("max_spend").as_series().to_vec<double>(1) == 8.0,
+         "Nexus fluent builders should accept batched std::map/std::unordered_map specs for metadata, take(), and grouped reducers");
+
   const auto typed = nx.pull("customers", {
       pluss::bundle::nexus::take("customer_id"),
       pluss::bundle::nexus::count("events.event_id", "event_count"),
@@ -4599,6 +4672,49 @@ void test_nexus_pull_surface() {
 
   expect_throw([&]() { (void)nx.pull("customers", {"events.event_id"}); },
                "Nexus::pull should still reject raw one-to-many projections that would break root grain");
+}
+
+void test_nexus_query_sql_accessor() {
+  const auto customers = DataFrame({
+      {"customer_id", pluss::make_series(std::vector<std::int64_t>{1, 2, 3})},
+      {"name", pluss::make_note({"Ama", "Kojo", "Esi"})},
+      {"tier", pluss::make_note({"gold", "silver", "gold"})},
+  });
+  const auto orders = DataFrame({
+      {"order_id", pluss::make_series(std::vector<std::int64_t>{10, 11, 12, 13})},
+      {"customer_id", pluss::make_series(std::vector<std::int64_t>{1, 1, 2, 3})},
+      {"amount", pluss::make_series(std::vector<double>{8.0, 12.0, 4.0, 20.0})},
+  });
+
+  const auto nx = pluss::bundle::Nexus({
+      {"customers", customers},
+      {"orders", orders},
+  });
+
+  const auto grouped = nx.query().execute(
+      "SELECT customer_id, SUM(amount) AS total_amount "
+      "FROM orders "
+      "GROUP BY customer_id "
+      "HAVING SUM(amount) >= 8 "
+      "ORDER BY total_amount DESC");
+  expect(grouped.nfeatures() == 2 && grouped.get("customer_id").has_value()
+             && grouped.get("total_amount").has_value() && grouped.ncases() == 2,
+         "Nexus::query().execute: workspace SQL should support grouped aggregates from any Nexus table");
+
+  const auto joined = nx.query().execute(
+      "WITH filtered AS ("
+      "  SELECT customer_id, amount "
+      "  FROM orders "
+      "  WHERE amount >= 8"
+      ") "
+      "SELECT customers.name, SUM(filtered.amount) AS total_amount "
+      "FROM filtered "
+      "LEFT JOIN customers ON customers.customer_id = filtered.customer_id "
+      "GROUP BY customers.name "
+      "ORDER BY total_amount DESC");
+  expect(joined.nfeatures() == 2 && joined.get("customers.name").has_value()
+             && joined.get("total_amount").has_value() && joined.ncases() == 2,
+         "Nexus::query().execute: workspace SQL should support CTEs and joins without a special root-table restriction");
 }
 
 void test_nexus_workspace_insights_and_views() {
@@ -4981,6 +5097,7 @@ int main(int argc, char** argv) {
       {"parallel_engine_matches_serial_engine", test_parallel_engine_matches_serial_engine},
       {"auto_engine_policy_switches_between_parallel_and_serial", test_auto_engine_policy_switches_between_parallel_and_serial},
       {"dataframe_sql_accessor", test_dataframe_sql_accessor},
+      {"nexus_query_sql_accessor", test_nexus_query_sql_accessor},
       {"versatile_dataframe_families", test_versatile_dataframe_families},
       {"replace_exact_and_null_overloads", test_replace_exact_and_null_overloads},
       {"select_and_place_helpers", test_select_and_place_helpers},

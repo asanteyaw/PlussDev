@@ -120,6 +120,14 @@ NexusPull& take(pluss::msharp::RangeView::Of<std::string_view> sources);
 NexusPull& take(
     std::string_view table,
     pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& count(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& sum(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& mean(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& median(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& min(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& max(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& std(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+NexusPullAgg& var(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
 NexusPullAgg agg(std::string_view table);
 NexusPull& add(const PullSpec& spec);
 NexusPull& add(std::initializer_list<PullSpec> specs);
@@ -136,6 +144,12 @@ brace-list, vector, array, and similar name ranges are adapted through the same
 - Scoped related-table lifts such as `.take("regions", {{"zone", "zone"}})` accept a
   range of `(source, alias)` pairs and then expose it to the builder as a
   `RangeView`.
+- The same batched-pair idea now extends to grouped reducers, so
+  `.agg("events").sum({{"spend", "total_spend"}, {"fee", "total_fee"}})` is valid and
+  avoids one method call per feature when several columns share the same reduction.
+- If you prefer standard associative containers, `std::map` and `std::unordered_map`
+  adapt through the same pair-based builder surface for `.meta(...)`, `.take(...)`, and
+  scoped reducer batches.
 - In other words, user-facing code stays short; the adapter types standardize the
   overload surface and prevent the ambiguity that the earlier raw `initializer_list`
   overload set introduced.
@@ -194,8 +208,10 @@ auto nx = Nexus({
     {"customers", customers},
     {"regions", regions},
     {"events", events},
-}).meta("customers", customer_meta)
-  .meta("events", event_meta)
+}).meta({
+    {"customers", customer_meta},
+    {"events", event_meta},
+})
   .links({customer_region, customer_events});
 
 auto pulled = nx.pull("customers")
@@ -224,6 +240,95 @@ Notice the alias behavior:
 - `.agg("events") ... .end()` scopes several grouped reducers under one child table token
 - aggregate helpers usually want an explicit alias (`"event_count"`, `"total_spend"`)
 - windows are declared structurally with `.windowed(...)` or `.root_windowed(...)`
+
+## Example: Batched Maps Instead Of Repeated Chains
+
+If several fields share the same operation, a small associative container usually reads
+better than one call per field.
+
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
+
+auto customers = DataFrame({
+    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"region_id",   Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto regions = DataFrame({
+    {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
+    {"zone",      Thread(pluss::make_note({"west", "east"}))},
+});
+auto events = DataFrame({
+    {"event_id",    Thread(pluss::make_series({100.0, 101.0, 102.0}))},
+    {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
+    {"spend",       Thread(pluss::make_series({10.0, 5.0, 8.0}))},
+    {"occurred_at", Thread(pluss::make_timeline({
+        "2026-01-01T00:00:00Z",
+        "2026-01-20T00:00:00Z",
+        "2026-01-25T00:00:00Z",
+    }))},
+});
+
+TableMeta customer_meta;
+customer_meta.primary_key = {"customer_id"};
+
+TableMeta event_meta;
+event_meta.time_field = "occurred_at";
+
+Relationship customer_region;
+customer_region.name = "customer_region";
+customer_region.left_table = "customers";
+customer_region.right_table = "regions";
+customer_region.keys = {{"region_id", "region_id"}};
+customer_region.cardinality = RelationshipCardinality::ManyToOne;
+
+Relationship customer_events;
+customer_events.name = "customer_events";
+customer_events.left_table = "customers";
+customer_events.right_table = "events";
+customer_events.keys = {{"customer_id", "customer_id"}};
+customer_events.cardinality = RelationshipCardinality::OneToMany;
+
+std::unordered_map<std::string, TableMeta> meta_batch;
+meta_batch.emplace("customers", customer_meta);
+meta_batch.emplace("events", event_meta);
+
+auto nx = Nexus({
+    {"customers", customers},
+    {"regions", regions},
+    {"events", events},
+}).meta(meta_batch)
+  .links({customer_region, customer_events});
+
+auto pulled = nx.pull("customers")
+    .take(std::map<std::string, std::string>{
+        {"customer_id", "customer_id"},
+    })
+    .take("regions", std::map<std::string, std::string>{
+        {"zone", "zone"},
+    })
+    .agg("events")
+        .count(std::map<std::string, std::string>{
+            {"event_id", "event_count"},
+            {"occurred_at", "dated_event_count"},
+        })
+        .sum(std::unordered_map<std::string, std::string>{
+            {"spend", "total_spend"},
+        })
+    .end()
+    .collect();
+
+std::cout << pulled.features();
+```
+
+### Output
+
+```text
+customer_id zone event_count dated_event_count total_spend
+```
+
+This is still the same `NexusPull` builder. The only difference is that repeated
+same-shape calls are collapsed into one bulk declaration.
 
 ## Example: Range-Friendly Root Lists
 

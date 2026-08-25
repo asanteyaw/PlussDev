@@ -26,9 +26,17 @@ CODEM_API pluss::codem::Series std(const pluss::codem::Series& x,
                                    bool keepdim = false);
 
 CODEM_API pluss::codem::Series nanvar(const pluss::codem::Series& x);
+CODEM_API pluss::codem::Series nanvar(const pluss::codem::Series& x,
+                                      std::int64_t dim,
+                                      bool keepdim = false);
 CODEM_API pluss::codem::Series nanstd(const pluss::codem::Series& x);
+CODEM_API pluss::codem::Series nanstd(const pluss::codem::Series& x,
+                                      std::int64_t dim,
+                                      bool keepdim = false);
 CODEM_API pluss::codem::Series skewness(const pluss::codem::Series& x);
+CODEM_API pluss::codem::Series skewness(const pluss::codem::Series& x, std::int64_t dim);
 CODEM_API pluss::codem::Series kurtosis(const pluss::codem::Series& x);
+CODEM_API pluss::codem::Series kurtosis(const pluss::codem::Series& x, std::int64_t dim);
 
 CODEM_API pluss::codem::Series movsum(const pluss::codem::Series& x, std::int64_t window, std::int64_t dim = -1);
 CODEM_API pluss::codem::Series movmean(const pluss::codem::Series& x, std::int64_t window, std::int64_t dim = -1);
@@ -40,7 +48,9 @@ CODEM_API pluss::codem::Series movvar(const pluss::codem::Series& x, std::int64_
 CODEM_API pluss::codem::Series normr(const pluss::codem::Series& x);
 CODEM_API pluss::codem::Series normc(const pluss::codem::Series& x);
 CODEM_API pluss::codem::Series standardize(const pluss::codem::Series& x);
+CODEM_API pluss::codem::Series standardize(const pluss::codem::Series& x, std::int64_t dim);
 CODEM_API pluss::codem::Series center(const pluss::codem::Series& x);
+CODEM_API pluss::codem::Series center(const pluss::codem::Series& x, std::int64_t dim);
 
 CODEM_API pluss::codem::Series pdist2(const pluss::codem::Series& x, const pluss::codem::Series& y);
 CODEM_API pluss::codem::Series cdist(const pluss::codem::Series& x, const pluss::codem::Series& y);

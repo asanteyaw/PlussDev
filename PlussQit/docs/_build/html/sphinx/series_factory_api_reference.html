@@ -13,12 +13,12 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="pluss::series::arange" href="api/series_factory/arange.html" />
-    <link rel="prev" title="Series::argmin" href="api/series/argmin.html" />
+    <link rel="prev" title="Series::kurtosis" href="api/series/kurtosis.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -81,18 +81,30 @@ the overload quirks that materially change the result.</p>
 </section>
 <section id="current-coverage">
 <h2>Current Coverage<a class="headerlink" href="#current-coverage" title="Link to this heading">¶</a></h2>
-<p>This first handwritten factory batch covers the core constructors users touch
-immediately:</p>
+<p>The current handwritten factory batch now covers the public constructor families
+most users actually reach first and second:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">arange</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">empty</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">full</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">make</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ones</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">zeros</span></code></p></li>
+<li><p>direct value construction: <code class="docutils literal notranslate"><span class="pre">make</span></code></p></li>
+<li><p>shape-first constants and layouts: <code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">zeros</span></code>, <code class="docutils literal notranslate"><span class="pre">ones</span></code>, <code class="docutils literal notranslate"><span class="pre">full</span></code>, <code class="docutils literal notranslate"><span class="pre">eye</span></code></p></li>
+<li><p>range/grid builders: <code class="docutils literal notranslate"><span class="pre">arange</span></code>, <code class="docutils literal notranslate"><span class="pre">linspace</span></code></p></li>
+<li><p>like-factories: <code class="docutils literal notranslate"><span class="pre">empty_like</span></code>, <code class="docutils literal notranslate"><span class="pre">zeros_like</span></code>, <code class="docutils literal notranslate"><span class="pre">ones_like</span></code>, <code class="docutils literal notranslate"><span class="pre">full_like</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rand_like</span></code>, <code class="docutils literal notranslate"><span class="pre">randn_like</span></code>, <code class="docutils literal notranslate"><span class="pre">randint_like</span></code>, <code class="docutils literal notranslate"><span class="pre">eye_like</span></code></p></li>
+<li><p>stochastic constructors: <code class="docutils literal notranslate"><span class="pre">rand</span></code>, <code class="docutils literal notranslate"><span class="pre">randn</span></code>, <code class="docutils literal notranslate"><span class="pre">rand_btw</span></code>, <code class="docutils literal notranslate"><span class="pre">randint</span></code>, <code class="docutils literal notranslate"><span class="pre">normal</span></code>,
+<code class="docutils literal notranslate"><span class="pre">randperm</span></code>, <code class="docutils literal notranslate"><span class="pre">bernoulli</span></code>, <code class="docutils literal notranslate"><span class="pre">poisson</span></code>, <code class="docutils literal notranslate"><span class="pre">multinomial</span></code></p></li>
+<li><p>complex constructors: <code class="docutils literal notranslate"><span class="pre">complex</span></code>, <code class="docutils literal notranslate"><span class="pre">polar</span></code></p></li>
 </ul>
-<p>The next batch should extend this landing page into <code class="docutils literal notranslate"><span class="pre">eye</span></code>, <code class="docutils literal notranslate"><span class="pre">linspace</span></code>, the
-stochastic families, like-factories, and the complex constructors.</p>
+<p>Those pages are split this way on purpose.</p>
+<ul class="simple">
+<li><p>The core random pages (<code class="docutils literal notranslate"><span class="pre">rand</span></code>, <code class="docutils literal notranslate"><span class="pre">randn</span></code>) teach seed and dtype policy.</p></li>
+<li><p>The interval/discrete pages (<code class="docutils literal notranslate"><span class="pre">rand_btw</span></code>, <code class="docutils literal notranslate"><span class="pre">randint</span></code>, <code class="docutils literal notranslate"><span class="pre">randperm</span></code>) teach how
+those rules change once bounds or uniqueness matter.</p></li>
+<li><p>The like-factory pages teach “same geometry as this existing tensor” as a
+separate mental model from ordinary shape-first construction.</p></li>
+<li><p>The complex pages teach the pairwise “two real tensors in, one complex tensor
+out” surface, which behaves differently from the scalar-fill factories.</p></li>
+</ul>
+<p>What is still out of scope for this handwritten batch is the unsupported sparse
+and quantized constructor stub family.</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="pluss-inline-prev-next">
@@ -170,6 +182,7 @@ stochastic families, like-factories, and the complex constructors.</p>
 <li class="toctree-l1"><a class="reference internal" href="../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Stats.html">Statistics: var / std</a></li>
@@ -194,7 +207,7 @@ stochastic families, like-factories, and the complex constructors.</p>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
-      <li>Previous: <a href="api/series/argmin.html" title="previous chapter">Series::argmin</a></li>
+      <li>Previous: <a href="api/series/kurtosis.html" title="previous chapter">Series::kurtosis</a></li>
       <li>Next: <a href="api/series_factory/arange.html" title="next chapter">pluss::series::arange</a></li>
   </ul></li>
   </ul></li>

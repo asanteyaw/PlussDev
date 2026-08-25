@@ -80,7 +80,7 @@ the differentiable surface of the clamp itself. Use the value-returning
 Example 1. A scalar floor raises only the positions below the bound.
 
 ```cpp
-auto line = pluss::make_series(std::vector<double>{-2.0, -0.5, 0.0, 1.0, 3.0}, {5});
+auto line = pluss::make_series({-2.0, -0.5, 0.0, 1.0, 3.0}, {5});
 
 std::cout << line.clamp_min(0.0);
 ```
@@ -122,9 +122,8 @@ Example 3. The `Series` overload broadcasts a row-shaped lower bound across the
 leading dimension.
 
 ```cpp
-auto lows = pluss::make_series(std::vector<double>{2, 4, 3}, {3});
-auto grid = pluss::make_series(
-    std::vector<double>{1, 5, 3, 0, 7, 2},
+auto lows = pluss::make_series({2, 4, 3}, {3});
+auto grid = pluss::make_series({1, 5, 3, 0, 7, 2},
     {2, 3});
 
 std::cout << grid.clamp_min(lows);

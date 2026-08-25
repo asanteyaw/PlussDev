@@ -76,16 +76,36 @@ Series nanvar(const Series& x) {
   return invoke_self_("nanvar", x, "nanvar");
 }
 
+Series nanvar(const Series& x, std::int64_t dim, bool keepdim) {
+  require_defined_(x, "nanvar");
+  return x.nanvar(dim, keepdim);
+}
+
 Series nanstd(const Series& x) {
   return invoke_self_("nanstd", x, "nanstd");
+}
+
+Series nanstd(const Series& x, std::int64_t dim, bool keepdim) {
+  require_defined_(x, "nanstd");
+  return x.nanstd(dim, keepdim);
 }
 
 Series skewness(const Series& x) {
   return invoke_self_("skewness", x, "skewness");
 }
 
+Series skewness(const Series& x, std::int64_t dim) {
+  require_defined_(x, "skewness");
+  return pluss::codem::_compat::invoke("skewness", x, {dim});
+}
+
 Series kurtosis(const Series& x) {
   return invoke_self_("kurtosis", x, "kurtosis");
+}
+
+Series kurtosis(const Series& x, std::int64_t dim) {
+  require_defined_(x, "kurtosis");
+  return pluss::codem::_compat::invoke("kurtosis", x, {dim});
 }
 
 Series movsum(const Series& x, std::int64_t window, std::int64_t dim) {
@@ -124,8 +144,18 @@ Series standardize(const Series& x) {
   return invoke_self_("standardize", x, "standardize");
 }
 
+Series standardize(const Series& x, std::int64_t dim) {
+  require_defined_(x, "standardize");
+  return x.standardize(dim);
+}
+
 Series center(const Series& x) {
   return invoke_self_("center", x, "center");
+}
+
+Series center(const Series& x, std::int64_t dim) {
+  require_defined_(x, "center");
+  return x.center(dim);
 }
 
 Series pdist2(const Series& x, const Series& y) {

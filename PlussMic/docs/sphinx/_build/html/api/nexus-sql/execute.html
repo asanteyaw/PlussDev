@@ -48,11 +48,12 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Executes a SQL <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> statement against the tables loaded into the <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>
-workspace and returns the materialized result as a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">FROM</span></code> clause must name a real workspace table such as <code class="docutils literal notranslate"><span class="pre">customers</span></code>,
-<code class="docutils literal notranslate"><span class="pre">orders</span></code>, or <code class="docutils literal notranslate"><span class="pre">trans</span></code>. <code class="docutils literal notranslate"><span class="pre">FROM</span> <span class="pre">df</span></code> is intentionally rejected, because there is no
-single implicit calling frame on a multi-table workspace.</p>
+<p>Executes a SQL query against the tables loaded into the <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> workspace and
+returns the materialized result as a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">FROM</span></code> clause must name real workspace tables such as <code class="docutils literal notranslate"><span class="pre">customers</span></code>,
+<code class="docutils literal notranslate"><span class="pre">orders</span></code>, or <code class="docutils literal notranslate"><span class="pre">trans</span></code>, but there is no longer a special root-table requirement.
+Any Nexus table can appear in <code class="docutils literal notranslate"><span class="pre">FROM</span></code>, <code class="docutils literal notranslate"><span class="pre">JOIN</span></code>, a common table expression, or a
+subquery.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>

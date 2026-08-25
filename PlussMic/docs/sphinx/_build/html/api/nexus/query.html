@@ -56,6 +56,10 @@ workspace.</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">query()</span></code> when you want SQL-style <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">...</span> <span class="pre">FROM</span> <span class="pre">...</span> <span class="pre">JOIN</span> <span class="pre">...</span></code> over the
 workspace. Use <a class="reference internal" href="from.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">from()</span></code></span></a> when you want relationship-graph traversal
 without SQL.</p>
+<p>Unlike the older root-table-proxy behavior, <code class="docutils literal notranslate"><span class="pre">query()</span></code> no longer requires you to
+anchor the statement to one special workspace table first. Any named Nexus table can
+appear in <code class="docutils literal notranslate"><span class="pre">FROM</span></code>, <code class="docutils literal notranslate"><span class="pre">JOIN</span></code>, CTEs, or subqueries, and the whole statement runs through
+the same in-memory SQLite backend that powers <a class="reference internal" href="../dataframe/sql.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sql()</span></code></span></a>.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
@@ -75,6 +79,13 @@ without SQL.</p>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3 1
+</pre></div>
+</div>
+<p>Because this is now a genuine workspace SQL surface, richer statements are also
+valid:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;WITH named AS (SELECT customer_id, name FROM customers) &quot;</span>
+<span class="w">    </span><span class="s">&quot;SELECT DISTINCT name FROM named ORDER BY name&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>

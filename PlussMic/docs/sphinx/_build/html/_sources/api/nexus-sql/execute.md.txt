@@ -12,12 +12,13 @@ NexusQuery::execute(std::string_view statement) const -> DataFrame
 
 ## What It Does
 
-Executes a SQL `SELECT` statement against the tables loaded into the `Nexus`
-workspace and returns the materialized result as a `DataFrame`.
+Executes a SQL query against the tables loaded into the `Nexus` workspace and
+returns the materialized result as a `DataFrame`.
 
-The `FROM` clause must name a real workspace table such as `customers`,
-`orders`, or `trans`. `FROM df` is intentionally rejected, because there is no
-single implicit calling frame on a multi-table workspace.
+The `FROM` clause must name real workspace tables such as `customers`,
+`orders`, or `trans`, but there is no longer a special root-table requirement.
+Any Nexus table can appear in `FROM`, `JOIN`, a common table expression, or a
+subquery.
 
 ## Example
 

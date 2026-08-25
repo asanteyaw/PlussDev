@@ -7,52 +7,83 @@
 ## Signature
 
 ```cpp
-Series::view(pluss::msharp::RangeView::Int new_sizes) const -> Series
+Series::view(pluss::RangeView<std::int64_t> new_sizes) const -> Series
 ```
 
 ## What It Does
 
 Reinterprets the same underlying storage under a new shape without copying.
 
-`view()` is the strict shape-reinterpretation surface. You use it when the
-no-copy property is part of the contract, not just a performance preference.
-If the requested shape cannot be expressed as a direct alias, `view()` fails
-instead of quietly allocating a normalized copy.
+That no-copy rule is not just a performance footnote. It is the main semantic
+contract of `view()`:
 
-In the current implementation that strictness is intentionally conservative:
+- same storage
+- same values
+- same `numel()`
+- new logical shape
+- fail if aliasing cannot be preserved directly
 
-- the source must be contiguous
-- the requested shape must preserve total `numel()`
+That is why `view()` and [`reshape()`](reshape.md) are both public APIs instead
+of one API with two marketing descriptions:
 
-If you want "give me this shape, copy if needed," the right method is
-[`reshape()`](reshape.md), not `view()`.
+- `view()` protects aliasing
+- `reshape()` protects the requested final shape
+
+If you remember only one thing from this page, remember that split.
 
 ## Parameters
 
-**new_sizes** (`pluss::msharp::RangeView::Int`)
+**new_sizes** (`pluss::RangeView<std::int64_t>`)
 
-The desired output shape.
+The desired logical output shape.
 
-In ordinary use you can pass brace literals such as `{3, 2}` directly, or reuse
-another `Series`’s [`sizes()`](sizes.md) result.
+In practice this is usually passed as:
+
+- a brace literal like `{3, 2}`
+- another tensor's [`sizes()`](sizes.md) result
+
+Two rules matter:
+
+- `new_sizes` must preserve total `numel()`
+- the current implementation requires the source to be contiguous
+
+So the method is validating both numerical compatibility and direct
+view-eligibility.
 
 ## Returns
 
 `Series`
-    A new `Series` handle over the same storage, with the requested logical
-    shape.
+    A new handle over the same storage with the requested logical shape.
+
+This is a new object, but still an aliasing object. If one alias mutates the
+shared storage, the other alias sees the same underlying values under its own
+shape interpretation.
 
 ## Autograd Behavior
 
-`view()` preserves reverse-mode connectivity. Gradients flowing into the view are
-reshaped back to the original shape on the way to the source.
+`view()` preserves reverse-mode connectivity.
 
-That is the right mental model: `view()` changes only how the same values are
-indexed, so the backward path only has to restore the original shape metadata.
+That is exactly the expected rule for a pure shape reinterpretation:
 
-## Examples
+- forward changes metadata
+- backward restores the original metadata
 
-The examples on this page build incrementally.
+There is no arithmetic happening here, only indexing reinterpretation.
+
+## Failure Model
+
+`view()` is intentionally strict.
+
+The main failure classes are:
+
+- non-contiguous source
+- incompatible target `numel()`
+
+One current implementation quirk is worth teaching explicitly: in the examples
+below, those two conceptual failures collapse to the same top-line error text.
+So the error string is less specific than the underlying rule.
+
+## Verified Examples
 
 Example 1. Reinterpret a contiguous `2 x 3` series as `3 x 2`.
 
@@ -74,11 +105,10 @@ data=[[1, 2],
   [5, 6]]
 ```
 
-This is not a transpose. The flat storage order stayed `[1, 2, 3, 4, 5, 6]`;
-you simply asked to reread that same sequence under a different shape.
+This is not a transpose. The flat read order is still `[1, 2, 3, 4, 5, 6]`.
+Only the shape used to interpret that order changed.
 
-Example 2. `new_sizes` can be borrowed from another tensor's shape metadata, not
-just spelled out manually.
+Example 2. The target shape can be borrowed from another tensor's metadata.
 
 ```cpp
 auto shape_template = pluss::make_series({
@@ -99,10 +129,26 @@ data=[[1, 2],
   [5, 6]]
 ```
 
-What matters is not that the shape came from another tensor. What matters is
-that `[3, 2]` still has the same `numel()` as `mat`.
+This is the practical `sizes()` + `view()` pattern: reuse a known shape without
+building an owning temporary.
 
-Example 3. A non-contiguous input is rejected instead of being copied.
+Example 3. `view()` can also flatten when the aliasing contract still holds.
+
+```cpp
+std::cout << mat.view({6});
+```
+
+### Output
+
+```text
+pluss::Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[1, 2, 3, 4, 5, 6]
+```
+
+That makes the no-copy rule concrete. You are not asking for a fresh vector
+copy. You are asking for the same storage seen as one axis.
+
+Example 4. A non-contiguous source is rejected instead of being normalized.
 
 ```cpp
 try {
@@ -120,11 +166,11 @@ try {
 view: requires contiguous in v0
 ```
 
-That failure is deliberate. Once the source stops being directly viewable,
-`view()` forces you to make an explicit choice to use [`reshape()`](reshape.md)
-instead.
+This is the moment where `reshape()` becomes the correct tool instead. Once the
+source stops being directly viewable, `view()` refuses to hide that fact behind
+a copy.
 
-Example 4. A `numel()` mismatch also fails.
+Example 5. A `numel()` mismatch also fails.
 
 ```cpp
 try {
@@ -141,22 +187,23 @@ try {
 view: requires contiguous in v0
 ```
 
-This is a current implementation quirk worth knowing: contiguity failure and
-shape incompatibility collapse to the same top-line error text because both are
-checked through the same view-eligibility gate.
+Conceptually the problem here is "wrong total element count." Practically, the
+current implementation reports the same top-line message as the non-contiguous
+case.
 
 ## Notes
 
-- `view()` is the no-copy contract, not the forgiving one.
-- Shape compatibility still requires equal total `numel()`.
-- In the current implementation, contiguity is mandatory even if a more general
-  stride reinterpretation could theoretically exist.
+- `view()` is the strict no-copy shape API.
+- Equal `numel()` is mandatory.
+- The current implementation requires contiguity.
+- If your contract is "final shape first, aliasing if possible," use
+  [`reshape()`](reshape.md) instead.
 
 ## See Also
 
-- [`Series::reshape`](reshape.md): same target shape, but copy-capable.
-- [`Series::sizes`](sizes.md): a convenient way to feed shape metadata into
-  `view()`.
+- [`Series::reshape`](reshape.md): copy-capable fallback shape change.
+- [`Series::transpose`](transpose.md): common source of non-contiguous layouts.
+- [`Series::sizes`](sizes.md): borrowed shape metadata for reuse.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sizes.html">

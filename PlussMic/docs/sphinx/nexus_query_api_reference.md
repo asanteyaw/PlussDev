@@ -4,7 +4,7 @@ This page documents the public `NexusQuery` surface returned by
 [`Nexus::query()`](nexus_api_reference.md).
 
 `NexusQuery` lives in `pluss::bundle` beside `Nexus`, but it delegates to the
-same in-memory SQL engine used by
+same in-memory SQLite-backed SQL engine used by
 [`DataFrame::sql()`](dataframe_sql_accessor_api_reference.md). The difference is
 scope: `DataFrame::sql()` starts from one frame, while `Nexus::query()` exposes
 the named tables already loaded into the workspace.
@@ -17,6 +17,11 @@ statement template with runtime parameter binding.
 
 This SQL surface is currently read-oriented and in-memory. It is for querying a
 named table workspace, not for mutating persisted storage.
+
+Because the underlying executor is now SQLite-backed, the workspace surface is no
+longer limited to a hand-curated subset of `SELECT` syntax. Normal grouped queries,
+CTEs, subqueries, `LEFT JOIN`, and similar query shapes are valid as long as the
+statement produces a result set.
 
 ## Using This Reference
 

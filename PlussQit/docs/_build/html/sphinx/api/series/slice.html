@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::traverse_slice" href="traverse_slice.html" />
@@ -55,35 +55,57 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a cheap strided view over one axis.</p>
-<p>This is the basic-slicing helper: one dimension at a time, positive step only,
-no advanced index tensors, no reversed traversal, and no selector grammar beyond
-<code class="docutils literal notranslate"><span class="pre">dim/start/end/step</span></code>. In exchange, the result stays in the aliasing view lane
-instead of materializing gathered data.</p>
-<p>That is the right mental split:</p>
+<p><code class="docutils literal notranslate"><span class="pre">slice()</span></code> returns a cheap strided view over one axis.</p>
+<p>This is the small, explicit, basic-slicing helper. It is meant for view-style
+reads where the indexing grammar is simple:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">slice()</span></code> is the small, explicit, view-oriented primitive</p></li>
-<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> is the richer dynamic indexing engine</p></li>
+<li><p>one axis at a time</p></li>
+<li><p>positive-step traversal only</p></li>
+<li><p>no advanced index tensors</p></li>
+<li><p>no reverse traversal</p></li>
+</ul>
+<p>That tradeoff is the point of the method. Because <code class="docutils literal notranslate"><span class="pre">slice()</span></code> stays in the
+view-representable lane, it can alias the original storage instead of
+materializing gathered data.</p>
+<p>The right mental split is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">slice()</span></code> is the compact, explicit, view-first primitive</p></li>
+<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> is the richer indexing engine when the selector is
+more sophisticated</p></li>
 </ul>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The axis to slice. Negative dimensions are allowed, so <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last
-axis.</p>
+<p>The axis to slice.</p>
+<ul class="simple">
+<li><p>positive dims count from the front</p></li>
+<li><p>negative dims count from the back</p></li>
+<li><p>the dim must exist</p></li>
+</ul>
 <p><strong>start</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The first included index on <code class="docutils literal notranslate"><span class="pre">dim</span></code>. Negative values resolve from the end.</p>
-<p>In the one-argument overload <code class="docutils literal notranslate"><span class="pre">slice(dim,</span> <span class="pre">start)</span></code>, slicing runs from <code class="docutils literal notranslate"><span class="pre">start</span></code> to
-the natural end of the axis.</p>
+<p>The first included index on <code class="docutils literal notranslate"><span class="pre">dim</span></code>.</p>
+<ul class="simple">
+<li><p>negative values resolve from the end of that axis</p></li>
+<li><p>in <code class="docutils literal notranslate"><span class="pre">slice(dim,</span> <span class="pre">start)</span></code>, slicing continues from <code class="docutils literal notranslate"><span class="pre">start</span></code> to the natural end</p></li>
+</ul>
 <p><strong>end</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The exclusive stop bound. Negative values resolve from the end.</p>
-<p>In <code class="docutils literal notranslate"><span class="pre">slice(dim)</span></code> and <code class="docutils literal notranslate"><span class="pre">slice(dim,</span> <span class="pre">start)</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code> defaults to the natural end of
-the chosen axis.</p>
+<p>The exclusive stop bound.</p>
+<ul class="simple">
+<li><p>negative values resolve from the end of the axis</p></li>
+<li><p>in <code class="docutils literal notranslate"><span class="pre">slice(dim)</span></code> and <code class="docutils literal notranslate"><span class="pre">slice(dim,</span> <span class="pre">start)</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code> defaults to the natural end</p></li>
+</ul>
 <p><strong>step</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>Stride along the sliced axis. This helper requires <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">==</span> <span class="pre">0</span></code> is invalid, and <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> is rejected intentionally because
-reversed traversal belongs on the more general <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> surface
-rather than this cheap view helper.</p>
+<p>Stride along the sliced axis.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> is required</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">==</span> <span class="pre">1</span></code> means contiguous progression along that axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> skips positions and usually makes the result non-contiguous</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">==</span> <span class="pre">0</span></code> is invalid</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> is rejected intentionally on this surface</p></li>
+</ul>
+<p>Reverse traversal belongs on the more general <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> path,
+not on this cheap view helper.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -92,17 +114,22 @@ A strided view over the requested range.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">slice()</span></code> is differentiable. During backpropagation, sensitivity flows only to
-the selected positions, and skipped positions receive zero.</p>
-<p>For stepped slices, this means the backward result is sparse in exactly the same
-pattern as the forward selection.</p>
+<p><code class="docutils literal notranslate"><span class="pre">slice()</span></code> is differentiable.</p>
+<p>In backpropagation, sensitivity flows only to the selected positions, and
+skipped positions receive zero. For stepped slices, the backward result is
+sparse in exactly the same pattern as the forward selection.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Shared setup for the overload family.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">31</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">33</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<p>The examples below build from the full four-argument form toward the shorter
+overloads, then cover negative dims, failure modes, and gradient behavior.</p>
+<p>Example 1. The full <code class="docutils literal notranslate"><span class="pre">(dim,</span> <span class="pre">start,</span> <span class="pre">end,</span> <span class="pre">step)</span></code> form slices one axis with an
+explicit stride.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
+<span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 </pre></div>
@@ -115,61 +142,78 @@ data=[[11, 13],
   [31, 33]]
 </pre></div>
 </div>
-<p>This is the full <code class="docutils literal notranslate"><span class="pre">(dim,</span> <span class="pre">start,</span> <span class="pre">end,</span> <span class="pre">step)</span></code> form. The output is non-contiguous
-because stepping by <code class="docutils literal notranslate"><span class="pre">2</span></code> skips through the parent storage.</p>
-<p>Example 2. Omitting <code class="docutils literal notranslate"><span class="pre">step</span></code> defaults it to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<p>The output is non-contiguous because stepping by <code class="docutils literal notranslate"><span class="pre">2</span></code> skips through the parent
+storage.</p>
+<p>Example 2. Changing the sliced axis changes both the shape and the traversal
+meaning.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[20, 21, 22, 23],
+  [30, 31, 32, 33]]
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code>, so whole rows are being kept instead of selected columns.</p>
+<p>Example 3. Omitting <code class="docutils literal notranslate"><span class="pre">step</span></code> defaults it to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,2], strides=[4,1], dtype=float64, platform=cpu, numel=6, contiguous=false)
 data=[[12, 13],
   [22, 23],
   [32, 33]]
 </pre></div>
 </div>
-<p>Example 3. Omitting <code class="docutils literal notranslate"><span class="pre">end</span></code> means “slice from <code class="docutils literal notranslate"><span class="pre">start</span></code> to the natural end.”</p>
+<p>Example 4. Omitting <code class="docutils literal notranslate"><span class="pre">end</span></code> means “slice from <code class="docutils literal notranslate"><span class="pre">start</span></code> to the natural end.”</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,3], strides=[4,1], dtype=float64, platform=cpu, numel=9, contiguous=false)
 data=[[11, 12, 13],
   [21, 22, 23],
   [31, 32, 33]]
 </pre></div>
 </div>
-<p>Example 4. <code class="docutils literal notranslate"><span class="pre">slice(dim)</span></code> is the explicit no-op slice for that axis.</p>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">slice(dim)</span></code> is the explicit identity slice for that axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
 data=[[10, 11, 12, 13],
   [20, 21, 22, 23],
   [30, 31, 32, 33]]
 </pre></div>
 </div>
-<p>Example 5. Negative dimensions are normalized from the back.</p>
+<p>This is useful when code wants to stay in a slicing pipeline but one branch
+happens to keep the full axis.</p>
+<p>Example 6. Negative dims are normalized from the back.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,2], strides=[4,2], dtype=float64, platform=cpu, numel=6, contiguous=false)
 data=[[10, 12],
   [20, 22],
   [30, 32]]
 </pre></div>
 </div>
-<p>Example 6. Negative-step reversal is rejected here.</p>
+<p>For a rank-2 <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this is column slicing.</p>
+<p>Example 7. Negative-step reversal is intentionally rejected here.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Slice</span><span class="o">::</span><span class="n">kUnbounded</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -179,15 +223,34 @@ data=[[10, 12],
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::slice: negative-step slices are not supported by this cheap view helper
 </pre></div>
 </div>
-<p>Example 7. Backpropagation only marks the sliced positions.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<p>This is not an accident. Reverse traversal belongs on a richer indexing
+surface.</p>
+<p>Example 8. Zero step is also illegal.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::slice: step must be non-zero
+</pre></div>
+</div>
+<p>Example 9. Backpropagation marks exactly the positions that were sliced.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
+<span class="p">});</span>
 <span class="n">tracked_grid</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
 <span class="n">tracked_grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
@@ -195,36 +258,52 @@ data=[[10, 12],
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
 data=[[0, 1, 0, 1],
   [0, 1, 0, 1],
   [0, 1, 0, 1]]
 </pre></div>
 </div>
-<p>Columns <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> were selected from every row, so those are the only
-positions that receive gradient.</p>
+<p>Columns <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> were selected from every row, so only those positions
+receive gradient.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">slice()</span></code> is for positive-step basic slicing only.</p></li>
-<li><p>The result aliases the original storage.</p></li>
-<li><p>Even <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">==</span> <span class="pre">1</span></code> slices are often non-contiguous if they expose only part of a
-larger parent row stride.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> usually makes the result non-contiguous.</p></li>
+<li><p>Even <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">==</span> <span class="pre">1</span></code> slices can be non-contiguous if they expose only part of a
+larger parent stride.</p></li>
+<li><p>Negative dims are fine; negative steps are not.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">==</span> <span class="pre">0</span></code> is invalid.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">slice()</span></code> when your selector can be expressed as “one axis, one range, one
+positive stride” and you want to stay in the cheap view path.</p>
+<ul class="simple">
+<li><p>Choose the axis with <code class="docutils literal notranslate"><span class="pre">dim</span></code>.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> to express the kept interval.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">step</span></code> when regular skipping is part of the meaning.</p></li>
+<li><p>Reach for <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> when you need reverse slices or richer
+selector grammar.</p></li>
+</ul>
+<p>If your indexing idea still sounds simple in plain language, <code class="docutils literal notranslate"><span class="pre">slice()</span></code> is often
+the right surface.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_slice</span></code></span></a>: the dynamic view-only selector
-counterpart.</p></li>
-<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract</span></code></span></a>: the richer surface for reversed or advanced
-indexing.</p></li>
-<li><p><a class="reference internal" href="block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::block</span></code></span></a>: a 2D row/column rectangle helper built from the
-same view semantics.</p></li>
+<li><p><a class="reference internal" href="traverse_slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_slice</span></code></span></a>: dynamic view-only slicing with
+a richer selector list.</p></li>
+<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract</span></code></span></a>: full mixed-selector indexing, including
+materializing paths.</p></li>
+<li><p><a class="reference internal" href="block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::block</span></code></span></a>: 2D rectangle helper built from the same view
+semantics.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pile.html">
@@ -301,6 +380,7 @@ same view semantics.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>

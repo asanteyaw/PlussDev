@@ -18,8 +18,8 @@ Stores a SQL statement template — one that may contain `{param_name}` placehol
 together with the current frame and `options`, returning a `DataFrameSqlPrepared`
 object you can `.execute(...)` repeatedly with different parameter bindings, without
 re-typing (or re-templating) the statement text each time. This is the reusable-query
-counterpart to [`sql().execute(statement)`](sql.md), which parses and runs a statement
-in one shot and is a better fit when a query only runs once.
+counterpart to [`sql().execute(statement)`](sql.md), which prepares a fresh in-memory
+SQLite workspace and runs the statement in one shot.
 
 ```{note} A pure convenience wrapper, nothing more
 `prep_sql(statement)` is exactly equivalent to `sql().prepare(statement)`, and
@@ -33,12 +33,10 @@ applies identically here.
 ```
 
 ```{note}
-`prep_sql()` itself does not parse the statement — no validation happens until the
-returned value's `.execute(...)` is actually called. What it saves you is retyping the
-statement text at each call site, not a parse step: PlussMic's SQL engine already
-caches parsed plans by their exact rendered text (`SqlOptions::enable_plan_cache`,
-on by default), so identical statement text is never re-parsed whether it arrives via
-`prep_sql()` or repeated `sql().execute(...)` calls.
+`prep_sql()` itself does not validate the statement — no SQL preparation happens until
+the returned value's `.execute(...)` is actually called. What it saves you is repeated
+statement templating at the call site, not execution work: every `.execute(...)` still
+builds a fresh in-memory SQLite workspace for the current frame and options.
 ```
 
 ## Parameters
@@ -115,8 +113,7 @@ std::cout << high_bar;
 *value* changes between the two `.execute({...})` calls, each of which renders the
 template fresh and re-runs the `WHERE` filter. Case `2`'s row survives both times
 (`120` is greater than both `95` and `110`), while case `0`'s row (`sales = 100`) only
-survives the looser `95` threshold. Both result frames keep the original case labels
-of whichever `orders` rows matched.
+survives the looser `95` threshold.
 
 ## Notes
 
@@ -126,8 +123,8 @@ of whichever `orders` rows matched.
   were already set in `options` at `prep_sql()` time.
 - Prefer `prep_sql()` over `sql().execute(statement)` when the same query *text*
   needs to be reused across several call sites with different bindings — it saves
-  retyping/re-templating the statement, not a parse step the automatic plan cache
-  wasn't already saving you (see the [`DataFrameSqlPrepared` reference](../../dataframe_sql_prepared_api_reference)
+  repeated statement templating and keeps the binding site smaller (see the
+  [`DataFrameSqlPrepared` reference](../../dataframe_sql_prepared_api_reference)
   for the full explanation).
 
 ## See Also

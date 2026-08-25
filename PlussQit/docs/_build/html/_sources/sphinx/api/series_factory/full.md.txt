@@ -104,6 +104,37 @@ data=[[7, 7],
   [7, 7]]
 ```
 
+Example 4. Boolean destinations treat any non-zero fill as `true`.
+
+```cpp
+std::cout << pluss::series::full({4}, 2.0, pluss::ScalarType::Bool);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, true, true, true]
+```
+
+Example 5. Fractional fills are converted to the destination dtype before
+storage.
+
+```cpp
+std::cout << pluss::series::full({3}, 2.75, pluss::ScalarType::Int32);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=int32, platform=cpu, numel=3, contiguous=true)
+data=[2, 2, 2]
+```
+
+That conversion step is one of the main `full()` gotchas: the public fill
+parameter is `double`, but the stored payload always follows the destination
+dtype.
+
 ## Notes
 
 - `full()` is the general constant-valued shape-first constructor.
@@ -116,12 +147,12 @@ data=[[7, 7],
 - [`pluss::series::ones`](ones.md): specialized `full(..., 1)`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="empty.html">
+  <a class="prev-link" href="eye.html">
     <span class="label">Previous</span>
-    <span class="title">empty</span>
+    <span class="title">eye</span>
   </a>
-  <a class="next-link" href="make.html">
+  <a class="next-link" href="linspace.html">
     <span class="label">Next</span>
-    <span class="title">make</span>
+    <span class="title">linspace</span>
   </a>
 </div>

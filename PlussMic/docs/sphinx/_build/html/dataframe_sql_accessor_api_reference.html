@@ -60,12 +60,15 @@
 </section>
 <section id="what-it-does">
 <h4>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h4>
-<p>Runs a SQL query against the current frame and returns the result as a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<p>Runs a SQL query against the current frame and returns the result as a new
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. The accessor uses an in-memory SQLite workspace under the hood, so the
+surface is much closer to normal SQL than the old parser-only version.</p>
 </section>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
 <p><strong>statement</strong>
-SQL query text run against the current frame. The frame is exposed to the statement as <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+SQL query text run against the current frame. The frame is exposed to the
+statement as <code class="docutils literal notranslate"><span class="pre">df</span></code>.</p>
 </section>
 <section id="returns">
 <h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
@@ -82,7 +85,7 @@ Value produced by this call.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sql</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sql</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; 95&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sql</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM df WHERE sales &gt; 95&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
@@ -98,7 +101,10 @@ Value produced by this call.</p>
 <h4>Practical Behavior<a class="headerlink" href="#practical-behavior" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">execute(statement)</span></code> runs the SQL immediately against the current frame.</p></li>
-<li><p>The current frame is exposed inside the statement as <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></li>
+<li><p>The current frame is exposed inside the statement as <code class="docutils literal notranslate"><span class="pre">df</span></code>.</p></li>
+<li><p>Additional named frames can be bound through <code class="docutils literal notranslate"><span class="pre">SqlOptions::sources</span></code>.</p></li>
+<li><p>This now executes against an in-memory SQLite workspace, so grouped aggregates,
+CTEs, <code class="docutils literal notranslate"><span class="pre">LEFT</span> <span class="pre">JOIN</span></code>, <code class="docutils literal notranslate"><span class="pre">DISTINCT</span></code>, and similar query shapes are valid.</p></li>
 <li><p>Use this for one-off queries. Use <code class="docutils literal notranslate"><span class="pre">prepare(...)</span></code> when the same statement shape will be executed repeatedly with different parameter values.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -144,7 +150,7 @@ Value produced by this call.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sql</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sql</span><span class="p">.</span><span class="n">prepare</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sql</span><span class="p">.</span><span class="n">prepare</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM df WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="id6">

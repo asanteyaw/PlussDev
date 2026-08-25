@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=c45ca647"></script>
-    <script src="../../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note API Reference" href="../../note_api_reference.html" />
+    <link rel="next" title="pluss::series::rand" href="rand.html" />
     <link rel="prev" title="pluss::series::ones" href="ones.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -106,6 +106,28 @@ data=[false, false, false, false]
 </pre></div>
 </div>
 <p>For <code class="docutils literal notranslate"><span class="pre">bool</span></code>, the zero constructor naturally means <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p>Example 3. A scalar shape gives a scalar zero.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0
+</pre></div>
+</div>
+<p>Example 4. Integer dtypes keep the same initialization contract.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int16</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[4], strides=[1], dtype=int16, platform=cpu, numel=4, contiguous=true)
+data=[0, 0, 0, 0]
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">
@@ -127,6 +149,10 @@ initialization.</p></li>
   <a class="prev-link" href="ones.html">
     <span class="label">Previous</span>
     <span class="title">ones</span>
+  </a>
+  <a class="next-link" href="rand.html">
+    <span class="label">Next</span>
+    <span class="title">rand</span>
   </a>
 </div>
 </section>
@@ -194,6 +220,7 @@ initialization.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
@@ -220,7 +247,7 @@ initialization.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_factory_api_reference.html">Series Factory API Reference</a><ul>
       <li>Previous: <a href="ones.html" title="previous chapter">pluss::series::ones</a></li>
-      <li>Next: <a href="../../note_api_reference.html" title="next chapter">Note API Reference</a></li>
+      <li>Next: <a href="rand.html" title="next chapter">pluss::series::rand</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

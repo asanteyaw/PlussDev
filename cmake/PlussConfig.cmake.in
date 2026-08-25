@@ -20,6 +20,7 @@ string(FIND "${_pluss_export_content}" "CURL::libcurl" _pluss_needs_curl)
 string(FIND "${_pluss_export_content}" "X11::X11" _pluss_needs_x11)
 string(FIND "${_pluss_export_content}" "Freetype::Freetype" _pluss_needs_freetype)
 string(FIND "${_pluss_export_content}" "fmt::fmt" _pluss_needs_fmt)
+string(FIND "${_pluss_export_content}" "SQLite::SQLite3" _pluss_needs_sqlite3)
 string(FIND "${_pluss_export_content}" "torch_library" _pluss_needs_torch_library)
 string(FIND "${_pluss_export_content}" "torch;" _pluss_needs_torch_target)
 
@@ -61,6 +62,10 @@ if(NOT _pluss_needs_fmt EQUAL -1)
   find_dependency(fmt CONFIG QUIET)
 endif()
 
+if(NOT _pluss_needs_sqlite3 EQUAL -1)
+  find_dependency(SQLite3)
+endif()
+
 if(NOT _pluss_needs_torch_library EQUAL -1 OR NOT _pluss_needs_torch_target EQUAL -1)
   find_dependency(Torch QUIET)
 endif()
@@ -94,6 +99,14 @@ if(NOT _pluss_needs_fmt EQUAL -1 AND NOT TARGET fmt::fmt)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
       "Pluss SDK was built with fmt-enabled public headers, but fmt::fmt was not found. "
       "Install fmt and add its prefix to CMAKE_PREFIX_PATH, or restage the SDK with PLUSSQIT_USE_FMT=OFF.")
+  return()
+endif()
+
+if(NOT _pluss_needs_sqlite3 EQUAL -1 AND NOT TARGET SQLite::SQLite3)
+  set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+  set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
+      "Pluss SDK requires SQLite3 for DataFrame SQL / Nexus query support, but SQLite::SQLite3 was not found. "
+      "Install SQLite development files and add their prefix to CMAKE_PREFIX_PATH, or restage the SDK without SQL support.")
   return()
 endif()
 

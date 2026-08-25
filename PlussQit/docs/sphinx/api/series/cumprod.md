@@ -23,11 +23,25 @@ in the lane, including itself.
 
 For `[1, 2, 3]`, the rowwise cumulative product is `[1, 2, 6]`.
 
+The prefix idea is the same as [`cumsum()`](cumsum.md), but multiplication
+changes the behavior materially:
+
+- early zeros wipe out later prefixes
+- large values grow faster
+- tiny values vanish faster
+
 ## Parameters
 
 **dim** (`std::int64_t`)
 
 The axis along which the running product is accumulated.
+
+Important details:
+
+- `dim = 0` scans down the first axis
+- `dim = 1` scans across the second axis
+- negative dims count from the back
+- the result keeps the same shape because this is a scan, not a reduction
 
 **keepdim** (`bool`)
 
@@ -89,7 +103,25 @@ data=[[1, 2, 3],
 
 The first row is unchanged because each column scan starts there.
 
-Example 3. `keepdim` is currently shape-neutral here too.
+Example 3. Negative dimensions count from the back, so `-1` means the last
+axis.
+
+```cpp
+std::cout << mat.cumprod(-1);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2, 6],
+  [4, 20, 120]]
+```
+
+On this shape, that matches `cumprod(1)` because the last axis is the row-local
+column axis.
+
+Example 4. `keepdim` is currently shape-neutral here too.
 
 ```cpp
 std::cout << (mat.cumprod(1, false).sizes() == mat.cumprod(1, true).sizes() ? "true" : "false");
@@ -101,7 +133,47 @@ std::cout << (mat.cumprod(1, false).sizes() == mat.cumprod(1, true).sizes() ? "t
 true
 ```
 
-Example 4. The current reverse-mode path does not populate source sensitivity.
+Example 5. Once a zero appears in a lane, later prefixes in that lane stay zero.
+
+```cpp
+auto with_zero = pluss::make_series({
+    {2.0, 0.0, 4.0},
+    {3.0, 5.0, 1.0},
+});
+
+std::cout << with_zero.cumprod(1);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 0, 0],
+  [3, 15, 15]]
+```
+
+This is one of the most important practical quirks of cumulative products:
+after multiplication by zero, the later prefixes in that lane cannot recover.
+
+Example 6. The in-place overload mutates the current `Series` but keeps the same
+scan semantics.
+
+```cpp
+auto inplace = mat.clone();
+inplace.cumprod_(1);
+
+std::cout << inplace;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2, 6],
+  [4, 20, 120]]
+```
+
+Example 7. The current reverse-mode path does not populate source sensitivity.
 
 ```cpp
 auto tracked_cumprod = mat.clone();
@@ -126,11 +198,25 @@ data=[[1, 2, 6],
 has_dx=false
 ```
 
-## Notes
+## Gotchas And Failure Modes
 
 - `cumprod()` is the multiplicative scan counterpart to [`cumsum()`](cumsum.md).
 - `keepdim` is currently accepted but shape-neutral.
 - Reverse-mode users should treat `cumprod()` as a current limitation point.
+- Early zeros flatten later prefixes in the same lane.
+- Choosing the wrong axis changes the meaning completely.
+- A `dim` outside the valid axis range fails.
+
+## Teaching Summary
+
+Use `cumprod()` when you need every multiplicative prefix, not just the final
+product:
+
+- `cumprod(dim)` preserves shape and stores all prefixes
+- `keepdim` is currently accepted but does not change shape
+- zeros propagate forward through the rest of a lane
+- `cumprod_` mutates the current `Series`
+- reverse-mode support is currently a limitation on this surface
 
 ## See Also
 

@@ -14,8 +14,8 @@ Series::prod(std::int64_t dim, bool keepdim) const -> Series
 
 ## What It Does
 
-Multiplies values together, either across the whole series or along one chosen
-axis.
+`prod()` multiplies values together, either across the whole `Series` or along
+one chosen axis.
 
 Shape-wise, `prod()` follows the same reduction rules as
 [`sum()`](sum.md)/[`mean()`](mean.md):
@@ -26,6 +26,10 @@ Shape-wise, `prod()` follows the same reduction rules as
 
 The numerical intuition is different, though. `prod()` is very sensitive to
 zeros and large magnitudes. One zero in a lane zeros the whole lane product.
+
+That sensitivity is not an implementation quirk. It is the actual mathematical
+character of a multiplicative reduction, so `prod()` deserves more caution than
+`sum()` or `mean()`.
 
 ## Parameters
 
@@ -105,7 +109,24 @@ data=[[6],
   [120]]
 ```
 
-Example 4. One zero is enough to zero the whole lane product.
+Example 4. Negative dimensions count from the back, so `-1` means the last
+axis.
+
+```cpp
+std::cout << mat.prod(-1);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[6, 120]
+```
+
+On this shape, that matches the row-wise product because the last axis is the
+row-local column axis.
+
+Example 5. One zero is enough to zero the whole lane product.
 
 ```cpp
 auto prod_with_zero = pluss::make_series({
@@ -126,7 +147,7 @@ data=[0, 15]
 This is one of the main reasons `prod()` is numerically and algorithmically
 less forgiving than `sum()` or `mean()`.
 
-Example 5. The current reverse-mode path does not populate source sensitivity.
+Example 6. The current reverse-mode path does not populate source sensitivity.
 
 ```cpp
 auto tracked_prod = mat.clone();
@@ -152,11 +173,23 @@ has_dx=false
 
 That is current behavior, not a typo in the example.
 
-## Notes
+## Gotchas And Failure Modes
 
 - `prod()` has the same shape contract as other reductions.
 - Zeros dominate multiplicatively.
 - Reverse-mode users should treat `prod()` as a current limitation point.
+- Large magnitudes can grow or underflow quickly because the operation is
+  multiplicative rather than additive.
+- A `dim` outside the valid axis range fails through the shared reduction path.
+
+## Teaching Summary
+
+Use `prod()` when multiplication itself is the statistic you need:
+
+- `prod()` is the multiplicative analogue of `sum()`
+- one zero wipes out the rest of a lane product
+- `keepdim=true` is only about shape retention
+- reverse-mode support is currently a limitation on this surface
 
 ## See Also
 

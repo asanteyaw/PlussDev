@@ -50,27 +50,27 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Enters the frame’s built-in SQL accessor — a small, self-contained SQL engine that
-runs <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> statements directly against the frame (referenced in the statement as
-the source table <code class="docutils literal notranslate"><span class="pre">df</span></code>), returning an ordinary <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> result. Use this when a
-transformation reads more naturally as a <code class="docutils literal notranslate"><span class="pre">SELECT</span></code>/<code class="docutils literal notranslate"><span class="pre">WHERE</span></code>/<code class="docutils literal notranslate"><span class="pre">JOIN</span></code>/<code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> statement
-than as a chained sequence of table verbs. <code class="docutils literal notranslate"><span class="pre">sql()</span></code> itself does no work beyond binding
-the frame (and, optionally, execution <code class="docutils literal notranslate"><span class="pre">options</span></code>); the real work happens on
-<code class="docutils literal notranslate"><span class="pre">.execute(statement)</span></code>.</p>
+<p>Enters the frame’s built-in SQL accessor. The accessor binds the current frame and
+optional extra sources, loads them into an in-memory SQLite workspace, and executes
+the SQL statement there before converting the result back into a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<p>That makes <code class="docutils literal notranslate"><span class="pre">sql()</span></code> much broader than the old parser-only implementation: ordinary
+<code class="docutils literal notranslate"><span class="pre">SELECT</span></code> queries, aliases, expressions, <code class="docutils literal notranslate"><span class="pre">GROUP</span> <span class="pre">BY</span></code>, <code class="docutils literal notranslate"><span class="pre">HAVING</span></code>, common table
+expressions (<code class="docutils literal notranslate"><span class="pre">WITH</span></code>), subqueries, <code class="docutils literal notranslate"><span class="pre">LEFT</span> <span class="pre">JOIN</span></code>, <code class="docutils literal notranslate"><span class="pre">DISTINCT</span></code>, and similar SQLite query
+shapes now work without PlussMic having to special-case each clause itself.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sql()</span></code> itself still does no work beyond binding the frame and options; the real work
+happens on <code class="docutils literal notranslate"><span class="pre">.execute(statement)</span></code>.</p>
 <p><a class="reference internal" href="prep_sql.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">prep_sql(statement)</span></code></span></a> is the sibling entry point for a statement
-that will run many times with different bound parameter values — it parses the
-statement once up front, rather than on every <code class="docutils literal notranslate"><span class="pre">.execute()</span></code> call the way
-<code class="docutils literal notranslate"><span class="pre">sql().execute(statement)</span></code> does each time it’s called fresh.</p>
+that will run many times with different bound parameter values.</p>
 <p>See the <a class="reference internal" href="../../dataframe_sql_accessor_api_reference.html"><span class="doc std std-doc">DataFrameSqlAccessor API Reference</span></a>
 for <code class="docutils literal notranslate"><span class="pre">.execute()</span></code>’s full parameter and behavior details.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">SqlOptions</span></code>, optional)</p>
-<p>Execution options for the returned accessor: additional joinable <code class="docutils literal notranslate"><span class="pre">sources</span></code>, default
+<p>Execution options for the returned accessor: additional joinable <code class="docutils literal notranslate"><span class="pre">sources</span></code>,
 <code class="docutils literal notranslate"><span class="pre">params</span></code>/<code class="docutils literal notranslate"><span class="pre">identifier_params</span></code> for <code class="docutils literal notranslate"><span class="pre">{...}</span></code>-style placeholders, missing-parameter and
-name-collision policies, row/memory/timeout limits, and diagnostics toggles. Omit it
-entirely to use every default.</p>
+name-collision policies, result/memory/timeout guards, and diagnostics toggles.
+Omit it entirely to use every default.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -105,10 +105,7 @@ An accessor bound to the current frame (and, if given, <code class="docutils lit
 [2 cs x 2 feat]
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clause behaves like <a class="reference internal" href="query.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">query()</span></code></span></a>’s filtering — case <code class="docutils literal notranslate"><span class="pre">2</span></code>
-(<code class="docutils literal notranslate"><span class="pre">sales</span> <span class="pre">=</span> <span class="pre">90</span></code>) doesn’t satisfy <code class="docutils literal notranslate"><span class="pre">sales</span> <span class="pre">&gt;</span> <span class="pre">95</span></code>, so it’s dropped, while cases <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>
-survive with their original case labels intact. The <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">id,</span> <span class="pre">sales</span></code> projection
-means <code class="docutils literal notranslate"><span class="pre">city</span></code> never appears in the result at all.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">id,</span> <span class="pre">sales</span></code> projection means <code class="docutils literal notranslate"><span class="pre">city</span></code> never appears in the result at all.</p>
 <p>Example 2. Pass an <code class="docutils literal notranslate"><span class="pre">{param}</span></code> placeholder value through <code class="docutils literal notranslate"><span class="pre">SqlOptions</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SqlOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">params</span><span class="p">[</span><span class="s">&quot;target_city&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;Tema&quot;</span><span class="p">);</span>
@@ -123,7 +120,7 @@ means <code class="docutils literal notranslate"><span class="pre">city</span></
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================
      | id    sales  city
 ------------------------
-1    | 2     120    Tema
+0    | 2     120    Tema
 ------------------------
 [1 cs x 3 feat]
 </pre></div>
@@ -131,6 +128,31 @@ means <code class="docutils literal notranslate"><span class="pre">city</span></
 <p><code class="docutils literal notranslate"><span class="pre">{target_city}</span></code> is substituted with the quoted string <code class="docutils literal notranslate"><span class="pre">'Tema'</span></code> before the statement
 runs, matching only case <code class="docutils literal notranslate"><span class="pre">1</span></code>. <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span></code> keeps every column this time, unlike Example
 1’s explicit projection.</p>
+<p>Example 3. Use grouped SQL directly instead of spelling the aggregation as chained
+table verbs.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT city, COUNT(*) AS n, AVG(sales) AS mean_sales &quot;</span>
+<span class="w">    </span><span class="s">&quot;FROM df &quot;</span>
+<span class="w">    </span><span class="s">&quot;GROUP BY city &quot;</span>
+<span class="w">    </span><span class="s">&quot;ORDER BY mean_sales DESC&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grouped</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==============================
+     | city    n      mean_sales
+------------------------------
+0    | Tema    1      120
+1    | Accra   1      100
+2    | Kumasi  1      90
+------------------------------
+[3 cs x 3 feat]
+</pre></div>
+</div>
+<p>This is the main reason to use <code class="docutils literal notranslate"><span class="pre">sql()</span></code>: when the operation reads more clearly as SQL
+than as a long sequence of C++ table verbs, you can just write the query.</p>
 </section>
 </section>
 <section id="notes">
@@ -140,8 +162,10 @@ runs, matching only case <code class="docutils literal notranslate"><span class=
 must call <code class="docutils literal notranslate"><span class="pre">.execute(statement)</span></code> to get a result.</p></li>
 <li><p>The calling frame is always available in the statement as the source table
 <code class="docutils literal notranslate"><span class="pre">df</span></code>; <code class="docutils literal notranslate"><span class="pre">options.sources</span></code> can bind additional named frames for joins.</p></li>
-<li><p>Use <a class="reference internal" href="prep_sql.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">prep_sql(statement)</span></code></span></a> instead when the same statement text runs
-repeatedly with different parameter bindings, to avoid re-parsing it every time.</p></li>
+<li><p>Bare source-name shorthand is accepted: <code class="docutils literal notranslate"><span class="pre">df.sql().execute(&quot;df&quot;)</span></code> is treated like
+<code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">df</span></code>, similar in spirit to pandas’ <code class="docutils literal notranslate"><span class="pre">read_sql(table_name,</span> <span class="pre">...)</span></code>.</p></li>
+<li><p>Statements still need to produce a result set. This surface is query-oriented, not
+a mutation API for arbitrary DDL/DML workflows.</p></li>
 </ul>
 </section>
 <section id="see-also">

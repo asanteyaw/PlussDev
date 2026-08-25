@@ -1,18 +1,10 @@
 #include <pluss/pluss.h>
 
-#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>
 
 namespace {
-
-using pluss::codem::ExtractSpec;
-using ExtractSpecView = pluss::msharp::RangeView::Of<ExtractSpec>;
-
-ExtractSpecView specs_view(const std::vector<ExtractSpec>& specs) {
-  return ExtractSpecView(specs);
-}
 
 void heading(const char* label) {
   std::cout << "=== " << label << " ===\n";
@@ -26,16 +18,23 @@ void print_error(const std::exception& e) {
 }  // namespace
 
 int main() {
-  auto grid = pluss::make_series(
-      std::vector<double>{10, 11, 12, 13, 20, 21, 22, 23, 30, 31, 32, 33},
-      {3, 4});
-  auto cube = pluss::make_series(
-      std::vector<double>{
-          1, 2, 3, 4, 5, 6,
-          7, 8, 9, 10, 11, 12,
-          13, 14, 15, 16, 17, 18,
-          19, 20, 21, 22, 23, 24},
-      {2, 3, 4});
+  auto grid = pluss::make_series({
+      {10.0, 11.0, 12.0, 13.0},
+      {20.0, 21.0, 22.0, 23.0},
+      {30.0, 31.0, 32.0, 33.0},
+  });
+  auto cube = pluss::make_series({
+      {
+          {1.0, 2.0, 3.0, 4.0},
+          {5.0, 6.0, 7.0, 8.0},
+          {9.0, 10.0, 11.0, 12.0},
+      },
+      {
+          {13.0, 14.0, 15.0, 16.0},
+          {17.0, 18.0, 19.0, 20.0},
+          {21.0, 22.0, 23.0, 24.0},
+      },
+  });
 
   heading("extract_one_spec");
   std::cout << grid.extract(pluss::Slicing::SliceRange(0, 2, 1)) << "\n\n";
@@ -61,94 +60,142 @@ int main() {
                    pluss::Slicing::NewAxis())
             << "\n\n";
 
+  heading("extract_ellipsis");
+  std::cout << grid.extract(
+                   pluss::Slicing::Ellipsis(),
+                   std::int64_t{2})
+            << "\n\n";
+
   heading("extract_reverse_cols");
-  const std::vector<ExtractSpec> reverse_cols{
+  std::cout << grid.extract({
       pluss::Slicing::SliceAll(),
-      pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)};
-  std::cout << grid.extract(specs_view(reverse_cols)) << "\n\n";
+      pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)}) << "\n\n";
 
   heading("extract_bool_mask");
-  auto row_mask = pluss::make_series(std::vector<bool>{true, false, true}, {3});
-  const std::vector<ExtractSpec> bool_pick{
+  auto row_mask = pluss::make_series({true, false, true});
+  std::cout << grid.extract({
       row_mask,
-      pluss::Slicing::SliceAll()};
-  std::cout << grid.extract(specs_view(bool_pick)) << "\n\n";
+      pluss::Slicing::SliceAll()}) << "\n\n";
 
   heading("extract_shaped_integer_index_flattens");
-  auto row_pick_2d = pluss::make_series(std::vector<std::int64_t>{2, 0, 2, 1}, {2, 2});
-  const std::vector<ExtractSpec> shaped_int_pick{
+  auto row_pick_2d = pluss::make_series({
+      {2LL, 0LL},
+      {2LL, 1LL},
+  });
+  std::cout << grid.extract({
       row_pick_2d,
-      pluss::Slicing::SliceAll()};
-  std::cout << grid.extract(specs_view(shaped_int_pick)) << "\n\n";
+      pluss::Slicing::SliceAll()}) << "\n\n";
+
+  heading("extract_zero_step_error");
+  try {
+    std::cout << grid.extract({
+        pluss::Slicing::SliceAll(),
+        pluss::Slicing::SliceRange(0, 4, 0)}) << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
 
   heading("index_single_advanced_tensor");
-  auto row_pick = pluss::make_series(std::vector<std::int64_t>{2, 0, 2}, {3});
-  const std::vector<ExtractSpec> single_adv{row_pick};
-  std::cout << grid.index(specs_view(single_adv)) << "\n\n";
+  auto row_pick = pluss::make_series({2LL, 0LL, 2LL});
+  std::cout << grid.index({row_pick}) << "\n\n";
 
   heading("index_advanced_pair_with_sliceall");
-  auto row_idx = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 1}, {4});
-  auto col_idx = pluss::make_series(std::vector<std::int64_t>{2, 3, 0, 2}, {4});
-  auto adv_cube = pluss::make_series(
-      std::vector<double>{
-          0, 1, 2, 3, 4, 5, 6, 7,
-          8, 9, 10, 11, 12, 13, 14, 15,
-          16, 17, 18, 19, 20, 21, 22, 23},
-      {3, 4, 2});
-  const std::vector<ExtractSpec> pair_specs{
+  auto row_idx = pluss::make_series({0LL, 1LL, 2LL, 1LL});
+  auto col_idx = pluss::make_series({2LL, 3LL, 0LL, 2LL});
+  auto adv_cube = pluss::make_series({
+      {
+          {0.0, 1.0},
+          {2.0, 3.0},
+          {4.0, 5.0},
+          {6.0, 7.0},
+      },
+      {
+          {8.0, 9.0},
+          {10.0, 11.0},
+          {12.0, 13.0},
+          {14.0, 15.0},
+      },
+      {
+          {16.0, 17.0},
+          {18.0, 19.0},
+          {20.0, 21.0},
+          {22.0, 23.0},
+      },
+  });
+  std::cout << adv_cube.index({
       row_idx,
       col_idx,
-      pluss::Slicing::SliceAll()};
-  std::cout << adv_cube.index(specs_view(pair_specs)) << "\n\n";
+      pluss::Slicing::SliceAll()}) << "\n\n";
 
   heading("index_bool_mask_route");
-  const std::vector<ExtractSpec> bool_index_specs{
+  std::cout << grid.index({
       row_mask,
-      pluss::Slicing::SliceAll()};
-  std::cout << grid.index(specs_view(bool_index_specs)) << "\n\n";
+      pluss::Slicing::SliceAll()}) << "\n\n";
 
   heading("index_alias_to_extract");
-  const std::vector<ExtractSpec> alias_specs{
+  std::cout << grid.index({
       pluss::Slicing::SliceAll(),
-      pluss::Slicing::SliceRange(1, 4, 2)};
-  std::cout << grid.index(specs_view(alias_specs)) << "\n\n";
+      pluss::Slicing::SliceRange(1, 4, 2)}) << "\n\n";
 
   heading("index_mixed_nonidentity_falls_back");
-  const std::vector<ExtractSpec> mixed_specs{
+  std::cout << adv_cube.index({
       row_idx,
       pluss::Slicing::SliceRange(1, 4, 2),
-      pluss::Slicing::SliceAll()};
-  std::cout << adv_cube.index(specs_view(mixed_specs)) << "\n\n";
+      pluss::Slicing::SliceAll()}) << "\n\n";
 
   heading("index_shaped_integer_index_preserves_shape");
-  const std::vector<ExtractSpec> shaped_index_specs{row_pick_2d};
-  std::cout << grid.index(specs_view(shaped_index_specs)) << "\n\n";
+  std::cout << grid.index({row_pick_2d}) << "\n\n";
 
-  auto take_src = pluss::make_series(
-      std::vector<double>{10, 11, 12, 20, 21, 22},
-      {2, 3});
-  auto take_idx = pluss::make_series(std::vector<std::int64_t>{5, 0, 3, 1}, {2, 2});
+  heading("index_negative_integer_indices");
+  auto negative_row_pick = pluss::make_series({-1LL, 0LL});
+  std::cout << grid.index({negative_row_pick}) << "\n\n";
+
+  auto take_src = pluss::make_series({
+      {10.0, 11.0, 12.0},
+      {20.0, 21.0, 22.0},
+  });
+  auto take_idx = pluss::make_series({
+      {5LL, 0LL},
+      {3LL, 1LL},
+  });
 
   heading("take_flattened_shape");
   std::cout << take_src.take(take_idx) << "\n\n";
 
   heading("take_negative_indices");
-  auto negative_take_idx = pluss::make_series(std::vector<std::int64_t>{-1, -3, 0}, {3});
+  auto negative_take_idx = pluss::make_series({-1LL, -3LL, 0LL});
   std::cout << take_src.take(negative_take_idx) << "\n\n";
 
   heading("take_transposed_logical_order");
   auto transposed = take_src.transpose(0, 1);
-  auto transposed_idx = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 3, 4, 5}, {2, 3});
+  auto transposed_idx = pluss::make_series({
+      {0LL, 1LL, 2LL},
+      {3LL, 4LL, 5LL},
+  });
   std::cout << transposed.take(transposed_idx) << "\n\n";
 
+  heading("take_scalar_shaped_index");
+  auto one_idx = pluss::make_series({4LL});
+  std::cout << take_src.take(one_idx) << "\n\n";
+
   heading("take_repeated_gradient");
-  auto tracked = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4});
+  auto tracked = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4});
   tracked.tracks_slope_(true);
-  auto repeat_idx = pluss::make_series(std::vector<std::int64_t>{0, 0, 3}, {3});
+  auto repeat_idx = pluss::make_series({0LL, 0LL, 3LL});
   auto gathered = tracked.take(repeat_idx);
   gathered.sum().reverse();
   std::cout << "out=" << gathered << "\n";
   std::cout << "dx=" << tracked.sensitivity() << "\n\n";
+
+  heading("take_out_of_range_error");
+  try {
+    auto bad_pos = pluss::make_series({6LL});
+    std::cout << take_src.take(bad_pos) << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
 
   heading("take_non_int64_error");
   try {
