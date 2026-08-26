@@ -36,12 +36,12 @@ DataFrame make_frame() {
   });
 }
 
-Model staged_logistic() {
-  const ColumnRouter categorical = columnrouter::names({"category"});
-  const ColumnRouter numeric = columnrouter::remaining_of(categorical);
-  Model model = model::decision_tree_classifier({.max_depth = 3});
-  model.append(stage::standard_scaler(), numeric)
-       .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical);
+models::Model staged_logistic() {
+  const prep::Route categorical = prep::route::names({"category"});
+  const prep::Route numeric = prep::route::remaining_of(categorical);
+  models::Model model = models::decision_tree_classifier({.max_depth = 3});
+  model.append(prep::stage::standard_scaler(), numeric)
+       .append(prep::stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical);
   return model;
 }
 
@@ -59,7 +59,7 @@ bool run_validate_checks(std::ostream* err) {
   quick_train.max_iterations = 100;
   quick_train.tolerance = 1e-4;
 
-  const validate::Plan plan = validate::stratified().folds(2).shuffle(false).workers(1);
+  const selection::Plan plan = selection::stratified().folds(2).shuffle(false).workers(1);
   const metrics::CrossValidationReport report = plan.run(staged_logistic(), frame, data_options, quick_train, assess);
   if (report.report.folds.size() != 2 || report.report.metrics.size() != 2) {
     if (err) *err << "validate::stratified().run(model, frame, data_options, ...) should produce 2 folds x 2 metrics\n";
@@ -75,7 +75,7 @@ bool run_validate_checks(std::ostream* err) {
     if (err) *err << "validate::Plan::scores should return one score per fold\n";
     return false;
   }
-  const prep::HoldoutSplit split = validate::holdout().test_size(0.25).stratify("y").seed(11).split(frame);
+  const prep::HoldoutSplit split = selection::holdout().test_size(0.25).stratify("y").seed(11).split(frame);
   if (!split.has_frame() || split.has_batch()
       || split.train_set.ncases() + split.test_set.ncases() != frame.ncases()
       || split.test_set.ncases() != 2) {
@@ -84,7 +84,7 @@ bool run_validate_checks(std::ostream* err) {
   }
 
   const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options), "test.labeled_batch_from_dataframe");
-  const prep::HoldoutSplit batch_split = validate::holdout().test_size(0.25).stratify(batch.y).seed(11).split(batch);
+  const prep::HoldoutSplit batch_split = selection::holdout().test_size(0.25).stratify(batch.y).seed(11).split(batch);
   if (batch_split.has_frame() || !batch_split.has_batch()
       || batch_split.train_batch.features.sample_count() + batch_split.test_batch.features.sample_count()
              != batch.features.sample_count()
@@ -93,9 +93,9 @@ bool run_validate_checks(std::ostream* err) {
     return false;
   }
 
-  Builder candidates = builder::build({
+  models::Builder candidates = models::build({
       {"staged_tree", staged_logistic()},
-      {"plain_tree", model::decision_tree_classifier({.max_depth = 2})},
+      {"plain_tree", models::decision_tree_classifier({.max_depth = 2})},
   });
   const selection::CompareResult ranked = plan.run(candidates, frame, data_options, quick_train, assess,
                                                    MetricKind::Accuracy, TuneObjectivePolicy::Maximize,
@@ -105,40 +105,41 @@ bool run_validate_checks(std::ostream* err) {
     return false;
   }
 
-  Payload time_payload = payload::make(frame)
+  workflow::Payload time_payload = workflow::payload::make(frame)
       .features({"x1", "x2", "category"})
       .label("y")
-      .time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4})
+      .time(workflow::TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4})
       .note(DataNotePolicy::Factorize);
 
-  Policy gate{.require_columns = {"timestamp", "x1", "x2", "category", "y"},
-              .reject_missing = {"timestamp", "y"},
-              .allow_missing = {"x1", "x2", "category"}};
+  workflow::Policy gate{.require_columns = {"timestamp", "x1", "x2", "category", "y"},
+                        .reject_missing = {"timestamp", "y"},
+                        .allow_missing = {"x1", "x2", "category"}};
 
-  Workflow time_workflow = workflow::make(model::linear_regression(), gate)
-      .time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
-  time_workflow.on({"x1", "x2"}).add(stage::standard_scaler());
+  workflow::Workflow time_workflow = workflow::make(models::linear_regression(), gate)
+      .time(workflow::TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
+  time_workflow.on({"x1", "x2"}).add(prep::stage::standard_scaler());
 
-  metrics::ValidationOptions raw_time_options{};
+  selection::TimeValOptions raw_time_options{};
   raw_time_options.plan = CVPlanKind::TSCrossVal;
-  const metrics::ValidationOptions effective_time =
-      validate::detail::effective_time_options_(raw_time_options, time_workflow);
+  const selection::TimeValOptions effective_time =
+      selection::validate::detail::effective_time_options_(raw_time_options, time_workflow);
   if (effective_time.time_gap != 1 || effective_time.time_test_size != 1 || effective_time.time_max_train_size != 4) {
     if (err) *err << "time validation should merge Workflow time options into effective CV options\n";
     return false;
   }
 
-  Payload no_time_payload = payload::make(frame).features({"x1", "x2", "category"}).label("y").note(DataNotePolicy::Factorize);
+  workflow::Payload no_time_payload =
+      workflow::payload::make(frame).features({"x1", "x2", "category"}).label("y").note(DataNotePolicy::Factorize);
   if (!time_payload.has_time() || no_time_payload.has_time()) {
     if (err) *err << "time validation fixtures should distinguish explicit and absent Payload time roles\n";
     return false;
   }
 
-  metrics::ValidationOptions ordered_time{};
+  selection::TimeValOptions ordered_time{};
   ordered_time.plan = CVPlanKind::TSCrossVal;
   ordered_time.folds = 2;
   ordered_time.time_test_size = 2;
-  const validate::Plan time_plan = validate::time(ordered_time);
+  const selection::Plan time_plan = selection::time(ordered_time);
   const auto ordered_splits = time_plan.splits(frame, "timestamp");
   if (ordered_splits.size() != 2
       || ordered_splits.back().test_set.ncases() != 2

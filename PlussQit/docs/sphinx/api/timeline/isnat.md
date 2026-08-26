@@ -25,7 +25,7 @@ Example 1. Detect missing timestamps in a mixed timeline.
 
 ```cpp
 auto mask = with_nat.isnat();
-std::cout << pluss::print_series(mask) << "\n";
+std::cout << pluss::series::print(mask) << "\n";
 ```
 
 ### Output

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::zoom &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=608a74fd"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Thread API Reference" href="../../thread_api_reference.html" />
+    <link rel="prev" title="DataFrame::width" href="width.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e9067bf84f98 -->
+<section id="dataframe-zoom">
+<h1>DataFrame::zoom<a class="headerlink" href="#dataframe-zoom" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">zoom</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">case_start</span><span class="p">,</span>
+<span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">case_stop</span><span class="p">,</span>
+<span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">feature_start</span><span class="p">,</span>
+<span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">feature_stop</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Carves out a positional rectangular block from the frame: a contiguous case range and
+a contiguous feature range at the same time, returning the smaller block as a new
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. If you think of a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> as a labeled matrix, <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is the
+direct “give me this rectangle” convenience.</p>
+<p>Semantically, <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is the positional shorthand for:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="n">case_start</span><span class="p">,</span><span class="w"> </span><span class="n">case_stop</span><span class="p">),</span>
+<span class="w">              </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Feat</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="n">feature_start</span><span class="p">,</span><span class="w"> </span><span class="n">feature_stop</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>So it is intentionally positional and half-open on both axes. If you need label-based
+selection or a non-rectangular pick, reach for <a class="reference internal" href="case_study.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">case_study()</span></code></span></a>
+instead.</p>
+<p>The important distinction is that <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is not trying to be a second general
+indexing language. It is the compact “rectangular block” helper:</p>
+<ul class="simple">
+<li><p>one contiguous case interval</p></li>
+<li><p>one contiguous feature interval</p></li>
+<li><p>one resulting smaller frame</p></li>
+</ul>
+<p>That makes it especially useful when you are visually inspecting a large table,
+debugging a generated frame, or preparing a focused block for display/export.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>case_start</strong>, <strong>case_stop</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
+<p>The contiguous case block <code class="docutils literal notranslate"><span class="pre">[case_start,</span> <span class="pre">case_stop)</span></code>. Negative values follow the same
+Python-style normalization as <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>.</p>
+<p><strong>feature_start</strong>, <strong>feature_stop</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
+<p>The contiguous feature block <code class="docutils literal notranslate"><span class="pre">[feature_start,</span> <span class="pre">feature_stop)</span></code>. Negative values are
+normalized relative to the end of the feature axis the same way
+<code class="docutils literal notranslate"><span class="pre">Feat::slice(...)</span></code> already does internally.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame containing only the requested rectangular block, preserving the
+original case labels and feature order inside that block.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> when the thing you want is specifically a rectangular positional block.</p>
+<p>That usually happens in three situations:</p>
+<ul class="simple">
+<li><p>you are visually inspecting a large frame and want to focus on one local region</p></li>
+<li><p>you are debugging generated data and need a compact “window” into the middle or tail
+of a table</p></li>
+<li><p>you want a matrix-like block extraction without spelling the longer
+<code class="docutils literal notranslate"><span class="pre">case_study(Case::slice(...),</span> <span class="pre">Feat::slice(...))</span></code> form each time</p></li>
+</ul>
+<p>If your selection is not rectangular, not positional, or not contiguous, then
+<code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is the wrong tool. In that case, <code class="docutils literal notranslate"><span class="pre">case_study()</span></code>, <code class="docutils literal notranslate"><span class="pre">slice()</span></code>, <code class="docutils literal notranslate"><span class="pre">features()</span></code>, or
+label-driven selection will be clearer.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Extract a middle rectangle from a labeled frame.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;w&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">})},</span>
+<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">zoom</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================
+     | x   y   z
+----------------
+r1   | 6   10  14
+r2   | 7   11  15
+----------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">zoom(1,</span> <span class="pre">3,</span> <span class="pre">1,</span> <span class="pre">4)</span></code> means:</p>
+<ul class="simple">
+<li><p>cases <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3)</span></code> -&gt; rows <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code></p></li>
+<li><p>features <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">4)</span></code> -&gt; columns <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code></p></li>
+</ul>
+<p>Both axes are half-open, so case <code class="docutils literal notranslate"><span class="pre">3</span></code> and any feature at position <code class="docutils literal notranslate"><span class="pre">4</span></code> are excluded.</p>
+<p>Example 2. Use negative indices to zoom relative to the end on both axes.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tail_block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">zoom</span><span class="p">(</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">-3</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tail_block</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | x   y
+------------
+r2   | 7   11
+r3   | 8   12
+------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p>Here:</p>
+<ul class="simple">
+<li><p>cases <code class="docutils literal notranslate"><span class="pre">[-2,</span> <span class="pre">4)</span></code> normalize to <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">4)</span></code> -&gt; rows <code class="docutils literal notranslate"><span class="pre">r2</span></code>, <code class="docutils literal notranslate"><span class="pre">r3</span></code></p></li>
+<li><p>features <code class="docutils literal notranslate"><span class="pre">[-3,</span> <span class="pre">-1)</span></code> normalize to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3)</span></code> -&gt; columns <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code></p></li>
+</ul>
+<p>So <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> inherits the same practical negative-index ergonomics users already expect
+from the case-side slicing family.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> preserves labels and feature order inside the carved block.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">zoom</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">block</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | w   x
+------------
+r0   | 1   5
+r1   | 2   6
+------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p>Notice that the surviving labels remain <code class="docutils literal notranslate"><span class="pre">r0</span></code> and <code class="docutils literal notranslate"><span class="pre">r1</span></code>; they are not renumbered to
+new local positions. This matters when you are matching a zoomed block back to the
+source frame during debugging or reporting.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is equivalent to the explicit <code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code> rectangle.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">via_zoom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">zoom</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">via_case_study</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span>
+<span class="w">    </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">),</span>
+<span class="w">    </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Feat</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">via_zoom</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | y   z
+------------
+r1   | 10  14
+r2   | 11  15
+r3   | 12  16
+------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">via_zoom</span></code> and <code class="docutils literal notranslate"><span class="pre">via_case_study</span></code> describe the same rectangle. <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> exists because
+that pattern is common enough to deserve the shorter surface.</p>
+<p>Example 5. Reach for <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> only when both axes matter.</p>
+<p>If you only wanted the last two rows, this is clearer:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rows_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If you only wanted columns <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>, this is clearer:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cols_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">zoom()</span></code> earns its place when you want a row interval and a feature interval together
+as one rectangular cut.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is purely positional. It is not meant to replace
+<a class="reference internal" href="case_study.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">case_study()</span></code></span></a>; it is the shorter matrix-block convenience for the
+common positional rectangle case.</p></li>
+<li><p>Case labels on the surviving rows are preserved exactly; they are not renumbered.</p></li>
+<li><p>Feature order inside the carved block is preserved exactly as it appeared on the
+source frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is half-open on both axes, not inclusive. This keeps it consistent with
+positional <code class="docutils literal notranslate"><span class="pre">slice(start,</span> <span class="pre">stop)</span></code> semantics elsewhere in the table stack.</p></li>
+<li><p>If you only need rows, <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a> is clearer. If you only need columns,
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> is clearer. <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> earns its place when both axes are
+part of the selection at once.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="case_study.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::case_study</span></code></span></a>: the more general row/feature selector
+surface <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is built on.</p></li>
+<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::slice</span></code></span></a>: contiguous case-only slicing.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: feature-only projection by name.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="width.md">
+    <span class="label">Previous</span>
+    <span class="title">width</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="width.html" title="previous chapter">DataFrame::width</a></li>
+      <li>Next: <a href="../../thread_api_reference.html" title="next chapter">Thread API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/zoom.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

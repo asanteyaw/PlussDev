@@ -79,13 +79,14 @@ bool run_unsupervised_checks(std::ostream* err) {
     train.random.seed = 11;
     train.random.deterministic = true;
 
-    const cluster::Result learned = cluster::model(models::kmeans(options)).run(cluster_batch(), train);
+    const models::cluster::Result learned =
+        models::cluster::model(models::cluster::kmeans(options)).run(cluster_batch(), train);
     const auto label_shape = learned.labels().sizes();
     const auto center_shape = learned.centers().sizes();
     if (!(learned.trained() && learned.labels().numel() == 40
           && center_shape.size() == 2 && center_shape[0] == 2 && center_shape[1] == 2
           && learned.cluster_count() == 2)) {
-      if (err) *err << "cluster::model(...).run should return trained labels and fitted centers\n";
+      if (err) *err << "models::cluster::model(...).run should return trained labels and fitted centers\n";
       return false;
     }
     if (!(label_shape.size() == 2 && label_shape[0] == 40 && label_shape[1] == 1)) {
@@ -93,14 +94,14 @@ bool run_unsupervised_checks(std::ostream* err) {
       return false;
     }
     if (learned.board().ncases() != 2) {
-      if (err) *err << "cluster::Result::board should summarize one row per cluster\n";
+      if (err) *err << "models::cluster::Result::board should summarize one row per cluster\n";
       return false;
     }
 
-    Model reusable = models::kmeans(options);
-    const cluster::Result via_model = cluster::model(reusable).run(cluster_frame(), train);
+    models::Model reusable = models::cluster::kmeans(options);
+    const models::cluster::Result via_model = models::cluster::model(reusable).run(cluster_frame(), train);
     if (!(via_model.trained() && !reusable.trained() && via_model.labels().numel() == 40)) {
-      if (err) *err << "cluster::model(Model).run(DataFrame) should train a copied model result\n";
+      if (err) *err << "models::cluster::model(Model).run(DataFrame) should train a copied model result\n";
       return false;
     }
   }
@@ -114,7 +115,8 @@ bool run_unsupervised_checks(std::ostream* err) {
     train.random.seed = 17;
     train.random.deterministic = true;
 
-    const embed::Result learned = embed::model(models::pca(options)).run(embed_batch(), train);
+    const models::embed::Result learned =
+        models::embed::model(models::decompose::pca(options)).run(embed_batch(), train);
     const auto coord_shape = learned.coordinates().sizes();
     const auto component_shape = learned.components().sizes();
     if (!(learned.trained()
@@ -122,11 +124,11 @@ bool run_unsupervised_checks(std::ostream* err) {
           && component_shape.size() == 2 && component_shape[0] == 3 && component_shape[1] == 2
           && learned.variances().numel() == 2
           && learned.component_count() == 2)) {
-      if (err) *err << "embed::model(...).run should return trained coordinates, components, and variances\n";
+      if (err) *err << "models::embed::model(...).run should return trained coordinates, components, and variances\n";
       return false;
     }
     if (learned.board().ncases() != 2) {
-      if (err) *err << "embed::Result::board should summarize one row per component\n";
+      if (err) *err << "models::embed::Result::board should summarize one row per component\n";
       return false;
     }
   }

@@ -20,14 +20,14 @@ int main() {
 
   const auto hourly_sum = idx.resample_agg(values, "H", "sum", 1);
   const auto hourly_mean = idx.resample_agg(values, "H", "mean", 1);
-  std::cout << "Resample sum (H):\n" << pluss::print_series(hourly_sum) << "\n\n";
-  std::cout << "Resample mean (H):\n" << pluss::print_series(hourly_mean) << "\n\n";
+  std::cout << "Resample sum (H):\n" << pluss::series::print(hourly_sum) << "\n\n";
+  std::cout << "Resample mean (H):\n" << pluss::series::print(hourly_mean) << "\n\n";
 
   const auto roll_window = pluss::duration::minutes(45);
   const auto roll_sum = idx.rolling_agg(values, roll_window, "sum");
   const auto roll_max = idx.rolling_agg(values, roll_window, "max");
-  std::cout << "Rolling sum (45min):\n" << pluss::print_series(roll_sum) << "\n\n";
-  std::cout << "Rolling max (45min):\n" << pluss::print_series(roll_max) << "\n";
+  std::cout << "Rolling sum (45min):\n" << pluss::series::print(roll_sum) << "\n\n";
+  std::cout << "Rolling max (45min):\n" << pluss::series::print(roll_max) << "\n";
 
   return 0;
 }

@@ -1246,7 +1246,7 @@ inline pluss::Note format(std::string_view tpl,
 }
 
 // pluss::note::print(n) -- human-readable rendering, mirroring
-// pluss::duration::print/pluss::timeline::print. `std::cout << n` also works
+// pluss::series::print/pluss::timeline::print. `std::cout << n` also works
 // directly via pluss::coden's Note operator<<.
 inline std::string print(const pluss::Note& n) {
   return pluss::coden::print_note(n);

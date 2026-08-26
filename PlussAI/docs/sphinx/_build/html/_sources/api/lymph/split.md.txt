@@ -69,6 +69,7 @@ Use this family when you need to answer questions like:
 :maxdepth: 2
 
 split/Plan
+split/ValidationOptions
 split/cross
 split/time
 split/holdout

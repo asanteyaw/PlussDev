@@ -3835,6 +3835,63 @@ void test_series_nan_participates_in_table_missing_semantics() {
          fmt::format("save_csv should serialize floating NaN as the default blank missing marker; got [{}]", saved));
 }
 
+void test_dataframe_shownull_and_zoom() {
+  using pluss::table::Axis;
+  using pluss::table::DataFrame;
+
+  const auto nan = std::numeric_limits<double>::quiet_NaN();
+
+  const auto row_source = DataFrame({
+      {"a", pluss::make_series(std::vector<double>{1.0, nan, 3.0, nan})},
+      {"b", pluss::make_series(std::vector<double>{10.0, 11.0, nan, nan})},
+      {"c", pluss::make_series(std::vector<double>{100.0, 101.0, 102.0, nan})},
+  });
+
+  const auto null_rows_any = row_source.shownull();
+  expect(null_rows_any.ncases() == 3 && null_rows_any.nfeatures() == row_source.nfeatures(),
+         "DataFrame::shownull() should keep rows with at least one null by default");
+  expect(null_rows_any.isnull({"a"}).features("a").as_series().to_vec<bool>() ==
+             std::vector<bool>({true, false, true}),
+         "DataFrame::shownull(Axis::Case) should preserve row order for null-containing rows");
+
+  const auto null_rows_all = row_source.shownull(Axis::Case, true);
+  expect(null_rows_all.ncases() == 1,
+         "DataFrame::shownull(Axis::Case, all=true) should keep only rows whose selected cells are all null");
+  expect(null_rows_all.isnull().all(Axis::Case).as_series().to_vec<bool>() == std::vector<bool>({true}),
+         "DataFrame::shownull(Axis::Case, all=true) should keep the fully-null row");
+
+  const auto feature_source = DataFrame({
+      {"clean", pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0})},
+      {"some_null", pluss::make_series(std::vector<double>{5.0, nan, 7.0, 8.0})},
+      {"all_null", pluss::make_series(std::vector<double>{nan, nan, nan, nan})},
+  });
+
+  const auto null_features_any = feature_source.shownull(Axis::Feature);
+  expect(null_features_any.features() == std::vector<std::string>({"some_null", "all_null"}),
+         "DataFrame::shownull(Axis::Feature) should keep features with at least one null");
+
+  const auto null_features_all = feature_source.shownull(Axis::Feature, true);
+  expect(null_features_all.features() == std::vector<std::string>({"all_null"}),
+         "DataFrame::shownull(Axis::Feature, all=true) should keep only fully-null features");
+
+  const auto grid = DataFrame({
+      {"w", pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4})},
+      {"x", pluss::make_series(std::vector<std::int64_t>{5, 6, 7, 8})},
+      {"y", pluss::make_series(std::vector<std::int64_t>{9, 10, 11, 12})},
+      {"z", pluss::make_series(std::vector<std::int64_t>{13, 14, 15, 16})},
+  }).label().set(pluss::make_note({"r0", "r1", "r2", "r3"}));
+
+  const auto zoomed = grid.zoom(1, 3, 1, 4);
+  expect(zoomed.ncases() == 2 && zoomed.nfeatures() == 3,
+         "DataFrame::zoom should return the requested rectangular half-open block");
+  expect(zoomed.features() == std::vector<std::string>({"x", "y", "z"}),
+         "DataFrame::zoom should project the requested feature block");
+  expect(zoomed.features("y").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({10, 11}),
+         "DataFrame::zoom should preserve the values inside the carved block");
+  expect(zoomed.label().values().as_note().vector() == std::vector<std::string>({"r1", "r2"}),
+         "DataFrame::zoom should preserve the matching case labels for the carved block");
+}
+
 void test_thread_arrange_and_corr_stability() {
   const auto values = pluss::make_series(std::vector<std::int64_t>{3, 99, 1, 2});
   const auto valid = pluss::make_series(std::vector<bool>{true, false, true, true});
@@ -5102,6 +5159,7 @@ int main(int argc, char** argv) {
       {"replace_exact_and_null_overloads", test_replace_exact_and_null_overloads},
       {"select_and_place_helpers", test_select_and_place_helpers},
       {"series_nan_participates_in_table_missing_semantics", test_series_nan_participates_in_table_missing_semantics},
+      {"dataframe_shownull_and_zoom", test_dataframe_shownull_and_zoom},
       {"thread_and_dataframe_freq_surfaces", test_thread_and_dataframe_freq_surfaces},
       {"thread_bucketize_correctness", test_thread_bucketize_correctness},
       {"thread_arrange_and_corr_stability", test_thread_arrange_and_corr_stability},

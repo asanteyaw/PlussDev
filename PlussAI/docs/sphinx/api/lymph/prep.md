@@ -212,16 +212,16 @@ int main() {
   options.note_policy = lymph::DataNotePolicy::Factorize;
   options.layout = lymph::ObservationLayout::Rows;
 
-  lymph::FeatureTransformer transformer = lymph::make_feature_transformer(
+  lymph::prep::FeatureTransformer transformer = lymph::prep::feature_transformer(
       raw,
       options,
       {
-          lymph::workflow::feature::compose(
+          lymph::prep::branch::compose(
               {
-                  lymph::workflow::stage::standard_scaler(),
+                  lymph::stage::standard_scaler(),
               },
               {"income"}),
-          lymph::workflow::feature::one_hot_encoder(
+          lymph::prep::branch::one_hot_encoder(
               lymph::prep::OneHotEncoderOptions{
                   .max_categories = 8,
                   .overflow = lymph::prep::CategoryOverflowPolicy::KeepMostFrequent,
@@ -266,6 +266,9 @@ This is the more compositional `prep` shape:
 - it is still branch-aware
 - it is still trained state, not a loose stateless mapper
 - it can be reused independently of any one specific model instance
+- branch construction belongs to `lymph::prep::branch::*`
+- individual transform descriptors belong to `lymph::stage::*`
+- `lymph::workflow::*` stays reserved for workflow composition, not prep routing
 
 ## Recommended Reading Order
 

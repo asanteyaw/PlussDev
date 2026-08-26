@@ -13,7 +13,7 @@ void show_timeline(std::string_view label, const pluss::codeh::Timeline& t) {
 
 void show_series(std::string_view label, const pluss::Series& s) {
   std::cout << "\n== " << label << " ==\n";
-  std::cout << pluss::print_series(s) << "\n";
+  std::cout << pluss::series::print(s) << "\n";
 }
 
 void show_note(std::string_view label, const pluss::Note& n) {

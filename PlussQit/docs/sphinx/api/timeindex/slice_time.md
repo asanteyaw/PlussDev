@@ -45,7 +45,7 @@ Example 1. Slice directly from ISO-like text bounds.
 auto rows = idx.slice_time(
     "2024-11-01T00:15:00Z",
     "2024-11-01T01:00:00Z");
-std::cout << pluss::print_series(rows) << "\n";
+std::cout << pluss::series::print(rows) << "\n";
 ```
 
 ### Output
@@ -63,7 +63,7 @@ std::string from_cfg = "2024-11-01T00:15:00Z";
 std::string to_cfg = "2024-11-01T01:00:00Z";
 
 auto rows = idx.slice_time(from_cfg, to_cfg);
-std::cout << pluss::print_series(rows) << "\n";
+std::cout << pluss::series::print(rows) << "\n";
 ```
 
 This is the most natural form when the bounds already live in metadata,

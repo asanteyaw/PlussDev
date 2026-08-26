@@ -78,14 +78,14 @@ bool run_phase3_checks(std::ostream* err = nullptr) {
     lymph::AssessOptions assess{};
     assess.metrics = {lymph::MetricKind::Mse, lymph::MetricKind::R2};
 
-    lymph::Model tree = lymph::models::decision_tree_regressor({.max_depth = 3});
+    lymph::models::Model tree = lymph::models::decision_tree_regressor({.max_depth = 3});
     const ai::Procedure learn_proc = ai::procedure::make({
         ai::procedure::step("learn_tree", "train", "model", tree, train),
     });
     ai::RunOptions learn_mode{};
     learn_mode.mode = ai::ProcedureMode::Learn;
     const ai::ProcedureResult learned = learn_proc.run({ai::procedure::input("train", regression_batch())}, learn_mode);
-    const lymph::Model model = learned.get<lymph::Model>("model");
+    const lymph::models::Model model = learned.get<lymph::models::Model>("model");
     if (!model.trained()) {
       if (err) *err << "Procedure Model adapter should return a trained Model in Learn mode\n";
       return false;

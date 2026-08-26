@@ -6,11 +6,11 @@
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
-  using pluss::ai::nodej::AssessOptions;
-  using pluss::ai::nodej::LinearFamilyOptions;
-  using pluss::ai::nodej::MetricKind;
-  using pluss::ai::nodej::RegularizationKind;
-  using pluss::ai::nodej::TrainOptions;
+  using lymph::AssessOptions;
+  using lymph::LinearFamilyOptions;
+  using lymph::MetricKind;
+  using lymph::RegularizationKind;
+  using lymph::TrainOptions;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
 

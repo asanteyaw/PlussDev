@@ -7,16 +7,16 @@
 
 #include <utility>
 
-namespace pluss::ai::lymph::validate {
+namespace pluss::ai::lymph::selection::validate {
 
 namespace detail {
 
-[[nodiscard]] inline bool is_time_plan_(const metrics::ValidationOptions& options) noexcept {
+[[nodiscard]] inline bool is_time_plan_(const TimeValOptions& options) noexcept {
   return options.plan == CVPlanKind::TSCrossVal;
 }
 
-inline void require_time_safe_payload_(const metrics::ValidationOptions& options,
-                                       const Payload& payload,
+inline void require_time_safe_payload_(const TimeValOptions& options,
+                                       const workflow::Payload& payload,
                                        const char* where) {
   if (!is_time_plan_(options)) return;
   if (options.shuffle) {
@@ -32,9 +32,9 @@ inline void require_time_safe_payload_(const metrics::ValidationOptions& options
   }
 }
 
-inline void require_workflow_time_compatible_(const metrics::ValidationOptions& options,
-                                              const Workflow& workflow,
-                                              const Payload& payload,
+inline void require_workflow_time_compatible_(const TimeValOptions& options,
+                                              const workflow::Workflow& workflow,
+                                              const workflow::Payload& payload,
                                               const char* where) {
   if (workflow.time_aware() && !is_time_plan_(options)) {
     ::pluss::throw_error(std::string(where) +
@@ -43,7 +43,7 @@ inline void require_workflow_time_compatible_(const metrics::ValidationOptions& 
   if (is_time_plan_(options)) {
     require_time_safe_payload_(options, payload, where);
     if (!workflow.time_aware()) return;
-    const TimeOptions& wf_time = *workflow.time_options();
+    const workflow::TimeOptions& wf_time = *workflow.time_options();
     const std::string payload_time = payload.time_feature();
     if (has_time_index(wf_time) && !payload_time.empty() && wf_time.index != payload_time) {
       ::pluss::throw_error(std::string(where) + ": Workflow time index \"" + wf_time.index +
@@ -52,10 +52,10 @@ inline void require_workflow_time_compatible_(const metrics::ValidationOptions& 
   }
 }
 
-[[nodiscard]] inline metrics::ValidationOptions effective_time_options_(metrics::ValidationOptions options,
-                                                                       const Workflow& workflow) {
+[[nodiscard]] inline TimeValOptions effective_time_options_(TimeValOptions options,
+                                                            const workflow::Workflow& workflow) {
   if (!is_time_plan_(options) || !workflow.time_aware()) return options;
-  const TimeOptions& time = *workflow.time_options();
+  const workflow::TimeOptions& time = *workflow.time_options();
   if (options.time_gap == 0) options.time_gap = time.gap;
   if (options.time_test_size == 0) options.time_test_size = time.horizon;
   if (options.time_max_train_size == 0) options.time_max_train_size = time.lookback;
@@ -92,9 +92,9 @@ inline void require_workflow_time_compatible_(const metrics::ValidationOptions& 
 
 class Plan final {
  public:
-  explicit Plan(metrics::ValidationOptions options = {}) : options_(std::move(options)) {}
+  explicit Plan(CrossValOptions options = {}) : options_(std::move(options)) {}
 
-  [[nodiscard]] const metrics::ValidationOptions& options() const noexcept { return options_; }
+  [[nodiscard]] const CrossValOptions& options() const noexcept { return options_; }
 
   Plan& folds(std::int64_t value) {
     if (value <= 1) {
@@ -186,7 +186,7 @@ class Plan final {
     return run(spec, x, as_stratify_series(y), std::move(train_options), std::move(assess_options));
   }
 
-  [[nodiscard]] metrics::CrossValidationReport run(const Model& model,
+  [[nodiscard]] metrics::CrossValidationReport run(const models::Model& model,
                                                    const LabeledBatch& batch,
                                                    TrainOptions train_options = {},
                                                    AssessOptions assess_options = {}) const {
@@ -195,7 +195,7 @@ class Plan final {
         std::move(train_options), std::move(assess_options));
   }
 
-  [[nodiscard]] metrics::CrossValidationReport run(const Model& model,
+  [[nodiscard]] metrics::CrossValidationReport run(const models::Model& model,
                                                    const pluss::table::DataFrame& frame,
                                                    const DataFrameBatchOptions& data_options,
                                                    TrainOptions train_options = {},
@@ -205,7 +205,7 @@ class Plan final {
         std::move(train_options), std::move(assess_options));
   }
 
-  [[nodiscard]] metrics::CrossValidationReport run(const Model& model,
+  [[nodiscard]] metrics::CrossValidationReport run(const models::Model& model,
                                                    const pluss::table::DataFrame& x,
                                                    const Series& y,
                                                    TrainOptions train_options = {},
@@ -215,7 +215,7 @@ class Plan final {
         std::move(train_options), std::move(assess_options));
   }
 
-  [[nodiscard]] metrics::CrossValidationReport run(const Model& model,
+  [[nodiscard]] metrics::CrossValidationReport run(const models::Model& model,
                                                    const pluss::table::DataFrame& x,
                                                    const pluss::table::Thread& y,
                                                    TrainOptions train_options = {},
@@ -223,8 +223,8 @@ class Plan final {
     return run(model, x, as_stratify_series(y), std::move(train_options), std::move(assess_options));
   }
 
-  [[nodiscard]] metrics::CrossValidationReport run(const Model& model,
-                                                   const Payload& payload,
+  [[nodiscard]] metrics::CrossValidationReport run(const models::Model& model,
+                                                   const workflow::Payload& payload,
                                                    TrainOptions train_options = {},
                                                    AssessOptions assess_options = {}) const {
     detail::require_time_safe_payload_(options_, payload, "validate::Plan::run(model,payload)");
@@ -243,12 +243,12 @@ class Plan final {
     return run(model, payload.labeled_batch(), std::move(train_options), std::move(assess_options));
   }
 
-  [[nodiscard]] metrics::CrossValidationReport run(const Workflow& workflow,
-                                                   const Payload& payload,
+  [[nodiscard]] metrics::CrossValidationReport run(const workflow::Workflow& workflow,
+                                                   const workflow::Payload& payload,
                                                    TrainOptions train_options = {},
                                                    AssessOptions assess_options = {}) const {
     detail::require_workflow_time_compatible_(options_, workflow, payload, "validate::Plan::run(workflow,payload)");
-    const metrics::ValidationOptions effective_options = detail::effective_time_options_(options_, workflow);
+    const TimeValOptions effective_options = detail::effective_time_options_(options_, workflow);
     const ::pluss::ai::lymph::detail::WorkflowLabeledInput input =
         ::pluss::ai::lymph::detail::workflow_labeled_input_(workflow, payload, "validate::Plan::run(workflow,payload)");
     if (input.frame.has_value()) {
@@ -261,7 +261,7 @@ class Plan final {
         std::move(train_options), std::move(assess_options));
   }
 
-  [[nodiscard]] selection::CompareResult run(const Builder& builder,
+  [[nodiscard]] selection::CompareResult run(const models::Builder& builder,
                                              const LabeledBatch& batch,
                                              TrainOptions train_options = {},
                                              AssessOptions assess_options = {},
@@ -272,7 +272,7 @@ class Plan final {
                              objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] selection::CompareResult run(const Builder& builder,
+  [[nodiscard]] selection::CompareResult run(const models::Builder& builder,
                                              const pluss::table::DataFrame& frame,
                                              const DataFrameBatchOptions& data_options,
                                              TrainOptions train_options = {},
@@ -284,8 +284,8 @@ class Plan final {
                              objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] selection::CompareResult run(const Builder& builder,
-                                             const Payload& payload,
+  [[nodiscard]] selection::CompareResult run(const models::Builder& builder,
+                                             const workflow::Payload& payload,
                                              TrainOptions train_options = {},
                                              AssessOptions assess_options = {},
                                              MetricKind objective_metric = MetricKind::Accuracy,
@@ -416,7 +416,7 @@ class Plan final {
     return score(spec, x, as_stratify_series(y), metric, std::move(train_options), std::move(assess_options));
   }
 
-  [[nodiscard]] Series scores(const Model& model,
+  [[nodiscard]] Series scores(const models::Model& model,
                               const LabeledBatch& batch,
                               MetricKind metric,
                               TrainOptions train_options = {},
@@ -426,7 +426,7 @@ class Plan final {
                                        metric, "validate::Plan::scores");
   }
 
-  [[nodiscard]] Series scores(const Model& model,
+  [[nodiscard]] Series scores(const models::Model& model,
                               const pluss::table::DataFrame& frame,
                               const DataFrameBatchOptions& data_options,
                               MetricKind metric,
@@ -437,7 +437,7 @@ class Plan final {
                                        metric, "validate::Plan::scores");
   }
 
-  [[nodiscard]] double score(const Model& model,
+  [[nodiscard]] double score(const models::Model& model,
                              const LabeledBatch& batch,
                              MetricKind metric,
                              TrainOptions train_options = {},
@@ -446,7 +446,7 @@ class Plan final {
     return values.mean().item<double>();
   }
 
-  [[nodiscard]] double score(const Model& model,
+  [[nodiscard]] double score(const models::Model& model,
                              const pluss::table::DataFrame& frame,
                              const DataFrameBatchOptions& data_options,
                              MetricKind metric,
@@ -456,8 +456,8 @@ class Plan final {
     return values.mean().item<double>();
   }
 
-  [[nodiscard]] Series scores(const Model& model,
-                              const Payload& payload,
+  [[nodiscard]] Series scores(const models::Model& model,
+                              const workflow::Payload& payload,
                               MetricKind metric,
                               TrainOptions train_options = {},
                               AssessOptions assess_options = {}) const {
@@ -466,8 +466,8 @@ class Plan final {
                                        metric, "validate::Plan::scores");
   }
 
-  [[nodiscard]] Series scores(const Workflow& workflow,
-                              const Payload& payload,
+  [[nodiscard]] Series scores(const workflow::Workflow& workflow,
+                              const workflow::Payload& payload,
                               MetricKind metric,
                               TrainOptions train_options = {},
                               AssessOptions assess_options = {}) const {
@@ -476,8 +476,8 @@ class Plan final {
                                        metric, "validate::Plan::scores");
   }
 
-  [[nodiscard]] double score(const Model& model,
-                             const Payload& payload,
+  [[nodiscard]] double score(const models::Model& model,
+                             const workflow::Payload& payload,
                              MetricKind metric,
                              TrainOptions train_options = {},
                              AssessOptions assess_options = {}) const {
@@ -485,8 +485,8 @@ class Plan final {
     return values.mean().item<double>();
   }
 
-  [[nodiscard]] double score(const Workflow& workflow,
-                             const Payload& payload,
+  [[nodiscard]] double score(const workflow::Workflow& workflow,
+                             const workflow::Payload& payload,
                              MetricKind metric,
                              TrainOptions train_options = {},
                              AssessOptions assess_options = {}) const {
@@ -495,14 +495,16 @@ class Plan final {
   }
 
  private:
-  metrics::ValidationOptions options_{};
+  CrossValOptions options_{};
 };
+
+using HoldoutOptions = prep::HoldoutSplitOptions;
 
 class HoldoutPlan final {
  public:
-  explicit HoldoutPlan(prep::HoldoutSplitOptions options = {}) : options_(std::move(options)) {}
+  explicit HoldoutPlan(HoldoutOptions options = {}) : options_(std::move(options)) {}
 
-  [[nodiscard]] const prep::HoldoutSplitOptions& options() const noexcept { return options_; }
+  [[nodiscard]] const HoldoutOptions& options() const noexcept { return options_; }
 
   HoldoutPlan& test_size(double value) {
     if (!(value > 0.0 && value < 1.0)) {
@@ -544,45 +546,52 @@ class HoldoutPlan final {
   }
 
  private:
-  prep::HoldoutSplitOptions options_{};
+  HoldoutOptions options_{};
 };
 
-[[nodiscard]] inline Plan cross(metrics::ValidationOptions options = {}) {
+[[nodiscard]] inline Plan cross(CrossValOptions options = {}) {
   options.plan = CVPlanKind::CrossVal;
   return Plan(std::move(options));
 }
 
-[[nodiscard]] inline Plan stratified(metrics::ValidationOptions options = {}) {
+[[nodiscard]] inline Plan stratified(CrossValOptions options = {}) {
   options.plan = CVPlanKind::StratifiedCrossVal;
   options.stratified = true;
   return Plan(std::move(options));
 }
 
-[[nodiscard]] inline Plan grouped(Series groups, metrics::ValidationOptions options = {}) {
+[[nodiscard]] inline Plan grouped(Series groups, CrossValOptions options = {}) {
   options.plan = CVPlanKind::GroupCrossVal;
   options.groups = std::move(groups);
   return Plan(std::move(options));
 }
 
-[[nodiscard]] inline Plan time_ordered(metrics::ValidationOptions options = {}) {
+[[nodiscard]] inline Plan time_ordered(TimeValOptions options = {}) {
   options.plan = CVPlanKind::TSCrossVal;
   options.shuffle = false;
   return Plan(std::move(options));
 }
 
-[[nodiscard]] inline Plan time(metrics::ValidationOptions options = {}) {
+[[nodiscard]] inline Plan time(TimeValOptions options = {}) {
   return time_ordered(std::move(options));
 }
 
-[[nodiscard]] inline HoldoutPlan holdout(prep::HoldoutSplitOptions options = {}) {
+[[nodiscard]] inline HoldoutPlan holdout(HoldoutOptions options = {}) {
   return HoldoutPlan(std::move(options));
 }
 
-} // namespace pluss::ai::lymph::validate
+} // namespace pluss::ai::lymph::selection::validate
 
-namespace pluss::ai::lymph {
+namespace pluss::ai::lymph::selection {
 
-using ValidationPlan = validate::Plan;
 using HoldoutPlan = validate::HoldoutPlan;
+using HoldoutOptions = validate::HoldoutOptions;
+using Plan = validate::Plan;
+using validate::cross;
+using validate::grouped;
+using validate::holdout;
+using validate::stratified;
+using validate::time;
+using validate::time_ordered;
 
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::selection

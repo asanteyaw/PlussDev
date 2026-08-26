@@ -32,8 +32,9 @@
 //   - learn_/learn/map/learn_map/infer/infer_scores/assess/save, raw-frame
 //     paths applying Policy before the held Model sees data, plus batch paths
 //     for callers already working at Series/FeatureBatch/LabeledBatch level.
-//   - save_policy(path, Policy) / load_policy(path) -- sidecar persistence
-//     helpers kept here because they are Workflow-only concerns.
+//   - workflow::save_policy(path, Policy) / workflow::load_policy(path) --
+//     sidecar persistence helpers kept here because they are Workflow-only
+//     concerns.
 //   - namespace lymph::workflow { Workflow make(Model, Policy); Workflow
 //     restore(FlowBundle, Policy); Workflow load(std::string path); }
 //
@@ -45,9 +46,26 @@
 // those phases learn to run Workflow directly. Workflow itself must not absorb
 // those families' responsibilities.
 
-namespace pluss::ai::lymph {
+namespace pluss::ai::lymph::workflow {
 
-namespace workflow {
+using ::pluss::ai::lymph::AssessOptions;
+using ::pluss::ai::lymph::DataFrameBatchOptions;
+using ::pluss::ai::lymph::FlowGraphInfo;
+using ::pluss::ai::lymph::FeatureBatch;
+using ::pluss::ai::lymph::InferOptions;
+using ::pluss::ai::lymph::LabeledBatch;
+using ::pluss::ai::lymph::MetricReport;
+using ::pluss::ai::lymph::ModelSpec;
+using ::pluss::ai::lymph::Series;
+using ::pluss::ai::lymph::TargetTransform;
+using ::pluss::ai::lymph::TaskKind;
+using ::pluss::ai::lymph::TrainOptions;
+using ::pluss::ai::lymph::TransformSpec;
+using ::pluss::ai::lymph::models::Model;
+using ::pluss::ai::lymph::models::ModelPrep;
+using ::pluss::ai::lymph::prep::CustomStage;
+using ::pluss::ai::lymph::prep::Route;
+using ::pluss::ai::lymph::prep::Stage;
 
 struct WorkflowBranchInfo {
   std::string name{};
@@ -86,32 +104,22 @@ class WorkflowBranch;
 class WorkflowRoute;
 class Workflow;
 
-} // namespace workflow
+} // namespace pluss::ai::lymph::workflow
 
-using WorkflowBranchInfo = workflow::WorkflowBranchInfo;
-using WorkflowSchedule = workflow::WorkflowSchedule;
-using WorkflowCache = workflow::WorkflowCache;
-using WorkflowOptions = workflow::WorkflowOptions;
-using WorkflowStepSpec = workflow::WorkflowStepSpec;
-using WorkflowBranchSpec = workflow::WorkflowBranchSpec;
-using WorkflowBranch = workflow::WorkflowBranch;
-using WorkflowRoute = workflow::WorkflowRoute;
-using Workflow = workflow::Workflow;
-
-namespace detail {
+namespace pluss::ai::lymph::detail {
 
 [[nodiscard]] inline std::string workflow_policy_sidecar_path_(const std::string& bundle_path) {
   return bundle_path + ".policy";
 }
 
-inline void require_workflow_xy_policy_safe_(const Policy& policy, const char* where) {
+inline void require_workflow_xy_policy_safe_(const workflow::Policy& policy, const char* where) {
   if (policy.filter_nulls) {
     ::pluss::throw_error(std::string(where) +
                          ": Policy can drop rows; use the frame + DataFrameBatchOptions overload so features and labels stay aligned.");
   }
 }
 
-inline void require_frame_payload_weight_column_(const Payload& payload, const char* where) {
+inline void require_frame_payload_weight_column_(const workflow::Payload& payload, const char* where) {
   if (payload.weights().defined() && !payload.has_weight_feature()) {
     ::pluss::throw_error(std::string(where) +
                          ": DataFrame-backed Payload with Series weights must use weights(\"column\") so policy/filtering keeps rows aligned.");
@@ -142,13 +150,15 @@ inline void write_policy_name_list_(std::ofstream& out, const std::vector<std::s
   return out;
 }
 
-} // namespace detail
+} // namespace pluss::ai::lymph::detail
+
+namespace pluss::ai::lymph::workflow {
 
 inline void save_policy(const std::string& bundle_path, const Policy& policy) {
   const std::string sidecar = detail::workflow_policy_sidecar_path_(bundle_path);
   std::ofstream out(sidecar, std::ios::trunc);
   if (!out) {
-    ::pluss::throw_error("lymph::save_policy: could not open \"" + sidecar + "\" for writing.");
+    ::pluss::throw_error("lymph::workflow::save_policy: could not open \"" + sidecar + "\" for writing.");
   }
   out << "LYMPH_POLICY_V2\n";
   detail::write_policy_name_list_(out, policy.drop_columns);
@@ -173,22 +183,22 @@ inline void save_policy(const std::string& bundle_path, const Policy& policy) {
     return policy;
   }
   if (first == "LYMPH_POLICY_V2") {
-    policy.drop_columns = detail::read_policy_name_list_(in, "lymph::load_policy");
-    policy.require_columns = detail::read_policy_name_list_(in, "lymph::load_policy");
-    policy.forbid_columns = detail::read_policy_name_list_(in, "lymph::load_policy");
-    policy.reject_missing = detail::read_policy_name_list_(in, "lymph::load_policy");
-    policy.allow_missing = detail::read_policy_name_list_(in, "lymph::load_policy");
+    policy.drop_columns = detail::read_policy_name_list_(in, "lymph::workflow::load_policy");
+    policy.require_columns = detail::read_policy_name_list_(in, "lymph::workflow::load_policy");
+    policy.forbid_columns = detail::read_policy_name_list_(in, "lymph::workflow::load_policy");
+    policy.reject_missing = detail::read_policy_name_list_(in, "lymph::workflow::load_policy");
+    policy.allow_missing = detail::read_policy_name_list_(in, "lymph::workflow::load_policy");
   } else {
     std::istringstream first_in(first);
     std::size_t count = 0;
     if (!(first_in >> count)) {
-      ::pluss::throw_error("lymph::load_policy: malformed workflow policy sidecar (version/name count).");
+      ::pluss::throw_error("lymph::workflow::load_policy: malformed workflow policy sidecar (version/name count).");
     }
     policy.drop_columns.reserve(count);
     for (std::size_t i = 0; i < count; ++i) {
       std::string line;
       if (!std::getline(in, line)) {
-        ::pluss::throw_error("lymph::load_policy: malformed workflow policy sidecar (legacy drop column list).");
+        ::pluss::throw_error("lymph::workflow::load_policy: malformed workflow policy sidecar (legacy drop column list).");
       }
       policy.drop_columns.push_back(std::move(line));
     }
@@ -196,16 +206,15 @@ inline void save_policy(const std::string& bundle_path, const Policy& policy) {
   int filter_nulls = 0;
   int drop_only_if_all_null = 0;
   if (!(in >> filter_nulls) || !(in >> drop_only_if_all_null)) {
-    ::pluss::throw_error("lymph::load_policy: malformed workflow policy sidecar (flags).");
+    ::pluss::throw_error("lymph::workflow::load_policy: malformed workflow policy sidecar (flags).");
   }
   in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   policy.filter_nulls = filter_nulls != 0;
   policy.drop_only_if_all_null = drop_only_if_all_null != 0;
-  policy.null_filter_columns = detail::read_policy_name_list_(in, "lymph::load_policy");
+  policy.null_filter_columns = detail::read_policy_name_list_(in, "lymph::workflow::load_policy");
   return policy;
 }
 
-namespace workflow {
 [[nodiscard]] Workflow make(Policy policy);
 [[nodiscard]] Workflow make(Model model, Policy policy = {});
 [[nodiscard]] Workflow make(Policy policy,
@@ -236,9 +245,8 @@ namespace workflow {
                                         std::initializer_list<WorkflowStepSpec> steps);
 [[nodiscard]] Workflow restore(const io::FlowBundle& bundle, Policy policy = {});
 [[nodiscard]] Workflow load(const std::string& path);
-} // namespace workflow
 
-class workflow::Workflow final {
+class Workflow final {
  public:
   Workflow(Workflow&&) noexcept = default;
   Workflow& operator=(Workflow&&) noexcept = default;
@@ -271,7 +279,7 @@ class workflow::Workflow final {
 
   Workflow& workers(std::int64_t value) {
     if (value < 1) {
-      ::pluss::throw_error("lymph::Workflow::workers: worker count must be at least 1.");
+      ::pluss::throw_error("lymph::workflow::Workflow::workers: worker count must be at least 1.");
     }
     options_.workers = value;
     return *this;
@@ -283,7 +291,7 @@ class workflow::Workflow final {
   }
 
   Workflow& time(TimeOptions options) {
-    validate_time_options(options, "lymph::Workflow::time");
+    validate_time_options(options, "lymph::workflow::Workflow::time");
     time_options_ = std::move(options);
     return *this;
   }
@@ -303,13 +311,13 @@ class workflow::Workflow final {
 
   [[nodiscard]] WorkflowBranch branch(std::string name);
 
-  [[nodiscard]] WorkflowRoute on(ColumnRouter router);
+  [[nodiscard]] WorkflowRoute on(Route router);
 
   [[nodiscard]] WorkflowRoute on(std::vector<std::string> names);
 
   [[nodiscard]] WorkflowRoute on(std::initializer_list<std::string> names);
 
-  [[nodiscard]] WorkflowRoute on(std::string name, ColumnRouter router);
+  [[nodiscard]] WorkflowRoute on(std::string name, Route router);
 
   [[nodiscard]] WorkflowRoute on(std::string name, std::vector<std::string> names);
 
@@ -342,7 +350,7 @@ class workflow::Workflow final {
   Workflow& learn_(const pluss::table::DataFrame& x,
                    const Series& y,
                    const TrainOptions& options = {}) {
-    detail::require_workflow_xy_policy_safe_(policy_, "lymph::Workflow::learn_(x,y)");
+    detail::require_workflow_xy_policy_safe_(policy_, "lymph::workflow::Workflow::learn_(x,y)");
     model_.learn_(policy_.apply(x), y, options);
     return *this;
   }
@@ -350,7 +358,7 @@ class workflow::Workflow final {
   Workflow& learn_(const pluss::table::DataFrame& x,
                    const pluss::table::Thread& y,
                    const TrainOptions& options = {}) {
-    detail::require_workflow_xy_policy_safe_(policy_, "lymph::Workflow::learn_(x,y)");
+    detail::require_workflow_xy_policy_safe_(policy_, "lymph::workflow::Workflow::learn_(x,y)");
     model_.learn_(policy_.apply(x), y, options);
     return *this;
   }
@@ -389,12 +397,12 @@ class workflow::Workflow final {
     if (payload.has_frame()) {
       const pluss::table::DataFrame frame = policy_.apply(payload.frame());
       if (payload.has_label_feature()) {
-        detail::require_frame_payload_weight_column_(payload, "lymph::Workflow::learn_(payload)");
+        detail::require_frame_payload_weight_column_(payload, "lymph::workflow::Workflow::learn_(payload)");
         model_.learn_(frame, payload.data(), options);
         return *this;
       }
       if (payload.has_label()) {
-        detail::require_workflow_xy_policy_safe_(policy_, "lymph::Workflow::learn_(payload)");
+        detail::require_workflow_xy_policy_safe_(policy_, "lymph::workflow::Workflow::learn_(payload)");
         model_.learn_(frame, payload.label(), options);
         return *this;
       }
@@ -514,14 +522,14 @@ class workflow::Workflow final {
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
                                     const Series& y,
                                     const AssessOptions& options = {}) const {
-    detail::require_workflow_xy_policy_safe_(policy_, "lymph::Workflow::assess(x,y)");
+    detail::require_workflow_xy_policy_safe_(policy_, "lymph::workflow::Workflow::assess(x,y)");
     return model_.assess(policy_.apply(x), y, options);
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
                                     const pluss::table::Thread& y,
                                     const AssessOptions& options = {}) const {
-    detail::require_workflow_xy_policy_safe_(policy_, "lymph::Workflow::assess(x,y)");
+    detail::require_workflow_xy_policy_safe_(policy_, "lymph::workflow::Workflow::assess(x,y)");
     return model_.assess(policy_.apply(x), y, options);
   }
 
@@ -529,11 +537,11 @@ class workflow::Workflow final {
     if (payload.has_frame()) {
       const pluss::table::DataFrame frame = policy_.apply(payload.frame());
       if (payload.has_label_feature()) {
-        detail::require_frame_payload_weight_column_(payload, "lymph::Workflow::assess(payload)");
+        detail::require_frame_payload_weight_column_(payload, "lymph::workflow::Workflow::assess(payload)");
         return model_.assess(frame, payload.data(), options);
       }
       if (payload.has_label()) {
-        detail::require_workflow_xy_policy_safe_(policy_, "lymph::Workflow::assess(payload)");
+        detail::require_workflow_xy_policy_safe_(policy_, "lymph::workflow::Workflow::assess(payload)");
         return model_.assess(frame, payload.label(), options);
       }
     }
@@ -546,18 +554,18 @@ class workflow::Workflow final {
             const TrainOptions& train_options = {},
             io::FlowBundleMetadata metadata = {}) const {
     model_.save(path, policy_.apply(raw_train_frame), data_options, train_options, std::move(metadata));
-    save_policy(path, policy_);
+    workflow::save_policy(path, policy_);
   }
 
   void save(const std::string& path) const {
     model_.save(path);
-    save_policy(path, policy_);
+    workflow::save_policy(path, policy_);
   }
 
   void save(const std::string& path,
             io::FlowBundleMetadata metadata) const {
     model_.save(path, std::move(metadata));
-    save_policy(path, policy_);
+    workflow::save_policy(path, policy_);
   }
 
   void save(const std::string& path,
@@ -571,22 +579,22 @@ class workflow::Workflow final {
 
  private:
   struct WorkflowStepRecord {
-    WorkflowStepRecord(std::int64_t in_branch_index, Stage in_stage, ColumnRouter in_router)
+    WorkflowStepRecord(std::int64_t in_branch_index, Stage in_stage, Route in_router)
         : branch_index(in_branch_index), stage(std::move(in_stage)), router(std::move(in_router)) {}
 
     std::int64_t branch_index;
     Stage stage;
-    ColumnRouter router;
+    Route router;
   };
 
-  [[nodiscard]] WorkflowRoute open_branch_(std::string name, bool named, ColumnRouter router);
+  [[nodiscard]] WorkflowRoute open_branch_(std::string name, bool named, Route router);
 
-  Model& append_step_(std::int64_t branch_index, Stage stage, const ColumnRouter& router) {
+  Model& append_step_(std::int64_t branch_index, Stage stage, const Route& router) {
     if (branch_index < 0 || branch_index >= static_cast<std::int64_t>(branches_.size())) {
-      ::pluss::throw_error("lymph::Workflow: invalid branch index while appending a stage.");
+      ::pluss::throw_error("lymph::workflow::Workflow: invalid branch index while appending a stage.");
     }
     Stage stored_stage = stage;
-    ColumnRouter stored_router = router;
+    Route stored_router = router;
     model_.append(std::move(stage), router);
     steps_.push_back(WorkflowStepRecord{branch_index, std::move(stored_stage), std::move(stored_router)});
     ++branches_[static_cast<std::size_t>(branch_index)].stage_count;
@@ -594,13 +602,7 @@ class workflow::Workflow final {
   }
 
   friend class WorkflowBranch;
-  friend Workflow workflow::make(Model model, Policy policy);
-  friend Workflow workflow::make(Policy policy);
-  friend Workflow workflow::restore(const io::FlowBundle& bundle, Policy policy);
   friend class WorkflowRoute;
-
-  Workflow(Model model, Policy policy)
-      : model_(std::move(model)), policy_(std::move(policy)) {}
 
   Model model_;
   Policy policy_;
@@ -609,18 +611,22 @@ class workflow::Workflow final {
   bool joined_ = false;
   WorkflowOptions options_{};
   std::optional<TimeOptions> time_options_{};
+
+ public:
+  Workflow(Model model, Policy policy)
+      : model_(std::move(model)), policy_(std::move(policy)) {}
 };
 
-class workflow::WorkflowBranch final {
+class WorkflowBranch final {
  public:
   WorkflowBranch(Workflow& workflow, std::string name)
       : workflow_(&workflow), name_(std::move(name)) {
     if (name_.empty()) {
-      ::pluss::throw_error("lymph::WorkflowBranch: branch name cannot be empty.");
+      ::pluss::throw_error("lymph::workflow::WorkflowBranch: branch name cannot be empty.");
     }
   }
 
-  [[nodiscard]] WorkflowRoute route(ColumnRouter router);
+  [[nodiscard]] WorkflowRoute route(Route router);
 
   [[nodiscard]] WorkflowRoute route(std::vector<std::string> names);
 
@@ -634,14 +640,14 @@ class workflow::WorkflowBranch final {
   std::string name_;
 };
 
-class workflow::WorkflowRoute final {
+class WorkflowRoute final {
  public:
-  WorkflowRoute(Workflow& workflow, ColumnRouter router, std::int64_t branch_index)
+  WorkflowRoute(Workflow& workflow, Route router, std::int64_t branch_index)
       : workflow_(&workflow), router_(std::move(router)), branch_index_(branch_index) {}
 
   WorkflowRoute& add(Stage stage) {
     if (workflow_ == nullptr) {
-      ::pluss::throw_error("lymph::WorkflowRoute: invalid empty route accessor.");
+      ::pluss::throw_error("lymph::workflow::WorkflowRoute: invalid empty route accessor.");
     }
     workflow_->append_step_(branch_index_, std::move(stage), router_);
     return *this;
@@ -649,13 +655,13 @@ class workflow::WorkflowRoute final {
 
  private:
   Workflow* workflow_ = nullptr;
-  ColumnRouter router_;
+  Route router_;
   std::int64_t branch_index_ = -1;
 };
 
-[[nodiscard]] inline WorkflowRoute Workflow::open_branch_(std::string name, bool named, ColumnRouter router) {
+[[nodiscard]] inline WorkflowRoute Workflow::open_branch_(std::string name, bool named, Route router) {
   if (named && name.empty()) {
-    ::pluss::throw_error("lymph::Workflow::on: named workflow branch cannot be empty.");
+    ::pluss::throw_error("lymph::workflow::Workflow::on: named workflow branch cannot be empty.");
   }
   const std::int64_t branch_index = static_cast<std::int64_t>(branches_.size());
   branches_.push_back(WorkflowBranchInfo{std::move(name), named, 0});
@@ -666,24 +672,24 @@ class workflow::WorkflowRoute final {
   return WorkflowBranch(*this, std::move(name));
 }
 
-[[nodiscard]] inline WorkflowRoute Workflow::on(ColumnRouter router) {
+[[nodiscard]] inline WorkflowRoute Workflow::on(Route router) {
   return open_branch_({}, false, std::move(router));
 }
 
 [[nodiscard]] inline WorkflowRoute Workflow::on(std::vector<std::string> names) {
-  return on(columnrouter::names(std::move(names)));
+  return on(::pluss::ai::lymph::prep::route::names(std::move(names)));
 }
 
 [[nodiscard]] inline WorkflowRoute Workflow::on(std::initializer_list<std::string> names) {
   return on(std::vector<std::string>(names.begin(), names.end()));
 }
 
-[[nodiscard]] inline WorkflowRoute Workflow::on(std::string name, ColumnRouter router) {
+[[nodiscard]] inline WorkflowRoute Workflow::on(std::string name, Route router) {
   return open_branch_(std::move(name), true, std::move(router));
 }
 
 [[nodiscard]] inline WorkflowRoute Workflow::on(std::string name, std::vector<std::string> names) {
-  return on(std::move(name), columnrouter::names(std::move(names)));
+  return on(std::move(name), ::pluss::ai::lymph::prep::route::names(std::move(names)));
 }
 
 [[nodiscard]] inline WorkflowRoute Workflow::on(std::string name, std::initializer_list<std::string> names) {
@@ -692,24 +698,24 @@ class workflow::WorkflowRoute final {
 
 [[nodiscard]] inline WorkflowRoute Workflow::on(
     std::function<bool(std::string_view feature_name, std::string_view dtype)> predicate) {
-  return on(columnrouter::where(std::move(predicate)));
+  return on(::pluss::ai::lymph::prep::route::where(std::move(predicate)));
 }
 
 [[nodiscard]] inline WorkflowRoute Workflow::on(
     std::string name,
     std::function<bool(std::string_view feature_name, std::string_view dtype)> predicate) {
-  return on(std::move(name), columnrouter::where(std::move(predicate)));
+  return on(std::move(name), ::pluss::ai::lymph::prep::route::where(std::move(predicate)));
 }
 
-[[nodiscard]] inline WorkflowRoute WorkflowBranch::route(ColumnRouter router) {
+[[nodiscard]] inline WorkflowRoute WorkflowBranch::route(Route router) {
   if (workflow_ == nullptr) {
-    ::pluss::throw_error("lymph::WorkflowBranch: invalid empty branch accessor.");
+    ::pluss::throw_error("lymph::workflow::WorkflowBranch: invalid empty branch accessor.");
   }
   return workflow_->open_branch_(name_, true, std::move(router));
 }
 
 [[nodiscard]] inline WorkflowRoute WorkflowBranch::route(std::vector<std::string> names) {
-  return route(columnrouter::names(std::move(names)));
+  return route(::pluss::ai::lymph::prep::route::names(std::move(names)));
 }
 
 [[nodiscard]] inline WorkflowRoute WorkflowBranch::route(std::initializer_list<std::string> names) {
@@ -718,10 +724,12 @@ class workflow::WorkflowRoute final {
 
 [[nodiscard]] inline WorkflowRoute WorkflowBranch::route(
     std::function<bool(std::string_view feature_name, std::string_view dtype)> predicate) {
-  return route(columnrouter::where(std::move(predicate)));
+  return route(::pluss::ai::lymph::prep::route::where(std::move(predicate)));
 }
 
-namespace detail {
+} // namespace pluss::ai::lymph::workflow
+
+namespace pluss::ai::lymph::detail {
 
 struct WorkflowLabeledInput {
   std::optional<pluss::table::DataFrame> frame{};
@@ -729,8 +737,8 @@ struct WorkflowLabeledInput {
   std::optional<LabeledBatch> batch{};
 };
 
-[[nodiscard]] inline WorkflowLabeledInput workflow_labeled_input_(const Workflow& workflow,
-                                                                  const Payload& payload,
+[[nodiscard]] inline WorkflowLabeledInput workflow_labeled_input_(const ::pluss::ai::lymph::workflow::Workflow& workflow,
+                                                                  const ::pluss::ai::lymph::workflow::Payload& payload,
                                                                   const char* where) {
   if (payload.has_frame()) {
     if (payload.has_external_weights() && !payload.has_weight_feature()) {
@@ -761,23 +769,23 @@ struct WorkflowLabeledInput {
   };
 }
 
-} // namespace detail
+} // namespace pluss::ai::lymph::detail
+
+namespace pluss::ai::lymph::workflow {
 
 inline void Workflow::save(const std::string& path,
                            const Payload& payload,
                            const TrainOptions& train_options,
                            io::FlowBundleMetadata metadata) const {
   const detail::WorkflowLabeledInput input = detail::workflow_labeled_input_(*
-      this, payload, "lymph::Workflow::save(payload)");
+      this, payload, "lymph::workflow::Workflow::save(payload)");
   if (input.frame.has_value()) {
     model_.save(path, *input.frame, input.data_options, train_options, std::move(metadata));
   } else {
     model_.save(path, *input.batch, train_options, std::move(metadata));
   }
-  save_policy(path, policy_);
+  workflow::save_policy(path, policy_);
 }
-
-namespace workflow {
 
 [[nodiscard]] inline Workflow make(Policy policy) {
   return Workflow(Model(::pluss::ai::nodej::Workflow{}), std::move(policy));
@@ -834,7 +842,7 @@ inline void apply_workflow_branches_(Workflow& workflow, const std::vector<Workf
 [[nodiscard]] inline WorkflowBranchSpec branch(std::string name,
                                                std::initializer_list<std::string> columns,
                                                std::initializer_list<WorkflowStepSpec> steps) {
-  return branch(
+  return ::pluss::ai::lymph::workflow::branch(
       std::move(name),
       std::vector<std::string>(columns.begin(), columns.end()),
       std::vector<WorkflowStepSpec>(steps.begin(), steps.end()));
@@ -852,7 +860,7 @@ inline void apply_workflow_branches_(Workflow& workflow, const std::vector<Workf
 [[nodiscard]] inline Workflow make(Policy policy,
                                    std::initializer_list<WorkflowBranchSpec> branches,
                                    WorkflowOptions options) {
-  return make(
+  return ::pluss::ai::lymph::workflow::make(
       std::move(policy),
       std::vector<WorkflowBranchSpec>(branches.begin(), branches.end()),
       options);
@@ -862,7 +870,7 @@ inline void apply_workflow_branches_(Workflow& workflow, const std::vector<Workf
                                    std::vector<WorkflowBranchSpec> branches,
                                    Model model,
                                    WorkflowOptions options) {
-  Workflow workflow = make(std::move(model), std::move(policy));
+  Workflow workflow = ::pluss::ai::lymph::workflow::make(std::move(model), std::move(policy));
   detail::apply_workflow_options_(workflow, options);
   detail::apply_workflow_branches_(workflow, branches);
   return workflow;
@@ -872,7 +880,7 @@ inline void apply_workflow_branches_(Workflow& workflow, const std::vector<Workf
                                    std::initializer_list<WorkflowBranchSpec> branches,
                                    Model model,
                                    WorkflowOptions options) {
-  return make(
+  return ::pluss::ai::lymph::workflow::make(
       std::move(policy),
       std::vector<WorkflowBranchSpec>(branches.begin(), branches.end()),
       std::move(model),
@@ -882,13 +890,13 @@ inline void apply_workflow_branches_(Workflow& workflow, const std::vector<Workf
 [[nodiscard]] inline Workflow make(std::vector<WorkflowBranchSpec> branches,
                                    Model model,
                                    WorkflowOptions options) {
-  return make(Policy{}, std::move(branches), std::move(model), options);
+  return ::pluss::ai::lymph::workflow::make(Policy{}, std::move(branches), std::move(model), options);
 }
 
 [[nodiscard]] inline Workflow make(std::initializer_list<WorkflowBranchSpec> branches,
                                    Model model,
                                    WorkflowOptions options) {
-  return make(
+  return ::pluss::ai::lymph::workflow::make(
       std::vector<WorkflowBranchSpec>(branches.begin(), branches.end()),
       std::move(model),
       options);
@@ -899,9 +907,9 @@ inline void apply_workflow_branches_(Workflow& workflow, const std::vector<Workf
 }
 
 [[nodiscard]] inline Workflow load(const std::string& path) {
-  return restore(resolve(io::load(path), "lymph::workflow::load"), load_policy(path));
+  return ::pluss::ai::lymph::workflow::restore(
+      resolve(io::load(path), "lymph::workflow::load"),
+      ::pluss::ai::lymph::workflow::load_policy(path));
 }
 
-} // namespace workflow
-
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::workflow

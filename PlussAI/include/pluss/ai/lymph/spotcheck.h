@@ -9,15 +9,15 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::ai::lymph {
+namespace pluss::ai::lymph::selection {
 
 namespace spotcheck {
 
-using Result = selection::CompareResult;
+using Result = CompareResult;
 
 class Suite final {
  public:
-  explicit Suite(const Builder& builder) {
+  explicit Suite(const models::Builder& builder) {
     const auto names = builder.names();
     entries_.reserve(names.size());
     for (const auto& name : names) {
@@ -50,43 +50,43 @@ class Suite final {
 
   [[nodiscard]] Result run(const pluss::table::DataFrame& frame,
                            const DataFrameBatchOptions& data_options,
-                           metrics::ValidationOptions cv = {},
+                           CrossValOptions cv = {},
                            AssessOptions assess_options = {},
                            MetricKind objective_metric = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
-                           selection::FitOptions fit_options = {}) const {
-    return selection::compare(candidates_(), frame, data_options, cv, TrainOptions{},
-                              assess_options, objective_metric, objective_policy, fit_options);
+                           FitOptions fit_options = {}) const {
+    return compare(candidates_(), frame, data_options, cv, TrainOptions{},
+                   assess_options, objective_metric, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const LabeledBatch& batch,
-                           metrics::ValidationOptions cv = {},
+                           CrossValOptions cv = {},
                            AssessOptions assess_options = {},
                            MetricKind objective_metric = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
-                           selection::FitOptions fit_options = {}) const {
-    return selection::compare(candidates_(), batch, cv, TrainOptions{},
-                              assess_options, objective_metric, objective_policy, fit_options);
+                           FitOptions fit_options = {}) const {
+    return compare(candidates_(), batch, cv, TrainOptions{},
+                   assess_options, objective_metric, objective_policy, fit_options);
   }
 
-  [[nodiscard]] Result run(const Workflow& design,
-                           const Payload& payload,
-                           metrics::ValidationOptions cv = {},
+  [[nodiscard]] Result run(const workflow::Workflow& design,
+                           const workflow::Payload& payload,
+                           CrossValOptions cv = {},
                            AssessOptions assess_options = {},
                            MetricKind objective_metric = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
-                           selection::FitOptions fit_options = {}) const {
+                           FitOptions fit_options = {}) const {
     validate::detail::require_workflow_time_compatible_(
-        cv, design, payload, "lymph::spotcheck::Suite::run(workflow,payload)");
-    const metrics::ValidationOptions effective_cv = validate::detail::effective_time_options_(cv, design);
+        cv, design, payload, "lymph::selection::spotcheck::Suite::run(workflow,payload)");
+    const TimeValOptions effective_cv = validate::detail::effective_time_options_(cv, design);
     const detail::WorkflowLabeledInput input =
-        detail::workflow_labeled_input_(design, payload, "lymph::spotcheck::Suite::run(workflow,payload)");
+        detail::workflow_labeled_input_(design, payload, "lymph::selection::spotcheck::Suite::run(workflow,payload)");
     if (input.frame.has_value()) {
-      return selection::compare(candidates_(design), *input.frame, input.data_options, effective_cv, TrainOptions{},
-                                assess_options, objective_metric, objective_policy, fit_options);
+      return compare(candidates_(design), *input.frame, input.data_options, effective_cv, TrainOptions{},
+                     assess_options, objective_metric, objective_policy, fit_options);
     }
-    return selection::compare(candidates_(design), *input.batch, effective_cv, TrainOptions{},
-                              assess_options, objective_metric, objective_policy, fit_options);
+    return compare(candidates_(design), *input.batch, effective_cv, TrainOptions{},
+                   assess_options, objective_metric, objective_policy, fit_options);
   }
 
  private:
@@ -95,14 +95,14 @@ class Suite final {
     TrainOptions train_options{};
   };
 
-  [[nodiscard]] std::vector<selection::Candidate> candidates_() const {
+  [[nodiscard]] std::vector<Candidate> candidates_() const {
     if (entries_.empty()) {
-      ::pluss::throw_error("lymph::spotcheck::Suite::run: at least one model is required.");
+      ::pluss::throw_error("lymph::selection::spotcheck::Suite::run: at least one model is required.");
     }
     if (strategies_.empty()) {
-      ::pluss::throw_error("lymph::spotcheck::Suite::run: at least one strategy is required.");
+      ::pluss::throw_error("lymph::selection::spotcheck::Suite::run: at least one strategy is required.");
     }
-    std::vector<selection::Candidate> out{};
+    std::vector<Candidate> out{};
     out.reserve(entries_.size() * strategies_.size());
     for (const auto& strategy : strategies_) {
       for (const auto& [model_name, model] : entries_) {
@@ -112,25 +112,26 @@ class Suite final {
     return out;
   }
 
-  [[nodiscard]] std::vector<selection::Candidate> candidates_(const Workflow& design) const {
-    std::vector<selection::Candidate> out = candidates_();
+  [[nodiscard]] std::vector<Candidate> candidates_(const workflow::Workflow& design) const {
+    std::vector<Candidate> out = candidates_();
     for (auto& candidate : out) {
-      Workflow candidate_workflow = design.with(candidate.model);
+      workflow::Workflow candidate_workflow = design.with(candidate.model);
       candidate.model = candidate_workflow.model();
     }
     return out;
   }
 
-  std::vector<std::pair<std::string, Model>> entries_{};
+  std::vector<std::pair<std::string, models::Model>> entries_{};
   std::vector<Strategy_> strategies_{};
 };
 
-[[nodiscard]] inline Suite suite(const Builder& builder) {
+[[nodiscard]] inline Suite suite(const models::Builder& builder) {
   return Suite(builder);
 }
 
 } // namespace spotcheck
 
 using Suite = spotcheck::Suite;
+using spotcheck::suite;
 
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::selection

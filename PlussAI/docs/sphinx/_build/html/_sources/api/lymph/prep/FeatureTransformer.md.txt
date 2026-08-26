@@ -1,4 +1,4 @@
-# `lymph::FeatureTransformer`
+# `lymph::prep::FeatureTransformer`
 
 ## Summary
 
@@ -34,9 +34,10 @@ That is why it matters for more complex feature shaping:
 ## Signature
 
 ```cpp
-lymph::FeatureTransformer lymph::make_feature_transformer(...);
-lymph::FeatureTransformer lymph::make_branch_transformer(...);
-pluss::Series lymph::FeatureTransformer::learn_map(...) ;
+lymph::prep::FeatureTransformer lymph::prep::feature_transformer(...);
+lymph::prep::branch::Branch lymph::prep::branch::compose(...);
+lymph::prep::branch::Branch lymph::prep::branch::one_hot_encoder(...);
+pluss::Series lymph::prep::FeatureTransformer::learn_map(...);
 ```
 
 ## Practical Example
@@ -76,16 +77,16 @@ int main() {
   options.note_policy = lymph::DataNotePolicy::Factorize;
   options.layout = lymph::ObservationLayout::Rows;
 
-  lymph::FeatureTransformer transformer = lymph::make_feature_transformer(
+  lymph::prep::FeatureTransformer transformer = lymph::prep::feature_transformer(
       raw,
       options,
       {
-          lymph::workflow::feature::compose(
+          lymph::prep::branch::compose(
               {
-                  lymph::workflow::stage::standard_scaler(),
+                  lymph::stage::standard_scaler(),
               },
               {"income"}),
-          lymph::workflow::feature::one_hot_encoder(
+          lymph::prep::branch::one_hot_encoder(
               lymph::prep::OneHotEncoderOptions{
                   .max_categories = 8,
                   .overflow = lymph::prep::CategoryOverflowPolicy::KeepMostFrequent,
@@ -130,6 +131,13 @@ Read that output as evidence of three things:
 - the transformer is trained state, not a stateless helper
 - two routed stages were learned and applied
 - the output width expanded because one branch was categorical and got encoded
+
+The namespace split matters:
+
+- `lymph::prep::FeatureTransformer` is the reusable fitted object
+- `lymph::prep::branch::*` builds branch-local preprocessing plans
+- `lymph::stage::*` builds the individual stage descriptors used inside those branches
+- `lymph::workflow::*` is not part of this surface
 
 ## Related Pages
 

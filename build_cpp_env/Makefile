@@ -1766,6 +1766,19 @@ plussai_lymph_model_builder_docverify_demo/fast:
 .PHONY : plussai_lymph_model_builder_docverify_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussai_lymph_models_builder_docverify_demo
+
+# Build rule for target.
+plussai_lymph_models_builder_docverify_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_models_builder_docverify_demo
+.PHONY : plussai_lymph_models_builder_docverify_demo
+
+# fast build rule for target.
+plussai_lymph_models_builder_docverify_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_docverify_demo.dir/build
+.PHONY : plussai_lymph_models_builder_docverify_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussai_lymph_policy_docverify_demo
 
 # Build rule for target.
@@ -3831,6 +3844,32 @@ plussqit_codem_series_stats_reference_demo: cmake_check_build_system
 plussqit_codem_series_stats_reference_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_stats_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_stats_reference_demo.dir/build
 .PHONY : plussqit_codem_series_stats_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_arithmetic_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_arithmetic_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_arithmetic_reference_demo
+.PHONY : plussqit_codem_series_arithmetic_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_arithmetic_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/build
+.PHONY : plussqit_codem_series_arithmetic_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_comparison_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_comparison_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_comparison_reference_demo
+.PHONY : plussqit_codem_series_comparison_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_comparison_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/build
+.PHONY : plussqit_codem_series_comparison_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codem_linear_alg_demo
@@ -10993,6 +11032,7 @@ help:
 	@echo "... plussai_lymph_metrics_docverify_demo"
 	@echo "... plussai_lymph_model_builder_docverify_demo"
 	@echo "... plussai_lymph_model_prep_io_docverify_demo"
+	@echo "... plussai_lymph_models_builder_docverify_demo"
 	@echo "... plussai_lymph_online_demo"
 	@echo "... plussai_lymph_policy_docverify_demo"
 	@echo "... plussai_lymph_prep_column_router_docverify_demo"
@@ -11266,8 +11306,10 @@ help:
 	@echo "... plussqit_codem_mps_vs_cpu_demo"
 	@echo "... plussqit_codem_optim_tests"
 	@echo "... plussqit_codem_output_engine_demo"
+	@echo "... plussqit_codem_series_arithmetic_reference_demo"
 	@echo "... plussqit_codem_series_bounds_reference_demo"
 	@echo "... plussqit_codem_series_combine_reference_demo"
+	@echo "... plussqit_codem_series_comparison_reference_demo"
 	@echo "... plussqit_codem_series_copy_gather_reference_demo"
 	@echo "... plussqit_codem_series_extract_index_take_reference_demo"
 	@echo "... plussqit_codem_series_factory_core_reference_demo"

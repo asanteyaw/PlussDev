@@ -14,32 +14,40 @@ Series::index_put(std::int64_t index, const Series& values) const -> Series
 
 ## What It Does
 
-Returns a modified copy after writing through explicit index tensors.
+Returns a patched copy after writing through explicit index tensors.
 
-This is the copy-returning sibling of [`index_put_()`](index_put_.md):
+This family is the copy-returning sibling of [`index_put_()`](index_put_.md):
 
-- `index_put_()` mutates the existing series
-- `index_put()` leaves the original alone and returns the patched copy
+- `index_put_()` mutates the current `Series`
+- `index_put()` leaves the current `Series` unchanged and returns a new one
 
-The overload split matters because the family actually covers two different
-styles of write:
+That ownership difference matters in pipelines and expression-heavy code, but
+it is not the only thing to understand here. The overload family also covers
+two different styles of write:
 
-- general advanced-index writes through `Series` index tensors
-- a narrow 1D scalar convenience overload
+- general advanced-index writes through one or more index `Series`
+- a narrow scalar convenience overload for a single 1D position
 
-The general overloads are richer than the current signature alone suggests.
-They support:
+If you want selector-language writes like slices, `Ellipsis()`, `NewAxis()`, or
+mask-and-slice combinations spelled directly at the call site, this is not the
+best surface. Use [`extract_put()`](extract_put.md) instead.
 
-- integer position tensors
-- bool masks
-- scalar replacement
-- one-value-per-selected-head updates
-- trailing-slice pattern reuse
-- additive updates through `accumulate=true`
+## Overload Map
 
-Unlike [`index_put_()`](index_put_.md), this copy-returning family does **not**
-provide an `ExtractSpec` convenience overload. If you want selector-language
-copy-returning writes, use [`extract_put()`](extract_put.md).
+`index_put({idx0, idx1, ...}, values, accumulate)`
+
+The main advanced-index write surface. Use this when you already have explicit
+index tensors or want to spell them inline.
+
+`index_put(index_container, values, accumulate)`
+
+The same advanced-index behavior, but convenient when the index list already
+lives in a container such as `std::vector<Series>`.
+
+`index_put(i, scalar_value)`
+
+The narrow scalar convenience overload. This is for one 1D logical position and
+is not meant to replace the general advanced-index surface.
 
 ## Parameters
 
@@ -47,65 +55,59 @@ copy-returning writes, use [`extract_put()`](extract_put.md).
 
 The explicit index tensors for the general overloads.
 
-These can be:
+Common forms include:
 
 - integer index tensors
 - bool masks
-- undefined entries when routed through lower-level mixed-index machinery
+- multiple integer index tensors for paired advanced addressing
 
-The initializer-list form is the most convenient when the index tensors are
-spelled inline. The `RangeView` form is the right choice when the index list
-already lives in a container.
+The initializer-list form is usually the nicest way to write small examples:
+`x.index_put({rows, cols}, values, false)`. The `RangeView` form is useful when
+those same index tensors were built earlier and stored in a container.
 
 **index** (`std::int64_t`)
 
-The scalar convenience form.
+The scalar convenience overload.
 
-This overload is intentionally narrow: it patches one logical position in a 1D
-series and expects a scalar `values` source.
+This is a 1D logical position. Negative values count from the end.
 
 **values** (`const Series&`)
 
 The replacement data.
 
-For the general overloads, the accepted cardinality depends on the indexed
-shape:
+Accepted cardinality depends on the indexed region:
 
-- scalar: one value reused everywhere
-- one value per selected advanced head
-- one full tail pattern reused across every selected head
-- one fully expanded output block
+- scalar value: broadcast across every selected destination
+- one value per selected head position
+- one trailing block reused across every selected head
+- a fully expanded value block when the advanced indexing shape demands it
 
-For the scalar convenience form, `values` must be scalar.
+The important teaching point is that `index_put()` is more flexible than a
+simple "scalar or exact full-shape match" rule.
 
 **accumulate** (`bool`)
 
-Only present on the general overloads.
+Controls overwrite versus addition on the general overloads:
 
-- `false`: replacement semantics
-- `true`: additive semantics
+- `false`: replace written positions
+- `true`: add into written positions
+
+The scalar convenience overload does not expose this toggle.
 
 ## Returns
 
 `Series`
-    A new series containing the requested updates.
-
-```{note} One-dimensional single-integer-list writes use the flat fast path
-If you call `index_put({idx}, values, ...)` on a 1D series with one integer
-index tensor, the public API intentionally reuses the same flat write semantics
-as [`put_()`](put_.md): duplicate integer indices with `accumulate=false` keep
-last-write behavior rather than rejecting the overlap.
-```
+    A new `Series` containing the requested updates.
 
 ## Examples
 
-Example 1. The initializer-list overload is the shortest copy-returning form
-for a basic integer index write.
+Example 1. A single integer index tensor is the shortest copy-returning form
+for a basic advanced-index write.
 
 ```cpp
-auto vec = pluss::make_series({0, 1, 2, 3, 4}, {5});
-auto idx = pluss::make_series({1, 3}, {2});
-auto picked = pluss::make_series({90, 70}, {2});
+auto vec = pluss::make_series({0.0, 1.0, 2.0, 3.0, 4.0});
+auto idx = pluss::make_series({1LL, 3LL});
+auto picked = pluss::make_series({90.0, 70.0});
 
 std::cout << vec.index_put({idx}, picked, false);
 ```
@@ -117,8 +119,8 @@ pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, cont
 data=[0, 90, 2, 70, 4]
 ```
 
-Example 2. Because this is the copy-returning family, the original source
-series is unchanged.
+Example 2. Because this is the copy-returning family, the original source stays
+unchanged.
 
 ```cpp
 std::cout << vec;
@@ -131,18 +133,15 @@ pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, cont
 data=[0, 1, 2, 3, 4]
 ```
 
-Example 3. The `RangeView` overload is useful when the index list already lives
-in a container, and `accumulate=true` turns the update into an additive write.
+Example 3. If the index list already lives in a container, you can pass that
+container directly and still use `accumulate=true`.
 
 ```cpp
-auto overlap_idx = pluss::make_series({1, 1, 3}, {3});
-auto overlap_values = pluss::make_series({10, 20, 30}, {3});
+auto overlap_idx = pluss::make_series({1LL, 1LL, 3LL});
+auto overlap_values = pluss::make_series({10.0, 20.0, 30.0});
 std::vector<pluss::Series> overlap_indices{overlap_idx};
 
-std::cout << vec.index_put(
-    overlap_indices,
-    overlap_values,
-    true);
+std::cout << vec.index_put(overlap_indices, overlap_values, true);
 ```
 
 ### Output
@@ -152,10 +151,10 @@ pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, cont
 data=[0, 31, 2, 33, 4]
 ```
 
-Example 4. A bool mask write is also part of the general overload family.
+Example 4. Bool masks are part of the general advanced-index write family.
 
 ```cpp
-auto mask = pluss::make_series({false, true, false, true, false}, {5});
+auto mask = pluss::make_series({false, true, false, true, false});
 std::cout << vec.index_put({mask}, pluss::make_series(-1.0), false);
 ```
 
@@ -166,18 +165,17 @@ pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, cont
 data=[0, -1, 2, -1, 4]
 ```
 
-The bool mask selects positions `1` and `3`, and the scalar replacement is
-reused for both.
-
-Example 5. A non-indexed trailing slice can be supplied once and reused across
-every selected head.
+Example 5. A trailing block can be supplied once and reused for each selected
+advanced head.
 
 ```cpp
-auto mat = pluss::make_series(
-    {1, 2, 3, 4, 5, 6, 7, 8, 9},
-    {3, 3});
-auto row_idx = pluss::make_series({0, 2}, {2});
-auto tail_pattern = pluss::make_series({100, 200, 300}, {3});
+auto mat = pluss::make_series({
+    {1.0, 2.0, 3.0},
+    {4.0, 5.0, 6.0},
+    {7.0, 8.0, 9.0},
+});
+auto row_idx = pluss::make_series({0LL, 2LL});
+auto tail_pattern = pluss::make_series({100.0, 200.0, 300.0});
 
 std::cout << mat.index_put({row_idx}, tail_pattern, false);
 ```
@@ -191,10 +189,33 @@ data=[[100, 200, 300],
   [100, 200, 300]]
 ```
 
-This is a good example of the "tail pattern" cardinality mode: the same
-length-3 row is reused for each selected row index.
+This is the "reuse one whole row pattern for every chosen row" mode.
 
-Example 6. The scalar convenience overload targets one 1D position, and
+Example 6. Multiple index tensors can address paired positions directly.
+
+```cpp
+auto plane = pluss::make_series({
+    {10.0, 11.0, 12.0, 13.0},
+    {20.0, 21.0, 22.0, 23.0},
+    {30.0, 31.0, 32.0, 33.0},
+});
+auto adv_row_idx = pluss::make_series({0LL, 2LL});
+auto adv_col_idx = pluss::make_series({1LL, 3LL});
+auto adv_values = pluss::make_series({500.0, 700.0});
+
+std::cout << plane.index_put({adv_row_idx, adv_col_idx}, adv_values, false);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[10, 500, 12, 13],
+  [20, 21, 22, 23],
+  [30, 31, 32, 700]]
+```
+
+Example 7. The scalar convenience overload targets one 1D logical position, and
 negative indices count from the end.
 
 ```cpp
@@ -208,8 +229,8 @@ pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, cont
 data=[0, 1, 2, 3, 555]
 ```
 
-Example 7. On the 1D single-integer-list path, duplicate indices with
-`accumulate=false` keep last-write semantics.
+Example 8. On the 1D single-integer-list route, duplicate positions with
+`accumulate=false` keep last-write behavior.
 
 ```cpp
 std::cout << vec.index_put({overlap_idx}, overlap_values, false);
@@ -222,21 +243,70 @@ pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, cont
 data=[0, 20, 2, 30, 4]
 ```
 
-That is the same replace-vs-last-write behavior as [`put_()`](put_.md), because
-this specific public shape reuses the 1D flat write route.
+That is a specific public-path quirk worth remembering: the call collapses to
+the same flat replacement behavior used by [`put_()`](put_.md).
 
-## Notes
+Example 9. Out-of-range positions fail, and on this route the error text comes
+from the shared flat scatter machinery.
 
-- `index_put()` is the copy-returning explicit-index write family.
-- Bool masks are part of the general overload semantics.
-- The `values` cardinality rules are richer than "scalar or exact output match"; trailing-slice reuse is also supported.
-- If you want the original object mutated, use [`index_put_()`](index_put_.md).
+```cpp
+try {
+  auto bad_idx = pluss::make_series({5LL});
+  std::cout << vec.index_put({bad_idx}, pluss::make_series(10.0), false);
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+put: index out of range
+```
+
+Example 10. Integer index tensors on the general overload are broader than the
+flat `put_()` rule here: this `int32` index tensor is accepted.
+
+```cpp
+auto int32_idx_copy = pluss::make_series(std::vector<std::int32_t>{1, 3}, {2});
+std::cout << vec.index_put({int32_idx_copy}, picked, false);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[0, 90, 2, 70, 4]
+```
+
+## Gotchas And Failure Modes
+
+- `index_put()` is copy-returning. If you expect the original object to change,
+  you want [`index_put_()`](index_put_.md) instead.
+- The 1D single-integer-list case has a practical quirk: duplicate positions
+  with `accumulate=false` keep last-write behavior rather than raising an
+  overlap error.
+- Some failure messages on narrow routes bubble up from the shared flat scatter
+  engine, so the text may mention `put`.
+- Integer index dtypes are not uniform across all write surfaces. `put_()` is
+  strict about `int64`, while this general advanced-index route accepts at
+  least the verified `int32` case above.
+
+## Teaching Summary
+
+Use `index_put()` when your write is best described by explicit index tensors
+but you still want value semantics. The overload family can broadcast a scalar,
+zip multiple index tensors together, reuse a trailing block across selected
+heads, or accumulate into repeated destinations. Use the scalar convenience
+overload only when you genuinely mean "patch one 1D position."
 
 ## See Also
 
 - [`Series::index_put_`](index_put_.md): the in-place sibling.
-- [`Series::put_`](put_.md): flat write semantics.
-- [`Series::extract_put`](extract_put.md): selector-language copy-returning writes.
+- [`Series::put_`](put_.md): flat logical writes.
+- [`Series::extract_put`](extract_put.md): copy-returning selector-language
+  writes.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="index.html">

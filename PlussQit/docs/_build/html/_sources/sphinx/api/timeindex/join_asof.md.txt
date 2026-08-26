@@ -102,7 +102,7 @@ auto right = pluss::timeindex::make({
 });
 
 auto map = left.join_asof(right);
-std::cout << pluss::print_series(map) << "\n";
+std::cout << pluss::series::print(map) << "\n";
 ```
 
 ### Output
@@ -122,7 +122,7 @@ auto map = left.join_asof(
     pluss::TimeIndex::AsofDirection::Nearest,
     &tol,
     true);
-std::cout << pluss::print_series(map) << "\n";
+std::cout << pluss::series::print(map) << "\n";
 ```
 
 ### Output
@@ -138,7 +138,7 @@ Example 3. Switch to forward matching when the left axis should look ahead.
 auto map = left.join_asof(
     right,
     pluss::TimeIndex::AsofDirection::Forward);
-std::cout << pluss::print_series(map) << "\n";
+std::cout << pluss::series::print(map) << "\n";
 ```
 
 ### Output

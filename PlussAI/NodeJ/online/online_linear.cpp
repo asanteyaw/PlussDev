@@ -112,7 +112,7 @@ struct BinaryLabelEncoding {
         Status::invalid_argument(std::string(where) + " does not support NaN labels."));
   }
 
-  const Series classes = y64.unique().sort(0, false, false);
+  const Series classes = y64.unique(true).sort(0, false, false);
   if (classes.numel() != 2) {
     return StatusOr<BinaryLabelEncoding>(
         Status::invalid_argument(std::string(where) + " currently requires exactly two distinct classes."));

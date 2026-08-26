@@ -856,19 +856,229 @@ public:
   static Series full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st);
   static Series full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st, Platform platform);
   static Series arange(double start, double end, double step, ScalarType dtype, Platform platform);
+  static Series arange(double start, double end, double step, ScalarType dtype);
   static Series linspace(double start, double end, std::int64_t steps, ScalarType dtype, Platform platform);
+  static Series linspace(double start, double end, std::int64_t steps, ScalarType dtype);
   static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype, Platform platform);
+  static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype);
   static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform);
+  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed);
   static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform);
+  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed);
+  static Series from_storage(const Storage& storage,
+                             std::int64_t storage_offset,
+                             const std::vector<std::int64_t>& sizes,
+                             const std::vector<std::int64_t>& strides,
+                             ScalarType dtype);
 
   // Core view/cast helpers used across the library.
   Series contiguous() const;
+  Series view(pluss::msharp::RangeView::Int new_sizes) const;
+  Series reshape(pluss::msharp::RangeView::Int new_sizes) const;
+  Series reshape(const std::vector<std::int64_t>& new_sizes) const {
+    return reshape(pluss::msharp::RangeView::Int(
+        std::span<const std::int64_t>(new_sizes.data(), new_sizes.size())));
+  }
+  Series reshape(std::initializer_list<std::int64_t> new_sizes) const {
+    return reshape(pluss::msharp::RangeView::Int(new_sizes));
+  }
+  Series permute(pluss::msharp::RangeView::Int dims) const;
   Series to(ScalarType st) const;
   // Torch-like transfer/cast entrypoints.
   // Non-CPU backend support is incremental (MPS currently supports a subset).
   Series to(Platform target) const;
   Series to(Platform target, ScalarType st) const;
   Series clone() const;
+  Series transpose(std::int64_t dim0, std::int64_t dim1) const;
+  Series unsqueeze(std::int64_t dim) const;
+  Series squeeze() const;
+  Series squeeze(std::int64_t dim) const;
+  Series select(std::int64_t dim, std::int64_t index) const;
+  Series slice(std::int64_t dim, std::int64_t start, std::int64_t end, std::int64_t step) const;
+  Series gather(std::int64_t dim, const Series& index) const;
+  Series take(const Series& index) const;
+  Series factorial(std::int64_t n) const;
+  Series scatter(std::int64_t dim, const Series& index, const Series& src) const;
+  Series& scatter_(std::int64_t dim, const Series& index, const Series& src);
+  Series scatter_add(std::int64_t dim, const Series& index, const Series& src) const;
+  Series& scatter_add_(std::int64_t dim, const Series& index, const Series& src);
+  Series scatter_reduce_sum(std::int64_t dim, const Series& index, const Series& src, bool include_self) const;
+  Series scatter_reduce_amax(std::int64_t dim, const Series& index, const Series& src, bool include_self) const;
+  Series scatter_reduce_amin(std::int64_t dim, const Series& index, const Series& src, bool include_self) const;
+  Series scatter_reduce_sum(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
+  Series scatter_reduce_amax(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
+  Series scatter_reduce_amin(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
+  Series put_(const Series& index, const Series& source, bool accumulate=false);
+  Series nonzero() const;
+  Series unique(bool sorted=true) const;
+  Series isin(const Series& test_elements) const;
+  Series isin(const Series& test_elements, bool assume_unique) const;
+  Series isin(const Series& test_elements, bool assume_unique, bool invert) const;
+  Series union1d(const Series& other) const;
+  Series union1d(const Series& other, bool sorted) const;
+  Series unionize(pluss::msharp::RangeView::Of<Series> others, bool sorted=true) const;
+  Series intersect1d(const Series& other) const;
+  Series intersect1d(const Series& other, bool sorted) const;
+  Series intersect1d(const Series& other, bool sorted, bool assume_unique) const;
+  Series intersection(pluss::msharp::RangeView::Of<Series> others,
+                      bool sorted=true,
+                      bool assume_unique=false) const;
+  Series setdiff1d(const Series& other) const;
+  Series setdiff1d(const Series& other, bool sorted) const;
+  Series setdiff1d(const Series& other, bool sorted, bool assume_unique) const;
+  Series setxor1d(const Series& other) const;
+  Series setxor1d(const Series& other, bool sorted) const;
+  Series setxor1d(const Series& other, bool sorted, bool assume_unique) const;
+  Series unionize_along(const Series& other, std::int64_t dim) const;
+  Series unionize_along(const Series& other, std::int64_t dim, bool sorted) const;
+  Series intersection_along(const Series& other, std::int64_t dim) const;
+  Series intersection_along(const Series& other, std::int64_t dim, bool sorted) const;
+  Series intersection_along(const Series& other,
+                            std::int64_t dim,
+                            bool sorted,
+                            bool assume_unique) const;
+  Series setdiff_along(const Series& other, std::int64_t dim) const;
+  Series setdiff_along(const Series& other, std::int64_t dim, bool sorted) const;
+  Series setdiff_along(const Series& other,
+                       std::int64_t dim,
+                       bool sorted,
+                       bool assume_unique) const;
+  Series setxor_along(const Series& other, std::int64_t dim) const;
+  Series setxor_along(const Series& other, std::int64_t dim, bool sorted) const;
+  Series setxor_along(const Series& other,
+                      std::int64_t dim,
+                      bool sorted,
+                      bool assume_unique) const;
+  Series comp(const Series& universe) const;
+  Series comp(const Series& universe, bool sorted) const;
+  Series comp(const Series& universe, bool sorted, bool assume_unique) const;
+  Series cartprod(const Series& other) const;
+  Series cartprod(pluss::msharp::RangeView::Of<Series> others) const;
+  Series is_prime() const;
+  Series prime() const;
+  Series factor() const;
+  Series bincount(std::int64_t minlength=0) const;
+  Series histc(std::int64_t bins, double min, double max) const;
+  Series masked_select(const Series& mask) const;
+  Series masked_scatter(const Series& mask, const Series& src) const;
+  Series& masked_scatter_(const Series& mask, const Series& src);
+  Series bitwise_and(const Series& rhs) const;
+  Series bitwise_or(const Series& rhs) const;
+  Series bitwise_xor(const Series& rhs) const;
+  Series bitwise_not() const;
+  Series logical_and(const Series& rhs) const;
+  Series logical_or(const Series& rhs) const;
+  Series logical_xor(const Series& rhs) const;
+  Series logical_not() const;
+  Series& logical_not_();
+  Series where(const Series& condition, const Series& other) const;
+  Series& where_(const Series& condition, const Series& other);
+  Series where(const Series& condition, double other) const;
+  Series& where_(const Series& condition, double other);
+  Series exp() const;
+  Series& exp_();
+  Series log() const;
+  Series& log_();
+  Series sqrt() const;
+  Series& sqrt_();
+  Series sin() const;
+  Series& sin_();
+  Series cos() const;
+  Series& cos_();
+  Series tan() const;
+  Series& tan_();
+  Series tanh() const;
+  Series& tanh_();
+  Series sinh() const;
+  Series& sinh_();
+  Series cosh() const;
+  Series& cosh_();
+  Series asin() const;
+  Series& asin_();
+  Series acos() const;
+  Series& acos_();
+  Series atan() const;
+  Series& atan_();
+  Series asinh() const;
+  Series& asinh_();
+  Series acosh() const;
+  Series& acosh_();
+  Series atanh() const;
+  Series& atanh_();
+  Series erf() const;
+  Series& erf_();
+  Series erfc() const;
+  Series& erfc_();
+  Series lgamma() const;
+  Series& lgamma_();
+  Series log1p() const;
+  Series& log1p_();
+  Series expm1() const;
+  Series& expm1_();
+  Series floor() const;
+  Series& floor_();
+  Series ceil() const;
+  Series& ceil_();
+  Series round() const;
+  Series& round_();
+  Series trunc() const;
+  Series& trunc_();
+  Series reciprocal() const;
+  Series& reciprocal_();
+  Series sigmoid() const;
+  Series& sigmoid_();
+  Series relu() const;
+  Series& relu_();
+  Series isnan() const;
+  Series& isnan_();
+  Series isinf() const;
+  Series& isinf_();
+  Series isfinite() const;
+  Series& isfinite_();
+  Series mean() const;
+  Series mean(std::int64_t dim, bool keepdim) const;
+  Series sum(std::int64_t dim, bool keepdim) const;
+  Series amax(std::int64_t dim, bool keepdim) const;
+  Series amin(std::int64_t dim, bool keepdim) const;
+  Series all(std::int64_t dim, bool keepdim) const;
+  Series any(std::int64_t dim, bool keepdim) const;
+  Series flatten(std::int64_t start_dim, std::int64_t end_dim) const;
+  Series norm(double p) const;
+  Series norm(double p, std::int64_t dim, bool keepdim) const;
+  Series var(bool unbiased) const;
+  Series var(std::int64_t dim, bool unbiased, bool keepdim) const;
+  Series std(bool unbiased) const;
+  Series std(std::int64_t dim, bool unbiased, bool keepdim) const;
+  Series nan_to_num(double nan, double posinf, double neginf) const;
+  Series& nan_to_num_(double nan, double posinf, double neginf);
+  Series cumsum(std::int64_t dim, bool keepdim) const;
+  Series& cumsum_(std::int64_t dim, bool keepdim);
+  Series cumprod(std::int64_t dim, bool keepdim) const;
+  Series& cumprod_(std::int64_t dim, bool keepdim);
+  Series pow(double rhs) const;
+  Series& pow_(double rhs);
+  Series minimum(double rhs) const;
+  Series& minimum_(double rhs);
+  Series maximum(double rhs) const;
+  Series& maximum_(double rhs);
+  Series& add_(double rhs, double alpha);
+  Series& add_(const Series& rhs, double alpha);
+  Series& add_(const Series& other, double alpha, const Series& out);
+  Series& sub_(const Series& rhs, double alpha);
+  Series& sub_(const Series& other, double alpha, const Series& out);
+  Series& sub_(double rhs, double alpha);
+  Series& mul_(const Series& rhs);
+  Series& mul_(double rhs);
+  Series& div_(const Series& rhs);
+  Series& div_(double rhs);
+  Series clamp_min(double min) const;
+  Series& clamp_min_(double min);
+  Series clamp_max(double max) const;
+  Series& clamp_max_(double max);
+  Series clamp_min(const Series& min) const;
+  Series& clamp_min_(const Series& min);
+  Series clamp_max(const Series& max) const;
+  Series& clamp_max_(const Series& max);
   // Query current backend (Torch-like tensor.device() analog at Platform granularity).
   Platform platform() const noexcept { return SeriesBase::platform(); }
   // Request transfer to another backend.
@@ -1053,12 +1263,9 @@ public:
 
   // Variance / std (dim overloads are used internally but not yet codegen'd).
   Series var() const { return var(true); }
-  Series var(std::int64_t dim, bool unbiased=true, bool keepdim=false) const;
   Series std() const { return std(true); }
-  Series std(std::int64_t dim, bool unbiased=true, bool keepdim=false) const;
 
   // Norm overloads used throughout the codebase.
-  Series norm(double p, std::int64_t dim, bool keepdim=false) const;
   ::pluss::StackArray<Series> max_pair(std::int64_t dim, bool keepdim=false) const;
   ::pluss::StackArray<Series> min_pair(std::int64_t dim, bool keepdim=false) const;
   ::pluss::StackArray<Series> argmax_pair(std::int64_t dim, bool keepdim=false) const;

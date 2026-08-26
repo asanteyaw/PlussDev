@@ -1772,6 +1772,43 @@ DataFrame DataFrame::invalid(pluss::msharp::RangeView::Of<std::string_view> feat
   return missing(MissingOp::Invalid, features);
 }
 
+DataFrame DataFrame::shownull(Axis axis, bool all) const {
+  const auto& src = impl_ref_();
+  if (src.columns_.empty()) {
+    return axis == Axis::Feature ? *this : slice(0, 0);
+  }
+
+  std::vector<std::size_t> target_indices;
+  target_indices.reserve(src.columns_.size());
+  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+    target_indices.push_back(i);
+  }
+
+  if (axis == Axis::Case) {
+    const auto valid = validity_matrix_(src, target_indices, "DataFrame::shownull");
+    const auto counts = valid.to(pluss::codem::ScalarType::Int64).sum(1);
+    const auto keep =
+        all ? counts.eq(0.0) : counts.lt(static_cast<double>(target_indices.size()));
+    return filter(keep);
+  }
+
+  PLUSS_CHECK(axis == Axis::Feature, "DataFrame::shownull: axis must be Axis::Case or Axis::Feature");
+  const auto valid = validity_matrix_(src, target_indices, "DataFrame::shownull");
+  const auto non_null_by_feature = valid.to(pluss::codem::ScalarType::Int64).sum(0).to_vec<std::int64_t>();
+
+  std::vector<std::size_t> keep_indices;
+  keep_indices.reserve(src.columns_.size());
+  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+    const auto non_null = non_null_by_feature[i];
+    const bool keep =
+        all ? (non_null == 0) : (non_null < src.nrows_);
+    if (keep) {
+      keep_indices.push_back(i);
+    }
+  }
+  return project_feature_positions_(*this, keep_indices);
+}
+
 DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
   if (specs.size() == 0) {
     return *this;

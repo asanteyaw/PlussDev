@@ -38,11 +38,11 @@ int main() {
   using pluss::Series;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
-  using pluss::ai::nodej::AssessOptions;
-  using pluss::ai::nodej::LinearFamilyOptions;
-  using pluss::ai::nodej::MetricKind;
-  using pluss::ai::nodej::RegularizationKind;
-  using pluss::ai::nodej::TrainOptions;
+  using lymph::AssessOptions;
+  using lymph::LinearFamilyOptions;
+  using lymph::MetricKind;
+  using lymph::RegularizationKind;
+  using lymph::TrainOptions;
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
@@ -134,16 +134,16 @@ int main() {
   transform_options.feature_names = {"income", "region", "balance"};
   transform_options.note_policy = lymph::DataNotePolicy::Factorize;
   transform_options.layout = lymph::ObservationLayout::Rows;
-  lymph::FeatureTransformer feature_transformer = lymph::make_feature_transformer(
+  lymph::prep::FeatureTransformer feature_transformer = lymph::prep::feature_transformer(
       raw,
       transform_options,
       {
-          lymph::workflow::feature::compose(
+          lymph::prep::branch::compose(
               {
-                  lymph::workflow::stage::standard_scaler(),
+                  lymph::stage::standard_scaler(),
               },
               {"income"}),
-          lymph::workflow::feature::one_hot_encoder(
+          lymph::prep::branch::one_hot_encoder(
               lymph::prep::OneHotEncoderOptions{
                   .max_categories = 8,
                   .overflow = lymph::prep::CategoryOverflowPolicy::KeepMostFrequent,

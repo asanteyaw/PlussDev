@@ -145,7 +145,7 @@ them elementwise:
 ```cpp
 const auto via_operator = t0 + pluss::duration::hours(3);
 const auto via_method = t0.add_duration(pluss::duration::hours(3));
-std::cout << pluss::print_series(via_operator.eq(via_method)) << "\n";
+std::cout << pluss::series::print(via_operator.eq(via_method)) << "\n";
 ```
 
 ### Output
@@ -167,7 +167,7 @@ verified identical to them:
 auto t_mut = t0;
 t_mut += pluss::duration::hours(3);
 std::cout << pluss::timeline::print(t_mut) << "\n";
-std::cout << pluss::print_series(t_mut.eq(t0 + pluss::duration::hours(3))) << "\n";
+std::cout << pluss::series::print(t_mut.eq(t0 + pluss::duration::hours(3))) << "\n";
 ```
 
 ### Output

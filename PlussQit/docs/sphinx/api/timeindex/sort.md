@@ -54,7 +54,7 @@ plan applied to other aligned payloads too.
 ```cpp
 auto order = dup.argsort();
 auto sorted_idx = dup.take(order);
-std::cout << pluss::print_series(order) << "\n";
+std::cout << pluss::series::print(order) << "\n";
 std::cout << pluss::timeindex::print(sorted_idx) << "\n";
 ```
 

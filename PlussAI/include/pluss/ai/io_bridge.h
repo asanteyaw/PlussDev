@@ -29,7 +29,7 @@ inline void save(
 }
 
 inline void save(
-    const ::pluss::ai::lymph::Model& model,
+    const ::pluss::ai::lymph::models::Model& model,
     std::string_view path,
     const ::pluss::ai::nodej::LabeledBatch& train_batch,
     const ::pluss::ai::nodej::TrainOptions& train_options = {},
@@ -71,10 +71,10 @@ inline T load(std::string_view path, const ::pluss::io::LoadOptions& options = {
 }
 
 template <class T>
-  requires std::is_same_v<std::remove_cvref_t<T>, ::pluss::ai::lymph::Model>
+  requires std::is_same_v<std::remove_cvref_t<T>, ::pluss::ai::lymph::models::Model>
 inline T load(std::string_view path, const ::pluss::io::LoadOptions& options = {}) {
-  warn_model_load_options_ignored_(options, "load<lymph::Model>");
-  return ::pluss::ai::lymph::Model::load(std::string(path));
+  warn_model_load_options_ignored_(options, "load<lymph::models::Model>");
+  return ::pluss::ai::lymph::models::Model::load(std::string(path));
 }
 
 inline void load(
@@ -92,10 +92,10 @@ inline void load(
 }
 
 inline void load(
-    ::pluss::ai::lymph::Model& out,
+    ::pluss::ai::lymph::models::Model& out,
     std::string_view path,
     const ::pluss::io::LoadOptions& options = {}) {
-  out = load<::pluss::ai::lymph::Model>(path, options);
+  out = load<::pluss::ai::lymph::models::Model>(path, options);
 }
 
 } // namespace pluss::io

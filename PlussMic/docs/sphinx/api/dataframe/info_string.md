@@ -69,11 +69,11 @@ Cases          | 6
 Features       | 6                      
 Case Range     | 0 -> 5                 
 Null Case Rows | 2                      
-Dtypes         | Note(2), Series(4)     
+PTypes         | Note(2), Series(4)     
 Memory         | 316.00 B               
 ----------------------------------------
 =======================================
-#  | Feature     Non-Null Cases  Dtype 
+#  | Feature     Non-Null Cases  PType 
 ---------------------------------------
 0  | order_id    6               Series
 1  | city        6               Note  

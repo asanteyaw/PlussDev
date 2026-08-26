@@ -58,7 +58,7 @@ bool run_target_transform_checks(std::ostream* err) {
 
   // 1) A plain linear model fit directly on y should do a visibly poor job --
   // establishes the transform is actually earning its keep, not just plumbing.
-  Model plain(linear_spec());
+  models::Model plain(linear_spec());
   plain.learn_(x_frame, y_series);
   const MetricReport plain_report = plain.assess(x_frame, y_series);
   const double plain_r2 = plain_report.r2.item<double>();
@@ -67,7 +67,7 @@ bool run_target_transform_checks(std::ostream* err) {
   // log1p()), should fit (in original y units) far better on this data.
   // has_target_transform()/.target_transform() (getter) should reflect it
   // before and after set.
-  Model wrapped(linear_spec());
+  models::Model wrapped(linear_spec());
   if (wrapped.has_target_transform()) {
     if (err) *err << "a freshly-built Model should not have a target_transform set\n";
     return false;
@@ -112,7 +112,7 @@ bool run_target_transform_checks(std::ostream* err) {
   {
     bool threw = false;
     try {
-      Model classifier(ModelSpec{
+      models::Model classifier(ModelSpec{
           .task = TaskKind::Classification,
           .family = ModelFamily::Linear,
           .options = LinearFamilyOptions{.objective = LinearObjective::Logistic, .fit_intercept = true},
@@ -132,7 +132,7 @@ bool run_target_transform_checks(std::ostream* err) {
   {
     bool threw = false;
     try {
-      Model bad(linear_spec());
+      models::Model bad(linear_spec());
       bad.target_transform(transform::custom(
           "broken",
           [](const Series& y) { return y.mul(2.0); },
@@ -150,7 +150,7 @@ bool run_target_transform_checks(std::ostream* err) {
   // check_inverse = false should bypass that guard for a caller who knows
   // what they are doing (e.g. a transform only invertible over part of the range).
   {
-    Model bypass(linear_spec());
+    models::Model bypass(linear_spec());
     bypass.target_transform(transform::custom(
         "broken_but_unchecked",
         [](const Series& y) { return y.mul(2.0); },

@@ -7,12 +7,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::ai::nodej::ClassReportOptions;
-  using pluss::ai::nodej::ConfusionOptions;
-  using pluss::ai::nodej::LinearFamilyOptions;
-  using pluss::ai::nodej::MetricKind;
-  using pluss::ai::nodej::RegularizationKind;
-  using pluss::ai::nodej::TrainOptions;
+  using lymph::ClassReportOptions;
+  using lymph::ConfusionOptions;
+  using lymph::LinearFamilyOptions;
+  using lymph::MetricKind;
+  using lymph::RegularizationKind;
+  using lymph::TrainOptions;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
 
@@ -23,7 +23,7 @@ int main() {
       truth_labels,
       predicted_labels,
       ConfusionOptions{
-          .normalize = pluss::ai::nodej::ConfusionNormalize::ByTruth,
+          .normalize = lymph::ConfusionNormalize::ByTruth,
       });
   std::cout << "== confusion_table ==\n";
   std::cout << "labels=" << confusion.labels << "\n";

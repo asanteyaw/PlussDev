@@ -58,8 +58,8 @@ binary operator it wraps.
 ```cpp
 auto compound_sub = one_day;
 compound_sub -= one_hour;
-std::cout << "diff=" << pluss::print_series(compound_sub.total().hours()) << "\n";
-std::cout << "matches_binary=" << pluss::print_series(compound_sub.eq(one_day - one_hour));
+std::cout << "diff=" << pluss::series::print(compound_sub.total().hours()) << "\n";
+std::cout << "matches_binary=" << pluss::series::print(compound_sub.eq(one_day - one_hour));
 ```
 
 ### Output

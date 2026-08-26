@@ -61,8 +61,8 @@ binary operator it wraps.
 ```cpp
 auto compound_add = one_hour;
 compound_add += ninety_min;
-std::cout << "sum=" << pluss::print_series(compound_add.total().hours()) << "\n";
-std::cout << "matches_binary=" << pluss::print_series(compound_add.eq(one_hour + ninety_min));
+std::cout << "sum=" << pluss::series::print(compound_add.total().hours()) << "\n";
+std::cout << "matches_binary=" << pluss::series::print(compound_add.eq(one_hour + ninety_min));
 ```
 
 ### Output

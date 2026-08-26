@@ -189,6 +189,7 @@ api/dataframe/set_
 api/dataframe/shape
 api/dataframe/shift
 api/dataframe/show
+api/dataframe/shownull
 api/dataframe/shuffle
 api/dataframe/skew
 api/dataframe/slice
@@ -219,4 +220,5 @@ api/dataframe/var
 api/dataframe/view
 api/dataframe/where
 api/dataframe/width
+api/dataframe/zoom
 ```

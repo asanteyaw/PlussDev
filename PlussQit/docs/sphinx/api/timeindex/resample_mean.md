@@ -49,7 +49,7 @@ Example 1. Compute the mean value inside each hourly bucket.
 ```cpp
 auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0});
 auto means = idx.resample_mean(values, "H");
-std::cout << pluss::print_series(means) << "\n";
+std::cout << pluss::series::print(means) << "\n";
 ```
 
 ### Output
@@ -64,7 +64,7 @@ mean-style aggregation.
 
 ```cpp
 auto means = idx.resample_mean(values, "H", 2);
-std::cout << pluss::print_series(means) << "\n";
+std::cout << pluss::series::print(means) << "\n";
 ```
 
 ### Output

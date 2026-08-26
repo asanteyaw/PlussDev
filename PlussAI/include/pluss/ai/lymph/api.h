@@ -8,27 +8,28 @@
 //
 // Module map:
 //   common.h         - resolve(), small free helpers, umbrella includes
-//   columnrouter.h   - ColumnRouter + lymph::columnrouter:: (names/where/remaining_of)
+//   selection_options.h - selection-owned validation option contracts
+//   columnrouter.h   - prep::Route + lymph::prep::route:: (names/where/remaining_of)
 //   balance.h        - lymph::balance:: factories over NodeJ's existing BalanceTarget
 //   prep.h           - pluss::ai::lymph::prep (imputers/scalers/encoders)
-//   stage.h          - Stage + lymph::stage:: (Model::append()'s attachable-stage descriptor)
+//   stage.h          - prep::Stage + lymph::prep::stage:: (Model::append()'s attachable-stage descriptor)
 //   transform.h      - TargetTransform + lymph::transform:: (log1p/sqrt/custom factories)
 //   metrics.h        - MetricReport, holdout/cross-validation plumbing
-//   sparse.h         - pluss::ai::lymph::sparse (sparse linear models)
+//   sparse.h         - pluss::ai::lymph::models::sparse (sparse linear models)
 //   inspection.h     - pluss::ai::lymph::inspection (PDP/permutation importance)
-//   feature_select.h - pluss::ai::lymph::feature (ranking/selection)
+//   feature_select.h - pluss::ai::lymph::features (ranking/selection)
 //   detail/model_core.h - internal Model implementation, included through model.h
-//   workflow_dsl.h      - workflow::feature/stage branch DSL, FeatureTransformer builders
-//   policy.h            - Policy + lymph::policy::Policy raw-frame admission/schema rules
-//   time.h              - TimeOptions + row-step duration helpers for temporal Workflow safety
-//   payload.h           - Payload + lymph::payload::make(...) typed data/metadata carrier
-//   workflow.h          - Workflow + lymph::workflow::make/load composition object
+//   workflow_dsl.h      - prep::branch DSL + prep::feature_transformer builders
+//   policy.h            - workflow::Policy + lymph::workflow::policy::Policy raw-frame admission/schema rules
+//   time.h              - workflow::TimeOptions + row-step duration helpers for temporal Workflow safety
+//   payload.h           - workflow::Payload + lymph::workflow::payload::make(...) typed data/metadata carrier
+//   workflow.h          - workflow::Workflow + lymph::workflow::make/load composition object
 //   factories.h         - internal detail::*_factory construction tags for model.h
-//   online.h            - OnlineLinearClassifier/Regressor + lymph::online::linear_*
+//   online.h            - OnlineLinearClassifier/Regressor + lymph::models::online::linear_*
 //   selection.h         - pluss::ai::lymph::selection (model/hyperparameter tuning)
-//   model.h             - public Model handle + lymph::model:: grouped factories
+//   model.h             - public Model handle + lymph::models:: grouped factories
 //   reports.h           - pluss::ai::lymph::reports (model-backed report builders)
-//   builder.h           - Builder (Nexus-inspired named model coordinator) + lymph::builder::
+//   builder.h           - Builder (Nexus-inspired named model coordinator) + lymph::models::builder::
 //   validate.h          - validate::cross/stratified/grouped/time_ordered validation plans
 //   spotcheck.h         - spotcheck::suite(Builder) strategy x model comparison
 //   unsupervised.h      - cluster/embed result families over transform-style models
@@ -48,6 +49,7 @@
 //   select.h         -> Comparison/SelectionResult/Candidate, replaces selection::compare
 
 #include "pluss/ai/lymph/common.h"
+#include "pluss/ai/lymph/selection_options.h"
 #include "pluss/ai/lymph/columnrouter.h"
 #include "pluss/ai/lymph/balance.h"
 #include "pluss/ai/lymph/prep.h"

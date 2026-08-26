@@ -53,11 +53,11 @@ bool run_search_checks(std::ostream* err) {
   const Frame frame = make_frame();
   const LabeledBatch batch = make_batch(frame);
 
-  const std::vector<GridAxis> axes = {
+  const std::vector<selection::GridAxis> axes = {
       {.name = "regularization_strength", .values = {0.01, 1.0}},
   };
-  const auto make_model = [](const GridPoint& point) {
-    Model m = model::logistic_regression({
+  const auto make_model = [](const selection::GridPoint& point) {
+    models::Model m = models::logistic_regression({
         .regularization_strength = point.at("regularization_strength"),
         .fit_intercept = true,
     });
@@ -65,7 +65,7 @@ bool run_search_checks(std::ostream* err) {
     return m;
   };
 
-  metrics::ValidationOptions cv{};
+  selection::CrossValOptions cv{};
   cv.plan = CVPlanKind::CrossVal;
   cv.folds = 2;
   cv.shuffle = false;
@@ -74,10 +74,10 @@ bool run_search_checks(std::ostream* err) {
   train_options.max_iterations = 120;
   train_options.tolerance = 1e-5;
 
-  Search search = search::grid(axes, cv);
-  search::Result tuned = search.run(make_model, batch, train_options, AssessOptions{},
-                                  MetricKind::Accuracy, TuneObjectivePolicy::Maximize,
-                                  selection::FitOptions{.fit_top = 2});
+  selection::Search search = selection::grid(axes, cv);
+  selection::search::Result tuned = search.run(make_model, batch, train_options, AssessOptions{},
+                                               MetricKind::Accuracy, TuneObjectivePolicy::Maximize,
+                                               selection::FitOptions{.fit_top = 2});
 
   if (tuned.report.trials.size() != 2) {
     if (err) *err << "Search::run(grid) should have produced one trial per grid point, got "
@@ -99,7 +99,7 @@ bool run_search_checks(std::ostream* err) {
     return false;
   }
 
-  const std::vector<std::pair<std::string, Model>> top2 = tuned.top(2);
+  const std::vector<std::pair<std::string, models::Model>> top2 = tuned.top(2);
   if (top2.size() != 2 || !top2[0].second.trained() || !top2[1].second.trained()) {
     if (err) *err << "Search::run's top(k) should return k trained, owned Models\n";
     return false;
@@ -112,7 +112,7 @@ bool run_search_checks(std::ostream* err) {
   // search::build(axes, TuneOptions) bridges the old axis/options pair into
   // the object surface without adding a second random-search training pass to
   // this already-heavy test.
-  const Search random_cv_search = search::random(axes, /*trials=*/2, cv);
+  const selection::Search random_cv_search = selection::random(axes, /*trials=*/2, cv);
   (void)random_cv_search;
 
   TuneOptions tune_options{};
@@ -121,8 +121,8 @@ bool run_search_checks(std::ostream* err) {
   tune_options.split = make_validation_split_options(cv);
   tune_options.max_parallel = 2;
   tune_options.random = RandomState{.seed = 7, .deterministic = true};
-  Search random_search = search::build(axes, tune_options);
-  search::Result random_tuned = random_search.run(make_model, batch, train_options);
+  selection::Search random_search = selection::build(axes, tune_options);
+  selection::search::Result random_tuned = random_search.run(make_model, batch, train_options);
   if (random_tuned.report.trials.size() != 1 || !random_tuned.best().trained()) {
     if (err) *err << "search::build(axes, TuneOptions) should preserve random trial count and stored split policy\n";
     return false;
@@ -133,16 +133,16 @@ bool run_search_checks(std::ostream* err) {
       {"x2", pluss::table::Thread(frame.x.get("x2").value())},
       {"y", pluss::table::Thread(frame.y)},
   });
-  const Payload raw_payload = payload::make(raw).features({"x1", "x2"}).label("y");
-  const Workflow design = workflow::make(Policy{});
-  search::Result workflow_tuned = search.run(make_model,
-                                           design,
-                                           raw_payload,
-                                           train_options,
-                                           AssessOptions{},
-                                           MetricKind::Accuracy,
-                                           TuneObjectivePolicy::Maximize,
-                                           selection::FitOptions{.fit_top = 1});
+  const workflow::Payload raw_payload = workflow::payload::make(raw).features({"x1", "x2"}).label("y");
+  const workflow::Workflow design = workflow::make(workflow::Policy{});
+  selection::search::Result workflow_tuned = search.run(make_model,
+                                                        design,
+                                                        raw_payload,
+                                                        train_options,
+                                                        AssessOptions{},
+                                                        MetricKind::Accuracy,
+                                                        TuneObjectivePolicy::Maximize,
+                                                        selection::FitOptions{.fit_top = 1});
   if (workflow_tuned.report.trials.size() != 2 || !workflow_tuned.best().trained()) {
     if (err) *err << "Search::run should consume Workflow + Payload and keep returning trained Models\n";
     return false;

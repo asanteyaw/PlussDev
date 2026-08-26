@@ -66,7 +66,7 @@ pluss::table::DataFrame lymph::prep::OneHotEncoder::learn_map(
     const lymph::InferOptions& infer_options = {});
 ```
 
-## Practical Example
+## Practical Examples
 
 This page uses the exact verifier program
 `lymph_prep_one_hot_encoder_docverify_demo.cpp`.
@@ -104,12 +104,20 @@ int main() {
   encoder.features({"region"});
   const DataFrame encoded = encoder.learn_map(raw.features({"region"}));
   const lymph::prep::TransformerSummary summary = encoder.summary();
+  const DataFrame inference({
+      {"region", Thread(pluss::make_note({"north", "west"}))},
+  });
+  const DataFrame mapped = encoder.map(inference);
 
   std::cout << "== one_hot_encoder ==\n";
   std::cout << "rows=" << encoded.ncases()
             << " features=" << encoded.nfeatures()
             << " summary_features=" << summary.feature_names.size() << "\n";
   std::cout << encoded.head(3) << "\n";
+  std::cout << "== one_hot_encoder_inference ==\n";
+  std::cout << "rows=" << mapped.ncases()
+            << " features=" << mapped.nfeatures() << "\n";
+  std::cout << mapped << "\n";
 
   return 0;
 }
@@ -123,16 +131,57 @@ rows=8 features=5 summary_features=1
 =======================================================
      | region_0  region_1  region_2  region_3  region_4
 -------------------------------------------------------
-0    | 0         0         0         1         0       
-1    | 0         0         1         0         0       
+0    | 0         0         0         1         0
+1    | 0         0         1         0         0
 2    | 0         0         0         1         0       
 -------------------------------------------------------
 [3 cs x 5 feat]
+== one_hot_encoder_inference ==
+rows=2 features=5
+=======================================================
+     | region_0  region_1  region_2  region_3  region_4
+-------------------------------------------------------
+0    | 0         0         0         1         0
+1    | 0         0         1         0         0
+-------------------------------------------------------
+[2 cs x 5 feat]
 ```
 
 The important thing is not just that feature count grew from one to five. It is
 that the expansion is explicit, inspectable, and learned under a policy surface
 that governs category budget and unknown handling.
+
+### Example 2
+
+The second half of the same executed program maps a later frame after
+construction and fitting. It reuses the learned category layout, so downstream
+data receives the same indicator columns as the training data.
+
+```cpp
+const DataFrame inference({
+    {"region", Thread(pluss::make_note({"north", "west"}))},
+});
+const DataFrame mapped = encoder.map(inference);
+
+std::cout << "== one_hot_encoder_inference ==\n";
+std::cout << "rows=" << mapped.ncases()
+          << " features=" << mapped.nfeatures() << "\n";
+std::cout << mapped << "\n";
+```
+
+Output
+
+```text
+== one_hot_encoder_inference ==
+rows=2 features=5
+=======================================================
+     | region_0  region_1  region_2  region_3  region_4
+-------------------------------------------------------
+0    | 0         0         0         1         0
+1    | 0         0         1         0         0
+-------------------------------------------------------
+[2 cs x 5 feat]
+```
 
 ## Related Pages
 

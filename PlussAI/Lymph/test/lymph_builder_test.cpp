@@ -22,8 +22,8 @@ Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 }
 
-Model empty_model() {
-  return Model(::pluss::ai::nodej::Workflow{});
+models::Model empty_model() {
+  return models::Model(::pluss::ai::nodej::Workflow{});
 }
 
 // Linearly separable two-class data -- any of the three registered models
@@ -48,9 +48,9 @@ Frame make_frame() {
 }
 
 bool run_builder_construction_checks(std::ostream* err) {
-  Model ctor_logreg = empty_model();
-  Model ctor_tree = empty_model();
-  Builder built = builder::build({
+  models::Model ctor_logreg = empty_model();
+  models::Model ctor_tree = empty_model();
+  models::Builder built = models::build({
       {"ctor_logreg", ctor_logreg},
       {"ctor_tree", ctor_tree},
   });
@@ -66,9 +66,9 @@ bool run_builder_construction_checks(std::ostream* err) {
     return false;
   }
 
-  Model copied_logreg = empty_model();
-  Model copied_tree = empty_model();
-  Builder copied = builder::build({
+  models::Model copied_logreg = empty_model();
+  models::Model copied_tree = empty_model();
+  models::Builder copied = models::build({
       {"linear regression", copied_logreg},
       {"decision_tree_clsfr", copied_tree},
       {"inline logistic", empty_model()},
@@ -80,26 +80,26 @@ bool run_builder_construction_checks(std::ostream* err) {
     return false;
   }
 
-  std::map<std::string, Model> registry;
+  std::map<std::string, models::Model> registry;
   registry.emplace("map_logreg", empty_model());
   registry.emplace("map_tree", empty_model());
-  Builder from_map = builder::build(registry);
+  models::Builder from_map = models::build(registry);
   if (from_map.size() != 2 || !from_map.has("map_logreg") || !from_map.has("map_tree")) {
     if (err) *err << "builder::build(map) should copy a named model map cheaply\n";
     return false;
   }
 
-  std::vector<std::pair<std::string, Model>> list_registry;
+  std::vector<std::pair<std::string, models::Model>> list_registry;
   list_registry.emplace_back("vector_logreg", empty_model());
   list_registry.emplace_back("vector_tree", empty_model());
-  Builder from_vector = builder::build(list_registry);
+  models::Builder from_vector = models::build(list_registry);
   if (from_vector.size() != 2 || !from_vector.has("vector_logreg") || !from_vector.has("vector_tree")) {
     if (err) *err << "builder::build(vector) should copy a named model vector cheaply\n";
     return false;
   }
 
-  Model source = model::logistic_regression({});
-  Builder cow = builder::build({{"source", source}});
+  models::Model source = models::logistic_regression({});
+  models::Builder cow = models::build({{"source", source}});
   cow.get("source").standard_scaler();
   if (source.stage_count() != 0 || cow.get("source").stage_count() != 1) {
     if (err) *err << "copied Model handles should detach on mutation without changing the source model\n";
@@ -110,7 +110,7 @@ bool run_builder_construction_checks(std::ostream* err) {
 }
 
 bool run_builder_checks(std::ostream* err) {
-  Builder builder = builder::build();
+  models::Builder builder = models::build();
 
   if (!builder.empty() || builder.size() != 0) {
     if (err) *err << "a freshly-built Builder should be empty\n";
@@ -122,9 +122,9 @@ bool run_builder_checks(std::ostream* err) {
   }
 
   // Prvalues built directly at the call site -- zero std::move needed.
-  builder.inject("logreg", model::logistic_regression({.fit_intercept = true}))
-         .inject("tree", model::decision_tree_classifier({.max_depth = 3}))
-         .inject("knn", model::knn_classifier({.k = 3}));
+  builder.inject("logreg", models::logistic_regression({.fit_intercept = true}))
+         .inject("tree", models::decision_tree_classifier({.max_depth = 3}))
+         .inject("knn", models::knn_classifier({.k = 3}));
 
   if (builder.size() != 3) {
     if (err) *err << "expected 3 registered models, got " << builder.size() << "\n";
@@ -148,7 +148,7 @@ bool run_builder_checks(std::ostream* err) {
 
   // An already-named lvalue Model should copy cheaply; neither side should
   // need std::move for ordinary coordinator construction.
-  Model extra = model::gaussian_nb_classifier({});
+  models::Model extra = models::gaussian_nb_classifier({});
   builder.inject("nb", extra);
   if (builder.size() != 4) {
     if (err) *err << "inject(name, lvalue) did not register the model\n";
@@ -158,7 +158,7 @@ bool run_builder_checks(std::ostream* err) {
   // Duplicate name must throw, not silently overwrite.
   bool threw_dup = false;
   try {
-    builder.inject("logreg", model::logistic_regression({}));
+    builder.inject("logreg", models::logistic_regression({}));
   } catch (const std::exception&) {
     threw_dup = true;
   }
@@ -185,7 +185,7 @@ bool run_builder_checks(std::ostream* err) {
   }
 
   // eject() removes and hands back ownership.
-  Model ejected = builder.eject("nb");
+  models::Model ejected = builder.eject("nb");
   if (builder.size() != 3 || builder.has("nb")) {
     if (err) *err << "eject() should remove the model from the Builder\n";
     return false;
@@ -203,7 +203,7 @@ bool run_builder_checks(std::ostream* err) {
   // building a single Candidate by hand, and leave the Builder untouched.
   // 2 folds -- the default fold count leaves too few of these 8 rows per
   // test fold once split by class.
-  metrics::ValidationOptions cv{};
+  selection::CrossValOptions cv{};
   cv.folds = 2;
   cv.shuffle = false;
   const Frame frame = make_frame();
@@ -227,7 +227,7 @@ bool run_builder_checks(std::ostream* err) {
     if (err) *err << "Builder should remember the trained best() and worst() models from its last benchmark()\n";
     return false;
   }
-  const std::vector<std::pair<std::string, Model>> top2 = result.top(2);
+  const std::vector<std::pair<std::string, models::Model>> top2 = result.top(2);
   if (top2.size() != 2 || top2[0].first.empty() || !top2[0].second.trained() || !top2[1].second.trained()) {
     if (err) *err << "benchmark()'s top(k) should return named, trained Models\n";
     return false;

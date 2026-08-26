@@ -1,7 +1,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <functional>
-#include <iostream>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
@@ -12,7 +11,6 @@
 namespace {
 
 using pluss::table::DataFrame;
-using pluss::table::Thread;
 
 [[noreturn]] void fail(std::string_view message) {
   throw std::runtime_error(std::string(message));
@@ -98,43 +96,47 @@ pluss::bundle::Nexus make_bi_nexus() {
 }
 
 void test_session_and_controls() {
-  pluss::bi::Session session;
+  using namespace pluss::bi;
+
+  Session session;
   expect(session.empty(), "new BI session should start empty");
 
-  const auto segment = pluss::bi::Control::category("segment_filter", "segment", "Segment");
-  pluss::bi::apply(session, segment, std::vector<std::string>{"retail"});
+  auto segment = category("segment_filter");
+  segment.feature("segment").label("Segment");
+  apply(session, segment, std::vector<std::string>{"retail"});
   expect(session.has_filter("segment_filter"), "categorical control should register a session filter");
   expect(session.version() == 1, "setting a filter should bump session version");
 
-  const auto principal = pluss::bi::Control::numeric_range("principal_range", "principal", "Principal");
-  pluss::bi::apply(session, principal, 950.0, 1300.0);
+  auto principal = range("principal_range");
+  principal.feature("principal").label("Principal");
+  apply(session, principal, 950.0, 1300.0);
   expect(session.has_filter("principal_range"), "numeric control should register a range filter");
   expect(session.version() == 2, "setting a second filter should bump session version");
 
-  pluss::bi::clear(session, segment);
+  clear(session, segment);
   expect(!session.has_filter("segment_filter"), "clearing a control should remove its filter");
   expect(session.version() == 3, "clearing a filter should bump session version");
 }
 
 void test_source_query_and_projection_after_filters() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  const auto query =
-      pluss::bi::QuerySpec::from("loans")
-          .where(pluss::bi::Filter::eq("risk_band", "A"))
-          .select({"loan_id", "principal"});
+  Studio studio("credit_studio");
+  studio.source(nexus);
 
-  const auto view = pluss::bi::View::make(
-      "loan_table",
-      query,
-      pluss::bi::BindSpec::detail_table("Loans"));
+  auto loans_view = table("loan_table");
+  loans_view
+      .query(from("loans")
+                 .where(Filter::eq("risk_band", "A"))
+                 .select({"loan_id", "principal"}))
+      .title("Loans")
+      .place(0, 0);
 
-  const auto board =
-      pluss::bi::Board("credit").shape(1, 1).add(
-          pluss::bi::Tile::from_view("loan_tile", pluss::bi::LayoutSpec::at(0, 0), view));
-
-  pluss::bi::Studio studio("credit_studio");
-  studio.source(nexus).add(board);
+  auto& board = studio.board("credit");
+  board.grid(1, 1);
+  board.view(loans_view);
 
   const auto render = studio.render();
   expect(render.boards.size() == 1, "BI studio should render one board");
@@ -147,44 +149,50 @@ void test_source_query_and_projection_after_filters() {
 }
 
 void test_scoped_session_filters_skip_or_throw_correctly() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  pluss::bi::Studio studio("scoped");
+  Studio studio("scoped");
   studio.source(nexus);
-  studio.set_filter(pluss::bi::Filter::eq("segment", "retail").scoped("customers_scope"));
+  studio.set_filter(Filter::eq("segment", "retail").scoped("customers_scope"));
 
-  const auto customer_view = pluss::bi::View::make(
-      "customers_view",
-      pluss::bi::QuerySpec::from("customers").scope_as("customers_scope"),
-      pluss::bi::BindSpec::detail_table("Customers"));
+  auto customers_view = table("customers_view");
+  customers_view
+      .query(from("customers").scope_as("customers_scope"))
+      .title("Customers")
+      .place(0, 0);
 
-  const auto loan_view = pluss::bi::View::make(
-      "loans_view",
-      pluss::bi::QuerySpec::from("loans").scope_as("loans_scope"),
-      pluss::bi::BindSpec::detail_table("Loans"));
+  auto loans_view = table("loans_view");
+  loans_view
+      .query(from("loans").scope_as("loans_scope"))
+      .title("Loans")
+      .place(0, 1);
 
-  auto board = pluss::bi::Board("b").shape(1, 2);
-  board = board.add(pluss::bi::Tile::from_view("customers_tile", pluss::bi::LayoutSpec::at(0, 0), customer_view));
-  board = board.add(pluss::bi::Tile::from_view("loans_tile", pluss::bi::LayoutSpec::at(0, 1), loan_view));
+  auto& board = studio.board("b");
+  board.grid(1, 2);
+  board.view(customers_view);
+  board.view(loans_view);
 
-  studio.add(board);
   const auto render = studio.render();
   expect(render.boards[0].tiles[0].table->ncases() == 2,
          "scoped session filters should apply when the query scope matches");
   expect(render.boards[0].tiles[1].table->ncases() == 4,
          "scoped session filters should skip unrelated query scopes");
 
-  pluss::bi::Studio bad("scoped_missing");
+  Studio bad("scoped_missing");
   bad.source(nexus);
-  bad.set_filter(pluss::bi::Filter::eq("segment", "retail").scoped("loans_scope"));
-  bad.add(pluss::bi::Board("bad").shape(1, 1).add(
-      pluss::bi::Tile::from_view(
-          "bad_tile",
-          pluss::bi::LayoutSpec::at(0, 0),
-          pluss::bi::View::make(
-              "bad_view",
-              pluss::bi::QuerySpec::from("loans").scope_as("loans_scope"),
-              pluss::bi::BindSpec::detail_table("Loans")))));
+  bad.set_filter(Filter::eq("segment", "retail").scoped("loans_scope"));
+
+  auto bad_view = table("bad_view");
+  bad_view
+      .query(from("loans").scope_as("loans_scope"))
+      .title("Loans")
+      .place(0, 0);
+
+  auto& bad_board = bad.board("bad");
+  bad_board.grid(1, 1);
+  bad_board.view(bad_view);
 
   expect_throws_contains(
       [&]() { (void)bad.render(); },
@@ -193,19 +201,23 @@ void test_scoped_session_filters_skip_or_throw_correctly() {
 }
 
 void test_unscoped_session_filters_skip_missing_features() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  pluss::bi::Studio studio("unscoped_skip");
+  Studio studio("unscoped_skip");
   studio.source(nexus);
-  studio.set_filter(pluss::bi::Filter::eq("segment", "retail"));
-  studio.add(pluss::bi::Board("loans_board").shape(1, 1).add(
-      pluss::bi::Tile::from_view(
-          "loans_tile",
-          pluss::bi::LayoutSpec::at(0, 0),
-          pluss::bi::View::make(
-              "loans_view",
-              pluss::bi::QuerySpec::from("loans"),
-              pluss::bi::BindSpec::detail_table("Loans")))));
+  studio.set_filter(Filter::eq("segment", "retail"));
+
+  auto loans_view = table("loans_view");
+  loans_view
+      .query(from("loans"))
+      .title("Loans")
+      .place(0, 0);
+
+  auto& board = studio.board("loans_board");
+  board.grid(1, 1);
+  board.view(loans_view);
 
   const auto render = studio.render();
   expect(render.boards[0].tiles[0].table->ncases() == 4,
@@ -213,34 +225,40 @@ void test_unscoped_session_filters_skip_missing_features() {
 }
 
 void test_temporal_filters_and_query_windowing() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  pluss::bi::Studio studio("temporal");
+  Studio studio("temporal");
   studio.source(nexus);
 
-  const auto opened_range =
-      pluss::bi::Control::temporal_range("opened_range", "opened_at", "Opened")
-          .scoped("loans_scope");
-  pluss::bi::Session session;
-  pluss::bi::apply_time(
+  auto opened_range = time_range("opened_range");
+  opened_range
+      .feature("opened_at")
+      .label("Opened")
+      .scope("loans_scope");
+
+  Session session;
+  apply_time(
       session,
       opened_range,
       pluss::make_timeline({"2026-01-02T00:00:00Z"}),
       pluss::make_timeline({"2026-01-03T00:00:00Z"}));
   studio.session(session);
 
-  studio.add(pluss::bi::Board("window").shape(1, 1).add(
-      pluss::bi::Tile::from_view(
-          "window_tile",
-          pluss::bi::LayoutSpec::at(0, 0),
-          pluss::bi::View::make(
-              "window_view",
-              pluss::bi::QuerySpec::from("loans")
-                  .scope_as("loans_scope")
-                  .drop({"customer_id"})
-                  .head(2)
-                  .named("Loan Window"),
-              pluss::bi::BindSpec::detail_table("Loan Window")))));
+  auto window_view = table("window_view");
+  window_view
+      .query(from("loans")
+                 .scope_as("loans_scope")
+                 .drop({"customer_id"})
+                 .head(2)
+                 .named("Loan Window"))
+      .title("Loan Window")
+      .place(0, 0);
+
+  auto& board = studio.board("window");
+  board.grid(1, 1);
+  board.view(window_view);
 
   const auto render = studio.render();
   expect(render.boards[0].tiles[0].table->title() == "Loan Window",
@@ -252,21 +270,25 @@ void test_temporal_filters_and_query_windowing() {
 }
 
 void test_query_arrange_orders_results_before_windowing() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  pluss::bi::Studio studio("arrange");
-  studio.source(nexus).add(
-      pluss::bi::Board("board").shape(1, 1).add(
-          pluss::bi::Tile::from_view(
-              "tile",
-              pluss::bi::LayoutSpec::at(0, 0),
-              pluss::bi::View::make(
-                  "view",
-                  pluss::bi::QuerySpec::from("loans")
-                      .arrange("principal", false)
-                      .head(2)
-                      .select({"loan_id", "principal"}),
-                  pluss::bi::BindSpec::detail_table("Top Loans")))));
+  Studio studio("arrange");
+  studio.source(nexus);
+
+  auto top_loans = table("view");
+  top_loans
+      .query(from("loans")
+                 .arrange("principal", false)
+                 .head(2)
+                 .select({"loan_id", "principal"}))
+      .title("Top Loans")
+      .place(0, 0);
+
+  auto& board = studio.board("board");
+  board.grid(1, 1);
+  board.view(top_loans);
 
   const auto render = studio.render();
   const auto top = *render.boards[0].tiles[0].table;
@@ -280,23 +302,27 @@ void test_query_arrange_orders_results_before_windowing() {
 }
 
 void test_control_tiles_materialize_active_state() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  const auto segment = pluss::bi::Control::category("segment_filter", "segment", "Segment");
+  auto segment = category("segment_filter");
+  segment.feature("segment").label("Segment").place(0, 0);
 
-  pluss::bi::Studio studio("controls");
+  auto customers_view = table("customers_view");
+  customers_view
+      .query(from("customers"))
+      .title("Customers")
+      .place(0, 1);
+
+  Studio studio("controls");
   studio.source(nexus);
-  studio.set_filter(pluss::bi::Filter::eq("segment", "retail"));
-  studio.add(
-      pluss::bi::Board("board").shape(1, 2)
-          .add(pluss::bi::Tile::from_control("segment_tile", pluss::bi::LayoutSpec::at(0, 0), segment))
-          .add(pluss::bi::Tile::from_view(
-              "customers_tile",
-              pluss::bi::LayoutSpec::at(0, 1),
-              pluss::bi::View::make(
-                  "customers_view",
-                  pluss::bi::QuerySpec::from("customers"),
-                  pluss::bi::BindSpec::detail_table("Customers")))));
+  studio.set_filter(Filter::eq("segment", "retail"));
+
+  auto& board = studio.board("board");
+  board.grid(1, 2);
+  board.control(segment);
+  board.view(customers_view);
 
   const auto render = studio.render();
   expect(render.boards[0].tiles.size() == 2,
@@ -314,19 +340,22 @@ void test_control_tiles_materialize_active_state() {
 }
 
 void test_query_filters_throw_on_missing_features() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  pluss::bi::Studio studio("bad_query");
-  studio.source(nexus).add(
-      pluss::bi::Board("board").shape(1, 1).add(
-          pluss::bi::Tile::from_view(
-              "tile",
-              pluss::bi::LayoutSpec::at(0, 0),
-              pluss::bi::View::make(
-                  "view",
-                  pluss::bi::QuerySpec::from("loans")
-                      .where(pluss::bi::Filter::eq("segment", "retail")),
-                  pluss::bi::BindSpec::detail_table("Loans")))));
+  Studio studio("bad_query");
+  studio.source(nexus);
+
+  auto bad_view = table("view");
+  bad_view
+      .query(from("loans").where(Filter::eq("segment", "retail")))
+      .title("Loans")
+      .place(0, 0);
+
+  auto& board = studio.board("board");
+  board.grid(1, 1);
+  board.view(bad_view);
 
   expect_throws_contains(
       [&]() { (void)studio.render(); },
@@ -335,38 +364,41 @@ void test_query_filters_throw_on_missing_features() {
 }
 
 void test_kpi_and_plot_tiles() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  auto board = pluss::bi::Board("perf").shape(1, 3);
-  board = board.add(pluss::bi::Tile::from_view(
-      "kpi",
-      pluss::bi::LayoutSpec::at(0, 0),
-      pluss::bi::View::make(
-          "mean_principal",
-          pluss::bi::QuerySpec::from("loans"),
-          pluss::bi::BindSpec::kpi("principal", pluss::table::GroupOp::Mean, "Mean Principal"))));
-  board = board.add(pluss::bi::Tile::from_view(
-      "line",
-      pluss::bi::LayoutSpec::at(0, 1),
-      pluss::bi::View::make(
-          "principal_curve",
-          pluss::bi::QuerySpec::from("loans").select({"opened_at", "principal"}),
-          pluss::bi::BindSpec::line(
-              {.x_feature = "opened_at", .y_feature = "principal"},
-              "Principal Curve"))));
-  board = board.add(pluss::bi::Tile::from_view(
-      "bar",
-      pluss::bi::LayoutSpec::at(0, 2),
-      pluss::bi::View::make(
-          "risk_counts",
-          pluss::bi::QuerySpec::from("loans").select({"risk_band"}),
-          pluss::bi::BindSpec::bar(
-              {.feature = "risk_band"},
-              false,
-              "Risk Counts"))));
+  auto mean_principal = kpi("mean_principal");
+  mean_principal
+      .query(from("loans"))
+      .feature("principal")
+      .op(pluss::table::GroupOp::Mean)
+      .title("Mean Principal")
+      .place(0, 0);
 
-  pluss::bi::Studio studio("plots");
-  studio.source(nexus).add(board);
+  auto principal_curve = line("principal_curve");
+  principal_curve
+      .query(from("loans").select({"opened_at", "principal"}))
+      .x("opened_at")
+      .y("principal")
+      .title("Principal Curve")
+      .place(0, 1);
+
+  auto risk_counts = bar("risk_counts");
+  risk_counts
+      .query(from("loans").select({"risk_band"}))
+      .feature("risk_band")
+      .title("Risk Counts")
+      .place(0, 2);
+
+  Studio studio("plots");
+  studio.source(nexus);
+
+  auto& board = studio.board("perf");
+  board.grid(1, 3);
+  board.view(mean_principal);
+  board.view(principal_curve);
+  board.view(risk_counts);
 
   const auto render = studio.render();
   expect(render.boards[0].tiles.size() == 3, "all BI tiles should render");
@@ -379,24 +411,28 @@ void test_kpi_and_plot_tiles() {
 }
 
 void test_pivot_tile() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  const auto view = pluss::bi::View::make(
-      "pivot",
-      pluss::bi::QuerySpec::from("loans"),
-      pluss::bi::BindSpec::pivot_table(
-          {"risk_band"},
-          {"customer_id"},
-          {"principal"},
-          pluss::table::GroupOp::Sum,
-          true,
-          true,
-          "Principal Pivot"));
+  auto pivot_view = pivot("pivot");
+  pivot_view
+      .query(from("loans"))
+      .pivot_index({"risk_band"})
+      .pivot_columns({"customer_id"})
+      .pivot_values({"principal"})
+      .op(pluss::table::GroupOp::Sum)
+      .dropna(true)
+      .sort(true)
+      .title("Principal Pivot")
+      .place(0, 0);
 
-  pluss::bi::Studio studio("pivot");
-  studio.source(nexus).add(
-      pluss::bi::Board("board").shape(1, 1).add(
-          pluss::bi::Tile::from_view("pivot_tile", pluss::bi::LayoutSpec::at(0, 0), view)));
+  Studio studio("pivot");
+  studio.source(nexus);
+
+  auto& board = studio.board("board");
+  board.grid(1, 1);
+  board.view(pivot_view);
 
   const auto render = studio.render();
   expect(render.boards[0].tiles[0].table != nullptr, "pivot tile should materialize a pivoted DataFrame");
@@ -406,34 +442,39 @@ void test_pivot_tile() {
 }
 
 void test_stored_plan_sql_and_traverse_queries() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  const auto stored_view = pluss::bi::View::make(
-      "stored",
-      pluss::bi::QuerySpec::stored("loans_payments"),
-      pluss::bi::BindSpec::detail_table("Stored"));
+  auto stored_view = table("stored");
+  stored_view
+      .query(stored("loans_payments"))
+      .title("Stored")
+      .place(0, 0);
 
-  const auto sql_view = pluss::bi::View::make(
-      "sql",
-      pluss::bi::QuerySpec::sql(
+  auto sql_view = table("sql");
+  sql_view
+      .query(sql(
           "SELECT loans.loan_id, customers.name "
           "FROM loans "
-          "INNER JOIN customers ON loans.customer_id = customers.customer_id"),
-      pluss::bi::BindSpec::detail_table("Sql"));
+          "INNER JOIN customers ON loans.customer_id = customers.customer_id"))
+      .title("Sql")
+      .place(0, 1);
 
-  const auto traverse_view = pluss::bi::View::make(
-      "traverse",
-      pluss::bi::QuerySpec::traverse_from("loans")
-          .join("customers"),
-      pluss::bi::BindSpec::detail_table("Traverse"));
+  auto traverse_view = table("traverse");
+  traverse_view
+      .query(traverse_from("loans").join("customers"))
+      .title("Traverse")
+      .place(0, 2);
 
-  auto board = pluss::bi::Board("queries").shape(1, 3);
-  board = board.add(pluss::bi::Tile::from_view("stored_tile", pluss::bi::LayoutSpec::at(0, 0), stored_view));
-  board = board.add(pluss::bi::Tile::from_view("sql_tile", pluss::bi::LayoutSpec::at(0, 1), sql_view));
-  board = board.add(pluss::bi::Tile::from_view("traverse_tile", pluss::bi::LayoutSpec::at(0, 2), traverse_view));
+  Studio studio("queries_studio");
+  studio.source(nexus);
 
-  pluss::bi::Studio studio("queries_studio");
-  studio.source(nexus).add(board);
+  auto& board = studio.board("queries");
+  board.grid(1, 3);
+  board.view(stored_view);
+  board.view(sql_view);
+  board.view(traverse_view);
 
   const auto render = studio.render();
   expect(has_feature(*render.boards[0].tiles[0].table, "loan_id"),
@@ -455,20 +496,29 @@ void test_stored_plan_sql_and_traverse_queries() {
 }
 
 void test_board_validation() {
+  using namespace pluss::bi;
+
   const auto nexus = make_bi_nexus();
 
-  const auto view = pluss::bi::View::make(
-      "view",
-      pluss::bi::QuerySpec::from("loans"),
-      pluss::bi::BindSpec::detail_table("Loans"));
+  auto good_view = table("tile");
+  good_view
+      .query(from("loans"))
+      .title("Loans")
+      .place(0, 0);
 
   bool duplicate_threw = false;
   try {
-    pluss::bi::Studio studio("dup");
-    studio.source(nexus).add(
-        pluss::bi::Board("board").shape(1, 2)
-            .add(pluss::bi::Tile::from_view("tile", pluss::bi::LayoutSpec::at(0, 0), view))
-            .add(pluss::bi::Tile::from_view("tile", pluss::bi::LayoutSpec::at(0, 1), view)));
+    Studio studio("dup");
+    studio.source(nexus);
+
+    auto first = good_view;
+    auto second = table("tile");
+    second.query(from("loans")).title("Loans 2").place(0, 1);
+
+    auto& board = studio.board("board");
+    board.grid(1, 2);
+    board.view(first);
+    board.view(second);
     (void)studio.render();
   } catch (const std::exception& e) {
     duplicate_threw = std::string(e.what()).find("duplicate tile key") != std::string::npos;
@@ -477,15 +527,91 @@ void test_board_validation() {
 
   bool bounds_threw = false;
   try {
-    pluss::bi::Studio studio("bounds");
-    studio.source(nexus).add(
-        pluss::bi::Board("board").shape(1, 1).add(
-            pluss::bi::Tile::from_view("tile", pluss::bi::LayoutSpec::at(0, 0, 1, 2), view)));
+    Studio studio("bounds");
+    studio.source(nexus);
+
+    auto bad_view = table("tile");
+    bad_view
+        .query(from("loans"))
+        .title("Loans")
+        .place(0, 0, 1, 2);
+
+    auto& board = studio.board("board");
+    board.grid(1, 1);
+    board.view(bad_view);
     (void)studio.render();
   } catch (const std::exception& e) {
     bounds_threw = std::string(e.what()).find("column span exceeds board shape") != std::string::npos;
   }
   expect(bounds_threw, "out-of-bounds BI tiles should be rejected");
+}
+
+void test_native_runtime_and_cache_flow() {
+  using namespace pluss::bi;
+
+  const auto nexus = make_bi_nexus();
+
+  Studio studio("runtime");
+  studio.source(nexus);
+
+  auto segment = category("segment_filter");
+  segment.feature("segment").label("Segment").place(0, 0);
+
+  auto customers_view = table("customers_table");
+  customers_view
+      .query(from("customers"))
+      .title("Customers")
+      .place(0, 1);
+
+  auto loan_curve = line("loan_curve");
+  loan_curve
+      .query(from("loans").select({"opened_at", "principal"}))
+      .x("opened_at")
+      .y("principal")
+      .title("Principal Curve")
+      .place(1, 0, 1, 2);
+
+  auto& board = studio.board("overview");
+  board.title("Overview");
+  board.grid(2, 2);
+  board.control(segment);
+  board.view(customers_view);
+  board.view(loan_curve);
+
+  studio.set_filter(Filter::eq("segment", "retail"));
+
+  const auto first = studio.render();
+  expect(first.native != nullptr, "studio render should materialize a native board studio");
+  expect(first.boards[0].native != nullptr, "board render should materialize a native board runtime");
+  expect(first.boards[0].native->pane_count() == 3,
+         "board native runtime should compose one pane per control/view tile");
+  expect(first.dependencies.count("segment") == 1,
+         "render should expose dependency bookkeeping for active filters");
+  expect(!first.dependencies.at("segment").empty(),
+         "active filter dependency bookkeeping should name affected tiles");
+
+  const auto second = studio.render();
+  expect(second.cache.query_hits > 0, "second render should hit the BI query cache");
+  expect(second.cache.tile_hits > 0, "second render should hit the BI tile cache");
+  expect(second.cache.board_hits > 0, "second render should hit the BI board-native cache");
+
+  studio.set_filter(Filter::eq("segment", "enterprise"));
+  const auto third = studio.render();
+  expect(third.cache.query_misses > 0,
+         "changing an active filter should invalidate BI query results for a fresh render");
+  expect(third.cache.tile_hits > 0 && third.cache.tile_misses > 0,
+         "filter changes should selectively reuse unaffected BI tiles while rebuilding affected ones");
+  expect(third.boards[0].native != nullptr,
+         "native board runtime should rebuild cleanly after filter invalidation");
+
+  studio.refresh();
+  const auto fourth = studio.render();
+  expect(fourth.cache.query_misses > 0, "refresh() should clear the BI query cache");
+  expect(fourth.cache.tile_misses > 0, "refresh() should clear the BI tile cache");
+  expect(fourth.cache.board_misses > 0, "refresh() should clear the BI board-native cache");
+
+  expect(studio.show("BI runtime", 960, 640, false),
+         "Studio::show(..., launch=false) should still render the native BI surface");
 }
 
 } // namespace
@@ -504,5 +630,6 @@ int main() {
   test_pivot_tile();
   test_stored_plan_sql_and_traverse_queries();
   test_board_validation();
+  test_native_runtime_and_cache_flow();
   return 0;
 }

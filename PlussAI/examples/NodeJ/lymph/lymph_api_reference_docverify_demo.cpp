@@ -10,13 +10,13 @@ int main() {
   using pluss::Series;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
-  using pluss::ai::nodej::AssessOptions;
-  using pluss::ai::nodej::ClassReportOptions;
-  using pluss::ai::nodej::ConfusionOptions;
-  using pluss::ai::nodej::LinearFamilyOptions;
-  using pluss::ai::nodej::MetricKind;
-  using pluss::ai::nodej::RegularizationKind;
-  using pluss::ai::nodej::TrainOptions;
+  using lymph::AssessOptions;
+  using lymph::ClassReportOptions;
+  using lymph::ConfusionOptions;
+  using lymph::LinearFamilyOptions;
+  using lymph::MetricKind;
+  using lymph::RegularizationKind;
+  using lymph::TrainOptions;
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
@@ -37,7 +37,7 @@ int main() {
       }))},
   });
 
-  pluss::ai::nodej::DataFrameBatchOptions data_options{};
+  lymph::DataFrameBatchOptions data_options{};
   data_options.feature_names = {"income", "balance", "late"};
   data_options.label_feature = "target";
 
@@ -131,7 +131,7 @@ int main() {
   lymph::Suite suite = lymph::spotcheck::suite(builder);
   suite.strategy("plain", TrainOptions{});
   suite.strategy("weighted", TrainOptions{
-      .class_weight = pluss::ai::nodej::ClassWeightMode::Balanced,
+      .class_weight = lymph::ClassWeightMode::Balanced,
   });
 
   const lymph::spotcheck::Result suite_result =
@@ -172,7 +172,7 @@ int main() {
       frame.features("target").as_series(),
       predicted,
       ConfusionOptions{
-          .normalize = pluss::ai::nodej::ConfusionNormalize::ByTruth,
+          .normalize = lymph::ConfusionNormalize::ByTruth,
       });
   std::cout << "labels=" << confusion.labels << "\n";
   std::cout << "counts=" << confusion.counts << "\n";

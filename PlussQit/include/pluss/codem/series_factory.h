@@ -965,6 +965,20 @@ namespace pluss::series {
   // --------------------------------------------------------------------------
   // Value / blob / make factories (create NEW Series from user data)
   // --------------------------------------------------------------------------
+  // pluss::series::print(s) -- human-readable rendering, mirroring
+  // pluss::note::print/pluss::timeline::print. `std::cout << s` also works
+  // directly via pluss::codem's Series operator<<.
+  inline std::string print(const pluss::Series& s) {
+    return pluss::codem::print_series(s);
+  }
+  inline std::string print(const pluss::Series& s, const pluss::PrintOptions& opt) {
+    return pluss::codem::print_series(s, opt);
+  }
+  inline std::ostream& print(std::ostream& os, const pluss::Series& s,
+                             const pluss::PrintOptions& opt = {}) {
+    return pluss::codem::print_series(os, s, opt);
+  }
+
   // Owned-construction entrypoint.
   // Data forms are parsed by DataReader constructors; options are applied here.
   template <class... Opts>

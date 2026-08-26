@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=bd236ad6"></script>
+    <script src="../../_static/api_nav.js?v=608a74fd"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,9 +52,9 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">info()</span></code> prints a concise, two-part health check of a frame: a short <strong>summary block</strong>
-(shape, case range, null-row count, a per-dtype feature tally, and an estimated memory
+(shape, case range, null-row count, a per-ptype feature tally, and an estimated memory
 footprint) followed by a <strong>feature inventory</strong> listing every column with its non-null
-count and its logical dtype. It is the fastest way to answer the three questions you
+count and its logical payload type. It is the fastest way to answer the three questions you
 almost always ask right after loading or deriving a frame: <em>how big is this, what shape
 are the columns, and where is data missing?</em></p>
 <p>Unlike <a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">describe()</span></code></span></a>, which summarizes the <strong>values</strong> of numeric features
@@ -68,7 +68,7 @@ to any <code class="docutils literal notranslate"><span class="pre">std::ostream
 string stream instead of the terminal).</p>
 <p><code class="docutils literal notranslate"><span class="pre">info()</span></code> never mutates the frame and never touches non-participating columns: every
 feature that exists on the frame is listed exactly once in the inventory, in its current
-column order, regardless of dtype.</p>
+column order, regardless of concrete scalar dtype.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -128,11 +128,11 @@ Cases          | 6
 Features       | 6                      
 Case Range     | 0 -&gt; 5                 
 Null Case Rows | 2                      
-Dtypes         | Note(2), Series(4)     
+PTypes         | Note(2), Series(4)     
 Memory         | 316.00 B               
 ----------------------------------------
 =======================================
-#  | Feature     Non-Null Cases  Dtype 
+#  | Feature     Non-Null Cases  PType 
 ---------------------------------------
 0  | order_id    6               Series
 1  | city        6               Note  
@@ -147,11 +147,11 @@ Memory         | 316.00 B
 <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>, and row 2 is missing <code class="docutils literal notranslate"><span class="pre">discount</span></code> — you can already tell that before
 inspecting a single value directly, because the feature inventory shows <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> and
 <code class="docutils literal notranslate"><span class="pre">discount</span></code> each sitting at <code class="docutils literal notranslate"><span class="pre">5</span></code> non-null cases against <code class="docutils literal notranslate"><span class="pre">6</span></code> total.</p>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">Dtypes</span></code> reports <strong>logical</strong> thread kinds, not numeric precision — <code class="docutils literal notranslate"><span class="pre">order_id</span></code>,
+<p>Note that <code class="docutils literal notranslate"><span class="pre">PTypes</span></code> reports <strong>logical</strong> thread kinds, not numeric precision — <code class="docutils literal notranslate"><span class="pre">order_id</span></code>,
 <code class="docutils literal notranslate"><span class="pre">units</span></code>, <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>, and <code class="docutils literal notranslate"><span class="pre">discount</span></code> are all <code class="docutils literal notranslate"><span class="pre">Series</span></code>, whether they hold <code class="docutils literal notranslate"><span class="pre">int64</span></code> or
 <code class="docutils literal notranslate"><span class="pre">double</span></code> underneath. If you need the concrete scalar dtype per feature (<code class="docutils literal notranslate"><span class="pre">int64</span></code>,
 <code class="docutils literal notranslate"><span class="pre">float64</span></code>, and so on), use <a class="reference internal" href="dtypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code></span></a> instead; <code class="docutils literal notranslate"><span class="pre">info()</span></code> intentionally keeps
-the dtype column coarse so it stays readable on a frame with dozens of features.</p>
+the <code class="docutils literal notranslate"><span class="pre">PType</span></code> column coarse so it stays readable on a frame with dozens of features.</p>
 <p>Example 2. Write the same report to a stream instead of the terminal.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">ostringstream</span><span class="w"> </span><span class="n">log</span><span class="p">;</span>
 <span class="n">orders</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="n">log</span><span class="p">);</span>
@@ -163,11 +163,11 @@ the dtype column coarse so it stays readable on a frame with dozens of features.
 </section>
 <section id="what-the-report-deliberately-leaves-out">
 <h2>What The Report Deliberately Leaves Out<a class="headerlink" href="#what-the-report-deliberately-leaves-out" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">info()</span></code> gives you row count, column count, a per-column non-null count and dtype, and a
+<p><code class="docutils literal notranslate"><span class="pre">info()</span></code> gives you row count, column count, a per-column non-null count and payload type, and a
 rough memory estimate — a structural summary, not a value-level one. Two design choices
 worth knowing up front:</p>
 <ul class="simple">
-<li><p>The dtype column reports the <strong>logical</strong> Pluss thread kind — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
+<li><p>The <code class="docutils literal notranslate"><span class="pre">PType</span></code> column reports the <strong>logical</strong> Pluss thread kind — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — rather than a concrete scalar dtype, because a single
 <code class="docutils literal notranslate"><span class="pre">Series</span></code> column can already carry any numeric scalar type underneath. Pair <code class="docutils literal notranslate"><span class="pre">info()</span></code>
 with <a class="reference internal" href="dtypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code></span></a> when you need the concrete per-column scalar type.</p></li>

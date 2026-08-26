@@ -15,23 +15,18 @@
 // cost, preserving the old "do not accidentally mutate somebody else's
 // model" semantics without forcing std::move into normal user code.
 //
-// Public factories live under `lymph::model`, grouped by model family:
-// `model::linear::linear_regression(...)`, `model::tree::...`, etc. The
-// family-root shortcuts (`model::linear_regression(...)`) and older plural
-// compatibility shortcuts (`models::linear_regression(...)`) forward to those
-// grouped factories. `lymph::Model` remains the ergonomic type shortcut;
-// `lymph::model::Model` is the explicit family-local spelling of the same
-// handle type.
+// Public factories live under `lymph::models`, grouped by model subfamily:
+// `models::linear::linear_regression(...)`, `models::tree::...`, etc. The
+// family-root shortcuts (`models::linear_regression(...)`) forward to those
+// grouped factories. `lymph::models::Model` is the real family-owned spelling
+// of the handle type.
 
 namespace pluss::ai::lymph {
 
-namespace model {
+namespace models {
 class Model;
 class ModelPrep;
-} // namespace model
-
-using Model = model::Model;
-using ModelPrep = model::ModelPrep;
+} // namespace models
 
 namespace reports {
 class ModelReports;
@@ -45,11 +40,11 @@ struct ModelImpl final : pluss::msharp::RefCounted {
   ModelCore core;
 };
 
-[[nodiscard]] inline const ModelCore& model_core(const Model& model) noexcept;
+[[nodiscard]] inline const ModelCore& model_core(const models::Model& model) noexcept;
 
 } // namespace detail
 
-namespace model {
+namespace models {
 
 class Model final {
   friend const detail::ModelCore& detail::model_core(const Model& model) noexcept;
@@ -199,7 +194,7 @@ class Model final {
     return *this;
   }
 
-  Model& add(const CustomStage& stage) {
+  Model& add(const prep::CustomStage& stage) {
     if (!stage.map_fn) {
       ::pluss::throw_error("lymph::Model::add: custom stage \"" + stage.name + "\" has no callable.");
     }
@@ -207,7 +202,7 @@ class Model final {
     return *this;
   }
 
-  Model& append(Stage stage, ColumnRouter router) {
+  Model& append(prep::Stage stage, prep::Route router) {
     mut_core_().append(std::move(stage), std::move(router));
     return *this;
   }
@@ -523,45 +518,45 @@ class ModelPrep final {
     return *model_;
   }
 
-  [[nodiscard]] ColumnRouter names(std::vector<std::string> values) const {
-    return columnrouter::names(std::move(values));
+  [[nodiscard]] prep::Route names(std::vector<std::string> values) const {
+    return prep::route::names(std::move(values));
   }
 
-  [[nodiscard]] ColumnRouter names(std::initializer_list<std::string> values) const {
+  [[nodiscard]] prep::Route names(std::initializer_list<std::string> values) const {
     return names(std::vector<std::string>(values.begin(), values.end()));
   }
 
-  [[nodiscard]] ColumnRouter where(
+  [[nodiscard]] prep::Route where(
       std::function<bool(std::string_view feature_name, std::string_view dtype)> predicate) const {
-    return columnrouter::where(std::move(predicate));
+    return prep::route::where(std::move(predicate));
   }
 
-  [[nodiscard]] ColumnRouter remaining(std::vector<std::string> values) const {
-    return columnrouter::remaining_of(std::move(values));
+  [[nodiscard]] prep::Route remaining(std::vector<std::string> values) const {
+    return prep::route::remaining_of(std::move(values));
   }
 
-  [[nodiscard]] ColumnRouter remaining(std::initializer_list<std::string> values) const {
+  [[nodiscard]] prep::Route remaining(std::initializer_list<std::string> values) const {
     return remaining(std::vector<std::string>(values.begin(), values.end()));
   }
 
-  [[nodiscard]] ColumnRouter remaining(ColumnRouter router) const {
-    return columnrouter::remaining_of(std::move(router));
+  [[nodiscard]] prep::Route remaining(prep::Route router) const {
+    return prep::route::remaining_of(std::move(router));
   }
 
-  ModelPrep& add(Stage stage, ColumnRouter router) {
+  ModelPrep& add(prep::Stage stage, prep::Route router) {
     model().append(std::move(stage), std::move(router));
     return *this;
   }
 
-  ModelPrep& standardize(ColumnRouter router, prep::StandardScalerOptions options = {}) {
-    return add(stage::standard_scaler(options), std::move(router));
+  ModelPrep& standardize(prep::Route router, prep::StandardScalerOptions options = {}) {
+    return add(prep::stage::standard_scaler(options), std::move(router));
   }
 
   ModelPrep& standardize(std::initializer_list<std::string> names, prep::StandardScalerOptions options = {}) {
     return standardize(this->names(names), options);
   }
 
-  ModelPrep& scale(ColumnRouter router, prep::StandardScalerOptions options = {}) {
+  ModelPrep& scale(prep::Route router, prep::StandardScalerOptions options = {}) {
     return standardize(std::move(router), options);
   }
 
@@ -569,106 +564,106 @@ class ModelPrep final {
     return scale(this->names(names), options);
   }
 
-  ModelPrep& rescale(ColumnRouter router, prep::MinMaxScalerOptions options = {}) {
-    return add(stage::minmax_scaler(options), std::move(router));
+  ModelPrep& rescale(prep::Route router, prep::MinMaxScalerOptions options = {}) {
+    return add(prep::stage::minmax_scaler(options), std::move(router));
   }
 
   ModelPrep& rescale(std::initializer_list<std::string> names, prep::MinMaxScalerOptions options = {}) {
     return rescale(this->names(names), options);
   }
 
-  ModelPrep& robust(ColumnRouter router, prep::RobustScalerOptions options = {}) {
-    return add(stage::robust_scaler(options), std::move(router));
+  ModelPrep& robust(prep::Route router, prep::RobustScalerOptions options = {}) {
+    return add(prep::stage::robust_scaler(options), std::move(router));
   }
 
-  ModelPrep& fill(ColumnRouter router, prep::SimpleImputerOptions options = {}) {
-    return add(stage::simple_imputer(options), std::move(router));
+  ModelPrep& fill(prep::Route router, prep::SimpleImputerOptions options = {}) {
+    return add(prep::stage::simple_imputer(options), std::move(router));
   }
 
   ModelPrep& fill(std::initializer_list<std::string> names, prep::SimpleImputerOptions options = {}) {
     return fill(this->names(names), options);
   }
 
-  ModelPrep& neighbor_fill(ColumnRouter router, prep::NeighborImputerOptions options = {}) {
-    return add(stage::neighbor_imputer(options), std::move(router));
+  ModelPrep& neighbor_fill(prep::Route router, prep::NeighborImputerOptions options = {}) {
+    return add(prep::stage::neighbor_imputer(options), std::move(router));
   }
 
-  ModelPrep& iterative_fill(ColumnRouter router, prep::IterativeImputerOptions options = {}) {
-    return add(stage::iterative_imputer(options), std::move(router));
+  ModelPrep& iterative_fill(prep::Route router, prep::IterativeImputerOptions options = {}) {
+    return add(prep::stage::iterative_imputer(options), std::move(router));
   }
 
-  ModelPrep& encode(ColumnRouter router, prep::OneHotEncoderOptions options = {}) {
-    return add(stage::one_hot_encoder(options), std::move(router));
+  ModelPrep& encode(prep::Route router, prep::OneHotEncoderOptions options = {}) {
+    return add(prep::stage::one_hot_encoder(options), std::move(router));
   }
 
   ModelPrep& encode(std::initializer_list<std::string> names, prep::OneHotEncoderOptions options = {}) {
     return encode(this->names(names), options);
   }
 
-  ModelPrep& count_encode(ColumnRouter router, prep::FrequencyEncoderOptions options = {}) {
-    return add(stage::frequency_encoder(options), std::move(router));
+  ModelPrep& count_encode(prep::Route router, prep::FrequencyEncoderOptions options = {}) {
+    return add(prep::stage::frequency_encoder(options), std::move(router));
   }
 
-  ModelPrep& order_encode(ColumnRouter router, prep::OrdinalEncoderOptions options = {}) {
-    return add(stage::ordinal_encoder(options), std::move(router));
+  ModelPrep& order_encode(prep::Route router, prep::OrdinalEncoderOptions options = {}) {
+    return add(prep::stage::ordinal_encoder(options), std::move(router));
   }
 
-  ModelPrep& label_encode(ColumnRouter router, prep::LabelEncoderOptions options = {}) {
-    return add(stage::label_encoder(options), std::move(router));
+  ModelPrep& label_encode(prep::Route router, prep::LabelEncoderOptions options = {}) {
+    return add(prep::stage::label_encoder(options), std::move(router));
   }
 
-  ModelPrep& normalize(ColumnRouter router, prep::VectorNormalizerOptions options = {}) {
-    return add(stage::vector_normalizer(options), std::move(router));
+  ModelPrep& normalize(prep::Route router, prep::VectorNormalizerOptions options = {}) {
+    return add(prep::stage::vector_normalizer(options), std::move(router));
   }
 
-  ModelPrep& maxabs(ColumnRouter router, prep::MaxAbsScalerOptions options = {}) {
-    return add(stage::maxabs_scaler(options), std::move(router));
+  ModelPrep& maxabs(prep::Route router, prep::MaxAbsScalerOptions options = {}) {
+    return add(prep::stage::maxabs_scaler(options), std::move(router));
   }
 
-  ModelPrep& gaussianize(ColumnRouter router, prep::QuantileMapOptions options = {}) {
+  ModelPrep& gaussianize(prep::Route router, prep::QuantileMapOptions options = {}) {
     options.output = prep::QuantileMapOutput::Gaussian;
-    return add(stage::quantile_map(options), std::move(router));
+    return add(prep::stage::quantile_map(options), std::move(router));
   }
 
   ModelPrep& gaussianize(std::initializer_list<std::string> names, prep::QuantileMapOptions options = {}) {
     return gaussianize(this->names(names), options);
   }
 
-  ModelPrep& quantiles(ColumnRouter router, prep::QuantileMapOptions options = {}) {
-    return add(stage::quantile_map(options), std::move(router));
+  ModelPrep& quantiles(prep::Route router, prep::QuantileMapOptions options = {}) {
+    return add(prep::stage::quantile_map(options), std::move(router));
   }
 
-  ModelPrep& power(ColumnRouter router, prep::PowerMapOptions options = {}) {
-    return add(stage::power_map(options), std::move(router));
+  ModelPrep& power(prep::Route router, prep::PowerMapOptions options = {}) {
+    return add(prep::stage::power_map(options), std::move(router));
   }
 
-  ModelPrep& binarize(ColumnRouter router, prep::ThresholdBinarizerOptions options = {}) {
-    return add(stage::threshold_binarizer(options), std::move(router));
+  ModelPrep& binarize(prep::Route router, prep::ThresholdBinarizerOptions options = {}) {
+    return add(prep::stage::threshold_binarizer(options), std::move(router));
   }
 
-  ModelPrep& polynomial(ColumnRouter router, prep::PolynomialLiftOptions options = {}) {
-    return add(stage::polynomial_lift(options), std::move(router));
+  ModelPrep& polynomial(prep::Route router, prep::PolynomialLiftOptions options = {}) {
+    return add(prep::stage::polynomial_lift(options), std::move(router));
   }
 
  private:
   Model* model_ = nullptr;
 };
 
-[[nodiscard]] inline ModelPrep Model::prepare() noexcept {
+[[nodiscard]] inline models::ModelPrep models::Model::prepare() noexcept {
   return ModelPrep(*this);
 }
 
-} // namespace model
+} // namespace models
 
 namespace detail {
 
-[[nodiscard]] inline const ModelCore& model_core(const Model& model) noexcept {
+[[nodiscard]] inline const ModelCore& model_core(const models::Model& model) noexcept {
   return model.core_();
 }
 
 } // namespace detail
 
-namespace model {
+namespace models {
 
 namespace linear {
 [[nodiscard]] inline Model linear_regression(LinearFamilyOptions options = {}) { return detail::linear::linear_regression(options); }
@@ -816,6 +811,6 @@ namespace detect {
 [[nodiscard]] inline Model isolation_detector(prep::OutlierIsolatorOptions options) { return detect::isolation_detector(options); }
 [[nodiscard]] inline Model transformer(DetectFamilyOptions options = {}) { return detect::transformer(options); }
 
-} // namespace model
+} // namespace models
 
 } // namespace pluss::ai::lymph

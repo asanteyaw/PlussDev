@@ -3,9 +3,7 @@
 #include "pluss/ai/lymph/common.h"
 #include "pluss/ai/lymph/metrics.h"
 
-namespace pluss::ai::lymph {
-
-namespace sparse {
+namespace pluss::ai::lymph::models::sparse {
 
 using Triplet = ::pluss::ai::nodej::SparseTripletMatrix;
 using Csr = ::pluss::ai::nodej::SparseCsrMatrix;
@@ -546,6 +544,4 @@ private:
   return tune_ledger(report).encoded_params;
 }
 
-} // namespace sparse
-
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::models::sparse

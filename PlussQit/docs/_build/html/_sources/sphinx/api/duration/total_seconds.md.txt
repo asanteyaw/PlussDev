@@ -38,7 +38,7 @@ Example 1. A `90`-minute `Duration` read as seconds.
 
 ```cpp
 auto ninety_min = pluss::duration::minutes(90);
-std::cout << pluss::print_series(ninety_min.total().seconds());
+std::cout << pluss::series::print(ninety_min.total().seconds());
 ```
 
 ### Output

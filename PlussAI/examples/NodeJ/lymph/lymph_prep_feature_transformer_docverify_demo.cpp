@@ -24,16 +24,16 @@ int main() {
   options.note_policy = lymph::DataNotePolicy::Factorize;
   options.layout = lymph::ObservationLayout::Rows;
 
-  lymph::FeatureTransformer transformer = lymph::make_feature_transformer(
+  lymph::prep::FeatureTransformer transformer = lymph::prep::feature_transformer(
       raw,
       options,
       {
-          lymph::workflow::feature::compose(
+          lymph::prep::branch::compose(
               {
-                  lymph::workflow::stage::standard_scaler(),
+                  lymph::stage::standard_scaler(),
               },
               {"income"}),
-          lymph::workflow::feature::one_hot_encoder(
+          lymph::prep::branch::one_hot_encoder(
               lymph::prep::OneHotEncoderOptions{
                   .max_categories = 8,
                   .overflow = lymph::prep::CategoryOverflowPolicy::KeepMostFrequent,

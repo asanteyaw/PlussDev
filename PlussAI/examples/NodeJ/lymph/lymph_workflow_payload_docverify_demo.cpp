@@ -22,9 +22,9 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::ai::nodej::LinearFamilyOptions;
-  using pluss::ai::nodej::RegularizationKind;
-  using pluss::ai::nodej::TrainOptions;
+  using lymph::LinearFamilyOptions;
+  using lymph::RegularizationKind;
+  using lymph::TrainOptions;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
 

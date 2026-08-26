@@ -3,9 +3,7 @@
 #include "pluss/ai/lymph/common.h"
 #include "pluss/ai/lymph/metrics.h"
 
-namespace pluss::ai::lymph {
-
-namespace online {
+namespace pluss::ai::lymph::models::online {
 
 class OnlineLinearClassifier final {
  public:
@@ -310,9 +308,17 @@ private:
   return OnlineLinearRegressor(options);
 }
 
-} // namespace online
+} // namespace pluss::ai::lymph::models::online
 
+namespace pluss::ai::lymph::models {
 using OnlineLinearClassifier = online::OnlineLinearClassifier;
 using OnlineLinearRegressor = online::OnlineLinearRegressor;
 
-} // namespace pluss::ai::lymph
+[[nodiscard]] inline OnlineLinearClassifier linear_classifier(OnlineLinearOptions options = {}) {
+  return online::linear_classifier(options);
+}
+
+[[nodiscard]] inline OnlineLinearRegressor linear_regressor(OnlineLinearOptions options = {}) {
+  return online::linear_regressor(options);
+}
+} // namespace pluss::ai::lymph::models

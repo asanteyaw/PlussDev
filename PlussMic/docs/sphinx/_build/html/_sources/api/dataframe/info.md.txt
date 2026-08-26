@@ -16,9 +16,9 @@ DataFrame::info(std::ostream& os, const display::DisplayOptions& options = {}) -
 ## What It Does
 
 `info()` prints a concise, two-part health check of a frame: a short **summary block**
-(shape, case range, null-row count, a per-dtype feature tally, and an estimated memory
+(shape, case range, null-row count, a per-ptype feature tally, and an estimated memory
 footprint) followed by a **feature inventory** listing every column with its non-null
-count and its logical dtype. It is the fastest way to answer the three questions you
+count and its logical payload type. It is the fastest way to answer the three questions you
 almost always ask right after loading or deriving a frame: *how big is this, what shape
 are the columns, and where is data missing?*
 
@@ -35,7 +35,7 @@ string stream instead of the terminal).
 
 `info()` never mutates the frame and never touches non-participating columns: every
 feature that exists on the frame is listed exactly once in the inventory, in its current
-column order, regardless of dtype.
+column order, regardless of concrete scalar dtype.
 
 ## Parameters
 
@@ -101,11 +101,11 @@ Cases          | 6
 Features       | 6                      
 Case Range     | 0 -> 5                 
 Null Case Rows | 2                      
-Dtypes         | Note(2), Series(4)     
+PTypes         | Note(2), Series(4)     
 Memory         | 316.00 B               
 ----------------------------------------
 =======================================
-#  | Feature     Non-Null Cases  Dtype 
+#  | Feature     Non-Null Cases  PType 
 ---------------------------------------
 0  | order_id    6               Series
 1  | city        6               Note  
@@ -121,11 +121,11 @@ Two rows have a missing value somewhere (`Null Case Rows | 2`): row 5 is missing
 inspecting a single value directly, because the feature inventory shows `unit_price` and
 `discount` each sitting at `5` non-null cases against `6` total.
 
-Note that `Dtypes` reports **logical** thread kinds, not numeric precision — `order_id`,
+Note that `PTypes` reports **logical** thread kinds, not numeric precision — `order_id`,
 `units`, `unit_price`, and `discount` are all `Series`, whether they hold `int64` or
 `double` underneath. If you need the concrete scalar dtype per feature (`int64`,
 `float64`, and so on), use [`dtypes()`](dtypes.md) instead; `info()` intentionally keeps
-the dtype column coarse so it stays readable on a frame with dozens of features.
+the `PType` column coarse so it stays readable on a frame with dozens of features.
 
 Example 2. Write the same report to a stream instead of the terminal.
 
@@ -138,11 +138,11 @@ orders.info(log);
 
 ## What The Report Deliberately Leaves Out
 
-`info()` gives you row count, column count, a per-column non-null count and dtype, and a
+`info()` gives you row count, column count, a per-column non-null count and payload type, and a
 rough memory estimate — a structural summary, not a value-level one. Two design choices
 worth knowing up front:
 
-- The dtype column reports the **logical** Pluss thread kind — `Series`, `Note`,
+- The `PType` column reports the **logical** Pluss thread kind — `Series`, `Note`,
   `Timeline`, or `TimeIndex` — rather than a concrete scalar dtype, because a single
   `Series` column can already carry any numeric scalar type underneath. Pair `info()`
   with [`dtypes()`](dtypes.md) when you need the concrete per-column scalar type.

@@ -357,6 +357,13 @@ DataFrame DataFrame::slice(std::int64_t start, std::int64_t stop) const {
   return take(idx);
 }
 
+DataFrame DataFrame::zoom(std::int64_t case_start,
+                          std::int64_t case_stop,
+                          std::int64_t feature_start,
+                          std::int64_t feature_stop) const {
+  return case_study(Case::slice(case_start, case_stop), Feat::slice(feature_start, feature_stop));
+}
+
 DataFrame DataFrame::take(pluss::msharp::RangeView::Int indices) const {
   const auto& src = impl_ref_();
   if (indices.size() == static_cast<std::size_t>(src.nrows_)) {

@@ -36,7 +36,7 @@ Example 1. `1` day is greater than `1` hour.
 ```cpp
 auto one_hour = pluss::duration::hours(1);
 auto one_day = pluss::duration::days(1);
-std::cout << pluss::print_series(one_day.gt(one_hour));
+std::cout << pluss::series::print(one_day.gt(one_hour));
 ```
 
 ### Output

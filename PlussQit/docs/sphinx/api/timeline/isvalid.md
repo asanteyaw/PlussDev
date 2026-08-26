@@ -49,7 +49,7 @@ Example 1. Build a keep-mask from a timeline that contains missing timestamps.
 
 ```cpp
 auto keep = with_nat.isvalid();
-std::cout << pluss::print_series(keep) << "\n";
+std::cout << pluss::series::print(keep) << "\n";
 ```
 
 ### Output
@@ -64,7 +64,7 @@ defined.
 
 ```cpp
 auto keep = base.isvalid();
-std::cout << pluss::print_series(keep) << "\n";
+std::cout << pluss::series::print(keep) << "\n";
 ```
 
 ### Output

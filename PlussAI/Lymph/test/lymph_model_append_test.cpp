@@ -42,11 +42,11 @@ bool run_model_append_checks(std::ostream* err) {
   const DataFrame frame = make_frame();
   const DataFrameBatchOptions data_options{.label_feature = "y", .note_policy = DataNotePolicy::Factorize};
 
-  model::Model explicit_linear = model::linear::linear_regression();
-  model::Model shortcut_linear = model::linear_regression();
-  Model plural_tree = models::decision_tree_regressor();
-  Model grouped_tree = model::tree::decision_tree_regressor();
-  Model grouped_forest = model::ensemble::random_forest_classifier();
+  models::Model explicit_linear = models::linear::linear_regression();
+  models::Model shortcut_linear = models::linear_regression();
+  models::Model plural_tree = models::decision_tree_regressor();
+  models::Model grouped_tree = models::tree::decision_tree_regressor();
+  models::Model grouped_forest = models::ensemble::random_forest_classifier();
   if (explicit_linear.task_kind() != TaskKind::Regression ||
       shortcut_linear.task_kind() != TaskKind::Regression ||
       plural_tree.task_kind() != TaskKind::Regression ||
@@ -56,13 +56,13 @@ bool run_model_append_checks(std::ostream* err) {
     return false;
   }
 
-  const ColumnRouter categorical_router = columnrouter::names({"category"});
-  const ColumnRouter numeric_router = columnrouter::remaining_of(categorical_router);
+  const prep::Route categorical_router = prep::route::names({"category"});
+  const prep::Route numeric_router = prep::route::remaining_of(categorical_router);
 
   // 1) append() before any frame exists, resolution deferred to learn_().
-  Model model = models::decision_tree_classifier({.max_depth = 3});
-  model.append(stage::standard_scaler(), numeric_router)
-       .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical_router);
+  models::Model model = models::decision_tree_classifier({.max_depth = 3});
+  model.append(prep::stage::standard_scaler(), numeric_router)
+       .append(prep::stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical_router);
 
   if (model.stage_count() != 0) {
     if (err) *err << "append()'d stages should not materialize into the Flow until learn_() sees a frame\n";
@@ -89,10 +89,10 @@ bool run_model_append_checks(std::ostream* err) {
 
   // 2) The non-mutating learn(...) sibling clones first; pending stages must
   // travel with the clone and still resolve correctly there.
-  Model unlearned = models::decision_tree_classifier({.max_depth = 3});
-  unlearned.append(stage::standard_scaler(), numeric_router)
-           .append(stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical_router);
-  const Model learned = unlearned.learn(frame, data_options);
+  models::Model unlearned = models::decision_tree_classifier({.max_depth = 3});
+  unlearned.append(prep::stage::standard_scaler(), numeric_router)
+           .append(prep::stage::one_hot_encoder({.max_categories = 8, .include_unknown_bucket = true}), categorical_router);
+  const models::Model learned = unlearned.learn(frame, data_options);
   if (unlearned.trained()) {
     if (err) *err << "learn(...) (non-mutating) should leave the original Model untouched\n";
     return false;
@@ -104,26 +104,26 @@ bool run_model_append_checks(std::ostream* err) {
 
   // 3) Object-factory preparation accessor: once the Model exists, users
   // should be able to keep preprocessing object/method based instead of
-  // stitching stage:: and columnrouter:: factories through every line.
-  Model fluent = models::decision_tree_classifier({.max_depth = 3});
+  // stitching prep::stage:: and prep::route:: factories through every line.
+  models::Model fluent = models::decision_tree_classifier({.max_depth = 3});
   auto prep = fluent.prepare();
-  const ColumnRouter categorical = prep.names({"category"});
+  const prep::Route categorical = prep.names({"category"});
   prep.standardize(prep.remaining(categorical))
       .encode(categorical, {.max_categories = 8, .include_unknown_bucket = true});
   if (fluent.stage_count() != 0) {
     if (err) *err << "prepare().* stages should stay pending until a frame-backed learn_() resolves them\n";
     return false;
   }
-  const Model fluent_learned = fluent.learn(frame, data_options);
+  const models::Model fluent_learned = fluent.learn(frame, data_options);
   if (!fluent_learned.trained() || fluent_learned.stage_count() != 2) {
     if (err) *err << "prepare().standardize(...).encode(...) should materialize into two trained stages\n";
     return false;
   }
 
-  Model shaped = models::decision_tree_classifier({.max_depth = 3});
+  models::Model shaped = models::decision_tree_classifier({.max_depth = 3});
   auto shape = shaped.prepare();
   shape.gaussianize({"x1"}).power(shape.names({"x2"}));
-  const Model shaped_learned = shaped.learn(frame, data_options);
+  const models::Model shaped_learned = shaped.learn(frame, data_options);
   if (!shaped_learned.trained() || shaped_learned.stage_count() != 2) {
     if (err) *err << "prepare().gaussianize(...).power(...) should expose distribution-shaping stages\n";
     return false;

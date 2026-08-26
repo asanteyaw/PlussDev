@@ -66,8 +66,8 @@ int main() {
   std::cout << "a numel=" << a.numel() << " c numel=" << c.numel() << "\n";
   std::cout << "b shape=(2,2) d=" << d.to_vec<std::int64_t>()[0] << "\n";
 
-  std::cout << "looking at 1D rendering\n" << pluss::print_series(a) << "\n";
-  std::cout << "looking at 0D rendering\n" << pluss::print_series(d) << "\n";
+  std::cout << "looking at 1D rendering\n" << pluss::series::print(a) << "\n";
+  std::cout << "looking at 0D rendering\n" << pluss::series::print(d) << "\n";
 
   let rv = pluss::series::normal(0.0, 1.0, {5});
   std::cout << "random values: " << rv << "\n";
@@ -102,18 +102,18 @@ int main() {
 #ifdef PLUSS_ENABLE_TORCH
   std::cout << "looking at the from_torch conversion\n" << a2 << "\n";
   std::cout << "looking at the from_torch conversion\n" << b2 << "\n";
-  std::cout << "looking at the from_torch conversion\n" << pluss::print_series(a2) << "\n";
-  std::cout << "looking at the from_torch conversion\n" << pluss::print_series(b2) << "\n";
+  std::cout << "looking at the from_torch conversion\n" << pluss::series::print(a2) << "\n";
+  std::cout << "looking at the from_torch conversion\n" << pluss::series::print(b2) << "\n";
 #endif
 
-  std::cout << "randn(3,4) pretty default:\n" << pluss::print_series(rand_vals) << "\n";
+  std::cout << "randn(3,4) pretty default:\n" << pluss::series::print(rand_vals) << "\n";
 
   let rand_3d = pluss::series::randn({3, 4, 5});
-  std::cout << "randn(3,4,5) pretty:\n" << pluss::print_series(rand_3d) << "\n";
+  std::cout << "randn(3,4,5) pretty:\n" << pluss::series::print(rand_3d) << "\n";
 
   let big_mat = pluss::series::randn({8, 6});
   std::cout << "randn(8,6) default with row/col summary:\n" << big_mat << "\n";
-  std::cout << "randn(8,6) pretty summarized:\n" << pluss::print_series(big_mat) << "\n";
+  std::cout << "randn(8,6) pretty summarized:\n" << pluss::series::print(big_mat) << "\n";
 
 #ifdef PLUSS_ENABLE_TORCH
   let torch_b = pluss::series::to_torch(rand_3d);
@@ -135,8 +135,8 @@ int main() {
     }
   });
 
-  std::cout << "Mixed types 2D\n" << pluss::print_series(type_prom_2d) << "\n";
-  std::cout << "Mixed types 3D\n" << pluss::print_series(type_prom_3d) << "\n";
+  std::cout << "Mixed types 2D\n" << pluss::series::print(type_prom_2d) << "\n";
+  std::cout << "Mixed types 3D\n" << pluss::series::print(type_prom_3d) << "\n";
 
   // 7D demos (rank-7): one rvalue literal path, one lvalue host-buffer path.
   let seven_d_rvalue = pluss::make_series({
@@ -153,47 +153,47 @@ int main() {
       }
     }
   }); // shape=[1,1,1,1,1,2,3]
-  std::cout << "7D rvalue via value(...):\n" << pluss::print_series(seven_d_rvalue) << "\n";
+  std::cout << "7D rvalue via value(...):\n" << pluss::series::print(seven_d_rvalue) << "\n";
 
   std::vector<double> seven_d_host{10.0, 11.0, 12.0, 13.0, 14.0, 15.0};
   let seven_d_lvalue = pluss::make_series(seven_d_host, {1, 1, 1, 1, 1, 2, 3});
-  std::cout << "7D lvalue via make_series(host, sizes):\n" << pluss::print_series(seven_d_lvalue) << "\n";
+  std::cout << "7D lvalue via make_series(host, sizes):\n" << pluss::series::print(seven_d_lvalue) << "\n";
 
   let large_2d = pluss::series::randn({11, 7});
-  std::cout << "large 2D with default summarization:\n" << pluss::print_series(large_2d) << "\n";
+  std::cout << "large 2D with default summarization:\n" << pluss::series::print(large_2d) << "\n";
 
   // 1) Precision / notation / trailing-zero trim
   pluss::PrintOptions fixed_fmt;
   fixed_fmt.number_mode = pluss::codem::PrintNumberMode::Fixed;
   fixed_fmt.precision = 4;
   fixed_fmt.trim_trailing_zeros = true;
-  std::cout << "fixed + trim:\n" << pluss::print_series(rand_vals, fixed_fmt) << "\n";
+  std::cout << "fixed + trim:\n" << pluss::series::print(rand_vals, fixed_fmt) << "\n";
 
   pluss::PrintOptions sci_fmt;
   sci_fmt.number_mode = pluss::codem::PrintNumberMode::Scientific;
   sci_fmt.precision = 3;
-  std::cout << "scientific:\n" << pluss::print_series(rand_vals, sci_fmt) << "\n";
+  std::cout << "scientific:\n" << pluss::series::print(rand_vals, sci_fmt) << "\n";
 
   // 2) Matrix layout: alignment / bracket style / separators
   pluss::PrintOptions decimal_align;
   decimal_align.pretty_align = pluss::codem::PrintAlignMode::Decimal;
   decimal_align.pretty_values_with_commas = true;
-  std::cout << "decimal align + comma separator:\n" << pluss::print_series(rand_vals, decimal_align) << "\n";
+  std::cout << "decimal align + comma separator:\n" << pluss::series::print(rand_vals, decimal_align) << "\n";
 
   pluss::PrintOptions ascii_brackets;
   ascii_brackets.pretty_bracket_style = pluss::codem::PrintBracketStyle::Ascii;
-  std::cout << "ascii brackets:\n" << pluss::print_series(rand_vals, ascii_brackets) << "\n";
+  std::cout << "ascii brackets:\n" << pluss::series::print(rand_vals, ascii_brackets) << "\n";
 
   pluss::PrintOptions no_brackets;
   no_brackets.pretty_bracket_style = pluss::codem::PrintBracketStyle::None;
   no_brackets.pretty_align = pluss::codem::PrintAlignMode::Left;
-  std::cout << "no brackets + left align:\n" << pluss::print_series(rand_vals, no_brackets) << "\n";
+  std::cout << "no brackets + left align:\n" << pluss::series::print(rand_vals, no_brackets) << "\n";
 
   // 3) Summarization policy + line-width based reduction
   pluss::PrintOptions line_limited;
   line_limited.pretty_max_line_width = 40;
   line_limited.pretty_matrix_max_cols = 0;
-  std::cout << "line-width summarized:\n" << pluss::print_series(big_mat, line_limited) << "\n";
+  std::cout << "line-width summarized:\n" << pluss::series::print(big_mat, line_limited) << "\n";
 
   // 4) Slice rendering controls
   pluss::PrintOptions slice_style;
@@ -203,25 +203,25 @@ int main() {
   slice_style.pretty_max_slices = 4;
   slice_style.pretty_slice_sampling = pluss::codem::PrintSliceSampling::Uniform;
   std::cout << "3D with custom slice labels + uniform sampling:\n"
-            << pluss::print_series(rand_3d, slice_style) << "\n";
+            << pluss::series::print(rand_3d, slice_style) << "\n";
 
   pluss::PrintOptions hide_slice_labels;
   hide_slice_labels.pretty_show_slice_indices = false;
-  std::cout << "3D no slice labels:\n" << pluss::print_series(rand_3d, hide_slice_labels) << "\n";
+  std::cout << "3D no slice labels:\n" << pluss::series::print(rand_3d, hide_slice_labels) << "\n";
 
   // 5) Metadata/content verbosity controls
   pluss::PrintOptions compact_meta;
   compact_meta.metadata_mode = pluss::codem::PrintMetadataMode::Compact;
-  std::cout << "compact metadata:\n" << pluss::print_series(rand_vals, compact_meta) << "\n";
+  std::cout << "compact metadata:\n" << pluss::series::print(rand_vals, compact_meta) << "\n";
 
   pluss::PrintOptions values_only;
   values_only.metadata_mode = pluss::codem::PrintMetadataMode::None;
   values_only.content_mode = pluss::codem::PrintContentMode::ValuesOnly;
-  std::cout << "values only:\n" << pluss::print_series(rand_vals, values_only) << "\n";
+  std::cout << "values only:\n" << pluss::series::print(rand_vals, values_only) << "\n";
 
   pluss::PrintOptions header_only;
   header_only.content_mode = pluss::codem::PrintContentMode::HeaderOnly;
-  std::cout << "header only:\n" << pluss::print_series(rand_vals, header_only) << "\n";
+  std::cout << "header only:\n" << pluss::series::print(rand_vals, header_only) << "\n";
 
   // 6) Width controls: clip cell width + auto-wrap
   let wide_mat = pluss::series::randn({4, 12});
@@ -230,7 +230,7 @@ int main() {
   wrapped.pretty_max_line_width = 44;
   wrapped.pretty_auto_wrap = true;
   wrapped.pretty_cell_max_width = 9;
-  std::cout << "wrapped + clipped wide matrix:\n" << pluss::print_series(wide_mat, wrapped) << "\n";
+  std::cout << "wrapped + clipped wide matrix:\n" << pluss::series::print(wide_mat, wrapped) << "\n";
 
   // 7) Type-specific bool/complex rendering
   let bool_series = rand_vals.gt(0.0);
@@ -243,13 +243,13 @@ int main() {
   let complex_series = pluss::make_series(complex_vals, {2, 2});
   pluss::PrintOptions complex_i;
   complex_i.complex_style = pluss::codem::PrintComplexStyle::CartesianI;
-  std::cout << "complex cartesian i-style:\n" << pluss::print_series(complex_series, complex_i) << "\n";
+  std::cout << "complex cartesian i-style:\n" << pluss::series::print(complex_series, complex_i) << "\n";
 
   // 8) Optional ANSI coloring
   pluss::PrintOptions colored;
   colored.enable_color = true;
   colored.pretty_cell_max_width = 10;
-  std::cout << "colorized (if terminal supports ANSI):\n" << pluss::print_series(rand_vals, colored) << "\n";
+  std::cout << "colorized (if terminal supports ANSI):\n" << pluss::series::print(rand_vals, colored) << "\n";
 
   // 9) Constrained let-like declarations (`let_as`)
   let_as(int, float) price = 25;

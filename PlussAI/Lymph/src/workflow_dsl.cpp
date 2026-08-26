@@ -2,6 +2,8 @@
 
 namespace pluss::ai::lymph {
 
+namespace detail {
+
 [[nodiscard]] std::vector<std::string> resolved_feature_order_for_features_(
     const pluss::table::DataFrame& frame,
     const DataFrameBatchOptions& data_options) {
@@ -72,9 +74,13 @@ namespace pluss::ai::lymph {
   ::pluss::throw_error("make_feature_transformer: unsupported transform kind.");
 }
 
-[[nodiscard]] ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+} // namespace detail
+
+namespace prep {
+
+[[nodiscard]] ::pluss::ai::nodej::prep::FeatureTransformer feature_transformer(
     const std::vector<std::string>& feature_order,
-    const std::vector<workflow::feature::Branch>& branches,
+    const std::vector<branch::Branch>& branches,
     prep::FeatureRemainderPolicy remainder) {
   if (feature_order.empty()) {
     ::pluss::throw_error("make_feature_transformer: feature_order cannot be empty.");
@@ -92,7 +98,7 @@ namespace pluss::ai::lymph {
   ::pluss::ai::nodej::prep::FeatureTransformer feature_transformer(remainder);
   for (std::size_t i = 0; i < branches.size(); ++i) {
     const auto& branch = branches[i];
-    if (branch.transforms.empty()) {
+    if (branch.stages.empty()) {
       ::pluss::throw_error("make_feature_transformer: branch requires at least one transform stage.");
     }
     std::vector<std::int64_t> route{};
@@ -107,49 +113,36 @@ namespace pluss::ai::lymph {
           auto it = index_by_name.find(name);
           if (it == index_by_name.end()) {
             ::pluss::throw_error(
-                "make_feature_transformer: feature '" + name + "' was not found in feature_order.");
+              "make_feature_transformer: feature '" + name + "' was not found in feature_order.");
           }
           route.push_back(it->second);
         }
       } else {
         route = branch.feature_route;
       }
-      for (const auto& stage : branch.transforms) {
-        if (!stage.feature_route.empty()) {
-          ::pluss::throw_error(
-              "make_feature_transformer: when branch-level routing is set, per-stage feature_route must be empty.");
-        }
-      }
     } else {
-      std::optional<std::vector<std::int64_t>> inferred_route{};
-      for (const auto& stage : branch.transforms) {
-        if (stage.feature_route.empty()) continue;
-        if (!inferred_route.has_value()) {
-          inferred_route = stage.feature_route;
-          continue;
-        }
-        if (*inferred_route != stage.feature_route) {
-          ::pluss::throw_error(
-              "make_feature_transformer: all per-stage feature_route values in a branch must match.");
-        }
-      }
-      if (inferred_route.has_value()) {
-        route = std::move(*inferred_route);
-      }
+      ::pluss::throw_error("make_feature_transformer: each branch must select at least one feature.");
     }
     if (route.empty()) {
       ::pluss::throw_error("make_feature_transformer: each branch must select at least one feature.");
     }
 
     std::vector<std::unique_ptr<TransformerBase>> branch_chain{};
-    branch_chain.reserve(branch.transforms.size());
-    for (const auto& stage : branch.transforms) {
-      branch_chain.push_back(make_core_transformer_from_spec_(stage));
+    branch_chain.reserve(branch.stages.size());
+    for (const auto& stage : branch.stages) {
+      const TransformSpec spec{
+          .kind = stage.kind,
+          .options = stage.options,
+          .feature_route = {},
+      };
+      branch_chain.push_back(detail::make_core_transformer_from_spec_(spec));
     }
     resolve(feature_transformer.add_pipeline(std::move(branch_chain), std::move(route)),
             "make_feature_transformer.add_branch");
   }
   return feature_transformer;
 }
+
+} // namespace prep
 
 } // namespace pluss::ai::lymph

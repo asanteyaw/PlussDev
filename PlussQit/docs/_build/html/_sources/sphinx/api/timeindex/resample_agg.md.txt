@@ -72,7 +72,7 @@ opts.step = 1;
 
 std::string op = "max";
 auto out = idx.resample_agg(values, opts, op);
-std::cout << pluss::print_series(out) << "\n";
+std::cout << pluss::series::print(out) << "\n";
 ```
 
 ### Output
@@ -87,8 +87,8 @@ Example 2. Keep the binning fixed and swap only `op`.
 ```cpp
 auto mins = idx.resample_agg(values, opts, "min");
 auto lasts = idx.resample_agg(values, opts, "last");
-std::cout << "mins =\n" << pluss::print_series(mins) << "\n";
-std::cout << "lasts =\n" << pluss::print_series(lasts) << "\n";
+std::cout << "mins =\n" << pluss::series::print(mins) << "\n";
+std::cout << "lasts =\n" << pluss::series::print(lasts) << "\n";
 ```
 
 ### Output

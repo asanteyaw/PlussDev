@@ -156,6 +156,7 @@ window.PLUSS_API_NAV = {
       "shape",
       "shift",
       "show",
+      "shownull",
       "shuffle",
       "skew",
       "slice",
@@ -185,7 +186,8 @@ window.PLUSS_API_NAV = {
       "var",
       "view",
       "where",
-      "width"
+      "width",
+      "zoom"
     ]
   },
   "DataFrameNoteAccessor": {

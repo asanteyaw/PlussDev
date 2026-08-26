@@ -33,8 +33,8 @@ Example 1. A valid duration and an explicitly-missing one.
 ```cpp
 auto one_hour = pluss::duration::hours(1);
 auto missing = pluss::duration::nanos(pluss::Duration::kNaT);
-std::cout << "valid=" << pluss::print_series(one_hour.isvalid()) << "\n";
-std::cout << "missing=" << pluss::print_series(missing.isvalid());
+std::cout << "valid=" << pluss::series::print(one_hour.isvalid()) << "\n";
+std::cout << "missing=" << pluss::series::print(missing.isvalid());
 ```
 
 ### Output

@@ -46,7 +46,7 @@ Example 1. Equality keeps only rows where the timestamps match exactly.
 
 ```cpp
 auto out = base.eq(other);
-std::cout << pluss::print_series(out) << "\n";
+std::cout << pluss::series::print(out) << "\n";
 ```
 
 ### Output
@@ -62,8 +62,8 @@ questions.
 ```cpp
 auto earlier = base.lt(other);
 auto later_or_equal = base.ge(other);
-std::cout << pluss::print_series(earlier) << "\n";
-std::cout << pluss::print_series(later_or_equal) << "\n";
+std::cout << pluss::series::print(earlier) << "\n";
+std::cout << pluss::series::print(later_or_equal) << "\n";
 ```
 
 ### Output

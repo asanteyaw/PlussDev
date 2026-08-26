@@ -68,7 +68,7 @@ bool run_shape_checks(std::ostream* err) {
       return false;
     }
 
-    Model model = models::logistic_regression({.fit_intercept = true});
+    models::Model model = models::logistic_regression({.fit_intercept = true});
     plan.apply(model);
     const DataFrame frame = shaped_frame();
     const DataFrameBatchOptions data_options{.label_feature = "y"};

@@ -37,7 +37,7 @@ Example 1. `1` hour does not equal `90` minutes.
 ```cpp
 auto ninety_min = pluss::duration::minutes(90);
 auto one_hour = pluss::duration::hours(1);
-std::cout << pluss::print_series(one_hour.ne(ninety_min));
+std::cout << pluss::series::print(one_hour.ne(ninety_min));
 ```
 
 ### Output

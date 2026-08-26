@@ -141,7 +141,7 @@ inline pluss::Duration range(const pluss::Duration& start,
 }
 
 // pluss::duration::print(d) -- human-readable rendering, mirroring
-// pluss::print_series/pluss::timeline::print. `std::cout << d` also works
+// pluss::series::print/pluss::timeline::print. `std::cout << d` also works
 // directly (see CodeH/core/Printing.h's Duration operator<<).
 inline std::string print(const pluss::Duration& d) {
   return pluss::codeh::print_duration(d);

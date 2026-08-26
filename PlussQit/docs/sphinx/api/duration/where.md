@@ -52,11 +52,11 @@ Example 1. Replace every position past `4` days with a `99`-day sentinel.
 auto ranged = pluss::duration::range(
     pluss::duration::days(0), pluss::duration::days(10), pluss::duration::days(2));
 auto mask = ranged.gt(pluss::duration::days(4));
-std::cout << "mask=" << pluss::print_series(mask) << "\n";
+std::cout << "mask=" << pluss::series::print(mask) << "\n";
 
 auto replacement = pluss::duration::full({6}, pluss::duration::days(99));
 auto picked = ranged.where(mask, replacement);
-std::cout << "where=" << pluss::print_series(picked.total().days());
+std::cout << "where=" << pluss::series::print(picked.total().days());
 ```
 
 ### Output

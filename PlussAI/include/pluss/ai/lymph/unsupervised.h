@@ -2,7 +2,7 @@
 
 #include "pluss/ai/lymph/model.h"
 
-namespace pluss::ai::lymph {
+namespace pluss::ai::lymph::models {
 namespace detail {
 
 [[nodiscard]] inline bool model_family_is_(const Model& model, ModelFamily family) noexcept {
@@ -198,4 +198,4 @@ class Runner final {
 
 } // namespace embed
 
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::models

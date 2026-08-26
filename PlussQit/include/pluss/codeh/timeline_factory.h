@@ -144,7 +144,7 @@ inline pluss::Timeline unite(std::initializer_list<pluss::Timeline> values) {
 }
 
 // pluss::timeline::print(t) -- human-readable rendering, mirroring
-// pluss::duration::print/pluss::print_series. `std::cout << t` also works
+// pluss::duration::print/pluss::series::print. `std::cout << t` also works
 // directly via pluss::codeh's Timeline operator<<.
 inline std::string print(const pluss::Timeline& t) {
   return pluss::codeh::print_timeline(t);

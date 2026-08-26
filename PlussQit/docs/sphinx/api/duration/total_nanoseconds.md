@@ -45,7 +45,7 @@ Example 1. A `90`-minute `Duration` read as raw nanoseconds.
 
 ```cpp
 auto ninety_min = pluss::duration::minutes(90);
-std::cout << pluss::print_series(ninety_min.total().nanoseconds());
+std::cout << pluss::series::print(ninety_min.total().nanoseconds());
 ```
 
 ### Output

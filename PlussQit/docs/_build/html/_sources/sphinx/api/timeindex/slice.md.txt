@@ -52,7 +52,7 @@ auto start = pluss::timeline::make("2024-11-01T00:15:00Z");
 auto end = pluss::timeline::make("2024-11-01T01:00:00Z");
 
 auto take_rows = idx.slice(start, end);
-std::cout << pluss::print_series(take_rows) << "\n";
+std::cout << pluss::series::print(take_rows) << "\n";
 ```
 
 ### Output
@@ -72,8 +72,8 @@ auto rows = idx.slice(
     pluss::timeline::make("2024-11-01T01:00:00Z"));
 
 auto window_values = values.take(rows);
-std::cout << pluss::print_series(rows) << "\n";
-std::cout << pluss::print_series(window_values) << "\n";
+std::cout << pluss::series::print(rows) << "\n";
+std::cout << pluss::series::print(window_values) << "\n";
 ```
 
 This is the normal workflow: determine the row membership on the axis, then

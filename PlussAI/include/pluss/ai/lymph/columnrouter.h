@@ -10,39 +10,39 @@
 #include <unordered_set>
 #include <vector>
 
-// ColumnRouter, relocated out of common.h into its own per-concern file
+// Route, relocated out of common.h into its own per-concern file
 // (LYMPH_REDESIGN_PLAN.md phase 1: pure move, no behavior change). The one
 // real change: construction moves off static methods on the class
-// (ColumnRouter::names(...), ::where(...), ::remaining_of(...)) into a real
-// lowercase lymph::columnrouter:: namespace, per the construction-vs-method
+// (old ColumnRouter::names(...), ::where(...), ::remaining_of(...)) into the
+// prep::route family surface, per the construction-vs-method
 // rule (LYMPH_REDESIGN_PLAN.md 2.0 rule 2) -- `Type::factory()` syntax
 // forces the left of `::` to match the class name exactly, so it can never
 // be lowercased; the class itself now keeps no construction of its own,
 // only .resolve(...) and .with_remainder(...).
 
-namespace pluss::ai::lymph {
+namespace pluss::ai::lymph::prep {
 
-// Forward-declared here (ColumnRouter is still incomplete at this point,
+// Forward-declared here (Route is still incomplete at this point,
 // which is fine for a function declaration -- only a definition or a call
 // needs the complete type) so ColumnRouter's own friend declarations below
 // can name them.
-namespace columnrouter {
+namespace route {
 
-class ColumnRouter;
+class Route;
 
-[[nodiscard]] ColumnRouter names(std::vector<std::string> names);
-[[nodiscard]] ColumnRouter where(std::function<bool(std::string_view feature_name, std::string_view dtype)> predicate);
-[[nodiscard]] ColumnRouter remaining_of(std::vector<std::string> names);
-[[nodiscard]] ColumnRouter remaining_of(ColumnRouter other);
+[[nodiscard]] Route names(std::vector<std::string> names);
+[[nodiscard]] Route where(std::function<bool(std::string_view feature_name, std::string_view dtype)> predicate);
+[[nodiscard]] Route remaining_of(std::vector<std::string> names);
+[[nodiscard]] Route remaining_of(Route other);
 
-} // namespace columnrouter
+} // namespace route
 
-using ColumnRouter = columnrouter::ColumnRouter;
+using Route = route::Route;
 
 // A real object unifying route()/route_where()/route_remaining() + a
 // remainder policy into one reusable, declarative column selection, closing
 // the "several free functions a caller has to stitch together by hand every
-// time" gap: build a ColumnRouter once per prep stage (columnrouter::
+// time" gap: build a Route once per prep stage (route::
 // names(...), where(...), or remaining_of(...)), then call
 // .resolve(frame, ordered_names) as many times as needed (a fresh DataFrame
 // each fold/call) instead of re-deriving a feature_route inline at every
@@ -51,9 +51,9 @@ using ColumnRouter = columnrouter::ColumnRouter;
 // is visible to a where(...) router the same way the two-argument
 // route_where(frame, ordered_names, predicate) overload in common.h already
 // fixed -- this class has no independent Note-blind code path.
-class columnrouter::ColumnRouter final {
+class route::Route final {
  public:
-  ColumnRouter& with_remainder(RouteRemainderPolicy policy) noexcept {
+  Route& with_remainder(RouteRemainderPolicy policy) noexcept {
     remainder = policy;
     return *this;
   }
@@ -69,13 +69,13 @@ class columnrouter::ColumnRouter final {
     switch (kind_) {
       case Kind::Names: {
         const auto views = detail::as_string_views_(names_);
-        return route(ordered_names, pluss::msharp::RangeView::Of<std::string_view>(views));
+        return ::pluss::ai::lymph::route(ordered_names, pluss::msharp::RangeView::Of<std::string_view>(views));
       }
       case Kind::Where:
-        return route_where(frame, ordered_names, predicate_);
+        return ::pluss::ai::lymph::route_where(frame, ordered_names, predicate_);
       case Kind::RemainingOfNames: {
         const auto views = detail::as_string_views_(names_);
-        return route_remaining(ordered_names, pluss::msharp::RangeView::Of<std::string_view>(views));
+        return ::pluss::ai::lymph::route_remaining(ordered_names, pluss::msharp::RangeView::Of<std::string_view>(views));
       }
       case Kind::RemainingOfRouter: {
         const auto claimed = remaining_of_->resolve(frame, ordered_names);
@@ -83,7 +83,7 @@ class columnrouter::ColumnRouter final {
         // Ranges filter over the index space rather than a hand-rolled
         // push_back loop. Not a perf-motivated change -- column counts are
         // always small (tens, never millions), and there is no Series/
-        // tensor data anywhere in ColumnRouter to vectorize onto a device;
+        // tensor data anywhere in Route to vectorize onto a device;
         // this is pure host-side name/index bookkeeping. The filter reads
         // as "every index not already claimed," which is what it is.
         // Not `const`: libc++'s filter_view::begin()/end() aren't const
@@ -94,7 +94,7 @@ class columnrouter::ColumnRouter final {
         return std::vector<std::int64_t>(kept_view.begin(), kept_view.end());
       }
     }
-    ::pluss::throw_error("ColumnRouter::resolve: unreachable selection kind.");
+    ::pluss::throw_error("lymph::prep::Route::resolve: unreachable selection kind.");
   }
 
   // Convenience default: resolve against the frame's own Series-only column
@@ -110,41 +110,41 @@ class columnrouter::ColumnRouter final {
 private:
   enum class Kind { Names, Where, RemainingOfNames, RemainingOfRouter };
 
-  ColumnRouter() = default;
+  Route() = default;
 
   Kind kind_ = Kind::Names;
   std::vector<std::string> names_{};
   std::function<bool(std::string_view, std::string_view)> predicate_{};
-  std::shared_ptr<ColumnRouter> remaining_of_{};
+  std::shared_ptr<Route> remaining_of_{};
 
-  friend ColumnRouter names(std::vector<std::string> names);
-  friend ColumnRouter where(std::function<bool(std::string_view, std::string_view)> predicate);
-  friend ColumnRouter remaining_of(std::vector<std::string> names);
-  friend ColumnRouter remaining_of(ColumnRouter other);
+  friend Route names(std::vector<std::string> names);
+  friend Route where(std::function<bool(std::string_view, std::string_view)> predicate);
+  friend Route remaining_of(std::vector<std::string> names);
+  friend Route remaining_of(Route other);
 };
 
-namespace columnrouter {
+namespace route {
 
-[[nodiscard]] inline ColumnRouter names(std::vector<std::string> names) {
-  ColumnRouter out{};
-  out.kind_ = ColumnRouter::Kind::Names;
+[[nodiscard]] inline Route names(std::vector<std::string> names) {
+  Route out{};
+  out.kind_ = Route::Kind::Names;
   out.names_ = std::move(names);
   return out;
 }
 
-[[nodiscard]] inline ColumnRouter where(
+[[nodiscard]] inline Route where(
     std::function<bool(std::string_view feature_name, std::string_view dtype)> predicate) {
-  ColumnRouter out{};
-  out.kind_ = ColumnRouter::Kind::Where;
+  Route out{};
+  out.kind_ = Route::Kind::Where;
   out.predicate_ = std::move(predicate);
   return out;
 }
 
-// Everything not in `names` -- the ColumnRouter-native shape of
+// Everything not in `names` -- the Route-native shape of
 // route_remaining().
-[[nodiscard]] inline ColumnRouter remaining_of(std::vector<std::string> names) {
-  ColumnRouter out{};
-  out.kind_ = ColumnRouter::Kind::RemainingOfNames;
+[[nodiscard]] inline Route remaining_of(std::vector<std::string> names) {
+  Route out{};
+  out.kind_ = Route::Kind::RemainingOfNames;
   out.names_ = std::move(names);
   return out;
 }
@@ -153,13 +153,13 @@ namespace columnrouter {
 // declaratively tied to whatever selection strategy `other` uses (names or
 // where) instead of duplicating its logic as a separately-maintained name
 // list that can drift out of sync with it.
-[[nodiscard]] inline ColumnRouter remaining_of(ColumnRouter other) {
-  ColumnRouter out{};
-  out.kind_ = ColumnRouter::Kind::RemainingOfRouter;
-  out.remaining_of_ = std::make_shared<ColumnRouter>(std::move(other));
+[[nodiscard]] inline Route remaining_of(Route other) {
+  Route out{};
+  out.kind_ = Route::Kind::RemainingOfRouter;
+  out.remaining_of_ = std::make_shared<Route>(std::move(other));
   return out;
 }
 
-} // namespace columnrouter
+} // namespace route
 
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::prep

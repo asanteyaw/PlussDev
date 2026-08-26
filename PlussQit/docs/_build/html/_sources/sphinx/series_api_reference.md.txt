@@ -31,6 +31,8 @@ stub.
 
 The current handwritten shape and slice/indexing cluster now covers:
 
+- elementwise arithmetic core: `add`, `sub`, `mul`, `div`, `pow`
+- elementwise comparison core: `eq`, `ne`, `lt`, `le`, `gt`, `ge`
 - shape introspection: `size`, `sizes`
 - view reshaping: `view`, `reshape`, `transpose`, `permute`, `unsqueeze`,
   `squeeze`, `flatten`
@@ -70,48 +72,59 @@ or jump straight to the dedicated accessor reference from the sidebar.
 :hidden:
 :maxdepth: 1
 
-api/series/pos
-api/series/size
-api/series/sizes
-api/series/view
-api/series/reshape
-api/series/transpose
-api/series/permute
-api/series/unsqueeze
-api/series/squeeze
-api/series/flatten
-api/series/unite
-api/series/pile
-api/series/slice
-api/series/traverse_slice
-api/series/traverse_put_
-api/series/traverse_put
+api/series/add
+api/series/argmax
+api/series/argmin
 api/series/block
-api/series/extract
-api/series/extract_put
-api/series/extract_put_
-api/series/index
-api/series/index_put
-api/series/index_put_
-api/series/take
-api/series/put_
 api/series/clamp_max
 api/series/clamp_min
 api/series/copy_
-api/series/gather
-api/series/index_select
-api/series/maximum
-api/series/minimum
-api/series/sum
-api/series/mean
-api/series/prod
-api/series/cumsum
 api/series/cumprod
+api/series/cumsum
+api/series/div
+api/series/eq
+api/series/extract
+api/series/extract_put
+api/series/extract_put_
+api/series/flatten
+api/series/gather
+api/series/ge
+api/series/gt
+api/series/index
+api/series/index_put
+api/series/index_put_
+api/series/index_select
+api/series/le
+api/series/lt
 api/series/max
+api/series/maximum
+api/series/mean
 api/series/min
-api/series/argmax
-api/series/argmin
+api/series/minimum
+api/series/mul
+api/series/ne
+api/series/permute
+api/series/pile
+api/series/pos
+api/series/pow
+api/series/prod
+api/series/put_
+api/series/reshape
+api/series/size
+api/series/sizes
+api/series/slice
+api/series/squeeze
 api/series/stat
+api/series/sub
+api/series/sum
+api/series/take
+api/series/transpose
+api/series/traverse_put
+api/series/traverse_put_
+api/series/traverse_slice
+api/series/unite
+api/series/unsqueeze
+api/series/view
 series_stat_accessor_api_reference
 ```
 

@@ -49,7 +49,7 @@ Example 1. Count how many observations land in each hourly bin.
 
 ```cpp
 auto counts = idx.resample_count("H");
-std::cout << pluss::print_series(counts) << "\n";
+std::cout << pluss::series::print(counts) << "\n";
 ```
 
 ### Output
@@ -64,7 +64,7 @@ frequency units.
 
 ```cpp
 auto counts = idx.resample_count("H", 2);
-std::cout << pluss::print_series(counts) << "\n";
+std::cout << pluss::series::print(counts) << "\n";
 ```
 
 ### Output

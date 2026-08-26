@@ -130,7 +130,7 @@ auto minutes_1d = pluss::duration::minutes({15, 30, 45, 60});
 auto hours_2d = pluss::duration::hours({{1, 2}, {3, 4}, {5, 6}});
 std::cout << "1d.dim=" << minutes_1d.dim() << " 1d.numel=" << minutes_1d.numel() << "\n";
 std::cout << "2d.dim=" << hours_2d.dim() << " 2d.numel=" << hours_2d.numel() << "\n";
-std::cout << pluss::print_series(hours_2d.total().hours());
+std::cout << pluss::series::print(hours_2d.total().hours());
 ```
 
 ### Output
@@ -153,7 +153,7 @@ Example 3. Explicit `(flat, shape)` construction with plain braces — no
 
 ```cpp
 auto days_2x2 = pluss::duration::days({1, 2, 3, 4}, {2, 2});
-std::cout << pluss::print_series(days_2x2.total().days());
+std::cout << pluss::series::print(days_2x2.total().days());
 ```
 
 ### Output
@@ -170,8 +170,8 @@ Example 4. `pluss::duration::make` — the same construction, with the unit pick
 ```cpp
 auto made_scalar = pluss::duration::make(3, pluss::duration::Unit::Days);
 auto made_1d = pluss::duration::make({1, 2, 3}, pluss::duration::Unit::Hours);
-std::cout << "scalar=" << pluss::print_series(made_scalar.total().days()) << "\n";
-std::cout << "1d=" << pluss::print_series(made_1d.total().hours());
+std::cout << "scalar=" << pluss::series::print(made_scalar.total().days()) << "\n";
+std::cout << "1d=" << pluss::series::print(made_1d.total().hours());
 ```
 
 ### Output

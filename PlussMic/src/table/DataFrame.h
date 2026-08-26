@@ -1048,6 +1048,10 @@ public:
   DataFrame reshuffle(Axis axis = Axis::Case, std::optional<std::uint64_t> random_state = std::nullopt) const;
   DataFrame shift(std::int64_t periods = 1) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
+  DataFrame zoom(std::int64_t case_start,
+                 std::int64_t case_stop,
+                 std::int64_t feature_start,
+                 std::int64_t feature_stop) const;
   DataFrame take(pluss::msharp::RangeView::Int indices) const;
   DataFrame take(const Thread& indices) const;
   DataFrame where(const pluss::Series& bool_mask) const;
@@ -1420,6 +1424,7 @@ public:
   DataFrame isnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame notnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame invalid(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame shownull(Axis axis = Axis::Case, bool all = false) const;
   template <detail::StringViewNameRange NameRange>
   DataFrame isnull(const NameRange& features) const {
     return detail::with_stack_name_view(features, [&](auto names) { return isnull(names); });

@@ -1,0 +1,159 @@
+{% set is_api = pagename.startswith('api/') %}
+{% set is_lymph = pagename == 'api/plussai_lymph' or pagename.startswith('api/lymph/') %}
+{% set is_models = pagename == 'api/lymph/models' or pagename.startswith('api/lymph/models/') %}
+{% set is_builder = pagename == 'api/lymph/models/builder' or pagename.startswith('api/lymph/models/builder/') %}
+{% set is_prep = pagename == 'api/lymph/prep' or pagename.startswith('api/lymph/prep/') %}
+{% set is_workflow = pagename == 'api/lymph/model' or pagename.startswith('api/lymph/model/') %}
+{% set is_selection = pagename == 'api/lymph/split' or pagename.startswith('api/lymph/split/') or pagename == 'api/lymph/tune' or pagename.startswith('api/lymph/tune/') %}
+{% set is_validate = pagename == 'api/lymph/split' or pagename.startswith('api/lymph/split/') %}
+{% set is_search = pagename == 'api/lymph/tune' or pagename.startswith('api/lymph/tune/Search') or pagename.startswith('api/lymph/tune/CompareReport') or pagename.startswith('api/lymph/tune/TuneReport') %}
+{% set is_spotcheck = pagename.startswith('api/lymph/tune/Suite') %}
+{% set is_metrics = pagename == 'api/lymph/metrics' or pagename.startswith('api/lymph/metrics/') %}
+{% set is_io = pagename == 'api/lymph/io' or pagename.startswith('api/lymph/io/') %}
+
+{% macro doc_href(page) -%}
+{{ pathto('index') | replace('index.html', '') }}{{ page }}.html
+{%- endmacro %}
+
+{% macro tree_link(label, page) -%}
+<a href="{{ doc_href(page) }}" class="{% if pagename == page %}active{% endif %}">{{ label }}</a>
+{%- endmacro %}
+
+{% if is_api %}
+<div class="pluss-api-sidebar">
+  <div class="sidebar-title">API Reference</div>
+  <nav class="pluss-api-tree" aria-label="Pluss API navigation">
+    <details class="tree-item depth-0" {% if pagename == 'api/plussai_classic' %}open{% endif %}>
+      <summary>{{ tree_link('classic', 'api/plussai_classic') }}</summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 {% if pagename == 'api/plussai_classic' %}active{% endif %}" href="{{ doc_href('api/plussai_classic') }}">Introduction</a>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" {% if pagename == 'api/plussai_nets' %}open{% endif %}>
+      <summary>{{ tree_link('nets', 'api/plussai_nets') }}</summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 {% if pagename == 'api/plussai_nets' %}active{% endif %}" href="{{ doc_href('api/plussai_nets') }}">Introduction</a>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" {% if pagename == 'api/plussai_nlp' %}open{% endif %}>
+      <summary>{{ tree_link('nlp', 'api/plussai_nlp') }}</summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 {% if pagename == 'api/plussai_nlp' %}active{% endif %}" href="{{ doc_href('api/plussai_nlp') }}">Introduction</a>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" {% if is_lymph %}open{% endif %}>
+      <summary>{{ tree_link('lymph', 'api/plussai_lymph') }}</summary>
+      <div class="tree-children">
+        <details class="tree-item depth-1" {% if is_models %}open{% endif %}>
+          <summary>{{ tree_link('models', 'api/lymph/models') }}</summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/models' %}active{% endif %}" href="{{ doc_href('api/lymph/models') }}">Introduction</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/models/Model' %}active{% endif %}" href="{{ doc_href('api/lymph/models/Model') }}">Model</a>
+            <details class="tree-item depth-2" {% if is_builder %}open{% endif %}>
+              <summary>{{ tree_link('builder', 'api/lymph/models/builder') }}</summary>
+              <div class="tree-children">
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/models/builder/Introduction' %}active{% endif %}" href="{{ doc_href('api/lymph/models/builder/Introduction') }}">Introduction</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/models/builder/Builder' %}active{% endif %}" href="{{ doc_href('api/lymph/models/builder/Builder') }}">Builder</a>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" {% if is_prep %}open{% endif %}>
+          <summary>{{ tree_link('prep', 'api/lymph/prep') }}</summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/prep' %}active{% endif %}" href="{{ doc_href('api/lymph/prep') }}">Introduction</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/prep/ColumnRouter' %}active{% endif %}" href="{{ doc_href('api/lymph/prep/ColumnRouter') }}">ColumnRouter</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/prep/Stage' %}active{% endif %}" href="{{ doc_href('api/lymph/prep/Stage') }}">Stage</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/prep/StandardScaler' %}active{% endif %}" href="{{ doc_href('api/lymph/prep/StandardScaler') }}">StandardScaler</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/prep/OneHotEncoder' %}active{% endif %}" href="{{ doc_href('api/lymph/prep/OneHotEncoder') }}">OneHotEncoder</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/prep/FeatureTransformer' %}active{% endif %}" href="{{ doc_href('api/lymph/prep/FeatureTransformer') }}">FeatureTransformer</a>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" {% if is_workflow %}open{% endif %}>
+          <summary>{{ tree_link('workflow', 'api/lymph/model') }}</summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/model' %}active{% endif %}" href="{{ doc_href('api/lymph/model') }}">Introduction</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/model/Workflow' %}active{% endif %}" href="{{ doc_href('api/lymph/model/Workflow') }}">Workflow</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/model/Payload' %}active{% endif %}" href="{{ doc_href('api/lymph/model/Payload') }}">Payload</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/model/Policy' %}active{% endif %}" href="{{ doc_href('api/lymph/model/Policy') }}">Policy</a>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" {% if is_selection %}open{% endif %}>
+          <summary><a href="{{ doc_href('api/lymph/tune') }}" class="{% if pagename == 'api/lymph/tune' or pagename == 'api/lymph/split' %}active{% endif %}">selection</a></summary>
+          <div class="tree-children">
+            <details class="tree-item depth-2" {% if is_validate %}open{% endif %}>
+              <summary><a href="{{ doc_href('api/lymph/split') }}" class="{% if pagename == 'api/lymph/split' %}active{% endif %}">validate</a></summary>
+              <div class="tree-children">
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/split' %}active{% endif %}" href="{{ doc_href('api/lymph/split') }}">Introduction</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/split/Plan' %}active{% endif %}" href="{{ doc_href('api/lymph/split/Plan') }}">Plan</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/split/ValidationOptions' %}active{% endif %}" href="{{ doc_href('api/lymph/split/ValidationOptions') }}">ValidationOptions</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/split/cross' %}active{% endif %}" href="{{ doc_href('api/lymph/split/cross') }}">cross</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/split/holdout' %}active{% endif %}" href="{{ doc_href('api/lymph/split/holdout') }}">holdout</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/split/time' %}active{% endif %}" href="{{ doc_href('api/lymph/split/time') }}">time</a>
+              </div>
+            </details>
+            <details class="tree-item depth-2" {% if is_search %}open{% endif %}>
+              <summary><a href="{{ doc_href('api/lymph/tune') }}" class="{% if is_search %}active{% endif %}">search</a></summary>
+              <div class="tree-children">
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/tune' %}active{% endif %}" href="{{ doc_href('api/lymph/tune') }}">Introduction</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/tune/Search' %}active{% endif %}" href="{{ doc_href('api/lymph/tune/Search') }}">Search</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/tune/CompareReport' %}active{% endif %}" href="{{ doc_href('api/lymph/tune/CompareReport') }}">CompareReport</a>
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/tune/TuneReport' %}active{% endif %}" href="{{ doc_href('api/lymph/tune/TuneReport') }}">TuneReport</a>
+              </div>
+            </details>
+            <details class="tree-item depth-2" {% if is_spotcheck %}open{% endif %}>
+              <summary><a href="{{ doc_href('api/lymph/tune/Suite') }}" class="{% if is_spotcheck %}active{% endif %}">spotcheck</a></summary>
+              <div class="tree-children">
+                <a class="tree-leaf depth-3 {% if pagename == 'api/lymph/tune/Suite' %}active{% endif %}" href="{{ doc_href('api/lymph/tune/Suite') }}">Suite</a>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" {% if is_metrics %}open{% endif %}>
+          <summary>{{ tree_link('metrics', 'api/lymph/metrics') }}</summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/metrics' %}active{% endif %}" href="{{ doc_href('api/lymph/metrics') }}">Introduction</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/metrics/CrossValidationReport' %}active{% endif %}" href="{{ doc_href('api/lymph/metrics/CrossValidationReport') }}">CrossValidationReport</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/metrics/Threshold' %}active{% endif %}" href="{{ doc_href('api/lymph/metrics/Threshold') }}">Threshold</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/metrics/classification_summary' %}active{% endif %}" href="{{ doc_href('api/lymph/metrics/classification_summary') }}">classification_summary</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/metrics/confusion_table' %}active{% endif %}" href="{{ doc_href('api/lymph/metrics/confusion_table') }}">confusion_table</a>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" {% if is_io %}open{% endif %}>
+          <summary>{{ tree_link('io', 'api/lymph/io') }}</summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/io' %}active{% endif %}" href="{{ doc_href('api/lymph/io') }}">Introduction</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/io/load' %}active{% endif %}" href="{{ doc_href('api/lymph/io/load') }}">load</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/io/persistence' %}active{% endif %}" href="{{ doc_href('api/lymph/io/persistence') }}">persistence</a>
+            <a class="tree-leaf depth-2 {% if pagename == 'api/lymph/io/save' %}active{% endif %}" href="{{ doc_href('api/lymph/io/save') }}">save</a>
+          </div>
+        </details>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" {% if pagename == 'api/plussai_ice' %}open{% endif %}>
+      <summary>{{ tree_link('ice', 'api/plussai_ice') }}</summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 {% if pagename == 'api/plussai_ice' %}active{% endif %}" href="{{ doc_href('api/plussai_ice') }}">Introduction</a>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" {% if pagename == 'api/plussai_procedure' %}open{% endif %}>
+      <summary>{{ tree_link('procedure', 'api/plussai_procedure') }}</summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 {% if pagename == 'api/plussai_procedure' %}active{% endif %}" href="{{ doc_href('api/plussai_procedure') }}">Introduction</a>
+      </div>
+    </details>
+  </nav>
+</div>
+{% else %}
+{{ toctree(maxdepth=2, collapse=False, includehidden=True, titles_only=False) }}
+{% endif %}

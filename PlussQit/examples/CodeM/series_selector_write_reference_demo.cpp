@@ -7,13 +7,6 @@
 
 namespace {
 
-using pluss::codem::ExtractSpec;
-using ExtractSpecView = pluss::msharp::RangeView::Of<ExtractSpec>;
-
-ExtractSpecView specs_view(const std::vector<ExtractSpec>& specs) {
-  return ExtractSpecView(specs);
-}
-
 void heading(const char* label) {
   std::cout << "=== " << label << " ===\n";
 }
@@ -26,109 +19,153 @@ void print_error(const std::exception& e) {
 }  // namespace
 
 int main() {
-  auto base = pluss::make_series(
-      {10.0, 11.0, 12.0, 13.0, 20.0, 21.0, 22.0, 23.0, 30.0, 31.0, 32.0, 33.0},
-      {3, 4});
+  auto base = pluss::make_series({
+      {10.0, 11.0, 12.0, 13.0},
+      {20.0, 21.0, 22.0, 23.0},
+      {30.0, 31.0, 32.0, 33.0},
+  });
 
   auto grid = base.clone();
-  const std::vector<ExtractSpec> fill_column{
-      pluss::Slicing::SliceAll(),
-      std::int64_t{1}};
   heading("extract_put_inplace_setup");
   std::cout << grid << "\n\n";
 
   heading("extract_put_inplace_scalar_broadcast");
-  grid.extract_put_(specs_view(fill_column), pluss::make_series(-1.0));
+  grid.extract_put_({pluss::Slicing::SliceAll(), std::int64_t{1}}, pluss::make_series(-1.0));
   std::cout << grid << "\n\n";
 
-  const std::vector<ExtractSpec> reverse_write{
-      std::int64_t{1},
-      pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -2)};
   heading("extract_put_inplace_reverse_slice");
-  grid.extract_put_(specs_view(reverse_write), pluss::make_series({90.0, 70.0}, {2}));
+  grid.extract_put_(
+      {std::int64_t{1}, pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -2)},
+      pluss::make_series({90.0, 70.0}));
   std::cout << grid << "\n\n";
 
-  const std::vector<ExtractSpec> with_newaxis{
-      pluss::Slicing::NewAxis(),
-      pluss::Slicing::SliceAll(),
-      std::int64_t{0}};
   heading("extract_put_inplace_newaxis_ignored");
-  grid.extract_put_(specs_view(with_newaxis), pluss::make_series({100.0, 200.0, 300.0}, {3}));
+  grid.extract_put_(
+      {pluss::Slicing::NewAxis(), pluss::Slicing::SliceAll(), std::int64_t{0}},
+      pluss::make_series({100.0, 200.0, 300.0}));
   std::cout << grid << "\n\n";
 
-  auto row_mask = pluss::make_series({true, false, true}, {3});
-  const std::vector<ExtractSpec> mask_specs{
-      row_mask,
-      pluss::Slicing::SliceAll()};
+  auto row_mask = pluss::make_series({true, false, true});
   heading("extract_put_inplace_mask_rows");
-  grid.extract_put_(specs_view(mask_specs), pluss::make_series(0.0));
+  grid.extract_put_({row_mask, pluss::Slicing::SliceAll()}, pluss::make_series(0.0));
+  std::cout << grid << "\n\n";
+
+  heading("extract_put_inplace_integer_rows");
+  auto picked_rows = pluss::make_series({2LL, 0LL});
+  grid.extract_put_(
+      {picked_rows, pluss::Slicing::SliceAll()},
+      pluss::make_series({
+          {3000.0, 3001.0, 3002.0, 3003.0},
+          {1000.0, 1001.0, 1002.0, 1003.0},
+      }));
+  std::cout << grid << "\n\n";
+
+  heading("extract_put_inplace_ellipsis");
+  grid.extract_put_(
+      {pluss::Slicing::Ellipsis(), std::int64_t{2}},
+      pluss::make_series({12.5, 22.5, 32.5}));
   std::cout << grid << "\n\n";
 
   heading("extract_put_inplace_mismatch_error");
   try {
-    const std::vector<ExtractSpec> mismatch_specs{
-        std::int64_t{0},
-        pluss::Slicing::SliceRange(0, 4, 2)};
-    grid.extract_put_(specs_view(mismatch_specs), pluss::make_series({1.0, 2.0, 3.0}, {3}));
+    grid.extract_put_(
+        {std::int64_t{0}, pluss::Slicing::SliceRange(0, 4, 2)},
+        pluss::make_series({1.0, 2.0, 3.0}));
   } catch (const std::exception& e) {
     print_error(e);
   }
   std::cout << "\n";
 
-  auto copy_grid = pluss::make_series(
-      {100.0, -1.0, 12.0, 13.0, 200.0, 70.0, 22.0, 90.0, 300.0, -1.0, 32.0, 33.0},
-      {3, 4});
+  heading("extract_put_inplace_zero_step_error");
+  try {
+    grid.extract_put_(
+        {pluss::Slicing::SliceAll(), pluss::Slicing::SliceRange(0, 4, 0)},
+        pluss::make_series(0.0));
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
+
+  auto copy_grid = pluss::make_series({
+      {100.0, -1.0, 12.0, 13.0},
+      {200.0, 70.0, 22.0, 90.0},
+      {300.0, -1.0, 32.0, 33.0},
+  });
   heading("extract_put_copy_original");
   std::cout << copy_grid << "\n\n";
 
-  const std::vector<ExtractSpec> right_two{
-      pluss::Slicing::SliceAll(),
-      pluss::Slicing::SliceRange(2, 4, 1)};
   heading("extract_put_copy_result");
-  auto patched = copy_grid.extract_put(specs_view(right_two), pluss::make_series(5.0));
+  auto patched = copy_grid.extract_put(
+      {pluss::Slicing::SliceAll(), pluss::Slicing::SliceRange(2, 4, 1)},
+      pluss::make_series(5.0));
   std::cout << patched << "\n\n";
 
   heading("extract_put_copy_original_after_call");
   std::cout << copy_grid << "\n\n";
 
   heading("extract_put_copy_mask_rows");
-  std::cout << copy_grid.extract_put(specs_view(mask_specs), pluss::make_series(0.0)) << "\n\n";
+  std::cout << copy_grid.extract_put(
+                   {row_mask, pluss::Slicing::SliceAll()},
+                   pluss::make_series(0.0))
+            << "\n\n";
 
   heading("extract_put_copy_reverse_slice");
   std::cout << copy_grid.extract_put(
-      specs_view(reverse_write),
-      pluss::make_series({900.0, 700.0}, {2})) << "\n\n";
+      {std::int64_t{1}, pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -2)},
+      pluss::make_series({900.0, 700.0})) << "\n\n";
+
+  heading("extract_put_copy_integer_rows");
+  std::cout << copy_grid.extract_put(
+      {picked_rows, pluss::Slicing::SliceAll()},
+      pluss::make_series({
+          {9000.0, 9001.0, 9002.0, 9003.0},
+          {7000.0, 7001.0, 7002.0, 7003.0},
+      })) << "\n\n";
+
+  heading("extract_put_copy_zero_step_error");
+  try {
+    std::cout << copy_grid.extract_put(
+                     {pluss::Slicing::SliceAll(), pluss::Slicing::SliceRange(0, 4, 0)},
+                     pluss::make_series(0.0))
+              << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
 
   auto traverse_grid = base.clone();
   heading("traverse_put_inplace_setup");
   std::cout << traverse_grid << "\n\n";
 
-  const std::vector<ExtractSpec> middle_column{
-      pluss::Slicing::SliceAll(),
-      std::int64_t{1}};
   heading("traverse_put_inplace_column");
-  traverse_grid.traverse_put_(specs_view(middle_column), pluss::make_series({100.0, 200.0, 300.0}, {3}));
+  traverse_grid.traverse_put_(
+      {pluss::Slicing::SliceAll(), std::int64_t{1}},
+      pluss::make_series({100.0, 200.0, 300.0}));
   std::cout << traverse_grid << "\n\n";
 
   heading("traverse_put_inplace_newaxis_ignored");
   traverse_grid.traverse_put_(
-      specs_view(with_newaxis),
-      pluss::make_series({1.0, 2.0, 3.0}, {3}));
+      {pluss::Slicing::NewAxis(), pluss::Slicing::SliceAll(), std::int64_t{0}},
+      pluss::make_series({1.0, 2.0, 3.0}));
   std::cout << traverse_grid << "\n\n";
 
-  const std::vector<ExtractSpec> row_tail{
-      std::int64_t{2},
-      pluss::Slicing::SliceRange(2, 4, 1)};
   heading("traverse_put_inplace_scalar_broadcast");
-  traverse_grid.traverse_put_(specs_view(row_tail), pluss::make_series(-5.0));
+  traverse_grid.traverse_put_(
+      {std::int64_t{2}, pluss::Slicing::SliceRange(2, 4, 1)},
+      pluss::make_series(-5.0));
+  std::cout << traverse_grid << "\n\n";
+
+  heading("traverse_put_inplace_ellipsis");
+  traverse_grid.traverse_put_(
+      {pluss::Slicing::Ellipsis(), std::int64_t{3}},
+      pluss::make_series({13.5, 23.5, 33.5}));
   std::cout << traverse_grid << "\n\n";
 
   heading("traverse_put_inplace_reverse_error");
   try {
-    const std::vector<ExtractSpec> reverse_specs{
-        pluss::Slicing::SliceAll(),
-        pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)};
-    traverse_grid.traverse_put_(specs_view(reverse_specs), pluss::make_series(0.0));
+    traverse_grid.traverse_put_(
+        {pluss::Slicing::SliceAll(), pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)},
+        pluss::make_series(0.0));
   } catch (const std::exception& e) {
     print_error(e);
   }
@@ -136,7 +173,17 @@ int main() {
 
   heading("traverse_put_inplace_mask_error");
   try {
-    traverse_grid.traverse_put_(specs_view(mask_specs), pluss::make_series(0.0));
+    traverse_grid.traverse_put_({row_mask, pluss::Slicing::SliceAll()}, pluss::make_series(0.0));
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
+
+  heading("traverse_put_inplace_mismatch_error");
+  try {
+    traverse_grid.traverse_put_(
+        {std::int64_t{0}, pluss::Slicing::SliceRange(0, 2, 1)},
+        pluss::make_series({1.0, 2.0, 3.0}));
   } catch (const std::exception& e) {
     print_error(e);
   }
@@ -145,24 +192,28 @@ int main() {
   heading("traverse_put_copy_original");
   std::cout << traverse_grid << "\n\n";
 
-  const std::vector<ExtractSpec> first_two{
-      std::int64_t{0},
-      pluss::Slicing::SliceRange(0, 2, 1)};
   heading("traverse_put_copy_result");
-  auto copied = traverse_grid.traverse_put(specs_view(first_two), pluss::make_series(999.0));
+  auto copied = traverse_grid.traverse_put(
+      {std::int64_t{0}, pluss::Slicing::SliceRange(0, 2, 1)},
+      pluss::make_series(999.0));
   std::cout << copied << "\n\n";
 
   heading("traverse_put_copy_newaxis");
   std::cout << traverse_grid.traverse_put(
-      specs_view(with_newaxis),
-      pluss::make_series({10.0, 20.0, 30.0}, {3})) << "\n\n";
+      {pluss::Slicing::NewAxis(), pluss::Slicing::SliceAll(), std::int64_t{0}},
+      pluss::make_series({10.0, 20.0, 30.0})) << "\n\n";
+
+  heading("traverse_put_copy_ellipsis");
+  std::cout << traverse_grid.traverse_put(
+      {pluss::Slicing::Ellipsis(), std::int64_t{2}},
+      pluss::make_series({120.0, 220.0, 320.0})) << "\n\n";
 
   heading("traverse_put_copy_reverse_error");
   try {
-    const std::vector<ExtractSpec> reverse_specs{
-        pluss::Slicing::SliceAll(),
-        pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)};
-    std::cout << traverse_grid.traverse_put(specs_view(reverse_specs), pluss::make_series(0.0)) << "\n";
+    std::cout << traverse_grid.traverse_put(
+                     {pluss::Slicing::SliceAll(), pluss::Slicing::SliceRange(-1, pluss::Slicing::Slice::kUnbounded, -1)},
+                     pluss::make_series(0.0))
+              << "\n";
   } catch (const std::exception& e) {
     print_error(e);
   }
@@ -170,7 +221,21 @@ int main() {
 
   heading("traverse_put_copy_mask_error");
   try {
-    std::cout << traverse_grid.traverse_put(specs_view(mask_specs), pluss::make_series(0.0)) << "\n";
+    std::cout << traverse_grid.traverse_put(
+                     {row_mask, pluss::Slicing::SliceAll()},
+                     pluss::make_series(0.0))
+              << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
+
+  heading("traverse_put_copy_mismatch_error");
+  try {
+    std::cout << traverse_grid.traverse_put(
+                     {std::int64_t{0}, pluss::Slicing::SliceRange(0, 2, 1)},
+                     pluss::make_series({1.0, 2.0, 3.0}))
+              << "\n";
   } catch (const std::exception& e) {
     print_error(e);
   }

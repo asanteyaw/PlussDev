@@ -10,7 +10,7 @@
 #include <utility>
 
 // Stage -- one preprocessing step attachable to a Model via
-// Model::append(Stage, ColumnRouter). See LYMPH_REDESIGN_PLAN.md 2 for why
+// Model::append(Stage, Route). See LYMPH_REDESIGN_PLAN.md 2 for why
 // this is named Stage rather than Prep: lymph::prep:: (prep.h) already owns
 // a real, unrelated namespace of standalone fittable transformer objects
 // (StandardScaler, OneHotEncoder, ...) with their own .learn(frame)/
@@ -23,14 +23,12 @@
 // struct types prep.h's standalone wrappers already alias, so a Stage
 // factory and its prep:: standalone-object counterpart take identical
 // arguments, only the return type and role differ). No route/remainder
-// here -- that lives on the ColumnRouter Model::append() takes alongside a
+// here -- that lives on the Route Model::append() takes alongside a
 // Stage, resolved lazily (see detail/model_core.h's pending_stages_) once a
 // real DataFrame is available, since .append() itself is always called
 // before any frame exists.
 
-namespace pluss::ai::lymph {
-
-namespace stage {
+namespace pluss::ai::lymph::prep::stage {
 
 struct TransformContract {
   bool reversible = false;
@@ -118,7 +116,9 @@ struct CustomStage {
   TransformContract contract{};
   bool persistable = false;
 };
-} // namespace stage
+} // namespace pluss::ai::lymph::prep::stage
+
+namespace pluss::ai::lymph::prep {
 
 using TransformContract = stage::TransformContract;
 using Stage = stage::Stage;
@@ -142,7 +142,7 @@ requires std::is_invocable_v<Fn&, const Series&>
                                         TransformContract contract = callable_contract(),
                                         prep::FunctionTransformerOptions options = {}) {
   if (name.empty()) {
-    ::pluss::throw_error("lymph::stage::custom: custom stage name cannot be empty.");
+    ::pluss::throw_error("lymph::prep::stage::custom: custom stage name cannot be empty.");
   }
   CustomStage::SeriesMapFn wrapped = [fn = std::move(map_fn)](const Series& input) mutable -> StatusOr<Series> {
     using Return = std::invoke_result_t<Fn&, const Series&>;
@@ -228,4 +228,4 @@ requires std::is_invocable_v<Fn&, const Series&>
 
 } // namespace stage
 
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::prep

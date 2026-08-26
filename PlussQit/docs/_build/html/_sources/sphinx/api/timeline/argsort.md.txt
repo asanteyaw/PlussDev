@@ -44,7 +44,7 @@ duplicates and `NaT`.
 
 ```cpp
 auto order = duplicated.argsort();
-std::cout << pluss::print_series(order) << "\n";
+std::cout << pluss::series::print(order) << "\n";
 ```
 
 ### Output
@@ -58,7 +58,7 @@ Example 2. Call `argsort()` on a timeline that is already increasing.
 
 ```cpp
 auto order = base.argsort();
-std::cout << pluss::print_series(order) << "\n";
+std::cout << pluss::series::print(order) << "\n";
 ```
 
 ### Output
@@ -73,7 +73,7 @@ Example 3. Compare `argsort()` with sorting the timeline values themselves.
 ```cpp
 auto order = duplicated.argsort();
 auto sorted = duplicated.sort();
-std::cout << pluss::print_series(order) << "\n";
+std::cout << pluss::series::print(order) << "\n";
 std::cout << pluss::timeline::print(sorted) << "\n";
 ```
 

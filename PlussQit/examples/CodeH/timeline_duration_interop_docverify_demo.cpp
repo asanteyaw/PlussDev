@@ -14,12 +14,12 @@ void show_timeline(std::string_view label, const pluss::Timeline& t) {
 void show_duration(std::string_view label, const pluss::Duration& d) {
   std::cout << "\n== " << label << " ==\n";
   std::cout << "dim=" << d.dim() << " numel=" << d.numel() << "\n";
-  std::cout << pluss::print_series(d.total().seconds()) << "\n";
+  std::cout << pluss::series::print(d.total().seconds()) << "\n";
 }
 
 void show_series(std::string_view label, const pluss::Series& s) {
   std::cout << "\n== " << label << " ==\n";
-  std::cout << pluss::print_series(s) << "\n";
+  std::cout << pluss::series::print(s) << "\n";
 }
 
 } // namespace

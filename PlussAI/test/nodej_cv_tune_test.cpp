@@ -824,21 +824,21 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     std::vector<lymph::selection::Candidate> candidates;
     candidates.emplace_back(
         "linear",
-        lymph::model::linear_regression(LinearFamilyOptions{
+        lymph::models::linear_regression(LinearFamilyOptions{
             .objective = LinearObjective::LeastSquares,
             .regularization = RegularizationKind::None,
             .fit_intercept = true,
         }));
     candidates.emplace_back(
         "ridge",
-        lymph::model::linear_regression(LinearFamilyOptions{
+        lymph::models::linear_regression(LinearFamilyOptions{
             .objective = LinearObjective::LeastSquares,
             .regularization = RegularizationKind::L2,
             .regularization_strength = 10.0,
             .fit_intercept = true,
         }));
 
-    lymph::metrics::ValidationOptions cv{};
+    lymph::selection::CrossValOptions cv{};
     cv.plan = CVPlanKind::CrossVal;
     cv.folds = 3;
     cv.shuffle = false;
@@ -896,21 +896,21 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     std::vector<lymph::selection::Candidate> candidates;
     candidates.emplace_back(
         "linear",
-        lymph::model::linear_regression(LinearFamilyOptions{
+        lymph::models::linear_regression(LinearFamilyOptions{
             .objective = LinearObjective::LeastSquares,
             .regularization = RegularizationKind::None,
             .fit_intercept = true,
         }));
     candidates.emplace_back(
         "ridge",
-        lymph::model::linear_regression(LinearFamilyOptions{
+        lymph::models::linear_regression(LinearFamilyOptions{
             .objective = LinearObjective::LeastSquares,
             .regularization = RegularizationKind::L2,
             .regularization_strength = 10.0,
             .fit_intercept = true,
         }));
 
-    lymph::metrics::ValidationOptions cv{};
+    lymph::selection::CrossValOptions cv{};
     cv.plan = CVPlanKind::CrossVal;
     cv.folds = 3;
     cv.shuffle = false;
@@ -994,7 +994,7 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
         {.name = "regularization_strength", .values = {0.0001, 0.01, 1.0, 10.0}},
     };
     const auto make_linear_model = [](const lymph::selection::GridPoint& point) {
-      return lymph::model::linear_regression(LinearFamilyOptions{
+      return lymph::models::linear_regression(LinearFamilyOptions{
           .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = point.at("regularization_strength"),
@@ -1002,12 +1002,12 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
       });
     };
 
-    lymph::metrics::ValidationOptions hp_cv{};
+    lymph::selection::CrossValOptions hp_cv{};
     hp_cv.plan = CVPlanKind::CrossVal;
     hp_cv.folds = 3;
     hp_cv.shuffle = false;
 
-    const auto exhaustive = lymph::search::grid(hp_axes, hp_cv).run(
+    const auto exhaustive = lymph::selection::grid(hp_axes, hp_cv).run(
         make_linear_model,
         tune_x,
         y_series,
@@ -1025,7 +1025,7 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    const auto sampled = lymph::search::random(
+    const auto sampled = lymph::selection::random(
                              hp_axes,
                              2,
                              RandomState{.seed = 7, .deterministic = true},

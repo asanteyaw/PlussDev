@@ -19,7 +19,7 @@ Use `classic` when you want the lower-level contracts directly:
 
 Use `lymph` when you want the higher-level workflow:
 
-- a stable `Model` or `Workflow` object to carry through a project
+- a stable `models::Model` or `workflow::Workflow` object to carry through a project
 - reusable validation plans instead of ad-hoc split code
 - payload-aware learning and inference
 - spotchecking, search, comparison, and persistence
@@ -65,11 +65,11 @@ If you only remember one idea, remember this:
 You normally do not stay at the level of raw arrays, raw folds, and raw evaluation
 plumbing. You move into a smaller set of durable objects:
 
-- `Model` for trainable pipelines
-- `Workflow` for richer deployable orchestration
-- `Payload` for explicitly described inputs
-- `ValidationOptions` and `validate::Plan` for validation policy
-- `Builder`, `Suite`, and `Search` for comparison and tuning
+- `models::Model` for trainable pipelines
+- `workflow::Workflow` for richer deployable orchestration
+- `workflow::Payload` for explicitly described inputs
+- `selection::CrossValOptions` and `selection::Plan` for validation policy
+- `models::Builder`, `selection::Suite`, and `selection::Search` for comparison and tuning
 
 That object model is what keeps large projects from collapsing into one-off helper
 functions and fragile experiment scripts.
@@ -78,10 +78,10 @@ functions and fragile experiment scripts.
 
 A realistic `lymph` flow usually looks like this:
 
-1. choose or construct a `Model`
+1. choose or construct a `models::Model`
 2. attach prep or transform stages
-3. describe the incoming data with `Payload` when needed
-4. choose a validation family such as `validate::cross(...)` or `validate::time(...)`
+3. describe the incoming data with `workflow::Payload` when needed
+4. choose a selection path such as `selection::cross(...)` or `selection::time(...)`
 5. run comparison, spotchecking, or search
 6. train the surviving workflow
 7. persist the resulting artifact
@@ -98,13 +98,26 @@ Each family page should answer three things clearly:
 - which objects you carry on the left-hand side
 - which functions or builders are the main entrypoints
 
-```{toctree}
-:maxdepth: 3
+The left sidebar should narrow as:
 
-lymph/metrics
-validate <lymph/split>
+- `lymph`
+  - main family
+    - subfamily
+      - `Introduction`
+      - object/type pages
+      - option pages
+
+This first rebuilt slice focuses on the `models` family so the navigation
+pattern can be verified before the rest of the branch is expanded the same way.
+
+```{toctree}
+:maxdepth: 4
+
+lymph/models
 lymph/prep
 lymph/model
+lymph/split
+lymph/metrics
 lymph/tune
 lymph/io
 ```
@@ -113,12 +126,9 @@ lymph/io
 
 If you are learning `lymph` for the first time, this is the most effective order:
 
-1. [model](lymph/model.md) to understand the main durable objects
-2. [validate](lymph/split.md) to understand validation planning
-3. [metrics](lymph/metrics.md) to understand validation inputs and evaluation outputs
-4. [prep](lymph/prep.md) to understand reusable input transformation
-5. [tune](lymph/tune.md) to understand comparison and search
-6. [io](lymph/io.md) to understand save/load and artifact reuse
+1. [models](lymph/models.md) to understand the main trainable artifacts
+2. verify the family/subfamily navigation pattern in the sidebar
+3. expand the remaining main families on the same pattern
 
 That sequence mirrors how real projects usually mature.
 

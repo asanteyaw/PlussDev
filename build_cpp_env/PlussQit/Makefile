@@ -501,6 +501,34 @@ plussqit_codem_series_stats_reference_demo/fast:
 .PHONY : plussqit_codem_series_stats_reference_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_arithmetic_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_arithmetic_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_arithmetic_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/build
+.PHONY : plussqit_codem_series_arithmetic_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_comparison_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_comparison_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_comparison_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/build
+.PHONY : plussqit_codem_series_comparison_reference_demo/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_linear_alg_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_linear_alg_demo.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_codem_linear_alg_demo.dir/rule
@@ -1422,6 +1450,30 @@ examples/CodeM/output_engine_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/examples/CodeM/output_engine_demo.cpp.s
 .PHONY : examples/CodeM/output_engine_demo.cpp.s
 
+examples/CodeM/series_arithmetic_reference_demo.o: examples/CodeM/series_arithmetic_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_arithmetic_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_arithmetic_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/examples/CodeM/series_arithmetic_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_arithmetic_reference_demo.cpp.o
+
+examples/CodeM/series_arithmetic_reference_demo.i: examples/CodeM/series_arithmetic_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_arithmetic_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_arithmetic_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/examples/CodeM/series_arithmetic_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_arithmetic_reference_demo.cpp.i
+
+examples/CodeM/series_arithmetic_reference_demo.s: examples/CodeM/series_arithmetic_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_arithmetic_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_arithmetic_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_arithmetic_reference_demo.dir/examples/CodeM/series_arithmetic_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_arithmetic_reference_demo.cpp.s
+
 examples/CodeM/series_bounds_reference_demo.o: examples/CodeM/series_bounds_reference_demo.cpp.o
 .PHONY : examples/CodeM/series_bounds_reference_demo.o
 
@@ -1469,6 +1521,30 @@ examples/CodeM/series_combine_reference_demo.s: examples/CodeM/series_combine_re
 examples/CodeM/series_combine_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_combine_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_combine_reference_demo.dir/examples/CodeM/series_combine_reference_demo.cpp.s
 .PHONY : examples/CodeM/series_combine_reference_demo.cpp.s
+
+examples/CodeM/series_comparison_reference_demo.o: examples/CodeM/series_comparison_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_comparison_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_comparison_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/examples/CodeM/series_comparison_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_comparison_reference_demo.cpp.o
+
+examples/CodeM/series_comparison_reference_demo.i: examples/CodeM/series_comparison_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_comparison_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_comparison_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/examples/CodeM/series_comparison_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_comparison_reference_demo.cpp.i
+
+examples/CodeM/series_comparison_reference_demo.s: examples/CodeM/series_comparison_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_comparison_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_comparison_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_comparison_reference_demo.dir/examples/CodeM/series_comparison_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_comparison_reference_demo.cpp.s
 
 examples/CodeM/series_copy_gather_reference_demo.o: examples/CodeM/series_copy_gather_reference_demo.cpp.o
 .PHONY : examples/CodeM/series_copy_gather_reference_demo.o
@@ -9060,8 +9136,10 @@ help:
 	@echo "... plussqit_codem_mps_vs_cpu_demo"
 	@echo "... plussqit_codem_optim_tests"
 	@echo "... plussqit_codem_output_engine_demo"
+	@echo "... plussqit_codem_series_arithmetic_reference_demo"
 	@echo "... plussqit_codem_series_bounds_reference_demo"
 	@echo "... plussqit_codem_series_combine_reference_demo"
+	@echo "... plussqit_codem_series_comparison_reference_demo"
 	@echo "... plussqit_codem_series_copy_gather_reference_demo"
 	@echo "... plussqit_codem_series_extract_index_take_reference_demo"
 	@echo "... plussqit_codem_series_factory_core_reference_demo"
@@ -9147,12 +9225,18 @@ help:
 	@echo "... examples/CodeM/output_engine_demo.o"
 	@echo "... examples/CodeM/output_engine_demo.i"
 	@echo "... examples/CodeM/output_engine_demo.s"
+	@echo "... examples/CodeM/series_arithmetic_reference_demo.o"
+	@echo "... examples/CodeM/series_arithmetic_reference_demo.i"
+	@echo "... examples/CodeM/series_arithmetic_reference_demo.s"
 	@echo "... examples/CodeM/series_bounds_reference_demo.o"
 	@echo "... examples/CodeM/series_bounds_reference_demo.i"
 	@echo "... examples/CodeM/series_bounds_reference_demo.s"
 	@echo "... examples/CodeM/series_combine_reference_demo.o"
 	@echo "... examples/CodeM/series_combine_reference_demo.i"
 	@echo "... examples/CodeM/series_combine_reference_demo.s"
+	@echo "... examples/CodeM/series_comparison_reference_demo.o"
+	@echo "... examples/CodeM/series_comparison_reference_demo.i"
+	@echo "... examples/CodeM/series_comparison_reference_demo.s"
 	@echo "... examples/CodeM/series_copy_gather_reference_demo.o"
 	@echo "... examples/CodeM/series_copy_gather_reference_demo.i"
 	@echo "... examples/CodeM/series_copy_gather_reference_demo.s"

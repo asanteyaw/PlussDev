@@ -53,7 +53,7 @@ int main() {
   std::cout << "Series pile({s2,s3}, dim=1) dim=" << piled.dim()
             << ", shape=[" << piled.sizes()[0] << ", " << piled.sizes()[1] << "]"
             << ", first row=[" << piled_vals[0] << ", " << piled_vals[1] << ", " << piled_vals[2] << "]\n";
-  std::cout << pluss::print_series(piled) << "\n";
+  std::cout << pluss::series::print(piled) << "\n";
 
   return 0;
 }

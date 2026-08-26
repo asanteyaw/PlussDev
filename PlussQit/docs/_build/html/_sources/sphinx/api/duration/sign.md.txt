@@ -33,8 +33,8 @@ Example 1. `sign()` on a negative duration and a positive one, for contrast.
 ```cpp
 auto neg_fifteen_min = pluss::duration::minutes(-15);
 auto ninety_min = pluss::duration::minutes(90);
-std::cout << "sign_neg=" << pluss::print_series(neg_fifteen_min.sign().total().nanoseconds()) << "\n";
-std::cout << "sign_pos=" << pluss::print_series(ninety_min.sign().total().nanoseconds());
+std::cout << "sign_neg=" << pluss::series::print(neg_fifteen_min.sign().total().nanoseconds()) << "\n";
+std::cout << "sign_pos=" << pluss::series::print(ninety_min.sign().total().nanoseconds());
 ```
 
 ### Output

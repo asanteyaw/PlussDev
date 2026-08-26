@@ -67,7 +67,7 @@ Example 1. Rolling mean over 45 minutes.
 auto values = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5});
 auto win = pluss::duration::minutes(45);
 auto out = base.rolling_mean(values, win);
-std::cout << pluss::print_series(out) << "\n";
+std::cout << pluss::series::print(out) << "\n";
 ```
 
 ### Output
@@ -81,7 +81,7 @@ Example 2. Rolling minimum over the same window.
 
 ```cpp
 auto out = base.rolling_min(values, win);
-std::cout << pluss::print_series(out) << "\n";
+std::cout << pluss::series::print(out) << "\n";
 ```
 
 ### Output
@@ -95,7 +95,7 @@ Example 3. Rolling maximum over the same window.
 
 ```cpp
 auto out = base.rolling_max(values, win);
-std::cout << pluss::print_series(out) << "\n";
+std::cout << pluss::series::print(out) << "\n";
 ```
 
 ### Output
@@ -110,7 +110,7 @@ trailing window.
 
 ```cpp
 auto out = idx.rolling_first(values, win);
-std::cout << pluss::print_series(out) << "\n";
+std::cout << pluss::series::print(out) << "\n";
 ```
 
 ### Output
@@ -125,7 +125,7 @@ window.
 
 ```cpp
 auto out = idx.rolling_last(values, win);
-std::cout << pluss::print_series(out) << "\n";
+std::cout << pluss::series::print(out) << "\n";
 ```
 
 ### Output
@@ -139,7 +139,7 @@ Example 6. Dynamic operation dispatch.
 
 ```cpp
 auto out = idx.rolling_agg(values, win, "mean");
-std::cout << pluss::print_series(out) << "\n";
+std::cout << pluss::series::print(out) << "\n";
 ```
 
 ### Output

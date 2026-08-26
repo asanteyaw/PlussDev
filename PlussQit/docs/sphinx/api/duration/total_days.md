@@ -34,7 +34,7 @@ Example 1. `.total().days()` over an array `Duration`.
 ```cpp
 auto ranged = pluss::duration::range(
     pluss::duration::days(0), pluss::duration::days(10), pluss::duration::days(2));
-std::cout << pluss::print_series(ranged.total().days());
+std::cout << pluss::series::print(ranged.total().days());
 ```
 
 ### Output

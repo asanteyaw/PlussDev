@@ -286,7 +286,7 @@ StatusOr<ClassMix> class_mix(const Series& labels) {
     return StatusOr<ClassMix>(Status::invalid_argument(std::string(where) + " labels must be finite."));
   }
 
-  Series classes = y.unique().sort(0, false, false);
+  Series classes = y.unique(true).sort(0, false, false);
   const std::int64_t k = classes.numel();
   if (k <= 0) {
     return StatusOr<ClassMix>(Status::invalid_argument(std::string(where) + " requires at least one class."));

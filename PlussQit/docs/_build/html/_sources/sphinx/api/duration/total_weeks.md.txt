@@ -34,7 +34,7 @@ Example 1. A `21`-day `Duration` read as weeks.
 
 ```cpp
 auto three_weeks = pluss::duration::days(21);
-std::cout << pluss::print_series(three_weeks.total().weeks());
+std::cout << pluss::series::print(three_weeks.total().weeks());
 ```
 
 ### Output

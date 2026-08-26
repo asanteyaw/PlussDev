@@ -5,7 +5,7 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai;
+  namespace lymph = pluss::ai::lymph;
 
   const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const pluss::Series x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}, f64);
@@ -21,31 +21,31 @@ int main() {
   const auto numeric = housing.feataxis().series().features();
   const auto categorical = housing.feataxis().note().features();
 
-  pluss::ai::nodej::DataFrameBatchOptions data_options{};
-  data_options.feature_names = {"median_income", "ocean_proximity", "target"};
+  lymph::DataFrameBatchOptions data_options{};
+  data_options.feature_names = {"median_income", "ocean_proximity"};
   data_options.label_feature = "target";
-  data_options.note_policy = pluss::ai::nodej::DataNotePolicy::Hash;
-  data_options.layout = pluss::ai::nodej::ObservationLayout::Rows;
+  data_options.note_policy = lymph::DataNotePolicy::Hash;
+  data_options.layout = lymph::ObservationLayout::Rows;
 
-  auto preprocessing = lymph::make_feature_transformer(
+  auto preprocessing = lymph::prep::feature_transformer(
       housing,
       data_options,
-      std::vector<lymph::workflow::feature::Branch>{
-          lymph::workflow::feature::compose(
+      std::vector<lymph::prep::branch::Branch>{
+          lymph::prep::branch::compose(
               {
-                  lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{
+                  lymph::stage::simple_imputer(lymph::prep::SimpleImputerOptions{
                       .strategy = lymph::prep::SimpleImputerStrategy::Mean,
                   }),
-                  lymph::workflow::stage::standard_scaler(),
+                  lymph::stage::standard_scaler(),
               },
               {"median_income"}),
-          lymph::workflow::feature::one_hot_encoder(lymph::prep::OneHotEncoderOptions{}, categorical),
+          lymph::prep::branch::one_hot_encoder(lymph::prep::OneHotEncoderOptions{}, categorical),
       },
       lymph::prep::FeatureRemainderPolicy::PassThrough);
 
-  auto reg = lymph::model::linear_regression(pluss::ai::nodej::LinearFamilyOptions{
-      .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
-      .regularization = pluss::ai::nodej::RegularizationKind::None,
+  auto reg = lymph::model::linear_regression(lymph::LinearFamilyOptions{
+      .objective = lymph::LinearObjective::LeastSquares,
+      .regularization = lymph::RegularizationKind::None,
       .regularization_strength = 0.0,
       .fit_intercept = true,
   });
@@ -55,8 +55,8 @@ int main() {
   const auto pred = reg.infer(housing, data_options);
   const auto metrics = reg.assess(housing,
                                   data_options,
-                                  pluss::ai::nodej::AssessOptions{
-                                      .metrics = {pluss::ai::nodej::MetricKind::Mse, pluss::ai::nodej::MetricKind::R2},
+                                  lymph::AssessOptions{
+                                      .metrics = {lymph::MetricKind::Mse, lymph::MetricKind::R2},
                                   });
 
   std::cout << "numeric features: ";

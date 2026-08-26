@@ -20,6 +20,8 @@ the user explicitly changes direction.
   parameter descriptions when the doc can do so cleanly.
 - Avoid exposing `pluss::msharp` in example code. If a public call site can be
   expressed without it, do that.
+- When printing a `Series`, prefer `pluss::series::print(...)` over the older
+  flat helper spelling.
 
 ## Prose Standard
 
@@ -109,4 +111,3 @@ Not every page needs every section, but this is the default standard.
 - No fluff.
 - No internal-engineering leakage unless the behavior cannot be explained
   honestly without it.
-

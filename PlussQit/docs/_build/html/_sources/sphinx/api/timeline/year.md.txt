@@ -40,9 +40,9 @@ Example 1. Extract coarse calendar components.
 auto years = base.year();
 auto months = base.month();
 auto days = base.day();
-std::cout << pluss::print_series(years) << "\n";
-std::cout << pluss::print_series(months) << "\n";
-std::cout << pluss::print_series(days) << "\n";
+std::cout << pluss::series::print(years) << "\n";
+std::cout << pluss::series::print(months) << "\n";
+std::cout << pluss::series::print(days) << "\n";
 ```
 
 ### Output
@@ -74,9 +74,9 @@ Example 2. Extract time-of-day components.
 auto hours = base.hour();
 auto minutes = base.minute();
 auto seconds = base.second();
-std::cout << pluss::print_series(hours) << "\n";
-std::cout << pluss::print_series(minutes) << "\n";
-std::cout << pluss::print_series(seconds) << "\n";
+std::cout << pluss::series::print(hours) << "\n";
+std::cout << pluss::series::print(minutes) << "\n";
+std::cout << pluss::series::print(seconds) << "\n";
 ```
 
 ### Output
@@ -110,11 +110,11 @@ auto weekdays = base.weekday();
 auto yeardays = base.dayofyear();
 auto quarters = base.quarter();
 auto weeks = base.week();
-std::cout << pluss::print_series(nanos) << "\n";
-std::cout << pluss::print_series(weekdays) << "\n";
-std::cout << pluss::print_series(yeardays) << "\n";
-std::cout << pluss::print_series(quarters) << "\n";
-std::cout << pluss::print_series(weeks) << "\n";
+std::cout << pluss::series::print(nanos) << "\n";
+std::cout << pluss::series::print(weekdays) << "\n";
+std::cout << pluss::series::print(yeardays) << "\n";
+std::cout << pluss::series::print(quarters) << "\n";
+std::cout << pluss::series::print(weeks) << "\n";
 ```
 
 ### Output

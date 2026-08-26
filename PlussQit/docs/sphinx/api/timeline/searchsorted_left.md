@@ -69,7 +69,7 @@ inside, and after the sorted range.
 
 ```cpp
 auto pos = sorted.searchsorted_left(queries);
-std::cout << pluss::print_series(pos) << "\n";
+std::cout << pluss::series::print(pos) << "\n";
 ```
 
 ### Output
@@ -84,7 +84,7 @@ existing matches.
 
 ```cpp
 auto pos = sorted.searchsorted_right(queries);
-std::cout << pluss::print_series(pos) << "\n";
+std::cout << pluss::series::print(pos) << "\n";
 ```
 
 ### Output
@@ -102,7 +102,7 @@ auto left = sorted.searchsorted_left(pluss::timeline::make({
     "2024-11-01T09:00:00Z",
     "2024-11-01T11:00:00Z",
 }));
-std::cout << pluss::print_series(left) << "\n";
+std::cout << pluss::series::print(left) << "\n";
 ```
 
 ### Output
@@ -119,7 +119,7 @@ auto right = sorted.searchsorted_right(pluss::timeline::make({
     "2024-11-01T09:00:00Z",
     "2024-11-01T11:00:00Z",
 }));
-std::cout << pluss::print_series(right) << "\n";
+std::cout << pluss::series::print(right) << "\n";
 ```
 
 ### Output

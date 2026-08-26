@@ -55,7 +55,7 @@ Example 1. Build hourly OHLC bars from a 1D numeric stream.
 ```cpp
 auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0});
 auto ohlc = idx.resample_ohlc(values, "H");
-std::cout << pluss::print_series(ohlc) << "\n";
+std::cout << pluss::series::print(ohlc) << "\n";
 ```
 
 ### Output
@@ -71,7 +71,7 @@ Example 2. Increase `step` when you want fewer, wider bars.
 
 ```cpp
 auto ohlc = idx.resample_ohlc(values, "H", 2);
-std::cout << pluss::print_series(ohlc) << "\n";
+std::cout << pluss::series::print(ohlc) << "\n";
 ```
 
 ### Output

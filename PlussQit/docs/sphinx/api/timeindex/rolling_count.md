@@ -42,7 +42,7 @@ Example 1. Count how many observations fall inside a trailing 45-minute window.
 
 ```cpp
 auto counts = idx.rolling_count(pluss::duration::minutes(45));
-std::cout << pluss::print_series(counts) << "\n";
+std::cout << pluss::series::print(counts) << "\n";
 ```
 
 ### Output
@@ -57,7 +57,7 @@ further backward in time.
 
 ```cpp
 auto counts = idx.rolling_count(pluss::duration::minutes(60));
-std::cout << pluss::print_series(counts) << "\n";
+std::cout << pluss::series::print(counts) << "\n";
 ```
 
 ### Output

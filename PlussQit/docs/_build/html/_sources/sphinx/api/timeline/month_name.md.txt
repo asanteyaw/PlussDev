@@ -73,7 +73,7 @@ Example 3. Compare full month names with numeric month extraction.
 auto labels = base.month_name();
 auto values = base.month();
 std::cout << pluss::print_note(labels) << "\n";
-std::cout << pluss::print_series(values) << "\n";
+std::cout << pluss::series::print(values) << "\n";
 ```
 
 ### Output

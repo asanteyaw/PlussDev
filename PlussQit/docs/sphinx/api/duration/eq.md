@@ -44,7 +44,7 @@ Example 1. `90` minutes equals `1` hour is false.
 ```cpp
 auto ninety_min = pluss::duration::minutes(90);
 auto one_hour = pluss::duration::hours(1);
-std::cout << pluss::print_series(one_hour.eq(ninety_min));
+std::cout << pluss::series::print(one_hour.eq(ninety_min));
 ```
 
 ### Output

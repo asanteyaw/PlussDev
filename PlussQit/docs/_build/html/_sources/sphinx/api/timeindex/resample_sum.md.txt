@@ -53,7 +53,7 @@ Example 1. Sum values inside each hourly bucket.
 ```cpp
 auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0});
 auto totals = idx.resample_sum(values, "H");
-std::cout << pluss::print_series(totals) << "\n";
+std::cout << pluss::series::print(totals) << "\n";
 ```
 
 ### Output
@@ -73,7 +73,7 @@ opts.step = 1;
 opts.origin = pluss::TimeIndex::ResampleOrigin::Epoch;
 
 auto totals = idx.resample_sum(values, opts);
-std::cout << pluss::print_series(totals) << "\n";
+std::cout << pluss::series::print(totals) << "\n";
 ```
 
 Example 3. Increase `step` when you want a coarser total from the same hourly
@@ -81,7 +81,7 @@ family.
 
 ```cpp
 auto totals = idx.resample_sum(values, "H", 2);
-std::cout << pluss::print_series(totals) << "\n";
+std::cout << pluss::series::print(totals) << "\n";
 ```
 
 ### Output

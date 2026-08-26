@@ -46,7 +46,7 @@ Example 1. Compute a trailing 45-minute sum.
 ```cpp
 auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0});
 auto roll = idx.rolling_sum(values, pluss::duration::minutes(45));
-std::cout << pluss::print_series(roll) << "\n";
+std::cout << pluss::series::print(roll) << "\n";
 ```
 
 ### Output
@@ -61,7 +61,7 @@ history.
 
 ```cpp
 auto roll = idx.rolling_sum(values, pluss::duration::minutes(60));
-std::cout << pluss::print_series(roll) << "\n";
+std::cout << pluss::series::print(roll) << "\n";
 ```
 
 ### Output

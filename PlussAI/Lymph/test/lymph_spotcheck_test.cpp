@@ -52,17 +52,17 @@ DataFrame frame() {
 }
 
 bool run_spotcheck_checks(std::ostream* err) {
-  Builder registry = builder::build({
-      {"bayes", model::gaussian_nb_classifier()},
-      {"tree", model::decision_tree_classifier({.max_depth = 2})},
+  models::Builder registry = models::build({
+      {"bayes", models::gaussian_nb_classifier()},
+      {"tree", models::decision_tree_classifier({.max_depth = 2})},
   });
 
-  metrics::ValidationOptions cv{};
+  selection::CrossValOptions cv{};
   cv.folds = 2;
   cv.shuffle = false;
   cv.max_parallel = 1;
 
-  const spotcheck::Result ranked = spotcheck::suite(registry)
+  const selection::spotcheck::Result ranked = selection::suite(registry)
                                      .strategy("plain", TrainOptions{})
                                      .run(batch(),
                                           cv,
@@ -88,9 +88,9 @@ bool run_spotcheck_checks(std::ostream* err) {
     return false;
   }
 
-  const Payload raw_payload = payload::make(frame()).features({"x0", "x1"}).label("y");
-  const Workflow design = workflow::make(Policy{});
-  const spotcheck::Result workflow_ranked = spotcheck::suite(registry)
+  const workflow::Payload raw_payload = workflow::payload::make(frame()).features({"x0", "x1"}).label("y");
+  const workflow::Workflow design = workflow::make(workflow::Policy{});
+  const selection::spotcheck::Result workflow_ranked = selection::suite(registry)
                                               .strategy("plain", TrainOptions{})
                                               .run(design,
                                                    raw_payload,
@@ -104,21 +104,21 @@ bool run_spotcheck_checks(std::ostream* err) {
     return false;
   }
 
-  metrics::ValidationOptions time_cv{};
+  selection::TimeValOptions time_cv{};
   time_cv.plan = CVPlanKind::TSCrossVal;
   time_cv.folds = 2;
   time_cv.shuffle = false;
   time_cv.max_parallel = 1;
 
-  Payload time_payload = payload::make(frame())
+  workflow::Payload time_payload = workflow::payload::make(frame())
       .features({"x0", "x1"})
       .label("y")
-      .time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
-  Workflow time_design = workflow::make(Policy{});
-  time_design.time(TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
+      .time(workflow::TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
+  workflow::Workflow time_design = workflow::make(workflow::Policy{});
+  time_design.time(workflow::TimeOptions{.index = "timestamp", .horizon = 1, .gap = 1, .lookback = 4});
 
-  const metrics::ValidationOptions effective_time =
-      validate::detail::effective_time_options_(time_cv, time_design);
+  const selection::TimeValOptions effective_time =
+      selection::validate::detail::effective_time_options_(time_cv, time_design);
   if (effective_time.time_gap != 1 || effective_time.time_test_size != 1 || effective_time.time_max_train_size != 4) {
     if (err) *err << "spotcheck should use the shared Workflow/Payload time option merge\n";
     return false;

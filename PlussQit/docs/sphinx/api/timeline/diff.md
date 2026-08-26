@@ -50,7 +50,7 @@ Example 1. Compute the distance between two scalar instants.
 auto dt = scalar_later.diff(scalar);
 std::cout << pluss::print_note(
     pluss::codeh::_compat::invoke<pluss::Note>("to_note_iso", dt)) << "\n";
-std::cout << pluss::print_series(
+std::cout << pluss::series::print(
     pluss::codeh::_compat::invoke<pluss::Series>("total", dt, {"s"})) << "\n";
 ```
 
@@ -76,7 +76,7 @@ Example 2. Compute elementwise signed distances across a vector.
 auto dt = base.diff(other);
 std::cout << pluss::print_note(
     pluss::codeh::_compat::invoke<pluss::Note>("to_note_iso", dt)) << "\n";
-std::cout << pluss::print_series(
+std::cout << pluss::series::print(
     pluss::codeh::_compat::invoke<pluss::Series>("total", dt, {"s"})) << "\n";
 ```
 
@@ -106,8 +106,8 @@ const auto t1 = pluss::timeline::make("1999-04-18T00:15:23Z"); // t0 + 3h
 const auto diff_operator = t1 - t0;
 const auto diff_method = t1.diff(t0);
 std::cout << "dim=" << diff_operator.dim() << " numel=" << diff_operator.numel() << "\n";
-std::cout << pluss::print_series(diff_operator.total().seconds()) << "\n";
-std::cout << pluss::print_series(diff_operator.eq(diff_method)) << "\n";
+std::cout << pluss::series::print(diff_operator.total().seconds()) << "\n";
+std::cout << pluss::series::print(diff_operator.eq(diff_method)) << "\n";
 ```
 
 ### Output

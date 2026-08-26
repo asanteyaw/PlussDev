@@ -69,8 +69,8 @@ auto right = pluss::timeindex::make({
 
 auto aligned = left.align_union(right);
 std::cout << pluss::timeline::print(aligned.index) << "\n";
-std::cout << pluss::print_series(aligned.left_indexer) << "\n";
-std::cout << pluss::print_series(aligned.right_indexer) << "\n";
+std::cout << pluss::series::print(aligned.left_indexer) << "\n";
+std::cout << pluss::series::print(aligned.right_indexer) << "\n";
 ```
 
 ### Output
@@ -96,8 +96,8 @@ auto shared = left.align_union(right);
 
 // Use shared.left_indexer and shared.right_indexer as the alignment maps.
 std::cout << pluss::timeline::print(shared.index) << "\n";
-std::cout << pluss::print_series(shared.left_indexer) << "\n";
-std::cout << pluss::print_series(shared.right_indexer) << "\n";
+std::cout << pluss::series::print(shared.left_indexer) << "\n";
+std::cout << pluss::series::print(shared.right_indexer) << "\n";
 ```
 
 ## Notes

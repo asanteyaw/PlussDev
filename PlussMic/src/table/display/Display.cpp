@@ -1701,7 +1701,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Null Case Rows</div><div class=\"value\">{}</div></div>",
       null_case_rows);
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Dtypes</div><div class=\"value\">{}</div></div>",
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">PTypes</div><div class=\"value\">{}</div></div>",
                       escape_html_(dtype_summary_line(dtype_counts)));
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Memory</div><div class=\"value\">{}</div></div>",
                       escape_html_(human_bytes(memory_bytes)));
@@ -1713,7 +1713,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
   body += "<th class=\"sortable\" data-column-index=\"0\" data-kind=\"numeric\">#</th>";
   body += "<th class=\"sortable sticky-left\" data-column-index=\"1\" data-kind=\"text\">Feature</th>";
   body += "<th class=\"sortable\" data-column-index=\"2\" data-kind=\"numeric\">Non-Null Cases</th>";
-  body += "<th class=\"sortable\" data-column-index=\"3\" data-kind=\"text\">Dtype</th>";
+  body += "<th class=\"sortable\" data-column-index=\"3\" data-kind=\"text\">PType</th>";
   body += "</tr></thead><tbody>";
 
   for (std::size_t i = 0; i < names.size(); ++i) {
@@ -1913,12 +1913,12 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
       {"Features", fmt::format("{}", frame.nfeatures())},
       {"Case Range", fmt::format("{} -> {}", first_case, last_case)},
       {"Null Case Rows", fmt::format("{}", null_case_rows)},
-      {"Dtypes", dtype_summary_line(dtype_counts)},
+      {"PTypes", dtype_summary_line(dtype_counts)},
       {"Memory", human_bytes(memory_bytes)},
   };
 
   TableMatrix details;
-  details.headers = {"#", "Feature", "Non-Null Cases", "Dtype"};
+  details.headers = {"#", "Feature", "Non-Null Cases", "PType"};
   details.right_align = {false, false, false, false};
   details.min_widths = {2, 6, 6, 5};
   const auto detail_plan = build_row_plan(static_cast<std::int64_t>(names.size()), effective);

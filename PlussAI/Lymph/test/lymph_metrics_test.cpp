@@ -118,7 +118,7 @@ bool run_lymph_factorize_checks(std::ostream* err = nullptr) {
   linear.regularization_strength = 1e-6;
   linear.fit_intercept = true;
 
-  Model model = model::logistic_regression(linear);
+  models::Model model = models::logistic_regression(linear);
   TrainOptions train{};
   train.max_iterations = 2000;
   train.tolerance = 1e-8;
@@ -158,7 +158,7 @@ bool run_lymph_factorize_checks(std::ostream* err = nullptr) {
   const LabeledBatch train_batch_for_save =
       resolve(labeled_batch_from_dataframe(train_frame, data_options), "test.labeled_batch_from_dataframe(save)");
   model.save(tmp.string(), train_batch_for_save, train);
-  const Model restored = Model::load(tmp.string());
+  const models::Model restored = models::Model::load(tmp.string());
   std::filesystem::remove(tmp);
 
   if (!restored.trained()) {
@@ -197,7 +197,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   linear.regularization_strength = 1e-6;
   linear.fit_intercept = true;
 
-  Model model = model::logistic_regression(linear);
+  models::Model model = models::logistic_regression(linear);
   TrainOptions train{};
   train.max_iterations = 2500;
   train.tolerance = 1e-8;
@@ -288,14 +288,14 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
     return false;
   }
 
-  metrics::ValidationOptions cv{};
+  selection::CrossValOptions cv{};
   cv.plan = CVPlanKind::CrossVal;
   cv.folds = 4;
   cv.shuffle = true;
   cv.random_state = 73;
   cv.deterministic = true;
 
-  const validate::Plan cv_plan = validate::cross(cv);
+  const selection::Plan cv_plan = selection::cross(cv);
   const Series fold_scores = cv_plan.scores(model.model_spec().value(), batch, MetricKind::Accuracy, train);
   if (fold_scores.numel() != 4 || !fold_scores.isfinite().all().item<bool>()) {
     if (err) *err << "lymph cross_validate_scores should return one finite score per fold\n";
@@ -319,7 +319,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
 
   // Reports are now produced by the reports family consuming a public Model;
   // CV still uses the spec-level validation path until validate:: lands.
-  Model report_model = model::logistic_regression(linear);
+  models::Model report_model = models::logistic_regression(linear);
   report_model.learn_(batch, train);
   const ConfusionTable report_cm = reports::confusion_table(report_model, batch);
   if (report_cm.counts.numel() != cm.counts.numel()) {
@@ -348,15 +348,15 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   }
 
   {
-    const auto triplet = sparse::make_triplet(6,
-                                              2,
-                                              {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5},
-                                              {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1},
-                                              {-2.0, -1.0, -1.5, -0.7, 1.2, 1.4, 1.8, 0.9, -1.1, -0.8, 1.0, 1.2});
-    const auto csr = sparse::to_csr(triplet);
+    const auto triplet = models::sparse::make_triplet(6,
+                                                      2,
+                                                      {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5},
+                                                      {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1},
+                                                      {-2.0, -1.0, -1.5, -0.7, 1.2, 1.4, 1.8, 0.9, -1.1, -0.8, 1.0, 1.2});
+    const auto csr = models::sparse::to_csr(triplet);
     const Series y_bin = pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0, 0.0, 1.0}, {6}, f64());
 
-    sparse::BinaryLinearModel sparse_bin{};
+    models::sparse::BinaryLinearModel sparse_bin{};
     sparse_bin.learn_(triplet, y_bin, TrainOptions{.max_iterations = 500, .tolerance = 1e-7});
     const Series sparse_pred = sparse_bin.infer(csr);
     if (sparse_pred.numel() != 6) {
@@ -364,7 +364,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
       return false;
     }
     const auto sparse_state = sparse_bin.dump_state();
-    sparse::BinaryLinearModel sparse_bin_copy{};
+    models::sparse::BinaryLinearModel sparse_bin_copy{};
     sparse_bin_copy.load_state_(pluss::msharp::RangeView::Series(sparse_state));
     const Series sparse_pred_copy = sparse_bin_copy.infer(triplet);
     if (sparse_pred_copy.numel() != 6) {
@@ -379,32 +379,32 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
     sparse_split.random.seed = 17;
     sparse_split.random.deterministic = true;
 
-    const auto sparse_cv = sparse::cross_assess_binary(triplet, y_bin, sparse_split);
+    const auto sparse_cv = models::sparse::cross_assess_binary(triplet, y_bin, sparse_split);
     if (static_cast<std::int64_t>(sparse_cv.folds.size()) != sparse_split.folds) {
       if (err) *err << "sparse::cross_assess_binary should produce one report per fold\n";
       return false;
     }
 
-    const auto sparse_fold_report = sparse::assess_binary_folds(triplet, y_bin, sparse_split);
+    const auto sparse_fold_report = models::sparse::assess_binary_folds(triplet, y_bin, sparse_split);
     if (static_cast<std::int64_t>(sparse_fold_report.folds.size()) != sparse_split.folds) {
       if (err) *err << "sparse::assess_binary_folds should produce one report per fold\n";
       return false;
     }
 
     const LinearFamilyOptions linear_sparse = linear;
-    const auto sparse_tune = sparse::tune_binary({linear_sparse}, triplet, y_bin, sparse_split);
+    const auto sparse_tune = models::sparse::tune_binary({linear_sparse}, triplet, y_bin, sparse_split);
     if (sparse_tune.trials.empty()) {
       if (err) *err << "sparse::tune_binary should return at least one trial\n";
       return false;
     }
-    if (!sparse::has_best_trial(sparse_tune)) {
+    if (!models::sparse::has_best_trial(sparse_tune)) {
       if (err) *err << "sparse::tune_binary should produce a best trial index\n";
       return false;
     }
-    const auto& sparse_best = sparse::best_trial(sparse_tune);
+    const auto& sparse_best = models::sparse::best_trial(sparse_tune);
     (void)sparse_best;
-    const Series sparse_obj = sparse::objective_series(sparse_tune);
-    const Series sparse_rank = sparse::objective_rank_series(sparse_tune);
+    const Series sparse_obj = models::sparse::objective_series(sparse_tune);
+    const Series sparse_rank = models::sparse::objective_rank_series(sparse_tune);
     if (sparse_obj.numel() != static_cast<std::int64_t>(sparse_tune.trials.size())
         || sparse_rank.numel() != static_cast<std::int64_t>(sparse_tune.objective_rank.size())) {
       if (err) *err << "sparse tune objective artifact helpers should mirror trial and rank sizes\n";

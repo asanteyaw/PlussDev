@@ -47,7 +47,7 @@ Example 2. Reuse an `argsort()` result to physically reorder the axis.
 ```cpp
 auto order = dup.argsort();
 auto sorted = dup.take(order);
-std::cout << pluss::print_series(order) << "\n";
+std::cout << pluss::series::print(order) << "\n";
 std::cout << pluss::timeindex::print(sorted) << "\n";
 ```
 

@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=7ba0f378"></script>
+    <script src="../../../_static/api_nav.js?v=5807a5a5"></script>
     <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::index" href="index.html" />
+    <link rel="next" title="Series::flatten" href="flatten.html" />
     <link rel="prev" title="Series::extract_put" href="extract_put.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -48,24 +48,23 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Writes into the current series through the full <code class="docutils literal notranslate"><span class="pre">ExtractSpec</span></code> selector
-language, mutates in place, and returns <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
+<p>Writes into the current <code class="docutils literal notranslate"><span class="pre">Series</span></code> through the full selector language, mutates in
+place, and returns the same handle.</p>
 <p>This is the broadest selector-based write surface on <code class="docutils literal notranslate"><span class="pre">Series</span></code>. If
-<a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a> is the strict “only accept selectors that
-can remain a pure view” method, <code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> is the method that says
-“accept the full selector grammar and materialize positions when necessary.”</p>
-<p>That distinction matters in practice:</p>
+<a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a> is the strict method that only accepts
+selectors that stay view-representable, <code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> is the method that
+says “accept the richer selector language and materialize destination positions
+when necessary.”</p>
+<p>That distinction matters in practice. This surface accepts things like:</p>
 <ul class="simple">
-<li><p>reverse slices are legal here</p></li>
-<li><p>bool masks are legal here</p></li>
-<li><p>integer advanced indices are legal here</p></li>
-<li><p>mixed selectors that cannot stay a plain view are still legal here</p></li>
+<li><p>reverse slices</p></li>
+<li><p>bool masks</p></li>
+<li><p>integer index <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
+<li><p>mixed selectors that cannot stay a plain view</p></li>
 </ul>
-<p>Internally, the selector is normalized, the destination positions are computed,
-and the final write routes through the explicit index-write machinery. So the
-mental model is simple even if the lowering path is not:</p>
+<p>The most useful mental model is simple:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">extract()</span></code> chooses values to read</p></li>
+<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a> chooses values to read</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> chooses positions to write</p></li>
 </ul>
 </section>
@@ -73,7 +72,7 @@ mental model is simple even if the lowering path is not:</p>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>specs</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;ExtractSpec&gt;</span></code>)</p>
 <p>The destination selector.</p>
-<p>This method accepts the same selector language documented for
+<p>This method accepts the same broad selector family taught on
 <a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract()</span></code></span></a>, including:</p>
 <ul class="simple">
 <li><p>scalar integer indices</p></li>
@@ -82,15 +81,16 @@ mental model is simple even if the lowering path is not:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">SliceAll()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code></p></li>
-<li><p>bool mask series</p></li>
-<li><p>integer index series</p></li>
+<li><p>bool mask <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
+<li><p>integer index <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
 </ul>
-<p>Write-side selector details:</p>
+<p>Write-side details are important here:</p>
 <ul class="simple">
 <li><p>scalar indices consume an existing axis and narrow the addressed region</p></li>
-<li><p>slices keep the axis and choose which positions on it will be written</p></li>
+<li><p>slices keep an axis and choose positions on it</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code> expands to however many identity slices are required</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> is accepted, but it does not create a new writable axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> is accepted for selector compatibility, but it does not create a
+new writable axis</p></li>
 <li><p>advanced selectors are materialized into explicit destination positions</p></li>
 </ul>
 <p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
@@ -102,23 +102,23 @@ selection</p></li>
 <li><p>otherwise <code class="docutils literal notranslate"><span class="pre">values.numel()</span></code> must exactly match the number of selected
 destination elements</p></li>
 </ul>
-<p>For non-scalar writes, matching is by element count. The source is consumed in
-the selector’s logical visit order rather than by trying to preserve its
-original shape.</p>
+<p>For non-scalar writes, matching is by selected element count. The original
+shape of <code class="docutils literal notranslate"><span class="pre">values</span></code> does not need to mirror the destination shape as long as the
+write cardinality is correct.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code>
-The same series, after mutation.</p>
+The same <code class="docutils literal notranslate"><span class="pre">Series</span></code>, after mutation.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Shared setup. Start with an ordinary <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">4</span></code> grid.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">,</span>
-<span class="w">     </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">,</span>
-<span class="w">     </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<p>Example 1. Shared setup. Start from a simple <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">4</span></code> grid.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w"> </span><span class="mf">32.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">},</span>
+<span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
 </pre></div>
@@ -131,13 +131,9 @@ data=[[10, 11, 12, 13],
   [30, 31, 32, 33]]
 </pre></div>
 </div>
-<p>Example 2. A scalar source broadcasts across all selected destinations.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fill_column</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">}};</span>
-
-<span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
-<span class="w">    </span><span class="n">fill_column</span><span class="p">,</span>
+<p>Example 2. A scalar source broadcasts across every selected destination.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">}},</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">-1.0</span><span class="p">));</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
@@ -154,13 +150,9 @@ data=[[10, -1, 12, 13],
 </div>
 <p>Example 3. Reverse slices are legal here, so write order follows the selector’s
 logical visitation order.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">reverse_write</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">},</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Slice</span><span class="o">::</span><span class="n">kUnbounded</span><span class="p">,</span><span class="w"> </span><span class="mi">-2</span><span class="p">)};</span>
-
-<span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
-<span class="w">    </span><span class="n">reverse_write</span><span class="p">,</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">70.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">}));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Slice</span><span class="o">::</span><span class="n">kUnbounded</span><span class="p">,</span><span class="w"> </span><span class="mi">-2</span><span class="p">)},</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">70.0</span><span class="p">}));</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
 </pre></div>
@@ -176,16 +168,11 @@ data=[[10, -1, 12, 13],
 </div>
 <p>The selector visits row <code class="docutils literal notranslate"><span class="pre">1</span></code>, columns <code class="docutils literal notranslate"><span class="pre">3</span></code> then <code class="docutils literal notranslate"><span class="pre">1</span></code>, so <code class="docutils literal notranslate"><span class="pre">90</span></code> lands in column <code class="docutils literal notranslate"><span class="pre">3</span></code>
 and <code class="docutils literal notranslate"><span class="pre">70</span></code> lands in column <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
-<p>Example 4. <code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> is accepted for compatibility with the selector grammar,
-but it does not create a new writable destination dimension.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">with_newaxis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">NewAxis</span><span class="p">(),</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">}};</span>
-
-<span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
-<span class="w">    </span><span class="n">with_newaxis</span><span class="p">,</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">300.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">}));</span>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> is accepted for selector compatibility, but it does not
+create a new writable destination dimension.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">NewAxis</span><span class="p">(),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">}},</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">300.0</span><span class="p">}));</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
 </pre></div>
@@ -199,17 +186,13 @@ data=[[100, -1, 12, 13],
   [300, -1, 32, 33]]
 </pre></div>
 </div>
-<p>Semantically this is still just “write column <code class="docutils literal notranslate"><span class="pre">0</span></code> for every row.”</p>
-<p>Example 5. Bool masks are also legal here because <code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> is allowed
-to materialize the addressed positions.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
-
-<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask_specs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">    </span><span class="n">row_mask</span><span class="p">,</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">()};</span>
+<p>Semantically, this is still just “write column <code class="docutils literal notranslate"><span class="pre">0</span></code> for every row.”</p>
+<p>Example 5. Bool masks are legal here because <code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> is allowed to
+materialize destination positions.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
 
 <span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
-<span class="w">    </span><span class="n">mask_specs</span><span class="p">,</span>
+<span class="w">    </span><span class="p">{</span><span class="n">row_mask</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">()},</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">));</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
@@ -224,15 +207,52 @@ data=[[0, 0, 0, 0],
   [0, 0, 0, 0]]
 </pre></div>
 </div>
-<p>Example 6. Non-scalar sources must match the selected element count exactly.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mismatch_specs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">},</span>
-<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)};</span>
+<p>Example 6. Integer index <code class="docutils literal notranslate"><span class="pre">Series</span></code> selectors can target explicit rows in the
+same write family.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">picked_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">0L</span><span class="n">L</span><span class="p">});</span>
 
+<span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="n">picked_rows</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">()},</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">3000.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3001.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3002.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3003.0</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">1000.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1001.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1002.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1003.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">}));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[1000, 1001, 1002, 1003],
+  [200, 70, 22, 90],
+  [3000, 3001, 3002, 3003]]
+</pre></div>
+</div>
+<p>Example 7. <code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code> also works on the write side and expands to the missing
+identity slices before the final write.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Ellipsis</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">2</span><span class="p">}},</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">12.5</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">,</span><span class="w"> </span><span class="mf">32.5</span><span class="p">}));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
+data=[[1000, 1001, 12.5, 1003],
+  [200, 70, 22.5, 90],
+  [3000, 3001, 32.5, 3003]]
+</pre></div>
+</div>
+<p>Example 8. Non-scalar sources must match the selected element count exactly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
-<span class="w">      </span><span class="n">mismatch_specs</span><span class="p">,</span>
-<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">}));</span>
+<span class="w">      </span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)},</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
@@ -240,36 +260,59 @@ data=[[0, 0, 0, 0],
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::extract_put_: source must be scalar or match selected element count
 </pre></div>
 </div>
-<p>The selector names only two destination positions, so a three-element source is
-rejected.</p>
+<p>Example 9. Invalid slice step values fail before any write happens.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">grid</span><span class="p">.</span><span class="n">extract_put_</span><span class="p">(</span>
+<span class="w">      </span><span class="p">{</span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceAll</span><span class="p">(),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">SliceRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)},</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::extract: step cannot be 0
+</pre></div>
+</div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> is the richest selector-write surface on <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
-<li><p>Use it when the selector may involve masks, reverse traversal, or other
-non-view addressing.</p></li>
-<li><p>If you want the same write to return a patched copy, use
-<a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">extract_put()</span></code></span></a>.</p></li>
-<li><p>If you want the method to reject anything that is not view-representable, use
-<a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NewAxis()</span></code> is accepted, but it does not create a new writable destination
+axis.</p></li>
+<li><p>Reverse slices are legal here, so source values follow selector visit order,
+not sorted position order.</p></li>
+<li><p>Bool masks and integer index selectors are allowed because this method is
+willing to materialize explicit destination positions.</p></li>
+<li><p>A zero slice step fails during selector normalization before any write occurs.</p></li>
+<li><p>The selection count, not the visible destination shape, is what governs
+whether a non-scalar source is valid.</p></li>
 </ul>
+</section>
+<section id="teaching-summary">
+<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<p>Reach for <code class="docutils literal notranslate"><span class="pre">extract_put_()</span></code> when you want the richest selector-language write
+surface on <code class="docutils literal notranslate"><span class="pre">Series</span></code>. It is the right method for masks, reverse slices,
+<code class="docutils literal notranslate"><span class="pre">Ellipsis()</span></code>, and advanced integer selectors. If you later realize your
+selector could have stayed a plain view all along, then
+<a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">traverse_put_()</span></code></span></a> is the stricter sibling.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put</span></code></span></a>: same selector language, but
-copy-returning.</p></li>
-<li><p><a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_put_</span></code></span></a>: stricter in-place writes through
-the view-representable subset only.</p></li>
+<li><p><a class="reference internal" href="extract_put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract_put</span></code></span></a>: copy-returning sibling.</p></li>
+<li><p><a class="reference internal" href="traverse_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse_put_</span></code></span></a>: stricter in-place selector
+writes.</p></li>
 <li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::extract</span></code></span></a>: read-side counterpart.</p></li>
-<li><p><a class="reference internal" href="index_put_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::index_put_</span></code></span></a>: explicit index-list writes.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="extract_put.html">
@@ -373,7 +416,7 @@ the view-representable subset only.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="extract_put.html" title="previous chapter">Series::extract_put</a></li>
-      <li>Next: <a href="index.html" title="next chapter">Series::index</a></li>
+      <li>Next: <a href="flatten.html" title="next chapter">Series::flatten</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

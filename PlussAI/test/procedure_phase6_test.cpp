@@ -329,7 +329,7 @@ bool run_phase6_checks(std::ostream* err = nullptr) {
     const lymph::TrainOptions train = rich_train_options();
     const lymph::InferOptions infer = rich_infer_options();
     const lymph::AssessOptions assess = rich_assess_options();
-    lymph::Model trained_model = lymph::models::decision_tree_regressor({.max_depth = 3});
+    lymph::models::Model trained_model = lymph::models::decision_tree_regressor({.max_depth = 3});
     trained_model.learn_(regression_batch(), lymph::TrainOptions{});
     lymph::Workflow trained_workflow = lymph::workflow::make(lymph::models::decision_tree_regressor({.max_depth = 2}));
     trained_workflow.learn_(regression_batch(), lymph::TrainOptions{});
