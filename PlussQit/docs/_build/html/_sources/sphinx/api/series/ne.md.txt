@@ -155,7 +155,7 @@ broadcast: incompatible shapes
 - The return value is a boolean mask, not a numeric residual.
 - Incompatible shapes still throw broadcast errors.
 
-## Teaching Summary
+## Summary
 
 Use `ne()` when you need the direct "different from" mask. It is the cleanest
 way to mark non-matching elements without building a numeric difference and

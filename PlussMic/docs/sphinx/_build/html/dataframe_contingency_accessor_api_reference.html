@@ -44,12 +44,83 @@
 <ul class="simple">
 <li><p>Use the left sidebar to open one method page at a time.</p></li>
 <li><p>Each method page contains its own signatures, parameter details, notes, verified outputs, and working previous/next navigation.</p></li>
-<li><p>This landing page stays intentionally short so the content panel is not one giant scroll of every method.</p></li>
+<li><p>The object is meant to be learned as a <strong>workflow</strong>, not as a bag of unrelated
+methods.</p></li>
+</ul>
+</section>
+<section id="the-object-in-one-sentence">
+<h2>The Object In One Sentence<a class="headerlink" href="#the-object-in-one-sentence" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ContingencyTable</span></code> is a retained N-dimensional joint frequency/distribution object that
+you can inspect, transform, and only then render to 2D.</p>
+</section>
+<section id="learn-it-in-this-order">
+<h2>Learn It In This Order<a class="headerlink" href="#learn-it-in-this-order" title="Link to this heading">¶</a></h2>
+<p>If you are new to the surface, this is the right study sequence:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="api/dataframe/contingency.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::contingency</span></code></span></a>
+Learn how the retained object is constructed and what overload remembers what.</p></li>
+<li><p><a class="reference internal" href="api/dataframe-contingency/ndim.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ndim</span></code></span></a>, <a class="reference internal" href="api/dataframe-contingency/shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shape</span></code></span></a>, <a class="reference internal" href="api/dataframe-contingency/dims.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dims</span></code></span></a>
+Learn how to inspect the retained tensor itself.</p></li>
+<li><p><a class="reference internal" href="api/dataframe-contingency/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq</span></code></span></a>, <a class="reference internal" href="api/dataframe-contingency/share.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">share</span></code></span></a>, <a class="reference internal" href="api/dataframe-contingency/condition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">condition</span></code></span></a>
+Learn the three value spaces: counts, global shares, and conditional shares.</p></li>
+<li><p><a class="reference internal" href="api/dataframe-contingency/slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice</span></code></span></a>, <a class="reference internal" href="api/dataframe-contingency/marginalize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">marginalize</span></code></span></a>
+Learn how to fix dimensions or sum them away before rendering.</p></li>
+<li><p><a class="reference internal" href="api/dataframe-contingency/to_frame.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_frame</span></code></span></a>, <a class="reference internal" href="api/dataframe-contingency/facet.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">facet</span></code></span></a>, <a class="reference internal" href="api/dataframe-contingency/to_array.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_array</span></code></span></a>
+Learn how to project the retained object into a 2D table, several 2D tables, or a
+dense tensor payload.</p></li>
+</ol>
+</section>
+<section id="the-core-distinctions">
+<h2>The Core Distinctions<a class="headerlink" href="#the-core-distinctions" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">share()</span></code> normalizes by the grand total of the <strong>current retained table</strong>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">condition({...})</span></code> normalizes within the supplied retained dimensions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slice(...)</span></code> fixes concrete levels and drops those dimensions from the object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">marginalize(...)</span></code> sums dimensions out and drops them from the object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code> flattens every remaining dimension not placed on rows onto the
+column side.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> keeps those remaining dimensions as an atlas/facet axis instead of
+flattening them into one wide frame.</p></li>
+</ul>
+</section>
+<section id="choosing-the-right-render">
+<h2>Choosing The Right Render<a class="headerlink" href="#choosing-the-right-render" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code> when:</p>
+<ul class="simple">
+<li><p>you want one ordinary <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></li>
+<li><p>a wide flattened column layout is acceptable</p></li>
+<li><p>you want totals inline in a single rendered table</p></li>
+</ul>
+<p>Use <code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> when:</p>
+<ul class="simple">
+<li><p>flattening the remaining dimensions would make the table too wide</p></li>
+<li><p>you want one 2D table per leftover level combination</p></li>
+<li><p>you want to preserve visual separation between slices instead of encoding them into
+column names</p></li>
+</ul>
+<p>Use <code class="docutils literal notranslate"><span class="pre">to_array()</span></code> when:</p>
+<ul class="simple">
+<li><p>you want the dense N-dimensional payload itself</p></li>
+<li><p>you are feeding the result into numeric/tensor code</p></li>
+<li><p>you care about tensor rank and axis order, not tabular rendering</p></li>
+</ul>
+</section>
+<section id="performance-and-limits">
+<h2>Performance And Limits<a class="headerlink" href="#performance-and-limits" title="Link to this heading">¶</a></h2>
+<p>This object is efficient when the crossed dimensions are genuinely categorical and the
+cardinality product is manageable. It is not sparse. If you cross a large number of
+high-cardinality dimensions, the dense tensor can become too large to materialize.</p>
+<p>That is the main practical rule:</p>
+<ul class="simple">
+<li><p>small-to-moderate categorical cardinality -&gt; excellent fit</p></li>
+<li><p>raw identifiers or huge combinatorial products -&gt; reduce, bucket, or use a different
+surface first</p></li>
 </ul>
 </section>
 <section id="method-pages">
 <h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
-<p>The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.</p>
+<p>The sidebar lists methods alphabetically. You can also use the search box to jump
+directly to a method name.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>

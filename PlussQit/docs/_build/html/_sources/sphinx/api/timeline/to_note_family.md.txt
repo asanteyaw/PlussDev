@@ -80,7 +80,7 @@ Example 1. Extract date-only text.
 
 ```cpp
 auto out = base.to_note_date();
-std::cout << pluss::print_note(out) << "\n";
+std::cout << pluss::note::print(out) << "\n";
 ```
 
 ### Output
@@ -94,7 +94,7 @@ Example 2. Extract time-only text.
 
 ```cpp
 auto out = base.to_note_time();
-std::cout << pluss::print_note(out) << "\n";
+std::cout << pluss::note::print(out) << "\n";
 ```
 
 ### Output
@@ -108,7 +108,7 @@ Example 3. Extract a plain datetime layout.
 
 ```cpp
 auto out = base.to_note_datetime();
-std::cout << pluss::print_note(out) << "\n";
+std::cout << pluss::note::print(out) << "\n";
 ```
 
 ### Output
@@ -122,7 +122,7 @@ Example 4. Extract RFC-style text with explicit offset.
 
 ```cpp
 auto out = base.to_note_rfc3339();
-std::cout << pluss::print_note(out) << "\n";
+std::cout << pluss::note::print(out) << "\n";
 ```
 
 ### Output

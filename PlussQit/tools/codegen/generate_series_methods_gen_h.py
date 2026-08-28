@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate CodeM/generated/SeriesMethodsGen.h from native_functions.yaml.
 
-This emits a Torch-like method surface for `pluss::codem::Series` where each
+This emits a method surface for `pluss::codem::Series` where each
 method is a thin wrapper that forwards to `_compat::invoke` / `_compat::invoke_`.
 """
 
@@ -30,7 +30,7 @@ CPP_KEYWORDS = {
 }
 
 EXTRA_METHOD_NAMES = {
-    # MATLAB/NumPy-style extensions maintained by PlussQit.
+    # Extensions maintained by PlussQit.
     "dct", "idct", "dst", "idst", "hilbert", "histcounts",
     "skewness", "kurtosis", "nanvar", "nanstd", "ediff1d",
     "movsum", "movmean", "movmax", "movmin", "movstd", "movvar",

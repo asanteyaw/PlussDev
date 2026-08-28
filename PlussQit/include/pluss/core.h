@@ -6,12 +6,14 @@
 #include "pluss/error.h"
 #include "pluss/null.h"
 #include "pluss/validate.h"
+#include "pluss/msharp/lister.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/codem/losses.h"
 #include "pluss/slicing.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "pluss/codeh/timeindex_factory.h"
+#include "pluss/queue.h"
 #include "pluss/io.h"
 
 #if __has_include("subsp/math/linalg.h")

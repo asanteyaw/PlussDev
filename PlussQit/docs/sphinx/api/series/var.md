@@ -312,7 +312,7 @@ var(dim): dim out of range
 - Sample variance on singleton lanes throws.
 - Invalid dims throw immediately.
 
-## Teaching Summary
+## Summary
 
 Use `var()` when you want squared spread around the mean.
 

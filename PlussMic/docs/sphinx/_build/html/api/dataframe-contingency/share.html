@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -52,6 +52,16 @@
 <p>Returns the same retained table in global-share space.</p>
 <p>Every cell is divided by the grand total across the current retained table, so
 the full rendered table sums to <code class="docutils literal notranslate"><span class="pre">1.0</span></code> when the table is non-empty.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ContingencyTable</span></code>
+A new retained table whose values are global proportions instead of counts.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">share()</span></code> when you want each cell interpreted as “share of the current whole”
+rather than “count within the current whole.”</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -106,6 +116,16 @@ original unsliced one.</p>
 </pre></div>
 </div>
 </section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">share()</span></code> normalizes the <strong>current retained table</strong>. If you slice or marginalize
+first, the denominator changes accordingly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">share()</span></code> is different from <code class="docutils literal notranslate"><span class="pre">condition(...)</span></code>: global share asks “share of all cells”;
+conditional share asks “share within these retained parent dimensions.”</p></li>
+<li><p>Empty or all-zero retained tables render as zeros rather than undefined values.</p></li>
+</ul>
 </section>
 </section>
 

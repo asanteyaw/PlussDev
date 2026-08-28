@@ -910,7 +910,7 @@ public:
   Series scatter_reduce_amin(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
   Series put_(const Series& index, const Series& source, bool accumulate=false);
   Series nonzero() const;
-  Series unique(bool sorted=true) const;
+  Series unique(bool sorted) const;
   Series isin(const Series& test_elements) const;
   Series isin(const Series& test_elements, bool assume_unique) const;
   Series isin(const Series& test_elements, bool assume_unique, bool invert) const;
@@ -957,7 +957,7 @@ public:
   Series is_prime() const;
   Series prime() const;
   Series factor() const;
-  Series bincount(std::int64_t minlength=0) const;
+  Series bincount(std::int64_t minlength) const;
   Series histc(std::int64_t bins, double min, double max) const;
   Series masked_select(const Series& mask) const;
   Series masked_scatter(const Series& mask, const Series& src) const;

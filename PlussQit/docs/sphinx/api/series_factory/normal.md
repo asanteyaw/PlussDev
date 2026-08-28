@@ -29,7 +29,7 @@ This is the parameterized companion to [`randn()`](randn.md):
 - `randn()` means standard normal: mean `0`, std `1`
 - `normal(mean, std, ...)` means "shift and scale to the distribution I want"
 
-So `normal()` is usually the better teaching surface once the problem statement
+So `normal()` is usually the better surface once the problem statement
 already names a mean and a spread.
 
 ## Parameters

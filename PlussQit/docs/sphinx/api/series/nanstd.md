@@ -228,7 +228,7 @@ That is a real current quirk worth documenting honestly.
 - `nanstd()` and `std()` differ by policy, not just convenience.
 - Some current `nanstd(...)` dim failures report through `nanvar` wording.
 
-## Teaching Summary
+## Summary
 
 Use `nanstd()` when NaN means "missing value that should be ignored during the
 reduction" and you want spread in the original units.

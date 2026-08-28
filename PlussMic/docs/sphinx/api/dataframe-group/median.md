@@ -5,10 +5,13 @@
 
 [Back to DataFrameGroupBuilder API Reference](../../dataframe_group_accessor_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrameGrouped::median() const -> DataFrame
+DataFrameGrouped::median(std::string_view feature) const -> DataFrame
+DataFrameGrouped::median(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::median(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -19,9 +22,16 @@ every remaining value feature. For a group with an odd number of observed values
 the median is the middle value once sorted; for an even count, it is the average of
 the two middle values.
 
+When you pass one or more feature names, `median(...)` only aggregates those selected
+value features instead of every remaining non-key value feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to median-reduce. Omit them to reduce every
+remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -80,11 +90,36 @@ std::cout << out;
 `"Tema"` has two values, `30` and `70`; with an even count the median is their
 average, `(30 + 70) / 2 = 50`.
 
+Example 2. Median only one selected value feature.
+
+```cpp
+auto wide = DataFrame({
+    {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Thread(pluss::make_series({10.0, 50.0, 30.0, 70.0}))},
+    {"units", Thread(pluss::make_series({2.0, 9.0, 1.0, 3.0}))},
+});
+
+auto out2 = wide.group().by({"city"}).median({"amount"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+===========================
+     | city   amount_median
+---------------------------
+0    | Accra  30
+1    | Tema   50
+---------------------------
+[2 cs x 2 feat]
+```
+
 ## Notes
 
 - Median is robust to extreme values in ways mean is not.
-- Like the other grouped terminals, it applies to every remaining non-key value
-  feature uniformly.
+- Like the other grouped terminals, it can either apply uniformly to every remaining
+  non-key value feature or to a targeted selected subset.
 - A group where the value feature is entirely null has a null median, not `0`.
 
 ## See Also

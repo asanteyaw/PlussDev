@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -72,58 +72,154 @@
 </section>
 <section id="what-it-is">
 <h2>What It Is<a class="headerlink" href="#what-it-is" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> reshapes long data into a summarized matrix.</p>
-<p>Conceptually it does three things:</p>
+<p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> is the summarized wide reshape.</p>
+<p>It starts from long data, groups by row-side keys and column-side keys, reduces one or
+more value features inside each key combination, and then spreads the column-side key
+combinations across wide output features.</p>
+<p>If you know pandas, this is the Pluss analogue of <code class="docutils literal notranslate"><span class="pre">pandas.pivot_table(...)</span></code>. The main
+idea is the same, but the rendering model is deliberately Pluss-native:</p>
+<ul class="simple">
+<li><p>row keys stay on the case axis</p></li>
+<li><p>multi-row keys become structured case labels</p></li>
+<li><p>multi-column key tuples are flattened into descriptive feature names</p></li>
+<li><p>the result is still an ordinary <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, not a column <code class="docutils literal notranslate"><span class="pre">MultiIndex</span></code></p></li>
+</ul>
+<p>That means a pivot such as:</p>
+<ul class="simple">
+<li><p>row keys: <code class="docutils literal notranslate"><span class="pre">{&quot;city&quot;,</span> <span class="pre">&quot;quarter&quot;}</span></code></p></li>
+<li><p>column keys: <code class="docutils literal notranslate"><span class="pre">{&quot;channel&quot;,</span> <span class="pre">&quot;product&quot;}</span></code></p></li>
+<li><p>values: <code class="docutils literal notranslate"><span class="pre">{&quot;units&quot;,</span> <span class="pre">&quot;revenue&quot;}</span></code></p></li>
+<li><p>aggregations: <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code></p></li>
+</ul>
+<p>still behaves like a full multi-key pivot, but the output features will read more like:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">units_sum</span> <span class="pre">::</span> <span class="pre">Card</span> <span class="pre">|</span> <span class="pre">Laptop</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">units_mean</span> <span class="pre">::</span> <span class="pre">Card</span> <span class="pre">|</span> <span class="pre">Laptop</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">revenue_sum</span> <span class="pre">::</span> <span class="pre">Cash</span> <span class="pre">|</span> <span class="pre">Phone</span></code></p></li>
+</ul>
+<p>instead of forcing a column hierarchy.</p>
+</section>
+<section id="mental-model">
+<h2>Mental Model<a class="headerlink" href="#mental-model" title="Link to this heading">¶</a></h2>
+<p>Read <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> as:</p>
 <ol class="arabic simple">
-<li><p>groups rows by one or more row keys (<code class="docutils literal notranslate"><span class="pre">index</span></code>) and one or more column keys (<code class="docutils literal notranslate"><span class="pre">columns</span></code>)</p></li>
-<li><p>aggregates one or more value features inside each key combination</p></li>
-<li><p>spreads the column-side key combinations across wide output features</p></li>
+<li><p>choose the case-side grouping keys with <code class="docutils literal notranslate"><span class="pre">index</span></code></p></li>
+<li><p>choose the feature-side grouping keys with <code class="docutils literal notranslate"><span class="pre">columns</span></code></p></li>
+<li><p>choose what to aggregate with <code class="docutils literal notranslate"><span class="pre">values</span></code> or <code class="docutils literal notranslate"><span class="pre">specs</span></code></p></li>
+<li><p>choose how to aggregate with <code class="docutils literal notranslate"><span class="pre">aggfuncs</span></code> or per-value <code class="docutils literal notranslate"><span class="pre">specs</span></code></p></li>
+<li><p>decide whether missing key combinations stay null or get filled</p></li>
+<li><p>decide whether totals should be appended with <code class="docutils literal notranslate"><span class="pre">margins</span></code></p></li>
 </ol>
-<p>If you know pandas, this is the Pluss analogue of <code class="docutils literal notranslate"><span class="pre">pandas.pivot_table(...)</span></code>. The
-generalized Pluss surface now covers the same core use cases:</p>
+<p>In other words, <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> is for:</p>
+<ul class="simple">
+<li><p>duplicate <code class="docutils literal notranslate"><span class="pre">(row_key,</span> <span class="pre">column_key)</span></code> combinations</p></li>
+<li><p>long transactional or observational data</p></li>
+<li><p>spreadsheet-like summaries</p></li>
+<li><p>“show me the grouped values in matrix form”</p></li>
+</ul>
+<p>It is not for:</p>
+<ul class="simple">
+<li><p>pure reshaping with guaranteed unique key pairs</p></li>
+<li><p>retained N-dimensional categorical objects</p></li>
+<li><p>arbitrary relational joins</p></li>
+</ul>
+<p>Use nearby methods accordingly:</p>
+<ul class="simple">
+<li><p>use <a class="reference internal" href="pivot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot()</span></code></span></a> when each <code class="docutils literal notranslate"><span class="pre">(case_feature,</span> <span class="pre">feature_feature)</span></code> pair is already unique</p></li>
+<li><p>use <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group()</span></code></span></a> when you want a grouped long result rather than a wide matrix</p></li>
+<li><p>use <a class="reference internal" href="contingency.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contingency()</span></code></span></a> when the primary object is a retained contingency table, not an immediately rendered summary matrix</p></li>
+</ul>
+</section>
+<section id="how-pluss-renders-the-result">
+<h2>How Pluss Renders The Result<a class="headerlink" href="#how-pluss-renders-the-result" title="Link to this heading">¶</a></h2>
+<p>This is one of the most important things to understand before you build larger pivots.</p>
+<section id="row-keys">
+<h3>Row keys<a class="headerlink" href="#row-keys" title="Link to this heading">¶</a></h3>
+<p>If <code class="docutils literal notranslate"><span class="pre">index</span> <span class="pre">=</span> <span class="pre">{&quot;city&quot;}</span></code>, you get one case per city.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">index</span> <span class="pre">=</span> <span class="pre">{&quot;city&quot;,</span> <span class="pre">&quot;quarter&quot;}</span></code>, Pluss keeps both keys on the case axis. When printed,
+they appear as a combined case label using <code class="docutils literal notranslate"><span class="pre">index_separator</span></code>.</p>
+<p>By default the separator is an internal control separator. For human-readable printed
+output, it is often worth setting:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">options</span><span class="p">.</span><span class="n">index_separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot; / &quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="column-keys">
+<h3>Column keys<a class="headerlink" href="#column-keys" title="Link to this heading">¶</a></h3>
+<p>If <code class="docutils literal notranslate"><span class="pre">columns</span> <span class="pre">=</span> <span class="pre">{&quot;product&quot;}</span></code>, each product becomes a feature or feature family.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">columns</span> <span class="pre">=</span> <span class="pre">{&quot;channel&quot;,</span> <span class="pre">&quot;product&quot;}</span></code>, each tuple such as <code class="docutils literal notranslate"><span class="pre">(&quot;Card&quot;,</span> <span class="pre">&quot;Laptop&quot;)</span></code> becomes a
+flattened label using <code class="docutils literal notranslate"><span class="pre">column_separator</span></code>, for example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Card | Laptop
+</pre></div>
+</div>
+</section>
+<section id="value-features-and-aggregation-names">
+<h3>Value features and aggregation names<a class="headerlink" href="#value-features-and-aggregation-names" title="Link to this heading">¶</a></h3>
+<p>If there is more than one resolved value aggregation, Pluss prefixes the flattened column
+label with the value-aggregation display name using <code class="docutils literal notranslate"><span class="pre">value_separator</span></code>, for example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>revenue_sum :: Card | Laptop
+</pre></div>
+</div>
+<p>If exactly one value aggregation is resolved, Pluss omits that prefix and uses only the
+column label when that is unambiguous. This preserves the simple look of the old
+single-value surface.</p>
+</section>
+</section>
+<section id="overload-guide">
+<h2>Overload Guide<a class="headerlink" href="#overload-guide" title="Link to this heading">¶</a></h2>
+<p>Use the overload that matches the job rather than forcing every call through the options
+struct.</p>
+<section id="legacy-three-key-overload">
+<h3>Legacy three-key overload<a class="headerlink" href="#legacy-three-key-overload" title="Link to this heading">¶</a></h3>
+<p>Use this when you have:</p>
+<ul class="simple">
+<li><p>one row key</p></li>
+<li><p>one column key</p></li>
+<li><p>one value feature</p></li>
+<li><p>one aggregation</p></li>
+</ul>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>It is still fully supported. It is now just the simple front door into the generalized
+pivot engine.</p>
+</section>
+<section id="range-or-initializer-list-overloads">
+<h3>Range or initializer-list overloads<a class="headerlink" href="#range-or-initializer-list-overloads" title="Link to this heading">¶</a></h3>
+<p>Use these when you want:</p>
 <ul class="simple">
 <li><p>multiple row keys</p></li>
 <li><p>multiple column keys</p></li>
 <li><p>multiple value features</p></li>
-<li><p>multiple aggregation functions</p></li>
-<li><p>per-value aggregation specs</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fill_value</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">margins</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">margins_name</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dropna</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sort</span></code></p></li>
+<li><p>one uniform aggregation applied to all selected values</p></li>
 </ul>
-<p>The main representation difference is output shape:</p>
-<ul class="simple">
-<li><p>pandas uses row/column <code class="docutils literal notranslate"><span class="pre">MultiIndex</span></code></p></li>
-<li><p>Pluss keeps multi-row keys as a structured case axis</p></li>
-<li><p>Pluss flattens multi-column combinations into descriptive feature names</p></li>
-</ul>
-<p>That is why a multi-key pivot in Pluss still behaves like an N-key pivot, but prints as a
-regular <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> with names such as <code class="docutils literal notranslate"><span class="pre">units_sum</span> <span class="pre">::</span> <span class="pre">Laptop</span></code> or
-<code class="docutils literal notranslate"><span class="pre">revenue_mean</span> <span class="pre">::</span> <span class="pre">West</span> <span class="pre">|</span> <span class="pre">Retail</span></code>.</p>
-</section>
-<section id="when-to-use-it">
-<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> when your source data is long and duplicate <code class="docutils literal notranslate"><span class="pre">(row_key,</span> <span class="pre">column_key)</span></code>
-pairs need aggregation.</p>
-<p>Prefer nearby methods in these cases:</p>
-<ul class="simple">
-<li><p>use <a class="reference internal" href="pivot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot()</span></code></span></a> when each <code class="docutils literal notranslate"><span class="pre">(case_feature,</span> <span class="pre">feature_feature)</span></code> pair is already
-unique and no aggregation should happen</p></li>
-<li><p>use <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group()</span></code></span></a> when you want a long grouped result rather than a wide matrix</p></li>
-<li><p>use <a class="reference internal" href="contingency.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contingency()</span></code></span></a> when the core object is a retained categorical
-joint distribution rather than an immediately rendered wide table</p></li>
-</ul>
-</section>
-<section id="surface-summary">
-<h2>Surface Summary<a class="headerlink" href="#surface-summary" title="Link to this heading">¶</a></h2>
-<p>The legacy overload is still there:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span>
+<span class="w">               </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">},</span>
+<span class="w">               </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">},</span>
+<span class="w">               </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>It is now just the simple entry point into the generalized engine.</p>
-<p>For the full surface, use <code class="docutils literal notranslate"><span class="pre">PivotTableOptions</span></code>:</p>
+<p>This is the cleanest surface when every value feature should use the same reduction.</p>
+</section>
+<section id="pivottableoptions">
+<h3><code class="docutils literal notranslate"><span class="pre">PivotTableOptions</span></code><a class="headerlink" href="#pivottableoptions" title="Link to this heading">¶</a></h3>
+<p>Use the options struct when you need any of the following:</p>
+<ul class="simple">
+<li><p>multiple aggregations</p></li>
+<li><p>per-value aggregation control</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fill_value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">margins</span></code></p></li>
+<li><p>custom <code class="docutils literal notranslate"><span class="pre">margins_name</span></code></p></li>
+<li><p>custom separators</p></li>
+<li><p>explicit <code class="docutils literal notranslate"><span class="pre">sort</span></code></p></li>
+<li><p>explicit <code class="docutils literal notranslate"><span class="pre">dropna</span></code></p></li>
+</ul>
+<p>This is the teaching-grade surface and the one to reach for once your pivot becomes more
+than a toy.</p>
+</section>
+</section>
+<section id="the-full-options-surface">
+<h2>The Full Options Surface<a class="headerlink" href="#the-full-options-surface" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">PivotValueSpec</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">output</span><span class="p">{};</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">feature</span><span class="p">{};</span>
@@ -149,47 +245,116 @@ joint distribution rather than an immediately rendered wide table</p></li>
 </pre></div>
 </div>
 </section>
-<section id="how-the-options-behave">
-<h2>How The Options Behave<a class="headerlink" href="#how-the-options-behave" title="Link to this heading">¶</a></h2>
-<p><strong>index</strong></p>
-<p>The row-side grouping keys. With one feature, the output has one row per distinct key
-value. With multiple features, the output keeps them as a structured case axis.</p>
-<p><strong>columns</strong></p>
-<p>The column-side grouping keys. With one feature, each distinct value becomes a set of
-output columns. With multiple features, each distinct tuple is flattened into one display
-label using <code class="docutils literal notranslate"><span class="pre">column_separator</span></code>.</p>
-<p><strong>values</strong></p>
-<p>The value features to aggregate. If omitted, <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> infers every non-key feature
-compatible with the requested aggregation(s).</p>
-<p><strong>aggfuncs</strong></p>
-<p>Uniform aggregation(s) applied to every feature in <code class="docutils literal notranslate"><span class="pre">values</span></code>. This is the closest analogue
-to pandas’ <code class="docutils literal notranslate"><span class="pre">aggfunc=[&quot;sum&quot;,</span> <span class="pre">&quot;mean&quot;]</span></code>.</p>
-<p><strong>specs</strong></p>
-<p>Explicit per-output aggregation specs. This is the targeted surface for “apply different
-reductions to different features” rather than using one <code class="docutils literal notranslate"><span class="pre">aggfunc</span></code> across everything.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">specs</span></code> is non-empty, it takes precedence over <code class="docutils literal notranslate"><span class="pre">values</span></code> and <code class="docutils literal notranslate"><span class="pre">aggfuncs</span></code>.</p>
-<p><strong>fill_value</strong></p>
-<p>Applied after the pivot is built. Unobserved cells stay null unless you supply a fill.</p>
-<p><strong>margins / margins_name</strong></p>
-<p>Adds totals. When a column axis exists, totals become extra wide features such as
-<code class="docutils literal notranslate"><span class="pre">units_sum</span> <span class="pre">::</span> <span class="pre">All</span></code>. When a row axis exists, an extra bottom row is appended.</p>
-<p><strong>dropna</strong></p>
-<p>If <code class="docutils literal notranslate"><span class="pre">true</span></code>, rows with null row/column keys are excluded before grouping. If <code class="docutils literal notranslate"><span class="pre">false</span></code>, null
-keys become real groups and render as <code class="docutils literal notranslate"><span class="pre">NULL</span></code>/<code class="docutils literal notranslate"><span class="pre">&lt;NULL&gt;</span></code> labels where appropriate.</p>
-<p><strong>sort</strong></p>
-<p>If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the grouped keys are ordered lexicographically before the pivot is spread wide.
-If <code class="docutils literal notranslate"><span class="pre">false</span></code>, first-seen group order is preserved.</p>
-<p><strong>index_separator / column_separator / value_separator</strong></p>
-<p>These are formatting controls for multi-key rendering:</p>
+<section id="option-semantics">
+<h2>Option Semantics<a class="headerlink" href="#option-semantics" title="Link to this heading">¶</a></h2>
+<section id="index">
+<h3><code class="docutils literal notranslate"><span class="pre">index</span></code><a class="headerlink" href="#index" title="Link to this heading">¶</a></h3>
+<p>The case-side grouping keys.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">index_separator</span></code> is the join token used when structured row-key labels are rendered</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">column_separator</span></code> joins multiple column-side key levels in the flattened output label</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">value_separator</span></code> joins the value-aggregation label to the flattened column label</p></li>
+<li><p>one feature means one output row per distinct key</p></li>
+<li><p>multiple features mean one output row per distinct tuple</p></li>
+<li><p>when printed, multiple features are rendered using <code class="docutils literal notranslate"><span class="pre">index_separator</span></code></p></li>
 </ul>
 </section>
-<section id="aggregations">
-<h2>Aggregations<a class="headerlink" href="#aggregations" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> accepts the same grouped reductions as <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group().agg()</span></code></span></a>:</p>
+<section id="columns">
+<h3><code class="docutils literal notranslate"><span class="pre">columns</span></code><a class="headerlink" href="#columns" title="Link to this heading">¶</a></h3>
+<p>The feature-side grouping keys.</p>
+<ul class="simple">
+<li><p>one feature means one output column family per distinct value</p></li>
+<li><p>multiple features mean one output column family per distinct tuple</p></li>
+<li><p>tuple labels are flattened using <code class="docutils literal notranslate"><span class="pre">column_separator</span></code></p></li>
+</ul>
+</section>
+<section id="values">
+<h3><code class="docutils literal notranslate"><span class="pre">values</span></code><a class="headerlink" href="#values" title="Link to this heading">¶</a></h3>
+<p>The value features to aggregate.</p>
+<p>If omitted, <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> tries to infer every non-key feature compatible with the
+requested aggregation list. This is convenient for quick exploration, but it can widen
+the result more than expected on large frames. For production pivots, explicit <code class="docutils literal notranslate"><span class="pre">values</span></code>
+or <code class="docutils literal notranslate"><span class="pre">specs</span></code> are usually clearer.</p>
+</section>
+<section id="aggfuncs">
+<h3><code class="docutils literal notranslate"><span class="pre">aggfuncs</span></code><a class="headerlink" href="#aggfuncs" title="Link to this heading">¶</a></h3>
+<p>Uniform aggregation functions applied to every selected value feature.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">values</span> <span class="pre">=</span> <span class="pre">{&quot;units&quot;,</span> <span class="pre">&quot;revenue&quot;}</span></code> and <code class="docutils literal notranslate"><span class="pre">aggfuncs</span> <span class="pre">=</span> <span class="pre">{Sum,</span> <span class="pre">Mean}</span></code>, Pluss resolves four
+value aggregations:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">units_sum</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">units_mean</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">revenue_sum</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">revenue_mean</span></code></p></li>
+</ul>
+</section>
+<section id="specs">
+<h3><code class="docutils literal notranslate"><span class="pre">specs</span></code><a class="headerlink" href="#specs" title="Link to this heading">¶</a></h3>
+<p>Explicit per-output aggregation control.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">PivotValueSpec</span></code> says:</p>
+<ul class="simple">
+<li><p>which source feature to aggregate</p></li>
+<li><p>which aggregation to apply</p></li>
+<li><p>what output display name to use</p></li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">specs</span></code> is non-empty, it takes precedence over <code class="docutils literal notranslate"><span class="pre">values</span></code> and <code class="docutils literal notranslate"><span class="pre">aggfuncs</span></code>.</p>
+<p>Use it when you want “sum this, mean that, mode this note feature, count rows here”
+instead of one aggregation rule for everything.</p>
+</section>
+<section id="fill-value">
+<h3><code class="docutils literal notranslate"><span class="pre">fill_value</span></code><a class="headerlink" href="#fill-value" title="Link to this heading">¶</a></h3>
+<p>Applied after the pivot matrix is built.</p>
+<p>Observed grouped cells keep their aggregated values. Only missing combinations are filled.
+This matters because:</p>
+<ul class="simple">
+<li><p>null produced by a genuinely missing <code class="docutils literal notranslate"><span class="pre">(row_key,</span> <span class="pre">column_key)</span></code> combination can be filled</p></li>
+<li><p>null already present inside source values still follows the aggregation’s own rules</p></li>
+</ul>
+</section>
+<section id="margins">
+<h3><code class="docutils literal notranslate"><span class="pre">margins</span></code><a class="headerlink" href="#margins" title="Link to this heading">¶</a></h3>
+<p>Adds totals.</p>
+<ul class="simple">
+<li><p>if there is a column axis, extra total features are appended</p></li>
+<li><p>if there is a row axis, an extra bottom total row is appended</p></li>
+<li><p>if both axes exist, you get both row totals and column totals</p></li>
+</ul>
+</section>
+<section id="margins-name">
+<h3><code class="docutils literal notranslate"><span class="pre">margins_name</span></code><a class="headerlink" href="#margins-name" title="Link to this heading">¶</a></h3>
+<p>Controls the label used for totals. Default is <code class="docutils literal notranslate"><span class="pre">&quot;All&quot;</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">margins=true</span></code>, <code class="docutils literal notranslate"><span class="pre">margins_name</span></code> cannot be empty.</p>
+</section>
+<section id="dropna">
+<h3><code class="docutils literal notranslate"><span class="pre">dropna</span></code><a class="headerlink" href="#dropna" title="Link to this heading">¶</a></h3>
+<p>Controls null grouping keys.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: rows with null <code class="docutils literal notranslate"><span class="pre">index</span></code> or <code class="docutils literal notranslate"><span class="pre">columns</span></code> keys are excluded before grouping</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: null keys become real groups and appear in the output</p></li>
+</ul>
+<p>When rendered, null-like labels appear as <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, consistent with the rest of the Pluss
+table surface.</p>
+</section>
+<section id="sort">
+<h3><code class="docutils literal notranslate"><span class="pre">sort</span></code><a class="headerlink" href="#sort" title="Link to this heading">¶</a></h3>
+<p>Controls grouped key ordering.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: distinct row-key tuples and column-key tuples are ordered lexicographically</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: first-seen group order is preserved</p></li>
+</ul>
+<p>This affects display order, not the aggregated values themselves.</p>
+</section>
+<section id="separators">
+<h3>Separators<a class="headerlink" href="#separators" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index_separator</span></code> controls how multi-row-key labels print</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">column_separator</span></code> controls how multi-column-key tuples flatten</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value_separator</span></code> controls how value-aggregation labels join to flattened column labels</p></li>
+</ul>
+<p>These are naming and rendering controls. They do not change grouping semantics.</p>
+</section>
+</section>
+<section id="aggregations-and-type-rules">
+<h2>Aggregations And Type Rules<a class="headerlink" href="#aggregations-and-type-rules" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> uses the same grouped reduction family as <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group().agg()</span></code></span></a>.</p>
+<p>Supported grouped operations include:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Count</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Ndistinct</span></code></p></li>
@@ -202,15 +367,39 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <li><p><code class="docutils literal notranslate"><span class="pre">Var</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Mode</span></code></p></li>
 </ul>
-<p>The same type rules apply here too:</p>
+<p>Type rules matter:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Sum</span></code>/<code class="docutils literal notranslate"><span class="pre">Mean</span></code>/<code class="docutils literal notranslate"><span class="pre">Median</span></code>/<code class="docutils literal notranslate"><span class="pre">Min</span></code>/<code class="docutils literal notranslate"><span class="pre">Max</span></code>/<code class="docutils literal notranslate"><span class="pre">Std</span></code>/<code class="docutils literal notranslate"><span class="pre">Var</span></code> require numeric value features</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Mode</span></code> works on note features and on numeric series</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Count</span></code> can count rows without needing a numeric value magnitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Median</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>, <code class="docutils literal notranslate"><span class="pre">Max</span></code>, <code class="docutils literal notranslate"><span class="pre">Std</span></code>, and <code class="docutils literal notranslate"><span class="pre">Var</span></code> require numeric value features</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Mode</span></code> works on note features and numeric series</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Count</span></code> can operate without a concrete value feature</p></li>
+</ul>
+<p>That last point is important. The generalized pivot engine supports row counting even when
+you do not name a value feature explicitly, but only for <code class="docutils literal notranslate"><span class="pre">Count</span></code>.</p>
+</section>
+<section id="failure-modes-and-guardrails">
+<h2>Failure Modes And Guardrails<a class="headerlink" href="#failure-modes-and-guardrails" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> is permissive where it is safe and strict where ambiguity would create bad
+results.</p>
+<p>It rejects these situations:</p>
+<ul class="simple">
+<li><p>no <code class="docutils literal notranslate"><span class="pre">index</span></code> and no <code class="docutils literal notranslate"><span class="pre">columns</span></code></p></li>
+<li><p>the same feature appearing on both axes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">margins=true</span></code> with an empty <code class="docutils literal notranslate"><span class="pre">margins_name</span></code></p></li>
+<li><p>non-numeric features passed to numeric aggregations</p></li>
+<li><p>non-<code class="docutils literal notranslate"><span class="pre">Count</span></code> specs with an empty source feature</p></li>
+<li><p>a resolved pivot with no compatible value aggregations</p></li>
+</ul>
+<p>A few behavior details are worth knowing:</p>
+<ul class="simple">
+<li><p>if <code class="docutils literal notranslate"><span class="pre">values</span></code> is omitted, inference only keeps features compatible with every requested aggregation</p></li>
+<li><p>if inference finds nothing and the only requested aggregation is <code class="docutils literal notranslate"><span class="pre">Count</span></code>, Pluss falls back to row counting</p></li>
+<li><p>if output feature names would collide, Pluss uniquifies them rather than silently overwriting</p></li>
 </ul>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>The examples below build from simple to advanced. Read them in order if you are learning
+the surface for the first time.</p>
 <p>Example 1. Classic one-row-key, one-column-key pivot using the legacy overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
@@ -235,11 +424,10 @@ Tema  | 3       5
 [2 cs x 2 feat]
 </pre></div>
 </div>
-<p>This is the original <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> use case: duplicate <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">product)</span></code> pairs exist,
-so a plain <a class="reference internal" href="pivot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot()</span></code></span></a> would be wrong, but <code class="docutils literal notranslate"><span class="pre">Sum</span></code> makes the intended collapse
+<p>This is the original <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> use case. Duplicate <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">product)</span></code> pairs exist,
+so a plain <a class="reference internal" href="pivot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot()</span></code></span></a> would be wrong. The aggregation makes the collapse
 explicit.</p>
-<p>Example 2. Default aggregation is <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, so repeated pairs are averaged rather than just
-spread wide.</p>
+<p>Example 2. Default aggregation is <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, not <code class="docutils literal notranslate"><span class="pre">Sum</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">avg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">avg</span><span class="p">;</span>
 </pre></div>
@@ -256,23 +444,23 @@ Tema  | 3       5
 [2 cs x 2 feat]
 </pre></div>
 </div>
-<p>The two <code class="docutils literal notranslate"><span class="pre">Accra</span></code>/<code class="docutils literal notranslate"><span class="pre">Laptop</span></code> rows (<code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">4</span></code>) are averaged to <code class="docutils literal notranslate"><span class="pre">3</span></code>. This is the key
-behavioral difference between <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> and a non-aggregating reshape.</p>
-<p>Example 3. Multiple row keys, one column key, and multiple value features.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">PivotTableOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">};</span>
-<span class="n">options</span><span class="p">.</span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">};</span>
-<span class="n">options</span><span class="p">.</span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">};</span>
-<span class="n">options</span><span class="p">.</span><span class="n">aggfuncs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">};</span>
-<span class="n">options</span><span class="p">.</span><span class="n">index_separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot; / &quot;</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">detailed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<p>The repeated <code class="docutils literal notranslate"><span class="pre">Accra</span></code>/<code class="docutils literal notranslate"><span class="pre">Laptop</span></code> values <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">4</span></code> are averaged to <code class="docutils literal notranslate"><span class="pre">3</span></code>. This is one of the
+most important behavioral differences between <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> and <code class="docutils literal notranslate"><span class="pre">pivot()</span></code>.</p>
+<p>Example 3. Multiple row keys and multiple value features with one uniform aggregation.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">detailed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}))},</span>
 <span class="p">});</span>
+
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">PivotTableOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">aggfuncs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">index_separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot; / &quot;</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">multi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">detailed</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">multi</span><span class="p">;</span>
@@ -292,38 +480,40 @@ Tema / Q2  | NULL                 5                   NULL                   50
 [4 cs x 4 feat]
 </pre></div>
 </div>
-<p>The returned object keeps <code class="docutils literal notranslate"><span class="pre">{&quot;city&quot;,</span> <span class="pre">&quot;quarter&quot;}</span></code> as a structured case axis. The printed row
-labels are joined with <code class="docutils literal notranslate"><span class="pre">index_separator</span></code>, which is why this example sets it to <code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">/</span> <span class="pre">&quot;</span></code>
-instead of leaving the default internal separator.</p>
-<p>Example 4. <code class="docutils literal notranslate"><span class="pre">fill_value</span></code> and <code class="docutils literal notranslate"><span class="pre">margins</span></code> make the result closer to a spreadsheet-style pivot.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">options</span><span class="p">.</span><span class="n">fill_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">HostAny</span><span class="o">::</span><span class="n">floating</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
-<span class="n">options</span><span class="p">.</span><span class="n">margins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<p>This example teaches three things at once:</p>
+<ul class="simple">
+<li><p>multiple <code class="docutils literal notranslate"><span class="pre">index</span></code> features create a tuple-grain row axis</p></li>
+<li><p>multiple <code class="docutils literal notranslate"><span class="pre">values</span></code> create multiple output feature families</p></li>
+<li><p>missing <code class="docutils literal notranslate"><span class="pre">(row_key,</span> <span class="pre">column_key)</span></code> combinations stay null unless you fill them</p></li>
+</ul>
+<p>Example 4. Multiple aggregation functions applied uniformly to every selected value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">PivotTableOptions</span><span class="w"> </span><span class="n">multiagg</span><span class="p">;</span>
+<span class="n">multiagg</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">};</span>
+<span class="n">multiagg</span><span class="p">.</span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">};</span>
+<span class="n">multiagg</span><span class="p">.</span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">};</span>
+<span class="n">multiagg</span><span class="p">.</span><span class="n">aggfuncs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span>
+<span class="p">};</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">totaled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">detailed</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">totaled</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rich</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">detailed</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">multiagg</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rich</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================================================================================================================================
-           | units_sum :: Laptop  units_sum :: Phone  units_sum :: All  revenue_sum :: Laptop  revenue_sum :: Phone  revenue_sum :: All
----------------------------------------------------------------------------------------------------------------------------------------
-Accra / Q1 | 2                    3                   5                 20                     30                    50
-Accra / Q2 | 4                    0                   4                 40                     0                     40
-Tema / Q1  | 1                    0                   1                 10                     0                     10
-Tema / Q2  | 0                    5                   5                 0                      50                    50
-All /      | 7                    8                   15                70                     80                    150
----------------------------------------------------------------------------------------------------------------------------------------
-[5 cs x 6 feat]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================================================================================================================================================
+      | units_sum :: Laptop  units_mean :: Laptop  units_sum :: Phone  units_mean :: Phone  revenue_sum :: Laptop  revenue_mean :: Laptop  revenue_sum :: Phone  revenue_mean :: Phone
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+Accra | 6                    3                     3                   3                    60                     30                       30                    30
+Tema  | 1                    1                     5                   5                    10                     10                       50                    50
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+[2 cs x 8 feat]
 </pre></div>
 </div>
-<p>This demonstrates two separate behaviors:</p>
-<ul class="simple">
-<li><p>missing combinations are filled after pivoting, so absent <code class="docutils literal notranslate"><span class="pre">Phone</span></code> cells become <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
-<li><p>totals are appended both across columns (<code class="docutils literal notranslate"><span class="pre">::</span> <span class="pre">All</span></code>) and across rows (the bottom <code class="docutils literal notranslate"><span class="pre">All</span></code>
-case)</p></li>
-</ul>
+<p>This is the closest analogue to pandas <code class="docutils literal notranslate"><span class="pre">aggfunc=[&quot;sum&quot;,</span> <span class="pre">&quot;mean&quot;]</span></code>. Every selected value
+feature is expanded against every requested aggregation.</p>
 <p>Example 5. Use explicit <code class="docutils literal notranslate"><span class="pre">specs</span></code> when different value features need different reductions.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
@@ -356,25 +546,141 @@ Tema  | 60                  40                  retry                retry
 [2 cs x 4 feat]
 </pre></div>
 </div>
-<p>This is the <code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> equivalent of pandas’ “dict aggfunc” style. The two outputs
-are not forced through the same reduction:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">amount</span></code> is summed</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">status</span></code> is reduced by mode</p></li>
-</ul>
+<p>This is the right surface when you need different reductions for different features. It
+is also how you pivot note data safely through <code class="docutils literal notranslate"><span class="pre">Mode</span></code> without forcing everything through a
+numeric aggregation.</p>
+<p>Example 6. <code class="docutils literal notranslate"><span class="pre">fill_value</span></code> and <code class="docutils literal notranslate"><span class="pre">margins</span></code> make the result closer to a spreadsheet pivot.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">options</span><span class="p">.</span><span class="n">fill_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">HostAny</span><span class="o">::</span><span class="n">floating</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="n">options</span><span class="p">.</span><span class="n">margins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">totaled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">detailed</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">totaled</span><span class="p">;</span>
+</pre></div>
+</div>
 </section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================================================================================================================================
+           | units_sum :: Laptop  units_sum :: Phone  units_sum :: All  revenue_sum :: Laptop  revenue_sum :: Phone  revenue_sum :: All
+---------------------------------------------------------------------------------------------------------------------------------------
+Accra / Q1 | 2                    3                   5                 20                     30                    50
+Accra / Q2 | 4                    0                   4                 40                     0                     40
+Tema / Q1  | 1                    0                   1                 10                     0                     10
+Tema / Q2  | 0                    5                   5                 0                      50                    50
+All /      | 7                    8                   15                70                     80                    150
+---------------------------------------------------------------------------------------------------------------------------------------
+[5 cs x 6 feat]
+</pre></div>
+</div>
+<p>Two behaviors matter here:</p>
+<ul class="simple">
+<li><p>missing combinations are filled after pivoting</p></li>
+<li><p>totals are appended both as extra wide features and as an extra bottom row</p></li>
+</ul>
+<p>Example 7. <code class="docutils literal notranslate"><span class="pre">dropna=false</span></code> keeps null key groups instead of discarding them.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">null_keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}),</span><span class="w"> </span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Phone&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">keep_null</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">null_keys</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span>
+<span class="w">                                       </span><span class="s">&quot;product&quot;</span><span class="p">,</span>
+<span class="w">                                       </span><span class="s">&quot;units&quot;</span><span class="p">,</span>
+<span class="w">                                       </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">,</span>
+<span class="w">                                       </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">keep_null</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
+      | Laptop  Phone
+---------------------
+Accra | 2       NULL
+Tema  | NULL    6
+NULL  | 4       NULL
+---------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>This is useful when null itself is analytically meaningful and should remain visible as a
+group rather than being filtered out.</p>
+<p>Example 8. Multi-column tuples flatten with <code class="docutils literal notranslate"><span class="pre">column_separator</span></code>, and custom names make
+wide outputs easier to read.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">PivotTableOptions</span><span class="w"> </span><span class="n">flat</span><span class="p">;</span>
+<span class="n">flat</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">};</span>
+<span class="n">flat</span><span class="p">.</span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">};</span>
+<span class="n">flat</span><span class="p">.</span><span class="n">specs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units_total&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
+<span class="p">};</span>
+<span class="n">flat</span><span class="p">.</span><span class="n">column_separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot; -&gt; &quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">flattened</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">detailed</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">flat</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">flattened</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================================================================================================
+      | Q1 -&gt; Laptop  Q1 -&gt; Phone  Q2 -&gt; Laptop  Q2 -&gt; Phone
+---------------------------------------------------------------------------------------------------
+Accra | 2            3            4             NULL
+Tema  | 1            NULL         NULL          5
+---------------------------------------------------------------------------------------------------
+[2 cs x 4 feat]
+</pre></div>
+</div>
+<p>Because only one value aggregation is resolved, Pluss omits the <code class="docutils literal notranslate"><span class="pre">units_total</span></code> prefix and
+uses only the flattened column tuple labels. That keeps the matrix compact while still
+respecting the full pivot semantics.</p>
+<p>Example 9. Counting rows without naming a value feature explicitly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">PivotTableOptions</span><span class="w"> </span><span class="n">counts</span><span class="p">;</span>
+<span class="n">counts</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">};</span>
+<span class="n">counts</span><span class="p">.</span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">};</span>
+<span class="n">counts</span><span class="p">.</span><span class="n">aggfuncs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">counted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">counts</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">counted</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
+      | Laptop  Phone
+---------------------
+Accra | 2       1
+Tema  | 1       1
+---------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p>This is the special inferred-count case. Because no explicit values were supplied and the
+only aggregation is <code class="docutils literal notranslate"><span class="pre">Count</span></code>, the pivot resolves to row counts for each key combination.</p>
+</section>
+</section>
+<section id="practical-guidance">
+<h2>Practical Guidance<a class="headerlink" href="#practical-guidance" title="Link to this heading">¶</a></h2>
+<p>For real work, these habits usually produce the clearest pivots:</p>
+<ul class="simple">
+<li><p>start with explicit <code class="docutils literal notranslate"><span class="pre">index</span></code>, <code class="docutils literal notranslate"><span class="pre">columns</span></code>, and <code class="docutils literal notranslate"><span class="pre">values</span></code></p></li>
+<li><p>use one uniform aggregation first so you can inspect shape quickly</p></li>
+<li><p>switch to <code class="docutils literal notranslate"><span class="pre">specs</span></code> once different features need different reductions</p></li>
+<li><p>set <code class="docutils literal notranslate"><span class="pre">index_separator</span></code> to a visible token when printing multi-row pivots</p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">fill_value</span></code> only when missing combinations should be treated as actual zeros or placeholders</p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">margins</span></code> deliberately, because totals widen the result and can obscure the core matrix if overused</p></li>
+</ul>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>If exactly one value spec is resolved, Pluss omits the value prefix and uses just the
-flattened column labels when that is unambiguous, preserving the old simple look.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">values</span></code> is omitted, compatible non-key features are inferred automatically.</p></li>
-<li><p>Multi-column pivots stay ordinary <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>s. Pluss does not manufacture a column
-<code class="docutils literal notranslate"><span class="pre">MultiIndex</span></code>; it flattens column tuples into stable feature names instead.</p></li>
-<li><p>Multi-row pivots use the case axis natively. Use <code class="docutils literal notranslate"><span class="pre">label().reset()</span></code> only when you want
-the row hierarchy materialized as ordinary features for printing or downstream joins.</p></li>
-<li><p>Missing cells are true nulls unless you explicitly provide <code class="docutils literal notranslate"><span class="pre">fill_value</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, so it integrates with normal rendering and <code class="docutils literal notranslate"><span class="pre">.show()</span></code> behavior</p></li>
+<li><p>multi-row pivots use the case axis natively; use <code class="docutils literal notranslate"><span class="pre">label().reset()</span></code> only when you explicitly want the row hierarchy back as ordinary features</p></li>
+<li><p>null cells render as <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, consistent with the rest of the dataframe surface</p></li>
+<li><p>output feature names are flattened intentionally so the result stays a normal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></li>
 </ul>
 </section>
 <section id="see-also">

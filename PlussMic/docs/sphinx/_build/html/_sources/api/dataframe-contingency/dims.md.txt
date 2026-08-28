@@ -18,6 +18,20 @@ Returns the retained dimension names, in tensor order.
 This is the name-side companion to `shape()`, and it also defines the dimension
 order used by `to_array()`.
 
+## Returns
+
+`std::vector<std::string>`
+    The retained dimension names in their current order.
+
+## When To Use It
+
+Use `dims()` whenever you need to answer one of these questions before proceeding:
+
+- which dimensions are still present after slicing or marginalizing?
+- what order do the axes of `to_array()` correspond to?
+- what row/column names are legal to hand to `to_frame(...)`, `facet(...)`,
+  `slice(...)`, `marginalize(...)`, or `condition(...)`?
+
 ## Examples
 
 Example 1. The one-list constructor preserves the supplied dimension order.
@@ -72,3 +86,12 @@ std::cout << "[" << collapsed[0] << ", " << collapsed[1] << "]\n";
 [city, channel]
 [city, weekend]
 ```
+
+## Notes
+
+- `dims()` is not just metadata. It is the authoritative axis order for `shape()` and
+  `to_array()`.
+- `slice(...)` and `marginalize(...)` physically remove dimensions, so `dims()` is one
+  of the fastest sanity checks after either operation.
+- The one-list constructor preserves your supplied order. The row/column constructor
+  retains dimensions as `rows..., columns...`.

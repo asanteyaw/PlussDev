@@ -241,7 +241,7 @@ Series::extract_put_: source must be scalar or match selected element count
 - Some validation errors still mention `extract_put_()` because both methods
   share the same underlying write-cardinality checks after selector admission.
 
-## Teaching Summary
+## Summary
 
 Choose `traverse_put_()` when you want selector-language writes but you also
 want the API to enforce "stay in ordinary view territory." It is the strict

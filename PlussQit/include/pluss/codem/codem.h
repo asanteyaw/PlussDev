@@ -378,85 +378,6 @@ namespace pluss {
   using u32_t = std::uint32_t;
   using u64_t = std::uint64_t;
 
-inline codem::Series select(pluss::msharp::RangeView::Of<codem::Series> conditions,
-                            pluss::msharp::RangeView::Of<codem::Series> choices,
-                            const codem::Series& default_value) {
-  PLUSS_CHECK(!conditions.empty(), "pluss::select: at least one condition is required");
-  PLUSS_CHECK(conditions.size() == choices.size(),
-              "pluss::select: condition/choice count mismatch");
-  PLUSS_CHECK(default_value.defined(), "pluss::select: default value is undefined");
-
-  codem::Series out = default_value;
-  for (std::size_t i = conditions.size(); i > 0; --i) {
-    const auto& cond = conditions[i - 1];
-    const auto& choice = choices[i - 1];
-    PLUSS_CHECK(cond.defined(), "pluss::select: condition is undefined");
-    PLUSS_CHECK(choice.defined(), "pluss::select: choice is undefined");
-    PLUSS_CHECK(cond.scalar_type() == codem::ScalarType::Bool,
-                "pluss::select: conditions must use Bool dtype");
-    if (choice.scalar_type() == codem::ScalarType::Bool
-        && out.scalar_type() == codem::ScalarType::Bool) {
-      out = cond.logical_and(choice).logical_or(cond.logical_not().logical_and(out));
-    } else {
-      out = cond.where(choice, out);
-    }
-  }
-  return out;
-}
-
-inline codem::Series select(std::initializer_list<codem::Series> conditions,
-                            std::initializer_list<codem::Series> choices,
-                            const codem::Series& default_value) {
-  return select(
-      pluss::msharp::RangeView::Of<codem::Series>(conditions),
-      pluss::msharp::RangeView::Of<codem::Series>(choices),
-      default_value);
-}
-
-template <codem::SeriesScalar T>
-inline codem::Series select(pluss::msharp::RangeView::Of<codem::Series> conditions,
-                            pluss::msharp::RangeView::Of<codem::Series> choices,
-                            T default_value) {
-  PLUSS_CHECK(!choices.empty(), "pluss::select: at least one choice is required");
-  return select(
-      conditions,
-      choices,
-      pluss::codem::make_scalar_like(choices[0], static_cast<double>(default_value)));
-}
-
-inline codem::Series select(pluss::msharp::RangeView::Of<codem::Series> conditions,
-                            pluss::msharp::RangeView::Of<codem::Series> choices,
-                            bool default_value) {
-  PLUSS_CHECK(!choices.empty(), "pluss::select: at least one choice is required");
-  return select(
-      conditions,
-      choices,
-      codem::Series::full(
-          {},
-          default_value ? 1.0 : 0.0,
-          codem::ScalarType::Bool,
-          choices[0].platform()));
-}
-
-template <codem::SeriesScalar T>
-inline codem::Series select(std::initializer_list<codem::Series> conditions,
-                            std::initializer_list<codem::Series> choices,
-                            T default_value) {
-  return select(
-      pluss::msharp::RangeView::Of<codem::Series>(conditions),
-      pluss::msharp::RangeView::Of<codem::Series>(choices),
-      default_value);
-}
-
-inline codem::Series select(std::initializer_list<codem::Series> conditions,
-                            std::initializer_list<codem::Series> choices,
-                            bool default_value) {
-  return select(
-      pluss::msharp::RangeView::Of<codem::Series>(conditions),
-      pluss::msharp::RangeView::Of<codem::Series>(choices),
-      default_value);
-}
-
   using Series = codem::Series;
   using Config = codem::Config;
   using ScalarType = codem::ScalarType;
@@ -470,7 +391,6 @@ inline codem::Series select(std::initializer_list<codem::Series> conditions,
   using PrintOptions = codem::PrintOptions;
 
   using codem::to_string;
-  using codem::print_series;
   using codem::platform_available;
   using codem::operator<<;
 

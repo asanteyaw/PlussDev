@@ -80,7 +80,7 @@ pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contig
 data=0.74156487
 ```
 
-Example 4. A current quirk worth teaching directly: the config overload can
+Example 4. A current quirk worth stating directly: the config overload can
 preserve the reference tensor's floating dtype instead of honoring a new one.
 
 ```cpp

@@ -42,7 +42,7 @@ Example 1. Convert a small timeline into full month labels.
 
 ```cpp
 auto labels = base.month_name();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ### Output
@@ -57,7 +57,7 @@ several months.
 
 ```cpp
 auto labels = calendar.month_name();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ### Output
@@ -72,7 +72,7 @@ Example 3. Compare full month names with numeric month extraction.
 ```cpp
 auto labels = base.month_name();
 auto values = base.month();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 std::cout << pluss::series::print(values) << "\n";
 ```
 

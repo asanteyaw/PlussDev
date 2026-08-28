@@ -171,7 +171,7 @@ broadcast: incompatible shapes
 - A non-contiguous input does not imply a non-contiguous output. `mul()`
   returns a fresh result series.
 
-## Teaching Summary
+## Summary
 
 Think of `mul()` as the simplest broadcast-aware scale-and-combine primitive on
 `Series`. It is ideal for explicit feature scaling, elementwise gating, and

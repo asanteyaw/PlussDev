@@ -18,6 +18,16 @@ Returns the same retained table in global-share space.
 Every cell is divided by the grand total across the current retained table, so
 the full rendered table sums to `1.0` when the table is non-empty.
 
+## Returns
+
+`ContingencyTable`
+    A new retained table whose values are global proportions instead of counts.
+
+## When To Use It
+
+Use `share()` when you want each cell interpreted as "share of the current whole"
+rather than "count within the current whole."
+
 ## Examples
 
 Example 1. Convert a two-way count table into global shares.
@@ -74,3 +84,11 @@ std::cout << out;
 -----------------------
 [2 cs x 3 feat]
 ```
+
+## Notes
+
+- `share()` normalizes the **current retained table**. If you slice or marginalize
+  first, the denominator changes accordingly.
+- `share()` is different from `condition(...)`: global share asks "share of all cells";
+  conditional share asks "share within these retained parent dimensions."
+- Empty or all-zero retained tables render as zeros rather than undefined values.

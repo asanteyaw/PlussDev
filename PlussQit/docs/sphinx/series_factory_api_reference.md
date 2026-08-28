@@ -23,6 +23,8 @@ to navigate.
 Use it for:
 
 - direct value construction with `make`
+- public rendering through `print`
+- ordered conditional construction through `select`
 - shape-first allocation like `empty`, `zeros`, `ones`, `full`
 - range/grid builders like `arange`, `linspace`, `eye`
 - random and distribution factories like `rand`, `randn`, `randint`,
@@ -49,9 +51,11 @@ the overload quirks that materially change the result.
 ## Current Coverage
 
 The current handwritten factory batch now covers the public constructor families
-most users actually reach first and second:
+most users actually reach first and second, plus the free-function helpers that
+show up immediately after construction:
 
 - direct value construction: `make`
+- free-function helpers on built `Series`: `print`, `select`
 - shape-first constants and layouts: `empty`, `zeros`, `ones`, `full`, `eye`
 - range/grid builders: `arange`, `linspace`
 - like-factories: `empty_like`, `zeros_like`, `ones_like`, `full_like`,
@@ -69,6 +73,8 @@ Those pages are split this way on purpose.
   separate mental model from ordinary shape-first construction.
 - The complex pages teach the pairwise "two real tensors in, one complex tensor
   out" surface, which behaves differently from the scalar-fill factories.
+- The helper pages (`print`, `select`) live here because they are free
+  functions on `pluss::series::*`, not `Series` methods.
 
 What is still out of scope for this handwritten batch is the unsupported sparse
 and quantized constructor stub family.
@@ -83,6 +89,8 @@ api/series_factory/eye
 api/series_factory/full
 api/series_factory/linspace
 api/series_factory/make
+api/series_factory/print
+api/series_factory/select
 api/series_factory/ones
 api/series_factory/zeros
 api/series_factory/rand

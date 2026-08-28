@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=5807a5a5"></script>
+    <script src="../../../_static/api_nav.js?v=da1ea0a4"></script>
     <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -60,7 +60,7 @@ original shape.</p>
 </ul>
 <p>In other words, standardization asks for more than “shift the values around
 zero.” It asks for “shift them around zero and put them on a comparable spread.”</p>
-<p>That makes <code class="docutils literal notranslate"><span class="pre">standardize()</span></code> a stronger teaching step than <code class="docutils literal notranslate"><span class="pre">center()</span></code>:</p>
+<p>That makes <code class="docutils literal notranslate"><span class="pre">standardize()</span></code> a stronger next step than <code class="docutils literal notranslate"><span class="pre">center()</span></code>:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">center()</span></code> tells you deviations from the mean</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">standardize()</span></code> tells you deviations from the mean in spread-scaled units</p></li>
@@ -230,8 +230,8 @@ is convenient, but it also means “all zeros” can mean “no spread was prese
 <li><p>The current verified behavior is population-style normalization.</p></li>
 </ul>
 </section>
-<section id="teaching-summary">
-<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">standardize()</span></code> when both offset and spread should be removed while shape is
 preserved:</p>
 <ul class="simple">

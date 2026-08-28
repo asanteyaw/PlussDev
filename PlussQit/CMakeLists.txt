@@ -498,6 +498,18 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_comparison_reference_demo examples/CodeM/series_comparison_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_comparison_reference_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_unary_math_reference_demo examples/CodeM/series_unary_math_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_unary_math_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_logic_reference_demo examples/CodeM/series_logic_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_logic_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_selection_count_reference_demo examples/CodeM/series_selection_count_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_selection_count_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_setops_reference_demo examples/CodeM/series_setops_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_setops_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_linear_alg_demo examples/CodeM/linear_alg_demo.cpp)
   target_link_libraries(plussqit_codem_linear_alg_demo PRIVATE PlussQit::CodeM)
 

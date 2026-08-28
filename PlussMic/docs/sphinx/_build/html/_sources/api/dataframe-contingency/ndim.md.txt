@@ -19,6 +19,21 @@ This is the N in the object's N-dimensional joint distribution. It changes
 after `slice(...)` and `marginalize(...)` because those operations physically
 remove dimensions from the retained object.
 
+## Returns
+
+`std::int64_t`
+    The number of currently retained dimensions.
+
+## When To Use It
+
+Use `ndim()` as a quick structural check before deciding how to render:
+
+- `0` -> scalar contingency
+- `1` -> one-dimensional frequency/share table
+- `2` -> ordinary row-by-column contingency
+- `3+` -> retained higher-dimensional object that may need `to_frame(...)` or
+  `facet(...)`
+
 ## Examples
 
 Example 1. A classic two-way contingency table has two retained dimensions.
@@ -76,3 +91,9 @@ std::cout << scalar_ct.ndim() << "\n";
 ```text
 0
 ```
+
+## Notes
+
+- `ndim()` counts retained dimensions, not rendered row/column sides.
+- `condition(...)` and `share()` do not change `ndim()` because they only change value
+  interpretation, not structure.

@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -155,7 +155,7 @@ the order each combination first appeared.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;year&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2023.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2024.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2023.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2024.0</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">250.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))},</span>
-<span class="p">}).</span><span class="n">set_label</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;year&quot;</span><span class="p">});</span>
+<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;year&quot;</span><span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">group</span><span class="p">()</span>
 <span class="w">                  </span><span class="p">.</span><span class="n">by</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">LabelGroup</span><span class="p">{.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">})</span>
@@ -177,13 +177,24 @@ the order each combination first appeared.</p>
 [2 cs x 2 feat]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">set_label({&quot;region&quot;,</span> <span class="pre">&quot;year&quot;})</span></code> moves those two ordinary columns onto the case axis
+<p><code class="docutils literal notranslate"><span class="pre">label().set({&quot;region&quot;,</span> <span class="pre">&quot;year&quot;})</span></code> moves those two ordinary columns onto the case axis
 as a two-level case label. <code class="docutils literal notranslate"><span class="pre">LabelGroup{.label</span> <span class="pre">=</span> <span class="pre">&quot;region&quot;}</span></code> then groups by only the
 <code class="docutils literal notranslate"><span class="pre">region</span></code> level of that composite label, ignoring <code class="docutils literal notranslate"><span class="pre">year</span></code> entirely — so both <code class="docutils literal notranslate"><span class="pre">North</span></code>
 rows (from 2023 and 2024) collapse into one group, and likewise for <code class="docutils literal notranslate"><span class="pre">South</span></code>. This is
 useful when the grouping identity already lives on the case axis and you do not want
 to materialize it as ordinary columns first.</p>
 </section>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>empty feature-key list -&gt; validation error</p></li>
+<li><p>duplicate feature key names -&gt; validation error</p></li>
+<li><p>unknown feature key names -&gt; validation error at grouped execution time</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LabelGroup</span></code> with neither <code class="docutils literal notranslate"><span class="pre">label</span></code> nor <code class="docutils literal notranslate"><span class="pre">names</span></code> -&gt; validation error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LabelGroup</span></code> with both <code class="docutils literal notranslate"><span class="pre">label</span></code> and <code class="docutils literal notranslate"><span class="pre">names</span></code> -&gt; validation error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LabelGroup</span></code> on a frame with no case labels -&gt; validation error</p></li>
+</ul>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>

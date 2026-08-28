@@ -284,7 +284,7 @@ Series::extract: step cannot be 0
 - The selection count, not the visible destination shape, is what governs
   whether a non-scalar source is valid.
 
-## Teaching Summary
+## Summary
 
 Reach for `extract_put_()` when you want the richest selector-language write
 surface on `Series`. It is the right method for masks, reverse slices,

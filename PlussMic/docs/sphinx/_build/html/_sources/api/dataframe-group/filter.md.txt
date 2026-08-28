@@ -32,6 +32,16 @@ A boolean grouped mask with one element per group.
     A filtered version of the original frame, preserving original row order among
     surviving rows.
 
+## When To Use It
+
+Use `filter(...)` when the keep/drop decision belongs to groups, not to individual
+rows.
+
+That is the key distinction:
+
+- `DataFrame::filter(mask)` asks one boolean per row
+- `DataFrameGrouped::filter(keep)` asks one boolean per group
+
 ## Examples
 
 Example 1. Keep only regions whose grouped total is above a threshold.
@@ -73,6 +83,12 @@ std::cout << out;
 strict `gt(200.0)`, so both `South` rows are dropped entirely. The important contract
 is that `keep` was produced in the same grouped order as the handle being filtered.
 
+## Failure Modes
+
+- `keep` length different from group count -> validation error
+- non-boolean `keep` -> validation error
+- grouped layout other than `Flat` -> validation error
+
 ## Notes
 
 - `filter(...)` expects **group count**, not row count.
@@ -80,6 +96,9 @@ is that `keep` was produced in the same grouped order as the handle being filter
   derive a boolean mask from that summary, then pass it to `filter(...)`.
 - Returned rows keep their original order and original case labels from the source
   frame — filtering never renumbers or reindexes survivors.
+- `sort` in `GroupOptions` affects the order of groups in the summary you likely used
+  to build `keep`; that is why the safest mask source is an `agg(...)` call on the
+  same grouped handle shape.
 
 ## See Also
 

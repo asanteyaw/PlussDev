@@ -237,7 +237,7 @@ Series::extract_put: source must be scalar or match selected element count
   the same downstream write-cardinality checks after the selector has been
   accepted.
 
-## Teaching Summary
+## Summary
 
 Use `traverse_put()` when you want value semantics and a selector gate that
 stays inside ordinary traversal and view rules. If your selector needs masked

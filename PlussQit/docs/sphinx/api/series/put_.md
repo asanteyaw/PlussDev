@@ -186,7 +186,7 @@ data=[[100, 20],
   [12, 500]]
 ```
 
-This is an important teaching point: `put_()` follows logical flat order, not
+This is an important point: `put_()` follows logical flat order, not
 "walk the current strides by hand."
 
 Example 6. Out-of-range flat positions fail immediately.
@@ -257,7 +257,7 @@ put: src must be scalar or same numel as index
 - The strict `int64` rule applies here even though some higher-level write
   surfaces accept broader integer dtypes and normalize them internally.
 
-## Teaching Summary
+## Summary
 
 Use `put_()` when you want the write-side twin of [`take()`](take.md): flat
 positions in, flat writes out. Think in logical element numbers, not axes.

@@ -32,7 +32,7 @@ void print_lengths(::std::string_view label, const std::vector<std::int64_t>& va
   std::cout << "\n";
 }
 
-void print_note_lines(::std::string_view label, const pluss::Note& note) {
+void print_lines(::std::string_view label, const pluss::Note& note) {
   print_marker(label);
   std::cout << label << ":\n";
   for (std::int64_t i = 0; i < note.numel(); ++i) {
@@ -59,11 +59,11 @@ void print_batch(::std::string_view label, const pluss::coden::TokenBatch& batch
 int main() {
   {
     auto note = pluss::make_note({"  Ada Lovelace  ", "\tGRACE HOPPER\t", "Linus"});
-    print_note_lines("lower", note.lower());
-    print_note_lines("lower_strip", note.strip().lower());
-    print_note_lines("strip", note.strip());
-    print_note_lines("strip_hash_space", pluss::make_note({"##alpha##", "#beta", "gamma##"}).strip("#"));
-    print_note_lines("strip_boundary_only", pluss::make_note({"#alpha#beta#", "##gamma##"}).strip("#"));
+    print_lines("lower", note.lower());
+    print_lines("lower_strip", note.strip().lower());
+    print_lines("strip", note.strip());
+    print_lines("strip_hash_space", pluss::make_note({"##alpha##", "#beta", "gamma##"}).strip("#"));
+    print_lines("strip_boundary_only", pluss::make_note({"#alpha#beta#", "##gamma##"}).strip("#"));
   }
 
   {
@@ -76,17 +76,17 @@ int main() {
 
   {
     auto note = pluss::make_note({"score: 75", "score: 88", "pending"});
-    print_note_lines("replace", note.replace("score", "mark"));
-    print_note_lines("replace_underscore", pluss::make_note({"Ada_Lovelace", "Grace_Hopper", "Linus"}).replace("_", " "));
+    print_lines("replace", note.replace("score", "mark"));
+    print_lines("replace_underscore", pluss::make_note({"Ada_Lovelace", "Grace_Hopper", "Linus"}).replace("_", " "));
     auto renamed = pluss::make_note({"midterm_1", "midterm_2", "final_exam"}).replace("midterm", "exam");
-    print_note_lines("replace_then_contains", renamed);
+    print_lines("replace_then_contains", renamed);
     print_mask("replace_then_contains_mask", renamed.contains("midterm"));
-    print_note_lines("remove_all", pluss::make_note({"alpha beta beta", "beta only"}).remove_all("beta"));
-    print_note_lines("remove_all_strip", pluss::make_note({"##alpha##", "##beta"}).remove_all("#").strip());
-    print_note_lines("remove_all_marker", pluss::make_note({"id-001-id", "id-204"}).remove_all("id-"));
-    print_note_lines("quote", pluss::make_note({"alpha beta beta", "already"}).quote());
-    print_note_lines("quote_strip", pluss::make_note({"  spaced  ", ""}).strip().quote());
-    print_note_lines("quote_display", pluss::make_note({"Ada_Lovelace", "Grace_Hopper"}).replace("_", " ").quote());
+    print_lines("remove_all", pluss::make_note({"alpha beta beta", "beta only"}).remove_all("beta"));
+    print_lines("remove_all_strip", pluss::make_note({"##alpha##", "##beta"}).remove_all("#").strip());
+    print_lines("remove_all_marker", pluss::make_note({"id-001-id", "id-204"}).remove_all("id-"));
+    print_lines("quote", pluss::make_note({"alpha beta beta", "already"}).quote());
+    print_lines("quote_strip", pluss::make_note({"  spaced  ", ""}).strip().quote());
+    print_lines("quote_display", pluss::make_note({"Ada_Lovelace", "Grace_Hopper"}).replace("_", " ").quote());
   }
 
   {
@@ -120,15 +120,15 @@ int main() {
         "Visit https://pluss.dev and email team@pluss.dev",
         "Mirror http://docs.pluss.dev for release notes",
     });
-    print_note_lines("nlp_remove_urls", dirty.nlp_remove_urls());
+    print_lines("nlp_remove_urls", dirty.nlp_remove_urls());
     print_mask("nlp_remove_urls_contains_http", dirty.nlp_remove_urls().contains("http"));
   }
 
   {
     auto tex = pluss::make_note({"Price is 50% of $x+y$", R"(Use \alpha and \beta.)"});
-    print_note_lines("tex_escape", tex.tex_escape());
-    print_note_lines("tex_escape_plain", pluss::make_note({"chapter title", "plain text"}).tex_escape());
-    print_note_lines(
+    print_lines("tex_escape", tex.tex_escape());
+    print_lines("tex_escape_plain", pluss::make_note({"chapter title", "plain text"}).tex_escape());
+    print_lines(
         "tex_to_text",
         pluss::make_note(
             "\\documentclass{article}\n"
@@ -138,7 +138,7 @@ int main() {
             "\\label{l1}\\ref{l1}\\cite{k}\\href{https://x.y}{link}\n"
             "\\end{document}\n")
             .tex_to_text());
-    print_note_lines("tex_to_text_inline", pluss::make_note("\\textit{Hello}").tex_to_text());
+    print_lines("tex_to_text_inline", pluss::make_note("\\textit{Hello}").tex_to_text());
   }
 
   {
@@ -146,18 +146,18 @@ int main() {
         "Email bob@example.com at 9:30am on 2025-01-03, pay $12.50 to @alice #ops",
         "Backup contact: jane@pluss.dev",
     });
-    print_note_lines("nlp_mask_pii", pii.nlp_mask_pii());
+    print_lines("nlp_mask_pii", pii.nlp_mask_pii());
     print_mask("nlp_mask_pii_contains_email", pii.nlp_mask_pii().contains("[EMAIL]"));
   }
 
   {
     auto codec = pluss::make_note("Hi!");
-    print_note_lines("base64_encode", codec.base64_encode());
-    print_note_lines("base64_roundtrip", codec.base64_encode().base64_decode());
-    print_note_lines("base64_encode_batch", pluss::make_note({"Hi!", "Pluss"}).base64_encode());
-    print_note_lines("url_encode", pluss::make_note("a b+c").url_encode());
-    print_note_lines("url_roundtrip", pluss::make_note("a b+c").url_encode().url_decode());
-    print_note_lines("url_encode_batch", pluss::make_note({"a b+c", "x/y"}).url_encode());
+    print_lines("base64_encode", codec.base64_encode());
+    print_lines("base64_roundtrip", codec.base64_encode().base64_decode());
+    print_lines("base64_encode_batch", pluss::make_note({"Hi!", "Pluss"}).base64_encode());
+    print_lines("url_encode", pluss::make_note("a b+c").url_encode());
+    print_lines("url_roundtrip", pluss::make_note("a b+c").url_encode().url_decode());
+    print_lines("url_encode_batch", pluss::make_note({"a b+c", "x/y"}).url_encode());
   }
 
   print_marker("end");

@@ -308,7 +308,7 @@ failure is both expected and useful.
 - Ties are first-winner, not tie-sharing.
 - Out-of-range dims and empty-dimension reductions both fail explicitly.
 
-## Teaching Summary
+## Summary
 
 Use `argmax()` when you need to know where the largest value lives.
 
@@ -327,9 +327,9 @@ working in: flat global position or local axis position.
 - [`Series::argmin`](argmin.md): lower-winner index counterpart.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="min.html">
+  <a class="prev-link" href="any.html">
     <span class="label">Previous</span>
-    <span class="title">min</span>
+    <span class="title">any</span>
   </a>
   <a class="next-link" href="argmin.html">
     <span class="label">Next</span>

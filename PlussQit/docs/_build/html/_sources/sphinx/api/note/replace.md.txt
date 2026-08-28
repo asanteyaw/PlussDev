@@ -68,7 +68,7 @@ Example 2. Replace structural separators when you want a more readable surface.
 ```cpp
 auto names = pluss::make_note({"Ada_Lovelace", "Grace_Hopper", "Linus"});
 auto out = names.replace("_", " ");
-std::cout << "replace_underscore:\n" << pluss::print_note(out) << "\n";
+std::cout << "replace_underscore:\n" << pluss::note::print(out) << "\n";
 ```
 
 ### Output

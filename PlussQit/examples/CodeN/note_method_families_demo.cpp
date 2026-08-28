@@ -159,6 +159,6 @@ int main() {
   pluss::NotePrintOptions popt;
   popt.max_elements = 6;
   popt.max_cell_chars = 24;
-  std::cout << "print_note:\n" << pluss::print_note(grid, popt) << "\n";
+  std::cout << "note::print:\n" << pluss::note::print(grid, popt) << "\n";
   return 0;
 }

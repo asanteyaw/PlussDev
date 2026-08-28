@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -62,6 +62,32 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Renders several 2D tables instead of flattening the remaining dimensions onto
 the column side.</p>
+<p><code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> is the alternative to <code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code> when one very wide flattened table
+would be harder to read than a small atlas of separate tables.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>row_dims</strong></p>
+<p>Dimensions that should form the row-key side inside each facet frame.</p>
+<p><strong>column_dims</strong></p>
+<p>Dimensions that should form the column side inside each facet frame.</p>
+<p><strong>options</strong></p>
+<p>The same render-time <code class="docutils literal notranslate"><span class="pre">ContingencyOptions</span></code> used by <code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code>, especially
+<code class="docutils literal notranslate"><span class="pre">totals</span></code>, <code class="docutils literal notranslate"><span class="pre">separator</span></code>, and <code class="docutils literal notranslate"><span class="pre">null_label</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+One <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> per leftover facet combination.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> when:</p>
+<ul class="simple">
+<li><p>the retained object has more dimensions than you want to flatten into one frame</p></li>
+<li><p>you want one table per remaining level combination</p></li>
+<li><p>the leftover dimensions are better understood as panels than as encoded column names</p></li>
+</ul>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -123,6 +149,18 @@ weekend=yes
 </pre></div>
 </div>
 </section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Any retained dimension not assigned to <code class="docutils literal notranslate"><span class="pre">row_dims</span></code> or <code class="docutils literal notranslate"><span class="pre">column_dims</span></code> becomes part of
+the facet axis.</p></li>
+<li><p>If no leftover dimensions remain, <code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> still returns an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>, but with a
+single frame.</p></li>
+<li><p>Duplicate row dimensions are rejected.</p></li>
+<li><p>Duplicate facet-column dimensions are rejected.</p></li>
+<li><p>A dimension cannot be named on both the row side and the facet-column side.</p></li>
+</ul>
 </section>
 </section>
 

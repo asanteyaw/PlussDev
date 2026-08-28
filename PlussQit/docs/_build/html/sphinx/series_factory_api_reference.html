@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=d2a74cb6" />
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=5807a5a5"></script>
+    <script src="../_static/api_nav.js?v=da1ea0a4"></script>
     <script src="../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -56,6 +56,8 @@ to navigate.</p>
 <p>Use it for:</p>
 <ul class="simple">
 <li><p>direct value construction with <code class="docutils literal notranslate"><span class="pre">make</span></code></p></li>
+<li><p>public rendering through <code class="docutils literal notranslate"><span class="pre">print</span></code></p></li>
+<li><p>ordered conditional construction through <code class="docutils literal notranslate"><span class="pre">select</span></code></p></li>
 <li><p>shape-first allocation like <code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">zeros</span></code>, <code class="docutils literal notranslate"><span class="pre">ones</span></code>, <code class="docutils literal notranslate"><span class="pre">full</span></code></p></li>
 <li><p>range/grid builders like <code class="docutils literal notranslate"><span class="pre">arange</span></code>, <code class="docutils literal notranslate"><span class="pre">linspace</span></code>, <code class="docutils literal notranslate"><span class="pre">eye</span></code></p></li>
 <li><p>random and distribution factories like <code class="docutils literal notranslate"><span class="pre">rand</span></code>, <code class="docutils literal notranslate"><span class="pre">randn</span></code>, <code class="docutils literal notranslate"><span class="pre">randint</span></code>,
@@ -82,9 +84,11 @@ the overload quirks that materially change the result.</p>
 <section id="current-coverage">
 <h2>Current Coverage<a class="headerlink" href="#current-coverage" title="Link to this heading">¶</a></h2>
 <p>The current handwritten factory batch now covers the public constructor families
-most users actually reach first and second:</p>
+most users actually reach first and second, plus the free-function helpers that
+show up immediately after construction:</p>
 <ul class="simple">
 <li><p>direct value construction: <code class="docutils literal notranslate"><span class="pre">make</span></code></p></li>
+<li><p>free-function helpers on built <code class="docutils literal notranslate"><span class="pre">Series</span></code>: <code class="docutils literal notranslate"><span class="pre">print</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code></p></li>
 <li><p>shape-first constants and layouts: <code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">zeros</span></code>, <code class="docutils literal notranslate"><span class="pre">ones</span></code>, <code class="docutils literal notranslate"><span class="pre">full</span></code>, <code class="docutils literal notranslate"><span class="pre">eye</span></code></p></li>
 <li><p>range/grid builders: <code class="docutils literal notranslate"><span class="pre">arange</span></code>, <code class="docutils literal notranslate"><span class="pre">linspace</span></code></p></li>
 <li><p>like-factories: <code class="docutils literal notranslate"><span class="pre">empty_like</span></code>, <code class="docutils literal notranslate"><span class="pre">zeros_like</span></code>, <code class="docutils literal notranslate"><span class="pre">ones_like</span></code>, <code class="docutils literal notranslate"><span class="pre">full_like</span></code>,
@@ -102,6 +106,8 @@ those rules change once bounds or uniqueness matter.</p></li>
 separate mental model from ordinary shape-first construction.</p></li>
 <li><p>The complex pages teach the pairwise “two real tensors in, one complex tensor
 out” surface, which behaves differently from the scalar-fill factories.</p></li>
+<li><p>The helper pages (<code class="docutils literal notranslate"><span class="pre">print</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code>) live here because they are free
+functions on <code class="docutils literal notranslate"><span class="pre">pluss::series::*</span></code>, not <code class="docutils literal notranslate"><span class="pre">Series</span></code> methods.</p></li>
 </ul>
 <p>What is still out of scope for this handwritten batch is the unsupported sparse
 and quantized constructor stub family.</p>

@@ -44,7 +44,7 @@ per-axis choice, you are already in [`size()`](size.md) territory instead.
 `pluss::RangeView<std::int64_t>`
     A lightweight borrowed view of the current axis extents.
 
-The teaching point here is not the exact type spelling. The teaching point is:
+The main point here is not the exact type spelling. The main point is:
 
 - cheap to inspect
 - cheap to pass onward
@@ -153,7 +153,7 @@ print_shape(mat.unsqueeze(1).sizes());
 [2, 1, 3]
 ```
 
-That is why `sizes()` is such a practical teaching and debugging tool: it lets
+That is why `sizes()` is such a practical inspection and debugging tool: it lets
 you inspect the exact shape consequence of a structural method before moving on.
 
 ## Notes

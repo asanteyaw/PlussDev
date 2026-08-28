@@ -317,7 +317,7 @@ Series::extract: step cannot be 0
   surface.
 - Zero-step slices fail explicitly.
 
-## Teaching Summary
+## Summary
 
 Use `extract()` when your indexing problem is heterogeneous, dynamic, or rich
 enough that the smaller helpers stop being expressive.

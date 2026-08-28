@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -62,6 +62,54 @@ implementation detail of how the selector is dispatched internally.</p>
 already has one or more <strong>named</strong> case-label levels, set up via
 <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code></span></a>. It looks up rows by matching those named levels’
 values rather than by position or by the plain default case label.</p>
+<p><code class="docutils literal notranslate"><span class="pre">case_study()</span></code> is the selection surface to learn well because it is the point where
+PlussMic’s row semantics and feature semantics meet. Many narrower methods are really
+special cases of it:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>: positional rows only</p></li>
+<li><p><a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a>: positional rows in an explicit list</p></li>
+<li><p><a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a>: boolean-mask rows only</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a>: feature projection only</p></li>
+<li><p><a class="reference internal" href="zoom.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zoom()</span></code></span></a>: rectangular positional row+feature block</p></li>
+</ul>
+<p>If you can read a <code class="docutils literal notranslate"><span class="pre">Case</span></code> selector and a <code class="docutils literal notranslate"><span class="pre">Feat</span></code> selector fluently, you can usually
+predict exactly what <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> will do.</p>
+</section>
+<section id="how-to-think-about-it">
+<h2>How To Think About It<a class="headerlink" href="#how-to-think-about-it" title="Link to this heading">¶</a></h2>
+<p>There are three independent ideas on this surface:</p>
+<ol class="arabic simple">
+<li><p><strong>How rows are selected</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p>by position: <code class="docutils literal notranslate"><span class="pre">Case::at</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::slice</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::take</span></code></p></li>
+<li><p>by the current case label payload: <code class="docutils literal notranslate"><span class="pre">Case::label</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::labels</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::span</span></code></p></li>
+<li><p>by a boolean mask: <code class="docutils literal notranslate"><span class="pre">Case::where</span></code></p></li>
+<li><p>by named case-label levels: <code class="docutils literal notranslate"><span class="pre">CasePick</span></code></p></li>
+</ul>
+<ol class="arabic simple" start="2">
+<li><p><strong>How features are selected</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p>all features: omit the second argument or pass <code class="docutils literal notranslate"><span class="pre">Feat::all()</span></code></p></li>
+<li><p>by one feature: <code class="docutils literal notranslate"><span class="pre">Feat::name</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::at</span></code></p></li>
+<li><p>by many features: <code class="docutils literal notranslate"><span class="pre">Feat::names</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::take</span></code></p></li>
+<li><p>by a contiguous positional/name window: <code class="docutils literal notranslate"><span class="pre">Feat::slice</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::span</span></code></p></li>
+</ul>
+<ol class="arabic simple" start="3">
+<li><p><strong>What shape comes back</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p>always a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></li>
+<li><p>row order follows the row selector</p></li>
+<li><p>feature order follows the feature selector</p></li>
+<li><p>duplicate labels match all rows carrying that label</p></li>
+<li><p>case labels are preserved on surviving rows unless you are using <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> with
+<code class="docutils literal notranslate"><span class="pre">drop</span> <span class="pre">=</span> <span class="pre">true</span></code></p></li>
+</ul>
+<p>That final point matters. <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> does not collapse to a scalar or a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+just because you selected one row or one feature. It stays on the frame surface so you
+can keep chaining frame operations naturally.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -115,6 +163,25 @@ redundant, since they’re constant across the matched rows) on every result row
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 A new frame containing the matched rows (and, with the two-argument overload,
 only the selected features), in the order the selector produced them.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> when the row selection and the feature selection belong together as
+one operation.</p>
+<p>Typical cases:</p>
+<ul class="simple">
+<li><p>inspect a handful of suspicious rows together with only the columns that matter</p></li>
+<li><p>carve out a labeled diagnostic subframe after a join, fill, or aggregation</p></li>
+<li><p>look rows up by business keys promoted into the case axis via <code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code></p></li>
+<li><p>keep the same result as a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> even when the selection is very small</p></li>
+</ul>
+<p>Use a narrower method when only one axis matters:</p>
+<ul class="simple">
+<li><p>row-only positional work: <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>, <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a></p></li>
+<li><p>row-only boolean work: <a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a></p></li>
+<li><p>feature-only work: <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a></p></li>
+<li><p>rectangular positional block work: <a class="reference internal" href="zoom.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zoom()</span></code></span></a></p></li>
+</ul>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -309,7 +376,61 @@ each level — here there is only one level (<code class="docutils literal notra
 single-element list. Both forms leave <code class="docutils literal notranslate"><span class="pre">region</span></code> in the result’s case labels (shown as
 the row index) because <code class="docutils literal notranslate"><span class="pre">drop</span></code> was left at its default <code class="docutils literal notranslate"><span class="pre">false</span></code>; pass <code class="docutils literal notranslate"><span class="pre">drop</span> <span class="pre">=</span> <span class="pre">true</span></code> when
 a level’s value is now constant across every matched row and no longer worth carrying.</p>
+<p>Example 7. Reorder features positionally while keeping a contiguous row block.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">Feat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Feat</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">Case</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">Feat</span><span class="o">::</span><span class="n">take</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
 </section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================================
+     | units  city   unit_price
+------------------------------------
+0    | 2      Accra  1200
+1    | 5      Accra  45.5
+------------------------------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p>This is a useful reminder that the feature selector controls output order directly.
+<code class="docutils literal notranslate"><span class="pre">Feat::take({3,</span> <span class="pre">1,</span> <span class="pre">4})</span></code> does not sort itself back into source order.</p>
+</section>
+</section>
+<section id="important-quirks">
+<h2>Important Quirks<a class="headerlink" href="#important-quirks" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Positional slices and label spans do <strong>not</strong> mean the same thing.
+<code class="docutils literal notranslate"><span class="pre">Case::slice(1,</span> <span class="pre">4)</span></code> is half-open and positional. <code class="docutils literal notranslate"><span class="pre">Case::span(&quot;A100&quot;,</span> <span class="pre">&quot;D400&quot;)</span></code> is
+inclusive and label-based.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::label(&quot;B200&quot;)</span></code> can return several rows. Case labels are lookup keys here, not
+uniqueness guarantees.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::labels({...})</span></code> follows your requested label order, not the frame’s original
+order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::where(mask)</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">filter(mask)</span></code> first, then applies the feature
+selector on the filtered frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Feat::span(&quot;a&quot;,</span> <span class="pre">&quot;d&quot;)</span></code> walks the frame’s <strong>current feature order</strong>, not
+alphabetical order.</p></li>
+</ul>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<p>These are worth knowing up front because <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> is intentionally strict:</p>
+<ul class="simple">
+<li><p>unknown case label -&gt; validation error</p></li>
+<li><p>unknown feature name -&gt; validation error</p></li>
+<li><p>out-of-bounds scalar/list position after negative-index normalization -&gt; validation error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CasePick.key</span></code> length different from the number of case-label levels -&gt; validation error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CasePick</span></code> with no matches -&gt; validation error</p></li>
+<li><p>mixing <code class="docutils literal notranslate"><span class="pre">CasePick.key</span></code> with named level selectors in the same <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> -&gt; validation error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CasePick.names</span></code> and <code class="docutils literal notranslate"><span class="pre">CasePick.values</span></code> of different lengths -&gt; validation error</p></li>
+</ul>
+<p>One subtle exception: a reversed label span such as <code class="docutils literal notranslate"><span class="pre">Case::span(&quot;D400&quot;,</span> <span class="pre">&quot;A100&quot;)</span></code>
+does <strong>not</strong> raise. It returns an empty frame because the stop position lands before
+the start position.</p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -331,6 +452,13 @@ validation error, matching <code class="docutils literal notranslate"><span clas
 <li><p><code class="docutils literal notranslate"><span class="pre">names</span></code> / <code class="docutils literal notranslate"><span class="pre">values</span></code> on <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> generalizes <code class="docutils literal notranslate"><span class="pre">label</span></code> / <code class="docutils literal notranslate"><span class="pre">value</span></code> to matching several
 named levels simultaneously — every listed level must match its paired value for a
 row to be included.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::span(...)</span></code> uses the first occurrence of the start label and the last
+occurrence of the stop label. That is why duplicate labels can expand the result
+more than first-time users expect.</p></li>
+<li><p>The selector structs are deliberately small vocabulary objects, not a second query
+language. If your selection logic is already a boolean expression over feature
+values, build the mask and pass it through <code class="docutils literal notranslate"><span class="pre">Case::where(...)</span></code> instead of trying to
+encode it indirectly through labels or positions.</p></li>
 </ul>
 </section>
 <section id="see-also">

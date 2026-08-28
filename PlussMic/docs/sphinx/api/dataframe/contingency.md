@@ -77,6 +77,75 @@ That means the old builder-style methods such as `count()`, `rowshare()`,
 `colshare()`, `sum()`, `mean()`, and friends are intentionally gone from this
 surface. The retained table itself is the object now; rendering is explicit.
 
+## Mental Model
+
+The right way to think about `contingency(...)` is:
+
+1. `DataFrame` supplies the observed rows.
+2. `contingency(...)` cross-classifies one or more dimensions and stores the joint
+   counts as a retained N-dimensional object.
+3. You manipulate that object mathematically:
+   `slice(...)`, `marginalize(...)`, `share()`, `condition(...)`.
+4. Only after that do you choose a 2D view:
+   `to_frame(...)` for one flattened table or `facet(...)` for several tables.
+
+That separation is the main architectural difference from a traditional one-shot
+`crosstab()` call. A crosstab API usually says "build me this 2D table now."
+PlussMic's retained contingency surface says "build the joint distribution once, then
+let me decide how to analyze and render it."
+
+## When To Use It
+
+Use `contingency(...)` when the thing you care about is a joint distribution over
+categorical or discrete dimensions.
+
+Good fits:
+
+- counts of how often category combinations occur
+- global shares and conditional shares
+- fixing some dimensions at concrete levels while retaining the others
+- collapsing dimensions out to form lower-dimensional marginals
+- switching between one 2D render and several faceted 2D renders without rebuilding
+  the counts
+
+Use something else when your problem is different:
+
+- arbitrary numeric aggregation by keys -> [`group()`](group.md)
+- spreadsheet-style summarized value tables -> [`pivot_table()`](pivot_table.md)
+- pure feature frequencies one column at a time -> [`freq()`](freq.md)
+
+## Overload Guide
+
+There are three conceptual construction styles.
+
+**1. Classic two-way form**
+
+```cpp
+auto ct = df.contingency("city", "channel");
+```
+
+This is the direct replacement for the ordinary row-by-column contingency table.
+
+**2. One-list retained form**
+
+```cpp
+auto ct = df.contingency({"city", "channel", "weekend"});
+```
+
+This keeps all named dimensions and remembers a default render of:
+
+- first dimension -> default row side
+- remaining dimensions -> default column side
+
+**3. Explicit row-side / column-side retained form**
+
+```cpp
+auto ct = df.contingency({"city"}, {"channel", "weekend"});
+```
+
+This keeps the same dimensions but remembers the intended row/column split for later
+`to_frame()` and `facet()` calls.
+
 ## Parameters
 
 **features**
@@ -102,10 +171,44 @@ Dimensions that should become the default column side for later rendering.
 - `separator`: how multi-dimension rendered column/facet labels are flattened
 - `null_label`: the text used when retained null levels are rendered
 
+Defaults:
+
+- `dropnull = true`
+- `sort = true`
+- `totals = false`
+- `separator = " | "`
+- `null_label = "NULL"`
+
+Two option details matter more than they first appear:
+
+- `dropnull` is a **construction-time** rule. With the default `true`, any source row
+  missing at least one requested contingency dimension is excluded before the tensor is
+  built.
+- `totals`, `separator`, and `null_label` are primarily **render-time** concerns. They
+  change what `to_frame(...)` and `facet(...)` show; they do not change which joint
+  cells exist in the retained object.
+
 ## Returns
 
 `ContingencyTable`
     A retained N-dimensional contingency object.
+
+## Performance Profile
+
+This surface is built for vectorized construction and reuse:
+
+- the joint counts are built once
+- `share()` and `condition(...)` normalize the retained tensor instead of rebuilding
+  the grouping
+- `slice(...)` and `marginalize(...)` work on the retained object rather than walking
+  the source frame again
+
+But it is still a **dense** retained tensor. That is the important tradeoff to teach.
+
+If you cross-classify dimensions with extremely high cardinality, the dense cell count
+can explode even when many combinations never occur. That is why this API is excellent
+for genuinely categorical/discrete dimensions and much less appropriate for raw
+high-cardinality identifiers unless you bucket or reduce them first.
 
 ## Examples
 
@@ -232,6 +335,65 @@ That is the architectural difference from a plain crosstab: the object stays
 N-dimensional until you decide what 2D view you want, and options like totals
 are applied at render time rather than through a separate builder method.
 
+Example 6. Change the flattened label style without rebuilding the contingency
+tensor.
+
+```cpp
+DataFrame::ContingencyOptions options;
+options.separator = " -> ";
+
+auto ct = df.contingency({"city", "channel", "weekend"});
+std::cout << ct.to_frame({"city"}, {"channel"}, options);
+```
+
+### Output
+
+```text
+=====================================================================
+     | city  channel=Card -> weekend=no  channel=Card -> weekend=yes  channel=Cash -> weekend=no  channel=Cash -> weekend=yes
+---------------------------------------------------------------------
+0    | A     1                           0                            1                           0
+1    | B     0                           1                            1                           1
+---------------------------------------------------------------------
+[2 cs x 5 feat]
+```
+
+The retained object is the same. Only the flattened 2D column naming convention
+changed.
+
+## Common Workflow
+
+The most common study pattern looks like this:
+
+```cpp
+auto ct = df.contingency({"city", "channel", "weekend"});
+
+auto counts = ct.to_frame({"city"}, {"channel"});
+auto global = ct.share().to_frame({"city"}, {"channel"});
+auto weekend_yes = ct.slice({{"weekend", "yes"}}).to_frame({"city"}, {"channel"});
+auto by_city = ct.condition({"city"}).to_frame({"city"}, {"channel"});
+auto no_weekend = ct.marginalize({"weekend"}).to_frame({"city"}, {"channel"});
+auto faceted = ct.facet({"city"}, {"channel"});
+```
+
+That is the teaching sequence to internalize:
+
+- build once
+- choose whether you want counts or shares
+- choose whether you want to fix dimensions or sum them away
+- then choose one-frame rendering or faceted rendering
+
+## Failure Modes
+
+- empty feature list -> validation error
+- unknown feature name -> validation error
+- duplicate feature name on one side -> validation error
+- the same feature named on both row and column sides -> validation error
+- dense tensor size overflow from extreme cardinality -> validation error
+
+On very large cardinality products, that final failure is a feature, not a defect. It
+prevents silently attempting an impossible dense materialization.
+
 ## Notes
 
 - Sorting is lexicographic by full tuple within each rendered side. With
@@ -248,6 +410,10 @@ are applied at render time rather than through a separate builder method.
 - This surface is intentionally focused on joint frequencies/distributions.
   For arbitrary numeric value aggregation, use `group(...).agg(...)` or
   `pivot_table(...)`.
+- `to_frame(...)` appends any unassigned remaining dimensions onto the column side.
+  `facet(...)` leaves those remaining dimensions as the facet axis instead.
+- The retained dimension order matters. It drives `dims()`, `shape()`, and the axis
+  order of `to_array()`.
 
 ## See Also
 

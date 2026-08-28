@@ -9,15 +9,15 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=5807a5a5"></script>
+    <script src="../../../_static/api_nav.js?v=da1ea0a4"></script>
     <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::slice" href="slice.html" />
+    <link rel="next" title="Series::select" href="select.html" />
     <link rel="prev" title="Series::size" href="size.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -78,7 +78,7 @@ per-axis choice, you are already in <a class="reference internal" href="size.htm
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::int64_t&gt;</span></code>
 A lightweight borrowed view of the current axis extents.</p>
-<p>The teaching point here is not the exact type spelling. The teaching point is:</p>
+<p>The main point here is not the exact type spelling. The main point is:</p>
 <ul class="simple">
 <li><p>cheap to inspect</p></li>
 <li><p>cheap to pass onward</p></li>
@@ -174,7 +174,7 @@ length-<code class="docutils literal notranslate"><span class="pre">1</span></co
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[2, 1, 3]
 </pre></div>
 </div>
-<p>That is why <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> is such a practical teaching and debugging tool: it lets
+<p>That is why <code class="docutils literal notranslate"><span class="pre">sizes()</span></code> is such a practical inspection and debugging tool: it lets
 you inspect the exact shape consequence of a structural method before moving on.</p>
 </section>
 </section>
@@ -296,7 +296,7 @@ ranges directly.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="size.html" title="previous chapter">Series::size</a></li>
-      <li>Next: <a href="slice.html" title="next chapter">Series::slice</a></li>
+      <li>Next: <a href="select.html" title="next chapter">Series::select</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

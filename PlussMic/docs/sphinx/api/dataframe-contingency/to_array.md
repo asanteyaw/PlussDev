@@ -18,6 +18,19 @@ Returns the retained contingency tensor as an N-dimensional `pluss::Series`.
 Use this when you want the actual dense N-dimensional payload rather than a 2D
 rendered `DataFrame`.
 
+## Returns
+
+`pluss::Series`
+    The dense retained tensor in current value space.
+
+## When To Use It
+
+Use `to_array()` when:
+
+- you want tensor-style downstream work rather than a table render
+- you care about axis order and rank
+- you want counts as `int64` or normalized values as floating point directly
+
 ## Examples
 
 Example 1. Inspect the dense count tensor's rank, shape, and flattened cell
@@ -75,3 +88,11 @@ std::cout << "\n";
 ```text
 0.2 0.2 0.2 0.4
 ```
+
+## Notes
+
+- The array axis order is exactly `dims()`.
+- `freq()` returns integral count tensors; `share()` and `condition(...)` return
+  floating-point tensors.
+- `to_array()` exports the current retained object exactly as it stands after any
+  slicing or marginalization.

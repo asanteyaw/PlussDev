@@ -118,9 +118,9 @@ data=[true, true, true, true]
 - [`pluss::series::full`](full.md): the general repeated-fill constructor.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="make.html">
+  <a class="prev-link" href="select.html">
     <span class="label">Previous</span>
-    <span class="title">make</span>
+    <span class="title">select</span>
   </a>
   <a class="next-link" href="zeros.html">
     <span class="label">Next</span>

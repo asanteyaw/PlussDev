@@ -154,7 +154,7 @@ data=[0.70710678, 0.70710678]
 On this 2D shape, the last axis is the row axis, so the result matches Example
 3.
 
-## Gotchas And Teaching Notes
+## Gotchas And Notes
 
 - Use the `stat` accessor path on this surface.
 - Zero skewness means symmetry, not "low variance."
@@ -165,7 +165,7 @@ On this 2D shape, the last axis is the row axis, so the result matches Example
   fragile.
 - A `dim` outside the valid axis range fails.
 
-## Teaching Summary
+## Summary
 
 Use `skewness()` when you want to summarize distribution shape rather than
 transform values:

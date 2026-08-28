@@ -40,34 +40,61 @@
 <h1><code class="docutils literal notranslate"><span class="pre">lymph::models::Model</span></code><a class="headerlink" href="#lymph-models-model" title="Link to this heading">¶</a></h1>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">lymph::models::Model</span></code> is the main cheap-copy trainable handle in Lymph.</p>
-<p>Factories return it, prep stages attach to it, validation plans score it, and
-selection surfaces compare it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">lymph::models::Model</span></code> is the main trainable estimator handle in Lymph.</p>
+<p>Factories return it, <code class="docutils literal notranslate"><span class="pre">prep</span></code> objects can be attached to it, <code class="docutils literal notranslate"><span class="pre">selection</span></code>
+surfaces can score it, and <code class="docutils literal notranslate"><span class="pre">workflow</span></code> can later wrap it into a broader
+orchestration contract.</p>
+<p>The important design point is that <code class="docutils literal notranslate"><span class="pre">Model</span></code> is cheap to copy at the call site
+but still behaves like a real stateful artifact once training begins. That is
+why the object supports both:</p>
+<ul class="simple">
+<li><p>mutating training via <code class="docutils literal notranslate"><span class="pre">learn_(...)</span></code></p></li>
+<li><p>non-mutating training via <code class="docutils literal notranslate"><span class="pre">learn(...)</span> <span class="pre">const</span></code></p></li>
+</ul>
+<p>The mutating path is the direct “fit this object” route. The non-mutating path
+is the safer “keep the original template untouched and return a trained copy”
+route.</p>
 </section>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="nf">lymph::models::linear::logistic_regression</span><span class="p">(</span>
 <span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">LinearFamilyOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
 
-<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">ModelPrep</span><span class="w"> </span><span class="nf">lymph::models::Model::prepare</span><span class="p">();</span>
+<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">lymph::models::Model::append</span><span class="p">(</span>
+<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">Stage</span><span class="w"> </span><span class="n">stage</span><span class="p">,</span>
+<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">Route</span><span class="w"> </span><span class="n">route</span><span class="p">);</span>
+
+<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">ModelPrep</span><span class="w"> </span><span class="nf">lymph::models::Model::prepare</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span>
+
 <span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">lymph::models::Model::learn_</span><span class="p">(</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataFrameBatchOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">data_options</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">TrainOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">train_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+
+<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="nf">lymph::models::Model::learn</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataFrameBatchOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">data_options</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">TrainOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">train_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+
 <span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">lymph::models::Model::infer</span><span class="p">(</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataFrameBatchOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">data_options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+
 <span class="n">lymph</span><span class="o">::</span><span class="n">MetricReport</span><span class="w"> </span><span class="nf">lymph::models::Model::assess</span><span class="p">(</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataFrameBatchOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">data_options</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">AssessOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">assess_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">lymph::models::Model::save</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+
+<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="nf">lymph::models::Model::load</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="why-this-object-exists">
 <h2>Why This Object Exists<a class="headerlink" href="#why-this-object-exists" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Model</span></code> is the object that prevents everyday modeling work from collapsing into
-raw family options and one-off helper code.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Model</span></code> is the object that keeps everyday estimator work from collapsing into
+raw family options, one-off helper code, and ad-hoc state threading.</p>
 <p>You use it when one staged, trainable artifact is enough:</p>
 <ul class="simple">
 <li><p>tabular classification</p></li>
@@ -78,9 +105,278 @@ raw family options and one-off helper code.</p>
 <p>Move upward to <code class="docutils literal notranslate"><span class="pre">workflow::Workflow</span></code> when the project needs stronger runtime
 orchestration than the trainable artifact alone.</p>
 </section>
+<section id="construction-paths">
+<h2>Construction Paths<a class="headerlink" href="#construction-paths" title="Link to this heading">¶</a></h2>
+<p>There are two normal ways to shape a <code class="docutils literal notranslate"><span class="pre">Model</span></code> before fitting:</p>
+<ul class="simple">
+<li><p>direct family construction from a model factory</p></li>
+<li><p>staged extension after construction</p></li>
+</ul>
+<p>Direct family construction answers the question “which estimator family do I
+want?” Examples include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::models::linear::logistic_regression(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::models::tree::decision_tree_classifier(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::models::ensemble::random_forest_classifier(...)</span></code></p></li>
+</ul>
+<p>After that, you can shape the artifact in one of two preparation styles:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prepare()</span></code> for fluent model-bound preparation planning</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">append(stage,</span> <span class="pre">route)</span></code> for explicit stage-plus-route assembly</p></li>
+</ul>
+<p>Those two styles solve the same broad problem but serve different readers:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prepare()</span></code> is usually the cleaner public path for everyday work</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">append(...)</span></code> is better when stage objects and route objects already exist
+independently and you want to attach them explicitly</p></li>
+</ul>
+</section>
+<section id="state-semantics">
+<h2>State Semantics<a class="headerlink" href="#state-semantics" title="Link to this heading">¶</a></h2>
+<p>Three state ideas matter more than anything else on this surface:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">trained()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stage_count()</span></code></p></li>
+<li><p>the difference between pending and materialized preparation</p></li>
+</ul>
+<p>Pending preparation is important. When you call <code class="docutils literal notranslate"><span class="pre">prepare().standardize(...)</span></code>
+or <code class="docutils literal notranslate"><span class="pre">append(...)</span></code>, the route may depend on the real input frame. Lymph therefore
+lets those stages remain pending until <code class="docutils literal notranslate"><span class="pre">learn_()</span></code> or <code class="docutils literal notranslate"><span class="pre">learn()</span></code> sees the real
+data and resolves them.</p>
+<p>That is why <code class="docutils literal notranslate"><span class="pre">stage_count()</span></code> can remain <code class="docutils literal notranslate"><span class="pre">0</span></code> after preparation has been planned.
+Once learning happens on a real frame, the planned stages materialize and the
+count becomes the number of attached, resolved stages.</p>
+</section>
+<section id="learning-inference-and-assessment">
+<h2>Learning, Inference, and Assessment<a class="headerlink" href="#learning-inference-and-assessment" title="Link to this heading">¶</a></h2>
+<p>The normal lifecycle is:</p>
+<ol class="arabic simple">
+<li><p>construct the model</p></li>
+<li><p>optionally attach preparation</p></li>
+<li><p>choose how a frame becomes <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> via <code class="docutils literal notranslate"><span class="pre">DataFrameBatchOptions</span></code></p></li>
+<li><p>train with <code class="docutils literal notranslate"><span class="pre">learn_()</span></code> or <code class="docutils literal notranslate"><span class="pre">learn()</span></code></p></li>
+<li><p>call <code class="docutils literal notranslate"><span class="pre">infer()</span></code> for predictions</p></li>
+<li><p>call <code class="docutils literal notranslate"><span class="pre">assess()</span></code> for metric reports</p></li>
+</ol>
+<p>Use <code class="docutils literal notranslate"><span class="pre">learn_()</span></code> when the left-hand object is meant to become the trained
+artifact.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">learn()</span></code> when the current object is only a reusable template and you want
+the training result to come back as a separate <code class="docutils literal notranslate"><span class="pre">Model</span></code>.</p>
+</section>
+<section id="practical-examples">
+<h2>Practical Examples<a class="headerlink" href="#practical-examples" title="Link to this heading">¶</a></h2>
+<p>This page uses the exact verifier programs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph_models_model_docverify_demo.cpp</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph_models_model_append_docverify_demo.cpp</span></code></p></li>
+</ul>
+<section id="example-1">
+<h3>Example 1<a class="headerlink" href="#example-1" title="Link to this heading">¶</a></h3>
+<p>This example shows the full estimator lifecycle: construction, pending
+preparation, materialization on learning, inference, assessment, and the
+non-mutating <code class="docutils literal notranslate"><span class="pre">learn(...)</span></code> sibling.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/lymph.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">lymph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">lymph</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">).</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">raw</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.4</span><span class="p">,</span><span class="w"> </span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="mf">2.2</span><span class="p">,</span><span class="w"> </span><span class="mf">3.8</span><span class="p">,</span><span class="w"> </span><span class="mf">4.2</span><span class="p">,</span><span class="w"> </span><span class="mf">4.6</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;balance&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span><span class="w"> </span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="mf">2.1</span><span class="p">,</span><span class="w"> </span><span class="mf">2.4</span><span class="p">,</span><span class="w"> </span><span class="mf">2.7</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;late&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">}))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;default&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">LinearFamilyOptions</span><span class="w"> </span><span class="n">logistic_options</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">logistic_options</span><span class="p">.</span><span class="n">regularization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">RegularizationKind</span><span class="o">::</span><span class="n">L2</span><span class="p">;</span>
+<span class="w">  </span><span class="n">logistic_options</span><span class="p">.</span><span class="n">regularization_strength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-3</span><span class="p">;</span>
+<span class="w">  </span><span class="n">logistic_options</span><span class="p">.</span><span class="n">fit_intercept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">linear</span><span class="o">::</span><span class="n">logistic_regression</span><span class="p">(</span><span class="n">logistic_options</span><span class="p">);</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== initial_model ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; task_kind=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">task_kind</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">ModelPrep</span><span class="w"> </span><span class="n">prep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">prepare</span><span class="p">();</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">Route</span><span class="w"> </span><span class="n">categorical</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prep</span><span class="p">.</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">});</span>
+<span class="w">  </span><span class="n">prep</span><span class="p">.</span><span class="n">standardize</span><span class="p">(</span><span class="n">prep</span><span class="p">.</span><span class="n">remaining</span><span class="p">(</span><span class="n">categorical</span><span class="p">));</span>
+<span class="w">  </span><span class="n">prep</span><span class="p">.</span><span class="n">encode</span><span class="p">(</span>
+<span class="w">      </span><span class="n">categorical</span><span class="p">,</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">OneHotEncoderOptions</span><span class="p">{</span>
+<span class="w">          </span><span class="p">.</span><span class="n">max_categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">overflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">CategoryOverflowPolicy</span><span class="o">::</span><span class="n">KeepMostFrequent</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">include_unknown_bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">      </span><span class="p">});</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== after_prepare ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataFrameBatchOptions</span><span class="w"> </span><span class="n">data_options</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">feature_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;balance&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;late&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">};</span>
+<span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">label_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;default&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">note_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataNotePolicy</span><span class="o">::</span><span class="n">Factorize</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">TrainOptions</span><span class="w"> </span><span class="n">train_options</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">train_options</span><span class="p">.</span><span class="n">max_iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">600</span><span class="p">;</span>
+<span class="w">  </span><span class="n">train_options</span><span class="p">.</span><span class="n">tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-8</span><span class="p">;</span>
+<span class="w">  </span><span class="n">train_options</span><span class="p">.</span><span class="n">random</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{.</span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20260825ULL</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">deterministic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">};</span>
+
+<span class="w">  </span><span class="n">model</span><span class="p">.</span><span class="n">learn_</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">data_options</span><span class="p">,</span><span class="w"> </span><span class="n">train_options</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">predicted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">data_options</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricReport</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">assess</span><span class="p">(</span>
+<span class="w">      </span><span class="n">raw</span><span class="p">,</span>
+<span class="w">      </span><span class="n">data_options</span><span class="p">,</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">AssessOptions</span><span class="p">{</span>
+<span class="w">          </span><span class="p">.</span><span class="n">metrics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricKind</span><span class="o">::</span><span class="n">Accuracy</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricKind</span><span class="o">::</span><span class="n">F1</span><span class="p">},</span>
+<span class="w">      </span><span class="p">});</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== learned_model ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;predictions=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">predicted</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;accuracy=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="n">accuracy</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; f1=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="n">f1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">template_model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">linear</span><span class="o">::</span><span class="n">logistic_regression</span><span class="p">(</span><span class="n">logistic_options</span><span class="p">);</span>
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">ModelPrep</span><span class="w"> </span><span class="n">template_prep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">template_model</span><span class="p">.</span><span class="n">prepare</span><span class="p">();</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">Route</span><span class="w"> </span><span class="n">template_categorical</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">template_prep</span><span class="p">.</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">});</span>
+<span class="w">  </span><span class="n">template_prep</span><span class="p">.</span><span class="n">standardize</span><span class="p">(</span><span class="n">template_prep</span><span class="p">.</span><span class="n">remaining</span><span class="p">(</span><span class="n">template_categorical</span><span class="p">));</span>
+<span class="w">  </span><span class="n">template_prep</span><span class="p">.</span><span class="n">encode</span><span class="p">(</span>
+<span class="w">      </span><span class="n">template_categorical</span><span class="p">,</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">OneHotEncoderOptions</span><span class="p">{</span>
+<span class="w">          </span><span class="p">.</span><span class="n">max_categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">overflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">CategoryOverflowPolicy</span><span class="o">::</span><span class="n">KeepMostFrequent</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">include_unknown_bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">      </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">learned_copy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">template_model</span><span class="p">.</span><span class="n">learn</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">data_options</span><span class="p">,</span><span class="w"> </span><span class="n">train_options</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== learned_copy ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;original_trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">template_model</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; original_stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">template_model</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; copy_trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">learned_copy</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; copy_stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">learned_copy</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>== initial_model ==
+trained=false stage_count=0 task_kind=0
+== after_prepare ==
+trained=false stage_count=0
+== learned_model ==
+trained=true stage_count=2
+predictions=pluss::Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[0, 0, 0, 0, 1, 1, 1, 1]
+accuracy=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[1] f1=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[1]
+== learned_copy ==
+original_trained=false original_stage_count=0 copy_trained=true copy_stage_count=2
+</pre></div>
+</div>
+<p>A few details in that output are worth reading carefully:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stage_count=0</span></code> after <code class="docutils literal notranslate"><span class="pre">prepare()</span></code> confirms that preparation can remain
+pending until the frame is seen</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stage_count=2</span></code> after learning confirms that both planned stages
+materialized on the real frame</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">learn(...)</span></code> left the template untouched while returning a trained copy</p></li>
+</ul>
+</section>
+<section id="example-2">
+<h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
+<p>This example uses the explicit <code class="docutils literal notranslate"><span class="pre">append(stage,</span> <span class="pre">route)</span></code> path rather than the
+fluent <code class="docutils literal notranslate"><span class="pre">prepare()</span></code> accessor. It is the better fit when stage objects and route
+objects already exist independently and you want to assemble the model
+deliberately.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/lymph.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">lymph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">lymph</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">).</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">raw</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;x1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;x2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w"> </span><span class="mi">4000</span><span class="p">,</span><span class="w"> </span><span class="mi">1500</span><span class="p">,</span><span class="w"> </span><span class="mi">3000</span><span class="p">,</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w"> </span><span class="mi">3500</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;category&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}))},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">Route</span><span class="w"> </span><span class="n">categorical</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">route</span><span class="o">::</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;category&quot;</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">Route</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">route</span><span class="o">::</span><span class="n">remaining_of</span><span class="p">(</span><span class="n">categorical</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">tree</span><span class="o">::</span><span class="n">decision_tree_classifier</span><span class="p">({.</span><span class="n">max_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="w">  </span><span class="n">model</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">standard_scaler</span><span class="p">(),</span><span class="w"> </span><span class="n">numeric</span><span class="p">);</span>
+<span class="w">  </span><span class="n">model</span><span class="p">.</span><span class="n">append</span><span class="p">(</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">one_hot_encoder</span><span class="p">({</span>
+<span class="w">          </span><span class="p">.</span><span class="n">max_categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">overflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">CategoryOverflowPolicy</span><span class="o">::</span><span class="n">KeepMostFrequent</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">include_unknown_bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">      </span><span class="p">}),</span>
+<span class="w">      </span><span class="n">categorical</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== append_before_learn ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataFrameBatchOptions</span><span class="w"> </span><span class="n">data_options</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">label_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">note_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataNotePolicy</span><span class="o">::</span><span class="n">Factorize</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">model</span><span class="p">.</span><span class="n">learn_</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">data_options</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">predicted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">raw</span><span class="p">.</span><span class="n">drop</span><span class="p">({</span><span class="s">&quot;y&quot;</span><span class="p">}),</span><span class="w"> </span><span class="n">data_options</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== append_after_learn ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;predictions=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">predicted</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>== append_before_learn ==
+trained=false stage_count=0
+== append_after_learn ==
+trained=true stage_count=2
+predictions=pluss::Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[0, 0, 0, 1, 0, 1, 0, 1]
+</pre></div>
+</div>
+<p>The practical difference from Example 1 is not model capability but assembly
+style. Both routes let you defer materialization until real learning happens.
+The choice is mostly about whether your project reads better in fluent
+model-bound preparation form or in explicit stage-plus-route form.</p>
+</section>
+</section>
 <section id="related-pages">
 <h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a class="reference internal" href="../models.html"><span class="std std-doc">models family</span></a></p></li>
 <li><p><a class="reference internal" href="builder/Introduction.html"><span class="std std-doc">builder Introduction</span></a></p></li>
 <li><p><a class="reference internal" href="builder/Builder.html"><span class="std std-doc">Builder</span></a></p></li>
 </ul>

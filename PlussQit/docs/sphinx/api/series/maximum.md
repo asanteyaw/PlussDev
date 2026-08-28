@@ -226,7 +226,7 @@ Index `2` is the boundary case:
 - If the scalar is conceptually acting as a lower bound, [`clamp_min`](clamp_min.md)
   may read more clearly in public-facing code.
 
-## Teaching Summary
+## Summary
 
 Read `maximum()` in one of two ways:
 

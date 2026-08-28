@@ -44,7 +44,7 @@ Example 1. Convert a clean 1D timeline into canonical timestamp text.
 
 ```cpp
 auto labels = base.to_note_iso();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ### Output
@@ -58,7 +58,7 @@ Example 2. Preserve missing timestamps visibly during ISO conversion.
 
 ```cpp
 auto labels = with_nat.to_note_iso();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ### Output
@@ -74,8 +74,8 @@ formatting path.
 ```cpp
 auto canonical = base.to_note_iso();
 auto display = base.strftime("%Y-%m-%d %H:%M");
-std::cout << pluss::print_note(canonical) << "\n";
-std::cout << pluss::print_note(display) << "\n";
+std::cout << pluss::note::print(canonical) << "\n";
+std::cout << pluss::note::print(display) << "\n";
 ```
 
 ### Output

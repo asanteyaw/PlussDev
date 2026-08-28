@@ -318,7 +318,7 @@ static PrintOptions resolve_pretty_default_policy_(const Series& s, const PrintO
   const PrintOptions defaults{};
   const bool user_precision_set = (opt.precision != defaults.precision);
 
-  // print_series default: torch-like readability baseline.
+  // print default: readable aligned matrix baseline.
   if (!user_precision_set) {
     out.precision = 4;
   }
@@ -968,13 +968,13 @@ std::string to_string(const Series& s, const PrintOptions& opt) {
   return render_series_string_(s, opt, /*use_pretty_values=*/false);
 }
 
-std::string print_series(const Series& s, const PrintOptions& opt) {
+std::string print(const Series& s, const PrintOptions& opt) {
   const PrintOptions effective = resolve_pretty_default_policy_(s, opt);
   return render_series_string_(s, effective, /*use_pretty_values=*/true);
 }
 
-std::ostream& print_series(std::ostream& os, const Series& s, const PrintOptions& opt) {
-  os << print_series(s, opt);
+std::ostream& print(std::ostream& os, const Series& s, const PrintOptions& opt) {
+  os << print(s, opt);
   return os;
 }
 

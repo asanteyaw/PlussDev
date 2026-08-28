@@ -71,7 +71,7 @@ Example 2. Trim a custom boundary character set instead of whitespace.
 ```cpp
 auto tagged = pluss::make_note({"##alpha##", "#beta", "gamma##"});
 auto out = tagged.strip("#");
-std::cout << "strip_hash_space:\n" << pluss::print_note(out) << "\n";
+std::cout << "strip_hash_space:\n" << pluss::note::print(out) << "\n";
 ```
 
 ### Output

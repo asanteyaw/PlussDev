@@ -40,7 +40,8 @@
 <h1><code class="docutils literal notranslate"><span class="pre">models::builder</span></code> Introduction<a class="headerlink" href="#models-builder-introduction" title="Link to this heading">¶</a></h1>
 <section id="what-this-subfamily-owns">
 <h2>What This Subfamily Owns<a class="headerlink" href="#what-this-subfamily-owns" title="Link to this heading">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">models::builder</span></code> subfamily owns the candidate-model workspace surface.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">models::builder</span></code> subfamily owns the named candidate-model workspace
+surface.</p>
 <p>That means:</p>
 <ul class="simple">
 <li><p>named candidate registration</p></li>
@@ -69,6 +70,38 @@ or <code class="docutils literal notranslate"><span class="pre">std::map</span><
 <li><p>reusable reporting</p></li>
 <li><p>remembered best/worst outcomes after comparison</p></li>
 </ul>
+</section>
+<section id="why-names-matter">
+<h2>Why Names Matter<a class="headerlink" href="#why-names-matter" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Builder</span></code> is deliberately name-first rather than position-first.</p>
+<p>That is not cosmetic. Candidate comparison becomes much easier to read when the
+workspace remembers meaningful names such as <code class="docutils literal notranslate"><span class="pre">logreg</span></code>, <code class="docutils literal notranslate"><span class="pre">tree</span></code>, or <code class="docutils literal notranslate"><span class="pre">xgb_like</span></code>
+instead of asking the user to remember that candidate <code class="docutils literal notranslate"><span class="pre">2</span></code> was the tree and
+candidate <code class="docutils literal notranslate"><span class="pre">5</span></code> was the nearest-neighbor baseline.</p>
+<p>Those names travel into the reporting surfaces and into benchmark outcomes.
+They become part of the experimental record, not just a convenience while
+constructing the object.</p>
+</section>
+<section id="how-it-cooperates-with-selection">
+<h2>How It Cooperates With <code class="docutils literal notranslate"><span class="pre">selection</span></code><a class="headerlink" href="#how-it-cooperates-with-selection" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Builder</span></code> does not replace <code class="docutils literal notranslate"><span class="pre">selection</span></code>. It feeds it.</p>
+<p>The normal relationship is:</p>
+<ol class="arabic simple">
+<li><p>register candidate <code class="docutils literal notranslate"><span class="pre">Model</span></code> objects in <code class="docutils literal notranslate"><span class="pre">Builder</span></code></p></li>
+<li><p>inspect the workspace with cheap listing or tabular reporting</p></li>
+<li><p>benchmark or spotcheck the candidates through <code class="docutils literal notranslate"><span class="pre">selection</span></code></p></li>
+<li><p>keep the remembered best or worst fitted result as needed</p></li>
+</ol>
+<p>That split is important because <code class="docutils literal notranslate"><span class="pre">Builder</span></code> owns candidate coordination, while
+<code class="docutils literal notranslate"><span class="pre">selection</span></code> owns evidence policy and ranking logic.</p>
+</section>
+<section id="when-not-to-use-it">
+<h2>When Not To Use It<a class="headerlink" href="#when-not-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Do not use <code class="docutils literal notranslate"><span class="pre">Builder</span></code> if the project already has one clearly chosen estimator.
+In that case, staying with one <code class="docutils literal notranslate"><span class="pre">lymph::models::Model</span></code> keeps the run simpler.</p>
+<p>Also do not use <code class="docutils literal notranslate"><span class="pre">Builder</span></code> as a persistence format. It is an in-memory
+candidate workspace, not the long-term deployment artifact. Once a winner has
+been chosen, the practical next owner is usually <code class="docutils literal notranslate"><span class="pre">Model</span></code> or <code class="docutils literal notranslate"><span class="pre">workflow::Workflow</span></code>.</p>
 </section>
 <section id="next-page">
 <h2>Next Page<a class="headerlink" href="#next-page" title="Link to this heading">¶</a></h2>

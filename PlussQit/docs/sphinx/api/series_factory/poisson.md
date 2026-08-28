@@ -24,7 +24,7 @@ pluss::series::poisson(sizes,
 `lambda`.
 
 This is the stochastic count factory in the public constructor surface, so the
-first teaching rule is simple but important:
+first rule is simple but important:
 
 - outputs are counts
 - counts cannot be negative

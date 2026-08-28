@@ -167,7 +167,7 @@ broadcast: incompatible shapes
 - The result is boolean, so think of it as a mask rather than numeric data.
 - Shape rules are unchanged from the rest of the elementwise surface.
 
-## Teaching Summary
+## Summary
 
 Use `lt()` for exclusive upper bounds and open intervals. If the equality case
 must count as a match, step to [`Series::le`](le.md) instead.

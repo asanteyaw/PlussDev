@@ -16,7 +16,7 @@ Series::minimum(double rhs) const -> Series
 `minimum()` compares two values position by position and keeps the smaller one
 at each broadcasted location.
 
-This is the value-wise mirror of [`maximum`](maximum.md), but the same teaching
+This is the value-wise mirror of [`maximum`](maximum.md), but the same usage
 idea applies: this is an elementwise comparison, not a reduction.
 
 Use it when you want to:
@@ -208,7 +208,7 @@ Index `2` is again the decisive boundary case:
 - If the scalar is conceptually acting as an upper bound, [`clamp_max`](clamp_max.md)
   may express intent more directly.
 
-## Teaching Summary
+## Summary
 
 Read `minimum()` in one of two ways:
 

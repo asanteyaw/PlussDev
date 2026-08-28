@@ -19,7 +19,7 @@ been resolved. The public surface also accepts scalar RHS calls such as
 `x.div(2.0)`.
 
 Division is one of the methods where dtype and value edge cases matter more
-than on add or multiply, so it is worth teaching it carefully:
+than on add or multiply, so it is worth explaining carefully:
 
 - integer-looking inputs do not guarantee an integer-looking output
 - division by zero on floating inputs does not throw here; it produces
@@ -46,7 +46,7 @@ For differentiable dtypes, the local derivatives are:
 - with respect to `self`: `1 / rhs`
 - with respect to `rhs`: `-self / rhs^2`
 
-That makes `div()` a good method for teaching why denominator values influence
+That makes `div()` a good method for showing why denominator values influence
 both forward scale and backward sensitivity.
 
 ## Examples
@@ -167,7 +167,7 @@ broadcast: incompatible shapes
   values.
 - Denominator magnitude directly affects gradient magnitude.
 
-## Teaching Summary
+## Summary
 
 Use `div()` when you want broadcast-aware elementwise quotients, but keep your
 eyes on two things: output dtype and denominator edge cases. Those two details

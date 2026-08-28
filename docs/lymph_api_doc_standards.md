@@ -10,6 +10,9 @@ handwritten PlussAI/Lymph API docs.
   advertised output.
 - If the user copies the shown code into a file and runs it, the output should
   match what the docs advertise.
+- Do not rewrite, shorten, or "clean up" the example after running it and then
+  keep the old output. The published code and published output are a locked
+  pair.
 - Do not invent "expected output" when the page claims the output is verified.
 - Do not show loose variables with no provenance. If `truth_labels`,
   `predicted_labels`, `model`, `batch`, or similar names appear, the example
@@ -100,7 +103,11 @@ pluss::Series lymph::selection::Plan::scores(...) const;
 - Rich prose is required.
 - Explain what each parameter or toggle changes in behavior.
 - Explain defaults, constraints, tradeoffs, and failure modes where relevant.
-- A student should be able to learn the API deeply from the reference alone.
+- The docs should be written with pedagogical completeness in mind, but do not
+  literally say "teach", "teaching", or similar classroom framing in the
+  public prose.
+- A careful reader should be able to learn the API deeply from the reference
+  alone.
 - Each page should be strong enough that a careful reader could build working
   end-to-end usage from that page and its linked neighbors.
 

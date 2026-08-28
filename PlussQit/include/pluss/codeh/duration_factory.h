@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 #include <random>
 #include <string>
 #include <vector>
@@ -145,6 +146,9 @@ inline pluss::Duration range(const pluss::Duration& start,
 // directly (see CodeH/core/Printing.h's Duration operator<<).
 inline std::string print(const pluss::Duration& d) {
   return pluss::codeh::print_duration(d);
+}
+inline std::ostream& print(std::ostream& os, const pluss::Duration& d) {
+  return pluss::codeh::print_duration(os, d);
 }
 
 // ---- Shape factories (pluss::zeros/full/random-inspired, Duration-native) ----

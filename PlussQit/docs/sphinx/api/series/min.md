@@ -29,7 +29,7 @@ mental model changes with the overload family.
 - `min(other)` performs an elementwise lower-of-two comparison under
   broadcasting
 
-If you are teaching yourself to read the API fluently, it helps to separate
+If you are learning to read the API fluently, it helps to separate
 "ordered reduction" from "pairwise comparison" every time you see this method.
 
 ## Overload Map
@@ -368,7 +368,7 @@ This is the expected failure mode when the dim does not exist.
 - Broadcastability matters for `min(other)`.
 - Out-of-range dims throw immediately.
 
-## Teaching Summary
+## Summary
 
 Use `min()` when you need the smallest value itself.
 

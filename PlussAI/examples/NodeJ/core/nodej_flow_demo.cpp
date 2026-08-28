@@ -23,7 +23,7 @@ bool require_ok(const StatusOr<T>& out, const std::string& label) {
   return false;
 }
 
-void print_series(const std::string& label, const Series& x) {
+void print_metric_values(const std::string& label, const Series& x) {
   const auto v = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
   std::cout << label << ":";
   for (double value : v) std::cout << " " << value;
@@ -80,7 +80,7 @@ int main() {
 
     auto metric_or = cls.assess(train, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::LogLoss}});
     if (!require_ok(metric_or, "classification flow assess")) return 1;
-    print_series("classification flow metrics [accuracy, logloss]", metric_or.value());
+    print_metric_values("classification flow metrics [accuracy, logloss]", metric_or.value());
   }
 
   {
@@ -123,7 +123,7 @@ int main() {
 
     auto metric_or = reg.assess(train, AssessOptions{.metrics = {MetricKind::Mse, MetricKind::R2}});
     if (!require_ok(metric_or, "regression flow assess")) return 1;
-    print_series("regression flow metrics [mse, r2]", metric_or.value());
+    print_metric_values("regression flow metrics [mse, r2]", metric_or.value());
   }
 
   std::cout << "NodeJ Flow demo completed.\n";

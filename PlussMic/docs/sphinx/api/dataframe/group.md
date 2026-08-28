@@ -38,6 +38,50 @@ This keeps grouping declarative and stable. You do not pass keys, specs, null po
 sort policy, and execution mode into one giant call; the builder separates those
 concerns cleanly.
 
+## Mental Model
+
+There are three different things users often conflate when they say "group by":
+
+1. **What defines a group**
+
+- one feature: `by({"city"})`
+- several features as a tuple: `by({"city", "product"})`
+- one or more case-label levels: `by(LabelGroup{...})`
+
+2. **What should happen to the rows**
+
+- collapse to one row per group: `agg(...)`, `count()`, `mean()`, ...
+- stay at source row count with broadcasted group features: `transform(...)`
+- stay as source rows but keep/drop whole groups: `filter(...)`
+- stay as source rows but reorder into grouped neighborhoods: `yield()`
+
+3. **How groups are ordered / cleaned before execution**
+
+- `dropnull`: whether rows with null grouping keys participate at all
+- `sort`: whether group keys print in first-seen order or ascending tuple order
+
+Once you separate those three concerns, the surface becomes predictable.
+
+## When To Use It
+
+Use `group()` when the operation is fundamentally "split rows into groups, then do
+something per group."
+
+That includes:
+
+- grouped summaries
+- grouped row counts
+- grouped categorical modes
+- per-row broadcast of group statistics
+- whole-group pruning
+- grouped row neighborhood prep before row-wise operations
+
+Use a different surface when the problem is not grouped execution:
+
+- one-row whole-frame summary -> [`aggregate()`](aggregate.md)
+- contingency/joint categorical distribution -> [`contingency()`](contingency.md)
+- reshape grouped values into spreadsheet-like columns -> [`pivot_table()`](pivot_table.md)
+
 This page previews the builder's most common shape. Every grouped method
 (`by`, `agg`, `transform`, `filter`, and the convenience terminals) has its own
 dedicated, example-rich reference page — start at the
@@ -59,6 +103,17 @@ The zero-argument overload is shorthand for `GroupOptions{}`.
 `DataFrameGroupBuilder`
     A lightweight builder bound to the current frame. Calling `by(...)` returns a
     grouped handle, and grouped terminals return a new `DataFrame`.
+
+## Failure Modes
+
+- unsupported `layout` -> validation error at grouped execution time
+- no grouping keys passed later to `by(...)` -> validation error
+- null or missing grouping labels with `dropnull = true` -> those rows are excluded,
+  not errors
+- convenience terminal with no remaining value features -> validation error, except
+  `count()` which falls back to a row-count column
+- targeted convenience terminal naming a grouping key as a value feature -> validation error
+- grouped numeric reduction on a non-numeric value feature -> validation error
 
 ## Examples
 
@@ -206,6 +261,9 @@ std::cout << only_large;
   key columns and not the original frame.
 - `.filter(keep)` expects one boolean per group, in the same group order produced by
   `.agg(...)` on the same grouped handle.
+- For multi-key grouping, rows belong to the same group only if the **entire key
+  tuple** matches. This is not a "group by first key, then re-group by the second"
+  pipeline.
 
 ## Workflow Map
 

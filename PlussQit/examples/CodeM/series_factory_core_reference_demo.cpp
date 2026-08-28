@@ -647,6 +647,120 @@ int main() {
   }
   std::cout << "\n";
 
+  auto printable = pluss::series::make({
+      {1.25, 2.5, 3.75},
+      {4.0, 5.5, 6.25},
+  });
+
+  heading("print_default");
+  std::cout << pluss::series::print(printable) << "\n\n";
+
+  heading("print_stream_overload");
+  pluss::series::print(std::cout, printable) << "\n\n";
+
+  heading("print_values_only");
+  {
+    pluss::PrintOptions opt;
+    opt.metadata_mode = pluss::codem::PrintMetadataMode::None;
+    std::cout << pluss::series::print(printable, opt) << "\n\n";
+  }
+
+  heading("print_bool_one_zero");
+  {
+    pluss::PrintOptions opt;
+    opt.bool_style = pluss::codem::PrintBoolStyle::OneZero;
+    std::cout << pluss::series::print(
+        pluss::series::make({true, false, true, true}, pluss::ScalarType::Bool),
+        opt) << "\n\n";
+  }
+
+  heading("select_single_branch");
+  std::cout << pluss::series::select(
+      pluss::series::make({true, false, true, false}, pluss::ScalarType::Bool),
+      pluss::series::make({10.0, 20.0, 30.0, 40.0}),
+      -1.0) << "\n\n";
+
+  heading("select_first_match_wins");
+  std::cout << pluss::series::select(
+      {
+          pluss::series::make({true, true, false, false}, pluss::ScalarType::Bool),
+          pluss::series::make({true, false, true, false}, pluss::ScalarType::Bool),
+      },
+      {
+          pluss::series::make({100.0, 100.0, 100.0, 100.0}),
+          pluss::series::make({200.0, 200.0, 200.0, 200.0}),
+      },
+      0.0) << "\n\n";
+
+  heading("select_series_default");
+  std::cout << pluss::series::select(
+      {
+          pluss::series::make({false, true, false, false}, pluss::ScalarType::Bool),
+          pluss::series::make({false, false, true, false}, pluss::ScalarType::Bool),
+      },
+      {
+          pluss::series::make({10.0, 10.0, 10.0, 10.0}),
+          pluss::series::make({20.0, 20.0, 20.0, 20.0}),
+      },
+      pluss::series::make({-1.0, -2.0, -3.0, -4.0})) << "\n\n";
+
+  heading("select_scalar_choice_broadcast");
+  std::cout << pluss::series::select(
+      {
+          pluss::series::make({false, true, false, true}, pluss::ScalarType::Bool),
+      },
+      {
+          pluss::series::make(9.0),
+      },
+      pluss::series::make({1.0, 2.0, 3.0, 4.0})) << "\n\n";
+
+  heading("select_bool_output");
+  std::cout << pluss::series::select(
+      {
+          pluss::series::make({true, false, false, true}, pluss::ScalarType::Bool),
+          pluss::series::make({false, true, false, false}, pluss::ScalarType::Bool),
+      },
+      {
+          pluss::series::make({true, true, true, true}, pluss::ScalarType::Bool),
+          pluss::series::make({false, false, false, false}, pluss::ScalarType::Bool),
+      },
+      true) << "\n\n";
+
+  heading("select_single_series_overload");
+  std::cout << pluss::series::select(
+      pluss::series::make({false, true, false, false}, pluss::ScalarType::Bool),
+      pluss::series::make(5.0),
+      1.0) << "\n\n";
+
+  heading("select_condition_choice_mismatch");
+  try {
+    std::cout << pluss::series::select(
+        {
+            pluss::series::make({true, false}, pluss::ScalarType::Bool),
+            pluss::series::make({false, true}, pluss::ScalarType::Bool),
+        },
+        {
+            pluss::series::make({1.0, 1.0}),
+        },
+        0.0) << "\n";
+  } catch (const std::exception& e) {
+    std::string msg = e.what();
+    std::cout << msg.substr(0, msg.find('\n')) << "\n";
+  }
+  std::cout << "\n";
+
+  heading("select_non_bool_condition");
+  try {
+    std::cout << pluss::series::select(
+        pluss::series::make({1.0, 0.0, 1.0}),
+        pluss::series::make({10.0, 20.0, 30.0}),
+        -1.0) << "\n";
+  } catch (const std::exception& e) {
+    std::string msg = e.what();
+    std::cout << msg.substr(0, msg.find('\n')) << "\n";
+  }
+  std::cout << "\n";
+
   auto real32 = pluss::series::make({
       {1.0f, 2.0f},
       {3.0f, 4.0f},

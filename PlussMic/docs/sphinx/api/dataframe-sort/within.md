@@ -83,6 +83,8 @@ Within `"Tema"`, `200` (row `3`) sorts before `120` (row `0`); within
   distinct group value, not sorted alphabetically or by any other criterion.
 - Can be combined with [`then(...)`](then.md) for multi-key tie-breaking
   inside each group, exactly as without `within(...)`.
+- `within(...)` validates its feature names immediately because the partition itself
+  must be resolved before any later terminal can run.
 
 ## See Also
 

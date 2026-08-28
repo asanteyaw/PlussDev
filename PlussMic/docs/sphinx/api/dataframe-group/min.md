@@ -5,10 +5,13 @@
 
 [Back to DataFrameGroupBuilder API Reference](../../dataframe_group_accessor_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrameGrouped::min() const -> DataFrame
+DataFrameGrouped::min(std::string_view feature) const -> DataFrame
+DataFrameGrouped::min(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::min(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -17,9 +20,16 @@ Computes per-group minimum for each non-key value feature — the grouped conven
 terminal equivalent to calling [`agg()`](agg.md) with a `GroupOp::Min` spec for every
 remaining value feature.
 
+When you pass one or more feature names, `min(...)` only aggregates those selected
+value features instead of every remaining non-key value feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to min-reduce. Omit them to reduce every
+remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -60,6 +70,31 @@ std::cout << out;
 
 `"North"`'s smallest amount between `100` and `250` is `100`; `"South"`'s smallest
 between `80` and `120` is `80`.
+
+Example 2. Min only one selected feature on a wider value side.
+
+```cpp
+auto wide = DataFrame({
+    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
+    {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+    {"units", Thread(pluss::make_series({5.0, 1.0, 3.0, 4.0}))},
+});
+
+auto out2 = wide.group().by({"region"}).min({"units"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+========================
+     | region  units_min
+------------------------
+0    | North   1
+1    | South   3
+------------------------
+[2 cs x 2 feat]
+```
 
 ## Notes
 

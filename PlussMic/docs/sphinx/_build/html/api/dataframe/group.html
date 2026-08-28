@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -73,6 +73,55 @@ targeted selected-feature form</p></li>
 <p>This keeps grouping declarative and stable. You do not pass keys, specs, null policy,
 sort policy, and execution mode into one giant call; the builder separates those
 concerns cleanly.</p>
+</section>
+<section id="mental-model">
+<h2>Mental Model<a class="headerlink" href="#mental-model" title="Link to this heading">¶</a></h2>
+<p>There are three different things users often conflate when they say “group by”:</p>
+<ol class="arabic simple">
+<li><p><strong>What defines a group</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p>one feature: <code class="docutils literal notranslate"><span class="pre">by({&quot;city&quot;})</span></code></p></li>
+<li><p>several features as a tuple: <code class="docutils literal notranslate"><span class="pre">by({&quot;city&quot;,</span> <span class="pre">&quot;product&quot;})</span></code></p></li>
+<li><p>one or more case-label levels: <code class="docutils literal notranslate"><span class="pre">by(LabelGroup{...})</span></code></p></li>
+</ul>
+<ol class="arabic simple" start="2">
+<li><p><strong>What should happen to the rows</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p>collapse to one row per group: <code class="docutils literal notranslate"><span class="pre">agg(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">count()</span></code>, <code class="docutils literal notranslate"><span class="pre">mean()</span></code>, …</p></li>
+<li><p>stay at source row count with broadcasted group features: <code class="docutils literal notranslate"><span class="pre">transform(...)</span></code></p></li>
+<li><p>stay as source rows but keep/drop whole groups: <code class="docutils literal notranslate"><span class="pre">filter(...)</span></code></p></li>
+<li><p>stay as source rows but reorder into grouped neighborhoods: <code class="docutils literal notranslate"><span class="pre">yield()</span></code></p></li>
+</ul>
+<ol class="arabic simple" start="3">
+<li><p><strong>How groups are ordered / cleaned before execution</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span></code>: whether rows with null grouping keys participate at all</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sort</span></code>: whether group keys print in first-seen order or ascending tuple order</p></li>
+</ul>
+<p>Once you separate those three concerns, the surface becomes predictable.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">group()</span></code> when the operation is fundamentally “split rows into groups, then do
+something per group.”</p>
+<p>That includes:</p>
+<ul class="simple">
+<li><p>grouped summaries</p></li>
+<li><p>grouped row counts</p></li>
+<li><p>grouped categorical modes</p></li>
+<li><p>per-row broadcast of group statistics</p></li>
+<li><p>whole-group pruning</p></li>
+<li><p>grouped row neighborhood prep before row-wise operations</p></li>
+</ul>
+<p>Use a different surface when the problem is not grouped execution:</p>
+<ul class="simple">
+<li><p>one-row whole-frame summary -&gt; <a class="reference internal" href="aggregate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">aggregate()</span></code></span></a></p></li>
+<li><p>contingency/joint categorical distribution -&gt; <a class="reference internal" href="contingency.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contingency()</span></code></span></a></p></li>
+<li><p>reshape grouped values into spreadsheet-like columns -&gt; <a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code></span></a></p></li>
+</ul>
 <p>This page previews the builder’s most common shape. Every grouped method
 (<code class="docutils literal notranslate"><span class="pre">by</span></code>, <code class="docutils literal notranslate"><span class="pre">agg</span></code>, <code class="docutils literal notranslate"><span class="pre">transform</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, and the convenience terminals) has its own
 dedicated, example-rich reference page — start at the
@@ -94,6 +143,19 @@ and use its left sidebar to jump straight to any method.</p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameGroupBuilder</span></code>
 A lightweight builder bound to the current frame. Calling <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> returns a
 grouped handle, and grouped terminals return a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>unsupported <code class="docutils literal notranslate"><span class="pre">layout</span></code> -&gt; validation error at grouped execution time</p></li>
+<li><p>no grouping keys passed later to <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> -&gt; validation error</p></li>
+<li><p>null or missing grouping labels with <code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">true</span></code> -&gt; those rows are excluded,
+not errors</p></li>
+<li><p>convenience terminal with no remaining value features -&gt; validation error, except
+<code class="docutils literal notranslate"><span class="pre">count()</span></code> which falls back to a row-count column</p></li>
+<li><p>targeted convenience terminal naming a grouping key as a value feature -&gt; validation error</p></li>
+<li><p>grouped numeric reduction on a non-numeric value feature -&gt; validation error</p></li>
+</ul>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -233,6 +295,9 @@ group as an explicit aggregate.</p></li>
 key columns and not the original frame.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.filter(keep)</span></code> expects one boolean per group, in the same group order produced by
 <code class="docutils literal notranslate"><span class="pre">.agg(...)</span></code> on the same grouped handle.</p></li>
+<li><p>For multi-key grouping, rows belong to the same group only if the <strong>entire key
+tuple</strong> matches. This is not a “group by first key, then re-group by the second”
+pipeline.</p></li>
 </ul>
 </section>
 <section id="workflow-map">

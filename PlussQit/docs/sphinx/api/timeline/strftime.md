@@ -60,7 +60,7 @@ Example 1. Build compact report labels with year, month, day, hour, and minute.
 
 ```cpp
 auto out = base.strftime("%Y-%m-%d %H:%M");
-std::cout << pluss::print_note(out) << "\n";
+std::cout << pluss::note::print(out) << "\n";
 ```
 
 ### Output
@@ -75,7 +75,7 @@ labels instead.
 
 ```cpp
 auto out = base.strftime("%A, %b %d");
-std::cout << pluss::print_note(out) << "\n";
+std::cout << pluss::note::print(out) << "\n";
 ```
 
 ### Output

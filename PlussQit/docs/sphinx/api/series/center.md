@@ -216,7 +216,7 @@ the value itself, so centering removes everything and leaves zero.
 - `center()` removes offset only. If you also want unit-scale output, use
   [`standardize`](standardize.md).
 
-## Teaching Summary
+## Summary
 
 Use `center()` when you want to preserve shape but remove average level:
 

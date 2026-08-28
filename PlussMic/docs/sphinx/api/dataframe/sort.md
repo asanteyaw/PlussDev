@@ -22,6 +22,48 @@ With several keys, the eventual plan is lexicographic / tuple-based: the first
 key is primary, the next key breaks ties within equal first-key values, the next
 breaks remaining ties, and so on.
 
+## Mental Model
+
+There are four separate ideas on this surface:
+
+1. **Builder defaults**
+
+- `ascending`
+- `nulls_last`
+
+These are inherited by plain key-name overloads unless a key later overrides them.
+
+2. **The key plan**
+
+- `by(...)` starts or replaces it
+- `then(...)` appends tie-break keys
+
+3. **The active key**
+
+- `asc()`, `desc()`, `nulls_first()`, `nulls_last()` mutate only the most recently
+  added key
+
+4. **Optional partitioning**
+
+- `within(...)` says rows may only move inside groups, not across them
+
+That is why the builder exists: it separates defaults, key declaration, key-local
+refinement, and execution.
+
+## When To Use It
+
+Use `sort()` instead of [`arrange()`](arrange.md) when:
+
+- you want to build the key plan step by step
+- different keys need different direction or null placement
+- you want to reuse the same permutation via `order()`
+- you want partitioned sorting with `within(...)`
+
+Use [`arrange()`](arrange.md) when:
+
+- the full sort spec is already known up front
+- you just want one direct execute-now sort call
+
 Use the [DataFrameSortBuilder API Reference](../../dataframe_sort_accessor_api_reference)
 for the builder workflow itself:
 
@@ -64,6 +106,14 @@ exist yet without any of them throwing, right up until you call a terminal.
     A binder for the current frame — call `.by(...)` to start planning value
     keys, `.within(...)` to partition into groups first, then a terminal
     method to execute.
+
+## Failure Modes
+
+- calling a terminal with no sort keys planned -> validation error
+- calling `then(...)` before `by(...)` -> validation error
+- calling `asc()` / `desc()` / `nulls_first()` / `nulls_last()` before any key exists -> validation error
+- unknown feature names -> typically validation error only when a terminal executes
+- negative `n` for `head()` / `tail()` -> validation error
 
 ## Examples
 
@@ -180,6 +230,9 @@ builder equivalent of a per-level `ascending=[...]` style API.
 - Plain `.by({"a", "b", "c"})` uses one shared default for all three keys.
   Mixed per-key directions require `ArrangeSpec`s or post-`by(...)` mutation
   of the active key.
+- With plain key-name overloads, `sort(false).by({"age", "salary", "score"})`
+  means all three keys are descending. It is not the pandas-style
+  `ascending=[...]` case until you move to `ArrangeSpec`s or active-key mutation.
 - Not `noexcept`; `sort()` itself does no validation work — every check is
   deferred to the terminal.
 

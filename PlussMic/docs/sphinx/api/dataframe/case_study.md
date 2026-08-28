@@ -28,6 +28,50 @@ already has one or more **named** case-label levels, set up via
 [`label().set(...)`](label.md). It looks up rows by matching those named levels'
 values rather than by position or by the plain default case label.
 
+`case_study()` is the selection surface to learn well because it is the point where
+PlussMic's row semantics and feature semantics meet. Many narrower methods are really
+special cases of it:
+
+- [`slice()`](slice.md): positional rows only
+- [`take()`](take.md): positional rows in an explicit list
+- [`filter()`](filter.md): boolean-mask rows only
+- [`features()`](features.md): feature projection only
+- [`zoom()`](zoom.md): rectangular positional row+feature block
+
+If you can read a `Case` selector and a `Feat` selector fluently, you can usually
+predict exactly what `case_study()` will do.
+
+## How To Think About It
+
+There are three independent ideas on this surface:
+
+1. **How rows are selected**
+
+- by position: `Case::at`, `Case::slice`, `Case::take`
+- by the current case label payload: `Case::label`, `Case::labels`, `Case::span`
+- by a boolean mask: `Case::where`
+- by named case-label levels: `CasePick`
+
+2. **How features are selected**
+
+- all features: omit the second argument or pass `Feat::all()`
+- by one feature: `Feat::name`, `Feat::at`
+- by many features: `Feat::names`, `Feat::take`
+- by a contiguous positional/name window: `Feat::slice`, `Feat::span`
+
+3. **What shape comes back**
+
+- always a `DataFrame`
+- row order follows the row selector
+- feature order follows the feature selector
+- duplicate labels match all rows carrying that label
+- case labels are preserved on surviving rows unless you are using `CasePick` with
+  `drop = true`
+
+That final point matters. `case_study()` does not collapse to a scalar or a `Thread`
+just because you selected one row or one feature. It stays on the frame surface so you
+can keep chaining frame operations naturally.
+
 ## Parameters
 
 **rows** (`DataFrame::Case`) — built with one of:
@@ -81,6 +125,25 @@ Exactly one of `label`/`value`, `names`/`values`, or `key` should be set per cal
 `DataFrame`
     A new frame containing the matched rows (and, with the two-argument overload,
     only the selected features), in the order the selector produced them.
+
+## When To Use It
+
+Use `case_study()` when the row selection and the feature selection belong together as
+one operation.
+
+Typical cases:
+
+- inspect a handful of suspicious rows together with only the columns that matter
+- carve out a labeled diagnostic subframe after a join, fill, or aggregation
+- look rows up by business keys promoted into the case axis via `label().set(...)`
+- keep the same result as a `DataFrame` even when the selection is very small
+
+Use a narrower method when only one axis matters:
+
+- row-only positional work: [`slice()`](slice.md), [`take()`](take.md)
+- row-only boolean work: [`filter()`](filter.md)
+- feature-only work: [`features()`](features.md)
+- rectangular positional block work: [`zoom()`](zoom.md)
 
 ## Examples
 
@@ -294,6 +357,61 @@ single-element list. Both forms leave `region` in the result's case labels (show
 the row index) because `drop` was left at its default `false`; pass `drop = true` when
 a level's value is now constant across every matched row and no longer worth carrying.
 
+Example 7. Reorder features positionally while keeping a contiguous row block.
+
+```cpp
+using Case = DataFrame::Case;
+using Feat = DataFrame::Feat;
+
+auto out = orders.case_study(Case::slice(0, 2), Feat::take({3, 1, 4}));
+std::cout << out;
+```
+
+### Output
+
+```text
+====================================
+     | units  city   unit_price
+------------------------------------
+0    | 2      Accra  1200
+1    | 5      Accra  45.5
+------------------------------------
+[2 cs x 3 feat]
+```
+
+This is a useful reminder that the feature selector controls output order directly.
+`Feat::take({3, 1, 4})` does not sort itself back into source order.
+
+## Important Quirks
+
+- Positional slices and label spans do **not** mean the same thing.
+  `Case::slice(1, 4)` is half-open and positional. `Case::span("A100", "D400")` is
+  inclusive and label-based.
+- `Case::label("B200")` can return several rows. Case labels are lookup keys here, not
+  uniqueness guarantees.
+- `Case::labels({...})` follows your requested label order, not the frame's original
+  order.
+- `Case::where(mask)` behaves like `filter(mask)` first, then applies the feature
+  selector on the filtered frame.
+- `Feat::span("a", "d")` walks the frame's **current feature order**, not
+  alphabetical order.
+
+## Failure Modes
+
+These are worth knowing up front because `case_study()` is intentionally strict:
+
+- unknown case label -> validation error
+- unknown feature name -> validation error
+- out-of-bounds scalar/list position after negative-index normalization -> validation error
+- `CasePick.key` length different from the number of case-label levels -> validation error
+- `CasePick` with no matches -> validation error
+- mixing `CasePick.key` with named level selectors in the same `CasePick` -> validation error
+- `CasePick.names` and `CasePick.values` of different lengths -> validation error
+
+One subtle exception: a reversed label span such as `Case::span("D400", "A100")`
+does **not** raise. It returns an empty frame because the stop position lands before
+the start position.
+
 ## Notes
 
 - `Case` and `Feat` should be built via their static factory methods (`Case::at`,
@@ -313,6 +431,13 @@ a level's value is now constant across every matched row and no longer worth car
 - `names` / `values` on `CasePick` generalizes `label` / `value` to matching several
   named levels simultaneously — every listed level must match its paired value for a
   row to be included.
+- `Case::span(...)` uses the first occurrence of the start label and the last
+  occurrence of the stop label. That is why duplicate labels can expand the result
+  more than first-time users expect.
+- The selector structs are deliberately small vocabulary objects, not a second query
+  language. If your selection logic is already a boolean expression over feature
+  values, build the mask and pass it through `Case::where(...)` instead of trying to
+  encode it indirectly through labels or positions.
 
 ## See Also
 

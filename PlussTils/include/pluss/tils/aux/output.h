@@ -325,7 +325,7 @@ public:
   }
 
   template <class... Args>
-  OutputEngine& writefln(std::string_view pattern, Args&&... args) {
+  OutputEngine& writelnf(std::string_view pattern, Args&&... args) {
     const std::string text = format_message(pattern, std::forward<Args>(args)...);
     std::scoped_lock lock(mu_);
     (*sink_) << text << '\n';

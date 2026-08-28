@@ -18,7 +18,6 @@ using Note = coden::Note;
 using TokenBatch = coden::TokenBatch;
 using NotePrintOptions = coden::NotePrintOptions;
 using coden::to_string;
-using coden::print_note;
 using coden::operator<<;
 } // namespace pluss
 

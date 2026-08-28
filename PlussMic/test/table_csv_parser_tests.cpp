@@ -3682,16 +3682,16 @@ void test_select_and_place_helpers() {
   const auto pick1 = pluss::make_series(std::vector<double>{20.0, 20.0, 20.0, 20.0});
   const auto pick2 = pluss::make_series(std::vector<double>{30.0, 30.0, 30.0, 30.0});
 
-  const auto selected = pluss::select({cond0, cond1, cond2}, {pick0, pick1, pick2}, -1.0);
+  const auto selected = pluss::series::select({cond0, cond1, cond2}, {pick0, pick1, pick2}, -1.0);
   expect(selected.to_vec<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
-         "pluss::select should choose branch values by the first matching boolean condition");
+         "pluss::series::select should choose branch values by the first matching boolean condition");
 
   const auto thread_selected = Thread::select(
       {Thread(cond0), Thread(cond1), Thread(cond2)},
       {Thread(pick0), Thread(pick1), Thread(pick2)},
       -1.0);
   expect(thread_selected.as_series().to_vec<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
-         "Thread::select should delegate multi-branch numeric selection to pluss::select");
+         "Thread::select should delegate multi-branch numeric selection to pluss::series::select");
 
   expect_throw([&]() { (void)Thread(pluss::make_note("A+")); },
                "Thread should reject scalar Note payloads and preserve its strict 1D contract");

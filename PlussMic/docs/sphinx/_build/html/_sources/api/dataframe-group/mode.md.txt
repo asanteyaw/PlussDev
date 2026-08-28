@@ -5,10 +5,13 @@
 
 [Back to DataFrameGroupBuilder API Reference](../../dataframe_group_accessor_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrameGrouped::mode() const -> DataFrame
+DataFrameGrouped::mode(std::string_view feature) const -> DataFrame
+DataFrameGrouped::mode(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::mode(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -21,9 +24,16 @@ This is the grouped "most common value inside each group" terminal. It is especi
 useful for categorical/value-coded features such as status, region code, product
 family, or segment, but it also works on numeric value features.
 
+When you pass one or more feature names, `mode(...)` only aggregates those selected
+value features instead of every remaining non-key value feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to mode-reduce. Omit them to reduce every
+remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -82,6 +92,31 @@ one `"bad"` and one `"good"` — tied at one occurrence each — and `status_mod
 `"bad"` because it appears first in the source data (row `2`), not because it sorts
 first alphabetically. This is the same first-occurrence tie-break used by
 [`Thread::freq()`](../thread/freq.md).
+
+Example 2. Target one selected feature on a wider value side.
+
+```cpp
+auto wide = DataFrame({
+    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
+    {"status", Thread(pluss::make_note({"good", "good", "bad", "good"}))},
+    {"segment", Thread(pluss::make_note({"retail", "retail", "sme", "sme"}))},
+});
+
+auto out2 = wide.group().by({"region"}).mode({"segment"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+============================
+     | region  segment_mode
+----------------------------
+0    | North   retail
+1    | South   sme
+----------------------------
+[2 cs x 2 feat]
+```
 
 ## Notes
 

@@ -162,7 +162,7 @@ broadcast: incompatible shapes
 - The result is a boolean mask, not a numeric difference.
 - Broadcast rules are unchanged from the rest of the elementwise API.
 
-## Teaching Summary
+## Summary
 
 Use `gt()` for exclusive lower bounds. When the equality case must pass too,
 reach for [`Series::ge`](ge.md).

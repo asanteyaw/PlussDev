@@ -31,8 +31,15 @@ stub.
 
 The current handwritten shape and slice/indexing cluster now covers:
 
+- unary math core: `abs`, `neg`, `sign`, `exp`, `log`, `sqrt`
 - elementwise arithmetic core: `add`, `sub`, `mul`, `div`, `pow`
 - elementwise comparison core: `eq`, `ne`, `lt`, `le`, `gt`, `ge`
+- selection/counting core: `select`, `nonzero`, `unique`, `isin`, `bincount`,
+  `histc`
+- flat set logic core: `union1d`, `unionize`, `intersect1d`, `intersection`,
+  `setdiff1d`, `setxor1d`, `comp`, `cartprod`
+- axis-wise set logic core: `unionize_along`, `intersection_along`,
+  `setdiff_along`, `setxor_along`
 - shape introspection: `size`, `sizes`
 - view reshaping: `view`, `reshape`, `transpose`, `permute`, `unsqueeze`,
   `squeeze`, `flatten`
@@ -72,17 +79,24 @@ or jump straight to the dedicated accessor reference from the sidebar.
 :hidden:
 :maxdepth: 1
 
+api/series/abs
 api/series/add
+api/series/all
+api/series/any
 api/series/argmax
 api/series/argmin
+api/series/bincount
 api/series/block
+api/series/cartprod
 api/series/clamp_max
 api/series/clamp_min
+api/series/comp
 api/series/copy_
 api/series/cumprod
 api/series/cumsum
 api/series/div
 api/series/eq
+api/series/exp
 api/series/extract
 api/series/extract_put
 api/series/extract_put_
@@ -90,11 +104,17 @@ api/series/flatten
 api/series/gather
 api/series/ge
 api/series/gt
+api/series/histc
 api/series/index
 api/series/index_put
 api/series/index_put_
 api/series/index_select
+api/series/intersect1d
+api/series/intersection
+api/series/intersection_along
+api/series/isin
 api/series/le
+api/series/log
 api/series/lt
 api/series/max
 api/series/maximum
@@ -103,6 +123,8 @@ api/series/min
 api/series/minimum
 api/series/mul
 api/series/ne
+api/series/neg
+api/series/nonzero
 api/series/permute
 api/series/pile
 api/series/pos
@@ -110,9 +132,16 @@ api/series/pow
 api/series/prod
 api/series/put_
 api/series/reshape
+api/series/sign
 api/series/size
 api/series/sizes
+api/series/select
+api/series/setdiff1d
+api/series/setdiff_along
+api/series/setxor1d
+api/series/setxor_along
 api/series/slice
+api/series/sqrt
 api/series/squeeze
 api/series/stat
 api/series/sub
@@ -122,9 +151,14 @@ api/series/transpose
 api/series/traverse_put
 api/series/traverse_put_
 api/series/traverse_slice
+api/series/unique
+api/series/union1d
+api/series/unionize
+api/series/unionize_along
 api/series/unite
 api/series/unsqueeze
 api/series/view
+api/series/where
 series_stat_accessor_api_reference
 ```
 

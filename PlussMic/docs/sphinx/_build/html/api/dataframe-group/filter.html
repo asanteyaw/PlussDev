@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -66,6 +66,16 @@ that group survives. If it is <code class="docutils literal notranslate"><span c
 A filtered version of the original frame, preserving original row order among
 surviving rows.</p>
 </section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">filter(...)</span></code> when the keep/drop decision belongs to groups, not to individual
+rows.</p>
+<p>That is the key distinction:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::filter(mask)</span></code> asks one boolean per row</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrameGrouped::filter(keep)</span></code> asks one boolean per group</p></li>
+</ul>
+</section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Keep only regions whose grouped total is above a threshold.</p>
@@ -105,6 +115,14 @@ strict <code class="docutils literal notranslate"><span class="pre">gt(200.0)</s
 is that <code class="docutils literal notranslate"><span class="pre">keep</span></code> was produced in the same grouped order as the handle being filtered.</p>
 </section>
 </section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">keep</span></code> length different from group count -&gt; validation error</p></li>
+<li><p>non-boolean <code class="docutils literal notranslate"><span class="pre">keep</span></code> -&gt; validation error</p></li>
+<li><p>grouped layout other than <code class="docutils literal notranslate"><span class="pre">Flat</span></code> -&gt; validation error</p></li>
+</ul>
+</section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
@@ -113,6 +131,9 @@ is that <code class="docutils literal notranslate"><span class="pre">keep</span>
 derive a boolean mask from that summary, then pass it to <code class="docutils literal notranslate"><span class="pre">filter(...)</span></code>.</p></li>
 <li><p>Returned rows keep their original order and original case labels from the source
 frame — filtering never renumbers or reindexes survivors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sort</span></code> in <code class="docutils literal notranslate"><span class="pre">GroupOptions</span></code> affects the order of groups in the summary you likely used
+to build <code class="docutils literal notranslate"><span class="pre">keep</span></code>; that is why the safest mask source is an <code class="docutils literal notranslate"><span class="pre">agg(...)</span></code> call on the
+same grouped handle shape.</p></li>
 </ul>
 </section>
 <section id="see-also">

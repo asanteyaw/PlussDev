@@ -201,12 +201,12 @@ exactly the slice it contributed. If the inputs had different widths along
   concatenation.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="flatten.html">
+  <a class="prev-link" href="unionize_along.html">
     <span class="label">Previous</span>
-    <span class="title">flatten</span>
+    <span class="title">unionize_along</span>
   </a>
-  <a class="next-link" href="pile.html">
+  <a class="next-link" href="unsqueeze.html">
     <span class="label">Next</span>
-    <span class="title">pile</span>
+    <span class="title">unsqueeze</span>
   </a>
 </div>

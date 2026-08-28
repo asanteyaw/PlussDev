@@ -164,9 +164,9 @@ broadcast: incompatible shapes
 - The output is boolean, not a reduced truth value for the whole `Series`.
 - Broadcast incompatibility is still a hard error.
 
-## Teaching Summary
+## Summary
 
-Use `le()` when your boundary is inclusive. If you are teaching interval logic,
+Use `le()` when your boundary is inclusive. If you are reasoning about interval logic,
 this is the closed-boundary counterpart to the open-boundary behavior of
 [`Series::lt`](lt.md).
 

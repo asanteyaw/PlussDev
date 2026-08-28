@@ -216,7 +216,7 @@ Series::extract: step cannot be 0
 - Cardinality is checked against the number of selected destination elements,
   not against the visible destination layout.
 
-## Teaching Summary
+## Summary
 
 Use `extract_put()` when you want the richest selector-language write surface
 but also want value semantics. If the selector needs masks, reverse traversal,

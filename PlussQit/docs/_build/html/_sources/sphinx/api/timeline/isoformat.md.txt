@@ -61,7 +61,7 @@ conversion surface instead of forcing `isoformat()`.
 
 ```cpp
 auto labels = with_nat.to_note_iso();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ### Output

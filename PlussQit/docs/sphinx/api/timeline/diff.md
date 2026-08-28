@@ -48,7 +48,7 @@ Example 1. Compute the distance between two scalar instants.
 
 ```cpp
 auto dt = scalar_later.diff(scalar);
-std::cout << pluss::print_note(
+std::cout << pluss::note::print(
     pluss::codeh::_compat::invoke<pluss::Note>("to_note_iso", dt)) << "\n";
 std::cout << pluss::series::print(
     pluss::codeh::_compat::invoke<pluss::Series>("total", dt, {"s"})) << "\n";
@@ -74,7 +74,7 @@ Example 2. Compute elementwise signed distances across a vector.
 
 ```cpp
 auto dt = base.diff(other);
-std::cout << pluss::print_note(
+std::cout << pluss::note::print(
     pluss::codeh::_compat::invoke<pluss::Note>("to_note_iso", dt)) << "\n";
 std::cout << pluss::series::print(
     pluss::codeh::_compat::invoke<pluss::Series>("total", dt, {"s"})) << "\n";

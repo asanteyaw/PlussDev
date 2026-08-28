@@ -38,17 +38,72 @@
             
   <section id="lymph-models">
 <h1>Lymph <code class="docutils literal notranslate"><span class="pre">models</span></code><a class="headerlink" href="#lymph-models" title="Link to this heading">¶</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">models</span></code> is the Lymph main family for trainable modeling artifacts.</p>
-<p>This family owns the objects users carry when they are deciding what to train,
-what to compare, and what to keep.</p>
-<p>The important separation is:</p>
+<p><code class="docutils literal notranslate"><span class="pre">models</span></code> is the Lymph family for trainable modeling artifacts.</p>
+<p>This is the branch you enter when the main question is not yet “how do I
+deploy the workflow?” or “how do I validate the experiment?” but rather:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code> owns trainable artifacts and candidate-model workspaces</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">workflow</span></code> owns deployable orchestration around those artifacts</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">selection</span></code> owns comparison, validation, and search policy</p></li>
+<li><p>what exact estimator object am I fitting</p></li>
+<li><p>how do I attach preparation to that estimator cleanly</p></li>
+<li><p>how do I hold several candidate estimators before comparison</p></li>
 </ul>
-<p>If a user asks “what object is the thing I am fitting?”, they are in
-<code class="docutils literal notranslate"><span class="pre">models</span></code>.</p>
+<p>That ownership boundary matters because Lymph is intentionally split by
+concern:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code> owns trainable estimator handles and candidate-model workspaces</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prep</span></code> owns reusable transformation objects, stages, routes, and feature
+remapping contracts</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">selection</span></code> owns evidence policy: cross-validation, holdout, time-aware
+validation, spotchecking, and search</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workflow</span></code> owns the broader deployed orchestration layer</p></li>
+</ul>
+<p>If the object on the left-hand side is “the model I will fit” or “the stable
+workspace of candidate models I will compare”, you are in <code class="docutils literal notranslate"><span class="pre">models</span></code>.</p>
+<section id="what-this-family-owns">
+<h2>What This Family Owns<a class="headerlink" href="#what-this-family-owns" title="Link to this heading">¶</a></h2>
+<p>The family currently revolves around two public objects:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::models::Model</span></code>: one trainable artifact</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder</span></code>: one named candidate-model workspace</p></li>
+</ul>
+<p>Those two objects solve different scales of work.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Model</span></code> is the right object when one estimator is enough and you want to:</p>
+<ul class="simple">
+<li><p>construct it from a family factory such as
+<code class="docutils literal notranslate"><span class="pre">lymph::models::linear::logistic_regression(...)</span></code></p></li>
+<li><p>attach preparation directly to it</p></li>
+<li><p>fit, infer, assess, save, and restore the artifact</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Builder</span></code> is the right object when one estimator is no longer enough and you
+need to:</p>
+<ul class="simple">
+<li><p>register several candidates under stable names</p></li>
+<li><p>inspect the candidate set before any comparison begins</p></li>
+<li><p>run spotchecking or benchmarking without hand-plumbing candidate vectors</p></li>
+<li><p>ask for the remembered best or worst fitted result after comparison</p></li>
+</ul>
+</section>
+<section id="what-this-family-does-not-own">
+<h2>What This Family Does Not Own<a class="headerlink" href="#what-this-family-does-not-own" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">models</span></code> does not decide whether your evaluation policy is statistically
+appropriate. That belongs to <code class="docutils literal notranslate"><span class="pre">selection</span></code>.</p>
+<p>It also does not own broad deployment metadata or runtime routing. That
+belongs to <code class="docutils literal notranslate"><span class="pre">workflow</span></code>.</p>
+<p>This separation is what keeps the estimator surface small enough to remain
+predictable. A <code class="docutils literal notranslate"><span class="pre">Model</span></code> should feel like a fit-ready artifact, not a dumping
+ground for the whole framework.</p>
+</section>
+<section id="how-to-read-this-family">
+<h2>How To Read This Family<a class="headerlink" href="#how-to-read-this-family" title="Link to this heading">¶</a></h2>
+<p>The most reliable reading order is:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="models/Model.html"><span class="std std-doc">Model</span></a></p></li>
+<li><p><a class="reference internal" href="models/builder/Introduction.html"><span class="std std-doc">builder Introduction</span></a></p></li>
+<li><p><a class="reference internal" href="models/builder/Builder.html"><span class="std std-doc">Builder</span></a></p></li>
+</ol>
+<p>Read <code class="docutils literal notranslate"><span class="pre">Model</span></code> first if your project already has a likely champion estimator in
+mind. Read <code class="docutils literal notranslate"><span class="pre">Builder</span></code> next if your project still needs a disciplined candidate
+workspace before validation or search.</p>
+</section>
 <section id="subfamilies">
 <h2>Subfamilies<a class="headerlink" href="#subfamilies" title="Link to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
@@ -57,6 +112,10 @@ what to compare, and what to keep.</p>
 <li class="toctree-l2"><a class="reference internal" href="models/Model.html#summary">Summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models/Model.html#signature">Signature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models/Model.html#why-this-object-exists">Why This Object Exists</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models/Model.html#construction-paths">Construction Paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models/Model.html#state-semantics">State Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models/Model.html#learning-inference-and-assessment">Learning, Inference, and Assessment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models/Model.html#practical-examples">Practical Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models/Model.html#related-pages">Related Pages</a></li>
 </ul>
 </li>
@@ -66,14 +125,6 @@ what to compare, and what to keep.</p>
 </li>
 </ul>
 </div>
-</section>
-<section id="reading-order">
-<h2>Reading Order<a class="headerlink" href="#reading-order" title="Link to this heading">¶</a></h2>
-<ol class="arabic simple">
-<li><p><a class="reference internal" href="models/Model.html"><span class="std std-doc">Model</span></a></p></li>
-<li><p><a class="reference internal" href="models/builder/Introduction.html"><span class="std std-doc">builder Introduction</span></a></p></li>
-<li><p><a class="reference internal" href="models/builder/Builder.html"><span class="std std-doc">Builder</span></a></p></li>
-</ol>
 </section>
 </section>
 

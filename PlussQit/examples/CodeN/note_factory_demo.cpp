@@ -41,35 +41,35 @@ int main() {
 
   pluss::Note bytes = pluss::note::bytes({{"\x01", "\x02"}, {"\x03", "\x04"}});
 
-  std::cout << "scalar:\n" << pluss::print_note(scalar) << "\n\n";
-  std::cout << "one_d:\n" << pluss::print_note(one_d) << "\n\n";
-  std::cout << "two_d:\n" << pluss::print_note(two_d) << "\n\n";
-  std::cout << "three_d:\n" << pluss::print_note(three_d) << "\n\n";
-  std::cout << "from_flat:\n" << pluss::print_note(from_flat) << "\n\n";
-  std::cout << "from_lines:\n" << pluss::print_note(from_lines) << "\n\n";
-  std::cout << "from_words:\n" << pluss::print_note(from_words) << "\n\n";
-  std::cout << "filled:\n" << pluss::print_note(filled) << "\n\n";
-  std::cout << "empty:\n" << pluss::print_note(empty) << "\n\n";
-  std::cout << "like:\n" << pluss::print_note(like) << "\n\n";
-  std::cout << "repeated:\n" << pluss::print_note(repeated) << "\n\n";
-  std::cout << "random_upper:\n" << pluss::print_note(random_upper) << "\n\n";
-  std::cout << "random_between:\n" << pluss::print_note(random_between) << "\n\n";
-  std::cout << "alpha_range:\n" << pluss::print_note(alpha_range) << "\n\n";
-  std::cout << "combos:\n" << pluss::print_note(combos) << "\n\n";
-  std::cout << "perms:\n" << pluss::print_note(perms) << "\n\n";
-  std::cout << "formatted:\n" << pluss::print_note(formatted) << "\n\n";
+  std::cout << "scalar:\n" << pluss::note::print(scalar) << "\n\n";
+  std::cout << "one_d:\n" << pluss::note::print(one_d) << "\n\n";
+  std::cout << "two_d:\n" << pluss::note::print(two_d) << "\n\n";
+  std::cout << "three_d:\n" << pluss::note::print(three_d) << "\n\n";
+  std::cout << "from_flat:\n" << pluss::note::print(from_flat) << "\n\n";
+  std::cout << "from_lines:\n" << pluss::note::print(from_lines) << "\n\n";
+  std::cout << "from_words:\n" << pluss::note::print(from_words) << "\n\n";
+  std::cout << "filled:\n" << pluss::note::print(filled) << "\n\n";
+  std::cout << "empty:\n" << pluss::note::print(empty) << "\n\n";
+  std::cout << "like:\n" << pluss::note::print(like) << "\n\n";
+  std::cout << "repeated:\n" << pluss::note::print(repeated) << "\n\n";
+  std::cout << "random_upper:\n" << pluss::note::print(random_upper) << "\n\n";
+  std::cout << "random_between:\n" << pluss::note::print(random_between) << "\n\n";
+  std::cout << "alpha_range:\n" << pluss::note::print(alpha_range) << "\n\n";
+  std::cout << "combos:\n" << pluss::note::print(combos) << "\n\n";
+  std::cout << "perms:\n" << pluss::note::print(perms) << "\n\n";
+  std::cout << "formatted:\n" << pluss::note::print(formatted) << "\n\n";
 
   pluss::Note lower = two_d.lower();
   pluss::Note escaped = three_d.tex_escape();
-  std::cout << "lower:\n" << pluss::print_note(lower) << "\n\n";
-  std::cout << "escaped:\n" << pluss::print_note(escaped) << "\n\n";
+  std::cout << "lower:\n" << pluss::note::print(lower) << "\n\n";
+  std::cout << "escaped:\n" << pluss::note::print(escaped) << "\n\n";
 
   auto tokens = from_lines.split_lines().tokens();
-  std::cout << "tokens from split_lines:\n" << pluss::print_note(tokens) << "\n\n";
+  std::cout << "tokens from split_lines:\n" << pluss::note::print(tokens) << "\n\n";
 
   pluss::NotePrintOptions bytes_opt;
   bytes_opt.bytes_mode = pluss::coden::NotePrintBytesMode::Hex;
-  std::cout << "bytes (hex):\n" << pluss::print_note(bytes, bytes_opt) << "\n\n";
+  std::cout << "bytes (hex):\n" << pluss::note::print(bytes, bytes_opt) << "\n\n";
 
   return 0;
 }

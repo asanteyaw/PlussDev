@@ -229,7 +229,7 @@ nanvar: dim out of range
   missing-data policy.
 - Invalid dims throw explicitly.
 
-## Teaching Summary
+## Summary
 
 Use `nanvar()` when NaN means "missing value that should be omitted from the
 reduction."

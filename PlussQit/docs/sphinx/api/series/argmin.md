@@ -303,7 +303,7 @@ no elements at all.
 - Ties are first-winner, not tie-sharing.
 - Invalid dims and empty-dimension reductions fail explicitly.
 
-## Teaching Summary
+## Summary
 
 Use `argmin()` when you need to know where the smallest value lives.
 

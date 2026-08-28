@@ -619,15 +619,15 @@ void test_high_yield_nlp_and_printing() {
           "alpha", "beta", "gamma", "delta", "epsilon", "zeta",
           "line1\nline2", "emoji 🙂", "quoted \"x\"", "kappa", "lambda", "mu"},
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
-  const std::string printed = pluss::print_note(m, opt);
-  expect_true(printed.find("Note(") != std::string::npos, "print_note includes metadata");
-  expect_true(printed.find("shape=[2, 6]") != std::string::npos, "print_note includes shape");
-  expect_true(printed.find("...") != std::string::npos, "print_note summarizes large notes");
+  const std::string printed = pluss::note::print(m, opt);
+  expect_true(printed.find("Note(") != std::string::npos, "note::print includes metadata");
+  expect_true(printed.find("shape=[2, 6]") != std::string::npos, "note::print includes shape");
+  expect_true(printed.find("...") != std::string::npos, "note::print summarizes large notes");
 
   pluss::NotePrintOptions hex_opt;
   hex_opt.bytes_mode = pluss::coden::NotePrintBytesMode::Hex;
-  const std::string bytes_print = pluss::print_note(pluss::note::bytes("Hi"), hex_opt);
-  expect_true(bytes_print.find("hex[48 69]") != std::string::npos, "print_note hex mode prints byte hex");
+  const std::string bytes_print = pluss::note::print(pluss::note::bytes("Hi"), hex_opt);
+  expect_true(bytes_print.find("hex[48 69]") != std::string::npos, "note::print hex mode prints byte hex");
 
   pluss::Note tex = pluss::make_note(
       "\\section{Intro}\r\n\r\n"

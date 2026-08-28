@@ -223,7 +223,7 @@ take: index must be int64
 - Repeated positions accumulate gradient.
 - Out-of-range and wrong-dtype indices fail explicitly.
 
-## Teaching Summary
+## Summary
 
 Use `take()` when your selector is best understood as a list of flat logical
 positions.

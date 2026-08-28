@@ -190,7 +190,7 @@ try {
 Series::traverse_slice: selector is not view-representable; use extract() or extract_put_() for materializing paths
 ```
 
-This is one of the key teaching points on the page: the method is limited by
+This is one of the key points on the page: the method is limited by
 design, not by accident.
 
 Example 6. Reverse slices are rejected for the same reason.
@@ -253,7 +253,7 @@ receive gradient.
   slices.
 - Advanced tensors and reverse slices are rejected deliberately.
 
-## Teaching Summary
+## Summary
 
 Use `traverse_slice()` when you need a dynamic selector list but still want to
 guarantee that the result stays in the cheap view lane.

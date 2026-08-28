@@ -199,7 +199,7 @@ so it receives derivative `1`.
   vertical scans answer different questions.
 - A `dim` outside the valid axis range fails.
 
-## Teaching Summary
+## Summary
 
 Use `cumsum()` when every running total matters, not just the final one:
 

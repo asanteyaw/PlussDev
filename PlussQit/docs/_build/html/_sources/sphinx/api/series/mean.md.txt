@@ -25,7 +25,7 @@ The main extra detail is dtype behavior. A mean is inherently fractional, so
 integral inputs are promoted in the current CPU implementation instead of
 staying integral.
 
-That gives `mean()` two teaching jobs at once:
+That gives `mean()` two jobs at once:
 
 - it is a reduction, so axis choice and `keepdim` matter
 - it is a normalization-by-count operation, so output dtype and gradient scale
@@ -184,7 +184,7 @@ Each row has length `3`, so each contributing element receives `1 / 3`.
   `mean(1)` answers "row means."
 - A `dim` outside the valid axis range fails through the shared reduction path.
 
-## Teaching Summary
+## Summary
 
 Use `mean()` when you want a size-normalized reduction:
 

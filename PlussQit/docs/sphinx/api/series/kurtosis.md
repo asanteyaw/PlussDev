@@ -113,7 +113,7 @@ pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, cont
 data=[-1.5, -1.5]
 ```
 
-That is an important teaching point:
+That is an important point:
 
 - kurtosis is not skewness
 - visibly lopsided lanes can still have the same excess-kurtosis summary
@@ -152,7 +152,7 @@ data=[-1.5, -1.5]
 On this 2D shape, the last axis is the row axis, so the result matches Example
 3.
 
-## Gotchas And Teaching Notes
+## Gotchas And Notes
 
 - This surface reports excess kurtosis.
 - Use the stats accessor path on the current public surface.
@@ -162,7 +162,7 @@ On this 2D shape, the last axis is the row axis, so the result matches Example
   statistics are sensitive and should be interpreted with care on small samples.
 - A `dim` outside the valid axis range fails.
 
-## Teaching Summary
+## Summary
 
 Use `kurtosis()` when you care about tail/peakedness shape rather than center or
 spread:

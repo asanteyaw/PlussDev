@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -111,6 +111,67 @@ for the retained object itself.</p>
 <code class="docutils literal notranslate"><span class="pre">colshare()</span></code>, <code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">mean()</span></code>, and friends are intentionally gone from this
 surface. The retained table itself is the object now; rendering is explicit.</p>
 </section>
+<section id="mental-model">
+<h2>Mental Model<a class="headerlink" href="#mental-model" title="Link to this heading">¶</a></h2>
+<p>The right way to think about <code class="docutils literal notranslate"><span class="pre">contingency(...)</span></code> is:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> supplies the observed rows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">contingency(...)</span></code> cross-classifies one or more dimensions and stores the joint
+counts as a retained N-dimensional object.</p></li>
+<li><p>You manipulate that object mathematically:
+<code class="docutils literal notranslate"><span class="pre">slice(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">marginalize(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">share()</span></code>, <code class="docutils literal notranslate"><span class="pre">condition(...)</span></code>.</p></li>
+<li><p>Only after that do you choose a 2D view:
+<code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code> for one flattened table or <code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> for several tables.</p></li>
+</ol>
+<p>That separation is the main architectural difference from a traditional one-shot
+<code class="docutils literal notranslate"><span class="pre">crosstab()</span></code> call. A crosstab API usually says “build me this 2D table now.”
+PlussMic’s retained contingency surface says “build the joint distribution once, then
+let me decide how to analyze and render it.”</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">contingency(...)</span></code> when the thing you care about is a joint distribution over
+categorical or discrete dimensions.</p>
+<p>Good fits:</p>
+<ul class="simple">
+<li><p>counts of how often category combinations occur</p></li>
+<li><p>global shares and conditional shares</p></li>
+<li><p>fixing some dimensions at concrete levels while retaining the others</p></li>
+<li><p>collapsing dimensions out to form lower-dimensional marginals</p></li>
+<li><p>switching between one 2D render and several faceted 2D renders without rebuilding
+the counts</p></li>
+</ul>
+<p>Use something else when your problem is different:</p>
+<ul class="simple">
+<li><p>arbitrary numeric aggregation by keys -&gt; <a class="reference internal" href="group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">group()</span></code></span></a></p></li>
+<li><p>spreadsheet-style summarized value tables -&gt; <a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code></span></a></p></li>
+<li><p>pure feature frequencies one column at a time -&gt; <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a></p></li>
+</ul>
+</section>
+<section id="overload-guide">
+<h2>Overload Guide<a class="headerlink" href="#overload-guide" title="Link to this heading">¶</a></h2>
+<p>There are three conceptual construction styles.</p>
+<p><strong>1. Classic two-way form</strong></p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This is the direct replacement for the ordinary row-by-column contingency table.</p>
+<p><strong>2. One-list retained form</strong></p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;weekend&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>This keeps all named dimensions and remembers a default render of:</p>
+<ul class="simple">
+<li><p>first dimension -&gt; default row side</p></li>
+<li><p>remaining dimensions -&gt; default column side</p></li>
+</ul>
+<p><strong>3. Explicit row-side / column-side retained form</strong></p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;weekend&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>This keeps the same dimensions but remembers the intended row/column split for later
+<code class="docutils literal notranslate"><span class="pre">to_frame()</span></code> and <code class="docutils literal notranslate"><span class="pre">facet()</span></code> calls.</p>
+</section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>features</strong></p>
@@ -130,11 +191,44 @@ first-seen order</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">separator</span></code>: how multi-dimension rendered column/facet labels are flattened</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">null_label</span></code>: the text used when retained null levels are rendered</p></li>
 </ul>
+<p>Defaults:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span> <span class="pre">=</span> <span class="pre">true</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sort</span> <span class="pre">=</span> <span class="pre">true</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">totals</span> <span class="pre">=</span> <span class="pre">false</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">separator</span> <span class="pre">=</span> <span class="pre">&quot;</span> <span class="pre">|</span> <span class="pre">&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null_label</span> <span class="pre">=</span> <span class="pre">&quot;NULL&quot;</span></code></p></li>
+</ul>
+<p>Two option details matter more than they first appear:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dropnull</span></code> is a <strong>construction-time</strong> rule. With the default <code class="docutils literal notranslate"><span class="pre">true</span></code>, any source row
+missing at least one requested contingency dimension is excluded before the tensor is
+built.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">totals</span></code>, <code class="docutils literal notranslate"><span class="pre">separator</span></code>, and <code class="docutils literal notranslate"><span class="pre">null_label</span></code> are primarily <strong>render-time</strong> concerns. They
+change what <code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> show; they do not change which joint
+cells exist in the retained object.</p></li>
+</ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ContingencyTable</span></code>
 A retained N-dimensional contingency object.</p>
+</section>
+<section id="performance-profile">
+<h2>Performance Profile<a class="headerlink" href="#performance-profile" title="Link to this heading">¶</a></h2>
+<p>This surface is built for vectorized construction and reuse:</p>
+<ul class="simple">
+<li><p>the joint counts are built once</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">share()</span></code> and <code class="docutils literal notranslate"><span class="pre">condition(...)</span></code> normalize the retained tensor instead of rebuilding
+the grouping</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slice(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">marginalize(...)</span></code> work on the retained object rather than walking
+the source frame again</p></li>
+</ul>
+<p>But it is still a <strong>dense</strong> retained tensor. That is the important tradeoff to teach.</p>
+<p>If you cross-classify dimensions with extremely high cardinality, the dense cell count
+can explode even when many combinations never occur. That is why this API is excellent
+for genuinely categorical/discrete dimensions and much less appropriate for raw
+high-cardinality identifiers unless you bucket or reduce them first.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -248,7 +342,63 @@ the retained method surface.</p>
 <p>That is the architectural difference from a plain crosstab: the object stays
 N-dimensional until you decide what 2D view you want, and options like totals
 are applied at render time rather than through a separate builder method.</p>
+<p>Example 6. Change the flattened label style without rebuilding the contingency
+tensor.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ContingencyOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot; -&gt; &quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;weekend&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">to_frame</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
 </section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================================================================
+     | city  channel=Card -&gt; weekend=no  channel=Card -&gt; weekend=yes  channel=Cash -&gt; weekend=no  channel=Cash -&gt; weekend=yes
+---------------------------------------------------------------------
+0    | A     1                           0                            1                           0
+1    | B     0                           1                            1                           1
+---------------------------------------------------------------------
+[2 cs x 5 feat]
+</pre></div>
+</div>
+<p>The retained object is the same. Only the flattened 2D column naming convention
+changed.</p>
+</section>
+</section>
+<section id="common-workflow">
+<h2>Common Workflow<a class="headerlink" href="#common-workflow" title="Link to this heading">¶</a></h2>
+<p>The most common study pattern looks like this:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;weekend&quot;</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">to_frame</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">share</span><span class="p">().</span><span class="n">to_frame</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">weekend_yes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">slice</span><span class="p">({{</span><span class="s">&quot;weekend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="p">}}).</span><span class="n">to_frame</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">by_city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">condition</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">to_frame</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">no_weekend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">marginalize</span><span class="p">({</span><span class="s">&quot;weekend&quot;</span><span class="p">}).</span><span class="n">to_frame</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">faceted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">facet</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>That is the teaching sequence to internalize:</p>
+<ul class="simple">
+<li><p>build once</p></li>
+<li><p>choose whether you want counts or shares</p></li>
+<li><p>choose whether you want to fix dimensions or sum them away</p></li>
+<li><p>then choose one-frame rendering or faceted rendering</p></li>
+</ul>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>empty feature list -&gt; validation error</p></li>
+<li><p>unknown feature name -&gt; validation error</p></li>
+<li><p>duplicate feature name on one side -&gt; validation error</p></li>
+<li><p>the same feature named on both row and column sides -&gt; validation error</p></li>
+<li><p>dense tensor size overflow from extreme cardinality -&gt; validation error</p></li>
+</ul>
+<p>On very large cardinality products, that final failure is a feature, not a defect. It
+prevents silently attempting an impossible dense materialization.</p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -267,6 +417,10 @@ retained-object equivalent of a row-normalized contingency table.</p></li>
 <li><p>This surface is intentionally focused on joint frequencies/distributions.
 For arbitrary numeric value aggregation, use <code class="docutils literal notranslate"><span class="pre">group(...).agg(...)</span></code> or
 <code class="docutils literal notranslate"><span class="pre">pivot_table(...)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to_frame(...)</span></code> appends any unassigned remaining dimensions onto the column side.
+<code class="docutils literal notranslate"><span class="pre">facet(...)</span></code> leaves those remaining dimensions as the facet axis instead.</p></li>
+<li><p>The retained dimension order matters. It drives <code class="docutils literal notranslate"><span class="pre">dims()</span></code>, <code class="docutils literal notranslate"><span class="pre">shape()</span></code>, and the axis
+order of <code class="docutils literal notranslate"><span class="pre">to_array()</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">

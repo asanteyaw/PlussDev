@@ -33,7 +33,7 @@ Your main practical choice is between:
 
 - This is the semantic convenience equivalent of formatting with `%A`.
 - It is often the clearest surface for plots, summaries, schedule tables, and
-  teaching/demo code where the weekday label itself is the payload.
+  demo code where the weekday label itself is the payload.
 - If you need Monday/Tuesday as boolean predicates rather than strings, use the
   weekday predicate family documented on [`is_monday`](is_monday.md).
 
@@ -43,7 +43,7 @@ Example 1. Convert a small intraday timeline into weekday labels.
 
 ```cpp
 auto labels = base.weekday_name();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ### Output
@@ -58,7 +58,7 @@ multiple weekdays.
 
 ```cpp
 auto labels = calendar.weekday_name();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ### Output
@@ -73,8 +73,8 @@ Example 3. Compare semantic weekday labeling with a custom formatted label.
 ```cpp
 auto names = base.weekday_name();
 auto labels = base.strftime("%A, %b %d");
-std::cout << pluss::print_note(names) << "\n";
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(names) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ### Output

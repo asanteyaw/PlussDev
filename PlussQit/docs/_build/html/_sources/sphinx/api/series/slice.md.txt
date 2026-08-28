@@ -273,7 +273,7 @@ receive gradient.
 - Negative dims are fine; negative steps are not.
 - `step == 0` is invalid.
 
-## Teaching Summary
+## Summary
 
 Use `slice()` when your selector can be expressed as "one axis, one range, one
 positive stride" and you want to stay in the cheap view path.

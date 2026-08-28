@@ -31,16 +31,16 @@ int main() {
   std::cout << values.var(false) << "\n\n";
 
   heading("var_dim0_population");
-  std::cout << values.var(0, false) << "\n\n";
+  std::cout << values.var(0, false, false) << "\n\n";
 
   heading("var_dim1_population");
-  std::cout << values.var(1, false) << "\n\n";
+  std::cout << values.var(1, false, false) << "\n\n";
 
   heading("var_sample_dim_keepdim");
   std::cout << values.var(1, true, true) << "\n\n";
 
   heading("var_negative_dim_population");
-  std::cout << values.var(-1, false) << "\n\n";
+  std::cout << values.var(-1, false, false) << "\n\n";
 
   heading("var_stat_accessor");
   std::cout << values.stat.var(1, false) << "\n\n";
@@ -50,11 +50,11 @@ int main() {
 
   heading("var_population_singleton_lanes");
   auto singleton_lanes = pluss::make_series(std::vector<double>{1.0, 2.0}, {2, 1});
-  std::cout << singleton_lanes.var(1, false) << "\n\n";
+  std::cout << singleton_lanes.var(1, false, false) << "\n\n";
 
   heading("var_bad_dim_error");
   try {
-    std::cout << values.var(2, false) << "\n";
+    std::cout << values.var(2, false, false) << "\n";
   } catch (const std::exception& error) {
     print_error(error);
   }
@@ -67,10 +67,10 @@ int main() {
   std::cout << values.std(false) << "\n\n";
 
   heading("std_dim0_population");
-  std::cout << values.std(0, false) << "\n\n";
+  std::cout << values.std(0, false, false) << "\n\n";
 
   heading("std_dim1_population");
-  std::cout << values.std(1, false) << "\n\n";
+  std::cout << values.std(1, false, false) << "\n\n";
 
   heading("std_stat_accessor");
   std::cout << values.stat.std(1, false) << "\n\n";
@@ -82,7 +82,7 @@ int main() {
   std::cout << values.std(-1, false, true) << "\n\n";
 
   heading("std_population_singleton_lanes");
-  std::cout << singleton_lanes.std(1, false) << "\n\n";
+  std::cout << singleton_lanes.std(1, false, false) << "\n\n";
 
   auto missing = pluss::make_series({
       {1.0, std::numeric_limits<double>::quiet_NaN(), 3.0},
@@ -131,7 +131,7 @@ int main() {
   std::cout << missing.stat().nanstd(1) << "\n\n";
 
   heading("std_vs_nanstd");
-  std::cout << missing.std(1, false) << "\n";
+  std::cout << missing.std(1, false, false) << "\n";
   std::cout << missing.nanstd(1) << "\n\n";
 
   heading("all_nan_variance");
@@ -146,7 +146,7 @@ int main() {
 
   heading("unbiased_singleton_error");
   try {
-    std::cout << singleton_lanes.var(1, true) << "\n";
+    std::cout << singleton_lanes.var(1, true, false) << "\n";
   } catch (const std::exception& error) {
     print_error(error);
   }
@@ -154,7 +154,7 @@ int main() {
 
   heading("std_unbiased_singleton_error");
   try {
-    std::cout << singleton_lanes.std(1, true) << "\n";
+    std::cout << singleton_lanes.std(1, true, false) << "\n";
   } catch (const std::exception& error) {
     print_error(error);
   }
@@ -162,7 +162,7 @@ int main() {
 
   heading("std_bad_dim_error");
   try {
-    std::cout << values.std(2, false) << "\n";
+    std::cout << values.std(2, false, false) << "\n";
   } catch (const std::exception& error) {
     print_error(error);
   }

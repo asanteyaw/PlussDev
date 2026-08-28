@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::unionize &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=d2a74cb6" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=da1ea0a4"></script>
+    <script src="../../../_static/layout.js?v=34ad04f2"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::unionize_along" href="unionize_along.html" />
+    <link rel="prev" title="Series::union1d" href="union1d.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-unionize">
+<h1>Series::unionize<a class="headerlink" href="#series-unionize" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">unionize</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">others</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">unionize()</span></code> generalizes <a class="reference internal" href="union1d.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">union1d()</span></code></span></a> from one extra input to many.</p>
+<p>You start from <code class="docutils literal notranslate"><span class="pre">self</span></code>, then provide a list of additional <code class="docutils literal notranslate"><span class="pre">Series</span></code> values. The
+method computes the distinct union across the whole collection.</p>
+<p>In normal user code, the important thing is not the internal parameter wrapper.
+The important thing is the call style:</p>
+<ul class="simple">
+<li><p>brace lists such as <code class="docutils literal notranslate"><span class="pre">{b,</span> <span class="pre">c,</span> <span class="pre">d}</span></code> work naturally</p></li>
+<li><p>ordinary <code class="docutils literal notranslate"><span class="pre">Series</span></code> containers can also be passed when they match the range
+contract</p></li>
+</ul>
+<p>Like <code class="docutils literal notranslate"><span class="pre">union1d()</span></code>, this root method is 1D-set-oriented:</p>
+<ul class="simple">
+<li><p>every input is flattened</p></li>
+<li><p>duplicates are removed</p></li>
+<li><p>ordering is controlled by <code class="docutils literal notranslate"><span class="pre">sorted</span></code></p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>others</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;Series&gt;</span></code>)</p>
+<p>The additional inputs to fold into the union.</p>
+<p>Conceptually, this is “the rest of the series to union with <code class="docutils literal notranslate"><span class="pre">self</span></code>.” The method
+walks that list from left to right.</p>
+<p><strong>sorted</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>)</p>
+<p>Controls output ordering.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: sort the final distinct union</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: preserve first encounter order while scanning <code class="docutils literal notranslate"><span class="pre">self</span></code>, then each item
+in <code class="docutils literal notranslate"><span class="pre">others</span></code> from left to right</p></li>
+</ul>
+<p>This makes <code class="docutils literal notranslate"><span class="pre">unionize()</span></code> useful both as a true set constructor and as a stable
+deduplicating merge over several sources.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
+A flat 1D series containing one copy of each distinct value seen across
+<code class="docutils literal notranslate"><span class="pre">self</span></code> and every input in <code class="docutils literal notranslate"><span class="pre">others</span></code>.</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">unionize()</span></code> is not differentiable.</p>
+<p>It is a set-style data-shaping operation driven by equality and ordering.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. If <code class="docutils literal notranslate"><span class="pre">others</span></code> is empty, <code class="docutils literal notranslate"><span class="pre">unionize()</span></code> reduces to distinct extraction on
+<code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">unionize</span><span class="p">({},</span><span class="w"> </span><span class="nb">false</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[3, 1, 2]
+</pre></div>
+</div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">sorted=false</span></code> keeps first-seen order across the whole chain.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">unionize</span><span class="p">({</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=int64, platform=cpu, numel=5, contiguous=true)
+data=[3, 1, 2, 4, 9]
+</pre></div>
+</div>
+<p>The scan order is:</p>
+<ul class="simple">
+<li><p>start with <code class="docutils literal notranslate"><span class="pre">base</span></code></p></li>
+<li><p>then scan <code class="docutils literal notranslate"><span class="pre">b</span></code></p></li>
+<li><p>then scan <code class="docutils literal notranslate"><span class="pre">c</span></code></p></li>
+</ul>
+<p>Each new value is admitted only the first time it appears.</p>
+<p>Example 3. The default call returns the sorted distinct union.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">unionize</span><span class="p">({</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=int64, platform=cpu, numel=5, contiguous=true)
+data=[1, 2, 3, 4, 9]
+</pre></div>
+</div>
+<p>Example 4. Stable union order keeps following the sequence of inputs you pass.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">).</span><span class="n">unionize</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">),</span>
+<span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=int64, platform=cpu, numel=5, contiguous=true)
+data=[5, 1, 2, 3, 4]
+</pre></div>
+</div>
+<p>That example is worth studying because it shows the method’s mental model very
+clearly: “walk sources left to right and keep each value once.”</p>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">unionize()</span></code> is still a flat 1D set-style method. It does not preserve
+higher-rank slice structure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sorted=false</span></code> depends on the order of the inputs in <code class="docutils literal notranslate"><span class="pre">others</span></code>.</p></li>
+<li><p>Each participating <code class="docutils literal notranslate"><span class="pre">Series</span></code> must share dtype and platform with <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></li>
+<li><p>Empty <code class="docutils literal notranslate"><span class="pre">others</span></code> is not an error; it simply degenerates to distinct extraction.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p>Reach for <code class="docutils literal notranslate"><span class="pre">unionize()</span></code> when the same distinct-union idea needs to span more than
+two inputs.</p>
+<ul class="simple">
+<li><p>use brace lists like <code class="docutils literal notranslate"><span class="pre">{b,</span> <span class="pre">c,</span> <span class="pre">d}</span></code> for the normal call style</p></li>
+<li><p>choose <code class="docutils literal notranslate"><span class="pre">sorted=false</span></code> for stable source-order deduplication</p></li>
+<li><p>choose the default <code class="docutils literal notranslate"><span class="pre">sorted=true</span></code> when you want value-ordered output</p></li>
+<li><p>expect flattening and one-copy-per-distinct-value semantics</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="union1d.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::union1d</span></code></span></a>: the two-input form.</p></li>
+<li><p><a class="reference internal" href="intersection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::intersection</span></code></span></a>: many-input common-value extraction.</p></li>
+<li><p><a class="reference internal" href="comp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::comp</span></code></span></a>: subtract <code class="docutils literal notranslate"><span class="pre">self</span></code> from a universe instead of unioning.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="union1d.html">
+    <span class="label">Previous</span>
+    <span class="title">union1d</span>
+  </a>
+  <a class="next-link" href="unionize_along.html">
+    <span class="label">Next</span>
+    <span class="title">unionize_along</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="union1d.html" title="previous chapter">Series::union1d</a></li>
+      <li>Next: <a href="unionize_along.html" title="next chapter">Series::unionize_along</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/unionize.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

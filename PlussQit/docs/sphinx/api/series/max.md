@@ -379,7 +379,7 @@ it is worth treating as part of the normal usage story.
   broadcast time rather than reduction time.
 - Out-of-range dims throw instead of being silently clamped.
 
-## Teaching Summary
+## Summary
 
 Use `max()` when you want the winning value itself.
 

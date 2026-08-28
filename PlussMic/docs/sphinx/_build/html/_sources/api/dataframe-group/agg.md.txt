@@ -27,6 +27,18 @@ Each `GroupSpec` provides:
 This is the most expressive grouped terminal. Use it when you want mixed operations,
 custom output names, or explicit row-count columns beside other aggregates.
 
+## When To Use It
+
+Use `agg(...)` when the grouped output should be one row per group, but the value-side
+ operations are not uniform.
+
+Typical reasons:
+
+- one column needs `sum`, another needs `mean`
+- you want row count beside other aggregates
+- you want explicit output names
+- you want grouped mode beside numeric grouped reductions in one result
+
 ## Parameters
 
 **specs** (`RangeView<GroupSpec>` / `initializer_list<GroupSpec>`)
@@ -116,7 +128,7 @@ auto indexed = DataFrame({
     {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
     {"year", Thread(pluss::make_series({2023.0, 2024.0, 2023.0, 2024.0}))},
     {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
-}).set_label({"region", "year"});
+}).label().set({"region", "year"});
 
 auto out = indexed.group()
                   .by(DataFrame::LabelGroup{.names = {"region", "year"}})
@@ -144,6 +156,14 @@ The grouped result still comes back as a normal `DataFrame`; the only difference
 that the grouping key came from the case axis rather than an ordinary feature. Here
 every `(region, year)` pair is already unique, so each "group" has exactly one row
 and `amount_sum` just echoes the original `amount` value.
+
+## Failure Modes
+
+- empty spec list -> validation error
+- non-count spec with empty `feature` -> validation error
+- duplicate output names after inference -> validation error
+- unsupported op/value kind combination -> validation error
+- unsupported grouped layout -> validation error
 
 ## Notes
 

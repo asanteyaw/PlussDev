@@ -5,10 +5,13 @@
 
 [Back to DataFrameGroupBuilder API Reference](../../dataframe_group_accessor_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrameGrouped::std() const -> DataFrame
+DataFrameGrouped::std(std::string_view feature) const -> DataFrame
+DataFrameGrouped::std(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::std(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -19,9 +22,16 @@ value feature — the grouped convenience terminal equivalent to calling
 group needs at least **two** observed values to produce a defined standard
 deviation; a group with zero or one observed value produces null instead of `0`.
 
+When you pass one or more feature names, `std(...)` only aggregates those selected
+value features instead of every remaining non-key value feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to standardize by group. Omit them to reduce
+every remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -78,6 +88,31 @@ std::cout << out;
 `"North"` has three values (`10, 20, 30`), mean `20`; the sample standard deviation
 (`n - 1 = 2` in the denominator) works out to `10`. `"South"` has only one value, so
 there is no defined spread — `amount_std` is `NULL`, not `0`.
+
+Example 2. Standard deviation only for one selected feature.
+
+```cpp
+auto wide = DataFrame({
+    {"region", Thread(pluss::make_note({"North", "North", "North", "South"}))},
+    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 50.0}))},
+    {"units", Thread(pluss::make_series({1.0, 3.0, 5.0, 7.0}))},
+});
+
+auto out2 = wide.group().by({"region"}).std({"units"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+========================
+     | region  units_std
+------------------------
+0    | North   2
+1    | South   NULL
+------------------------
+[2 cs x 2 feat]
+```
 
 ## Notes
 

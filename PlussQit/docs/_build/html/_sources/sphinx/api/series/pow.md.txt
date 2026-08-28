@@ -45,7 +45,7 @@ backward rule follows the familiar calculus identity:
 
 `d/dx x^p = p * x^(p - 1)`
 
-That is the main power-law gradient you should keep in mind when teaching or
+That is the main power-law gradient you should keep in mind when reasoning about or
 debugging `pow()`.
 
 ## Examples
@@ -164,11 +164,11 @@ broadcast: incompatible shapes
 - `pow()` is more numerically delicate than add or multiply, so it deserves
   extra care around domain assumptions.
 
-## Teaching Summary
+## Summary
 
 Use `pow()` when you want exponent semantics directly, not when you merely want
 repeated multiplication by a small fixed count. It is especially useful for
-uniform power transforms, root-like transforms, and teaching how domain issues
+uniform power transforms, root-like transforms, and showing how domain issues
 show up in floating arithmetic.
 
 ## See Also

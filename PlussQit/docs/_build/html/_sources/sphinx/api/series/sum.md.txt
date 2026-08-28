@@ -212,7 +212,7 @@ reduce: dim out of range
 - A `dim` outside the valid axis range fails with the shared reduction
   validator.
 
-## Teaching Summary
+## Summary
 
 Use `sum()` when you want totals, not averages and not running prefixes:
 

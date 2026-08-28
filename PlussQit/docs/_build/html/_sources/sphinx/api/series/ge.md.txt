@@ -165,7 +165,7 @@ broadcast: incompatible shapes
 - The output is boolean and shape-preserving after broadcasting.
 - Broadcast incompatibility is still a hard error.
 
-## Teaching Summary
+## Summary
 
 Use `ge()` when your lower bound is inclusive. In interval language, it closes
 the boundary that [`Series::gt`](gt.md) leaves open.

@@ -5,10 +5,13 @@
 
 [Back to DataFrameGroupBuilder API Reference](../../dataframe_group_accessor_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrameGrouped::sum() const -> DataFrame
+DataFrameGrouped::sum(std::string_view feature) const -> DataFrame
+DataFrameGrouped::sum(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::sum(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -17,9 +20,16 @@ Sums each non-key value feature within each group — the grouped convenience te
 equivalent to calling [`agg()`](agg.md) with a `GroupOp::Sum` spec for every
 remaining value feature.
 
+When you pass one or more feature names, `sum(...)` only aggregates those selected
+value features instead of every remaining non-key value feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to sum. Omit them to aggregate every
+remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -61,6 +71,27 @@ std::cout << out;
 
 `"Accra"`'s two rows sum to `amount_sum = 100 + 80 = 180` and
 `units_sum = 2 + 1 = 3`; `"Tema"` sums to `50 + 40 = 90` and `3 + 1 = 4`.
+
+Example 2. Sum only one selected feature.
+
+```cpp
+auto out2 = sales.group()
+                .by({"city"})
+                .sum({"amount"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+=====================
+     | city   amount_sum
+---------------------
+0    | Accra  180
+1    | Tema   90
+---------------------
+[2 cs x 2 feat]
+```
 
 ## Notes
 

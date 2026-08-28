@@ -226,7 +226,7 @@ broadcast: incompatible shapes
 - Dtype promotion can change the output dtype even when one side started as an
   integer series.
 
-## Teaching Summary
+## Summary
 
 Use `add()` for three closely related jobs: plain elementwise addition,
 broadcasted addition, and scaled accumulation through `alpha`. The core mental
@@ -244,8 +244,8 @@ explicit `alpha` you supply.
     <span class="label">Previous</span>
     <span class="title">Series API Reference</span>
   </a>
-  <a class="next-link" href="argmax.html">
+  <a class="next-link" href="all.html">
     <span class="label">Next</span>
-    <span class="title">argmax</span>
+    <span class="title">all</span>
   </a>
 </div>

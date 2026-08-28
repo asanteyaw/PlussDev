@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -56,6 +56,55 @@ hands back a <code class="docutils literal notranslate"><span class="pre">DataFr
 <p>With several keys, the eventual plan is lexicographic / tuple-based: the first
 key is primary, the next key breaks ties within equal first-key values, the next
 breaks remaining ties, and so on.</p>
+</section>
+<section id="mental-model">
+<h2>Mental Model<a class="headerlink" href="#mental-model" title="Link to this heading">¶</a></h2>
+<p>There are four separate ideas on this surface:</p>
+<ol class="arabic simple">
+<li><p><strong>Builder defaults</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ascending</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nulls_last</span></code></p></li>
+</ul>
+<p>These are inherited by plain key-name overloads unless a key later overrides them.</p>
+<ol class="arabic simple" start="2">
+<li><p><strong>The key plan</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">by(...)</span></code> starts or replaces it</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">then(...)</span></code> appends tie-break keys</p></li>
+</ul>
+<ol class="arabic simple" start="3">
+<li><p><strong>The active key</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">asc()</span></code>, <code class="docutils literal notranslate"><span class="pre">desc()</span></code>, <code class="docutils literal notranslate"><span class="pre">nulls_first()</span></code>, <code class="docutils literal notranslate"><span class="pre">nulls_last()</span></code> mutate only the most recently
+added key</p></li>
+</ul>
+<ol class="arabic simple" start="4">
+<li><p><strong>Optional partitioning</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">within(...)</span></code> says rows may only move inside groups, not across them</p></li>
+</ul>
+<p>That is why the builder exists: it separates defaults, key declaration, key-local
+refinement, and execution.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">sort()</span></code> instead of <a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arrange()</span></code></span></a> when:</p>
+<ul class="simple">
+<li><p>you want to build the key plan step by step</p></li>
+<li><p>different keys need different direction or null placement</p></li>
+<li><p>you want to reuse the same permutation via <code class="docutils literal notranslate"><span class="pre">order()</span></code></p></li>
+<li><p>you want partitioned sorting with <code class="docutils literal notranslate"><span class="pre">within(...)</span></code></p></li>
+</ul>
+<p>Use <a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arrange()</span></code></span></a> when:</p>
+<ul class="simple">
+<li><p>the full sort spec is already known up front</p></li>
+<li><p>you just want one direct execute-now sort call</p></li>
+</ul>
 <p>Use the <a class="reference internal" href="../../dataframe_sort_accessor_api_reference.html"><span class="doc std std-doc">DataFrameSortBuilder API Reference</span></a>
 for the builder workflow itself:</p>
 <ul class="simple">
@@ -100,6 +149,16 @@ The default null placement every key inherits, unless overridden.</p>
 A binder for the current frame — call <code class="docutils literal notranslate"><span class="pre">.by(...)</span></code> to start planning value
 keys, <code class="docutils literal notranslate"><span class="pre">.within(...)</span></code> to partition into groups first, then a terminal
 method to execute.</p>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>calling a terminal with no sort keys planned -&gt; validation error</p></li>
+<li><p>calling <code class="docutils literal notranslate"><span class="pre">then(...)</span></code> before <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> -&gt; validation error</p></li>
+<li><p>calling <code class="docutils literal notranslate"><span class="pre">asc()</span></code> / <code class="docutils literal notranslate"><span class="pre">desc()</span></code> / <code class="docutils literal notranslate"><span class="pre">nulls_first()</span></code> / <code class="docutils literal notranslate"><span class="pre">nulls_last()</span></code> before any key exists -&gt; validation error</p></li>
+<li><p>unknown feature names -&gt; typically validation error only when a terminal executes</p></li>
+<li><p>negative <code class="docutils literal notranslate"><span class="pre">n</span></code> for <code class="docutils literal notranslate"><span class="pre">head()</span></code> / <code class="docutils literal notranslate"><span class="pre">tail()</span></code> -&gt; validation error</p></li>
+</ul>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -208,6 +267,9 @@ feature-name validation is deferred to the terminal call.</p></li>
 <li><p>Plain <code class="docutils literal notranslate"><span class="pre">.by({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;c&quot;})</span></code> uses one shared default for all three keys.
 Mixed per-key directions require <code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code>s or post-<code class="docutils literal notranslate"><span class="pre">by(...)</span></code> mutation
 of the active key.</p></li>
+<li><p>With plain key-name overloads, <code class="docutils literal notranslate"><span class="pre">sort(false).by({&quot;age&quot;,</span> <span class="pre">&quot;salary&quot;,</span> <span class="pre">&quot;score&quot;})</span></code>
+means all three keys are descending. It is not the pandas-style
+<code class="docutils literal notranslate"><span class="pre">ascending=[...]</span></code> case until you move to <code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code>s or active-key mutation.</p></li>
 <li><p>Not <code class="docutils literal notranslate"><span class="pre">noexcept</span></code>; <code class="docutils literal notranslate"><span class="pre">sort()</span></code> itself does no validation work — every check is
 deferred to the terminal.</p></li>
 </ul>

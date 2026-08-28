@@ -18,6 +18,39 @@ ContingencyTable::condition(pluss::msharp::RangeView::Of<std::string_view> dims)
 Turns the retained count table into a conditional-share table with respect to
 the supplied dimensions.
 
+More precisely: the supplied dimensions are the dimensions you want the result to sum
+to `1` within. Every other retained dimension is summed out of the denominator during
+normalization, but remains available for rendering.
+
+That makes `condition(...)` the targeted normalization surface:
+
+- `share()` -> divide by the grand total of the current retained table
+- `condition({"city"})` -> divide within each `city`
+- `condition({"city", "weekend"})` -> divide within each `(city, weekend)` cell family
+
+## Parameters
+
+**dim / dims**
+
+One or more retained dimension names already present on the `ContingencyTable`.
+
+## Returns
+
+`ContingencyTable`
+    A new retained table with the same dimensions and levels, but with conditional
+    shares materialized at render/export time instead of raw counts.
+
+## When To Use It
+
+Use `condition(...)` when the question is not "what share of the whole table is this?"
+but rather "what share within this parent slice is this?"
+
+Typical interpretations:
+
+- `condition({"city"})` -> channel mix within each city
+- `condition({"channel"})` -> city composition within each channel
+- `condition({"city", "weekend"})` -> channel mix within each city/weekend slice
+
 ## Examples
 
 Example 1. Condition on the row dimension.
@@ -97,3 +130,16 @@ std::cout << out;
 -----------------------
 [2 cs x 3 feat]
 ```
+
+## Notes
+
+- `condition(...)` does not remove dimensions. It only changes how values are
+  normalized.
+- Conditioning is applied to the **current retained table**. If you slice or
+  marginalize first, the conditional shares are computed on that transformed object,
+  not on the original unsliced contingency.
+- Duplicate dimension names are rejected.
+- Unknown dimension names are rejected.
+- Zero-denominator slices render as `0` rather than producing `NaN` cells. That is why
+  city `A` above shows `0, 0` in the sliced weekend-only example instead of undefined
+  values.

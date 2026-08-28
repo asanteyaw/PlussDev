@@ -5,10 +5,13 @@
 
 [Back to DataFrameGroupBuilder API Reference](../../dataframe_group_accessor_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrameGrouped::ndistinct() const -> DataFrame
+DataFrameGrouped::ndistinct(std::string_view feature) const -> DataFrame
+DataFrameGrouped::ndistinct(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::ndistinct(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -17,9 +20,16 @@ Counts the number of distinct observed (non-null) values per group for each non-
 value feature. This is the grouped convenience terminal equivalent to calling
 [`agg()`](agg.md) with a `GroupOp::Ndistinct` spec for every remaining value feature.
 
+When you pass one or more feature names, `ndistinct(...)` only aggregates those
+selected value features instead of every remaining non-key value feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to distinct-count. Omit them to aggregate
+every remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -77,6 +87,31 @@ std::cout << out;
 `"Accra"` ordered `"Tea"` twice and `"Coffee"` once — two distinct products, so
 `product_ndistinct` is `2`. `"Tema"` ordered `"Tea"` both times, so its
 `product_ndistinct` is `1`, even though it also has two rows.
+
+Example 2. Count distinctness only for one selected value feature.
+
+```cpp
+auto wide = DataFrame({
+    {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"product", Thread(pluss::make_note({"Tea", "Coffee", "Tea", "Tea"}))},
+    {"rep", Thread(pluss::make_note({"Ama", "Ama", "Kojo", "Esi"}))},
+});
+
+auto out2 = wide.group().by({"city"}).ndistinct({"rep"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+===========================
+     | city   rep_ndistinct
+---------------------------
+0    | Accra  1
+1    | Tema   2
+---------------------------
+[2 cs x 2 feat]
+```
 
 ## Notes
 

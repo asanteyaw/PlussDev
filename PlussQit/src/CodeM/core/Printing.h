@@ -82,7 +82,7 @@ struct PrintOptions {
   PrintBoolStyle bool_style = PrintBoolStyle::TrueFalse;
   PrintComplexStyle complex_style = PrintComplexStyle::ParenJ;
 
-  // Settings used by `print_series(...)` (aligned matrix view).
+  // Settings used by `print(...)` (aligned matrix view).
   PrintAlignMode pretty_align = PrintAlignMode::Right;
   PrintBracketStyle pretty_bracket_style = PrintBracketStyle::Unicode;
   bool pretty_values_with_commas = false;
@@ -110,8 +110,8 @@ struct PrintOptions {
 };
 
 std::string to_string(const Series& s, const PrintOptions& opt = {});
-std::string print_series(const Series& s, const PrintOptions& opt = {});
-std::ostream& print_series(std::ostream& os, const Series& s, const PrintOptions& opt = {});
+std::string print(const Series& s, const PrintOptions& opt = {});
+std::ostream& print(std::ostream& os, const Series& s, const PrintOptions& opt = {});
 std::ostream& operator<<(std::ostream& os, const Series& s);
 
 } // namespace pluss::codem

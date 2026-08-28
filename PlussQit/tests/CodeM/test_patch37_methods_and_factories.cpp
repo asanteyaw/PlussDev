@@ -54,6 +54,16 @@ TEST_CASE("sign_list supports temporary and lvalue usage", "[methods][list]") {
   auto united_lvalue = pluss::series::unite(list, 0);
   REQUIRE(united_lvalue.sizes()[0] == 4);
   REQUIRE(united_lvalue.sizes()[1] == 2);
+
+  auto owned = pluss::msharp::Lister::Series{a, b};
+  auto stacked_owned = pluss::series::pile(owned, 0);
+  REQUIRE(stacked_owned.sizes()[0] == 2);
+  REQUIRE(stacked_owned.sizes()[1] == 2);
+  REQUIRE(stacked_owned.sizes()[2] == 2);
+
+  auto united_owned = pluss::series::unite(owned, 0);
+  REQUIRE(united_owned.sizes()[0] == 4);
+  REQUIRE(united_owned.sizes()[1] == 2);
 }
 
 TEST_CASE("pair reductions return values and indices in one call", "[methods][list]") {

@@ -55,7 +55,7 @@ lowercased-but-still-padded text.
 ```cpp
 auto note = pluss::make_note({"  Ada Lovelace  ", "\tGRACE HOPPER\t", "Linus"});
 auto cleaned = note.strip().lower();
-std::cout << "lower_strip:\n" << pluss::print_note(cleaned) << "\n";
+std::cout << "lower_strip:\n" << pluss::note::print(cleaned) << "\n";
 ```
 
 ### Output

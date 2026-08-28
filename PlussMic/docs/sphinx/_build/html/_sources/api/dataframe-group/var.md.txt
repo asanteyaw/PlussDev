@@ -5,10 +5,13 @@
 
 [Back to DataFrameGroupBuilder API Reference](../../dataframe_group_accessor_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrameGrouped::var() const -> DataFrame
+DataFrameGrouped::var(std::string_view feature) const -> DataFrame
+DataFrameGrouped::var(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::var(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -19,9 +22,16 @@ with a `GroupOp::Var` spec for every remaining value feature. Like [`std()`](std
 a group needs at least **two** observed values to produce a defined variance; a
 group with zero or one observed value produces null instead of `0`.
 
+When you pass one or more feature names, `var(...)` only aggregates those selected
+value features instead of every remaining non-key value feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to variance-reduce. Omit them to reduce every
+remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -64,6 +74,31 @@ std::cout << out;
 `100 + 0 + 100 = 200`; dividing by `n - 1 = 2` gives a sample variance of `100` — the
 square of the `10` reported by [`std()`](std.md) on the same data. `"South"` has only
 one value, so `amount_var` is `NULL`, not `0`.
+
+Example 2. Variance only for one selected feature.
+
+```cpp
+auto wide = DataFrame({
+    {"region", Thread(pluss::make_note({"North", "North", "North", "South"}))},
+    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 50.0}))},
+    {"units", Thread(pluss::make_series({1.0, 3.0, 5.0, 7.0}))},
+});
+
+auto out2 = wide.group().by({"region"}).var({"units"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+========================
+     | region  units_var
+------------------------
+0    | North   4
+1    | South   NULL
+------------------------
+[2 cs x 2 feat]
+```
 
 ## Notes
 

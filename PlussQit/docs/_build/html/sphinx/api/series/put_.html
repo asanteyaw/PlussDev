@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=5807a5a5"></script>
+    <script src="../../../_static/api_nav.js?v=da1ea0a4"></script>
     <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -202,7 +202,7 @@ data=[[100, 20],
   [12, 500]]
 </pre></div>
 </div>
-<p>This is an important teaching point: <code class="docutils literal notranslate"><span class="pre">put_()</span></code> follows logical flat order, not
+<p>This is an important point: <code class="docutils literal notranslate"><span class="pre">put_()</span></code> follows logical flat order, not
 “walk the current strides by hand.”</p>
 <p>Example 6. Out-of-range flat positions fail immediately.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -270,8 +270,8 @@ logical extent.</p></li>
 surfaces accept broader integer dtypes and normalize them internally.</p></li>
 </ul>
 </section>
-<section id="teaching-summary">
-<h2>Teaching Summary<a class="headerlink" href="#teaching-summary" title="Link to this heading">¶</a></h2>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">put_()</span></code> when you want the write-side twin of <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a>: flat
 positions in, flat writes out. Think in logical element numbers, not axes.
 Choose <code class="docutils literal notranslate"><span class="pre">accumulate=false</span></code> for overwrite behavior and <code class="docutils literal notranslate"><span class="pre">accumulate=true</span></code> for

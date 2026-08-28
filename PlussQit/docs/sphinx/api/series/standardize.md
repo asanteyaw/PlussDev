@@ -26,7 +26,7 @@ This is the higher-level normalization counterpart to [`center`](center.md):
 In other words, standardization asks for more than "shift the values around
 zero." It asks for "shift them around zero and put them on a comparable spread."
 
-That makes `standardize()` a stronger teaching step than `center()`:
+That makes `standardize()` a stronger next step than `center()`:
 
 - `center()` tells you deviations from the mean
 - `standardize()` tells you deviations from the mean in spread-scaled units
@@ -221,7 +221,7 @@ is population-style normalization on this surface.
 - A `dim` outside the valid axis range fails.
 - The current verified behavior is population-style normalization.
 
-## Teaching Summary
+## Summary
 
 Use `standardize()` when both offset and spread should be removed while shape is
 preserved:

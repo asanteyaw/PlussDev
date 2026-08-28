@@ -994,7 +994,7 @@ Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
       for (const auto& choice : choices) {
         payloads.push_back(choice.as_series());
       }
-      auto out = pluss::select(
+      auto out = pluss::series::select(
           pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
           pluss::msharp::RangeView::Of<pluss::Series>(payloads),
           default_value.as_series());
@@ -1005,7 +1005,7 @@ Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
         expanded_validity.push_back(expand_validity(valid, out.numel()));
       }
       const auto out_valid = optional_mask_from_valid(
-          pluss::select(
+          pluss::series::select(
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))
@@ -1025,7 +1025,7 @@ Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
         expanded_validity.push_back(expand_validity(valid, out.numel()));
       }
       const auto out_valid = optional_mask_from_valid(
-          pluss::select(
+          pluss::series::select(
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))
@@ -1045,7 +1045,7 @@ Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
         expanded_validity.push_back(expand_validity(valid, out.numel()));
       }
       const auto out_valid = optional_mask_from_valid(
-          pluss::select(
+          pluss::series::select(
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))

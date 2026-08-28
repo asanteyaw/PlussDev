@@ -278,7 +278,7 @@ var(dim): dim out of range
 - Some current `std(...)` failures still report through variance wording.
 - `keepdim=true` changes shape, not grouping.
 
-## Teaching Summary
+## Summary
 
 Use `std()` when you want spread in the same units as the original data.
 

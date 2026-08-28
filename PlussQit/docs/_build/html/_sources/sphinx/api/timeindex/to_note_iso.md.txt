@@ -32,7 +32,7 @@ Example 1. Export the axis as explicit ISO text.
 
 ```cpp
 auto out = base.to_note_iso();
-std::cout << pluss::print_note(out) << "\n";
+std::cout << pluss::note::print(out) << "\n";
 ```
 
 ### Output
@@ -46,7 +46,7 @@ Example 2. Use the resulting `Note` directly in text-oriented Pluss workflows.
 
 ```cpp
 auto labels = base.to_note_iso();
-std::cout << pluss::print_note(labels) << "\n";
+std::cout << pluss::note::print(labels) << "\n";
 ```
 
 ## Notes

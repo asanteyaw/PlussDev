@@ -69,7 +69,7 @@ flow back to the original tensor rather than stopping at the staging copy.
 
 ## Shape Policy
 
-The key teaching distinction is between logical value order and physical
+The key distinction is between logical value order and physical
 storage order.
 
 When the input is already contiguous:

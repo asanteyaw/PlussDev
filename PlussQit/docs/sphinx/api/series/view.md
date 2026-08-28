@@ -79,7 +79,7 @@ The main failure classes are:
 - non-contiguous source
 - incompatible target `numel()`
 
-One current implementation quirk is worth teaching explicitly: in the examples
+One current implementation quirk is worth stating explicitly: in the examples
 below, those two conceptual failures collapse to the same top-line error text.
 So the error string is less specific than the underlying rule.
 
@@ -210,8 +210,8 @@ case.
     <span class="label">Previous</span>
     <span class="title">sizes</span>
   </a>
-  <a class="next-link" href="reshape.html">
+  <a class="next-link" href="where.html">
     <span class="label">Next</span>
-    <span class="title">reshape</span>
+    <span class="title">where</span>
   </a>
 </div>

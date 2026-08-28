@@ -335,7 +335,7 @@ data=[0, 90, 2, 70, 4]
 - As with `index_put()`, some narrow-route failures surface `put`-style error
   text because the implementation routes through shared scatter machinery.
 
-## Teaching Summary
+## Summary
 
 Use `index_put_()` when you want real advanced-index writes to land directly
 into the current `Series`. Reach for the general index-list overloads first;

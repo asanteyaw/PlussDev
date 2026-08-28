@@ -26,7 +26,7 @@ int main() {
       std::span<const std::int64_t>(v_sizes.data(), v_sizes.size()));
   pluss::NotePrintOptions clip;
   clip.max_cell_chars = 24;
-  std::cout << pluss::print_note(v, clip) << "\n\n";
+  std::cout << pluss::note::print(v, clip) << "\n\n";
 
   std::cout << "=== 2D summarized with edge_items ===\n";
   const std::array<std::int64_t, 2> m_sizes{3, 8};
@@ -43,7 +43,7 @@ int main() {
   pluss::NotePrintOptions sum2d;
   sum2d.max_elements = 10;
   sum2d.edge_items = 2;
-  std::cout << pluss::print_note(matrix, sum2d) << "\n\n";
+  std::cout << pluss::note::print(matrix, sum2d) << "\n\n";
 
   std::cout << "=== 3D summarized ===\n";
   const std::array<std::int64_t, 3> t_sizes{2, 3, 4};
@@ -57,31 +57,31 @@ int main() {
   sum3d.max_elements = 9;
   sum3d.edge_items = 1;
   sum3d.max_cell_chars = 8;
-  std::cout << pluss::print_note(cube, sum3d) << "\n\n";
+  std::cout << pluss::note::print(cube, sum3d) << "\n\n";
 
   std::cout << "=== header-only / values-only ===\n";
   pluss::NotePrintOptions hdr;
   hdr.content_mode = pluss::coden::NotePrintContentMode::HeaderOnly;
-  std::cout << pluss::print_note(matrix, hdr) << "\n";
+  std::cout << pluss::note::print(matrix, hdr) << "\n";
 
   pluss::NotePrintOptions val;
   val.content_mode = pluss::coden::NotePrintContentMode::ValuesOnly;
   val.edge_items = 1;
   val.max_elements = 8;
-  std::cout << pluss::print_note(matrix, val) << "\n\n";
+  std::cout << pluss::note::print(matrix, val) << "\n\n";
 
   std::cout << "=== metadata compact / none ===\n";
   pluss::NotePrintOptions compact;
   compact.metadata_mode = pluss::coden::NotePrintMetadataMode::Compact;
   compact.max_elements = 8;
   compact.edge_items = 1;
-  std::cout << pluss::print_note(matrix, compact) << "\n\n";
+  std::cout << pluss::note::print(matrix, compact) << "\n\n";
 
   pluss::NotePrintOptions no_meta;
   no_meta.metadata_mode = pluss::coden::NotePrintMetadataMode::None;
   no_meta.max_elements = 8;
   no_meta.edge_items = 1;
-  std::cout << pluss::print_note(matrix, no_meta) << "\n\n";
+  std::cout << pluss::note::print(matrix, no_meta) << "\n\n";
 
   std::cout << "=== bytes escaped vs hex ===\n";
   std::string raw = "A";
@@ -94,11 +94,11 @@ int main() {
 
   pluss::NotePrintOptions bytes_escaped;
   bytes_escaped.escape_controls = true;
-  std::cout << pluss::print_note(bytes, bytes_escaped) << "\n";
+  std::cout << pluss::note::print(bytes, bytes_escaped) << "\n";
 
   pluss::NotePrintOptions bytes_hex;
   bytes_hex.bytes_mode = pluss::coden::NotePrintBytesMode::Hex;
-  std::cout << pluss::print_note(bytes, bytes_hex) << "\n\n";
+  std::cout << pluss::note::print(bytes, bytes_hex) << "\n\n";
 
   std::cout << "=== to_string API ===\n";
   std::string rendered = pluss::to_string(v, clip);

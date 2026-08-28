@@ -5,10 +5,13 @@
 
 [Back to DataFrameGroupBuilder API Reference](../../dataframe_group_accessor_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
 DataFrameGrouped::max() const -> DataFrame
+DataFrameGrouped::max(std::string_view feature) const -> DataFrame
+DataFrameGrouped::max(std::initializer_list<std::string_view> features) const -> DataFrame
+DataFrameGrouped::max(pluss::RangeView<std::string_view> features) const -> DataFrame
 ```
 
 ## What It Does
@@ -17,9 +20,16 @@ Computes per-group maximum for each non-key value feature — the grouped conven
 terminal equivalent to calling [`agg()`](agg.md) with a `GroupOp::Max` spec for every
 remaining value feature.
 
+When you pass one or more feature names, `max(...)` only aggregates those selected
+value features instead of every remaining non-key value feature.
+
 ## Parameters
 
-This method takes no parameters.
+**feature** / **features** (`std::string_view` / `initializer_list<string_view>` /
+`RangeView<string_view>`, optional)
+
+Select one or more non-key value features to max-reduce. Omit them to reduce every
+remaining non-key value feature on the current frame.
 
 ## Returns
 
@@ -60,6 +70,31 @@ std::cout << out;
 
 `"North"`'s largest amount between `100` and `250` is `250`; `"South"`'s largest
 between `80` and `120` is `120`.
+
+Example 2. Max only one selected feature on a wider value side.
+
+```cpp
+auto wide = DataFrame({
+    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
+    {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+    {"units", Thread(pluss::make_series({5.0, 1.0, 3.0, 4.0}))},
+});
+
+auto out2 = wide.group().by({"region"}).max({"units"});
+std::cout << out2;
+```
+
+### Output (out2)
+
+```text
+========================
+     | region  units_max
+------------------------
+0    | North   5
+1    | South   4
+------------------------
+[2 cs x 2 feat]
+```
 
 ## Notes
 

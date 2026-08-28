@@ -84,7 +84,7 @@ int main() {
   auto ts_idx = ts.features({"event_time"}).cast().timeindex();
   auto bins = ts_idx.features("event_time").as_timeindex().resample_count("H", 6);
   std::cout << "features(\"event_time\").as_timeindex().resample_count(\"H\", 6):\n";
-  std::cout << pluss::print_series(bins) << "\n";
+  std::cout << pluss::series::print(bins) << "\n";
 
   std::cout << "features({\"load_mw\", \"speed_mph\"}).ts({.axis = features(\"event_time\")}).resample(\"6H\").mean():\n";
   ts_idx.features({"load_mw", "speed_mph"})

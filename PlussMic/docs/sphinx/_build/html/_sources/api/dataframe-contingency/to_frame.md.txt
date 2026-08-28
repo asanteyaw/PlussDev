@@ -32,6 +32,41 @@ Renders one explicit 2D `DataFrame` view from the retained contingency object.
 - if `column_dims` ends up empty, the rendered frame gets one scalar value
   column such as `freq` or `share`
 
+This page is the most important rendering page on the surface because it is the point
+where the retained N-dimensional object becomes an ordinary `DataFrame`.
+
+## Parameters
+
+**row_dims**
+
+Dimensions that should become explicit row-key columns in the rendered frame.
+
+**column_dims**
+
+Dimensions that should become rendered columns. Any retained dimensions not named here
+and not already named on the row side are appended to the column side automatically.
+
+**options**
+
+Render-time options:
+
+- `totals`: append row totals, column totals, and the grand total
+- `separator`: join multi-dimension flattened column labels
+- `null_label`: display text for retained null levels
+
+## Returns
+
+`DataFrame`
+    One 2D projection of the retained contingency object.
+
+## When To Use It
+
+Use `to_frame(...)` when you want one explicit tabular projection, either because:
+
+- the retained object is already 2D
+- flattening the leftover dimensions into columns is acceptable
+- you want a conventional crosstab-style `DataFrame` result
+
 ## Examples
 
 Example 1. Default 2D render from a two-way table.
@@ -127,3 +162,15 @@ std::cout << out;
 -------------
 [2 cs x 2 feat]
 ```
+
+## Notes
+
+- The row side and explicit column side cannot reuse the same dimension.
+- Duplicate row dimensions are rejected.
+- Duplicate column dimensions are rejected.
+- Any retained dimensions left unassigned are appended to the column side in retained
+  dimension order.
+- `totals` changes the render only; it does not add a synthetic retained dimension to
+  the `ContingencyTable`.
+- If the current table is in `share()` or `condition(...)` space, the implicit scalar
+  value column is named `share`; otherwise it is named `freq`.

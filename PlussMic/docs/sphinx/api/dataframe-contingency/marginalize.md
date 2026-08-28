@@ -18,6 +18,26 @@ ContingencyTable::marginalize(pluss::msharp::RangeView::Of<std::string_view> dim
 Sums the requested dimensions out of the retained table and removes them from
 the object.
 
+This is the retained-object equivalent of moving from a joint distribution to a
+lower-dimensional marginal distribution.
+
+## Parameters
+
+**dim / dims**
+
+One or more retained dimensions to sum away.
+
+## Returns
+
+`ContingencyTable`
+    A new retained table with the requested dimensions removed and their counts summed
+    into the remaining cells.
+
+## When To Use It
+
+Use `marginalize(...)` when one or more retained dimensions are no longer analytically
+important and should be collapsed out before rendering or normalization.
+
 ## Examples
 
 Example 1. Sum `weekend` out of a three-way table to recover the ordinary
@@ -93,3 +113,14 @@ std::cout << out;
 -------------
 [2 cs x 2 feat]
 ```
+
+## Notes
+
+- `marginalize(...)` changes the object itself: `ndim()`, `shape()`, `dims()`,
+  `to_array()`, `to_frame()`, and `facet()` all see the reduced table afterward.
+- The requested dimensions are removed from remembered default row/column hints as
+  well, so later plain `to_frame()` calls adapt to the smaller object.
+- If a marginalized dimension had previously been named in `condition(...)`, it is also
+  removed from the conditioned-dimension set.
+- Duplicate dimension names are rejected.
+- Unknown dimension names are rejected.

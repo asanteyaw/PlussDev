@@ -189,7 +189,7 @@ Only the selected element receives gradient.
 - The overload must match the source rank exactly.
 - `pos()` does not flatten or reinterpret the source shape for you.
 
-## Teaching Summary
+## Summary
 
 Use `pos()` when the meaning of your code is "read one element at this exact
 coordinate."

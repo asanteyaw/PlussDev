@@ -133,7 +133,7 @@ auto indexed = DataFrame({
     {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
     {"year", Thread(pluss::make_series({2023.0, 2024.0, 2023.0, 2024.0}))},
     {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
-}).set_label({"region", "year"});
+}).label().set({"region", "year"});
 
 auto out = indexed.group()
                   .by(DataFrame::LabelGroup{.label = "region"})
@@ -155,12 +155,21 @@ std::cout << out;
 [2 cs x 2 feat]
 ```
 
-`set_label({"region", "year"})` moves those two ordinary columns onto the case axis
+`label().set({"region", "year"})` moves those two ordinary columns onto the case axis
 as a two-level case label. `LabelGroup{.label = "region"}` then groups by only the
 `region` level of that composite label, ignoring `year` entirely — so both `North`
 rows (from 2023 and 2024) collapse into one group, and likewise for `South`. This is
 useful when the grouping identity already lives on the case axis and you do not want
 to materialize it as ordinary columns first.
+
+## Failure Modes
+
+- empty feature-key list -> validation error
+- duplicate feature key names -> validation error
+- unknown feature key names -> validation error at grouped execution time
+- `LabelGroup` with neither `label` nor `names` -> validation error
+- `LabelGroup` with both `label` and `names` -> validation error
+- `LabelGroup` on a frame with no case labels -> validation error
 
 ## Notes
 

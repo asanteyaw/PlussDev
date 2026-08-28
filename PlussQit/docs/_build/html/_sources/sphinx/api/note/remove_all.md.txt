@@ -66,7 +66,7 @@ Example 2. Normalize the result afterward when deletion leaves boundary noise.
 auto note = pluss::make_note({"##alpha##", "##beta"});
 auto cleaned = note.remove_all("#");
 auto normalized = cleaned.strip();
-std::cout << "remove_all_strip:\n" << pluss::print_note(normalized) << "\n";
+std::cout << "remove_all_strip:\n" << pluss::note::print(normalized) << "\n";
 ```
 
 ### Output

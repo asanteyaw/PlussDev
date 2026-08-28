@@ -68,7 +68,7 @@ parameters live on the terminal method you call next:
 - NaN-handling choices
 - and so on
 
-So the teaching rule is: `stat` chooses the family; the terminal method chooses
+So the practical rule is: `stat` chooses the family; the terminal method chooses
 the computation.
 
 ## Returns

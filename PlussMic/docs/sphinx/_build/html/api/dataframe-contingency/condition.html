@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -53,6 +53,37 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Turns the retained count table into a conditional-share table with respect to
 the supplied dimensions.</p>
+<p>More precisely: the supplied dimensions are the dimensions you want the result to sum
+to <code class="docutils literal notranslate"><span class="pre">1</span></code> within. Every other retained dimension is summed out of the denominator during
+normalization, but remains available for rendering.</p>
+<p>That makes <code class="docutils literal notranslate"><span class="pre">condition(...)</span></code> the targeted normalization surface:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">share()</span></code> -&gt; divide by the grand total of the current retained table</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">condition({&quot;city&quot;})</span></code> -&gt; divide within each <code class="docutils literal notranslate"><span class="pre">city</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">condition({&quot;city&quot;,</span> <span class="pre">&quot;weekend&quot;})</span></code> -&gt; divide within each <code class="docutils literal notranslate"><span class="pre">(city,</span> <span class="pre">weekend)</span></code> cell family</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>dim / dims</strong></p>
+<p>One or more retained dimension names already present on the <code class="docutils literal notranslate"><span class="pre">ContingencyTable</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ContingencyTable</span></code>
+A new retained table with the same dimensions and levels, but with conditional
+shares materialized at render/export time instead of raw counts.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">condition(...)</span></code> when the question is not “what share of the whole table is this?”
+but rather “what share within this parent slice is this?”</p>
+<p>Typical interpretations:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">condition({&quot;city&quot;})</span></code> -&gt; channel mix within each city</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">condition({&quot;channel&quot;})</span></code> -&gt; city composition within each channel</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">condition({&quot;city&quot;,</span> <span class="pre">&quot;weekend&quot;})</span></code> -&gt; channel mix within each city/weekend slice</p></li>
+</ul>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -128,6 +159,21 @@ rather than the original whole table.</p>
 </pre></div>
 </div>
 </section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">condition(...)</span></code> does not remove dimensions. It only changes how values are
+normalized.</p></li>
+<li><p>Conditioning is applied to the <strong>current retained table</strong>. If you slice or
+marginalize first, the conditional shares are computed on that transformed object,
+not on the original unsliced contingency.</p></li>
+<li><p>Duplicate dimension names are rejected.</p></li>
+<li><p>Unknown dimension names are rejected.</p></li>
+<li><p>Zero-denominator slices render as <code class="docutils literal notranslate"><span class="pre">0</span></code> rather than producing <code class="docutils literal notranslate"><span class="pre">NaN</span></code> cells. That is why
+city <code class="docutils literal notranslate"><span class="pre">A</span></code> above shows <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">0</span></code> in the sliced weekend-only example instead of undefined
+values.</p></li>
+</ul>
 </section>
 </section>
 

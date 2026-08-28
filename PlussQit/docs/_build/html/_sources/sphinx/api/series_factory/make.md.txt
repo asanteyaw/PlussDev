@@ -229,8 +229,8 @@ data=[[1, 2],
     <span class="label">Previous</span>
     <span class="title">linspace</span>
   </a>
-  <a class="next-link" href="ones.html">
+  <a class="next-link" href="print.html">
     <span class="label">Next</span>
-    <span class="title">ones</span>
+    <span class="title">print</span>
   </a>
 </div>

@@ -179,7 +179,7 @@ broadcast: incompatible shapes
 - The result dtype is boolean, even when both inputs were numeric.
 - Comparison uses the normal broadcast rules. Incompatible shapes throw.
 
-## Teaching Summary
+## Summary
 
 Use `eq()` when you want an exact-match mask, not when you want a reduction and
 not when you want approximate numeric closeness. The core mental model is

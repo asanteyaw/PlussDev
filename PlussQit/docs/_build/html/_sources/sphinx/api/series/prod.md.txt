@@ -182,7 +182,7 @@ That is current behavior, not a typo in the example.
   multiplicative rather than additive.
 - A `dim` outside the valid axis range fails through the shared reduction path.
 
-## Teaching Summary
+## Summary
 
 Use `prod()` when multiplication itself is the statistic you need:
 

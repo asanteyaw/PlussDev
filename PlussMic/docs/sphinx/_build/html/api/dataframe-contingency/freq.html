@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=d2a74cb6" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
@@ -54,6 +54,17 @@
 share/conditioning state and keeps the same retained dimensions, levels, and
 default render hints.</p>
 </section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ContingencyTable</span></code>
+A new retained table whose values are raw counts again.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">freq()</span></code> when you have already moved into <code class="docutils literal notranslate"><span class="pre">share()</span></code> or <code class="docutils literal notranslate"><span class="pre">condition(...)</span></code> space and
+want to render or export the original count interpretation again without rebuilding the
+contingency object from the source frame.</p>
+</section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Convert a global-share table back to raw counts before rendering.</p>
@@ -82,6 +93,16 @@ default render hints.</p>
 [2 cs x 3 feat]
 </pre></div>
 </div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">freq()</span></code> clears both global-share and conditional-share state.</p></li>
+<li><p>It does not change dimensions, levels, default row/column hints, or render options.</p></li>
+<li><p>Because the underlying count tensor was already retained, <code class="docutils literal notranslate"><span class="pre">freq()</span></code> is a cheap state
+switch, not a recomputation.</p></li>
+</ul>
 <p>Example 2. <code class="docutils literal notranslate"><span class="pre">freq()</span></code> also clears conditional normalization.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">contingency</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;channel&quot;</span><span class="p">)</span>
 <span class="w">             </span><span class="p">.</span><span class="n">condition</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">})</span>
@@ -90,7 +111,6 @@ default render hints.</p>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
-</section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================

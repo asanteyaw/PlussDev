@@ -19,6 +19,17 @@ Returns the same retained table in raw frequency space.
 share/conditioning state and keeps the same retained dimensions, levels, and
 default render hints.
 
+## Returns
+
+`ContingencyTable`
+    A new retained table whose values are raw counts again.
+
+## When To Use It
+
+Use `freq()` when you have already moved into `share()` or `condition(...)` space and
+want to render or export the original count interpretation again without rebuilding the
+contingency object from the source frame.
+
 ## Examples
 
 Example 1. Convert a global-share table back to raw counts before rendering.
@@ -49,6 +60,13 @@ std::cout << out;
 -----------------------
 [2 cs x 3 feat]
 ```
+
+## Notes
+
+- `freq()` clears both global-share and conditional-share state.
+- It does not change dimensions, levels, default row/column hints, or render options.
+- Because the underlying count tensor was already retained, `freq()` is a cheap state
+  switch, not a recomputation.
 
 Example 2. `freq()` also clears conditional normalization.
 

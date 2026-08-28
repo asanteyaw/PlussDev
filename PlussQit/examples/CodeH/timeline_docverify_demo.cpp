@@ -19,7 +19,7 @@ void show_series(std::string_view label, const pluss::Series& s) {
 
 void show_note(std::string_view label, const pluss::Note& n) {
   std::cout << "\n== " << label << " ==\n";
-  std::cout << pluss::print_note(n) << "\n";
+  std::cout << pluss::note::print(n) << "\n";
 }
 
 void show_i64s(std::string_view label, const std::vector<std::int64_t>& xs) {

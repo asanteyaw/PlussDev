@@ -78,7 +78,7 @@ For differentiable dtypes:
 - the gradient with respect to `rhs` is `-alpha` on the scaled overload, or
   `-1` on the plain overload
 
-This makes `sub()` a useful method for teaching sign flow in reverse mode.
+This makes `sub()` a useful method for showing sign flow in reverse mode.
 
 ## Examples
 
@@ -201,7 +201,7 @@ broadcast: incompatible shapes
 - Scalar subtraction is verified directly. For scaled scalar subtraction, the
   stable public pattern is a scalar-shaped `Series` rhs.
 
-## Teaching Summary
+## Summary
 
 `sub()` is best understood as "subtract a broadcastable, optionally pre-scaled
 RHS." Once that mental model is stable, the plain overload, the broadcast case,

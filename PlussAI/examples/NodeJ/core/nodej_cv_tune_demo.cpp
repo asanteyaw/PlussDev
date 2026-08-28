@@ -23,7 +23,7 @@ bool require_ok(const StatusOr<T>& out, const std::string& label) {
   return false;
 }
 
-void print_series(const std::string& label, const Series& x) {
+void print_metric_values(const std::string& label, const Series& x) {
   const auto v = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
   std::cout << label << ":";
   for (double value : v) std::cout << " " << value;
@@ -153,13 +153,13 @@ int main() {
 
   auto linear_cv_or = cross_assess(linear_logistic_spec(), batch, split, train, assess);
   if (!require_ok(linear_cv_or, "cross_assess(linear)")) return 1;
-  print_series("linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", linear_cv_or.value().mean_metrics);
-  print_series("linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", linear_cv_or.value().std_metrics);
+  print_metric_values("linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", linear_cv_or.value().mean_metrics);
+  print_metric_values("linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", linear_cv_or.value().std_metrics);
 
   auto kernel_cv_or = cross_assess(rbf_kernel_spec(), batch, split, train, assess);
   if (!require_ok(kernel_cv_or, "cross_assess(kernel)")) return 1;
-  print_series("kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", kernel_cv_or.value().mean_metrics);
-  print_series("kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", kernel_cv_or.value().std_metrics);
+  print_metric_values("kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", kernel_cv_or.value().mean_metrics);
+  print_metric_values("kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", kernel_cv_or.value().std_metrics);
 
   const std::vector<ModelSpec> candidates{linear_logistic_spec(), rbf_kernel_spec()};
   AssessOptions tune_assess{};

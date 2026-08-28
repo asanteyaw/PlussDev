@@ -277,7 +277,7 @@ delegates to `extract()`.
   the routing.
 - Negative integer indices are legal and count from the end.
 
-## Teaching Summary
+## Summary
 
 Use `index()` when advanced index tensors are the main story.
 

@@ -44,7 +44,57 @@
 <ul class="simple">
 <li><p>Use the left sidebar to open one method page at a time.</p></li>
 <li><p>Each method page contains its own signatures, parameter details, notes, verified outputs, and working previous/next navigation.</p></li>
-<li><p>This landing page stays intentionally short so the content panel is not one giant scroll of every method.</p></li>
+<li><p>The sort surface is easiest to learn as a plan-building workflow.</p></li>
+</ul>
+</section>
+<section id="the-surface-in-one-sentence">
+<h2>The Surface In One Sentence<a class="headerlink" href="#the-surface-in-one-sentence" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">sort()</span></code> creates a reusable ordering plan, <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">then(...)</span></code> define the tuple
+key, <code class="docutils literal notranslate"><span class="pre">within(...)</span></code> optionally partitions the frame first, and a terminal finally
+materializes the permutation or the sorted frame.</p>
+</section>
+<section id="learn-it-in-this-order">
+<h2>Learn It In This Order<a class="headerlink" href="#learn-it-in-this-order" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="api/dataframe/sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sort</span></code></span></a>
+Learn builder defaults and when to use the builder instead of direct
+<a class="reference internal" href="api/dataframe/arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arrange()</span></code></span></a>.</p></li>
+<li><p><a class="reference internal" href="api/dataframe-sort/by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by()</span></code></span></a> and <a class="reference internal" href="api/dataframe-sort/then.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">then()</span></code></span></a>
+Learn tuple-key ordering and plan growth.</p></li>
+<li><p><a class="reference internal" href="api/dataframe-sort/asc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">asc()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/desc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">desc()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/nulls_first.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nulls_first()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/nulls_last.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nulls_last()</span></code></span></a>
+Learn per-key refinement through the active-key model.</p></li>
+<li><p><a class="reference internal" href="api/dataframe-sort/within.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">within()</span></code></span></a>
+Learn partitioned sorting, where rows move only inside groups.</p></li>
+<li><p><a class="reference internal" href="api/dataframe-sort/order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">order()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/yield.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">yield()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>, <a class="reference internal" href="api/dataframe-sort/tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tail()</span></code></span></a>
+Learn how the same planned order can be exported or materialized.</p></li>
+</ol>
+</section>
+<section id="the-key-distinctions">
+<h2>The Key Distinctions<a class="headerlink" href="#the-key-distinctions" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Multi-key sorting is lexicographic / tuple-based:
+first key primary, later keys only break ties.</p></li>
+<li><p>Builder defaults (<code class="docutils literal notranslate"><span class="pre">sort(false,</span> <span class="pre">false)</span></code>) apply uniformly to plain key-name overloads.</p></li>
+<li><p>Per-key control requires either <code class="docutils literal notranslate"><span class="pre">ArrangeSpec</span></code> or active-key mutation after each key.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">within(...)</span></code> does not add another sort key. It partitions the frame first, then the
+value-key plan runs independently inside each partition.</p></li>
+<li><p>Validation is lazy. Unknown features typically fail only when a terminal runs.</p></li>
+</ul>
+</section>
+<section id="choosing-the-right-terminal">
+<h2>Choosing The Right Terminal<a class="headerlink" href="#choosing-the-right-terminal" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">yield()</span></code> when:</p>
+<ul class="simple">
+<li><p>you want the sorted <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> directly</p></li>
+</ul>
+<p>Use <code class="docutils literal notranslate"><span class="pre">order()</span></code> when:</p>
+<ul class="simple">
+<li><p>several aligned objects need the exact same permutation</p></li>
+</ul>
+<p>Use <code class="docutils literal notranslate"><span class="pre">head(n)</span></code> / <code class="docutils literal notranslate"><span class="pre">tail(n)</span></code> when:</p>
+<ul class="simple">
+<li><p>only the top-ranked or bottom-ranked rows matter</p></li>
+<li><p>you do not want to materialize the full sorted frame first</p></li>
 </ul>
 </section>
 <section id="method-pages">

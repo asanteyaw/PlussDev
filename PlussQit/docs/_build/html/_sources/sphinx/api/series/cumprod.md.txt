@@ -207,7 +207,7 @@ has_dx=false
 - Choosing the wrong axis changes the meaning completely.
 - A `dim` outside the valid axis range fails.
 
-## Teaching Summary
+## Summary
 
 Use `cumprod()` when you need every multiplicative prefix, not just the final
 product:

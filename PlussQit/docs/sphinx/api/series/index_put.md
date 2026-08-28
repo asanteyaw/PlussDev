@@ -82,7 +82,7 @@ Accepted cardinality depends on the indexed region:
 - one trailing block reused across every selected head
 - a fully expanded value block when the advanced indexing shape demands it
 
-The important teaching point is that `index_put()` is more flexible than a
+The important point is that `index_put()` is more flexible than a
 simple "scalar or exact full-shape match" rule.
 
 **accumulate** (`bool`)
@@ -293,7 +293,7 @@ data=[0, 90, 2, 70, 4]
   strict about `int64`, while this general advanced-index route accepts at
   least the verified `int32` case above.
 
-## Teaching Summary
+## Summary
 
 Use `index_put()` when your write is best described by explicit index tensors
 but you still want value semantics. The overload family can broadcast a scalar,

@@ -6,11 +6,78 @@ This page documents the retained `ContingencyTable` object returned by `DataFram
 
 - Use the left sidebar to open one method page at a time.
 - Each method page contains its own signatures, parameter details, notes, verified outputs, and working previous/next navigation.
-- This landing page stays intentionally short so the content panel is not one giant scroll of every method.
+- The object is meant to be learned as a **workflow**, not as a bag of unrelated
+  methods.
+
+## The Object In One Sentence
+
+`ContingencyTable` is a retained N-dimensional joint frequency/distribution object that
+you can inspect, transform, and only then render to 2D.
+
+## Learn It In This Order
+
+If you are new to the surface, this is the right study sequence:
+
+1. [`DataFrame::contingency`](api/dataframe/contingency.md)
+   Learn how the retained object is constructed and what overload remembers what.
+2. [`ndim`](api/dataframe-contingency/ndim.md), [`shape`](api/dataframe-contingency/shape.md), [`dims`](api/dataframe-contingency/dims.md)
+   Learn how to inspect the retained tensor itself.
+3. [`freq`](api/dataframe-contingency/freq.md), [`share`](api/dataframe-contingency/share.md), [`condition`](api/dataframe-contingency/condition.md)
+   Learn the three value spaces: counts, global shares, and conditional shares.
+4. [`slice`](api/dataframe-contingency/slice.md), [`marginalize`](api/dataframe-contingency/marginalize.md)
+   Learn how to fix dimensions or sum them away before rendering.
+5. [`to_frame`](api/dataframe-contingency/to_frame.md), [`facet`](api/dataframe-contingency/facet.md), [`to_array`](api/dataframe-contingency/to_array.md)
+   Learn how to project the retained object into a 2D table, several 2D tables, or a
+   dense tensor payload.
+
+## The Core Distinctions
+
+- `share()` normalizes by the grand total of the **current retained table**.
+- `condition({...})` normalizes within the supplied retained dimensions.
+- `slice(...)` fixes concrete levels and drops those dimensions from the object.
+- `marginalize(...)` sums dimensions out and drops them from the object.
+- `to_frame(...)` flattens every remaining dimension not placed on rows onto the
+  column side.
+- `facet(...)` keeps those remaining dimensions as an atlas/facet axis instead of
+  flattening them into one wide frame.
+
+## Choosing The Right Render
+
+Use `to_frame(...)` when:
+
+- you want one ordinary `DataFrame`
+- a wide flattened column layout is acceptable
+- you want totals inline in a single rendered table
+
+Use `facet(...)` when:
+
+- flattening the remaining dimensions would make the table too wide
+- you want one 2D table per leftover level combination
+- you want to preserve visual separation between slices instead of encoding them into
+  column names
+
+Use `to_array()` when:
+
+- you want the dense N-dimensional payload itself
+- you are feeding the result into numeric/tensor code
+- you care about tensor rank and axis order, not tabular rendering
+
+## Performance And Limits
+
+This object is efficient when the crossed dimensions are genuinely categorical and the
+cardinality product is manageable. It is not sparse. If you cross a large number of
+high-cardinality dimensions, the dense tensor can become too large to materialize.
+
+That is the main practical rule:
+
+- small-to-moderate categorical cardinality -> excellent fit
+- raw identifiers or huge combinatorial products -> reduce, bucket, or use a different
+  surface first
 
 ## Method Pages
 
-The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
+The sidebar lists methods alphabetically. You can also use the search box to jump
+directly to a method name.
 
 ```{toctree}
 :hidden:

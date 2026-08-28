@@ -24,7 +24,7 @@ That makes it ideal for:
 - explicit feature axis insertion
 - making later axis-oriented code line up with the mental model you want
 
-The central teaching point is simple:
+The central point is simple:
 
 - `unsqueeze()` adds structure
 - it does not add data

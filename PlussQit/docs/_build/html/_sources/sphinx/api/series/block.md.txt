@@ -230,7 +230,7 @@ Only the selected `2 x 3` rectangle receives gradient.
 - The result usually inherits parent stride and is therefore often
   non-contiguous.
 
-## Teaching Summary
+## Summary
 
 Use `block()` when your mental model is genuinely "a rectangle inside a
 matrix."
