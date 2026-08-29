@@ -68,6 +68,7 @@
 #include "pluss/ai/lymph/online.h"
 #include "pluss/ai/lymph/selection.h"
 #include "pluss/ai/lymph/model.h"
+#include "pluss/ai/lymph/options.h"
 #include "pluss/ai/lymph/reports.h"
 #include "pluss/ai/lymph/builder.h"
 #include "pluss/ai/lymph/validate.h"

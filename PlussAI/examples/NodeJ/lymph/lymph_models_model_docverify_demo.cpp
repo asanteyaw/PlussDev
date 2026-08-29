@@ -6,7 +6,6 @@
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
-  using pluss::Series;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
 
@@ -21,16 +20,16 @@ int main() {
       {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
-  lymph::LinearFamilyOptions logistic_options{};
+  lymph::options::Linear logistic_options{};
   logistic_options.regularization = lymph::RegularizationKind::L2;
   logistic_options.regularization_strength = 1e-3;
   logistic_options.fit_intercept = true;
 
   lymph::models::Model model = lymph::models::linear::logistic_regression(logistic_options);
   std::cout << "== initial_model ==\n";
-  std::cout << "trained=" << std::boolalpha << model.trained()
-            << " stage_count=" << model.stage_count()
-            << " task_kind=" << static_cast<int>(model.task_kind()) << "\n";
+  std::cout << "trained = " << std::boolalpha << model.trained()
+            << ", stage_count = " << model.stage_count()
+            << ", task_kind = " << static_cast<int>(model.task_kind()) << "\n\n";
 
   lymph::models::ModelPrep prep = model.prepare();
   const lymph::prep::Route categorical = prep.names({"region"});
@@ -43,34 +42,37 @@ int main() {
           .include_unknown_bucket = true,
       });
   std::cout << "== after_prepare ==\n";
-  std::cout << "trained=" << model.trained()
-            << " stage_count=" << model.stage_count() << "\n";
+  std::cout << "trained = " << model.trained()
+            << ", stage_count = " << model.stage_count() << "\n\n";
 
-  lymph::DataFrameBatchOptions data_options{};
+  lymph::options::DFBatch data_options{};
   data_options.feature_names = {"income", "balance", "late", "region"};
   data_options.label_feature = "default";
   data_options.note_policy = lymph::DataNotePolicy::Factorize;
 
-  lymph::TrainOptions train_options{};
+  lymph::options::Train train_options{};
   train_options.max_iterations = 600;
   train_options.tolerance = 1e-8;
   train_options.random = {.seed = 20260825ULL, .deterministic = true};
 
   model.learn_(raw, data_options, train_options);
-  const Series predicted = model.infer(raw, data_options);
-  const lymph::MetricReport report = model.assess(
+  const pluss::Series predicted = model.infer(raw, data_options);
+  const lymph::reports::Metric report = model.assess(
       raw,
       data_options,
-      lymph::AssessOptions{
+      lymph::options::Assess{
           .metrics = {lymph::MetricKind::Accuracy, lymph::MetricKind::F1},
       });
+  const DataFrame prediction_frame({
+      {"predicted", Thread(predicted)},
+  });
 
   std::cout << "== learned_model ==\n";
-  std::cout << "trained=" << model.trained()
-            << " stage_count=" << model.stage_count() << "\n";
-  std::cout << "predictions=" << predicted << "\n";
-  std::cout << "accuracy=" << report.accuracy
-            << " f1=" << report.f1 << "\n";
+  std::cout << "trained = " << model.trained()
+            << ", stage_count = " << model.stage_count() << "\n";
+  std::cout << prediction_frame << "\n";
+  std::cout << "accuracy = " << report.accuracy.item<double>()
+            << ", f1 = " << report.f1.item<double>() << "\n\n";
 
   lymph::models::Model template_model = lymph::models::linear::logistic_regression(logistic_options);
   lymph::models::ModelPrep template_prep = template_model.prepare();
@@ -86,10 +88,10 @@ int main() {
   const lymph::models::Model learned_copy = template_model.learn(raw, data_options, train_options);
 
   std::cout << "== learned_copy ==\n";
-  std::cout << "original_trained=" << template_model.trained()
-            << " original_stage_count=" << template_model.stage_count()
-            << " copy_trained=" << learned_copy.trained()
-            << " copy_stage_count=" << learned_copy.stage_count() << "\n";
+  std::cout << "original_trained = " << template_model.trained()
+            << ", original_stage_count = " << template_model.stage_count()
+            << ", copy_trained = " << learned_copy.trained()
+            << ", copy_stage_count = " << learned_copy.stage_count() << "\n";
 
   return 0;
 }

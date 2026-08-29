@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=da1ea0a4"></script>
+    <script src="../_static/api_nav.js?v=33944c6a"></script>
     <script src="../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -60,18 +60,20 @@ naming-and-organization note.</p></li>
 </section>
 <section id="coverage">
 <h2>Coverage<a class="headerlink" href="#coverage" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> has roughly 350 distinct method names; this reference currently covers a
-working subset, prioritized by how load-bearing each method is (indexing/shape,
-factories, then the autograd-sensitive family) rather than alphabetically. Every
-page here is real, hand-verified prose — nothing below is a mechanically generated
-stub.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> exposes a large public method surface, and this reference currently
+covers a working subset, prioritized by how load-bearing each family is
+(indexing/shape, factories, then the autograd-sensitive family) rather than by
+code generation order. Every page here is real, hand-verified prose — nothing
+below is a mechanically generated stub.</p>
 <p>The current handwritten shape and slice/indexing cluster now covers:</p>
 <ul class="simple">
-<li><p>unary math core: <code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">neg</span></code>, <code class="docutils literal notranslate"><span class="pre">sign</span></code>, <code class="docutils literal notranslate"><span class="pre">exp</span></code>, <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">sqrt</span></code></p></li>
+<li><p>unary math core: <code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">neg</span></code>, <code class="docutils literal notranslate"><span class="pre">sign</span></code>, <code class="docutils literal notranslate"><span class="pre">exp</span></code>, <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">sqrt</span></code>, <code class="docutils literal notranslate"><span class="pre">sin</span></code>, <code class="docutils literal notranslate"><span class="pre">cos</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tan</span></code>, <code class="docutils literal notranslate"><span class="pre">asin</span></code>, <code class="docutils literal notranslate"><span class="pre">acos</span></code>, <code class="docutils literal notranslate"><span class="pre">atan</span></code>, <code class="docutils literal notranslate"><span class="pre">sinh</span></code>, <code class="docutils literal notranslate"><span class="pre">cosh</span></code>, <code class="docutils literal notranslate"><span class="pre">tanh</span></code></p></li>
 <li><p>elementwise arithmetic core: <code class="docutils literal notranslate"><span class="pre">add</span></code>, <code class="docutils literal notranslate"><span class="pre">sub</span></code>, <code class="docutils literal notranslate"><span class="pre">mul</span></code>, <code class="docutils literal notranslate"><span class="pre">div</span></code>, <code class="docutils literal notranslate"><span class="pre">pow</span></code></p></li>
 <li><p>elementwise comparison core: <code class="docutils literal notranslate"><span class="pre">eq</span></code>, <code class="docutils literal notranslate"><span class="pre">ne</span></code>, <code class="docutils literal notranslate"><span class="pre">lt</span></code>, <code class="docutils literal notranslate"><span class="pre">le</span></code>, <code class="docutils literal notranslate"><span class="pre">gt</span></code>, <code class="docutils literal notranslate"><span class="pre">ge</span></code></p></li>
 <li><p>selection/counting core: <code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">nonzero</span></code>, <code class="docutils literal notranslate"><span class="pre">unique</span></code>, <code class="docutils literal notranslate"><span class="pre">isin</span></code>, <code class="docutils literal notranslate"><span class="pre">bincount</span></code>,
 <code class="docutils literal notranslate"><span class="pre">histc</span></code></p></li>
+<li><p>number theory core: <code class="docutils literal notranslate"><span class="pre">factor</span></code>, <code class="docutils literal notranslate"><span class="pre">is_prime</span></code>, <code class="docutils literal notranslate"><span class="pre">prime</span></code></p></li>
 <li><p>flat set logic core: <code class="docutils literal notranslate"><span class="pre">union1d</span></code>, <code class="docutils literal notranslate"><span class="pre">unionize</span></code>, <code class="docutils literal notranslate"><span class="pre">intersect1d</span></code>, <code class="docutils literal notranslate"><span class="pre">intersection</span></code>,
 <code class="docutils literal notranslate"><span class="pre">setdiff1d</span></code>, <code class="docutils literal notranslate"><span class="pre">setxor1d</span></code>, <code class="docutils literal notranslate"><span class="pre">comp</span></code>, <code class="docutils literal notranslate"><span class="pre">cartprod</span></code></p></li>
 <li><p>axis-wise set logic core: <code class="docutils literal notranslate"><span class="pre">unionize_along</span></code>, <code class="docutils literal notranslate"><span class="pre">intersection_along</span></code>,
@@ -88,6 +90,8 @@ stub.</p>
 <li><p>elementwise comparison/bounds helpers and a few load-bearing utility ops</p></li>
 <li><p>reduction and scan core: <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">prod</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">argmax</span></code>,
 <code class="docutils literal notranslate"><span class="pre">argmin</span></code>, <code class="docutils literal notranslate"><span class="pre">cumsum</span></code>, <code class="docutils literal notranslate"><span class="pre">cumprod</span></code></p></li>
+<li><p>autograd root controls: <code class="docutils literal notranslate"><span class="pre">tracks_slope</span></code>, <code class="docutils literal notranslate"><span class="pre">tracks_slope_</span></code>, <code class="docutils literal notranslate"><span class="pre">reverse</span></code>,
+<code class="docutils literal notranslate"><span class="pre">has_sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">clear_sensitivity</span></code></p></li>
 <li><p>accessors: <code class="docutils literal notranslate"><span class="pre">stat</span></code></p></li>
 </ul>
 <p>The current handwritten <code class="docutils literal notranslate"><span class="pre">SeriesStatAccessor</span></code> subset covers:</p>

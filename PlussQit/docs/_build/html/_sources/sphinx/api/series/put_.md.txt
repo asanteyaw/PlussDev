@@ -273,9 +273,9 @@ selector-aware, graduate to [`index_put_()`](index_put_.md) or
 - [`Series::extract_put_`](extract_put_.md): full selector-language writes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="take.html">
+  <a class="prev-link" href="prod.html">
     <span class="label">Previous</span>
-    <span class="title">take</span>
+    <span class="title">prod</span>
   </a>
   <a class="next-link" href="clamp_max.html">
     <span class="label">Next</span>

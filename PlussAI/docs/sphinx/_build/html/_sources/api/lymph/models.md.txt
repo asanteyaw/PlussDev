@@ -13,6 +13,8 @@ That ownership boundary matters because Lymph is intentionally split by
 concern:
 
 - `models` owns trainable estimator handles and candidate-model workspaces
+- `options` owns the shared configuration bags those objects consume
+- `reports` owns the richer result objects those workflows emit
 - `prep` owns reusable transformation objects, stages, routes, and feature
   remapping contracts
 - `selection` owns evidence policy: cross-validation, holdout, time-aware
@@ -73,7 +75,7 @@ workspace before validation or search.
 ## Subfamilies
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 3
 
 models/Model
 builder <models/builder>

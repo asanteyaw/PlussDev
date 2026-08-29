@@ -240,9 +240,9 @@ explicit `alpha` you supply.
 - [`Series::sum`](sum.md): reduction after arithmetic composition.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../series_api_reference.html">
+  <a class="prev-link" href="acos.html">
     <span class="label">Previous</span>
-    <span class="title">Series API Reference</span>
+    <span class="title">acos</span>
   </a>
   <a class="next-link" href="all.html">
     <span class="label">Next</span>

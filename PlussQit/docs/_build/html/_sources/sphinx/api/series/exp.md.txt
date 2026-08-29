@@ -140,8 +140,8 @@ forward pass and the backward pass.
     <span class="label">Previous</span>
     <span class="title">eq</span>
   </a>
-  <a class="next-link" href="extract.html">
+  <a class="next-link" href="factor.html">
     <span class="label">Next</span>
-    <span class="title">extract</span>
+    <span class="title">factor</span>
   </a>
 </div>

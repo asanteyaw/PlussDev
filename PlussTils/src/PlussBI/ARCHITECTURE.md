@@ -615,20 +615,78 @@ For implementation tracking, PlussBI should be treated as a 9-phase program.
    introduced centrally.
 
 6. Richer query planner.
-   Grouping, windowing, reshape planning, and reusable derived-query flows are
-   expanded while staying inside one planner path.
+   Query-level derived table planning expands inside the same shared resolver.
+   This phase should make patterns like the following first-class:
+
+   ```cpp
+   auto risk = bar("risk_mix");
+   risk.query(
+       from("loans")
+           .group({"risk_band"})
+           .agg({
+               {"loan_count", "", pluss::table::GroupOp::Count},
+               {"principal_sum", "principal", pluss::table::GroupOp::Sum},
+           })
+           .arrange("loan_count", false))
+       .x("risk_band")
+       .y("loan_count");
+
+   auto principal = line("principal_curve");
+   principal.query(
+       from("loans")
+           .resample("opened_at", {"principal"}, "M",
+                     pluss::subsp::stats::ts::ResampleOp::Sum))
+       .x("opened_at")
+       .y("principal");
+
+   auto pivoted = table("principal_pivot");
+   pivoted.query(
+       from("loans")
+           .pivot({"segment"}, {"risk_band"}, {"principal"},
+                  pluss::table::GroupOp::Mean));
+   ```
+
+   The important rule is that BI still delegates grouping, pivoting, and
+   temporal aggregation into the existing `DataFrame` and time-series kernels
+   rather than growing a second compute engine.
 
 7. Richer visual surface.
-   Heatmap, scatter, table styling, and higher-order analytic views are added
-   without forking data-flow semantics.
+   The next visual tranche should add:
+   - scatter views
+   - heatmap views
+   - richer table presentation and cell styling
+   - higher-order analytic views such as distribution and pairwise summaries
+
+   The public shape should remain:
+
+   ```cpp
+   auto scatter_view = scatter("principal_vs_payment");
+   scatter_view.query(from("loans")).x("principal").y("payment");
+   board.view(scatter_view);
+   ```
 
 8. Export and serialization.
-   Native save/export plus browser-ready artifact packaging are added from the
-   same studio definition.
+   One studio definition should become persistable and exportable through:
+   - native snapshots
+   - packaged browser artifacts
+   - saved board/studio definitions
+   - restorable session state
+
+   Example target shape:
+
+   ```cpp
+   studio.save("credit.plussbi");
+   studio.export_html("credit_board");
+   studio.export_png("credit_board.png");
+   ```
 
 9. Hardening pass.
-   Broader tests, stricter guards, performance audits, and API tightening land
-   before the BI surface is treated as stable.
+   Before BI is treated as stable, the final pass should land:
+   - broader Catch2 coverage across planner, controls, visuals, and exports
+   - stricter `pluss::Error` guards on malformed bindings and invalid layouts
+   - performance audits on query reuse, derived-table caching, and redraw costs
+   - API tightening to remove any redundant public surfaces discovered in
+     phases 1 through 8
 
 ## Immediate Implementation Split
 

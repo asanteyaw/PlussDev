@@ -6,7 +6,6 @@
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
-  using pluss::Series;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
 
@@ -34,20 +33,23 @@ int main() {
       categorical);
 
   std::cout << "== append_before_learn ==\n";
-  std::cout << "trained=" << std::boolalpha << model.trained()
-            << " stage_count=" << model.stage_count() << "\n";
+  std::cout << "trained = " << std::boolalpha << model.trained()
+            << ", stage_count = " << model.stage_count() << "\n\n";
 
-  lymph::DataFrameBatchOptions data_options{};
+  lymph::options::DFBatch data_options{};
   data_options.label_feature = "y";
   data_options.note_policy = lymph::DataNotePolicy::Factorize;
 
   model.learn_(raw, data_options);
-  const Series predicted = model.infer(raw.drop({"y"}), data_options);
+  const pluss::Series predicted = model.infer(raw.drop({"y"}), data_options);
+  const DataFrame prediction_frame({
+      {"predicted", Thread(predicted)},
+  });
 
   std::cout << "== append_after_learn ==\n";
-  std::cout << "trained=" << model.trained()
-            << " stage_count=" << model.stage_count() << "\n";
-  std::cout << "predictions=" << predicted << "\n";
+  std::cout << "trained = " << model.trained()
+            << ", stage_count = " << model.stage_count() << "\n";
+  std::cout << prediction_frame << "\n";
 
   return 0;
 }

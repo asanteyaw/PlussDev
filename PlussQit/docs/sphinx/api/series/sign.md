@@ -118,8 +118,8 @@ summarize polarity without preserving scale.
     <span class="label">Previous</span>
     <span class="title">setxor_along</span>
   </a>
-  <a class="next-link" href="size.html">
+  <a class="next-link" href="sin.html">
     <span class="label">Next</span>
-    <span class="title">size</span>
+    <span class="title">sin</span>
   </a>
 </div>

@@ -178,8 +178,8 @@ the stacked output that it originally occupied.
     <span class="label">Previous</span>
     <span class="title">unite</span>
   </a>
-  <a class="next-link" href="slice.html">
+  <a class="next-link" href="pos.html">
     <span class="label">Next</span>
-    <span class="title">slice</span>
+    <span class="title">pos</span>
   </a>
 </div>

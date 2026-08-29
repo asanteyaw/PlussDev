@@ -347,6 +347,34 @@ plussai_lymph_models_builder_benchmark_docverify_demo/fast:
 .PHONY : plussai_lymph_models_builder_benchmark_docverify_demo/fast
 
 # Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/rule
+
+# Convenience name for target.
+plussai_lymph_models_builder_ops_docverify_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/rule
+.PHONY : plussai_lymph_models_builder_ops_docverify_demo
+
+# fast build rule for target.
+plussai_lymph_models_builder_ops_docverify_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/build
+.PHONY : plussai_lymph_models_builder_ops_docverify_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/rule
+
+# Convenience name for target.
+plussai_lymph_models_model_io_docverify_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/rule
+.PHONY : plussai_lymph_models_model_io_docverify_demo
+
+# fast build rule for target.
+plussai_lymph_models_model_io_docverify_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/build
+.PHONY : plussai_lymph_models_model_io_docverify_demo/fast
+
+# Convenience name for target.
 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_append_docverify_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_append_docverify_demo.dir/rule
 .PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_append_docverify_demo.dir/rule
@@ -716,6 +744,30 @@ lymph_models_builder_docverify_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_docverify_demo.dir/lymph_models_builder_docverify_demo.cpp.s
 .PHONY : lymph_models_builder_docverify_demo.cpp.s
 
+lymph_models_builder_ops_docverify_demo.o: lymph_models_builder_ops_docverify_demo.cpp.o
+.PHONY : lymph_models_builder_ops_docverify_demo.o
+
+# target to build an object file
+lymph_models_builder_ops_docverify_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/lymph_models_builder_ops_docverify_demo.cpp.o
+.PHONY : lymph_models_builder_ops_docverify_demo.cpp.o
+
+lymph_models_builder_ops_docverify_demo.i: lymph_models_builder_ops_docverify_demo.cpp.i
+.PHONY : lymph_models_builder_ops_docverify_demo.i
+
+# target to preprocess a source file
+lymph_models_builder_ops_docverify_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/lymph_models_builder_ops_docverify_demo.cpp.i
+.PHONY : lymph_models_builder_ops_docverify_demo.cpp.i
+
+lymph_models_builder_ops_docverify_demo.s: lymph_models_builder_ops_docverify_demo.cpp.s
+.PHONY : lymph_models_builder_ops_docverify_demo.s
+
+# target to generate assembly for a file
+lymph_models_builder_ops_docverify_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_builder_ops_docverify_demo.dir/lymph_models_builder_ops_docverify_demo.cpp.s
+.PHONY : lymph_models_builder_ops_docverify_demo.cpp.s
+
 lymph_models_model_append_docverify_demo.o: lymph_models_model_append_docverify_demo.cpp.o
 .PHONY : lymph_models_model_append_docverify_demo.o
 
@@ -763,6 +815,30 @@ lymph_models_model_docverify_demo.s: lymph_models_model_docverify_demo.cpp.s
 lymph_models_model_docverify_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_docverify_demo.dir/lymph_models_model_docverify_demo.cpp.s
 .PHONY : lymph_models_model_docverify_demo.cpp.s
+
+lymph_models_model_io_docverify_demo.o: lymph_models_model_io_docverify_demo.cpp.o
+.PHONY : lymph_models_model_io_docverify_demo.o
+
+# target to build an object file
+lymph_models_model_io_docverify_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/lymph_models_model_io_docverify_demo.cpp.o
+.PHONY : lymph_models_model_io_docverify_demo.cpp.o
+
+lymph_models_model_io_docverify_demo.i: lymph_models_model_io_docverify_demo.cpp.i
+.PHONY : lymph_models_model_io_docverify_demo.i
+
+# target to preprocess a source file
+lymph_models_model_io_docverify_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/lymph_models_model_io_docverify_demo.cpp.i
+.PHONY : lymph_models_model_io_docverify_demo.cpp.i
+
+lymph_models_model_io_docverify_demo.s: lymph_models_model_io_docverify_demo.cpp.s
+.PHONY : lymph_models_model_io_docverify_demo.s
+
+# target to generate assembly for a file
+lymph_models_model_io_docverify_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_models_model_io_docverify_demo.dir/lymph_models_model_io_docverify_demo.cpp.s
+.PHONY : lymph_models_model_io_docverify_demo.cpp.s
 
 lymph_online_demo.o: lymph_online_demo.cpp.o
 .PHONY : lymph_online_demo.o
@@ -1052,8 +1128,10 @@ help:
 	@echo "... plussai_lymph_model_prep_io_docverify_demo"
 	@echo "... plussai_lymph_models_builder_benchmark_docverify_demo"
 	@echo "... plussai_lymph_models_builder_docverify_demo"
+	@echo "... plussai_lymph_models_builder_ops_docverify_demo"
 	@echo "... plussai_lymph_models_model_append_docverify_demo"
 	@echo "... plussai_lymph_models_model_docverify_demo"
+	@echo "... plussai_lymph_models_model_io_docverify_demo"
 	@echo "... plussai_lymph_online_demo"
 	@echo "... plussai_lymph_policy_docverify_demo"
 	@echo "... plussai_lymph_prep_column_router_docverify_demo"
@@ -1092,12 +1170,18 @@ help:
 	@echo "... lymph_models_builder_docverify_demo.o"
 	@echo "... lymph_models_builder_docverify_demo.i"
 	@echo "... lymph_models_builder_docverify_demo.s"
+	@echo "... lymph_models_builder_ops_docverify_demo.o"
+	@echo "... lymph_models_builder_ops_docverify_demo.i"
+	@echo "... lymph_models_builder_ops_docverify_demo.s"
 	@echo "... lymph_models_model_append_docverify_demo.o"
 	@echo "... lymph_models_model_append_docverify_demo.i"
 	@echo "... lymph_models_model_append_docverify_demo.s"
 	@echo "... lymph_models_model_docverify_demo.o"
 	@echo "... lymph_models_model_docverify_demo.i"
 	@echo "... lymph_models_model_docverify_demo.s"
+	@echo "... lymph_models_model_io_docverify_demo.o"
+	@echo "... lymph_models_model_io_docverify_demo.i"
+	@echo "... lymph_models_model_io_docverify_demo.s"
 	@echo "... lymph_online_demo.o"
 	@echo "... lymph_online_demo.i"
 	@echo "... lymph_online_demo.s"

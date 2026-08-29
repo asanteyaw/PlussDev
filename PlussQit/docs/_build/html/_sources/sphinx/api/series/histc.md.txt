@@ -179,8 +179,8 @@ Use `histc()` when you want range frequencies rather than exact label counts.
     <span class="label">Previous</span>
     <span class="title">gt</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="has_sensitivity.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">has_sensitivity</span>
   </a>
 </div>

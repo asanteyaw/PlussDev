@@ -6,7 +6,6 @@
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
-  using pluss::Series;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
 
@@ -17,7 +16,7 @@ int main() {
       {"x1", Thread(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
       {"x2", Thread(pluss::make_series({1, 1, 2, 2, 8, 8, 9, 9}, {8}, f64))},
   });
-  const Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
+  const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
 
   lymph::models::Builder builder = lymph::models::build({
       {"logreg", lymph::models::logistic_regression({.fit_intercept = true})},
@@ -25,7 +24,7 @@ int main() {
       {"knn", lymph::models::knn_classifier({.k = 3})},
   });
 
-  lymph::selection::CrossValOptions cv{};
+  lymph::options::CrossVal cv{};
   cv.folds = 2;
   cv.shuffle = false;
 
@@ -33,19 +32,19 @@ int main() {
       x,
       y,
       cv,
-      lymph::TrainOptions{},
-      lymph::AssessOptions{},
+      lymph::options::Train{},
+      lymph::options::Assess{},
       lymph::MetricKind::Accuracy,
       lymph::TuneObjectivePolicy::Auto,
-      lymph::selection::FitOptions{.fit_top = 2});
+      lymph::options::Fit{.fit_top = 2});
 
   std::cout << "== benchmark ==\n";
-  std::cout << ranked.report.board() << "\n";
-  std::cout << "best_name=" << ranked.report.best_name
-            << " benchmarked=" << std::boolalpha << builder.benchmarked()
-            << " best_trained=" << builder.best().trained()
-            << " worst_trained=" << builder.worst().trained()
-            << " stored_logreg_trained=" << builder.get("logreg").trained()
+  std::cout << ranked.report.board() << "\n\n";
+  std::cout << "best_name = " << ranked.report.best_name
+            << ", benchmarked = " << std::boolalpha << builder.benchmarked()
+            << ", best_trained = " << builder.best().trained()
+            << ", worst_trained = " << builder.worst().trained()
+            << ", stored_logreg_trained = " << builder.get("logreg").trained()
             << "\n";
 
   return 0;

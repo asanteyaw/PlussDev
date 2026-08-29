@@ -31,13 +31,13 @@ int main() {
   const DataFrame mapped = encoder.map(inference);
 
   std::cout << "== one_hot_encoder ==\n";
-  std::cout << "rows=" << encoded.ncases()
-            << " features=" << encoded.nfeatures()
-            << " summary_features=" << summary.feature_names.size() << "\n";
+  std::cout << "rows = " << encoded.ncases()
+            << ", features = " << encoded.nfeatures()
+            << ", summary_features = " << summary.feature_names.size() << "\n\n";
   std::cout << encoded.head(3) << "\n";
   std::cout << "== one_hot_encoder_inference ==\n";
-  std::cout << "rows=" << mapped.ncases()
-            << " features=" << mapped.nfeatures() << "\n";
+  std::cout << "rows = " << mapped.ncases()
+            << ", features = " << mapped.nfeatures() << "\n\n";
   std::cout << mapped << "\n";
 
   return 0;

@@ -296,6 +296,36 @@ void test_barplot_thread_and_atlas_depth_gate() {
          "flash direct Atlas plotting should reject depth > 1 so the user selects a frame intentionally");
 }
 
+void test_barplot_dataframe_supports_categorical_numeric_pairs() {
+  const auto frame = DataFrame({
+      {"district_region", pluss::make_note({"north", "south", "middle"})},
+      {"n_customers", pluss::make_series(std::vector<double>{20.0, 35.0, 18.0})},
+  });
+
+  pluss::pl::Studio vertical_fig("barplot_dataframe_categorical_vertical");
+  auto& vertical = vertical_fig.pane2("vertical");
+  (void)pluss::pl::flash::barplot(
+      vertical,
+      frame,
+      {.x_feature = "district_region", .y_feature = "n_customers"});
+  expect(vertical.x_axis().label == "district_region",
+         "flash::barplot(DataFrame) should accept categorical x with numeric y");
+  expect(vertical.y_axis().label == "n_customers",
+         "flash::barplot(DataFrame) should label the numeric value axis");
+
+  pluss::pl::Studio horizontal_fig("barplot_dataframe_categorical_horizontal");
+  auto& horizontal = horizontal_fig.pane2("horizontal");
+  (void)pluss::pl::flash::barplot(
+      horizontal,
+      frame,
+      {.x_feature = "district_region", .y_feature = "n_customers"},
+      {.horizontal = true});
+  expect(horizontal.x_axis().label == "n_customers",
+         "flash::barplot(DataFrame, horizontal) should place numeric values on x");
+  expect(horizontal.y_axis().label == "district_region",
+         "flash::barplot(DataFrame, horizontal) should place categories on y");
+}
+
 void test_relplot_dataframe_supports_explicit_hue() {
   const auto frame = DataFrame({
       {"day", pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0})},
@@ -377,6 +407,7 @@ int main() {
   test_lineplot_dataframe_auto_select_and_explicit_select();
   test_histplot_dataframe_requires_single_feature_or_explicit_feature();
   test_barplot_thread_and_atlas_depth_gate();
+  test_barplot_dataframe_supports_categorical_numeric_pairs();
   test_relplot_dataframe_supports_explicit_hue();
   test_boxenplot_dataframe_accepts_single_numeric_feature();
   test_parallel_family_dataframe_accepts_class_feature();

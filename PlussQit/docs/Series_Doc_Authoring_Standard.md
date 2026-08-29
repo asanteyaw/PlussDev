@@ -40,7 +40,7 @@ the user explicitly changes direction.
 - Prefer richer prose that teaches the mental model behind the method, not just
   a terse definition.
 - Add explicit "Gotchas And Failure Modes" sections where useful.
-- Add a short "Teaching Summary" section on load-bearing methods.
+- Add a short "Summary" section on load-bearing methods.
 - If a method has quirks, say so directly and concretely.
 
 ## Example Standard
@@ -99,7 +99,7 @@ For load-bearing `Series` methods, prefer this shape:
 6. Gradient, if relevant
 7. Examples
 8. Gotchas And Failure Modes
-9. Teaching Summary
+9. Summary
 10. See Also
 
 Not every page needs every section, but this is the default standard.

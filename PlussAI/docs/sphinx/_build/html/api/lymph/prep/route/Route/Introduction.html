@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>lymph::prep::Route Introduction &#8212; PlussAI  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/api_ref.css?v=d2a74cb6" />
+    <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../_static/api_nav.js?v=df24bc9e"></script>
+    <script src="../../../../../_static/layout.js?v=82df9d8b"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="lymph::prep::Route::resolve" href="resolve.html" />
+    <link rel="prev" title="lymph::prep::Route" href="../Route.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="lymph-prep-route-introduction">
+<h1><code class="docutils literal notranslate"><span class="pre">lymph::prep::Route</span></code> Introduction<a class="headerlink" href="#lymph-prep-route-introduction" title="Link to this heading">¶</a></h1>
+<section id="what-this-type-represents">
+<h2>What This Type Represents<a class="headerlink" href="#what-this-type-represents" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Route</span></code> is a declarative feature-selection object.</p>
+<p>It is not the resolved answer itself. It is the reusable rule that later turns
+into concrete feature positions when you call <code class="docutils literal notranslate"><span class="pre">resolve(...)</span></code> against a real
+frame and an ordered feature list.</p>
+</section>
+<section id="why-it-exists">
+<h2>Why It Exists<a class="headerlink" href="#why-it-exists" title="Link to this heading">¶</a></h2>
+<p>This type exists to separate three concerns cleanly:</p>
+<ul class="simple">
+<li><p>construction of the selection rule</p></li>
+<li><p>later resolution against a specific frame</p></li>
+<li><p>remainder policy attached to that rule</p></li>
+</ul>
+<p>Without a real route object, those concerns collapse into repeated ad-hoc
+column lists and one-off filtering logic.</p>
+</section>
+<section id="related-pages">
+<h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="resolve.html"><span class="std std-doc">resolve</span></a></p></li>
+<li><p><a class="reference internal" href="with_remainder.html"><span class="std std-doc">with_remainder</span></a></p></li>
+<li><p><a class="reference internal" href="Notes.html"><span class="std std-doc">Notes</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="pluss-api-sidebar">
+  <div class="sidebar-title">API Reference</div>
+  <nav class="pluss-api-tree" aria-label="Pluss API navigation">
+    <details class="tree-item depth-0" >
+      <summary><a href="../../../../../api/plussai_classic.html" class="">classic</a></summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 " href="../../../../../api/plussai_classic.html">Introduction</a>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" >
+      <summary><a href="../../../../../api/plussai_nets.html" class="">nets</a></summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 " href="../../../../../api/plussai_nets.html">Introduction</a>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" >
+      <summary><a href="../../../../../api/plussai_nlp.html" class="">nlp</a></summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 " href="../../../../../api/plussai_nlp.html">Introduction</a>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" open>
+      <summary><a href="../../../../../api/plussai_lymph.html" class="">lymph</a></summary>
+      <div class="tree-children">
+        <details class="tree-item depth-1" >
+          <summary><a href="../../../../../api/lymph/models.html" class="">models</a></summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/models.html">Introduction</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/models/Model.html">Model</a>
+            <details class="tree-item depth-2" >
+              <summary><a href="../../../../../api/lymph/models/builder.html" class="">builder</a></summary>
+              <div class="tree-children">
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/models/builder/Introduction.html">Introduction</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/models/builder/Builder.html">Builder</a>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" open>
+          <summary><a href="../../../../../api/lymph/prep.html" class="">prep</a></summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/prep.html">Introduction</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/prep/ColumnRouter.html">ColumnRouter</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/prep/Stage.html">Stage</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/prep/StandardScaler.html">StandardScaler</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/prep/OneHotEncoder.html">OneHotEncoder</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/prep/FeatureTransformer.html">FeatureTransformer</a>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" >
+          <summary><a href="../../../../../api/lymph/model.html" class="">workflow</a></summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/model.html">Introduction</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/model/Workflow.html">Workflow</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/model/Payload.html">Payload</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/model/Policy.html">Policy</a>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" >
+          <summary><a href="../../../../../api/lymph/tune.html" class="">selection</a></summary>
+          <div class="tree-children">
+            <details class="tree-item depth-2" >
+              <summary><a href="../../../../../api/lymph/split.html" class="">validate</a></summary>
+              <div class="tree-children">
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/split.html">Introduction</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/split/Plan.html">Plan</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/split/ValidationOptions.html">ValidationOptions</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/split/cross.html">cross</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/split/holdout.html">holdout</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/split/time.html">time</a>
+              </div>
+            </details>
+            <details class="tree-item depth-2" >
+              <summary><a href="../../../../../api/lymph/tune.html" class="">search</a></summary>
+              <div class="tree-children">
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/tune.html">Introduction</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/tune/Search.html">Search</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/tune/CompareReport.html">CompareReport</a>
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/tune/TuneReport.html">TuneReport</a>
+              </div>
+            </details>
+            <details class="tree-item depth-2" >
+              <summary><a href="../../../../../api/lymph/tune/Suite.html" class="">spotcheck</a></summary>
+              <div class="tree-children">
+                <a class="tree-leaf depth-3 " href="../../../../../api/lymph/tune/Suite.html">Suite</a>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" >
+          <summary><a href="../../../../../api/lymph/metrics.html" class="">metrics</a></summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/metrics.html">Introduction</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/metrics/CrossValidationReport.html">CrossValidationReport</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/metrics/Threshold.html">Threshold</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/metrics/classification_summary.html">classification_summary</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/metrics/confusion_table.html">confusion_table</a>
+          </div>
+        </details>
+
+        <details class="tree-item depth-1" >
+          <summary><a href="../../../../../api/lymph/io.html" class="">io</a></summary>
+          <div class="tree-children">
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/io.html">Introduction</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/io/load.html">load</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/io/persistence.html">persistence</a>
+            <a class="tree-leaf depth-2 " href="../../../../../api/lymph/io/save.html">save</a>
+          </div>
+        </details>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" >
+      <summary><a href="../../../../../api/plussai_ice.html" class="">ice</a></summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 " href="../../../../../api/plussai_ice.html">Introduction</a>
+      </div>
+    </details>
+
+    <details class="tree-item depth-0" >
+      <summary><a href="../../../../../api/plussai_procedure.html" class="">procedure</a></summary>
+      <div class="tree-children">
+        <a class="tree-leaf depth-1 " href="../../../../../api/plussai_procedure.html">Introduction</a>
+      </div>
+    </details>
+  </nav>
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../../_sources/api/lymph/prep/route/Route/Introduction.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/ai/lymph/model.h"
+#include "pluss/ai/lymph/selection.h"
 #include "pluss/ai/lymph/workflow.h"
 
 #include <utility>
@@ -13,6 +14,13 @@
 // receive report values, while Model itself does not grow reporting methods.
 
 namespace pluss::ai::lymph::reports {
+
+using Class = ClassReport;
+using Compare = selection::CompareReport;
+using CrossVal = metrics::CrossValidationReport;
+using Metric = metrics::MetricReport;
+using SeriesCompare = metrics::SeriesCompareReport;
+using Tune = TuneReport;
 
 [[nodiscard]] inline ConfusionTable confusion_table(const models::Model& model,
                                                     const LabeledBatch& batch,
@@ -308,6 +316,8 @@ class ModelReports final {
  private:
   models::Model model_;
 };
+
+using Model = ModelReports;
 
 } // namespace pluss::ai::lymph::reports
 

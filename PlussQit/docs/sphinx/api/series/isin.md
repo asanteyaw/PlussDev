@@ -167,9 +167,9 @@ Use `isin()` when you want a mask from a membership question.
   coordinates if needed.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="intersection_along.html">
+  <a class="prev-link" href="is_prime.html">
     <span class="label">Previous</span>
-    <span class="title">intersection_along</span>
+    <span class="title">is_prime</span>
   </a>
   <a class="next-link" href="le.html">
     <span class="label">Next</span>

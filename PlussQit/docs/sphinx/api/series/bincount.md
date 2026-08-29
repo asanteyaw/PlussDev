@@ -172,9 +172,9 @@ Use `bincount()` for exact label-frequency counting.
 - [`Series::unique`](unique.md): distinct extraction without counts.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="argmin.html">
+  <a class="prev-link" href="atan.html">
     <span class="label">Previous</span>
-    <span class="title">argmin</span>
+    <span class="title">atan</span>
   </a>
   <a class="next-link" href="block.html">
     <span class="label">Next</span>

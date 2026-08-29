@@ -1,5 +1,7 @@
 #include <cmath>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <stdexcept>
 #include <string_view>
@@ -38,6 +40,26 @@ void expect_throws_contains(
 bool has_feature(const DataFrame& frame, std::string_view name) {
   const auto& features = frame.features();
   return std::find(features.begin(), features.end(), std::string(name)) != features.end();
+}
+
+std::filesystem::path bi_temp_root(std::string_view name) {
+  auto root = std::filesystem::temp_directory_path() / "pluss_bi_tests" / std::string(name);
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+  std::filesystem::create_directories(root, ec);
+  if (ec) {
+    fail("failed to create BI temp directory");
+  }
+  return root;
+}
+
+std::uintmax_t file_size_checked(const std::filesystem::path& path) {
+  std::error_code ec;
+  const auto size = std::filesystem::file_size(path, ec);
+  if (ec) {
+    fail("failed to read output file size");
+  }
+  return size;
 }
 
 pluss::bundle::Nexus make_bi_nexus() {
@@ -301,6 +323,83 @@ void test_query_arrange_orders_results_before_windowing() {
          "arrange(descending) should preserve the correct second-ranked row");
 }
 
+void test_query_group_pivot_and_resample_plans() {
+  using namespace pluss::bi;
+
+  const auto nexus = make_bi_nexus();
+
+  Studio studio("phase6");
+  studio.source(nexus);
+
+  auto grouped = table("loan_grouped");
+  grouped
+      .query(from("loans")
+                 .group({"risk_band"})
+                 .agg({
+                     {"loan_count", "", pluss::table::GroupOp::Count},
+                     {"principal_sum", "principal", pluss::table::GroupOp::Sum},
+                 })
+                 .arrange("risk_band"))
+      .title("Grouped Loans")
+      .place(0, 0);
+
+  auto pivoted = table("loan_pivoted");
+  pivoted
+      .query(from("loans")
+                 .pivot({"risk_band"}, {"customer_id"}, {"principal"},
+                        pluss::table::GroupOp::Sum, true, true))
+      .title("Pivoted Loans")
+      .place(0, 1);
+
+  auto sampled = table("loan_sampled");
+  sampled
+      .query(from("loans")
+                 .resample("opened_at", {"principal"}, "2D",
+                           pluss::subsp::stats::ts::ResampleOp::Sum))
+      .title("Sampled Loans")
+      .place(1, 0, 1, 2);
+
+  auto& board = studio.board("overview");
+  board.grid(2, 2);
+  board.view(grouped);
+  board.view(pivoted);
+  board.view(sampled);
+
+  const auto render = studio.render();
+  const auto& grouped_frame = *render.boards[0].tiles[0].table;
+  expect(grouped_frame.ncases() == 2,
+         "query.group(...).agg(...) should produce one row per grouped key");
+  expect(has_feature(grouped_frame, "risk_band"),
+         "grouped BI query should preserve its grouping key");
+  expect(has_feature(grouped_frame, "loan_count"),
+         "grouped BI query should materialize aggregate outputs");
+  expect(has_feature(grouped_frame, "principal_sum"),
+         "grouped BI query should materialize multiple aggregate outputs");
+
+  const auto group_a = grouped_frame.filter(grouped_frame.features("risk_band") == "A");
+  const auto group_b = grouped_frame.filter(grouped_frame.features("risk_band") == "B");
+  expect(group_a.ncases() == 1 && group_b.ncases() == 1,
+         "grouped BI query should contain both grouped risk bands");
+  expect(group_a.features("principal_sum").as_series().item<double>() == 2500.0,
+         "grouped BI query should sum principal for risk band A");
+  expect(group_b.features("principal_sum").as_series().item<double>() == 2100.0,
+         "grouped BI query should sum principal for risk band B");
+
+  const auto& pivoted_frame = *render.boards[0].tiles[1].table;
+  expect(pivoted_frame.ncases() == 2,
+         "query.pivot(...) should preserve one row per pivoted index combination");
+  expect(pivoted_frame.nfeatures() >= 2,
+         "query.pivot(...) should materialize reshaped feature columns");
+
+  const auto& sampled_frame = *render.boards[0].tiles[2].table;
+  expect(sampled_frame.ncases() == 2,
+         "query.resample(...) should reduce the temporal axis into 2-day buckets");
+  expect(has_feature(sampled_frame, "principal"),
+         "query.resample(...) should preserve the sampled value feature");
+  expect(sampled_frame.features("principal").as_series().sum().item<double>() == 4600.0,
+         "query.resample(...) should aggregate principal across all resampled buckets");
+}
+
 void test_control_tiles_materialize_active_state() {
   using namespace pluss::bi;
 
@@ -441,6 +540,73 @@ void test_pivot_tile() {
   expect(pivoted.nfeatures() >= 2, "pivot tile should produce grouped columns");
 }
 
+void test_phase7_scatter_heatmap_and_corr_tiles() {
+  using namespace pluss::bi;
+
+  const auto nexus = make_bi_nexus();
+
+  auto scatter_view = scatter("principal_scatter");
+  scatter_view
+      .query(from("loans").select({"customer_id", "principal"}))
+      .x("customer_id")
+      .y("principal")
+      .title("Principal vs Customer")
+      .place(0, 0);
+
+  auto heatmap_view = heatmap("loan_heatmap");
+  heatmap_view
+      .query(from("loans").select({"loan_id", "customer_id", "principal"}))
+      .x("loan_id")
+      .y("customer_id")
+      .z("principal")
+      .title("Loan Heatmap")
+      .place(0, 1);
+
+  auto corr_view = corr("loan_corr");
+  corr_view
+      .query(from("loans"))
+      .features({"loan_id", "customer_id", "principal"})
+      .title("Loan Correlation")
+      .place(1, 0, 1, 2);
+
+  auto grouped_bar = bar("risk_mix");
+  grouped_bar
+      .query(from("loans")
+                 .group({"risk_band"})
+                 .agg({
+                     {"loan_count", "", pluss::table::GroupOp::Count},
+                 })
+                 .arrange("loan_count", false))
+      .x("risk_band")
+      .y("loan_count")
+      .title("Risk Mix")
+      .place(2, 0, 1, 2);
+
+  Studio studio("phase7");
+  studio.source(nexus);
+
+  auto& board = studio.board("overview");
+  board.grid(3, 2);
+  board.view(scatter_view);
+  board.view(heatmap_view);
+  board.view(corr_view);
+  board.view(grouped_bar);
+
+  const auto render = studio.render();
+  expect(render.boards[0].tiles[0].plot != nullptr,
+         "phase-7 scatter BI tile should materialize a plot");
+  expect(render.boards[0].tiles[1].plot != nullptr,
+         "phase-7 heatmap BI tile should materialize a plot");
+  expect(render.boards[0].tiles[2].plot != nullptr,
+         "phase-7 corr BI tile should materialize a plot");
+  expect(render.boards[0].tiles[3].plot != nullptr,
+         "grouped categorical BI bar tile should materialize a plot");
+  expect(render.boards[0].tiles[2].plot->pane_count() == 1,
+         "phase-7 corr BI tile should render as a single heatmap pane");
+  expect(render.boards[0].native != nullptr,
+         "phase-7 BI board should compose into the native board runtime");
+}
+
 void test_stored_plan_sql_and_traverse_queries() {
   using namespace pluss::bi;
 
@@ -563,6 +729,14 @@ void test_native_runtime_and_cache_flow() {
       .title("Customers")
       .place(0, 1);
 
+  auto customer_count = kpi("customer_count");
+  customer_count
+      .query(from("customers"))
+      .feature("customer_id")
+      .op(pluss::table::GroupOp::Count)
+      .title("Customer Count")
+      .place(0, 2);
+
   auto loan_curve = line("loan_curve");
   loan_curve
       .query(from("loans").select({"opened_at", "principal"}))
@@ -573,9 +747,10 @@ void test_native_runtime_and_cache_flow() {
 
   auto& board = studio.board("overview");
   board.title("Overview");
-  board.grid(2, 2);
+  board.grid(2, 3);
   board.control(segment);
   board.view(customers_view);
+  board.view(customer_count);
   board.view(loan_curve);
 
   studio.set_filter(Filter::eq("segment", "retail"));
@@ -583,7 +758,9 @@ void test_native_runtime_and_cache_flow() {
   const auto first = studio.render();
   expect(first.native != nullptr, "studio render should materialize a native board studio");
   expect(first.boards[0].native != nullptr, "board render should materialize a native board runtime");
-  expect(first.boards[0].native->pane_count() == 3,
+  expect(first.cache.query_hits > 0,
+         "first render should reuse central BI query results across tiles with identical queries");
+  expect(first.boards[0].native->pane_count() == 4,
          "board native runtime should compose one pane per control/view tile");
   expect(first.dependencies.count("segment") == 1,
          "render should expose dependency bookkeeping for active filters");
@@ -591,7 +768,6 @@ void test_native_runtime_and_cache_flow() {
          "active filter dependency bookkeeping should name affected tiles");
 
   const auto second = studio.render();
-  expect(second.cache.query_hits > 0, "second render should hit the BI query cache");
   expect(second.cache.tile_hits > 0, "second render should hit the BI tile cache");
   expect(second.cache.board_hits > 0, "second render should hit the BI board-native cache");
 
@@ -614,6 +790,223 @@ void test_native_runtime_and_cache_flow() {
          "Studio::show(..., launch=false) should still render the native BI surface");
 }
 
+void test_phase8_save_export_and_restore() {
+  using namespace pluss::bi;
+
+  const auto nexus = make_bi_nexus();
+  const auto root = bi_temp_root("phase8");
+  const auto bundle_path = root / "credit_bundle";
+  const auto html_path = root / "credit_board";
+  const auto svg_path = root / "credit_board.svg";
+  const auto pdf_path = root / "credit_board.pdf";
+
+  Studio studio("credit");
+  studio.source(nexus);
+
+  auto segment = category("segment_filter");
+  segment.feature("segment").label("Segment").scope("customers_scope").place(0, 0);
+
+  Session session;
+  apply(session, segment, std::vector<std::string>{"retail"});
+  session.set_param("dpi", 180.0);
+  session.set_param("theme", "paper");
+  studio.session(session);
+
+  auto grouped_bar = bar("risk_mix");
+  grouped_bar
+      .query(from("loans")
+                 .group({"risk_band"})
+                 .agg({
+                     {"loan_count", "", pluss::table::GroupOp::Count},
+                     {"principal_sum", "principal", pluss::table::GroupOp::Sum},
+                 })
+                 .arrange("loan_count", false))
+      .x("risk_band")
+      .y("loan_count")
+      .title("Risk Mix")
+      .place(0, 1);
+
+  auto stored_view = table("stored_view");
+  stored_view
+      .query(stored("loans_payments").head(3))
+      .title("Stored Payments")
+      .place(1, 0);
+
+  auto sql_view = table("sql_view");
+  sql_view
+      .query(sql(
+          "SELECT loans.loan_id, customers.name "
+          "FROM loans "
+          "INNER JOIN customers ON loans.customer_id = customers.customer_id"))
+      .title("SQL Join")
+      .place(1, 1);
+
+  auto traverse_view = table("traverse_view");
+  traverse_view
+      .query(traverse_from("loans").join("customers"))
+      .title("Traverse Join")
+      .place(2, 0);
+
+  auto sampled_table = table("sampled_table");
+  sampled_table
+      .query(from("loans")
+                 .resample("opened_at", {"principal"}, "2D",
+                           pluss::subsp::stats::ts::ResampleOp::Sum))
+      .title("Sampled Principal")
+      .place(2, 1);
+
+  auto& board = studio.board("overview");
+  board.title("Credit Overview");
+  board.grid(3, 2);
+  board.control(segment);
+  board.view(grouped_bar);
+  board.view(stored_view);
+  board.view(sql_view);
+  board.view(traverse_view);
+  board.view(sampled_table);
+
+  studio.save(bundle_path.string());
+  studio.export_html(html_path.string(), "Credit Board", 960, 640);
+  studio.export_svg(svg_path.string());
+  studio.export_pdf(pdf_path.string());
+
+  expect(std::filesystem::exists(bundle_path.string() + ".plussbi"),
+         "phase-8 save should write a BI bundle file");
+  expect(std::filesystem::exists(html_path.string() + ".html"),
+         "phase-8 export_html should write an HTML artifact");
+  expect(std::filesystem::exists(svg_path),
+         "phase-8 export_svg should write an SVG artifact");
+  expect(std::filesystem::exists(pdf_path),
+         "phase-8 export_pdf should write a PDF artifact");
+  expect(file_size_checked(bundle_path.string() + ".plussbi") > 0,
+         "saved BI bundle should not be empty");
+  expect(file_size_checked(html_path.string() + ".html") > 0,
+         "exported BI HTML should not be empty");
+  expect(file_size_checked(svg_path) > 0,
+         "exported BI SVG should not be empty");
+  expect(file_size_checked(pdf_path) > 0,
+         "exported BI PDF should not be empty");
+
+  const auto detached = Studio::load(bundle_path.string());
+  expect(detached.key() == "credit", "detached Studio::load should restore the studio key");
+  expect(detached.session().has_filter("segment_filter"),
+         "detached Studio::load should restore saved session filters");
+  expect(detached.session().has_param("dpi"),
+         "detached Studio::load should restore saved session params");
+  expect_throws_contains(
+      [&]() { (void)detached.render(); },
+      "source Nexus has not been set",
+      "detached Studio::load should require source rebinding before render");
+
+  const auto rebound = Studio::load(bundle_path.string(), nexus);
+  const auto render = rebound.render();
+  expect(render.boards.size() == 1, "rebound Studio::load should restore board structure");
+  expect(render.boards[0].tiles.size() == 6,
+         "rebound Studio::load should restore every saved tile");
+  expect(render.boards[0].tiles[1].plot != nullptr,
+         "rebound Studio::load should restore grouped plot views");
+  expect(render.boards[0].tiles[2].table != nullptr,
+         "rebound Studio::load should restore stored-plan table views");
+  expect(render.boards[0].tiles[3].table != nullptr,
+         "rebound Studio::load should restore SQL table views");
+  expect(render.boards[0].tiles[4].table != nullptr,
+         "rebound Studio::load should restore traverse table views");
+  expect(render.boards[0].tiles[5].table != nullptr,
+         "rebound Studio::load should restore resampled table views");
+  expect(render.boards[0].tiles[2].table->ncases() == 3,
+         "saved head() windows should survive load round-trips");
+  expect(render.boards[0].tiles[5].table->ncases() == 2,
+         "saved resample queries should survive load round-trips");
+
+  Studio session_only("session_only");
+  session_only.restore_session(bundle_path.string());
+  expect(session_only.session().has_filter("segment_filter"),
+         "restore_session should restore saved filters without replacing boards");
+  expect(session_only.session().has_param("theme"),
+         "restore_session should restore saved params without replacing boards");
+}
+
+void test_phase9_hardening_and_roundtrip_cache() {
+  using namespace pluss::bi;
+
+  const auto nexus = make_bi_nexus();
+  const auto root = bi_temp_root("phase9");
+  const auto bad_header = root / "bad_header.plussbi";
+  const auto duplicate_board = root / "duplicate_board.plussbi";
+
+  {
+    std::ofstream out(bad_header, std::ios::out | std::ios::trunc | std::ios::binary);
+    out << "NOTPLUSS|1\n";
+  }
+  expect_throws_contains(
+      [&]() { (void)Studio::load(bad_header.string()); },
+      "malformed bundle header",
+      "phase-9 hardening should reject malformed BI bundle headers");
+
+  {
+    std::ofstream out(duplicate_board, std::ios::out | std::ios::trunc | std::ios::binary);
+    out << "PLUSSBI|1\n";
+    out << "studio|dup\n";
+    out << "board|overview||1|1\n";
+    out << "board|overview||1|1\n";
+  }
+  expect_throws_contains(
+      [&]() { (void)Studio::load(duplicate_board.string()); },
+      "duplicate board key",
+      "phase-9 hardening should reject duplicate board keys in saved bundles");
+
+  Studio invalid("invalid");
+  invalid.source(nexus);
+  auto missing_feature = kpi("missing_feature");
+  missing_feature
+      .query(from("loans"))
+      .title("Broken KPI")
+      .place(0, 0);
+  auto& invalid_board = invalid.board("overview");
+  invalid_board.grid(1, 1);
+  invalid_board.view(missing_feature);
+  expect_throws_contains(
+      [&]() { invalid.save((root / "invalid_bundle").string()); },
+      "KPI view requires feature",
+      "phase-9 hardening should reject malformed KPI bindings during save");
+
+  Studio studio("cache_roundtrip");
+  studio.source(nexus);
+
+  auto line_view = line("curve");
+  line_view
+      .query(from("loans").select({"opened_at", "principal"}))
+      .x("opened_at")
+      .y("principal")
+      .title("Curve")
+      .place(0, 0);
+
+  auto count_view = kpi("count");
+  count_view
+      .query(from("loans"))
+      .feature("loan_id")
+      .op(pluss::table::GroupOp::Count)
+      .title("Loan Count")
+      .place(0, 1);
+
+  auto& board = studio.board("overview");
+  board.grid(1, 2);
+  board.view(line_view);
+  board.view(count_view);
+
+  const auto bundle_path = root / "cache_bundle";
+  studio.save(bundle_path.string());
+  auto loaded = Studio::load(bundle_path.string(), nexus);
+  const auto first = loaded.render();
+  const auto second = loaded.render();
+  expect(first.cache.query_misses > 0,
+         "first render after round-trip load should materialize BI query results");
+  expect(second.cache.tile_hits > 0,
+         "second render after round-trip load should reuse BI tile cache");
+  expect(second.cache.board_hits > 0,
+         "second render after round-trip load should reuse BI board cache");
+}
+
 } // namespace
 
 int main() {
@@ -624,12 +1017,16 @@ int main() {
   test_unscoped_session_filters_skip_missing_features();
   test_temporal_filters_and_query_windowing();
   test_query_arrange_orders_results_before_windowing();
+  test_query_group_pivot_and_resample_plans();
   test_control_tiles_materialize_active_state();
   test_query_filters_throw_on_missing_features();
   test_kpi_and_plot_tiles();
   test_pivot_tile();
+  test_phase7_scatter_heatmap_and_corr_tiles();
   test_stored_plan_sql_and_traverse_queries();
   test_board_validation();
   test_native_runtime_and_cache_flow();
+  test_phase8_save_export_and_restore();
+  test_phase9_hardening_and_roundtrip_cache();
   return 0;
 }

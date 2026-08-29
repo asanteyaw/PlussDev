@@ -326,8 +326,8 @@ flat global positions or local axis positions.
     <span class="label">Previous</span>
     <span class="title">argmax</span>
   </a>
-  <a class="next-link" href="var.html">
+  <a class="next-link" href="asin.html">
     <span class="label">Next</span>
-    <span class="title">var</span>
+    <span class="title">asin</span>
   </a>
 </div>

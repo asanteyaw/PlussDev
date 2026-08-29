@@ -181,8 +181,8 @@ that fact.
     <span class="label">Previous</span>
     <span class="title">clamp_min</span>
   </a>
-  <a class="next-link" href="gather.html">
+  <a class="next-link" href="cos.html">
     <span class="label">Next</span>
-    <span class="title">gather</span>
+    <span class="title">cos</span>
   </a>
 </div>

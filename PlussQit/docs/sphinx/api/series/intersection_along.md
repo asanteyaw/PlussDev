@@ -178,8 +178,8 @@ match.
     <span class="label">Previous</span>
     <span class="title">intersection</span>
   </a>
-  <a class="next-link" href="isin.html">
+  <a class="next-link" href="is_prime.html">
     <span class="label">Next</span>
-    <span class="title">isin</span>
+    <span class="title">is_prime</span>
   </a>
 </div>

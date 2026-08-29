@@ -17,8 +17,8 @@
     <script src="../../_static/layout.js?v=82df9d8b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="lymph::ColumnRouter" href="prep/ColumnRouter.html" />
-    <link rel="prev" title="lymph::models::Builder" href="models/builder/Builder.html" />
+    <link rel="next" title="Lymph prep::route" href="prep/route.html" />
+    <link rel="prev" title="lymph::models::Builder Notes" href="models/builder/Builder/Notes.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -38,129 +38,65 @@
             
   <section id="lymph-prep">
 <h1>Lymph <code class="docutils literal notranslate"><span class="pre">prep</span></code><a class="headerlink" href="#lymph-prep" title="Link to this heading">¶</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">prep</span></code> is the Lymph family for preprocessing, routing, and feature-shaping stages
-that sit around a model or workflow.</p>
-<p>Use it when you are deciding:</p>
+<p><code class="docutils literal notranslate"><span class="pre">prep</span></code> is the Lymph family for conditioning features before they reach a
+learner.</p>
+<p>This is the family you enter when the central question is not yet “which model
+family wins?” but rather:</p>
 <ul class="simple">
-<li><p>which numeric columns should be scaled</p></li>
-<li><p>which categorical columns should be encoded</p></li>
-<li><p>which branches should receive which feature subsets</p></li>
-<li><p>how to keep train-time and infer-time preprocessing identical</p></li>
+<li><p>which features belong together</p></li>
+<li><p>which columns should be scaled, encoded, imputed, or passed through</p></li>
+<li><p>which transformation state must be learned once and reused later</p></li>
+<li><p>how to keep training-time and inference-time feature handling identical</p></li>
 </ul>
+<p>That concern deserves its own family because preprocessing failures often look
+like modeling failures until you inspect the feature contract closely.</p>
 <section id="what-this-family-owns">
 <h2>What This Family Owns<a class="headerlink" href="#what-this-family-owns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">prep</span></code> owns the data-conditioning layer of Lymph.</p>
-<p>That includes:</p>
+<p><code class="docutils literal notranslate"><span class="pre">prep</span></code> owns five connected concerns:</p>
 <ul class="simple">
-<li><p>routing with <code class="docutils literal notranslate"><span class="pre">ColumnRouter</span></code></p></li>
-<li><p>attachable stage descriptions with <code class="docutils literal notranslate"><span class="pre">Stage</span></code></p></li>
-<li><p>reusable transformer objects such as <code class="docutils literal notranslate"><span class="pre">StandardScaler</span></code></p></li>
-<li><p>categorical expansion with <code class="docutils literal notranslate"><span class="pre">OneHotEncoder</span></code></p></li>
-<li><p>branch-local composite transformation with <code class="docutils literal notranslate"><span class="pre">FeatureTransformer</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">route</span></code>: declarative feature selection through <code class="docutils literal notranslate"><span class="pre">prep::Route</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stage</span></code>: attachable stage descriptors such as
+<code class="docutils literal notranslate"><span class="pre">prep::stage::standard_scaler(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scaling</span></code>: standalone numeric transformers such as
+<code class="docutils literal notranslate"><span class="pre">prep::StandardScaler</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">encoding</span></code>: standalone categorical transformers such as
+<code class="docutils literal notranslate"><span class="pre">prep::OneHotEncoder</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">feature</span></code>: multi-branch transformation under one reusable
+<code class="docutils literal notranslate"><span class="pre">prep::FeatureTransformer</span></code></p></li>
 </ul>
-<p>The core design point is simple:</p>
+<p>The family boundary is deliberate:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code> answers “what learner am I using?”</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">prep</span></code> answers “what must happen to the features before learning?”</p></li>
-</ul>
-<p>That separation is important in production ML because many silent failures are not
-learner failures. They are preprocessing drift:</p>
-<ul class="simple">
-<li><p>scaling applied during training but forgotten at inference</p></li>
-<li><p>categories seen during inference but not handled robustly</p></li>
-<li><p>feature subsets routed differently in different experiments</p></li>
-<li><p>custom transformations living as loose helper code instead of model contract</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code> owns the learner artifact</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prep</span></code> owns the feature-conditioning contract</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">selection</span></code> owns the evidence policy that judges the learner</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workflow</span></code> owns the broader runtime and deployment-shaped orchestration</p></li>
 </ul>
 </section>
-<section id="read-this-family-in-two-layers">
-<h2>Read This Family In Two Layers<a class="headerlink" href="#read-this-family-in-two-layers" title="Link to this heading">¶</a></h2>
-<p>There are two normal ways to use <code class="docutils literal notranslate"><span class="pre">prep</span></code>.</p>
-<section id="layer-1-standalone-transformer-objects">
-<h3>Layer 1. Standalone transformer objects<a class="headerlink" href="#layer-1-standalone-transformer-objects" title="Link to this heading">¶</a></h3>
-<p>Use:</p>
+<section id="mental-model">
+<h2>Mental Model<a class="headerlink" href="#mental-model" title="Link to this heading">¶</a></h2>
+<p>Read <code class="docutils literal notranslate"><span class="pre">prep</span></code> in two layers.</p>
+<p>The first layer is reusable transformer objects. Those are the classes you can
+fit, inspect, and reuse directly:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">prep::OneHotEncoder</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">FeatureTransformer</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prep::FeatureTransformer</span></code></p></li>
 </ul>
-<p>when you want a reusable transformer object in its own right.</p>
-</section>
-<section id="layer-2-attached-pipeline-stages">
-<h3>Layer 2. Attached pipeline stages<a class="headerlink" href="#layer-2-attached-pipeline-stages" title="Link to this heading">¶</a></h3>
-<p>Use:</p>
+<p>The second layer is attachable stage planning. That is the route-plus-stage
+surface used by <code class="docutils literal notranslate"><span class="pre">Model::prepare()</span></code> or <code class="docutils literal notranslate"><span class="pre">Model::append(...)</span></code>:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">stage::standard_scaler(...)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stage::one_hot_encoder(...)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Model::append(...)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ModelPrep</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prep::Route</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prep::Stage</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prep::stage::*</span></code> factories</p></li>
 </ul>
-<p>when you want preprocessing to travel with the model artifact itself.</p>
-<p>This second layer is usually the one that matters most in real work, because it
-keeps training and inference on the same rails.</p>
+<p>If you want a model to carry preprocessing as part of its own contract, the
+second layer is usually the right entry. If you want a standalone transformer
+object in its own right, start with the first layer.</p>
 </section>
-</section>
-<section id="main-objects">
-<h2>Main Objects<a class="headerlink" href="#main-objects" title="Link to this heading">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="prep/ColumnRouter.html"><code class="docutils literal notranslate"><span class="pre">lymph::ColumnRouter</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="prep/ColumnRouter.html#summary">Summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/ColumnRouter.html#what-it-solves">What It Solves</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/ColumnRouter.html#main-construction-styles">Main Construction Styles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/ColumnRouter.html#signature">Signature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/ColumnRouter.html#practical-examples">Practical Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/ColumnRouter.html#related-pages">Related Pages</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="prep/Stage.html"><code class="docutils literal notranslate"><span class="pre">lymph::Stage</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="prep/Stage.html#summary">Summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/Stage.html#what-stage-answers">What Stage Answers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/Stage.html#normal-builders">Normal Builders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/Stage.html#signature">Signature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/Stage.html#practical-example">Practical Example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/Stage.html#related-pages">Related Pages</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="prep/StandardScaler.html"><code class="docutils literal notranslate"><span class="pre">lymph::prep::StandardScaler</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="prep/StandardScaler.html#summary">Summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/StandardScaler.html#why-it-matters">Why It Matters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/StandardScaler.html#option-surface">Option Surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/StandardScaler.html#signature">Signature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/StandardScaler.html#practical-example">Practical Example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/StandardScaler.html#related-pages">Related Pages</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="prep/OneHotEncoder.html"><code class="docutils literal notranslate"><span class="pre">lymph::prep::OneHotEncoder</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="prep/OneHotEncoder.html#summary">Summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/OneHotEncoder.html#why-it-matters">Why It Matters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/OneHotEncoder.html#option-surface">Option Surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/OneHotEncoder.html#signature">Signature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/OneHotEncoder.html#practical-examples">Practical Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/OneHotEncoder.html#related-pages">Related Pages</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="prep/FeatureTransformer.html"><code class="docutils literal notranslate"><span class="pre">lymph::prep::FeatureTransformer</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="prep/FeatureTransformer.html#summary">Summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/FeatureTransformer.html#what-it-is-for">What It Is For</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/FeatureTransformer.html#what-makes-it-different">What Makes It Different</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/FeatureTransformer.html#signature">Signature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/FeatureTransformer.html#practical-example">Practical Example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prep/FeatureTransformer.html#related-pages">Related Pages</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="practical-examples">
-<h2>Practical Examples<a class="headerlink" href="#practical-examples" title="Link to this heading">¶</a></h2>
-<p>These examples are verified from real executables under
-the lymph documentation verifier examples. The code blocks below are the same programs that
-were built and run to produce the shown output.</p>
-<section id="example-1">
-<h3>Example 1<a class="headerlink" href="#example-1" title="Link to this heading">¶</a></h3>
-<p>This example shows the normal high-level path: use <code class="docutils literal notranslate"><span class="pre">ModelPrep</span></code> to attach scaling
-and encoding to a model, then train, infer, and assess through that attached prep
-contract.</p>
+<section id="practical-example">
+<h2>Practical Example<a class="headerlink" href="#practical-example" title="Link to this heading">¶</a></h2>
+<p>This executed example shows the highest-level everyday path: attach prep to a
+model, learn once, then infer and assess through the same feature contract.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/lymph.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
 
@@ -168,9 +104,7 @@ contract.</p>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">lymph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">lymph</span><span class="p">;</span>
-<span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">classic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">classic</span><span class="p">;</span>
 <span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
 <span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">;</span>
 <span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
 
@@ -185,48 +119,51 @@ contract.</p>
 <span class="w">      </span><span class="p">{</span><span class="s">&quot;default&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
 <span class="w">  </span><span class="p">});</span>
 
-<span class="w">  </span><span class="n">classic</span><span class="o">::</span><span class="n">LinearFamilyOptions</span><span class="w"> </span><span class="n">logistic_options</span><span class="p">{};</span>
-<span class="w">  </span><span class="n">logistic_options</span><span class="p">.</span><span class="n">regularization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">classic</span><span class="o">::</span><span class="n">RegularizationKind</span><span class="o">::</span><span class="n">L2</span><span class="p">;</span>
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">options</span><span class="o">::</span><span class="n">Linear</span><span class="w"> </span><span class="n">logistic_options</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">logistic_options</span><span class="p">.</span><span class="n">regularization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">RegularizationKind</span><span class="o">::</span><span class="n">L2</span><span class="p">;</span>
 <span class="w">  </span><span class="n">logistic_options</span><span class="p">.</span><span class="n">regularization_strength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-3</span><span class="p">;</span>
 <span class="w">  </span><span class="n">logistic_options</span><span class="p">.</span><span class="n">fit_intercept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">model</span><span class="o">::</span><span class="n">logistic_regression</span><span class="p">(</span><span class="n">logistic_options</span><span class="p">);</span>
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">ModelPrep</span><span class="w"> </span><span class="n">prep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">prepare</span><span class="p">();</span>
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">linear</span><span class="o">::</span><span class="n">logistic_regression</span><span class="p">(</span><span class="n">logistic_options</span><span class="p">);</span>
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">ModelPrep</span><span class="w"> </span><span class="n">prep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">prepare</span><span class="p">();</span>
 <span class="w">  </span><span class="n">prep</span><span class="p">.</span><span class="n">standardize</span><span class="p">({</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;balance&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;late&quot;</span><span class="p">});</span>
 <span class="w">  </span><span class="n">prep</span><span class="p">.</span><span class="n">encode</span><span class="p">(</span>
-<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">columnrouter</span><span class="o">::</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">}),</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">route</span><span class="o">::</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">}),</span>
 <span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">OneHotEncoderOptions</span><span class="p">{</span>
 <span class="w">          </span><span class="p">.</span><span class="n">max_categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
 <span class="w">          </span><span class="p">.</span><span class="n">overflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">CategoryOverflowPolicy</span><span class="o">::</span><span class="n">KeepMostFrequent</span><span class="p">,</span>
 <span class="w">          </span><span class="p">.</span><span class="n">include_unknown_bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
 <span class="w">      </span><span class="p">});</span>
 
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">TrainOptions</span><span class="w"> </span><span class="n">train_options</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">options</span><span class="o">::</span><span class="n">Train</span><span class="w"> </span><span class="n">train_options</span><span class="p">{};</span>
 <span class="w">  </span><span class="n">train_options</span><span class="p">.</span><span class="n">max_iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">600</span><span class="p">;</span>
 <span class="w">  </span><span class="n">train_options</span><span class="p">.</span><span class="n">tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-8</span><span class="p">;</span>
 <span class="w">  </span><span class="n">train_options</span><span class="p">.</span><span class="n">random</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{.</span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20260825ULL</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">deterministic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">};</span>
 
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataFrameBatchOptions</span><span class="w"> </span><span class="n">data_options</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">options</span><span class="o">::</span><span class="n">DFBatch</span><span class="w"> </span><span class="n">data_options</span><span class="p">{};</span>
 <span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">feature_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;balance&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;late&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">};</span>
 <span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">label_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;default&quot;</span><span class="p">;</span>
 <span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">note_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataNotePolicy</span><span class="o">::</span><span class="n">Factorize</span><span class="p">;</span>
 
 <span class="w">  </span><span class="n">model</span><span class="p">.</span><span class="n">learn_</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">data_options</span><span class="p">,</span><span class="w"> </span><span class="n">train_options</span><span class="p">);</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">predicted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">data_options</span><span class="p">);</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricReport</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">assess</span><span class="p">(</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">predicted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span><span class="w"> </span><span class="n">data_options</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">reports</span><span class="o">::</span><span class="n">Metric</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">assess</span><span class="p">(</span>
 <span class="w">      </span><span class="n">raw</span><span class="p">,</span>
 <span class="w">      </span><span class="n">data_options</span><span class="p">,</span>
-<span class="w">      </span><span class="n">AssessOptions</span><span class="p">{</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">options</span><span class="o">::</span><span class="n">Assess</span><span class="p">{</span>
 <span class="w">          </span><span class="p">.</span><span class="n">metrics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricKind</span><span class="o">::</span><span class="n">Accuracy</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricKind</span><span class="o">::</span><span class="n">F1</span><span class="p">},</span>
 <span class="w">      </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">prediction_frame</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;predicted&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">predicted</span><span class="p">)},</span>
+<span class="w">  </span><span class="p">});</span>
 
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== prep ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; task_kind=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">task_kind</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;predictions=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">predicted</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;accuracy=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="n">accuracy</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; f1=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="n">f1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;stage_count = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, trained = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, task_kind = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">task_kind</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">prediction_frame</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;accuracy = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="n">accuracy</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, f1 = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="n">f1</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
@@ -234,121 +171,33 @@ contract.</p>
 </div>
 <p>Output</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>== prep ==
-stage_count=2 trained=1 task_kind=0
-predictions=pluss::Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
-data=[0, 0, 0, 0, 1, 1, 1, 1]
-accuracy=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=[1] f1=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=[1]
+stage_count = 2, trained = true, task_kind = 0
+
+================
+     | predicted
+----------------
+0    | 0
+1    | 0
+2    | 0
+3    | 0
+4    | 1
+5    | 1
+6    | 1
+7    | 1
+----------------
+[8 cs x 1 feat]
+accuracy = 1, f1 = 1
 </pre></div>
 </div>
-<p>What this teaches:</p>
+<p>The point of that example is not the perfect toy accuracy. It is the ownership
+boundary:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ModelPrep</span></code> is not a side helper; it mutates the model’s attached stage graph</p></li>
-<li><p>scaling and encoding become part of the same trained artifact</p></li>
-<li><p>assessment happens after the exact same preprocessing contract used for
-training and inference</p></li>
+<li><p>the prep contract was attached before fitting</p></li>
+<li><p>the fitted model reused it for inference</p></li>
+<li><p>the same contract also governed assessment</p></li>
 </ul>
-</section>
-<section id="example-2">
-<h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
-<p>This example shows the lower-level transformer route. Instead of attaching prep
-directly to a model, it builds a reusable <code class="docutils literal notranslate"><span class="pre">FeatureTransformer</span></code> that standardizes a
-numeric branch, one-hot encodes a categorical branch, and passes the remainder
-through.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/lymph.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
-
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">lymph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">lymph</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span>
-<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">).</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
-
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">raw</span><span class="p">({</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.4</span><span class="p">,</span><span class="w"> </span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="mf">2.2</span><span class="p">,</span><span class="w"> </span><span class="mf">3.8</span><span class="p">,</span><span class="w"> </span><span class="mf">4.2</span><span class="p">,</span><span class="w"> </span><span class="mf">4.6</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">}))},</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;balance&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span><span class="w"> </span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="mf">2.1</span><span class="p">,</span><span class="w"> </span><span class="mf">2.4</span><span class="p">,</span><span class="w"> </span><span class="mf">2.7</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
-<span class="w">  </span><span class="p">});</span>
-
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataFrameBatchOptions</span><span class="w"> </span><span class="n">options</span><span class="p">{};</span>
-<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">feature_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;balance&quot;</span><span class="p">};</span>
-<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">note_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">DataNotePolicy</span><span class="o">::</span><span class="n">Factorize</span><span class="p">;</span>
-<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">ObservationLayout</span><span class="o">::</span><span class="n">Rows</span><span class="p">;</span>
-
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">FeatureTransformer</span><span class="w"> </span><span class="n">transformer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">feature_transformer</span><span class="p">(</span>
-<span class="w">      </span><span class="n">raw</span><span class="p">,</span>
-<span class="w">      </span><span class="n">options</span><span class="p">,</span>
-<span class="w">      </span><span class="p">{</span>
-<span class="w">          </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">branch</span><span class="o">::</span><span class="n">compose</span><span class="p">(</span>
-<span class="w">              </span><span class="p">{</span>
-<span class="w">                  </span><span class="n">lymph</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">standard_scaler</span><span class="p">(),</span>
-<span class="w">              </span><span class="p">},</span>
-<span class="w">              </span><span class="p">{</span><span class="s">&quot;income&quot;</span><span class="p">}),</span>
-<span class="w">          </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">branch</span><span class="o">::</span><span class="n">one_hot_encoder</span><span class="p">(</span>
-<span class="w">              </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">OneHotEncoderOptions</span><span class="p">{</span>
-<span class="w">                  </span><span class="p">.</span><span class="n">max_categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
-<span class="w">                  </span><span class="p">.</span><span class="n">overflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">CategoryOverflowPolicy</span><span class="o">::</span><span class="n">KeepMostFrequent</span><span class="p">,</span>
-<span class="w">                  </span><span class="p">.</span><span class="n">include_unknown_bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
-<span class="w">              </span><span class="p">},</span>
-<span class="w">              </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">}),</span>
-<span class="w">      </span><span class="p">},</span>
-<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">FeatureRemainderPolicy</span><span class="o">::</span><span class="n">PassThrough</span><span class="p">);</span>
-
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">Payload</span><span class="w"> </span><span class="n">payload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">payload</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
-<span class="w">                                     </span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;income&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;balance&quot;</span><span class="p">})</span>
-<span class="w">                                     </span><span class="p">.</span><span class="n">note</span><span class="p">(</span><span class="n">lymph</span><span class="o">::</span><span class="n">DataNotePolicy</span><span class="o">::</span><span class="n">Factorize</span><span class="p">);</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">FeatureBatch</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">payload</span><span class="p">.</span><span class="n">feature_batch</span><span class="p">();</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">transformed</span><span class="w"> </span><span class="o">=</span>
-<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">resolve</span><span class="p">(</span><span class="n">transformer</span><span class="p">.</span><span class="n">learn_map</span><span class="p">(</span><span class="n">batch</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;feature_transformer.learn_map&quot;</span><span class="p">);</span>
-
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== feature_transformer ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">transformer</span><span class="p">.</span><span class="n">trained</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; stage_count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">transformer</span><span class="p">.</span><span class="n">stage_count</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; rows=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">transformed</span><span class="p">.</span><span class="n">sizes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; features=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">transformed</span><span class="p">.</span><span class="n">sizes</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">transformed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<div class="toctree-wrapper compound">
 </div>
-<p>Output</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>== feature_transformer ==
-trained=1 stage_count=2 rows=8 features=7
-pluss::Series(shape=[8,7], strides=[7,1], dtype=float64, platform=cpu, numel=56, contiguous=true)
-data=[[-1.3608276, 0, ... , 0.2],
-  [-1.0886621, 0, ... , 0.4],
-  ...
- [1.3608276, 1, ... , 2.7]]
-</pre></div>
-</div>
-<p>This is the more compositional <code class="docutils literal notranslate"><span class="pre">prep</span></code> shape:</p>
-<ul class="simple">
-<li><p>it is still branch-aware</p></li>
-<li><p>it is still trained state, not a loose stateless mapper</p></li>
-<li><p>it can be reused independently of any one specific model instance</p></li>
-<li><p>branch construction belongs to <code class="docutils literal notranslate"><span class="pre">lymph::prep::branch::*</span></code></p></li>
-<li><p>individual transform descriptors belong to <code class="docutils literal notranslate"><span class="pre">lymph::stage::*</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lymph::workflow::*</span></code> stays reserved for workflow composition, not prep routing</p></li>
-</ul>
-</section>
-</section>
-<section id="recommended-reading-order">
-<h2>Recommended Reading Order<a class="headerlink" href="#recommended-reading-order" title="Link to this heading">¶</a></h2>
-<ol class="arabic simple">
-<li><p><a class="reference internal" href="prep/ColumnRouter.html"><span class="std std-doc">ColumnRouter</span></a></p></li>
-<li><p><a class="reference internal" href="prep/Stage.html"><span class="std std-doc">Stage</span></a></p></li>
-<li><p><a class="reference internal" href="prep/StandardScaler.html"><span class="std std-doc">StandardScaler</span></a></p></li>
-<li><p><a class="reference internal" href="prep/OneHotEncoder.html"><span class="std std-doc">OneHotEncoder</span></a></p></li>
-<li><p><a class="reference internal" href="prep/FeatureTransformer.html"><span class="std std-doc">FeatureTransformer</span></a></p></li>
-</ol>
 </section>
 </section>
 

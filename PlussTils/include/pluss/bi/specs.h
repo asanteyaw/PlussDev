@@ -44,6 +44,9 @@ enum class ViewKind : std::uint8_t {
   Bar = 2,
   DetailTable = 3,
   PivotTable = 4,
+  Scatter = 5,
+  Heatmap = 6,
+  Corr = 7,
 };
 
 using FilterScalar = std::variant<double, std::string, pluss::Timeline, pluss::TimeIndex>;
@@ -248,6 +251,31 @@ struct SortSpec {
   bool nulls_last{true};
 };
 
+struct QueryGroupPlan {
+  std::vector<std::string> keys{};
+  std::vector<pluss::table::DataFrame::GroupSpec> specs{};
+  bool dropnull{true};
+  bool sort{false};
+};
+
+struct QueryPivotPlan {
+  std::vector<std::string> index_features{};
+  std::vector<std::string> column_features{};
+  std::vector<std::string> value_features{};
+  pluss::table::GroupOp op{pluss::table::GroupOp::Mean};
+  bool dropna{true};
+  bool sort{true};
+};
+
+struct QueryResamplePlan {
+  std::string time_feature{};
+  std::vector<std::string> value_features{};
+  std::string freq{};
+  std::int64_t step{1};
+  pluss::subsp::stats::ts::ResampleOp op{
+      pluss::subsp::stats::ts::ResampleOp::Mean};
+};
+
 struct QuerySpec {
   QueryMode mode{QueryMode::Source};
   std::string source{};
@@ -257,6 +285,9 @@ struct QuerySpec {
   std::vector<SortSpec> sort_specs{};
   std::vector<std::string> select_features{};
   std::vector<std::string> drop_features{};
+  std::optional<QueryGroupPlan> group_plan{};
+  std::optional<QueryPivotPlan> pivot_plan{};
+  std::optional<QueryResamplePlan> resample_plan{};
   std::optional<std::int64_t> head_n{};
   std::optional<std::int64_t> tail_n{};
   std::optional<std::string> scope{};
@@ -340,6 +371,110 @@ struct QuerySpec {
     return out;
   }
 
+  [[nodiscard]] QuerySpec group(
+      std::initializer_list<std::string_view> keys,
+      bool dropnull = true,
+      bool sort = false) const {
+    QuerySpec out = *this;
+    out.pivot_plan.reset();
+    out.resample_plan.reset();
+    QueryGroupPlan plan;
+    plan.dropnull = dropnull;
+    plan.sort = sort;
+    plan.keys.reserve(keys.size());
+    for (const auto key : keys) {
+      PLUSS_CHECK(!key.empty(), "pluss::bi::QuerySpec::group: key names cannot be empty");
+      plan.keys.emplace_back(key);
+    }
+    out.group_plan = std::move(plan);
+    return out;
+  }
+
+  [[nodiscard]] QuerySpec agg(
+      std::initializer_list<pluss::table::DataFrame::GroupSpec> specs) const {
+    PLUSS_CHECK(group_plan.has_value(),
+                "pluss::bi::QuerySpec::agg: call group(...) before agg(...)");
+    QuerySpec out = *this;
+    out.group_plan->specs.assign(specs.begin(), specs.end());
+    PLUSS_CHECK(!out.group_plan->specs.empty(),
+                "pluss::bi::QuerySpec::agg: expected at least one GroupSpec");
+    return out;
+  }
+
+  [[nodiscard]] QuerySpec pivot(
+      std::initializer_list<std::string_view> index_features,
+      std::initializer_list<std::string_view> column_features,
+      std::initializer_list<std::string_view> value_features,
+      pluss::table::GroupOp op = pluss::table::GroupOp::Mean,
+      bool dropna = true,
+      bool sort = true) const {
+    QuerySpec out = *this;
+    out.group_plan.reset();
+    out.resample_plan.reset();
+    QueryPivotPlan plan;
+    plan.op = op;
+    plan.dropna = dropna;
+    plan.sort = sort;
+    plan.index_features.reserve(index_features.size());
+    plan.column_features.reserve(column_features.size());
+    plan.value_features.reserve(value_features.size());
+    for (const auto value : index_features) {
+      PLUSS_CHECK(!value.empty(), "pluss::bi::QuerySpec::pivot: index feature names cannot be empty");
+      plan.index_features.emplace_back(value);
+    }
+    for (const auto value : column_features) {
+      PLUSS_CHECK(!value.empty(), "pluss::bi::QuerySpec::pivot: column feature names cannot be empty");
+      plan.column_features.emplace_back(value);
+    }
+    for (const auto value : value_features) {
+      PLUSS_CHECK(!value.empty(), "pluss::bi::QuerySpec::pivot: value feature names cannot be empty");
+      plan.value_features.emplace_back(value);
+    }
+    out.pivot_plan = std::move(plan);
+    return out;
+  }
+
+  [[nodiscard]] QuerySpec resample(
+      std::string_view time_feature,
+      std::string_view freq,
+      pluss::subsp::stats::ts::ResampleOp op =
+          pluss::subsp::stats::ts::ResampleOp::Mean,
+      std::int64_t step = 1) const {
+    QuerySpec out = *this;
+    out.group_plan.reset();
+    out.pivot_plan.reset();
+    QueryResamplePlan plan;
+    PLUSS_CHECK(!time_feature.empty(),
+                "pluss::bi::QuerySpec::resample: time feature cannot be empty");
+    PLUSS_CHECK(!freq.empty(),
+                "pluss::bi::QuerySpec::resample: frequency cannot be empty");
+    PLUSS_CHECK(step > 0,
+                "pluss::bi::QuerySpec::resample: step must be > 0");
+    plan.time_feature = std::string(time_feature);
+    plan.freq = std::string(freq);
+    plan.step = step;
+    plan.op = op;
+    out.resample_plan = std::move(plan);
+    return out;
+  }
+
+  [[nodiscard]] QuerySpec resample(
+      std::string_view time_feature,
+      std::initializer_list<std::string_view> value_features,
+      std::string_view freq,
+      pluss::subsp::stats::ts::ResampleOp op =
+          pluss::subsp::stats::ts::ResampleOp::Mean,
+      std::int64_t step = 1) const {
+    auto out = resample(time_feature, freq, op, step);
+    out.resample_plan->value_features.reserve(value_features.size());
+    for (const auto feature : value_features) {
+      PLUSS_CHECK(!feature.empty(),
+                  "pluss::bi::QuerySpec::resample: value feature names cannot be empty");
+      out.resample_plan->value_features.emplace_back(feature);
+    }
+    return out;
+  }
+
   [[nodiscard]] QuerySpec scope_as(std::string_view value) const {
     QuerySpec out = *this;
     out.scope = std::string(value);
@@ -393,6 +528,7 @@ struct BindSpec {
   pluss::table::FlashTableColumns columns{};
   pluss::table::GroupOp op{pluss::table::GroupOp::Count};
   bool horizontal{false};
+  std::vector<std::string> analysis_features{};
   std::vector<std::string> index_features{};
   std::vector<std::string> column_features{};
   std::vector<std::string> value_features{};
@@ -431,6 +567,39 @@ struct BindSpec {
         .columns = columns,
         .horizontal = horizontal,
     };
+  }
+
+  [[nodiscard]] static BindSpec scatter(
+      const pluss::table::FlashTableColumns& columns = {},
+      std::string_view title = {}) {
+    return BindSpec{
+        .kind = ViewKind::Scatter,
+        .title = std::string(title),
+        .columns = columns,
+    };
+  }
+
+  [[nodiscard]] static BindSpec heatmap(
+      const pluss::table::FlashTableColumns& columns = {},
+      std::string_view title = {}) {
+    return BindSpec{
+        .kind = ViewKind::Heatmap,
+        .title = std::string(title),
+        .columns = columns,
+    };
+  }
+
+  [[nodiscard]] static BindSpec corr(
+      std::initializer_list<std::string_view> features = {},
+      std::string_view title = {}) {
+    BindSpec out;
+    out.kind = ViewKind::Corr;
+    out.title = std::string(title);
+    out.analysis_features.reserve(features.size());
+    for (const auto feature : features) {
+      out.analysis_features.emplace_back(feature);
+    }
+    return out;
   }
 
   [[nodiscard]] static BindSpec detail_table(std::string_view title = {}) {
@@ -540,6 +709,20 @@ public:
     return *this;
   }
 
+  View& hue(std::string_view value) {
+    bind_.columns.hue_feature = std::string(value);
+    return *this;
+  }
+
+  View& features(std::initializer_list<std::string_view> features) {
+    bind_.analysis_features.clear();
+    bind_.analysis_features.reserve(features.size());
+    for (const auto feature : features) {
+      bind_.analysis_features.emplace_back(feature);
+    }
+    return *this;
+  }
+
   View& horizontal(bool enable = true) {
     bind_.horizontal = enable;
     return *this;
@@ -612,6 +795,24 @@ public:
   [[nodiscard]] static View bar(std::string_view key) {
     View out(key);
     out.bind_ = BindSpec::bar();
+    return out;
+  }
+
+  [[nodiscard]] static View scatter(std::string_view key) {
+    View out(key);
+    out.bind_ = BindSpec::scatter();
+    return out;
+  }
+
+  [[nodiscard]] static View heatmap(std::string_view key) {
+    View out(key);
+    out.bind_ = BindSpec::heatmap();
+    return out;
+  }
+
+  [[nodiscard]] static View corr(std::string_view key) {
+    View out(key);
+    out.bind_ = BindSpec::corr();
     return out;
   }
 
@@ -906,6 +1107,18 @@ private:
 
 [[nodiscard]] inline View bar(std::string_view key) {
   return View::bar(key);
+}
+
+[[nodiscard]] inline View scatter(std::string_view key) {
+  return View::scatter(key);
+}
+
+[[nodiscard]] inline View heatmap(std::string_view key) {
+  return View::heatmap(key);
+}
+
+[[nodiscard]] inline View corr(std::string_view key) {
+  return View::corr(key);
 }
 
 [[nodiscard]] inline View table(std::string_view key) {

@@ -32,6 +32,14 @@ Use it when you want one of two things:
 
 It never mutates the `Series`. It is a presentation tool.
 
+The distinction matters:
+
+- `pluss::series::print(series)` returns a string
+- `pluss::series::print(std::cout, series)` writes immediately to the stream
+
+So if you call `pluss::series::print(series)` and do nothing with the returned
+string, nothing is printed yet.
+
 ## Overload Map
 
 **`print(s)`**
@@ -99,7 +107,8 @@ auto printable = pluss::make_series({
     {4.0, 5.5, 6.25},
 });
 
-std::cout << pluss::series::print(printable);
+auto rendered = pluss::series::print(printable);
+std::cout << rendered;
 ```
 
 ### Output
@@ -126,13 +135,30 @@ data=
 ⎣ 4.0000 5.5000 6.2500 ⎦
 ```
 
-Example 3. You can hide the metadata block and keep the data rendering.
+Example 3. `std::cout << series` is also valid, because `Series` has stream
+support too.
+
+```cpp
+std::cout << printable;
+```
+
+### Output
+
+```text
+Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 1.2500 2.5000 3.7500 ⎤
+⎣ 4.0000 5.5000 6.2500 ⎦
+```
+
+Example 4. You can hide the metadata block and keep the data rendering.
 
 ```cpp
 pluss::PrintOptions opt;
 opt.metadata_mode = pluss::codem::PrintMetadataMode::None;
 
-std::cout << pluss::series::print(printable, opt);
+auto rendered = pluss::series::print(printable, opt);
+std::cout << rendered;
 ```
 
 ### Output
@@ -144,13 +170,14 @@ data=
 ⎣ 4.0000 5.5000 6.2500 ⎦
 ```
 
-Example 4. Boolean output can be rendered in compact `1/0` form.
+Example 5. Boolean output can be rendered in compact `1/0` form.
 
 ```cpp
 pluss::PrintOptions opt;
 opt.bool_style = pluss::codem::PrintBoolStyle::OneZero;
 
-std::cout << pluss::series::print(
+pluss::series::print(
+    std::cout,
     pluss::make_series({true, false, true, true}, pluss::ScalarType::Bool),
     opt);
 ```
@@ -167,8 +194,10 @@ data=[1, 0, 1, 1]
 - `print(...)` is for human-readable display, not stable machine interchange.
 - Hiding metadata changes presentation only. It does not turn the output into a
   raw numeric dump.
+- `print(series)` does not print by itself. It returns a string that you still
+  need to store, stream, or otherwise use.
 - `std::cout << series` also works, but `pluss::series::print(...)` is the
-  explicit public print facility when you want to teach or control formatting.
+  explicit public print facility when you want to control formatting.
 
 ## Summary
 
@@ -177,6 +206,8 @@ Use `pluss::series::print(...)` when you want the public rendering surface for
 
 - choose `print(s)` when you need a string
 - choose `print(os, s, ...)` for direct stream output
+- `std::cout << series` is the shorthand stream route when you do not need
+  custom print options
 - use `PrintOptions` to tune presentation without changing the data
 
 ## See Also

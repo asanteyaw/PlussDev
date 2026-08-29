@@ -17,7 +17,7 @@
     <script src="../../../../_static/layout.js?v=82df9d8b"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="Lymph prep" href="../../prep.html" />
+    <link rel="next" title="lymph::models::Builder Introduction" href="Builder/Introduction.html" />
     <link rel="prev" title="models::builder Introduction" href="Introduction.html" />
    
   <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
@@ -38,255 +38,107 @@
             
   <section id="lymph-models-builder">
 <h1><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder</span></code><a class="headerlink" href="#lymph-models-builder" title="Link to this heading">¶</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder</span></code> is the named candidate-model workspace in the
-<code class="docutils literal notranslate"><span class="pre">models::builder</span></code> subfamily.</p>
-<p>Use it when you want several candidate <code class="docutils literal notranslate"><span class="pre">Model</span></code> objects to live inside one
-coordinated object before spotchecking, benchmarking, or search.</p>
-<p>The important contract is that <code class="docutils literal notranslate"><span class="pre">Builder</span></code> is not just a container. It remembers
-names, exposes tabular reporting, protects against accidental duplicate
-registration, and remembers the last benchmark result strongly enough that
-<code class="docutils literal notranslate"><span class="pre">best()</span></code> and <code class="docutils literal notranslate"><span class="pre">worst()</span></code> remain meaningful afterward.</p>
-</section>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Builder</span><span class="w"> </span><span class="nf">lymph::models::build</span><span class="p">();</span>
-<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Builder</span><span class="w"> </span><span class="nf">lymph::models::build</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">entries</span><span class="p">);</span>
-
-<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Builder</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">lymph::models::Builder::inject</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">model</span><span class="p">);</span>
-
-<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="nf">lymph::models::Builder::eject</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">);</span>
-
-<span class="kt">bool</span><span class="w"> </span><span class="nf">lymph::models::Builder::has</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span>
-
-<span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">lymph::models::Builder::get</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Builder</span><span class="o">::</span><span class="n">names</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Builder</span><span class="o">::</span><span class="n">list</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="nf">lymph::models::Builder::report</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-
-<span class="n">lymph</span><span class="o">::</span><span class="n">selection</span><span class="o">::</span><span class="n">CompareResult</span><span class="w"> </span><span class="nf">lymph::models::Builder::benchmark</span><span class="p">(</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span>
-<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">selection</span><span class="o">::</span><span class="n">CrossValOptions</span><span class="w"> </span><span class="n">cv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span>
-<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">TrainOptions</span><span class="w"> </span><span class="n">train_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span>
-<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">AssessOptions</span><span class="w"> </span><span class="n">assess_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span>
-<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricKind</span><span class="w"> </span><span class="n">objective_metric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricKind</span><span class="o">::</span><span class="n">Accuracy</span><span class="p">,</span>
-<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">TuneObjectivePolicy</span><span class="w"> </span><span class="n">objective_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">TuneObjectivePolicy</span><span class="o">::</span><span class="n">Auto</span><span class="p">,</span>
-<span class="w">    </span><span class="n">lymph</span><span class="o">::</span><span class="n">selection</span><span class="o">::</span><span class="n">FitOptions</span><span class="w"> </span><span class="n">fit_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-
-<span class="kt">bool</span><span class="w"> </span><span class="nf">lymph::models::Builder::benchmarked</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span>
-
-<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="nf">lymph::models::Builder::best</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-<span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="nf">lymph::models::Builder::worst</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
-</pre></div>
+<p><code class="docutils literal notranslate"><span class="pre">Builder</span></code> is the named candidate-model workspace inside the <code class="docutils literal notranslate"><span class="pre">models::builder</span></code>
+subfamily.</p>
+<p>Use it when one model is no longer enough and you need a stable home for
+several candidates before comparison.</p>
+<section id="pages">
+<h2>Pages<a class="headerlink" href="#pages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Builder/Introduction.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder</span></code> Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/Introduction.html#what-this-type-represents">What This Type Represents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/Introduction.html#why-it-lives-under-models-builder">Why It Lives Under <code class="docutils literal notranslate"><span class="pre">models::builder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/Introduction.html#reading-order">Reading Order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/Introduction.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/benchmark.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::benchmark</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/benchmark.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/benchmark.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/benchmark.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/benchmark.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/benchmarked.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::benchmarked</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/benchmarked.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/benchmarked.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/benchmarked.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/benchmarked.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/best.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::best</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/best.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/best.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/best.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/best.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/eject.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::eject</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/eject.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/eject.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/eject.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/eject.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/get.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::get</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/get.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/get.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/get.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/get.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/has.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::has</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/has.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/has.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/has.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/has.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/inject.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::inject</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/inject.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/inject.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/inject.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/inject.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/list.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::list</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/list.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/list.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/list.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/list.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/names.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::names</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/names.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/names.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/names.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/names.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/report.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::report</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/report.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/report.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/report.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/report.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/worst.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder::worst</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/worst.html#signature">Signature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/worst.html#what-it-does">What It Does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/worst.html#practical-example">Practical Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/worst.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Builder/Notes.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder</span></code> Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builder/Notes.html#registry-notes">Registry Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/Notes.html#benchmark-memory-notes">Benchmark Memory Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/Notes.html#inspection-notes">Inspection Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Builder/Notes.html#related-pages">Related Pages</a></li>
+</ul>
+</li>
+</ul>
 </div>
-</section>
-<section id="core-idea">
-<h2>Core Idea<a class="headerlink" href="#core-idea" title="Link to this heading">¶</a></h2>
-<p>The object solves three distinct jobs:</p>
-<ol class="arabic simple">
-<li><p>candidate registration</p></li>
-<li><p>candidate inspection</p></li>
-<li><p>candidate comparison handoff</p></li>
-</ol>
-<p>Registration is the “what lives here?” problem.</p>
-<p>Inspection is the “what exactly did I register?” problem.</p>
-<p>Comparison handoff is the “now evaluate these without building auxiliary
-candidate lists myself” problem.</p>
-<p>That is why the surface intentionally includes both lightweight and richer
-inspection paths:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">names()</span></code> and <code class="docutils literal notranslate"><span class="pre">list(n)</span></code> for cheap identity inspection</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">report()</span></code> for one-row-per-model tabular reporting</p></li>
-</ul>
-</section>
-<section id="benchmark-memory-contract">
-<h2>Benchmark Memory Contract<a class="headerlink" href="#benchmark-memory-contract" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">benchmark(...)</span></code> is intentionally non-destructive with respect to the stored
-candidate registry.</p>
-<p>That matters because experimental comparison and registry ownership are not the
-same concern. The comparison produces fitted winners and losers, but the
-underlying workspace still holds the original registered models. After a
-benchmark:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">builder.benchmarked()</span></code> becomes true</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">builder.best()</span></code> and <code class="docutils literal notranslate"><span class="pre">builder.worst()</span></code> become valid</p></li>
-<li><p>the stored registry remains available for inspection</p></li>
-<li><p>the stored candidate models are not silently overwritten by the fitted
-outputs</p></li>
-</ul>
-<p>The second example below prints that behavior directly.</p>
-</section>
-<section id="practical-examples">
-<h2>Practical Examples<a class="headerlink" href="#practical-examples" title="Link to this heading">¶</a></h2>
-<p>This page uses the exact verifier programs:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">lymph_models_builder_docverify_demo.cpp</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lymph_models_builder_benchmark_docverify_demo.cpp</span></code></p></li>
-</ul>
-<section id="example-1">
-<h3>Example 1<a class="headerlink" href="#example-1" title="Link to this heading">¶</a></h3>
-<p>This example constructs a real candidate-model workspace, confirms the basic
-identity state, shows both cheap listing surfaces, and then prints the richer
-report table.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/lymph.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
-
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">lymph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">lymph</span><span class="p">;</span>
-
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Builder</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">build</span><span class="p">({</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;logreg&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">logistic_regression</span><span class="p">({.</span><span class="n">fit_intercept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})},</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;tree&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">decision_tree_classifier</span><span class="p">({.</span><span class="n">max_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">})},</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;knn&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">knn_classifier</span><span class="p">({.</span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">})},</span>
-<span class="w">  </span><span class="p">});</span>
-
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== builder ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;size=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">size</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; empty=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">empty</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; has_tree=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;tree&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">names</span><span class="p">();</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">list</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;names=&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;preview=&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">preview</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">preview</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">report</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Output</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>== builder ==
-size=3 empty=false has_tree=true
-names=logreg,tree,knn
-preview=logreg,tree
-===================================================
-     | name    task_kind       trained  stage_count
----------------------------------------------------
-0    | logreg  classification  false    0          
-1    | tree    classification  false    0          
-2    | knn     classification  false    0          
----------------------------------------------------
-[3 cs x 4 feat]
-</pre></div>
-</div>
-<p>This is the normal pre-comparison checkpoint:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">names()</span></code> confirms insertion-order identity</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">list(2)</span></code> gives a cheap preview when you do not want the whole table</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">report()</span></code> turns the registry into a real table for screen inspection or
-further downstream handling</p></li>
-</ul>
-</section>
-<section id="example-2">
-<h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
-<p>This example runs a real benchmark over the registered candidates, prints the
-ranking board, and then proves that the workspace now remembers the benchmark
-result without silently mutating the stored registry entry itself.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/lymph.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
-
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">lymph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">lymph</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">;</span>
-<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span>
-<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">).</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
-
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">x</span><span class="p">({</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;x1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;x2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">))},</span>
-<span class="w">  </span><span class="p">});</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">);</span>
-
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">Builder</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">build</span><span class="p">({</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;logreg&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">logistic_regression</span><span class="p">({.</span><span class="n">fit_intercept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">})},</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;tree&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">decision_tree_classifier</span><span class="p">({.</span><span class="n">max_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">})},</span>
-<span class="w">      </span><span class="p">{</span><span class="s">&quot;knn&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">models</span><span class="o">::</span><span class="n">knn_classifier</span><span class="p">({.</span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">})},</span>
-<span class="w">  </span><span class="p">});</span>
-
-<span class="w">  </span><span class="n">lymph</span><span class="o">::</span><span class="n">selection</span><span class="o">::</span><span class="n">CrossValOptions</span><span class="w"> </span><span class="n">cv</span><span class="p">{};</span>
-<span class="w">  </span><span class="n">cv</span><span class="p">.</span><span class="n">folds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
-<span class="w">  </span><span class="n">cv</span><span class="p">.</span><span class="n">shuffle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">selection</span><span class="o">::</span><span class="n">CompareResult</span><span class="w"> </span><span class="n">ranked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">benchmark</span><span class="p">(</span>
-<span class="w">      </span><span class="n">x</span><span class="p">,</span>
-<span class="w">      </span><span class="n">y</span><span class="p">,</span>
-<span class="w">      </span><span class="n">cv</span><span class="p">,</span>
-<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">TrainOptions</span><span class="p">{},</span>
-<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">AssessOptions</span><span class="p">{},</span>
-<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">MetricKind</span><span class="o">::</span><span class="n">Accuracy</span><span class="p">,</span>
-<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">TuneObjectivePolicy</span><span class="o">::</span><span class="n">Auto</span><span class="p">,</span>
-<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">selection</span><span class="o">::</span><span class="n">FitOptions</span><span class="p">{.</span><span class="n">fit_top</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
-
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;== benchmark ==</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ranked</span><span class="p">.</span><span class="n">report</span><span class="p">.</span><span class="n">board</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;best_name=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ranked</span><span class="p">.</span><span class="n">report</span><span class="p">.</span><span class="n">best_name</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; benchmarked=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">benchmarked</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; best_trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">best</span><span class="p">().</span><span class="n">trained</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; worst_trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">worst</span><span class="p">().</span><span class="n">trained</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; stored_logreg_trained=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;logreg&quot;</span><span class="p">).</span><span class="n">trained</span><span class="p">()</span>
-<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Output</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>== benchmark ==
-========================================
-     | name    objective  rank  accuracy
-----------------------------------------
-0    | logreg  1          1     1       
-1    | tree    0.875      3     0.875   
-2    | knn     1          1     1       
-----------------------------------------
-[3 cs x 4 feat]
-best_name=logreg benchmarked=true best_trained=true worst_trained=true stored_logreg_trained=false
-</pre></div>
-</div>
-<p>The last line carries the main semantic point:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">benchmarked=true</span></code> means the workspace remembered the result</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">best_trained=true</span></code> and <code class="docutils literal notranslate"><span class="pre">worst_trained=true</span></code> mean the remembered winners and
-losers are fitted</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stored_logreg_trained=false</span></code> means the original registered candidate inside
-the workspace was not silently rewritten into the fitted winner</p></li>
-</ul>
-<p>That non-destructive contract is what makes <code class="docutils literal notranslate"><span class="pre">Builder</span></code> safe to reuse across
-multiple comparison passes.</p>
-</section>
-</section>
-<section id="related-pages">
-<h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="../../models.html"><span class="std std-doc">models family</span></a></p></li>
-<li><p><a class="reference internal" href="Introduction.html"><span class="std std-doc">builder Introduction</span></a></p></li>
-<li><p><a class="reference internal" href="../Model.html"><span class="std std-doc">Model</span></a></p></li>
-</ul>
 </section>
 </section>
 

@@ -161,9 +161,9 @@ Read `comp(universe)` as "the complement of `self` inside `universe`."
 - [`Series::intersection`](intersection.md): keep only common members.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clamp_min.html">
+  <a class="prev-link" href="clear_sensitivity.html">
     <span class="label">Previous</span>
-    <span class="title">clamp_min</span>
+    <span class="title">clear_sensitivity</span>
   </a>
   <a class="next-link" href="copy_.html">
     <span class="label">Next</span>

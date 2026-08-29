@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=da1ea0a4"></script>
+    <script src="../../../_static/api_nav.js?v=33944c6a"></script>
     <script src="../../../_static/layout.js?v=34ad04f2"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -65,6 +65,13 @@ function on the public <code class="docutils literal notranslate"><span class="p
 <li><p>direct output to a stream such as <code class="docutils literal notranslate"><span class="pre">std::cout</span></code></p></li>
 </ul>
 <p>It never mutates the <code class="docutils literal notranslate"><span class="pre">Series</span></code>. It is a presentation tool.</p>
+<p>The distinction matters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::series::print(series)</span></code> returns a string</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::series::print(std::cout,</span> <span class="pre">series)</span></code> writes immediately to the stream</p></li>
+</ul>
+<p>So if you call <code class="docutils literal notranslate"><span class="pre">pluss::series::print(series)</span></code> and do nothing with the returned
+string, nothing is printed yet.</p>
 </section>
 <section id="overload-map">
 <h2>Overload Map<a class="headerlink" href="#overload-map" title="Link to this heading">¶</a></h2>
@@ -117,7 +124,8 @@ For the stream-writing overload.</p>
 <span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5</span><span class="p">,</span><span class="w"> </span><span class="mf">6.25</span><span class="p">},</span>
 <span class="p">});</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">printable</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rendered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">printable</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rendered</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -141,33 +149,49 @@ data=
 ⎣ 4.0000 5.5000 6.2500 ⎦
 </pre></div>
 </div>
-<p>Example 3. You can hide the metadata block and keep the data rendering.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">PrintOptions</span><span class="w"> </span><span class="n">opt</span><span class="p">;</span>
-<span class="n">opt</span><span class="p">.</span><span class="n">metadata_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">PrintMetadataMode</span><span class="o">::</span><span class="n">None</span><span class="p">;</span>
-
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">printable</span><span class="p">,</span><span class="w"> </span><span class="n">opt</span><span class="p">);</span>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">series</span></code> is also valid, because <code class="docutils literal notranslate"><span class="pre">Series</span></code> has stream
+support too.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">printable</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data=
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
 ⎡ 1.2500 2.5000 3.7500 ⎤
 ⎣ 4.0000 5.5000 6.2500 ⎦
 </pre></div>
 </div>
-<p>Example 4. Boolean output can be rendered in compact <code class="docutils literal notranslate"><span class="pre">1/0</span></code> form.</p>
+<p>Example 4. You can hide the metadata block and keep the data rendering.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">PrintOptions</span><span class="w"> </span><span class="n">opt</span><span class="p">;</span>
-<span class="n">opt</span><span class="p">.</span><span class="n">bool_style</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">PrintBoolStyle</span><span class="o">::</span><span class="n">OneZero</span><span class="p">;</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">metadata_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">PrintMetadataMode</span><span class="o">::</span><span class="n">None</span><span class="p">;</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">),</span>
-<span class="w">    </span><span class="n">opt</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rendered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">printable</span><span class="p">,</span><span class="w"> </span><span class="n">opt</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rendered</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data=
+⎡ 1.2500 2.5000 3.7500 ⎤
+⎣ 4.0000 5.5000 6.2500 ⎦
+</pre></div>
+</div>
+<p>Example 5. Boolean output can be rendered in compact <code class="docutils literal notranslate"><span class="pre">1/0</span></code> form.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">PrintOptions</span><span class="w"> </span><span class="n">opt</span><span class="p">;</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">bool_style</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">PrintBoolStyle</span><span class="o">::</span><span class="n">OneZero</span><span class="p">;</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">),</span>
+<span class="w">    </span><span class="n">opt</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
 data=[1, 0, 1, 1]
 </pre></div>
@@ -180,8 +204,10 @@ data=[1, 0, 1, 1]
 <li><p><code class="docutils literal notranslate"><span class="pre">print(...)</span></code> is for human-readable display, not stable machine interchange.</p></li>
 <li><p>Hiding metadata changes presentation only. It does not turn the output into a
 raw numeric dump.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">print(series)</span></code> does not print by itself. It returns a string that you still
+need to store, stream, or otherwise use.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">series</span></code> also works, but <code class="docutils literal notranslate"><span class="pre">pluss::series::print(...)</span></code> is the
-explicit public print facility when you want to teach or control formatting.</p></li>
+explicit public print facility when you want to control formatting.</p></li>
 </ul>
 </section>
 <section id="summary">
@@ -191,6 +217,8 @@ explicit public print facility when you want to teach or control formatting.</p>
 <ul class="simple">
 <li><p>choose <code class="docutils literal notranslate"><span class="pre">print(s)</span></code> when you need a string</p></li>
 <li><p>choose <code class="docutils literal notranslate"><span class="pre">print(os,</span> <span class="pre">s,</span> <span class="pre">...)</span></code> for direct stream output</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">series</span></code> is the shorthand stream route when you do not need
+custom print options</p></li>
 <li><p>use <code class="docutils literal notranslate"><span class="pre">PrintOptions</span></code> to tune presentation without changing the data</p></li>
 </ul>
 </section>

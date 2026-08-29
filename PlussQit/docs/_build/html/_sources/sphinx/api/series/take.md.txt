@@ -245,12 +245,12 @@ surface.
   named axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index_put_.html">
+  <a class="prev-link" href="sum.html">
     <span class="label">Previous</span>
-    <span class="title">index_put_</span>
+    <span class="title">sum</span>
   </a>
-  <a class="next-link" href="put_.html">
+  <a class="next-link" href="tan.html">
     <span class="label">Next</span>
-    <span class="title">put_</span>
+    <span class="title">tan</span>
   </a>
 </div>

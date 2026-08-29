@@ -139,9 +139,9 @@ SeriesBase::size: dim out of range
   change what later `size()` calls return.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="pos.html">
+  <a class="prev-link" href="sinh.html">
     <span class="label">Previous</span>
-    <span class="title">pos</span>
+    <span class="title">sinh</span>
   </a>
   <a class="next-link" href="sizes.html">
     <span class="label">Next</span>

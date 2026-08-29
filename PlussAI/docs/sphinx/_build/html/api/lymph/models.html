@@ -50,6 +50,8 @@ deploy the workflow?” or “how do I validate the experiment?” but rather:</
 concern:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">models</span></code> owns trainable estimator handles and candidate-model workspaces</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> owns the shared configuration bags those objects consume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reports</span></code> owns the richer result objects those workflows emit</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">prep</span></code> owns reusable transformation objects, stages, routes, and feature
 remapping contracts</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">selection</span></code> owns evidence policy: cross-validation, holdout, time-aware
@@ -109,18 +111,26 @@ workspace before validation or search.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="models/Model.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="models/Model.html#summary">Summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models/Model.html#signature">Signature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models/Model.html#why-this-object-exists">Why This Object Exists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models/Model.html#construction-paths">Construction Paths</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models/Model.html#state-semantics">State Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models/Model.html#learning-inference-and-assessment">Learning, Inference, and Assessment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models/Model.html#practical-examples">Practical Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models/Model.html#related-pages">Related Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models/Model.html#pages">Pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/Introduction.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model</span></code> Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/append.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model::append</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/assess.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model::assess</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/infer.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model::infer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/learn.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model::learn</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/load.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model::load</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/prepare.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model::prepare</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/save.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model::save</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/Model/Notes.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Model</span></code> Notes</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="models/builder.html">builder</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="models/builder.html#pages">Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models/builder.html#pages">Pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="models/builder/Introduction.html"><code class="docutils literal notranslate"><span class="pre">models::builder</span></code> Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/builder/Builder.html"><code class="docutils literal notranslate"><span class="pre">lymph::models::Builder</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

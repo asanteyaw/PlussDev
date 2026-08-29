@@ -194,9 +194,9 @@ the original matrix, so that is exactly where the gradient lands.
 - [`Series::view`](view.md): strict aliasing reinterpretation.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="reshape.html">
+  <a class="prev-link" href="tracks_slope_.html">
     <span class="label">Previous</span>
-    <span class="title">reshape</span>
+    <span class="title">tracks_slope_</span>
   </a>
   <a class="next-link" href="permute.html">
     <span class="label">Next</span>

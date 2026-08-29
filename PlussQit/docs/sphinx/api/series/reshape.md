@@ -199,8 +199,8 @@ and `5`, so those are exactly the source positions that receive gradient.
     <span class="label">Previous</span>
     <span class="title">view</span>
   </a>
-  <a class="next-link" href="transpose.html">
+  <a class="next-link" href="reverse.html">
     <span class="label">Next</span>
-    <span class="title">transpose</span>
+    <span class="title">reverse</span>
   </a>
 </div>

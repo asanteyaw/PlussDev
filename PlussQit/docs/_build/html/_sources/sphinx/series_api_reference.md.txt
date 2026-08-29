@@ -23,19 +23,21 @@ compiled-and-run examples under every code block.
 
 ## Coverage
 
-`Series` has roughly 350 distinct method names; this reference currently covers a
-working subset, prioritized by how load-bearing each method is (indexing/shape,
-factories, then the autograd-sensitive family) rather than alphabetically. Every
-page here is real, hand-verified prose — nothing below is a mechanically generated
-stub.
+`Series` exposes a large public method surface, and this reference currently
+covers a working subset, prioritized by how load-bearing each family is
+(indexing/shape, factories, then the autograd-sensitive family) rather than by
+code generation order. Every page here is real, hand-verified prose — nothing
+below is a mechanically generated stub.
 
 The current handwritten shape and slice/indexing cluster now covers:
 
-- unary math core: `abs`, `neg`, `sign`, `exp`, `log`, `sqrt`
+- unary math core: `abs`, `neg`, `sign`, `exp`, `log`, `sqrt`, `sin`, `cos`,
+  `tan`, `asin`, `acos`, `atan`, `sinh`, `cosh`, `tanh`
 - elementwise arithmetic core: `add`, `sub`, `mul`, `div`, `pow`
 - elementwise comparison core: `eq`, `ne`, `lt`, `le`, `gt`, `ge`
 - selection/counting core: `select`, `nonzero`, `unique`, `isin`, `bincount`,
   `histc`
+- number theory core: `factor`, `is_prime`, `prime`
 - flat set logic core: `union1d`, `unionize`, `intersect1d`, `intersection`,
   `setdiff1d`, `setxor1d`, `comp`, `cartprod`
 - axis-wise set logic core: `unionize_along`, `intersection_along`,
@@ -52,6 +54,8 @@ The current handwritten shape and slice/indexing cluster now covers:
 - elementwise comparison/bounds helpers and a few load-bearing utility ops
 - reduction and scan core: `sum`, `mean`, `prod`, `max`, `min`, `argmax`,
   `argmin`, `cumsum`, `cumprod`
+- autograd root controls: `tracks_slope`, `tracks_slope_`, `reverse`,
+  `has_sensitivity`, `sensitivity`, `clear_sensitivity`
 - accessors: `stat`
 
 The current handwritten `SeriesStatAccessor` subset covers:
@@ -80,23 +84,30 @@ or jump straight to the dedicated accessor reference from the sidebar.
 :maxdepth: 1
 
 api/series/abs
+api/series/acos
 api/series/add
 api/series/all
 api/series/any
 api/series/argmax
 api/series/argmin
+api/series/asin
+api/series/atan
 api/series/bincount
 api/series/block
 api/series/cartprod
 api/series/clamp_max
 api/series/clamp_min
+api/series/clear_sensitivity
 api/series/comp
 api/series/copy_
+api/series/cos
+api/series/cosh
 api/series/cumprod
 api/series/cumsum
 api/series/div
 api/series/eq
 api/series/exp
+api/series/factor
 api/series/extract
 api/series/extract_put
 api/series/extract_put_
@@ -104,6 +115,7 @@ api/series/flatten
 api/series/gather
 api/series/ge
 api/series/gt
+api/series/has_sensitivity
 api/series/histc
 api/series/index
 api/series/index_put
@@ -112,6 +124,7 @@ api/series/index_select
 api/series/intersect1d
 api/series/intersection
 api/series/intersection_along
+api/series/is_prime
 api/series/isin
 api/series/le
 api/series/log
@@ -129,17 +142,22 @@ api/series/permute
 api/series/pile
 api/series/pos
 api/series/pow
+api/series/prime
 api/series/prod
 api/series/put_
 api/series/reshape
-api/series/sign
-api/series/size
-api/series/sizes
+api/series/reverse
 api/series/select
+api/series/sensitivity
 api/series/setdiff1d
 api/series/setdiff_along
 api/series/setxor1d
 api/series/setxor_along
+api/series/sign
+api/series/sin
+api/series/sinh
+api/series/size
+api/series/sizes
 api/series/slice
 api/series/sqrt
 api/series/squeeze
@@ -147,6 +165,10 @@ api/series/stat
 api/series/sub
 api/series/sum
 api/series/take
+api/series/tan
+api/series/tanh
+api/series/tracks_slope
+api/series/tracks_slope_
 api/series/transpose
 api/series/traverse_put
 api/series/traverse_put_

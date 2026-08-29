@@ -42,6 +42,20 @@ handwritten PlussAI/Lymph API docs.
   from a different helper file or a cleaned-up variant.
 - Never show one code sample and paste output from a different program. The
   example code in the page is the verifier artifact.
+- Prefer readable output layout. Separate major phases with blank lines so the
+  result is scannable instead of jammed together.
+- For scalar or key-value style status lines, prefer visible separators:
+  - `name = value`
+  - `left = value, right = value`
+  rather than jammed forms such as `name=value right=value`.
+- Do not print full `pluss::Series` object prose by default. Most examples
+  should print the carried values through a clearer surface such as a small
+  `DataFrame`, `.item<T>()`, or another data-focused display. Print the full
+  `Series` object only when shape, dtype, platform, or other metadata is part
+  of the lesson.
+- Do not publish internal verifier source filenames in public docs. Under
+  `Practical Examples`, summarize what the reader is about to see and what the
+  examples demonstrate; do not list repo-internal `.cpp` generators.
 
 ## Signature Discipline
 
@@ -84,6 +98,11 @@ pluss::Series lymph::selection::Plan::scores(...) const;
   - `pluss::ai::lymph`
 - In Lymph docs, prefer `lymph::*` names when the type is part of the Lymph
   public surface.
+- When examples need many option or report names, prefer:
+  - `using options = lymph::options;`
+  - `using reports = lymph::reports;`
+  so examples stay readable without falling back to root `lymph::*Options` or
+  root `lymph::*Report` usage.
 - If a lower-level public type must be shown, use the public alias family name
   such as `classic::*`, not `nodej::*`.
 - In examples, prefer `{...}` over verbose internal range-view construction.
@@ -151,6 +170,47 @@ Example:
 The clickable pages in the sidebar are the navigation contract. A family or
 subfamily landing page is not ornamental; it explains what that concern owns
 before the reader drills into concrete objects.
+
+Within a type, the tree must narrow further. Do not lump every method of a type
+into one giant type page. The type page tree should be:
+
+- family
+  - type or subfamily
+    - type
+      - `Introduction`
+      - one page per public method
+      - `Notes`
+
+If the type lives directly under a family, the shape is:
+
+- family
+  - type
+    - `Introduction`
+    - `append`
+    - `assess`
+    - `infer`
+    - `learn`
+    - `prepare`
+    - `Notes`
+
+If the type lives under a subfamily, the shape is:
+
+- family
+  - subfamily
+    - type
+      - `Introduction`
+      - method pages
+      - `Notes`
+
+Method pages must be listed in alphabetical order. If an in-place and
+out-of-place pair are the same conceptual method, teach them on one page
+together, for example `learn` can document both `learn(...)` and `learn_(...)`.
+
+This is API reference, not a user guide. The method page is where signature,
+options, behavior, examples, edge cases, and verified outputs should live. The
+type-level `Introduction` explains the object’s role; the type-level `Notes`
+holds summaries, gotchas, cross-links, and postscript material that does not
+belong to one method alone.
 
 The left sidebar itself must remain persistent across clicks. Clicking a family,
 subfamily, object, or options page should only change the content panel and the

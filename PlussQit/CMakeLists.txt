@@ -510,6 +510,15 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_setops_reference_demo examples/CodeM/series_setops_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_setops_reference_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_number_reference_demo examples/CodeM/series_number_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_number_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_trig_reference_demo examples/CodeM/series_trig_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_trig_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_autograd_reference_demo examples/CodeM/series_autograd_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_autograd_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_linear_alg_demo examples/CodeM/linear_alg_demo.cpp)
   target_link_libraries(plussqit_codem_linear_alg_demo PRIVATE PlussQit::CodeM)
 

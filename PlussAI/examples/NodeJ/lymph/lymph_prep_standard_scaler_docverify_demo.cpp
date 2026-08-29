@@ -29,9 +29,9 @@ int main() {
   const lymph::prep::StandardScalerSummary summary = scaler.summary();
 
   std::cout << "== standard_scaler ==\n";
-  std::cout << "rows=" << scaled.ncases()
-            << " features=" << scaled.nfeatures()
-            << " summary_features=" << summary.feature_names.size() << "\n";
+  std::cout << "rows = " << scaled.ncases()
+            << ", features = " << scaled.nfeatures()
+            << ", summary_features = " << summary.feature_names.size() << "\n\n";
   std::cout << scaled.head(2) << "\n";
 
   return 0;

@@ -9,7 +9,7 @@ searched cleanly."
 ## Pages
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 3
 
 builder/Introduction
 builder/Builder

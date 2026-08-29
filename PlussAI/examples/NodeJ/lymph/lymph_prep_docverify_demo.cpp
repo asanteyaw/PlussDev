@@ -6,12 +6,6 @@
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
-  using pluss::Series;
-  using lymph::AssessOptions;
-  using lymph::LinearFamilyOptions;
-  using lymph::MetricKind;
-  using lymph::RegularizationKind;
-  using lymph::TrainOptions;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
 
@@ -26,48 +20,51 @@ int main() {
       {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
-  LinearFamilyOptions logistic_options{};
-  logistic_options.regularization = RegularizationKind::L2;
+  lymph::options::Linear logistic_options{};
+  logistic_options.regularization = lymph::RegularizationKind::L2;
   logistic_options.regularization_strength = 1e-3;
   logistic_options.fit_intercept = true;
 
-  lymph::Model model = lymph::model::logistic_regression(logistic_options);
-  lymph::ModelPrep prep = model.prepare();
+  lymph::models::Model model = lymph::models::linear::logistic_regression(logistic_options);
+  lymph::models::ModelPrep prep = model.prepare();
   prep.standardize({"income", "balance", "late"});
   prep.encode(
-      lymph::columnrouter::names({"region"}),
+      lymph::prep::route::names({"region"}),
       lymph::prep::OneHotEncoderOptions{
           .max_categories = 8,
           .overflow = lymph::prep::CategoryOverflowPolicy::KeepMostFrequent,
           .include_unknown_bucket = true,
       });
 
-  TrainOptions train_options{};
+  lymph::options::Train train_options{};
   train_options.max_iterations = 600;
   train_options.tolerance = 1e-8;
   train_options.random = {.seed = 20260825ULL, .deterministic = true};
 
-  lymph::DataFrameBatchOptions data_options{};
+  lymph::options::DFBatch data_options{};
   data_options.feature_names = {"income", "balance", "late", "region"};
   data_options.label_feature = "default";
   data_options.note_policy = lymph::DataNotePolicy::Factorize;
 
   model.learn_(raw, data_options, train_options);
-  const Series predicted = model.infer(raw, data_options);
-  const lymph::MetricReport report = model.assess(
+  const pluss::Series predicted = model.infer(raw, data_options);
+  const lymph::reports::Metric report = model.assess(
       raw,
       data_options,
-      AssessOptions{
-          .metrics = {MetricKind::Accuracy, MetricKind::F1},
+      lymph::options::Assess{
+          .metrics = {lymph::MetricKind::Accuracy, lymph::MetricKind::F1},
       });
+  const DataFrame prediction_frame({
+      {"predicted", Thread(predicted)},
+  });
 
   std::cout << "== prep ==\n";
-  std::cout << "stage_count=" << model.stage_count()
-            << " trained=" << model.trained()
-            << " task_kind=" << static_cast<int>(model.task_kind()) << "\n";
-  std::cout << "predictions=" << predicted << "\n";
-  std::cout << "accuracy=" << report.accuracy
-            << " f1=" << report.f1 << "\n";
+  std::cout << "stage_count = " << model.stage_count()
+            << ", trained = " << std::boolalpha << model.trained()
+            << ", task_kind = " << static_cast<int>(model.task_kind()) << "\n\n";
+  std::cout << prediction_frame << "\n";
+  std::cout << "accuracy = " << report.accuracy.item<double>()
+            << ", f1 = " << report.f1.item<double>() << "\n";
 
   return 0;
 }

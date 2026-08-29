@@ -5,6 +5,7 @@
 
 int main() {
   namespace lymph = pluss::ai::lymph;
+  namespace options = lymph::options;
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
@@ -19,18 +20,18 @@ int main() {
       {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
   });
 
-  lymph::DataFrameBatchOptions options{};
-  options.feature_names = {"income", "region", "balance"};
-  options.note_policy = lymph::DataNotePolicy::Factorize;
-  options.layout = lymph::ObservationLayout::Rows;
+  options::DFBatch batch_options{};
+  batch_options.feature_names = {"income", "region", "balance"};
+  batch_options.note_policy = lymph::DataNotePolicy::Factorize;
+  batch_options.layout = lymph::ObservationLayout::Rows;
 
   lymph::prep::FeatureTransformer transformer = lymph::prep::feature_transformer(
       raw,
-      options,
+      batch_options,
       {
           lymph::prep::branch::compose(
               {
-                  lymph::stage::standard_scaler(),
+                  lymph::prep::stage::standard_scaler(),
               },
               {"income"}),
           lymph::prep::branch::one_hot_encoder(
@@ -43,18 +44,18 @@ int main() {
       },
       lymph::prep::FeatureRemainderPolicy::PassThrough);
 
-  const lymph::Payload payload = lymph::payload::make(raw)
-                                     .features({"income", "region", "balance"})
-                                     .note(lymph::DataNotePolicy::Factorize);
+  const lymph::workflow::Payload payload = lymph::workflow::payload::make(raw)
+                                               .features({"income", "region", "balance"})
+                                               .note(lymph::DataNotePolicy::Factorize);
   const lymph::FeatureBatch batch = payload.feature_batch();
   const Series transformed =
       lymph::resolve(transformer.learn_map(batch), "feature_transformer.learn_map");
 
   std::cout << "== feature_transformer ==\n";
-  std::cout << "trained=" << transformer.trained()
-            << " stage_count=" << transformer.stage_count()
-            << " rows=" << transformed.sizes()[0]
-            << " features=" << transformed.sizes()[1] << "\n";
+  std::cout << "trained = " << std::boolalpha << transformer.trained()
+            << ", stage_count = " << transformer.stage_count()
+            << ", rows = " << transformed.sizes()[0]
+            << ", features = " << transformed.sizes()[1] << "\n\n";
   std::cout << transformed << "\n";
 
   return 0;

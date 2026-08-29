@@ -224,9 +224,9 @@ product:
 - [`Series::prod`](prod.md): multiplicative reduction instead of scan.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cumsum.html">
+  <a class="prev-link" href="cosh.html">
     <span class="label">Previous</span>
-    <span class="title">cumsum</span>
+    <span class="title">cosh</span>
   </a>
   <a class="next-link" href="max.html">
     <span class="label">Next</span>

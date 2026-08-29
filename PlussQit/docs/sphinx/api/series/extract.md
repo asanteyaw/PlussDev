@@ -340,9 +340,9 @@ axis by axis. If yes, `extract()` is usually the right surface.
 - [`Series::extract_put_`](extract_put_.md): in-place write-side counterpart.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="block.html">
+  <a class="prev-link" href="factor.html">
     <span class="label">Previous</span>
-    <span class="title">block</span>
+    <span class="title">factor</span>
   </a>
   <a class="next-link" href="index.html">
     <span class="label">Next</span>

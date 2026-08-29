@@ -198,12 +198,12 @@ Use `prod()` when multiplication itself is the statistic you need:
 - [`Series::cumprod`](cumprod.md): prefix products without collapsing the axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="mean.html">
+  <a class="prev-link" href="prime.html">
     <span class="label">Previous</span>
-    <span class="title">mean</span>
+    <span class="title">prime</span>
   </a>
-  <a class="next-link" href="cumsum.html">
+  <a class="next-link" href="put_.html">
     <span class="label">Next</span>
-    <span class="title">cumsum</span>
+    <span class="title">put_</span>
   </a>
 </div>

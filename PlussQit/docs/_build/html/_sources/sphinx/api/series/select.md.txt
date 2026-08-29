@@ -228,8 +228,8 @@ Use `select()` when you want exactly one lane and you want rank to drop.
     <span class="label">Previous</span>
     <span class="title">sizes</span>
   </a>
-  <a class="next-link" href="slice.html">
+  <a class="next-link" href="sensitivity.html">
     <span class="label">Next</span>
-    <span class="title">slice</span>
+    <span class="title">sensitivity</span>
   </a>
 </div>

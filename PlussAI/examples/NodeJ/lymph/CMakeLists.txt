@@ -10,6 +10,8 @@ set(NODEJ_LYMPH_DEMOS
   lymph_model_builder_docverify_demo
   lymph_models_builder_docverify_demo
   lymph_models_builder_benchmark_docverify_demo
+  lymph_models_builder_ops_docverify_demo
+  lymph_models_model_io_docverify_demo
   lymph_models_model_append_docverify_demo
   lymph_models_model_docverify_demo
   lymph_policy_docverify_demo
