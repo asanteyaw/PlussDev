@@ -8,6 +8,7 @@
 #include "pluss/codem/series_value.h"
 #include "pluss/detail/factory_core.h"
 #include "pluss/detail/factory_containers.h"
+#include "pluss/detail/select_core.h"
 #include "pluss/detail/series_finalize.h"
 #include "MSharp/RangeView.h"
 #include "CodeM/core/Config.h"
@@ -965,6 +966,123 @@ namespace pluss::series {
   // --------------------------------------------------------------------------
   // Value / blob / make factories (create NEW Series from user data)
   // --------------------------------------------------------------------------
+  // pluss::series::print(s) -- human-readable rendering, mirroring
+  // pluss::note::print/pluss::timeline::print. `std::cout << s` also works
+  // directly via pluss::codem's Series operator<<.
+  inline std::string print(const pluss::Series& s) {
+    return pluss::codem::print(s);
+  }
+  inline std::string print(const pluss::Series& s, const pluss::PrintOptions& opt) {
+    return pluss::codem::print(s, opt);
+  }
+  inline std::ostream& print(std::ostream& os, const pluss::Series& s,
+                             const pluss::PrintOptions& opt = {}) {
+    return pluss::codem::print(os, s, opt);
+  }
+
+  inline pluss::Series select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+                              pluss::msharp::RangeView::Of<pluss::Series> choices,
+                              const pluss::Series& default_value) {
+    return pluss::detail::select_core::fold_select(
+        "pluss::series::select",
+        conditions,
+        choices,
+        default_value,
+        [](const pluss::Series& cond, const pluss::Series& choice, const pluss::Series& out) {
+          if (choice.scalar_type() == pluss::ScalarType::Bool
+              && out.scalar_type() == pluss::ScalarType::Bool) {
+            return cond.logical_and(choice).logical_or(cond.logical_not().logical_and(out));
+          }
+          return cond.where(choice, out);
+        });
+  }
+
+  inline pluss::Series select(std::initializer_list<pluss::Series> conditions,
+                              std::initializer_list<pluss::Series> choices,
+                              const pluss::Series& default_value) {
+    return pluss::detail::select_core::select_init(
+        "pluss::series::select",
+        conditions,
+        choices,
+        default_value,
+        [](std::string_view,
+           pluss::msharp::RangeView::Of<pluss::Series> conds,
+           pluss::msharp::RangeView::Of<pluss::Series> picks,
+           const pluss::Series& fallback) {
+          return select(conds, picks, fallback);
+        });
+  }
+
+  inline pluss::Series select(const pluss::Series& conditions,
+                              const pluss::Series& choices,
+                              const pluss::Series& default_value) {
+    return pluss::detail::select_core::select_scalar(
+        "pluss::series::select",
+        conditions,
+        choices,
+        default_value,
+        [](std::string_view,
+           pluss::msharp::RangeView::Of<pluss::Series> conds,
+           pluss::msharp::RangeView::Of<pluss::Series> picks,
+           const pluss::Series& fallback) {
+          return select(conds, picks, fallback);
+        });
+  }
+
+  template <pluss::codem::SeriesScalar T>
+  inline pluss::Series select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+                              pluss::msharp::RangeView::Of<pluss::Series> choices,
+                              T default_value) {
+    PLUSS_CHECK(!choices.empty(), "pluss::series::select: at least one choice is required");
+    return select(
+        conditions,
+        choices,
+        pluss::codem::make_scalar_like(choices[0], static_cast<double>(default_value)));
+  }
+
+  inline pluss::Series select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+                              pluss::msharp::RangeView::Of<pluss::Series> choices,
+                              bool default_value) {
+    PLUSS_CHECK(!choices.empty(), "pluss::series::select: at least one choice is required");
+    return select(
+        conditions,
+        choices,
+        pluss::Series::full(
+            {},
+            default_value ? 1.0 : 0.0,
+            pluss::ScalarType::Bool,
+            choices[0].platform()));
+  }
+
+  template <pluss::codem::SeriesScalar T>
+  inline pluss::Series select(std::initializer_list<pluss::Series> conditions,
+                              std::initializer_list<pluss::Series> choices,
+                              T default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<pluss::Series>(conditions),
+        pluss::msharp::RangeView::Of<pluss::Series>(choices),
+        default_value);
+  }
+
+  template <pluss::codem::SeriesScalar T>
+  inline pluss::Series select(pluss::Series conditions,
+                              pluss::Series choices,
+                              T default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<pluss::Series>({conditions}),
+        pluss::msharp::RangeView::Of<pluss::Series>({choices}),
+        default_value);
+  }
+
+  inline pluss::Series select(std::initializer_list<pluss::Series> conditions,
+                              std::initializer_list<pluss::Series> choices,
+                              bool default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<pluss::Series>(conditions),
+        pluss::msharp::RangeView::Of<pluss::Series>(choices),
+        default_value);
+  }
+
   // Owned-construction entrypoint.
   // Data forms are parsed by DataReader constructors; options are applied here.
   template <class... Opts>
@@ -990,12 +1108,24 @@ namespace pluss::series {
   // container utility, not part of this factory surface) rather than
   // re-finding this very overload -- ordinary unqualified lookup would stop
   // at `pluss::series::pile` before ever reaching the enclosing `pluss::`.
-  inline pluss::Series pile(StackArray<Series> values, std::int64_t dim = 0) {
-    return ::pluss::pile(values.data(), dim);
+  inline pluss::Series pile(std::initializer_list<Series> values, std::int64_t dim = 0) {
+    return ::pluss::pile(pluss::msharp::Lister::Series(values), dim);
   }
 
-  inline pluss::Series unite(StackArray<Series> values, std::int64_t dim = 0, bool strict_dtype = true) {
-    return ::pluss::unite(values.data(), dim, strict_dtype);
+  inline pluss::Series pile(pluss::msharp::Lister::Series values, std::int64_t dim = 0) {
+    return ::pluss::pile(values, dim);
+  }
+
+  inline pluss::Series unite(std::initializer_list<Series> values,
+                             std::int64_t dim = 0,
+                             bool strict_dtype = true) {
+    return ::pluss::unite(pluss::msharp::Lister::Series(values), dim, strict_dtype);
+  }
+
+  inline pluss::Series unite(pluss::msharp::Lister::Series values,
+                             std::int64_t dim = 0,
+                             bool strict_dtype = true) {
+    return ::pluss::unite(values, dim, strict_dtype);
   }
 
 } // namespace pluss::series

@@ -897,7 +897,8 @@ public:
   Series slice(std::int64_t dim, std::int64_t start, std::int64_t end, std::int64_t step) const;
   Series gather(std::int64_t dim, const Series& index) const;
   Series take(const Series& index) const;
-  Series factorial(std::int64_t n) const;
+  // `factorial()` (no-arg, elementwise integer factorial) is provided by the
+  // generated method surface and routed through the compat op table.
   Series scatter(std::int64_t dim, const Series& index, const Series& src) const;
   Series& scatter_(std::int64_t dim, const Series& index, const Series& src);
   Series scatter_add(std::int64_t dim, const Series& index, const Series& src) const;
@@ -1035,6 +1036,8 @@ public:
   Series& isinf_();
   Series isfinite() const;
   Series& isfinite_();
+  Series invalid() const;
+  Series invalid_index() const;
   Series mean() const;
   Series mean(std::int64_t dim, bool keepdim) const;
   Series sum(std::int64_t dim, bool keepdim) const;
@@ -1748,6 +1751,16 @@ public:
           "Series::traverse_put_: selector is not view-representable; "
           "use extract() or extract_put_() for materializing paths");
     }
+    Series view = traverse_slice_from_specs_(parsed);
+    if (values.numel() == view.numel()) {
+      Series src = values;
+      if (std::vector<std::int64_t>(src.sizes().begin(), src.sizes().end()) !=
+          std::vector<std::int64_t>(view.sizes().begin(), view.sizes().end())) {
+        src = src.reshape(view.sizes());
+      }
+      (void)pluss::codem::_compat::invoke_("copy_", view, {src});
+      return *this;
+    }
     return extract_put_from_specs_(parsed, values);
   }
 
@@ -1758,6 +1771,17 @@ public:
       PLUSS_FAIL(
           "Series::traverse_put: selector is not view-representable; "
           "use extract() or extract_put() for materializing paths");
+    }
+    Series out = clone();
+    Series view = out.traverse_slice_from_specs_(parsed);
+    if (values.numel() == view.numel()) {
+      Series src = values;
+      if (std::vector<std::int64_t>(src.sizes().begin(), src.sizes().end()) !=
+          std::vector<std::int64_t>(view.sizes().begin(), view.sizes().end())) {
+        src = src.reshape(view.sizes());
+      }
+      (void)pluss::codem::_compat::invoke_("copy_", view, {src});
+      return out;
     }
     return extract_put_copy_from_specs_(parsed, values);
   }

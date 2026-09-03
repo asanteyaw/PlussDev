@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=59a8c7d2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=608a74fd"></script>
+    <script src="../../_static/api_nav.js?v=66af7a1c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,6 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3a6950602f1e -->
 <section id="dataframeplotaccessor-scatter-matrix">
 <h1>DataFramePlotAccessor::scatter_matrix<a class="headerlink" href="#dataframeplotaccessor-scatter-matrix" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_plot_api_reference.html"><span class="doc std std-doc">Back to DataFramePlotAccessor API Reference</span></a></p>
@@ -68,19 +69,18 @@ matrix is inherently pairwise — fewer than two numeric features throws
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Feature selection here doesn’t validate non-numeric names — it filters instead
-Unlike <a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">box()</span></code></span></a>/<a class="reference internal" href="hist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hist()</span></code></span></a>/<a class="reference internal" href="corr_heatmap.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr_heatmap()</span></code></span></a>, an
-explicit <code class="docutils literal notranslate"><span class="pre">features</span></code> list here is first narrowed to the requested columns and then filtered
-down to only the <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind ones — passing a non-numeric feature name doesn’t throw,
-it’s simply excluded from the matrix. If that filtering leaves fewer than two features, the
-“at least two” check above still throws.</p>
+<p>Explicit feature lists are validated
+If you pass <code class="docutils literal notranslate"><span class="pre">features</span></code>, every requested name must resolve to a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>; a missing
+or non-numeric feature throws, matching the rest of the plotting accessor. If you leave
+<code class="docutils literal notranslate"><span class="pre">features</span></code> empty, <code class="docutils literal notranslate"><span class="pre">scatter_matrix()</span></code> uses the frame’s numeric features as-is.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
-Features to scope the matrix to before filtering down to the numeric ones. Empty (the
-default) considers every feature in the frame.</p>
+Numeric features to include in the matrix. Empty (the default) means “take the frame’s
+numeric features automatically.” Wide analytical tables therefore stay fully visible by
+default instead of being silently truncated.</p>
 <p><strong>triangle</strong> (<code class="docutils literal notranslate"><span class="pre">ScatterMatrixTriangle</span></code>, two-argument overload)
 <code class="docutils literal notranslate"><span class="pre">Full</span></code> (the default elsewhere too), <code class="docutils literal notranslate"><span class="pre">Lower</span></code>, or <code class="docutils literal notranslate"><span class="pre">Upper</span></code> — restricts the grid to only the
 lower or upper triangle (plus the diagonal) instead of drawing every cell twice
@@ -176,10 +176,14 @@ wrap directly — here, switching the diagonal cells from histograms to density 
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>At least two numeric features are required after filtering — see the important callout
-above.</p></li>
-<li><p>Non-numeric feature names in an explicit <code class="docutils literal notranslate"><span class="pre">features</span></code> list are silently filtered out
-instead of throwing — see the note above (contrast most other methods on this accessor).</p></li>
+<li><p>At least two numeric features are required after validation/selection.</p></li>
+<li><p>An explicit <code class="docutils literal notranslate"><span class="pre">features</span></code> list is strict: unknown or non-numeric names throw instead of being
+silently dropped.</p></li>
+<li><p>The no-argument form uses the full numeric feature set. If you want a smaller inspection
+grid, pass an explicit subset through <code class="docutils literal notranslate"><span class="pre">features</span></code>.</p></li>
+<li><p>Wide scatter matrices no longer rely on silent feature caps or grid-wide point throttling.
+The plotting stack now reuses normalized numeric columns during rendering so repeated
+pairwise panes do not keep rematerializing the same point vectors.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">corner</span> <span class="pre">=</span> <span class="pre">true</span></code> only overrides <code class="docutils literal notranslate"><span class="pre">pair.triangle</span></code> if it’s still at its default <code class="docutils literal notranslate"><span class="pre">Full</span></code>; an
 explicitly set <code class="docutils literal notranslate"><span class="pre">pair.triangle</span></code> is left alone.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callout for how to
@@ -260,8 +264,10 @@ multivariate-relationship views for more than two features at once.</p></li>
   <li><a href="../../api_reference.html">API Reference</a><ul>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
+  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
       <li>Previous: <a href="scatter.html" title="previous chapter">DataFramePlotAccessor::scatter</a></li>
       <li>Next: <a href="step.html" title="next chapter">DataFramePlotAccessor::step</a></li>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>

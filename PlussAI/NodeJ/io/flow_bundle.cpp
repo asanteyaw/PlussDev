@@ -585,6 +585,33 @@ void write_transform_spec(BinaryWriter& w, const TransformSpec& spec) {
       w.pod(static_cast<std::uint8_t>(o.one_based ? 1U : 0U));
       break;
     }
+    case TransformKind::BaseNEncoder: {
+      const auto& o = std::get<prep::BaseNEncoderOptions>(spec.options);
+      w.pod(o.base);
+      w.pod(o.max_categories);
+      write_enum(w, o.overflow);
+      break;
+    }
+    case TransformKind::HashingEncoder: {
+      const auto& o = std::get<prep::HashingEncoderOptions>(spec.options);
+      w.pod(o.n_components);
+      w.pod(o.seed);
+      break;
+    }
+    case TransformKind::TargetEncoder: {
+      const auto& o = std::get<prep::TargetEncoderOptions>(spec.options);
+      w.pod(o.smoothing);
+      w.pod(o.max_categories);
+      write_enum(w, o.overflow);
+      break;
+    }
+    case TransformKind::WOEEncoder: {
+      const auto& o = std::get<prep::WOEEncoderOptions>(spec.options);
+      w.pod(o.regularization);
+      w.pod(o.max_categories);
+      write_enum(w, o.overflow);
+      break;
+    }
   }
 }
 
@@ -726,6 +753,30 @@ bool read_transform_spec(BinaryReader& r, TransformSpec& spec) {
       if (!r.pod(o.max_categories) || !read_enum(r, o.overflow) || !r.pod(include) || !r.pod(one_based)) return false;
       o.include_unknown_bucket = include != 0;
       o.one_based = one_based != 0;
+      spec.options = o;
+      return true;
+    }
+    case TransformKind::BaseNEncoder: {
+      prep::BaseNEncoderOptions o{};
+      if (!r.pod(o.base) || !r.pod(o.max_categories) || !read_enum(r, o.overflow)) return false;
+      spec.options = o;
+      return true;
+    }
+    case TransformKind::HashingEncoder: {
+      prep::HashingEncoderOptions o{};
+      if (!r.pod(o.n_components) || !r.pod(o.seed)) return false;
+      spec.options = o;
+      return true;
+    }
+    case TransformKind::TargetEncoder: {
+      prep::TargetEncoderOptions o{};
+      if (!r.pod(o.smoothing) || !r.pod(o.max_categories) || !read_enum(r, o.overflow)) return false;
+      spec.options = o;
+      return true;
+    }
+    case TransformKind::WOEEncoder: {
+      prep::WOEEncoderOptions o{};
+      if (!r.pod(o.regularization) || !r.pod(o.max_categories) || !read_enum(r, o.overflow)) return false;
       spec.options = o;
       return true;
     }

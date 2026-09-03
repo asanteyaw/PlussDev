@@ -1357,6 +1357,50 @@ static Series scalar_like_(const Series& a, double s) {
       a.platform());
 }
 
+static Series generated_tanh_sensitivity_(const Series& out_sens, const Series& input) {
+  if (input.platform() == Platform::MPS && !series_tape::recording_enabled()) {
+    Series input_cpu = input.to(Platform::CPU, ScalarType::Float32);
+    Series sens_cpu = out_sens.to(Platform::CPU, ScalarType::Float32);
+    const Series y_cpu = tanh(input_cpu);
+    const Series one_cpu = scalar_like_(input_cpu, 1.0);
+    Series grad_cpu = mul(sens_cpu, sub(one_cpu, mul(y_cpu, y_cpu)));
+    if (input.scalar_type() != ScalarType::Float32) grad_cpu = grad_cpu.to(input.scalar_type());
+    return grad_cpu.to(input.platform(), input.scalar_type());
+  }
+  const Series one = scalar_like_(input, 1.0);
+  const Series y = tanh(input);
+  return out_sens.mul(sub(one, mul(y, y)));
+}
+
+static Series generated_sigmoid_sensitivity_(const Series& out_sens, const Series& input) {
+  if (input.platform() == Platform::MPS && !series_tape::recording_enabled()) {
+    Series input_cpu = input.to(Platform::CPU, ScalarType::Float32);
+    Series sens_cpu = out_sens.to(Platform::CPU, ScalarType::Float32);
+    const Series y_cpu = sigmoid(input_cpu);
+    const Series one_cpu = scalar_like_(input_cpu, 1.0);
+    Series grad_cpu = mul(sens_cpu, mul(y_cpu, sub(one_cpu, y_cpu)));
+    if (input.scalar_type() != ScalarType::Float32) grad_cpu = grad_cpu.to(input.scalar_type());
+    return grad_cpu.to(input.platform(), input.scalar_type());
+  }
+  const Series one = scalar_like_(input, 1.0);
+  const Series y = sigmoid(input);
+  return mul(out_sens, mul(y, sub(one, y)));
+}
+
+#include "CodeM/generated/SeriesAutogradUnaryReverseGen.h"
+
+namespace autograd_unary = generated::autograd_unary;
+
+static void maybe_link_unary_rule_(
+    const Series& out,
+    const Series& a,
+    const char* op,
+    autograd_unary::Rule rule) {
+  maybe_link_unary_op_(out, a, op, [a, rule](const Series& out_sens) {
+    return autograd_unary::apply(rule, out_sens, a);
+  });
+}
+
 Series add(const Series& a, double s) { return add(a, scalar_like_(a, s)); }
 Series sub(const Series& a, double s) { return sub(a, scalar_like_(a, s)); }
 Series mul(const Series& a, double s) { return mul(a, scalar_like_(a, s)); }
@@ -1678,9 +1722,7 @@ Series sqrt(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(aa, "sqrt", native::cpu::sqrt);
   }
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    return g.mul(0.5).mul(rsqrt(a));
-  });
+  maybe_link_unary_rule_(out, a, "sqrt", autograd_unary::Rule::Sqrt);
   return out;
 }
 Series exp(const Series& a) {
@@ -1698,9 +1740,7 @@ Series exp(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "exp", native::cpu::exp);
   }
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    return g.mul(exp(a));
-  });
+  maybe_link_unary_rule_(out, a, "exp", autograd_unary::Rule::Exp);
   return out;
 }
 Series log(const Series& a) {
@@ -1718,9 +1758,7 @@ Series log(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "log", native::cpu::log);
   }
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    return g.div(a);
-  });
+  maybe_link_unary_rule_(out, a, "log", autograd_unary::Rule::Log);
   return out;
 }
 
@@ -1817,6 +1855,16 @@ Series isinf(const Series& a) {
   }
   return unary_cpu_with_platform_dispatch_policy_(a, "isinf", cpu_route, ScalarType::Bool);
 }
+Series signbit(const Series& a) {
+  const auto& dt = dtype_of(a.scalar_type());
+  if (dt.is_floating() && !dt.is_complex()) {
+    // True IEEE sign bit: distinguishes -0.0 and -NaN, which `a < 0` misses.
+    auto cpu_route = [](const Series& in, Series& out) { native::cpu::signbit(in, out); };
+    return unary_cpu_with_platform_dispatch_policy_(a, "signbit", cpu_route, ScalarType::Bool);
+  }
+  // Integer and boolean values have no signed zero, so `a < 0` is exact.
+  return lt(a, scalar_like_(a, 0.0));
+}
 
 Series sin(const Series& a) {
   Series out;
@@ -1833,9 +1881,7 @@ Series sin(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "sin", native::cpu::sin);
   }
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    return g.mul(cos(a));
-  });
+  maybe_link_unary_rule_(out, a, "sin", autograd_unary::Rule::Sin);
   return out;
 }
 Series cos(const Series& a) {
@@ -1853,9 +1899,7 @@ Series cos(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "cos", native::cpu::cos);
   }
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    return g.mul(sin(a)).neg();
-  });
+  maybe_link_unary_rule_(out, a, "cos", autograd_unary::Rule::Cos);
   return out;
 }
 Series tanh(const Series& a) {
@@ -1873,20 +1917,7 @@ Series tanh(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "tanh", native::cpu::tanh);
   }
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    if (a.platform() == Platform::MPS && !series_tape::recording_enabled()) {
-      Series a_cpu = a.to(Platform::CPU, ScalarType::Float32);
-      Series g_cpu = g.to(Platform::CPU, ScalarType::Float32);
-      const Series y_cpu = tanh(a_cpu);
-      const Series one_cpu = scalar_like_(a_cpu, 1.0);
-      Series grad_cpu = mul(g_cpu, sub(one_cpu, mul(y_cpu, y_cpu)));
-      if (a.scalar_type() != ScalarType::Float32) grad_cpu = grad_cpu.to(a.scalar_type());
-      return grad_cpu.to(a.platform(), a.scalar_type());
-    }
-    const Series y = tanh(a);
-    const Series one = scalar_like_(a, 1.0);
-    return g.mul(sub(one, mul(y, y)));
-  });
+  maybe_link_unary_rule_(out, a, "tanh", autograd_unary::Rule::Tanh);
   return out;
 }
 
@@ -1898,10 +1929,13 @@ Series tan(const Series& a) {
     require_mps_support_or_policy_(supported, "tan");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Tan, a.contiguous(), out);
+      maybe_link_unary_rule_(out, a, "tan", autograd_unary::Rule::Tan);
       return out;
     }
   }
-  return unary_cpu_with_platform_dispatch_policy_(a, "tan", native::cpu::tan);
+  Series out = unary_cpu_with_platform_dispatch_policy_(a, "tan", native::cpu::tan);
+  maybe_link_unary_rule_(out, a, "tan", autograd_unary::Rule::Tan);
+  return out;
 }
 Series asin(const Series& a) {
   if (a.platform() == Platform::MPS) {
@@ -1911,10 +1945,13 @@ Series asin(const Series& a) {
     require_mps_support_or_policy_(supported, "asin");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Asin, a.contiguous(), out);
+      maybe_link_unary_rule_(out, a, "asin", autograd_unary::Rule::Asin);
       return out;
     }
   }
-  return unary_cpu_with_platform_dispatch_policy_(a, "asin", native::cpu::asin);
+  Series out = unary_cpu_with_platform_dispatch_policy_(a, "asin", native::cpu::asin);
+  maybe_link_unary_rule_(out, a, "asin", autograd_unary::Rule::Asin);
+  return out;
 }
 Series acos(const Series& a) {
   if (a.platform() == Platform::MPS) {
@@ -1924,10 +1961,13 @@ Series acos(const Series& a) {
     require_mps_support_or_policy_(supported, "acos");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Acos, a.contiguous(), out);
+      maybe_link_unary_rule_(out, a, "acos", autograd_unary::Rule::Acos);
       return out;
     }
   }
-  return unary_cpu_with_platform_dispatch_policy_(a, "acos", native::cpu::acos);
+  Series out = unary_cpu_with_platform_dispatch_policy_(a, "acos", native::cpu::acos);
+  maybe_link_unary_rule_(out, a, "acos", autograd_unary::Rule::Acos);
+  return out;
 }
 Series atan(const Series& a) {
   if (a.platform() == Platform::MPS) {
@@ -1937,10 +1977,13 @@ Series atan(const Series& a) {
     require_mps_support_or_policy_(supported, "atan");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Atan, a.contiguous(), out);
+      maybe_link_unary_rule_(out, a, "atan", autograd_unary::Rule::Atan);
       return out;
     }
   }
-  return unary_cpu_with_platform_dispatch_policy_(a, "atan", native::cpu::atan);
+  Series out = unary_cpu_with_platform_dispatch_policy_(a, "atan", native::cpu::atan);
+  maybe_link_unary_rule_(out, a, "atan", autograd_unary::Rule::Atan);
+  return out;
 }
 Series sinh(const Series& a) {
   if (a.platform() == Platform::MPS) {
@@ -1950,10 +1993,13 @@ Series sinh(const Series& a) {
     require_mps_support_or_policy_(supported, "sinh");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Sinh, a.contiguous(), out);
+      maybe_link_unary_rule_(out, a, "sinh", autograd_unary::Rule::Sinh);
       return out;
     }
   }
-  return unary_cpu_with_platform_dispatch_policy_(a, "sinh", native::cpu::sinh);
+  Series out = unary_cpu_with_platform_dispatch_policy_(a, "sinh", native::cpu::sinh);
+  maybe_link_unary_rule_(out, a, "sinh", autograd_unary::Rule::Sinh);
+  return out;
 }
 Series cosh(const Series& a) {
   if (a.platform() == Platform::MPS) {
@@ -1963,14 +2009,25 @@ Series cosh(const Series& a) {
     require_mps_support_or_policy_(supported, "cosh");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Cosh, a.contiguous(), out);
+      maybe_link_unary_rule_(out, a, "cosh", autograd_unary::Rule::Cosh);
       return out;
     }
   }
-  return unary_cpu_with_platform_dispatch_policy_(a, "cosh", native::cpu::cosh);
+  Series out = unary_cpu_with_platform_dispatch_policy_(a, "cosh", native::cpu::cosh);
+  maybe_link_unary_rule_(out, a, "cosh", autograd_unary::Rule::Cosh);
+  return out;
 }
 
-Series log1p(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Log1p, a); }
-Series expm1(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Expm1, a); }
+Series log1p(const Series& a) {
+  Series out = unary_op_(native::cpu::UnaryOpId::Log1p, a);
+  maybe_link_unary_rule_(out, a, "log1p", autograd_unary::Rule::Log1p);
+  return out;
+}
+Series expm1(const Series& a) {
+  Series out = unary_op_(native::cpu::UnaryOpId::Expm1, a);
+  maybe_link_unary_rule_(out, a, "expm1", autograd_unary::Rule::Expm1);
+  return out;
+}
 Series reciprocal(const Series& a) {
   if (a.platform() == Platform::MPS) {
     Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
@@ -1979,25 +2036,47 @@ Series reciprocal(const Series& a) {
     require_mps_support_or_policy_(supported, "reciprocal");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Reciprocal, a.contiguous(), out);
+      maybe_link_unary_rule_(out, a, "reciprocal", autograd_unary::Rule::Reciprocal);
       return out;
     }
   }
-  return unary_cpu_with_platform_dispatch_policy_(a, "reciprocal", native::cpu::reciprocal);
+  Series out = unary_cpu_with_platform_dispatch_policy_(a, "reciprocal", native::cpu::reciprocal);
+  maybe_link_unary_rule_(out, a, "reciprocal", autograd_unary::Rule::Reciprocal);
+  return out;
 }
 
 Series erf(const Series& a) {
   if (a.platform() != Platform::CPU) {
-    return stable_erf_noncpu_(a);
+    Series out = stable_erf_noncpu_(a);
+    maybe_link_unary_rule_(out, a, "erf", autograd_unary::Rule::Erf);
+    return out;
   }
-  return unary_op_(native::cpu::UnaryOpId::Erf, a);
+  Series out = unary_op_(native::cpu::UnaryOpId::Erf, a);
+  maybe_link_unary_rule_(out, a, "erf", autograd_unary::Rule::Erf);
+  return out;
 }
 Series erfc(const Series& a) {
   if (a.platform() != Platform::CPU) {
-    return stable_erfc_noncpu_(a);
+    Series out = stable_erfc_noncpu_(a);
+    maybe_link_unary_rule_(out, a, "erfc", autograd_unary::Rule::Erfc);
+    return out;
   }
-  return unary_op_(native::cpu::UnaryOpId::Erfc, a);
+  Series out = unary_op_(native::cpu::UnaryOpId::Erfc, a);
+  maybe_link_unary_rule_(out, a, "erfc", autograd_unary::Rule::Erfc);
+  return out;
 }
+// psi(x) = d/dx ln|Gamma(x)|. Backing kernel is float-only; non-CPU inputs are
+// bridged through the CPU kernel and moved back. Not itself differentiable
+// (second-order reverse through lgamma is unsupported).
+Series digamma(const Series& a) {
+  if (a.platform() != Platform::CPU) {
+    return unary_op_(native::cpu::UnaryOpId::Digamma, a.to(Platform::CPU)).to(a.platform());
+  }
+  return unary_op_(native::cpu::UnaryOpId::Digamma, a);
+}
+
 Series lgamma(const Series& a) {
+  Series out;
   if (a.platform() == Platform::MPS) {
     const auto x = a.contiguous().to(ScalarType::Float32);
     const auto one = scalar_like_(x, 1.0);
@@ -2009,36 +2088,65 @@ Series lgamma(const Series& a) {
         mul(invx, scalar_like_(x, 1.0 / 12.0)),
         add(mul(mul(invx2, invx), scalar_like_(x, -1.0 / 360.0)),
             mul(mul(mul(invx2, invx2), invx), scalar_like_(x, 1.0 / 1260.0))));
-    auto out = add(add(sub(mul(sub(x, half), log(x)), x), c0), corr);
+    auto lg = add(add(sub(mul(sub(x, half), log(x)), x), c0), corr);
     const auto nan = scalar_like_(x, std::numeric_limits<float>::quiet_NaN());
-    out = where(le(x, scalar_like_(x, 0.0)), nan, out);
-    return out.to(a.scalar_type());
+    lg = where(le(x, scalar_like_(x, 0.0)), nan, lg);
+    out = lg.to(a.scalar_type());
+  } else {
+    out = unary_op_(native::cpu::UnaryOpId::LGamma, a);
   }
-  return unary_op_(native::cpu::UnaryOpId::LGamma, a);
+  // d/dx lgamma(x) = digamma(x).
+  maybe_link_unary_op_(out, a, "lgamma", [a](const Series& out_sens) {
+    return mul(out_sens, digamma(a));
+  });
+  return out;
 }
+
+static Series inverse_hyperbolic_input_(const Series& a) {
+  const auto dt = a.scalar_type();
+  const bool promote = dt == ScalarType::Bool || dtype_of(dt).is_integral() ||
+      dt == ScalarType::Float8E4M3FN || dt == ScalarType::Float8E5M2;
+  return promote ? a.to(promote_types(dt, ScalarType::Float32)) : a;
+}
+
 Series asinh(const Series& a) {
-  if (a.platform() == Platform::MPS) {
-    const auto x = a.contiguous().to(ScalarType::Float32);
+  const Series aa = inverse_hyperbolic_input_(a);
+  if (aa.platform() == Platform::MPS) {
+    const auto x = aa.contiguous().to(ScalarType::Float32);
     const auto one = scalar_like_(x, 1.0);
-    return log(add(x, sqrt(add(mul(x, x), one)))).to(a.scalar_type());
+    Series out = log(add(x, sqrt(add(mul(x, x), one)))).to(aa.scalar_type());
+    maybe_link_unary_rule_(out, a, "asinh", autograd_unary::Rule::Asinh);
+    return out;
   }
-  return unary_op_(native::cpu::UnaryOpId::Asinh, a);
+  Series out = unary_op_(native::cpu::UnaryOpId::Asinh, aa);
+  maybe_link_unary_rule_(out, a, "asinh", autograd_unary::Rule::Asinh);
+  return out;
 }
 Series acosh(const Series& a) {
-  if (a.platform() == Platform::MPS) {
-    const auto x = a.contiguous().to(ScalarType::Float32);
+  const Series aa = inverse_hyperbolic_input_(a);
+  if (aa.platform() == Platform::MPS) {
+    const auto x = aa.contiguous().to(ScalarType::Float32);
     const auto one = scalar_like_(x, 1.0);
-    return log(add(x, sqrt(mul(sub(x, one), add(x, one))))).to(a.scalar_type());
+    Series out = log(add(x, sqrt(mul(sub(x, one), add(x, one))))).to(aa.scalar_type());
+    maybe_link_unary_rule_(out, a, "acosh", autograd_unary::Rule::Acosh);
+    return out;
   }
-  return unary_op_(native::cpu::UnaryOpId::Acosh, a);
+  Series out = unary_op_(native::cpu::UnaryOpId::Acosh, aa);
+  maybe_link_unary_rule_(out, a, "acosh", autograd_unary::Rule::Acosh);
+  return out;
 }
 Series atanh(const Series& a) {
-  if (a.platform() == Platform::MPS) {
-    const auto x = a.contiguous().to(ScalarType::Float32);
+  const Series aa = inverse_hyperbolic_input_(a);
+  if (aa.platform() == Platform::MPS) {
+    const auto x = aa.contiguous().to(ScalarType::Float32);
     const auto one = scalar_like_(x, 1.0);
-    return mul(scalar_like_(x, 0.5), log(div(add(one, x), sub(one, x)))).to(a.scalar_type());
+    Series out = mul(scalar_like_(x, 0.5), log(div(add(one, x), sub(one, x)))).to(aa.scalar_type());
+    maybe_link_unary_rule_(out, a, "atanh", autograd_unary::Rule::Atanh);
+    return out;
   }
-  return unary_op_(native::cpu::UnaryOpId::Atanh, a);
+  Series out = unary_op_(native::cpu::UnaryOpId::Atanh, aa);
+  maybe_link_unary_rule_(out, a, "atanh", autograd_unary::Rule::Atanh);
+  return out;
 }
 
 // Shape ops
@@ -2073,6 +2181,66 @@ Series isfinite(const Series& a) {
     }
   }
   return unary_cpu_with_platform_dispatch_policy_(a, "isfinite", cpu_route, ScalarType::Bool);
+}
+
+Series invalid(const Series& a) {
+  PLUSS_CHECK(a.defined(), "invalid: undefined");
+
+  switch (a.scalar_type()) {
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+    case ScalarType::Float32:
+    case ScalarType::Float64:
+      return logical_not(isfinite(a));
+    case ScalarType::Complex64:
+    case ScalarType::Complex128: {
+      if (a.platform() != Platform::CPU) {
+        return invalid(a.to(Platform::CPU)).to(a.platform());
+      }
+
+      const Series aa = a.contiguous();
+      Series out = Series::empty(aa.sizes(), ScalarType::Bool, Platform::CPU);
+      auto* op = reinterpret_cast<std::uint8_t*>(out.raw_data());
+
+      if (aa.scalar_type() == ScalarType::Complex64) {
+        const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
+        for (std::int64_t i = 0; i < aa.numel(); ++i) {
+          op[i] = (!std::isfinite(std::real(ap[i])) || !std::isfinite(std::imag(ap[i]))) ? 1 : 0;
+        }
+      } else {
+        const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
+        for (std::int64_t i = 0; i < aa.numel(); ++i) {
+          op[i] = (!std::isfinite(std::real(ap[i])) || !std::isfinite(std::imag(ap[i]))) ? 1 : 0;
+        }
+      }
+      return out;
+    }
+    default:
+      return Series::zeros(a.sizes(), ScalarType::Bool, a.platform());
+  }
+}
+
+Series invalid_index(const Series& a) {
+  PLUSS_CHECK(a.defined(), "invalid_index: undefined");
+  if (a.numel() == 0) {
+    return Series::empty({0}, ScalarType::Int64, a.platform());
+  }
+
+  const Series mask = invalid(a);
+  const Series flat_mask = mask.contiguous().reshape({mask.numel()});
+  const auto* mp = reinterpret_cast<const std::uint8_t*>(flat_mask.raw_data());
+
+  std::int64_t count = 0;
+  for (std::int64_t i = 0; i < flat_mask.numel(); ++i) {
+    if (mp[i]) ++count;
+  }
+
+  Series out = Series::empty({count}, ScalarType::Int64, mask.platform());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
+  for (std::int64_t i = 0, j = 0; i < flat_mask.numel(); ++i) {
+    if (mp[i]) op[j++] = i;
+  }
+  return out;
 }
 
 Series logical_not(const Series& a) {
@@ -3390,21 +3558,13 @@ Series relu(const Series& a) {
     if (supported) {
       Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
       native::mps::unary_math(native::mps::UnaryMathOp::Relu, a.contiguous(), out);
-      maybe_link_unary_op_(out, a, [a](const Series& g) {
-        const Series zero = scalar_like_(a, 0.0);
-        const Series one = scalar_like_(a, 1.0);
-        return mul(g, where(gt(a, zero), one, zero));
-      });
+      maybe_link_unary_rule_(out, a, "relu", autograd_unary::Rule::Relu);
       return out;
     }
   }
   Series out = a.clone();
   relu_(out);
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    const Series zero = scalar_like_(a, 0.0);
-    const Series one = scalar_like_(a, 1.0);
-    return mul(g, where(gt(a, zero), one, zero));
-  });
+  maybe_link_unary_rule_(out, a, "relu", autograd_unary::Rule::Relu);
   return out;
 }
 
@@ -3418,20 +3578,7 @@ Series& relu_(Series& a) {
 Series sigmoid(const Series& a) {
   const Series one = scalar_like_(a, 1.0);
   Series out = div(one, add(one, exp(neg(a))));
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    if (a.platform() == Platform::MPS && !series_tape::recording_enabled()) {
-      Series a_cpu = a.to(Platform::CPU, ScalarType::Float32);
-      Series g_cpu = g.to(Platform::CPU, ScalarType::Float32);
-      const Series y_cpu = sigmoid(a_cpu);
-      const Series one_cpu = scalar_like_(a_cpu, 1.0);
-      Series grad_cpu = mul(g_cpu, mul(y_cpu, sub(one_cpu, y_cpu)));
-      if (a.scalar_type() != ScalarType::Float32) grad_cpu = grad_cpu.to(a.scalar_type());
-      return grad_cpu.to(a.platform(), a.scalar_type());
-    }
-    const Series y = sigmoid(a);
-    const Series one = scalar_like_(a, 1.0);
-    return mul(g, mul(y, sub(one, y)));
-  });
+  maybe_link_unary_rule_(out, a, "sigmoid", autograd_unary::Rule::Sigmoid);
   return out;
 }
 Series& sigmoid_(Series& a) {
@@ -3491,7 +3638,12 @@ Series& gelu_(Series& a, bool approximate) {
   return a;
 }
 
-Series leaky_relu(const Series& a, double negative_slope) {
+Series leaky_relu(const Series& a0, double negative_slope) {
+  // Promote integral/bool input: a fractional negative slope produces
+  // non-integers, and a scalar built in the input's own dtype would truncate.
+  const Series a = dtype_of(a0.scalar_type()).is_floating()
+                       ? a0
+                       : a0.to(promote_types(a0.scalar_type(), ScalarType::Float32));
   const Series zero = scalar_like_(a, 0.0);
   const Series slope = scalar_like_(a, negative_slope);
   return where(ge(a, zero), a, mul(a, slope));
@@ -4316,7 +4468,7 @@ Series atan2(const Series& a, const Series& b) {
     out = where(logical_and(eq(bb, zero), gt(aa, zero)), half_pi, out);
     out = where(logical_and(eq(bb, zero), lt(aa, zero)), mul(half_pi, neg_one), out);
     out = where(logical_and(eq(bb, zero), eq(aa, zero)), zero, out);
-    return out;
+    return out;  // MPS path is already differentiable via its where/atan/div composition
   }
   auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()), a.platform());
   if (a.platform() == Platform::CUDA) {
@@ -4325,7 +4477,7 @@ Series atan2(const Series& a, const Series& b) {
     const Series aa = a.contiguous().to(out.scalar_type());
     const Series bb = b.contiguous().to(out.scalar_type());
     const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
-    return cuda_elementwise_route_or_bridge_(
+    out = cuda_elementwise_route_or_bridge_(
         "atan2",
         native_enabled,
         native_strict,
@@ -4334,12 +4486,101 @@ Series atan2(const Series& a, const Series& b) {
           native::cpu::atan2(aa, bb, out);
           return out;
         });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "atan2");
+    auto aa = a.contiguous().to(out.scalar_type());
+    auto bb = b.contiguous().to(out.scalar_type());
+    native::cpu::atan2(aa, bb, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "atan2");
-  auto aa = a.contiguous().to(out.scalar_type());
-  auto bb = b.contiguous().to(out.scalar_type());
-  native::cpu::atan2(aa, bb, out);
+  // d/da atan2(a, b) = b / (a^2 + b^2);  d/db atan2(a, b) = -a / (a^2 + b^2).
+  maybe_link_binary_op_(
+      out, a, b, "atan2",
+      [a, b](const Series& g) { return div(mul(g, b), add(square(a), square(b))); },
+      [a, b](const Series& g) { return div(mul(neg(g), a), add(square(a), square(b))); });
   return out;
+}
+
+// hypot(a, b) = sqrt(a^2 + b^2), evaluated in the scaled form
+//   hi * sqrt(1 + (lo/hi)^2),  hi = max(|a|,|b|),  lo = min(|a|,|b|)
+// so the intermediate square never overflows unless the true result does.
+// The stable forward routes through max(), whose tie subgradient would misroute
+// the gradient at |a| == |b|, so the analytic rule da = a/h, db = b/h is bound
+// explicitly (0 at a == b == 0).
+Series hypot(const Series& a, const Series& b) {
+  require_same_platform(a, b, "hypot");
+  Series out;
+  {
+    series_tape::NoGradGuard ng;
+    const Series aa = abs(a);
+    const Series bb = abs(b);
+    const Series hi = maximum(aa, bb);
+    const Series lo = minimum(aa, bb);
+    const Series is_zero = eq(hi, scalar_like_(hi, 0.0));
+    const Series safe_hi = where(is_zero, scalar_like_(hi, 1.0), hi);
+    const Series ratio = div(lo, safe_hi);
+    out = mul(hi, sqrt(add(scalar_like_(hi, 1.0), mul(ratio, ratio))));
+    out = where(is_zero, scalar_like_(out, 0.0), out);
+  }
+  maybe_link_binary_op_(
+      out, a, b, "hypot",
+      [a, out](const Series& g) {
+        const Series safe = where(eq(out, scalar_like_(out, 0.0)), scalar_like_(out, 1.0), out);
+        return where(eq(out, scalar_like_(out, 0.0)), scalar_like_(g, 0.0), div(mul(g, a), safe));
+      },
+      [b, out](const Series& g) {
+        const Series safe = where(eq(out, scalar_like_(out, 0.0)), scalar_like_(out, 1.0), out);
+        return where(eq(out, scalar_like_(out, 0.0)), scalar_like_(g, 0.0), div(mul(g, b), safe));
+      });
+  return out;
+}
+
+// logaddexp(a, b) = log(exp(a) + exp(b)), evaluated as
+//   m + log1p(exp(-|a - b|)),  m = max(a, b)
+// so no intermediate exp overflows. Both operands -inf -> -inf. The analytic
+// gradient da = sigmoid(a - b), db = sigmoid(b - a) is bound explicitly so the
+// max() in the stable forward does not misroute it at a == b.
+Series logaddexp(const Series& a, const Series& b) {
+  require_same_platform(a, b, "logaddexp");
+  Series out;
+  {
+    series_tape::NoGradGuard ng;
+    const Series m = maximum(a, b);
+    out = where(isinf(m), m, add(m, log1p(exp(neg(abs(sub(a, b)))))));
+  }
+  maybe_link_binary_op_(
+      out, a, b, "logaddexp",
+      [a, b](const Series& g) { return mul(g, sigmoid(sub(a, b))); },
+      [a, b](const Series& g) { return mul(g, sigmoid(sub(b, a))); });
+  return out;
+}
+
+// logaddexp2(a, b) = log2(2^a + 2^b), evaluated as
+//   m + log1p(2^(-|a - b|)) / ln 2.
+// Gradient: da = 1/(1 + 2^(b - a)) = sigmoid((a - b) * ln 2), db symmetric.
+Series logaddexp2(const Series& a, const Series& b) {
+  require_same_platform(a, b, "logaddexp2");
+  constexpr double kLn2 = 0.6931471805599453;
+  Series out;
+  {
+    series_tape::NoGradGuard ng;
+    const Series m = maximum(a, b);
+    const Series ln2 = scalar_like_(m, kLn2);
+    out = where(isinf(m), m, add(m, div(log1p(exp2(neg(abs(sub(a, b))))), ln2)));
+  }
+  maybe_link_binary_op_(
+      out, a, b, "logaddexp2",
+      [a, b](const Series& g) { return mul(g, sigmoid(mul(sub(a, b), scalar_like_(a, kLn2)))); },
+      [a, b](const Series& g) { return mul(g, sigmoid(mul(sub(b, a), scalar_like_(a, kLn2)))); });
+  return out;
+}
+
+// xlogy(a, b) = a * log(b), but with the convention 0 * log(0) = 0 (and, more
+// generally, 0 * anything = 0). NaN in b still propagates.
+Series xlogy(const Series& a, const Series& b) {
+  require_same_platform(a, b, "xlogy");
+  const Series prod = mul(a, log(b));
+  const Series zeroed = where(eq(a, scalar_like_(a, 0.0)), scalar_like_(prod, 0.0), prod);
+  return where(isnan(b), b, zeroed);
 }
 
 Series fmod(const Series& a, const Series& b) {
@@ -4436,10 +4677,7 @@ Series rsqrt(const Series& a) {
       native::cpu::rsqrt(aa, out);
     }
   }
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    const Series y = rsqrt(a);
-    return g.mul(-0.5).mul(mul(mul(y, y), y));
-  });
+  maybe_link_unary_rule_(out, a, "rsqrt", autograd_unary::Rule::Rsqrt);
   return out;
 }
 Series log2(const Series& a) {
@@ -4453,7 +4691,7 @@ Series log2(const Series& a) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_unary_elementwise(a);
-    return cuda_elementwise_route_or_bridge_(
+    out = cuda_elementwise_route_or_bridge_(
         "log2",
         native_enabled,
         native_strict,
@@ -4463,10 +4701,15 @@ Series log2(const Series& a) {
           native::cpu::log2(aa, out);
           return out;
         });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "log2");
+    auto aa = a.contiguous().to(out.scalar_type());
+    native::cpu::log2(aa, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "log2");
-  auto aa = a.contiguous().to(out.scalar_type());
-  native::cpu::log2(aa, out);
+  // d/dx log2(x) = 1 / (x * ln 2)
+  maybe_link_unary_op_(out, a, "log2", [a](const Series& g) {
+    return div(g, mul(a, scalar_like_(a, 0.6931471805599453)));
+  });
   return out;
 }
 Series log10(const Series& a) {
@@ -4480,7 +4723,7 @@ Series log10(const Series& a) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_unary_elementwise(a);
-    return cuda_elementwise_route_or_bridge_(
+    out = cuda_elementwise_route_or_bridge_(
         "log10",
         native_enabled,
         native_strict,
@@ -4490,10 +4733,15 @@ Series log10(const Series& a) {
           native::cpu::log10(aa, out);
           return out;
         });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "log10");
+    auto aa = a.contiguous().to(out.scalar_type());
+    native::cpu::log10(aa, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "log10");
-  auto aa = a.contiguous().to(out.scalar_type());
-  native::cpu::log10(aa, out);
+  // d/dx log10(x) = 1 / (x * ln 10)
+  maybe_link_unary_op_(out, a, "log10", [a](const Series& g) {
+    return div(g, mul(a, scalar_like_(a, 2.302585092994046)));
+  });
   return out;
 }
 Series exp2(const Series& a) {
@@ -4507,7 +4755,7 @@ Series exp2(const Series& a) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_unary_elementwise(a);
-    return cuda_elementwise_route_or_bridge_(
+    out = cuda_elementwise_route_or_bridge_(
         "exp2",
         native_enabled,
         native_strict,
@@ -4517,10 +4765,15 @@ Series exp2(const Series& a) {
           native::cpu::exp2(aa, out);
           return out;
         });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "exp2");
+    auto aa = a.contiguous().to(out.scalar_type());
+    native::cpu::exp2(aa, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "exp2");
-  auto aa = a.contiguous().to(out.scalar_type());
-  native::cpu::exp2(aa, out);
+  // d/dx 2^x = 2^x * ln 2
+  maybe_link_unary_op_(out, a, "exp2", [out](const Series& g) {
+    return mul(g, mul(out, scalar_like_(out, 0.6931471805599453)));
+  });
   return out;
 }
 Series cbrt(const Series& a) {
@@ -4534,7 +4787,7 @@ Series cbrt(const Series& a) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_unary_elementwise(a);
-    return cuda_elementwise_route_or_bridge_(
+    out = cuda_elementwise_route_or_bridge_(
         "cbrt",
         native_enabled,
         native_strict,
@@ -4544,10 +4797,15 @@ Series cbrt(const Series& a) {
           native::cpu::cbrt(aa, out);
           return out;
         });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "cbrt");
+    auto aa = a.contiguous().to(out.scalar_type());
+    native::cpu::cbrt(aa, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "cbrt");
-  auto aa = a.contiguous().to(out.scalar_type());
-  native::cpu::cbrt(aa, out);
+  // d/dx cbrt(x) = 1 / (3 * cbrt(x)^2); vertical tangent (inf) at x = 0.
+  maybe_link_unary_op_(out, a, "cbrt", [out](const Series& g) {
+    return div(g, mul(scalar_like_(out, 3.0), mul(out, out)));
+  });
   return out;
 }
 Series square(const Series& a) {
@@ -4585,7 +4843,8 @@ Series square(const Series& a) {
     // replay does not depend on transient alias lifetimes.
     const Series a_snapshot = a.clone();
     maybe_link_unary_op_(out, a, [a_snapshot](const Series& g) {
-      Series grad = g.mul(2.0).mul(a_snapshot);
+      Series grad = autograd_unary::apply(
+          autograd_unary::Rule::Square, g, a_snapshot);
       if (a_snapshot.platform() == Platform::MPS) {
         // Force materialization before parent accumulation to avoid transient
         // MPS alias/cache hazards across adjacent backward nodes.
@@ -4594,9 +4853,7 @@ Series square(const Series& a) {
       return grad;
     });
   } else {
-    maybe_link_unary_op_(out, a, [a](const Series& g) {
-      return g.mul(2.0).mul(a);
-    });
+    maybe_link_unary_rule_(out, a, "square", autograd_unary::Rule::Square);
   }
   return out;
 }
@@ -6897,6 +7154,7 @@ Series Series::clone() const {
   Series out = Series::empty(sizes(), scalar_type(), platform());
   SeriesIterator it = SeriesIterator::unary(*this, out);
   it.copy_out_from_in(*this, out);
+  maybe_link_unary_op_(out, *this, "clone", [](const Series& g) { return g; });
   return out;
 }
 
@@ -7471,7 +7729,7 @@ Series Series::rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::
   if (!(dtype == ScalarType::Float32 || dtype == ScalarType::Float64 || dtype == ScalarType::Float16 || dtype == ScalarType::BFloat16))
     PLUSS_FAIL("rand: dtype must be float");
   Series out = Series::empty(sizes, dtype);
-  auto state = pluss::aux::seed_or_next(seed);
+  auto state = pluss::tils::seed_or_next(seed);
   const auto n = out.numel();
   for (std::int64_t i=0;i<n;++i) {
     const float v = (float)u01_(state);
@@ -7487,7 +7745,7 @@ Series Series::randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std:
   if (!(dtype == ScalarType::Float32 || dtype == ScalarType::Float64 || dtype == ScalarType::Float16 || dtype == ScalarType::BFloat16))
     PLUSS_FAIL("randn: dtype must be float");
   Series out = Series::empty(sizes, dtype);
-  auto state = pluss::aux::seed_or_next(seed);
+  auto state = pluss::tils::seed_or_next(seed);
   const auto n = out.numel();
   for (std::int64_t i=0;i<n; i+=2) {
     const double u1 = std::max(1e-12, u01_(state));
@@ -7979,10 +8237,6 @@ Series Series::pile(pluss::msharp::RangeView::Of<Series> others, std::int64_t di
 
 Series Series::gather(std::int64_t dim, const Series& index) const {
   return ops_internal::gather(*this, dim, index);
-}
-Series Series::factorial(std::int64_t n) const {
-  (void)n;
-  PLUSS_FAIL("factorial: not implemented");
 }
 Series Series::scatter(std::int64_t dim, const Series& index, const Series& src) const {
   return ops_internal::scatter(*this, dim, index, src);
@@ -8505,7 +8759,12 @@ Series& Series::sigmoid_() { guard_direct_inplace_value_op_("sigmoid_", *this); 
 Series Series::relu() const { return ops_internal::relu(*this); }
 Series& Series::relu_() { guard_direct_inplace_value_op_("relu_", *this); *this = relu(); return finish_direct_inplace_value_op_(*this); }
 
-Series& Series::logical_not_() { guard_direct_inplace_value_op_("logical_not_", *this); *this = ops_internal::logical_not(*this); return finish_direct_inplace_value_op_(*this); }
+Series& Series::logical_not_() {
+  guard_direct_inplace_value_op_("logical_not_", *this);
+  Series out = logical_not();
+  *this = std::move(out);
+  return finish_direct_inplace_value_op_(*this);
+}
 
 Series Series::masked_select(const Series& mask) const {return pluss::codem::ops_internal::masked_select(*this, mask);}
 
@@ -8816,6 +9075,14 @@ Series& Series::isfinite_() {
   Series out = isfinite().to(scalar_type());
   copy_(out);
   return finish_direct_inplace_value_op_(*this);
+}
+Series Series::invalid() const {
+  PLUSS_CALL_GUARD();
+  return ops_internal::invalid(*this);
+}
+Series Series::invalid_index() const {
+  PLUSS_CALL_GUARD();
+  return ops_internal::invalid_index(*this);
 }
 
 Series Series::sum(std::int64_t dim, bool keepdim) const {
@@ -9185,6 +9452,19 @@ void require_grouped_reduce_args_(
   PLUSS_CHECK(group_ids.numel() == values.numel(),
               std::string(where) + ": group_ids length must match values length");
   PLUSS_CHECK(group_count >= 0, std::string(where) + ": group_count must be non-negative");
+  if (group_ids.numel() > 0) {
+    // Reject negative and >= group_count ids up front. Without this the
+    // scatter-backed reductions would treat a negative id as an offset from the
+    // end and silently fold it into the wrong group.
+    const Series ids64 = group_ids.scalar_type() == ScalarType::Int64
+                             ? group_ids
+                             : group_ids.to(ScalarType::Int64);
+    const std::int64_t lo = ids64.min().item<std::int64_t>();
+    const std::int64_t hi = ids64.max().item<std::int64_t>();
+    PLUSS_CHECK(lo >= 0 && hi < group_count,
+                std::string(where) + ": group id out of range; expected every id in [0, " +
+                    std::to_string(group_count) + ")");
+  }
 }
 
 Series grouped_ids_on_(const Series& group_ids, Platform platform) {

@@ -181,8 +181,8 @@ this is the closed-boundary counterpart to the open-boundary behavior of
     <span class="label">Previous</span>
     <span class="title">index_select</span>
   </a>
-  <a class="next-link" href="lt.html">
+  <a class="next-link" href="leaky_relu.html">
     <span class="label">Next</span>
-    <span class="title">lt</span>
+    <span class="title">leaky_relu</span>
   </a>
 </div>

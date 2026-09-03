@@ -17,7 +17,7 @@
 #include "pluss/codeh/codeh.h"
 #include "pluss/tils/aux/transmit.h"
 
-namespace pluss::aux {
+namespace pluss::tils {
 
 using transform_axis_options = transmit_options;
 
@@ -235,9 +235,4 @@ auto transform_axis(F&& fn,
   return detail::invoke_with_optional_index(std::forward<F>(fn), t, 0);
 }
 
-} // namespace pluss::aux
-
-namespace pluss {
-using aux::transform_axis;
-using aux::transform_axis_options;
-} // namespace pluss
+} // namespace pluss::tils

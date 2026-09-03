@@ -87,7 +87,7 @@ present.
 auto note = pluss::make_note({"midterm_1", "midterm_2", "final_exam"});
 auto renamed = note.replace("midterm", "exam");
 auto still_old = renamed.contains("midterm");
-pluss::OutputEngine out;
+pluss::tils::OutputEngine out;
 out.writeln("replace_then_contains:");
 out.writeln(renamed);
 std::cout << "replace_then_contains_mask:";

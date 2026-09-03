@@ -129,3 +129,7 @@ This output shows two things clearly:
 - [CrossValidationReport](CrossValidationReport.md)
 - [classification_summary](classification_summary.md)
 - [confusion_table](confusion_table.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

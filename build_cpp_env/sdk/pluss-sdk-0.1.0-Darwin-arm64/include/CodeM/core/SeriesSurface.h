@@ -45,16 +45,16 @@ Series operator*(const Series& other) const { return mul(other); }
 Series operator/(const Series& other) const { return div(other); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator+(T scalar) const { return add(static_cast<double>(scalar)); }
+Series operator+(T scalar) const { return add(static_cast<double>(scalar), 1.0); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator-(T scalar) const { return sub(static_cast<double>(scalar)); }
+Series operator-(T scalar) const { return sub(static_cast<double>(scalar), 1.0); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator*(T scalar) const { return mul(static_cast<double>(scalar)); }
+Series operator*(T scalar) const { return pluss::codem::_compat::invoke("mul", *this, {static_cast<double>(scalar)}); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator/(T scalar) const { return div(static_cast<double>(scalar)); }
+Series operator/(T scalar) const { return pluss::codem::_compat::invoke("div", *this, {static_cast<double>(scalar)}); }
 
 // In-place arithmetic
 Series& operator+=(const Series& other) { add_(other); return *this; }
@@ -63,10 +63,10 @@ Series& operator*=(const Series& other) { mul_(other); return *this; }
 Series& operator/=(const Series& other) { div_(other); return *this; }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series& operator+=(T scalar) { add_(static_cast<double>(scalar)); return *this; }
+Series& operator+=(T scalar) { (void)pluss::codem::_compat::invoke_("add_", *this, {static_cast<double>(scalar), 1.0}); return *this; }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series& operator-=(T scalar) { sub_(static_cast<double>(scalar)); return *this; }
+Series& operator-=(T scalar) { (void)pluss::codem::_compat::invoke_("sub_", *this, {static_cast<double>(scalar), 1.0}); return *this; }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
 Series& operator*=(T scalar) { mul_(static_cast<double>(scalar)); return *this; }
@@ -88,19 +88,19 @@ Series operator>(const Series& other) const { return gt(other); }
 Series operator>=(const Series& other) const { return ge(other); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator==(T scalar) const { return eq(static_cast<double>(scalar)); }
+Series operator==(T scalar) const { return pluss::codem::_compat::invoke("eq", *this, {static_cast<double>(scalar)}); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator!=(T scalar) const { return ne(static_cast<double>(scalar)); }
+Series operator!=(T scalar) const { return pluss::codem::_compat::invoke("ne", *this, {static_cast<double>(scalar)}); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator<(T scalar) const { return lt(static_cast<double>(scalar)); }
+Series operator<(T scalar) const { return pluss::codem::_compat::invoke("lt", *this, {static_cast<double>(scalar)}); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator<=(T scalar) const { return le(static_cast<double>(scalar)); }
+Series operator<=(T scalar) const { return pluss::codem::_compat::invoke("le", *this, {static_cast<double>(scalar)}); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator>(T scalar) const { return gt(static_cast<double>(scalar)); }
+Series operator>(T scalar) const { return pluss::codem::_compat::invoke("gt", *this, {static_cast<double>(scalar)}); }
 template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
-Series operator>=(T scalar) const { return ge(static_cast<double>(scalar)); }
+Series operator>=(T scalar) const { return pluss::codem::_compat::invoke("ge", *this, {static_cast<double>(scalar)}); }

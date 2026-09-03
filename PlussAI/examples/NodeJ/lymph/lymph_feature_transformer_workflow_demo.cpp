@@ -27,23 +27,23 @@ int main() {
   data_options.note_policy = lymph::DataNotePolicy::Hash;
   data_options.layout = lymph::ObservationLayout::Rows;
 
-  auto preprocessing = lymph::prep::feature_transformer(
+  lymph::prep::FeatureTransformer preprocessing = lymph::prep::feature_transformer(
       housing,
       data_options,
       std::vector<lymph::prep::branch::Branch>{
           lymph::prep::branch::compose(
               {
-                  lymph::stage::simple_imputer(lymph::prep::SimpleImputerOptions{
+                  lymph::prep::stage::simple_imputer(lymph::prep::SimpleImputerOptions{
                       .strategy = lymph::prep::SimpleImputerStrategy::Mean,
                   }),
-                  lymph::stage::standard_scaler(),
+                  lymph::prep::stage::standard_scaler(),
               },
               {"median_income"}),
           lymph::prep::branch::one_hot_encoder(lymph::prep::OneHotEncoderOptions{}, categorical),
       },
       lymph::prep::FeatureRemainderPolicy::PassThrough);
 
-  auto reg = lymph::model::linear_regression(lymph::LinearFamilyOptions{
+  auto reg = lymph::models::linear_regression(lymph::LinearFamilyOptions{
       .objective = lymph::LinearObjective::LeastSquares,
       .regularization = lymph::RegularizationKind::None,
       .regularization_strength = 0.0,

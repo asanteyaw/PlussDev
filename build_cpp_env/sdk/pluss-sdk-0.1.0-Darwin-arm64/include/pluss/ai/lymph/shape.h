@@ -26,7 +26,7 @@ class Plan final {
   [[nodiscard]] const std::vector<std::string>& features() const noexcept { return feature_names_; }
   [[nodiscard]] const prep::QuantileMapOptions& options() const noexcept { return options_; }
 
-  Model& apply(Model& model) const {
+  models::Model& apply(models::Model& model) const {
     if (feature_names_.empty()) return model;
     auto prep = model.prepare();
     prep.gaussianize(prep.names(feature_names_), options_);

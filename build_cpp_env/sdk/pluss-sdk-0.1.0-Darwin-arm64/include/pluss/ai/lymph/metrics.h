@@ -2,6 +2,7 @@
 
 #include "pluss/ai/lymph/common.h"
 #include "pluss/ai/lymph/prep.h"
+#include "pluss/ai/lymph/selection_options.h"
 
 namespace pluss::ai::lymph {
 
@@ -60,28 +61,6 @@ struct LinearParameters {
 
 [[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);
 
-struct ValidationOptions {
-  CVPlanKind plan = CVPlanKind::CrossVal;
-  double holdout_fraction = 0.2;
-  std::int64_t folds = 5;
-  std::int64_t repeats = 1;
-  std::int64_t time_gap = 0;
-  std::int64_t time_test_size = 0;
-  std::int64_t time_max_train_size = 0;
-  bool stratified = false;
-  Series groups = Series::undefined();
-  bool reliability_defaults = true;
-  bool shuffle = true;
-  // 0 = auto-detect (one worker per fold, capped at hardware_concurrency());
-  // each fold trains an independent out-of-place clone of the model, so
-  // parallelizing changes nothing about the result, only how long it takes
-  // to get it. Set to 1 to force serial evaluation, or a specific count to
-  // cap worker threads.
-  std::int64_t max_parallel = 0;
-  std::uint64_t random_state = 0;
-  bool deterministic = true;
-};
-
 struct CrossValidationReport {
   CrossAssessReport report{};
   MetricReport mean{};
@@ -101,7 +80,6 @@ struct FoldBatchPair {
 using MetricReport = metrics::MetricReport;
 using SeriesCompareReport = metrics::SeriesCompareReport;
 using LinearParameters = metrics::LinearParameters;
-using ValidationOptions = metrics::ValidationOptions;
 using CrossValidationReport = metrics::CrossValidationReport;
 using FoldBatchPair = metrics::FoldBatchPair;
 using metrics::as_stratify_series;
@@ -113,7 +91,7 @@ namespace metrics::detail {
 [[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
                                                   const LabeledBatch& batch,
                                                   MetricKind metric,
-                                                  ValidationOptions cv = {},
+                                                  selection::CrossValOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   SplitOptions split{};
@@ -137,7 +115,7 @@ namespace metrics::detail {
 [[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
                                                  const LabeledBatch& batch,
                                                  MetricKind metric,
-                                                 ValidationOptions cv = {},
+                                                 selection::CrossValOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   SplitOptions split{};
@@ -162,7 +140,7 @@ namespace metrics::detail {
                                                   const pluss::table::DataFrame& frame,
                                                   const DataFrameBatchOptions& data_options,
                                                   MetricKind metric,
-                                                  ValidationOptions cv = {},
+                                                  selection::CrossValOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   const LabeledBatch batch =
@@ -174,7 +152,7 @@ namespace metrics::detail {
                                                  const pluss::table::DataFrame& frame,
                                                  const DataFrameBatchOptions& data_options,
                                                  MetricKind metric,
-                                                 ValidationOptions cv = {},
+                                                 selection::CrossValOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   const LabeledBatch batch =
@@ -288,7 +266,7 @@ namespace metrics::detail {
   return resolve(::pluss::ai::nodej::regression_metrics(truth, prediction, metrics), "regression_metric_series");
 }
 
-[[nodiscard]] inline SplitOptions make_validation_split_options(const metrics::ValidationOptions& options) {
+[[nodiscard]] inline SplitOptions make_validation_split_options(const selection::CrossValOptions& options) {
   SplitOptions split{};
   split.plan = options.plan;
   split.holdout_fraction = options.holdout_fraction;
@@ -619,7 +597,7 @@ namespace metrics::detail {
 
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const LabeledBatch& batch,
-                                                          ValidationOptions cv = {},
+                                                          selection::CrossValOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   const SplitOptions split = make_validation_split_options(cv);
@@ -636,7 +614,7 @@ namespace metrics::detail {
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const pluss::table::DataFrame& frame,
                                                           const DataFrameBatchOptions& data_options,
-                                                          ValidationOptions cv = {},
+                                                          selection::CrossValOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate.labeled_batch_from_dataframe");
@@ -646,7 +624,7 @@ namespace metrics::detail {
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const pluss::table::DataFrame& x,
                                                           const Series& y,
-                                                          ValidationOptions cv = {},
+                                                          selection::CrossValOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "cross_validate(x,y)");
@@ -657,7 +635,7 @@ namespace metrics::detail {
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const pluss::table::DataFrame& x,
                                                           const pluss::table::Thread& y,
-                                                          ValidationOptions cv = {},
+                                                          selection::CrossValOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   return cross_validate(spec, x, as_stratify_series(y), cv, train_options, assess_options);
@@ -667,7 +645,7 @@ namespace metrics::detail {
                                                   const pluss::table::DataFrame& x,
                                                   const Series& y,
                                                   MetricKind metric,
-                                                  ValidationOptions cv = {},
+                                                  selection::CrossValOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "cross_validate_scores(x,y)");
@@ -679,7 +657,7 @@ namespace metrics::detail {
                                                  const pluss::table::DataFrame& x,
                                                  const Series& y,
                                                  MetricKind metric,
-                                                 ValidationOptions cv = {},
+                                                 selection::CrossValOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "cross_validate_score(x,y)");
@@ -691,7 +669,7 @@ namespace metrics::detail {
                                                   const pluss::table::DataFrame& x,
                                                   const pluss::table::Thread& y,
                                                   MetricKind metric,
-                                                  ValidationOptions cv = {},
+                                                  selection::CrossValOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   return cross_validate_scores(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
@@ -701,7 +679,7 @@ namespace metrics::detail {
                                                  const pluss::table::DataFrame& x,
                                                  const pluss::table::Thread& y,
                                                  MetricKind metric,
-                                                 ValidationOptions cv = {},
+                                                 selection::CrossValOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   return cross_validate_score(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);

@@ -51,9 +51,9 @@ int main() {
   logistic_options.regularization_strength = 1e-3;
   logistic_options.fit_intercept = true;
 
-  const lymph::Model logistic = lymph::model::logistic_regression(logistic_options);
+  const lymph::models::Model logistic = lymph::models::logistic_regression(logistic_options);
 
-  lymph::ValidationOptions cross_options{};
+  lymph::selection::CrossValOptions cross_options{};
   cross_options.folds = 4;
   cross_options.repeats = 1;
   cross_options.shuffle = true;
@@ -61,7 +61,7 @@ int main() {
   cross_options.deterministic = true;
   cross_options.max_parallel = 1;
 
-  const lymph::ValidationPlan cross_plan = lymph::validate::cross(cross_options);
+  const lymph::selection::Plan cross_plan = lymph::selection::cross(cross_options);
   std::cout << "== validation_options_cross ==\n";
   std::cout << "plan=" << static_cast<int>(cross_plan.options().plan)
             << " folds=" << cross_plan.options().folds
@@ -93,14 +93,14 @@ int main() {
   std::cout << "== cross_validation_report ==\n";
   std::cout << cross_report.board() << "\n";
 
-  const lymph::HoldoutPlan holdout_plan =
-      lymph::validate::holdout().test_size(0.25).shuffle(true).seed(20260825ULL);
-  const lymph::HoldoutSplit holdout = holdout_plan.split(frame);
+  const lymph::selection::HoldoutPlan holdout_plan =
+      lymph::selection::holdout().test_size(0.25).shuffle(true).seed(20260825ULL);
+  const lymph::prep::HoldoutSplit holdout = holdout_plan.split(frame);
   std::cout << "== holdout_split ==\n";
   std::cout << "train_rows=" << holdout.train_set.ncases()
             << " test_rows=" << holdout.test_set.ncases() << "\n";
 
-  lymph::ValidationOptions time_options{};
+  lymph::selection::CrossValOptions time_options{};
   time_options.folds = 3;
   time_options.shuffle = false;
   time_options.time_gap = 0;
@@ -109,8 +109,8 @@ int main() {
   time_options.random_state = 20260825ULL;
   time_options.deterministic = true;
 
-  const lymph::ValidationPlan time_plan = lymph::validate::time(time_options);
-  const lymph::TimeSeriesSplit last_block = time_plan.last(frame, "when");
+  const lymph::selection::Plan time_plan = lymph::selection::time(time_options);
+  const lymph::prep::TimeSeriesSplit last_block = time_plan.last(frame, "when");
   std::cout << "== time_plan_last ==\n";
   std::cout << "train_rows=" << last_block.train_set.ncases()
             << " test_rows=" << last_block.test_set.ncases() << "\n";

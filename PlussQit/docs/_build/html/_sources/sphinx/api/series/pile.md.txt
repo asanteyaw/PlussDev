@@ -174,9 +174,9 @@ the stacked output that it originally occupied.
   creating a new axis before alignment.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="unite.html">
+  <a class="prev-link" href="permute.html">
     <span class="label">Previous</span>
-    <span class="title">unite</span>
+    <span class="title">permute</span>
   </a>
   <a class="next-link" href="pos.html">
     <span class="label">Next</span>

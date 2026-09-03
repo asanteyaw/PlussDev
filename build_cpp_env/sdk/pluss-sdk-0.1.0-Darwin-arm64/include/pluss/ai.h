@@ -8,4 +8,7 @@
 // The active fusion/RNN surface now lives under <pluss/nn.h> plus the
 // structured NodeK models/ and NN/modules/ headers that it exports.
 //
-// Classical ML (NodeJ) contracts live under <pluss/ai/ml.h>.
+// Public namespace families:
+// - pluss::ai::classic -> NodeJ classical ML core
+// - pluss::ai::nets    -> NodeK neural/module surface
+// - pluss::ai::nlp     -> NodeB NLP surface

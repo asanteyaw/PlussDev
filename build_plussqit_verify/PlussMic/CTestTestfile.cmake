@@ -7,6 +7,7 @@
 subdirs("src/loader")
 subdirs("src/kindle")
 subdirs("src/bundle")
+subdirs("src/scribble")
 subdirs("src/table")
 subdirs("examples")
 subdirs("test")

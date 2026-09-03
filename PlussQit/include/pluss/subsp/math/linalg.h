@@ -27,6 +27,8 @@ struct SVDResult {
   Series Vh;
 };
 
+inline SVDResult svd(const Series& a, bool full_matrices);
+
 namespace detail {
 
 inline Config cpu_f64_cfg_() {
@@ -249,7 +251,10 @@ inline std::vector<double> triangular_solve_(const std::vector<double>& b, const
 inline std::vector<double> matrix_power_(const std::vector<double>& in, std::int64_t n, std::int64_t e) {
   if (e == 0) return identity_(n);
   std::vector<double> base = in;
-  std::uint64_t p = static_cast<std::uint64_t>(e < 0 ? -e : e);
+  const std::uint64_t p_abs = e < 0
+      ? static_cast<std::uint64_t>(-(e + 1)) + 1ULL
+      : static_cast<std::uint64_t>(e);
+  std::uint64_t p = p_abs;
   if (e < 0) base = inverse_gauss_(base, n);
   std::vector<double> out = identity_(n);
   while (p > 0) {
@@ -261,13 +266,57 @@ inline std::vector<double> matrix_power_(const std::vector<double>& in, std::int
 }
 
 inline std::vector<double> matrix_exp_(const std::vector<double>& in, std::int64_t n) {
+  double norm_inf = 0.0;
+  for (std::int64_t r = 0; r < n; ++r) {
+    double row_sum = 0.0;
+    for (std::int64_t c = 0; c < n; ++c) {
+      row_sum += std::abs(in[static_cast<std::size_t>(r * n + c)]);
+    }
+    norm_inf = std::max(norm_inf, row_sum);
+  }
+  const std::int64_t squarings = norm_inf > 1.0
+      ? static_cast<std::int64_t>(std::ceil(std::log2(norm_inf)))
+      : 0;
+  const double scale = std::ldexp(1.0, -static_cast<int>(squarings));
+  std::vector<double> scaled = in;
+  for (double& value : scaled) value *= scale;
+
   std::vector<double> out = identity_(n);
   std::vector<double> term = identity_(n);
   for (std::int64_t k = 1; k <= 18; ++k) {
-    term = matmul_(term, n, n, in, n);
+    term = matmul_(term, n, n, scaled, n);
     const double invk = 1.0 / static_cast<double>(k);
     for (double& v : term) v *= invk;
     for (std::size_t i = 0; i < out.size(); ++i) out[i] += term[i];
+  }
+  for (std::int64_t i = 0; i < squarings; ++i) {
+    out = matmul_(out, n, n, out, n);
+  }
+  return out;
+}
+
+inline std::vector<double> matrix_exp_frechet_adjoint_(
+    const std::vector<double>& a,
+    const std::vector<double>& grad,
+    std::int64_t n) {
+  const std::int64_t block_n = 2 * n;
+  std::vector<double> block(static_cast<std::size_t>(block_n * block_n), 0.0);
+  for (std::int64_t r = 0; r < n; ++r) {
+    for (std::int64_t c = 0; c < n; ++c) {
+      const double at = a[static_cast<std::size_t>(c * n + r)];
+      block[static_cast<std::size_t>(r * block_n + c)] = at;
+      block[static_cast<std::size_t>((r + n) * block_n + (c + n))] = at;
+      block[static_cast<std::size_t>(r * block_n + (c + n))] =
+          grad[static_cast<std::size_t>(r * n + c)];
+    }
+  }
+  const auto exponential = matrix_exp_(block, block_n);
+  std::vector<double> out(static_cast<std::size_t>(n * n), 0.0);
+  for (std::int64_t r = 0; r < n; ++r) {
+    for (std::int64_t c = 0; c < n; ++c) {
+      out[static_cast<std::size_t>(r * n + c)] =
+          exponential[static_cast<std::size_t>(r * block_n + (c + n))];
+    }
   }
   return out;
 }
@@ -353,7 +402,7 @@ inline Series cholesky(const Series& a, bool upper = false) {
 inline Series logdet(const Series& a) {
   auto d = det(a).to_vec<double>();
   const double v = d.empty() ? 0.0 : d[0];
-  return detail::scalar_from_value_(std::log(std::abs(v)));
+  return detail::scalar_from_value_(std::log(v));
 }
 
 inline Series slogdet(const Series& a) {
@@ -377,22 +426,35 @@ inline Series matrix_exp(const Series& a) {
 
 inline Series pinverse(const Series& a, double rcond = 1e-12) {
   detail::require_2d_(a, "subsp::math::linalg::pinverse");
+  if (!std::isfinite(rcond) || rcond < 0.0) {
+    ::pluss::throw_error("subsp::math::linalg::pinverse: rcond must be finite and non-negative");
+  }
   const auto m = a.sizes()[0];
   const auto n = a.sizes()[1];
-  const auto ar = detail::to_row_major_f64_(a);
-  if (m == n) return inverse(a);
-  if (m >= n) {
-    auto at = detail::transpose_(ar, m, n);
-    auto gram = detail::matmul_(at, n, m, ar, n);
-    for (std::int64_t i = 0; i < n; ++i) gram[static_cast<std::size_t>(i * n + i)] += rcond;
-    auto inv = detail::inverse_gauss_(gram, n);
-    return detail::matrix_from_row_major_(detail::matmul_(inv, n, n, at, m), n, m);
+  const auto decomposition = svd(a, /*full_matrices=*/false);
+  const auto u = decomposition.U.to_vec<double>();
+  const auto singular = decomposition.S.to_vec<double>();
+  const auto vh = decomposition.Vh.to_vec<double>();
+  const auto k = std::min(m, n);
+  const double largest = singular.empty() ? 0.0 : singular.front();
+  const double cutoff = rcond * largest;
+
+  std::vector<double> out(static_cast<std::size_t>(n * m), 0.0);
+  for (std::int64_t row = 0; row < n; ++row) {
+    for (std::int64_t col = 0; col < m; ++col) {
+      double value = 0.0;
+      for (std::int64_t i = 0; i < k; ++i) {
+        const double s = singular[static_cast<std::size_t>(i)];
+        if (s > cutoff) {
+          value += vh[static_cast<std::size_t>(i * n + row)]
+              * (1.0 / s)
+              * u[static_cast<std::size_t>(col * k + i)];
+        }
+      }
+      out[static_cast<std::size_t>(row * m + col)] = value;
+    }
   }
-  auto at = detail::transpose_(ar, m, n);
-  auto gram = detail::matmul_(ar, m, n, at, m);
-  for (std::int64_t i = 0; i < m; ++i) gram[static_cast<std::size_t>(i * m + i)] += rcond;
-  auto inv = detail::inverse_gauss_(gram, m);
-  return detail::matrix_from_row_major_(detail::matmul_(at, n, m, inv, m), n, m);
+  return detail::matrix_from_row_major_(out, n, m);
 }
 
 inline Series triangular_solve(const Series& b, const Series& a, bool upper = true, bool unitriangular = false) {

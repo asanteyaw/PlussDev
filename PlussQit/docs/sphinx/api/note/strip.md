@@ -89,7 +89,7 @@ operation, not a global deletion operation.
 ```cpp
 auto note = pluss::make_note({"#alpha#beta#", "##gamma##"});
 auto trimmed = note.strip("#");
-pluss::OutputEngine out;
+pluss::tils::OutputEngine out;
 out.writeln("strip_boundary_only:");
 out.writeln(trimmed);
 ```

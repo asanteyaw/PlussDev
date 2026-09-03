@@ -502,7 +502,7 @@ void test_kpi_and_plot_tiles() {
   const auto render = studio.render();
   expect(render.boards[0].tiles.size() == 3, "all BI tiles should render");
   expect(render.boards[0].tiles[0].scalar.has_value(), "KPI tile should return a scalar");
-  expect(std::fabs(pluss::aux::as_f64(render.boards[0].tiles[0].scalar->as_series()) - 1150.0) < 1e-12,
+  expect(std::fabs(pluss::tils::as_f64(render.boards[0].tiles[0].scalar->as_series()) - 1150.0) < 1e-12,
          "KPI reducer should compute the correct mean");
   expect(render.boards[0].tiles[1].plot != nullptr, "line tile should build a Flash studio");
   expect(render.boards[0].tiles[1].plot->pane_count() == 1, "line tile should create exactly one pane");

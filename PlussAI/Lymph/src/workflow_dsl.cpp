@@ -70,6 +70,18 @@ namespace detail {
     case TransformKind::PolynomialLift:
       return std::make_unique<::pluss::ai::nodej::prep::PolynomialLift>(
           std::get<prep::PolynomialLiftOptions>(spec.options));
+    case TransformKind::BaseNEncoder:
+      return std::make_unique<::pluss::ai::nodej::prep::BaseNEncoder>(
+          std::get<prep::BaseNEncoderOptions>(spec.options));
+    case TransformKind::HashingEncoder:
+      return std::make_unique<::pluss::ai::nodej::prep::HashingEncoder>(
+          std::get<prep::HashingEncoderOptions>(spec.options));
+    case TransformKind::TargetEncoder:
+      return std::make_unique<::pluss::ai::nodej::prep::TargetEncoder>(
+          std::get<prep::TargetEncoderOptions>(spec.options));
+    case TransformKind::WOEEncoder:
+      return std::make_unique<::pluss::ai::nodej::prep::WOEEncoder>(
+          std::get<prep::WOEEncoderOptions>(spec.options));
   }
   ::pluss::throw_error("make_feature_transformer: unsupported transform kind.");
 }

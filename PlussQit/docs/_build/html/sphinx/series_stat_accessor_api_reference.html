@@ -9,16 +9,16 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=d2a74cb6" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=15722e59" />
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=33944c6a"></script>
-    <script src="../_static/layout.js?v=34ad04f2"></script>
+    <script src="../_static/api_nav.js?v=60cd4e3d"></script>
+    <script src="../_static/layout.js?v=c27f9f8b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Series::var" href="api/series/var.html" />
-    <link rel="prev" title="Series::where" href="api/series/where.html" />
+    <link rel="next" title="SeriesStatAccessor::cdf" href="api/series-stat/cdf.html" />
+    <link rel="prev" title="Series::xlogy" href="api/series/xlogy.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -40,47 +40,100 @@
 <section id="seriesstataccessor-api-reference">
 <h1>SeriesStatAccessor API Reference<a class="headerlink" href="#seriesstataccessor-api-reference" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="series_api_reference.html"><span class="std std-doc">Back to Series API Reference</span></a></p>
-<p>This page documents the handwritten <code class="docutils literal notranslate"><span class="pre">SeriesStatAccessor</span></code> subset reached through
-<code class="docutils literal notranslate"><span class="pre">Series::stat</span></code>.</p>
-<section id="using-this-reference">
-<h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Use the left sidebar to open one method page at a time.</p></li>
-<li><p>Each method page contains its own signatures, parameter details, failure
-cases, verified outputs, and working previous/next navigation.</p></li>
-<li><p>This landing page stays intentionally short so the content panel is not one
-giant scroll of every statistical method at once.</p></li>
-</ul>
+<p><code class="docutils literal notranslate"><span class="pre">SeriesStatAccessor</span></code> groups statistical reductions, normal-distribution
+functions, trailing-window calculations, normalization transforms, and
+pairwise distances. Start here when the question is statistical rather than a
+generic elementwise or shape operation.</p>
+<section id="calling-styles">
+<h2>Calling Styles<a class="headerlink" href="#calling-styles" title="Link to this heading">¶</a></h2>
+<p>Unary methods have two equivalent spellings:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">().</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The first calls the accessor directly. The second creates a <code class="docutils literal notranslate"><span class="pre">SeriesStatProxy</span></code>
+bound to <code class="docutils literal notranslate"><span class="pre">x</span></code>, then calls the same implementation. Prefer direct style for
+ordinary code; recognize proxy style because it becomes useful for binary
+methods:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">direct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">bound</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">stat</span><span class="p">(</span><span class="n">right</span><span class="p">).</span><span class="n">cdist</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">stat(right)</span></code> binds the peer before the terminal method is selected. The
+owner <code class="docutils literal notranslate"><span class="pre">left</span></code> remains the first point table in either spelling.</p>
 </section>
-<section id="entry-surface">
-<h2>Entry Surface<a class="headerlink" href="#entry-surface" title="Link to this heading">¶</a></h2>
-<p>The accessor is available in two ordinary spellings:</p>
+<section id="describing-a-population">
+<h2>Describing A Population<a class="headerlink" href="#describing-a-population" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>dot-style convenience: <code class="docutils literal notranslate"><span class="pre">x.stat.var(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">x.stat.center(...)</span></code></p></li>
-<li><p>explicit proxy style: <code class="docutils literal notranslate"><span class="pre">x.stat().var(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">x.stat().center(...)</span></code></p></li>
+<li><p><a class="reference internal" href="api/series-stat/mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean</span></code></span></a> summarizes location globally or by axis.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var</span></code></span></a> measures squared spread with sample or
+population normalization.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">std</span></code></span></a> reports the same spread in original units.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/nanvar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nanvar</span></code></span></a> and
+<a class="reference internal" href="api/series-stat/nanstd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nanstd</span></code></span></a> omit NaNs under an explicit
+missing-observation policy.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/skewness.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">skewness</span></code></span></a> measures asymmetry.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/kurtosis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></span></a> reports excess fourth-moment shape.</p></li>
 </ul>
-<p>For the current handwritten batch, the dot-style forms are the main examples
-because they are the most concise everyday spelling on the public surface.</p>
+<p>Axis choice defines the population being summarized. On a matrix, <code class="docutils literal notranslate"><span class="pre">dim=0</span></code>
+groups values by column and <code class="docutils literal notranslate"><span class="pre">dim=1</span></code> groups them by row. A global statistic pools
+all entries and generally cannot be reconstructed by averaging lane-wise
+statistics.</p>
 </section>
-<section id="current-coverage">
-<h2>Current Coverage<a class="headerlink" href="#current-coverage" title="Link to this heading">¶</a></h2>
-<p>The current handwritten <code class="docutils literal notranslate"><span class="pre">SeriesStatAccessor</span></code> subset focuses on descriptive and
-normalization-heavy methods users typically reach first:</p>
+<section id="evaluating-a-normal-model">
+<h2>Evaluating A Normal Model<a class="headerlink" href="#evaluating-a-normal-model" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>dispersion: <code class="docutils literal notranslate"><span class="pre">var</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">nanvar</span></code>, <code class="docutils literal notranslate"><span class="pre">nanstd</span></code></p></li>
-<li><p>transforms: <code class="docutils literal notranslate"><span class="pre">center</span></code>, <code class="docutils literal notranslate"><span class="pre">standardize</span></code></p></li>
-<li><p>higher moments: <code class="docutils literal notranslate"><span class="pre">skewness</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p></li>
+<li><p><a class="reference internal" href="api/series-stat/pdf.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a> gives local density.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/logpdf.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">logpdf</span></code></span></a> gives log density.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/cdf.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cdf</span></code></span></a> gives accumulated lower-tail probability.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/logcdf.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">logcdf</span></code></span></a> preserves very small lower-tail values
+in log space.</p></li>
 </ul>
-<p>The accessor surface is wider than this. Pair-bound distance methods, density
-helpers, and moving-window methods should be documented in later batches rather
-than stubbed here without the same example rigor.</p>
+<p>All four preserve shape and support standard normal, scale-only, and explicit
+<code class="docutils literal notranslate"><span class="pre">(mu,sigma)</span></code> overloads. These methods evaluate a chosen normal model; they do
+not estimate <code class="docutils literal notranslate"><span class="pre">mu</span></code> or <code class="docutils literal notranslate"><span class="pre">sigma</span></code> from the owner.</p>
+</section>
+<section id="following-a-trailing-window">
+<h2>Following A Trailing Window<a class="headerlink" href="#following-a-trailing-window" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/series-stat/movsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">movsum</span></code></span></a> and
+<a class="reference internal" href="api/series-stat/movmean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">movmean</span></code></span></a> track local level.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/movmin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">movmin</span></code></span></a> and
+<a class="reference internal" href="api/series-stat/movmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">movmax</span></code></span></a> track local bounds.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/movvar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">movvar</span></code></span></a> and
+<a class="reference internal" href="api/series-stat/movstd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">movstd</span></code></span></a> track local population spread.</p></li>
+</ul>
+<p>Every moving method preserves shape, includes the current position, looks
+backward, and uses the available prefix before a full window exists. Omitted
+arguments mean window three on the last axis.</p>
+</section>
+<section id="transforming-statistical-geometry">
+<h2>Transforming Statistical Geometry<a class="headerlink" href="#transforming-statistical-geometry" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/series-stat/center.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">center</span></code></span></a> subtracts a global or lane mean.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/standardize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize</span></code></span></a> produces population z-scores.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/normr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">normr</span></code></span></a> gives nonzero rows unit L2 length.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/normc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">normc</span></code></span></a> gives nonzero columns unit L2 length.</p></li>
+</ul>
+<p>These operations all preserve shape, but they solve different problems.
+Centering removes offset, standardization removes offset and spread, and norm
+operations remove vector magnitude without subtracting a mean.</p>
+</section>
+<section id="comparing-point-tables">
+<h2>Comparing Point Tables<a class="headerlink" href="#comparing-point-tables" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/series-stat/cdist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cdist</span></code></span></a> computes all Euclidean row-to-row
+distances between two rank-2 point tables.</p></li>
+<li><p><a class="reference internal" href="api/series-stat/pdist2.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdist2</span></code></span></a> provides the equivalent two-table
+pairwise-distance surface; the <code class="docutils literal notranslate"><span class="pre">2</span></code> does not mean squared distance.</p></li>
+</ul>
+<p>For owner shape <code class="docutils literal notranslate"><span class="pre">[m,d]</span></code> and peer shape <code class="docutils literal notranslate"><span class="pre">[n,d]</span></code>, both return <code class="docutils literal notranslate"><span class="pre">[m,n]</span></code> and
+differentiate with respect to both point tables.</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="api/series/stat.html">
-    <span class="label">Previous</span>
-    <span class="title">stat</span>
-  </a>
+  <a class="prev-link" href="api/series/stat.html"><span class="label">Previous</span><span class="title">stat</span></a>
+  <a class="next-link" href="api/series-stat/cdf.html"><span class="label">Next</span><span class="title">cdf</span></a>
 </div>
 </section>
 </section>
@@ -173,8 +226,8 @@ than stubbed here without the same example rigor.</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="series_api_reference.html">Series API Reference</a><ul>
-      <li>Previous: <a href="api/series/where.html" title="previous chapter">Series::where</a></li>
-      <li>Next: <a href="api/series/var.html" title="next chapter">Series::var</a></li>
+      <li>Previous: <a href="api/series/xlogy.html" title="previous chapter">Series::xlogy</a></li>
+      <li>Next: <a href="api/series-stat/cdf.html" title="next chapter">SeriesStatAccessor::cdf</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -267,6 +267,8 @@ Use `where()` for binary branch selection on an existing `Series`.
 
 - [`pluss::series::select`](../series_factory/select.md): multi-branch free
   function for ordered conditional construction.
+- [`Series::where_`](where_.md): in-place sibling when the selected writes
+  should land back into the current `Series`.
 - [`Series::all`](all.md): reduce a mask to one global or axis-wise boolean
   answer.
 - [`Series::any`](any.md): test whether at least one value in a lane is truthy.
@@ -276,8 +278,8 @@ Use `where()` for binary branch selection on an existing `Series`.
     <span class="label">Previous</span>
     <span class="title">view</span>
   </a>
-  <a class="next-link" href="../../series_stat_accessor_api_reference.html">
+  <a class="next-link" href="where_.html">
     <span class="label">Next</span>
-    <span class="title">SeriesStatAccessor</span>
+    <span class="title">where_</span>
   </a>
 </div>

@@ -86,6 +86,9 @@ the user explicitly changes direction.
   `docs/scripts/validate_doc_examples.py`
   and the PlussQit Sphinx build after substantial page batches.
 - Keep previously known build warnings separate from any new regressions.
+- During long builds, do other productive local work instead of polling and
+  repeating the same progress update. Only report when there is actual new
+  information.
 
 ## Page Structure Preference
 

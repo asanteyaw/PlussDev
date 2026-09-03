@@ -16,7 +16,7 @@ API_CONTENT = DOCS / 'api_content'
 PER_METHOD_CLASSES = {
     'DataFrame', 'Thread', 'Catalog', 'Stream', 'Archive', 'Atlas',
     'DataFrameNoteAccessor', 'DataFrameTimelineAccessor', 'DataFrameLabelAccessor',
-    'DataFrameFeatureAxisAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
+    'DataFrameFeatureAxisAccessor', 'DataFramePlotAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
     'DataFrameTsWindowAccessor', 'DataFrameTsResampler', 'DataFrameGroupBuilder',
     'DataFrameSortBuilder', 'ContingencyTable',
     'TimeSeriesAccessor', 'DataFrameCastAccessor', 'ThreadPlotAccessor',
@@ -592,6 +592,7 @@ METHOD_PAGE_DIR = {
     'DataFrameTimelineAccessor': 'dataframe-timeline',
     'DataFrameLabelAccessor': 'dataframe-label',
     'DataFrameFeatureAxisAccessor': 'dataframe-feataxis',
+    'DataFramePlotAccessor': 'dataframe-plot',
     'DataFramePlot3DAccessor': 'dataframe-plot3d',
     'DataFrameTsAccessor': 'dataframe-ts',
     'DataFrameTsWindowAccessor': 'dataframe-ts-window',

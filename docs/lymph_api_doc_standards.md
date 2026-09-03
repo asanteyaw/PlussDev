@@ -1,7 +1,70 @@
 # Lymph API Doc Standards
 
-Use this note as the non-negotiable reference while writing or revising the
-handwritten PlussAI/Lymph API docs.
+This is the canonical, non-negotiable reference for writing or revising the
+handwritten PlussAI / Lymph API docs. `lymph_api_reference_doc_standards.md` is
+older background material; where the two disagree, this file wins.
+
+## Working Directives (standing, from review)
+
+These carry the same weight as the rest of the file.
+
+1. **Overload count drives depth.** The more overloads a method has, the more
+   prose it needs — behaviour differences, option toggles, which overload to
+   reach for — and the more examples it needs. When overloads are genuinely
+   dissimilar, dedicate at least one example to each shape.
+
+2. **`## Signature` is the method's own callable surface, nothing else.** Do not
+   paste factory or helper declarations from other families into it. If a method
+   consumes a type from another family (for example `Model::append` takes a
+   `prep::Stage` and a `prep::Route`), state that cross-family dependency in
+   prose and link the type's own page; do not imply a false relationship by
+   listing unrelated signatures.
+
+3. **Repackage toward `lymph::options::*` and `lymph::reports::*` as you go.**
+   Every family has options; several produce reports/results. These are the two
+   cross-cutting umbrella namespaces, and they are the **canonical public
+   spelling** — docs, signatures, and examples name `lymph::options::X` /
+   `lymph::reports::X`. As you document a family, make sure each of its option
+   and report types is re-exported there, and switch the prose to that spelling.
+   Do this incrementally, never in bulk. End state: root `lymph::` stops
+   re-exporting public option/report/result types (they live only in their
+   family namespace plus the umbrella); root holds only internal
+   family-coordination utilities.
+
+   - **Naming: drop the suffix.** The namespace already supplies the noun, so
+     `lymph::reports::CrossValResult` → `lymph::reports::CrossVal`,
+     `MetricReport` → `lymph::reports::Metric`, `CompareResult` →
+     `lymph::reports::Compare`, `StandardScalerOptions` →
+     `lymph::options::StandardScaler`. Short, consistent, one name per concept.
+   - **Umbrella = alias facade for these types.** Options and reports are plain
+     data. Keep each struct *defined* in its family/leaf header (next to the
+     code that uses it) and only `using`-alias it into `lymph::options` /
+     `lymph::reports`. Do **not** move the definitions into one header — that
+     creates a god-file and include cycles (a family header needs to name its
+     own options). "Implementation moves to the canonical scope, not just an
+     alias" still applies to *behavioural* types (whole classes/functions), not
+     to these data structs — for options/reports the facade alias **is** the
+     canonical home, and the family-local name becomes the secondary alias.
+   - The family-local spelling (`lymph::prep::StandardScalerOptions`) stays
+     valid as the reduced-scope alias, per directive 6.
+
+4. **Add bulk overloads where a method is one-at-a-time.** Methods like
+   `Model::append` and `Builder::inject` currently force a long `.append(...)` /
+   `.inject(...)` chain for multiple items. When documenting such a method, add
+   an efficient bulk overload (`std::initializer_list`, `std::map` /
+   `std::unordered_map`, or a range) to the API first — implemented for
+   performance, validating the whole batch before mutating — then let the
+   signature, prose, and examples cover it.
+
+5. **No classroom or "mental model" framing in headings or prose.** Section
+   headings are plain and concrete (`What It Does`, `Parameters`, `Input
+   Shapes`, `Practical Examples`, `Errors`). Do not write "Mental Model",
+   "Teaching", or similar.
+
+6. **Mix alias and full-scope spellings in examples.** Implementations live at
+   the fullest scope; the family re-exports a shorter alias. Both must compile.
+   Different examples on one page use different spellings so a reader sees both
+   and picks their own convention downstream.
 
 ## Example Discipline
 
@@ -139,6 +202,38 @@ page must never replace it with a shorter page-local sidebar. The selected page
 is highlighted, and its ancestors are expanded. Do not put literal labels such
 as "family" or "subfamily" in that tree: show the public names themselves.
 
+**The tree enumerates navigable API entities only** — families, subfamilies,
+objects/types, methods, and free functions — plus exactly one `Introduction`
+node per family or subfamily. Nothing else earns a sidebar node. In particular
+there are **no `Notes` pages, no standalone single-accessor pages** (for example
+a bare `contract` under a lightweight descriptor), **and no object-level
+`Introduction` node for an object whose methods are documented on its own
+page**.
+
+An object appears in one of two shapes:
+
+1. **Self-contained object** (the common case — every `prep` object: `Stage`,
+   `StandardScaler`, the encoders, `FeatureTransformer`, …). One page. Its
+   methods are `## Methods` subsections on that page; its role, contract,
+   invariants, and postscript material are `## Contract` / `## Notes` sections
+   on that same page. No child nodes at all.
+2. **Hub object** (`Model`, `Builder` — objects with a large method surface).
+   The object page is a hub: an `Introduction` child carries the role prose, and
+   each public method is its own page. Only this shape has an `Introduction`
+   node, and it never also duplicates what the method pages say.
+
+The manifest encodes the distinction: a `class` symbol with a non-empty
+`methods` list is a hub (gets `Introduction` + method pages); an empty `methods`
+list is self-contained (single page, no children). `apiref.py wire` / `nav` /
+`scaffold` follow that automatically.
+
+**An options page nests under the object it configures.** Give the options
+`[[symbol]]` an `owner = "<owning class qualname>"`; `apiref.py` then renders it
+as a child of that object in the sidebar and its toctree, not as a sibling at
+family level. The indentation carries the "these options belong to this object"
+relationship a flat family listing cannot. An options struct shared by several
+objects, or owned by none, stays at family level (no `owner`).
+
 The standard navigation rhythm is:
 
 - `lymph`
@@ -146,7 +241,10 @@ The standard navigation rhythm is:
     - subfamily
       - `Introduction`
       - object/type pages
-      - options pages
+        - (self-contained: one node, with its `Options` page nested beneath)
+        - (hub: node + `Introduction` + method pages, `Options` nested beneath)
+      - free-function pages
+      - family-level options pages (shared or owner-less)
 
 Example:
 
@@ -154,63 +252,39 @@ Example:
   - `models`
     - `builder`
       - `Introduction`
-      - `Builder`
+      - `Builder`            *(hub — expands to `Introduction` + method pages)*
     - `linear`
       - `Introduction`
       - `LinearFamilyOptions`
   - `prep`
     - `stage`
       - `Introduction`
-      - `Stage`
+      - `Stage`              *(self-contained — single page)*
     - `scaling`
       - `Introduction`
-      - `StandardScaler`
-      - `StandardScalerOptions`
+      - `StandardScaler`     *(self-contained — single page)*
+        - `StandardScalerOptions`   *(nested: `owner` = `StandardScaler`)*
+      - `MinMaxScaler`
+        - `MinMaxScalerOptions`
 
 The clickable pages in the sidebar are the navigation contract. A family or
-subfamily landing page is not ornamental; it explains what that concern owns
-before the reader drills into concrete objects.
+subfamily landing `Introduction` is not ornamental; it explains what that
+concern owns before the reader drills into concrete objects.
 
-Within a type, the tree must narrow further. Do not lump every method of a type
-into one giant type page. The type page tree should be:
+For a **hub object**, do not lump every method into one giant page. The tree is:
 
-- family
-  - type or subfamily
-    - type
-      - `Introduction`
-      - one page per public method
-      - `Notes`
-
-If the type lives directly under a family, the shape is:
-
-- family
+- family (or family → subfamily)
   - type
     - `Introduction`
-    - `append`
-    - `assess`
-    - `infer`
-    - `learn`
-    - `prepare`
-    - `Notes`
+    - one page per public method, alphabetical
 
-If the type lives under a subfamily, the shape is:
+If an in-place and out-of-place pair are the same conceptual method, document
+them on one page together — `learn` covers both `learn(...)` and `learn_(...)`.
 
-- family
-  - subfamily
-    - type
-      - `Introduction`
-      - method pages
-      - `Notes`
-
-Method pages must be listed in alphabetical order. If an in-place and
-out-of-place pair are the same conceptual method, teach them on one page
-together, for example `learn` can document both `learn(...)` and `learn_(...)`.
-
-This is API reference, not a user guide. The method page is where signature,
-options, behavior, examples, edge cases, and verified outputs should live. The
-type-level `Introduction` explains the object’s role; the type-level `Notes`
-holds summaries, gotchas, cross-links, and postscript material that does not
-belong to one method alone.
+This is API reference, not a user guide. For a hub object the method page holds
+signature, options, behaviour, examples, edge cases, and verified outputs, and
+the `Introduction` holds only role prose and cross-cutting notes. For a
+self-contained object all of that lives on the one page, sectioned.
 
 The left sidebar itself must remain persistent across clicks. Clicking a family,
 subfamily, object, or options page should only change the content panel and the

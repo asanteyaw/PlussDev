@@ -31,3 +31,33 @@ TEST_CASE("matmul 2D", "[matmul]") {
   REQUIRE(cp[2] == 139.0);
   REQUIRE(cp[3] == 154.0);
 }
+
+TEST_CASE("vector matmul returns a scalar", "[matmul]") {
+  const auto a = pluss::make_series({1.0, 2.0, 3.0});
+  const auto b = pluss::make_series({4.0, 5.0, 6.0});
+
+  const auto out = a.matmul(b);
+
+  REQUIRE(out.dim() == 0);
+  REQUIRE(out.item<double>() == 32.0);
+}
+
+TEST_CASE("linearalg named products enforce their rank contracts", "[matmul][linearalg]") {
+  const auto matrix = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
+  const auto vector = pluss::make_series({5.0, 6.0});
+
+  const auto mm_out = matrix.linearalg.mm(matrix);
+  const auto mv_out = matrix.linearalg.mv(vector);
+  REQUIRE(mm_out.dim() == 2);
+  REQUIRE(mm_out.sizes()[0] == 2);
+  REQUIRE(mm_out.sizes()[1] == 2);
+  REQUIRE(mv_out.dim() == 1);
+  REQUIRE(mv_out.sizes()[0] == 2);
+  REQUIRE(vector.linearalg.dot(vector).dim() == 0);
+  REQUIRE(vector.linearalg.vdot(vector).dim() == 0);
+
+  REQUIRE_THROWS(matrix.linearalg.mm(vector));
+  REQUIRE_THROWS(vector.linearalg.mv(vector));
+  REQUIRE_THROWS(matrix.linearalg.dot(matrix));
+  REQUIRE_THROWS(matrix.linearalg.vdot(matrix));
+}

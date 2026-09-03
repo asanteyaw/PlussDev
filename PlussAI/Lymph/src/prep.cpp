@@ -137,6 +137,22 @@ template <>
   return options;
 }
 
+template <>
+[[nodiscard]] DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::BaseNEncoder>(
+    pluss::msharp::RangeView::Of<std::string> names) {
+  auto options = prep_batch_options_for_(names);
+  options.note_policy = DataNotePolicy::Hash;
+  return options;
+}
+
+template <>
+[[nodiscard]] DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::HashingEncoder>(
+    pluss::msharp::RangeView::Of<std::string> names) {
+  auto options = prep_batch_options_for_(names);
+  options.note_policy = DataNotePolicy::Hash;
+  return options;
+}
+
 [[nodiscard]] pluss::table::DataFrame prep_merge_mapped_(
     const pluss::table::DataFrame& frame,
     pluss::msharp::RangeView::Of<std::string> names,
@@ -499,6 +515,8 @@ PLUSS_NODEJ_DEFINE_PREP_WRAPPER(QuantileMap, "prep::QuantileMap")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(PowerMap, "prep::PowerMap")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(ThresholdBinarizer, "prep::ThresholdBinarizer")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(PolynomialLift, "prep::PolynomialLift")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER(BaseNEncoder, "prep::BaseNEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER(HashingEncoder, "prep::HashingEncoder")
 
 #undef PLUSS_NODEJ_DEFINE_PREP_WRAPPER
 #undef PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD

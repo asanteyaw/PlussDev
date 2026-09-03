@@ -111,39 +111,50 @@ div.sphinxsidebar h4 {
   padding: 0.2rem 0.45rem;
 }
 
-.pluss-api-tree details > summary {
+.pluss-api-tree .tree-row {
   align-items: center;
-  cursor: pointer;
   display: flex;
-  list-style: none;
   min-height: 2rem;
 }
 
-.pluss-api-tree details > summary::-webkit-details-marker {
-  display: none;
+.pluss-api-tree .tree-toggle {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #52677b;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 1.35rem;
+  font: inherit;
+  justify-content: center;
+  margin: 0;
+  min-height: 2rem;
+  padding: 0;
 }
 
-.pluss-api-tree details > summary::before {
-  color: #52677b;
+.pluss-api-tree .tree-toggle::before {
   content: "›";
-  flex: 0 0 1.35rem;
   font-size: 1rem;
   font-weight: 700;
-  text-align: center;
   transform: rotate(0deg);
   transition: transform 0.12s ease;
 }
 
-.pluss-api-tree details[open] > summary::before {
+.pluss-api-tree .tree-branch.open > .tree-row > .tree-toggle::before {
   transform: rotate(90deg);
 }
 
 .pluss-api-tree .tree-children {
-  display: block;
+  display: none;
   margin-left: 1.25rem;
 }
 
-.pluss-api-tree details > summary a,
+.pluss-api-tree .tree-branch.open > .tree-children {
+  display: block;
+}
+
+.pluss-api-tree .tree-link,
 .pluss-api-tree .tree-leaf {
   border-left: 3px solid transparent;
   box-sizing: border-box;
@@ -155,14 +166,15 @@ div.sphinxsidebar h4 {
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
 }
 
-.pluss-api-tree details > summary a:hover,
+.pluss-api-tree .tree-link:hover,
 .pluss-api-tree .tree-leaf:hover {
   background: #eef4fb;
 }
 
-.pluss-api-tree details > summary a.active,
+.pluss-api-tree .tree-link.active,
 .pluss-api-tree .tree-leaf.active {
   background: #e8f4fb;
   border-left-color: var(--pluss-accent);
@@ -477,8 +489,47 @@ div.highlight:hover .pluss-copy-code,
     display: none;
   }
 
+  body.has-method-sidebar div.document {
+    display: flex;
+    flex-direction: column;
+  }
+
   body.has-method-sidebar #pluss-method-sidebar {
+    border-bottom: 1px solid var(--pluss-border);
+    border-right: 0;
+    display: block;
+    max-width: 100%;
+    order: -1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.35rem 0.7rem;
+    position: sticky;
+    top: var(--pluss-topbar-height);
+    width: 100%;
+    z-index: 900;
+  }
+
+  body.has-method-sidebar #pluss-method-sidebar .sidebar-title,
+  body.has-method-sidebar #pluss-method-sidebar .method-group {
     display: none;
+  }
+
+  body.has-method-sidebar #pluss-method-sidebar .method-nav {
+    display: flex;
+    gap: 0.2rem;
+    min-width: max-content;
+  }
+
+  body.has-method-sidebar #pluss-method-sidebar .method-nav a {
+    border-bottom: 3px solid transparent;
+    border-left: 0;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0.45rem 0.65rem;
+  }
+
+  body.has-method-sidebar #pluss-method-sidebar .method-nav a.active {
+    border-bottom-color: var(--pluss-accent);
   }
 
   div.documentwrapper {

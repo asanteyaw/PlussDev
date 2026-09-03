@@ -3,21 +3,6 @@
 
 #include <filesystem>
 #include <iostream>
-#include <vector>
-
-namespace {
-
-bool same_values(const pluss::Series& left, const pluss::Series& right) {
-  const std::vector<double> left_values = left.to(pluss::pCPU, pluss::ScalarType::Float64)
-                                              .reshape({left.numel()})
-                                              .to_vec<double>();
-  const std::vector<double> right_values = right.to(pluss::pCPU, pluss::ScalarType::Float64)
-                                               .reshape({right.numel()})
-                                               .to_vec<double>();
-  return left_values == right_values;
-}
-
-} // namespace
 
 int main() {
   namespace lymph = pluss::ai::lymph;
@@ -87,7 +72,6 @@ int main() {
             << ", loaded_stage_count = " << loaded.stage_count() << "\n\n";
   std::cout << original_frame << "\n";
   std::cout << reloaded_frame << "\n";
-  std::cout << "roundtrip_match = " << same_values(original, reloaded) << "\n";
 
   std::filesystem::remove(model_path);
 

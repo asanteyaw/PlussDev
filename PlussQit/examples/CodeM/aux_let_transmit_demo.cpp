@@ -1,5 +1,3 @@
-// If you ever want to disable let macro behavior in a TU, define PLUSS_DISABLE_LET_AUTO before including pluss.h>
-// #define PLUSS_DISABLE_LET_AUTO
 #include <pluss/pluss.h>
 #include <pluss/tils.h>
 
@@ -11,8 +9,8 @@ pluss::Series calc_tip (pluss::Series bills, double tip_percent) {
 }
 
 int main() {
-  let mps_ready = pluss::mps::is_ready();
-  let platform = mps_ready ? pluss::pMPS : pluss::pCPU;
+  const auto mps_ready = pluss::mps::is_ready();
+  const auto platform = mps_ready ? pluss::pMPS : pluss::pCPU;
   std::cout << (mps_ready ? "MPS ready. Training on GPU." : "Training on CPU.") << '\n';
 
   auto doubled = suppose(std::vector<int>{1, 2, 3, 4})
@@ -22,14 +20,14 @@ int main() {
                      })
                      .value();
 
-  auto zipped = pluss::transmit([](int a, int b, std::size_t i) {
+  auto zipped = pluss::tils::transmit([](int a, int b, std::size_t i) {
                  return a + b + static_cast<int>(i);
                },
                doubled,
                std::vector<int>{10, 20, 30, 40});
 
   auto scores = pluss::make_series(std::vector<double>{79.4, 82.1, 78.5, 85.0}, {4});
-  auto squared = pluss::transmit([](const pluss::Series& s) { return s.mul(s); }, scores);
+  auto squared = pluss::tils::transmit([](const pluss::Series& s) { return s.mul(s); }, scores);
 
   std::cout << "zipped: ";
   for (auto v : zipped) std::cout << v << " ";
@@ -40,7 +38,10 @@ int main() {
   std::cout << "\n";
 
   let bills = pluss::make_series({42.50, 35.85, 50.03, 15.21, 5.45});
-  let tips = pluss::transmit(calc_tip, bills);
+  auto tips = pluss::tils::transmit(calc_tip, bills);
+  std::cout << "tips: ";
+  for (auto v : tips.to_vec<double>()) std::cout << v << " ";
+  std::cout << "\n";
   
   return 0;
 }

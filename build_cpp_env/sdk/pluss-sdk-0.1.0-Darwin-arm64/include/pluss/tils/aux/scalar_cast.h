@@ -11,14 +11,14 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace pluss::aux {
+namespace pluss::tils {
 
 inline Config as_dtype(Config cfg, ScalarType dtype) {
   return Config{}.with_dtype(dtype).with_platform(cfg.platform).with_pinned(cfg.pinned);
 }
 
 inline Series as_dtype(const Series& x, ScalarType dtype, Config cfg = {}) {
-  PLUSS_CHECK(x.defined(), "pluss::as_dtype: expected defined Series");
+  PLUSS_CHECK(x.defined(), "pluss::tils::as_dtype: expected defined Series");
   return x.to(cfg.platform, dtype).contiguous();
 }
 
@@ -106,9 +106,10 @@ inline Series as_C128(std::complex<double> value, Config cfg) { return as_c128(v
 
 template <class T>
 T to_scalar(const Series& x) {
-  static_assert(is_scalar_extractable_v<T>, "pluss::to_scalar<T>: T must be an arithmetic or CodeM complex scalar type");
-  PLUSS_CHECK(x.defined(), "pluss::to_scalar<T>: expected defined Series");
-  PLUSS_CHECK(x.numel() == 1, "pluss::to_scalar<T>: expected scalar Series (numel==1)");
+  static_assert(is_scalar_extractable_v<T>,
+                "pluss::tils::to_scalar<T>: T must be an arithmetic or CodeM complex scalar type");
+  PLUSS_CHECK(x.defined(), "pluss::tils::to_scalar<T>: expected defined Series");
+  PLUSS_CHECK(x.numel() == 1, "pluss::tils::to_scalar<T>: expected scalar Series (numel==1)");
   return x.item<T>();
 }
 
@@ -163,4 +164,4 @@ inline Series as_U16(std::uint16_t value, Config cfg) { return as_u16(value, cfg
 inline Series as_U32(std::uint32_t value, Config cfg) { return as_u32(value, cfg); }
 inline Series as_U64(std::uint64_t value, Config cfg) { return as_u64(value, cfg); }
 
-} // namespace pluss::aux
+} // namespace pluss::tils

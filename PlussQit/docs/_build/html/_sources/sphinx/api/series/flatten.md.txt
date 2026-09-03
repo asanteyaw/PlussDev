@@ -192,12 +192,12 @@ flatten: start_dim must be <= end_dim
   whole axis range together.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="squeeze.html">
+  <a class="prev-link" href="factorial.html">
     <span class="label">Previous</span>
-    <span class="title">squeeze</span>
+    <span class="title">factorial</span>
   </a>
-  <a class="next-link" href="unite.html">
+  <a class="next-link" href="floor.html">
     <span class="label">Next</span>
-    <span class="title">unite</span>
+    <span class="title">floor</span>
   </a>
 </div>

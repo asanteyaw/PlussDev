@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>SeriesLinearAlgAccessor::svd &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
+    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="SeriesLinearAlgAccessor::svd_s" href="svd_s.html" />
+    <link rel="prev" title="SeriesLinearAlgAccessor::slogdet" href="slogdet.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="serieslinearalgaccessor-svd">
+<h1>SeriesLinearAlgAccessor::svd<a class="headerlink" href="#serieslinearalgaccessor-svd" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">Back to SeriesLinearAlgAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SvdDecomposition</span><span class="w"> </span><span class="n">SeriesLinearAlgAccessor</span><span class="o">::</span><span class="n">svd</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">full_matrices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">SvdDecomposition</span><span class="w"> </span><span class="n">SeriesLinearAlgProxy</span><span class="o">::</span><span class="n">svd</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">full_matrices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">svd()</span></code> returns the three coordinated factors in</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>A = U diag(S) Vh
+</pre></div>
+</div>
+<p>The returned <code class="docutils literal notranslate"><span class="pre">SvdDecomposition</span></code> has three public <code class="docutils literal notranslate"><span class="pre">Series</span></code> fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.u</span></code>: orthonormal directions in the output space</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.s</span></code>: nonnegative strengths, ordered largest to smallest</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.vh</span></code>: orthonormal input directions, stored as rows</p></li>
+</ul>
+<p>Use this joint method when the factors must be used together: reconstruction,
+low-rank approximation, basis conversion, or an algorithm that needs both
+directions and strengths. Use <code class="docutils literal notranslate"><span class="pre">svd_u()</span></code>, <code class="docutils literal notranslate"><span class="pre">svd_s()</span></code>, or <code class="docutils literal notranslate"><span class="pre">svd_vh()</span></code> when the code
+consumes only one component and returning a decomposition object would obscure
+that intent.</p>
+</section>
+<section id="calling-styles-and-the-two-signature-types">
+<h2>Calling Styles And The Two Signature Types<a class="headerlink" href="#calling-styles-and-the-two-signature-types" title="Link to this heading">¶</a></h2>
+<p>The two signatures do not perform different decompositions. They describe two
+ways the accessor machinery reaches the same unary operation:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">direct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">svd</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span><span class="w">    </span><span class="c1">// SeriesLinearAlgAccessor</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">proxied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">().</span><span class="n">svd</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span><span class="w"> </span><span class="c1">// SeriesLinearAlgProxy</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">matrix.linearalg</span></code> is the accessor stored on <code class="docutils literal notranslate"><span class="pre">matrix</span></code>. Calling <code class="docutils literal notranslate"><span class="pre">linearalg()</span></code>
+creates a lightweight proxy bound to that same matrix. Because SVD is unary,
+the proxy does not need a peer and both expressions decompose <code class="docutils literal notranslate"><span class="pre">matrix</span></code> with the
+same <code class="docutils literal notranslate"><span class="pre">full_matrices</span></code> setting. Users normally write the shorter direct form.</p>
+<p>The peer-bound form <code class="docutils literal notranslate"><span class="pre">matrix.linearalg(other)</span></code> exists for binary methods such as
+<code class="docutils literal notranslate"><span class="pre">matmul()</span></code> and <code class="docutils literal notranslate"><span class="pre">lu_solve()</span></code>. Do not bind an unrelated peer for <code class="docutils literal notranslate"><span class="pre">svd()</span></code>; SVD has
+only one numeric input.</p>
+</section>
+<section id="rotation-scaling-rotation">
+<h2>Rotation, Scaling, Rotation<a class="headerlink" href="#rotation-scaling-rotation" title="Link to this heading">¶</a></h2>
+<p>Read the factorization from right to left. <code class="docutils literal notranslate"><span class="pre">Vh</span></code> first expresses an input in
+principal input directions. <code class="docutils literal notranslate"><span class="pre">diag(S)</span></code> independently scales those coordinates.
+<code class="docutils literal notranslate"><span class="pre">U</span></code> then expresses the scaled result in output coordinates.</p>
+<p>A singular value near zero identifies a direction almost erased by the map.
+Exactly zero means rank deficiency: different inputs can produce the same
+output. The ratio between the largest and smallest retained singular values
+describes how strongly reversing the map can amplify error.</p>
+</section>
+<section id="parameter">
+<h2>Parameter<a class="headerlink" href="#parameter" title="Link to this heading">¶</a></h2>
+<p><strong>full_matrices</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+Controls whether <code class="docutils literal notranslate"><span class="pre">U</span></code> and <code class="docutils literal notranslate"><span class="pre">Vh</span></code> include complete orthonormal bases or only
+the directions needed to reconstruct <code class="docutils literal notranslate"><span class="pre">A</span></code>. It never changes <code class="docutils literal notranslate"><span class="pre">.s</span></code>.</p>
+<p>For input <code class="docutils literal notranslate"><span class="pre">[...,m,n]</span></code>, let <code class="docutils literal notranslate"><span class="pre">k=min(m,n)</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>mode</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">.u</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">.s</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">.vh</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[...,m,m]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[...,k]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[...,n,n]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[...,m,k]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[...,k]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[...,k,n]</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Reduced mode is usually the practical choice: it reconstructs the complete
+input with fewer stored values and is the mode supported by reverse mode.
+Full mode is useful when an algorithm explicitly needs bases for left or right
+null-space complements.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SvdDecomposition</span></code>
+A value object containing coordinated <code class="docutils literal notranslate"><span class="pre">.u</span></code>, <code class="docutils literal notranslate"><span class="pre">.s</span></code>, and <code class="docutils literal notranslate"><span class="pre">.vh</span></code> fields. It is
+not itself a <code class="docutils literal notranslate"><span class="pre">Series</span></code>; select a field before applying <code class="docutils literal notranslate"><span class="pre">Series</span></code> methods.</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p>Reverse mode is supported with <code class="docutils literal notranslate"><span class="pre">full_matrices=false</span></code>. A loss may depend on one
+or several returned fields, and sensitivities propagate to the original
+matrix.</p>
+<p>Singular-vector derivatives require distinct singular values. When two values
+are equal, their shared subspace is defined but no unique pair of basis vectors
+is. Near equality therefore makes gradients through <code class="docutils literal notranslate"><span class="pre">.u</span></code> or <code class="docutils literal notranslate"><span class="pre">.vh</span></code> unstable.
+Objectives that depend only symmetrically on <code class="docutils literal notranslate"><span class="pre">.s</span></code> are generally better behaved.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Direct-accessor and unary-proxy calls are equivalent.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">direct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">svd</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">proxied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">().</span><span class="n">svd</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;direct_s=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">direct</span><span class="p">.</span><span class="n">s</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;proxy_s=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">proxied</span><span class="p">.</span><span class="n">s</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>direct_s=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[4, 2]
+proxy_s=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[4, 2]
+</pre></div>
+</div>
+<p>The class names in the signatures explain routing; they are not two algorithms
+the caller must choose between.</p>
+<p>Example 2. Reconstruct a coupled matrix from reduced factors.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">svd</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">s</span><span class="p">.</span><span class="n">diag_embed</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">reconstructed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">u</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">scale</span><span class="p">).</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">vh</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reconstructed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[3, 1],
+  [1, 3]]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">diag_embed()</span></code> turns the singular-value vector into the middle <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">x</span> <span class="pre">k</span></code> scale
+matrix. This multiplication is the operational meaning of the factorization.</p>
+<p>Example 3. The singular directions are orthonormal.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">svd</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;u=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">u</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">u</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;vh=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">vh</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">vh</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>u=pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 1.9967346e-16],
+  [1.9967346e-16, 1]]
+vh=pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 4.2664216e-17],
+  [4.2664216e-17, 1]]
+</pre></div>
+</div>
+<p>The tiny off-diagonal values are floating-point roundoff. Orthogonality and
+reconstruction are reliable validation criteria; exact vector signs are not.</p>
+<p>Example 4. On a tall <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">2</span></code> matrix, reduced and full mode differ in <code class="docutils literal notranslate"><span class="pre">U</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tall</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">reduced</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tall</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">svd</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">full</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tall</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">svd</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;reduced_u=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reduced</span><span class="p">.</span><span class="n">u</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;full_u=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">full</span><span class="p">.</span><span class="n">u</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;s=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reduced</span><span class="p">.</span><span class="n">s</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>reduced_u=pluss::Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 0],
+  [0, 1],
+  [0, 0]]
+full_u=pluss::Series(shape=[3,3], strides=[3,1], dtype=float64, platform=cpu, numel=9, contiguous=true)
+data=[[1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1]]
+s=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[3, 2]
+</pre></div>
+</div>
+<p>The extra full-mode column spans an output direction not reached by this map.</p>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Input must have at least two dimensions; the last two are matrix dimensions.</p></li>
+<li><p>Leading dimensions are batches and are decomposed independently.</p></li>
+<li><p>Singular-vector signs are arbitrary. Paired sign changes in <code class="docutils literal notranslate"><span class="pre">U</span></code> and <code class="docutils literal notranslate"><span class="pre">Vh</span></code>
+leave reconstruction unchanged.</p></li>
+<li><p>Repeated singular values make individual singular vectors non-unique.</p></li>
+<li><p>Full factors consume more memory and are not supported by reverse mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SvdDecomposition</span></code> is a three-field result, not a <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">svd(false)</span></code> when an algorithm needs coordinated reduced factors. Read
+<code class="docutils literal notranslate"><span class="pre">.vh</span></code> as input directions, <code class="docutils literal notranslate"><span class="pre">.s</span></code> as their strengths, and <code class="docutils literal notranslate"><span class="pre">.u</span></code> as the resulting
+output directions. Use full mode only when complete null-space bases are part
+of the task.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="svd_u.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd_u</span></code></span></a>: return only output-space directions.</p></li>
+<li><p><a class="reference internal" href="svd_s.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd_s</span></code></span></a>: return only ordered singular strengths.</p></li>
+<li><p><a class="reference internal" href="svd_vh.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd_vh</span></code></span></a>: return only input-space directions.</p></li>
+<li><p><a class="reference internal" href="pinverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pinverse</span></code></span></a>: reverse directions whose singular values survive a cutoff.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="slogdet.html"><span class="label">Previous</span><span class="title">slogdet</span></a>
+  <a class="next-link" href="svd_s.html"><span class="label">Next</span><span class="title">svd_s</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+  <li><a href="../../series_linearalg_accessor_api_reference.html">SeriesLinearAlgAccessor API Reference</a><ul>
+      <li>Previous: <a href="slogdet.html" title="previous chapter">SeriesLinearAlgAccessor::slogdet</a></li>
+      <li>Next: <a href="svd_s.html" title="next chapter">SeriesLinearAlgAccessor::svd_s</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series-linearalg/svd.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

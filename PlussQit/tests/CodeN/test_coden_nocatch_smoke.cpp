@@ -844,11 +844,11 @@ void test_note_factory_paths() {
 void test_aux_transmit_translate_and_queue_basics() {
   std::cout << "[RUN] aux:transmit_translate_queue\n";
 
-  const auto mapped = pluss::transmit([](int x) { return x * x; }, std::vector<int>{1, 2, 3});
+  const auto mapped = pluss::tils::transmit([](int x) { return x * x; }, std::vector<int>{1, 2, 3});
   expect_true(mapped.size() == 3 && mapped[2] == 9, "transmit maps range values");
 
   pluss::Note n = pluss::make_note({{"aa", "bbb"}, {"c", "dddd"}});
-  const auto per_row_chars = pluss::transform_axis(
+  const auto per_row_chars = pluss::tils::transform_axis(
       [](const pluss::Note& row) {
         std::int64_t total = 0;
         for (std::int64_t i = 0; i < row.numel(); ++i) total += static_cast<std::int64_t>(row.at(i).size());
@@ -859,7 +859,7 @@ void test_aux_transmit_translate_and_queue_basics() {
   expect_true(per_row_chars.size() == 2, "transform_axis(Note, axis=1) returns one value per row slice");
   expect_true(per_row_chars[0] == 5 && per_row_chars[1] == 5, "transform_axis computes per-row aggregation");
 
-  const auto per_col_chars = pluss::transform_axis(
+  const auto per_col_chars = pluss::tils::transform_axis(
       [](const pluss::Note& col) {
         std::int64_t total = 0;
         for (std::int64_t i = 0; i < col.numel(); ++i) total += static_cast<std::int64_t>(col.at(i).size());

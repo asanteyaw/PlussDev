@@ -11,7 +11,13 @@ source_suffix = {
 
 master_doc = 'index'
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'README.md', '_local/NodeB/README.md']
+exclude_patterns = [
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    'README.md',
+    '_local/NodeB/README.md',
+]
 
 html_theme = 'alabaster'
 html_theme_options = {
@@ -32,6 +38,7 @@ myst_enable_extensions = [
     'deflist',
     'fieldlist',
 ]
+myst_heading_anchors = 3
 
 latex_engine = 'pdflatex'
 latex_documents = [

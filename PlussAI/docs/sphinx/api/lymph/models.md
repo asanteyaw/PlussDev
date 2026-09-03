@@ -74,9 +74,12 @@ workspace before validation or search.
 
 ## Subfamilies
 
+<!-- apiref:toctree:start -->
 ```{toctree}
-:maxdepth: 3
+:maxdepth: 4
+:hidden:
 
 models/Model
-builder <models/builder>
+models/builder
 ```
+<!-- apiref:toctree:end -->

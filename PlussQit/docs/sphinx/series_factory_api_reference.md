@@ -66,12 +66,12 @@ show up immediately after construction:
 
 Those pages are split this way on purpose.
 
-- The core random pages (`rand`, `randn`) teach seed and dtype policy.
-- The interval/discrete pages (`rand_btw`, `randint`, `randperm`) teach how
+- The core random pages (`rand`, `randn`) explain seed and dtype policy.
+- The interval/discrete pages (`rand_btw`, `randint`, `randperm`) explain how
   those rules change once bounds or uniqueness matter.
-- The like-factory pages teach "same geometry as this existing tensor" as a
+- The like-factory pages explain "same geometry as this existing tensor" as a
   separate mental model from ordinary shape-first construction.
-- The complex pages teach the pairwise "two real tensors in, one complex tensor
+- The complex pages explain the pairwise "two real tensors in, one complex tensor
   out" surface, which behaves differently from the scalar-fill factories.
 - The helper pages (`print`, `select`) live here because they are free
   functions on `pluss::series::*`, not `Series` methods.

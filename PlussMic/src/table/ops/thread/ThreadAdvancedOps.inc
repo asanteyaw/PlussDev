@@ -1833,6 +1833,28 @@ DataFrame Thread::extract(
   return DataFrame(std::move(output));
 }
 
+DataFrame Thread::framerize(std::string_view name) const {
+  std::string column = name.empty()
+                           ? (named() ? this->name() : std::string("x"))
+                           : std::string(name);
+
+  const bool indexed = detail::has_display_labels(*this);
+  std::optional<Thread> cases =
+      indexed ? std::optional<Thread>(detail::display_labels(*this)) : std::nullopt;
+
+  // The column carries values and validity only; its own name and index are
+  // dropped -- the name is replaced by `column`, the index becomes the frame's
+  // cases.
+  Thread body = indexed ? detail::clear_display_labels(*this) : *this;
+  if (body.named()) {
+    body = body.unname();
+  }
+
+  std::vector<std::pair<std::string, Thread>> output;
+  output.emplace_back(std::move(column), std::move(body));
+  return DataFrame(std::move(output), std::move(cases));
+}
+
 DataFrame Thread::split(
     std::string_view delimiter,
     std::int64_t limit,

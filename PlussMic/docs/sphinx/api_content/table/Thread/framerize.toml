@@ -1,0 +1,101 @@
+summary = """
+Reshape this Thread into a one-column `DataFrame` -- the 1-D to 2-D counterpart of pandas `Series.to_frame`.
+
+Reach for it at the end of a reducing chain that lands on a Thread you actually want to present or carry as a frame: `df.ndistinct(false).arrange(false)` gives you a Thread, and `.framerize("unique_values")` turns it into a labelled one-column frame that renders with `DataFrame`'s aligned table layout instead of the terser Thread view.
+
+The single output column takes `name`. This Thread's display labels -- its index -- become the frame's cases, so a sorted cardinality Thread produces a frame whose row index is the feature names in sorted order.
+"""
+
+returns = """
+`DataFrame`
+    A frame with exactly one feature. Its cases are this Thread's display labels when it has them, otherwise the default `0..n-1` positions. Values and missing-ness are carried across unchanged.
+"""
+
+see_also = [
+  "<a href=\"#name\"><code>Thread::name</code></a>: set the Thread's own name, which <code>framerize()</code> uses as the column name when no argument is given.",
+  "<a href=\"#label\"><code>Thread::label</code></a>: attach the display labels that become the frame's row index."
+]
+
+notes = [
+  """
+Column-name resolution: an explicit non-empty `name` wins; otherwise the Thread's own name is used; otherwise the column is labelled `x`.
+""",
+  """
+The Thread's own name is not copied onto the column -- only the resolved column name applies. The index, if present, is moved to the frame's cases rather than duplicated on the column.
+""",
+  """
+`DataFrame::to_frame(...)` is a different operation (contingency / wide reshape of an existing frame). Use `framerize` for the Thread to one-column-frame direction.
+"""
+]
+
+[[parameters]]
+name = "name"
+body = """
+The name of the single output column.
+
+- pass a name for a self-describing column (`"unique_values"`, `"count"`, ...)
+- leave it empty to fall back to this Thread's own name, or to `x` if the Thread is unnamed
+"""
+
+[[examples]]
+title = "Cardinality report: a reduced Thread becomes a labelled one-column frame."
+code = """
+using namespace pluss::table;
+
+auto counts = Thread(pluss::make_series({5.0, 3.0, 3.0, 2.0}))
+                  .label().set(Thread(pluss::make_note({"minutes", "branch", "runner", "status"})))
+                  .name("ndistinct");
+
+auto out = counts.framerize("unique_values");
+"""
+output = """
+=======================
+        | unique_values
+-----------------------
+minutes | 5
+branch  | 3
+runner  | 3
+status  | 2
+-----------------------
+[4 cs x 1 feat]
+"""
+
+[[examples]]
+title = "No argument: the column takes the Thread's own name."
+code = """
+using namespace pluss::table;
+
+auto counts = Thread(pluss::make_series({5.0, 3.0, 3.0, 2.0}))
+                  .label().set(Thread(pluss::make_note({"minutes", "branch", "runner", "status"})))
+                  .name("ndistinct");
+
+auto out = counts.framerize();
+"""
+output = """
+===================
+        | ndistinct
+-------------------
+minutes | 5
+branch  | 3
+runner  | 3
+status  | 2
+-------------------
+[4 cs x 1 feat]
+"""
+
+[[examples]]
+title = "A bare Thread with no name and no index frames to column `x` over default cases."
+code = """
+using namespace pluss::table;
+
+auto out = Thread(pluss::make_series({7.0, 8.0})).framerize();
+"""
+output = """
+===========
+     | x
+-----------
+0    | 7
+1    | 8
+-----------
+[2 cs x 1 feat]
+"""

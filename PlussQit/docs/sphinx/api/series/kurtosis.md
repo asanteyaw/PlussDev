@@ -58,7 +58,7 @@ to understand distribution shape.
 
 ## Verified Examples
 
-The examples below are arranged to teach the excess-kurtosis convention first,
+The examples below are arranged to introduce the excess-kurtosis convention first,
 then show that asymmetry and kurtosis are different questions.
 
 Example 1. Symmetric three-point rows produce negative excess kurtosis.

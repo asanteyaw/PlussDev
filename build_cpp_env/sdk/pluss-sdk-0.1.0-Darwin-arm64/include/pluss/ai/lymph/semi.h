@@ -4,7 +4,7 @@
 
 #include <limits>
 
-namespace pluss::ai::lymph::semi {
+namespace pluss::ai::lymph::models::semi {
 
 enum class SelectKind : std::uint8_t {
   Confidence = 0,
@@ -268,4 +268,4 @@ class Runner final {
   return Runner(std::move(model));
 }
 
-} // namespace pluss::ai::lymph::semi
+} // namespace pluss::ai::lymph::models::semi

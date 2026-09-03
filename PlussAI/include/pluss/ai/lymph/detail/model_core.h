@@ -766,6 +766,14 @@ private:
         return flow.add_threshold_binarizer(std::get<prep::ThresholdBinarizerOptions>(spec.options), spec.feature_route);
       case TransformKind::PolynomialLift:
         return flow.add_polynomial_lift(std::get<prep::PolynomialLiftOptions>(spec.options), spec.feature_route);
+      case TransformKind::BaseNEncoder:
+        return flow.add_basen_encoder(std::get<prep::BaseNEncoderOptions>(spec.options), spec.feature_route);
+      case TransformKind::HashingEncoder:
+        return flow.add_hashing_encoder(std::get<prep::HashingEncoderOptions>(spec.options), spec.feature_route);
+      case TransformKind::TargetEncoder:
+        return flow.add_target_encoder(std::get<prep::TargetEncoderOptions>(spec.options), spec.feature_route);
+      case TransformKind::WOEEncoder:
+        return flow.add_woe_encoder(std::get<prep::WOEEncoderOptions>(spec.options), spec.feature_route);
     }
     return Status::internal("append_transform_from_spec: unknown transform kind.");
   }

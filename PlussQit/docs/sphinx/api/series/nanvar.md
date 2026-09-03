@@ -84,7 +84,7 @@ If NaN means "missing observation," this method is appropriate. If NaN means
 
 ## Examples
 
-These examples are built to teach the missing-data policy explicitly, because
+These examples are built to show the missing-data policy explicitly, because
 that policy matters more than the variance formula itself.
 
 Example 1. Global `nanvar()` drops NaNs before computing population variance.
@@ -248,6 +248,6 @@ variance of the observed values that remain?"
 - [`Series::var`](var.md): ordinary variance that does not omit NaNs.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="std.html"><span class="label">Previous</span><span class="title">std</span></a>
-  <a class="next-link" href="nanstd.html"><span class="label">Next</span><span class="title">nanstd</span></a>
+  <a class="prev-link" href="nansum.html"><span class="label">Previous</span><span class="title">nansum</span></a>
+  <a class="next-link" href="narrow_copy.html"><span class="label">Next</span><span class="title">narrow_copy</span></a>
 </div>

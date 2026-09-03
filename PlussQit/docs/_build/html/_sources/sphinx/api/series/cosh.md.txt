@@ -142,8 +142,8 @@ current backward support on this public path is not.
     <span class="label">Previous</span>
     <span class="title">cos</span>
   </a>
-  <a class="next-link" href="cumprod.html">
+  <a class="next-link" href="cummax.html">
     <span class="label">Next</span>
-    <span class="title">cumprod</span>
+    <span class="title">cummax</span>
   </a>
 </div>

@@ -84,7 +84,7 @@ For differentiable dtypes, `add()` is one of the cleanest gradient surfaces:
 - the gradient with respect to `rhs` is `alpha` on the scaled overload, or `1`
   on the plain overload
 
-That makes `add()` a good method to teach the difference between value flow and
+That makes `add()` a good method to show the difference between value flow and
 gradient scaling: `alpha` changes both the forward value and the backward
 multiplier for `rhs`.
 
@@ -240,9 +240,9 @@ explicit `alpha` you supply.
 - [`Series::sum`](sum.md): reduction after arithmetic composition.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="acos.html">
+  <a class="prev-link" href="acosh.html">
     <span class="label">Previous</span>
-    <span class="title">acos</span>
+    <span class="title">acosh</span>
   </a>
   <a class="next-link" href="all.html">
     <span class="label">Next</span>

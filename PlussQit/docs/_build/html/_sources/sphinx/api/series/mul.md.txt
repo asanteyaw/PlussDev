@@ -189,8 +189,8 @@ eye.
     <span class="label">Previous</span>
     <span class="title">minimum</span>
   </a>
-  <a class="next-link" href="permute.html">
+  <a class="next-link" href="nan_to_num.html">
     <span class="label">Next</span>
-    <span class="title">permute</span>
+    <span class="title">nan_to_num</span>
   </a>
 </div>

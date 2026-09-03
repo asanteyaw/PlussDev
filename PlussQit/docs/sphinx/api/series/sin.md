@@ -151,9 +151,9 @@ special angles.
 - [`Series::asin`](asin.md): inverse sine on `[-1, 1]`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sign.html">
+  <a class="prev-link" href="silu.html">
     <span class="label">Previous</span>
-    <span class="title">sign</span>
+    <span class="title">silu</span>
   </a>
   <a class="next-link" href="sinh.html">
     <span class="label">Next</span>

@@ -1516,6 +1516,11 @@ void test_axis_dtype_and_host_exports() {
   expect(ptypes["event"] == "Timeline", "timeline ptype should be Timeline");
   expect(ptypes["axis"] == "TimeIndex", "time index ptype should be TimeIndex");
 
+  const auto payloads = ptypes.payloads();
+  expect(payloads.size() == 4, "DataFrame::ptypes payloads size mismatch");
+  expect(payloads == std::vector<std::string>({"Series", "Note", "Timeline", "TimeIndex"}),
+         "DataFrame::ptypes payloads should preserve payload-family order");
+
   const auto dtypes = frame.dtypes();
   expect(dtypes.size() == 4, "DataFrame::dtypes size mismatch");
   expect(dtypes["amount"].find("Series<") == 0, "numeric dtype should include Series concrete dtype");

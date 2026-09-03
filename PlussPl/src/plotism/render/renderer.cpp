@@ -11,6 +11,7 @@
 #include <iterator>
 #include <limits>
 #include <map>
+#include <memory>
 #include <numeric>
 #include <optional>
 #include <sstream>
@@ -18,6 +19,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -150,6 +152,7 @@ struct FillStroke {
 
 struct PathCommand {
   std::vector<Point2d> points;
+  std::vector<std::size_t> subpath_starts;
   FillStroke style{};
   bool closed{false};
 };
@@ -213,9 +216,48 @@ struct GroupRect {
   }
 };
 
+struct CachedAxisValues {
+  std::shared_ptr<const std::vector<double>> values{};
+  std::size_t count{0};
+  bool broadcast_scalar{false};
+  double scalar{0.0};
+
+  [[nodiscard]] double at(std::size_t index) const noexcept {
+    if (broadcast_scalar) {
+      return scalar;
+    }
+    return (*values)[index];
+  }
+};
+
+struct CachedOptionalAxisValues {
+  std::shared_ptr<const std::vector<double>> values{};
+  std::size_t count{0};
+  double fallback{0.0};
+  bool active{false};
+
+  [[nodiscard]] double at(std::size_t index) const noexcept {
+    if (!active || !values || values->empty()) {
+      return fallback;
+    }
+    if (values->size() == 1 && count > 1) {
+      return values->front();
+    }
+    if (index < values->size()) {
+      return (*values)[index];
+    }
+    return fallback;
+  }
+
+  [[nodiscard]] bool has_values() const noexcept {
+    return active && values && !values->empty();
+  }
+};
+
 struct SeriesPairData {
-  std::vector<double> first;
-  std::vector<double> second;
+  CachedAxisValues first{};
+  CachedAxisValues second{};
+  std::size_t count{0};
 };
 
 struct SurfaceGrid {
@@ -238,18 +280,58 @@ struct VolumeField {
 };
 
 struct CloudPoints {
-  std::vector<double> x;
-  std::vector<double> y;
-  std::vector<double> size;
-  std::optional<std::vector<double>> color;
+  CachedAxisValues x{};
+  CachedAxisValues y{};
+  CachedOptionalAxisValues size{};
+  CachedOptionalAxisValues color{};
+  std::size_t count{0};
 };
 
 struct Cloud3Points {
-  std::vector<double> x;
-  std::vector<double> y;
-  std::vector<double> z;
-  std::vector<double> size;
-  std::optional<std::vector<double>> color;
+  CachedAxisValues x{};
+  CachedAxisValues y{};
+  CachedAxisValues z{};
+  CachedOptionalAxisValues size{};
+  CachedOptionalAxisValues color{};
+  std::size_t count{0};
+};
+
+struct SeriesVectorCacheKey {
+  const void* impl_ptr{nullptr};
+  std::uint64_t impl_instance_id{0};
+  const void* storage_handle{nullptr};
+  std::int64_t storage_version{0};
+  std::int64_t storage_offset{0};
+  ScalarType scalar_type{ScalarType::Float32};
+  Platform platform{Platform::CPU};
+  std::uint64_t layout_signature{0};
+
+  [[nodiscard]] bool operator==(const SeriesVectorCacheKey&) const noexcept = default;
+};
+
+struct SeriesVectorCacheKeyHash {
+  [[nodiscard]] std::size_t operator()(const SeriesVectorCacheKey& key) const noexcept {
+    std::size_t seed = 0;
+    const auto mix = [&seed](std::size_t value) noexcept {
+      seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
+    };
+    mix(std::hash<const void*>{}(key.impl_ptr));
+    mix(std::hash<std::uint64_t>{}(key.impl_instance_id));
+    mix(std::hash<const void*>{}(key.storage_handle));
+    mix(std::hash<std::int64_t>{}(key.storage_version));
+    mix(std::hash<std::int64_t>{}(key.storage_offset));
+    mix(std::hash<int>{}(static_cast<int>(key.scalar_type)));
+    mix(std::hash<int>{}(static_cast<int>(key.platform)));
+    mix(std::hash<std::uint64_t>{}(key.layout_signature));
+    return seed;
+  }
+};
+
+struct SeriesVectorCache {
+  std::unordered_map<SeriesVectorCacheKey,
+                     std::shared_ptr<const std::vector<double>>,
+                     SeriesVectorCacheKeyHash>
+      values{};
 };
 
 struct RibbonGeometry {
@@ -354,11 +436,88 @@ struct WedgeSlice {
   return text.find('\\') != std::string_view::npos || text.find('$') != std::string_view::npos;
 }
 
-[[nodiscard]] std::vector<double> to_f64(const Series& series) {
+SeriesVectorCache*& active_series_vector_cache_() noexcept {
+  thread_local SeriesVectorCache* cache = nullptr;
+  return cache;
+}
+
+class ScopedSeriesVectorCache {
+ public:
+  ScopedSeriesVectorCache() noexcept
+      : previous_(active_series_vector_cache_()) {
+    active_series_vector_cache_() = &cache_;
+  }
+
+  ~ScopedSeriesVectorCache() {
+    active_series_vector_cache_() = previous_;
+  }
+
+ private:
+  SeriesVectorCache cache_{};
+  SeriesVectorCache* previous_{nullptr};
+};
+
+[[nodiscard]] std::uint64_t hash_series_layout_signature(const Series& series) noexcept {
+  constexpr std::uint64_t kOffset = 1469598103934665603ULL;
+  constexpr std::uint64_t kPrime = 1099511628211ULL;
+  std::uint64_t hash = kOffset;
+  hash ^= static_cast<std::uint64_t>(series.dim());
+  hash *= kPrime;
+  for (std::int64_t dim = 0; dim < series.dim(); ++dim) {
+    hash ^= static_cast<std::uint64_t>(series.sizes()[static_cast<std::size_t>(dim)]);
+    hash *= kPrime;
+    hash ^= static_cast<std::uint64_t>(series.strides()[static_cast<std::size_t>(dim)]);
+    hash *= kPrime;
+  }
+  hash ^= static_cast<std::uint64_t>(series.numel());
+  hash *= kPrime;
+  return hash;
+}
+
+[[nodiscard]] SeriesVectorCacheKey make_series_vector_cache_key(const Series& series) {
+  SeriesVectorCacheKey key{};
+  if (!series.defined()) {
+    return key;
+  }
+  const auto* impl = series.unsafe_impl();
+  key.impl_ptr = impl;
+  key.impl_instance_id = (impl != nullptr) ? impl->instance_id() : 0;
+  key.storage_handle = series.storage().handle().get();
+  key.storage_version = series.storage_version();
+  key.storage_offset = series.storage_offset();
+  key.scalar_type = series.scalar_type();
+  key.platform = series.platform();
+  key.layout_signature = hash_series_layout_signature(series);
+  return key;
+}
+
+[[nodiscard]] std::vector<double> to_f64_uncached(const Series& series) {
   if (series.scalar_type() == ScalarType::Float64) {
     return series.to_vec<double>();
   }
   return series.to(ScalarType::Float64).to_vec<double>();
+}
+
+[[nodiscard]] std::shared_ptr<const std::vector<double>> to_f64_shared(const Series& series) {
+  if (!series.defined()) {
+    static const auto empty = std::make_shared<const std::vector<double>>();
+    return empty;
+  }
+  auto* cache = active_series_vector_cache_();
+  if (cache == nullptr) {
+    return std::make_shared<const std::vector<double>>(to_f64_uncached(series));
+  }
+  const auto key = make_series_vector_cache_key(series);
+  if (const auto it = cache->values.find(key); it != cache->values.end()) {
+    return it->second;
+  }
+  auto values = std::make_shared<const std::vector<double>>(to_f64_uncached(series));
+  cache->values.emplace(key, values);
+  return values;
+}
+
+[[nodiscard]] std::vector<double> to_f64(const Series& series) {
+  return *to_f64_shared(series);
 }
 
 [[nodiscard]] Series flatten_f64(const Series& series) {
@@ -384,6 +543,13 @@ struct WedgeSlice {
   }
   return values;
 }
+
+[[nodiscard]] CachedAxisValues normalize_cloud_axis(const Series& series);
+
+[[nodiscard]] CachedOptionalAxisValues normalize_optional_cloud_axis(
+    const std::optional<Series>& series,
+    std::size_t count,
+    double fallback);
 
 [[nodiscard]] Series broadcast_plot_matrix(const Series& series, std::int64_t rows, std::int64_t cols) {
   Series values = series.to(ScalarType::Float64);
@@ -1087,75 +1253,101 @@ struct WedgeSlice {
 }
 
 [[nodiscard]] SeriesPairData normalize_pairs(const Series& first, const Series& second) {
-  SeriesPairData out{to_f64(first), to_f64(second)};
-  if (out.first.empty() || out.second.empty()) {
+  SeriesPairData out;
+  out.first = normalize_cloud_axis(first);
+  out.second = normalize_cloud_axis(second);
+  if (out.first.count == 0 || out.second.count == 0) {
     return out;
   }
-  if (out.first.size() == 1 && out.second.size() > 1) {
-    out.first.assign(out.second.size(), out.first.front());
-  } else if (out.second.size() == 1 && out.first.size() > 1) {
-    out.second.assign(out.first.size(), out.second.front());
+  if (out.first.count == 1 && out.second.count > 1) {
+    out.first.broadcast_scalar = true;
+    out.first.scalar = out.first.values->front();
+    out.count = out.second.count;
+  } else if (out.second.count == 1 && out.first.count > 1) {
+    out.second.broadcast_scalar = true;
+    out.second.scalar = out.second.values->front();
+    out.count = out.first.count;
+  } else {
+    out.count = std::min(out.first.count, out.second.count);
   }
-  const auto count = std::min(out.first.size(), out.second.size());
-  out.first.resize(count);
-  out.second.resize(count);
+  out.first.count = out.count;
+  out.second.count = out.count;
   return out;
 }
 
-[[nodiscard]] std::vector<double> broadcast_optional_series(
-    const std::optional<Series>& values,
+[[nodiscard]] CachedAxisValues normalize_cloud_axis(const Series& series) {
+  CachedAxisValues out;
+  out.values = to_f64_shared(series);
+  out.count = out.values->size();
+  return out;
+}
+
+[[nodiscard]] CachedOptionalAxisValues normalize_optional_cloud_axis(
+    const std::optional<Series>& series,
     std::size_t count,
     double fallback) {
-  std::vector<double> out(count, fallback);
-  if (!values.has_value()) {
+  CachedOptionalAxisValues out;
+  out.count = count;
+  out.fallback = fallback;
+  out.active = series.has_value();
+  if (!out.active) {
     return out;
   }
-  const auto raw = to_f64(*values);
-  if (raw.empty()) {
-    return out;
-  }
-  if (raw.size() == 1 && count > 1) {
-    out.assign(count, raw.front());
-    return out;
-  }
-  const auto clipped = std::min(count, raw.size());
-  std::copy(raw.begin(), raw.begin() + static_cast<std::ptrdiff_t>(clipped), out.begin());
+  out.values = to_f64_shared(*series);
   return out;
 }
 
 [[nodiscard]] CloudPoints normalize_cloud(const CloudData& data) {
-  const auto xy = normalize_pairs(data.x, data.y);
-  const auto count = std::min(xy.first.size(), xy.second.size());
   CloudPoints cloud;
-  cloud.x = xy.first;
-  cloud.y = xy.second;
-  cloud.x.resize(count);
-  cloud.y.resize(count);
-  cloud.size = broadcast_optional_series(data.size, count, 18.0);
-  if (data.color.has_value()) {
-    cloud.color = broadcast_optional_series(data.color, count, 0.0);
+  cloud.x = normalize_cloud_axis(data.x);
+  cloud.y = normalize_cloud_axis(data.y);
+  if (cloud.x.count == 0 || cloud.y.count == 0) {
+    return cloud;
   }
+  if (cloud.x.count == 1 && cloud.y.count > 1) {
+    cloud.x.broadcast_scalar = true;
+    cloud.x.scalar = cloud.x.values->front();
+    cloud.count = cloud.y.count;
+  } else if (cloud.y.count == 1 && cloud.x.count > 1) {
+    cloud.y.broadcast_scalar = true;
+    cloud.y.scalar = cloud.y.values->front();
+    cloud.count = cloud.x.count;
+  } else {
+    cloud.count = std::min(cloud.x.count, cloud.y.count);
+  }
+  cloud.x.count = cloud.count;
+  cloud.y.count = cloud.count;
+  cloud.size = normalize_optional_cloud_axis(data.size, cloud.count, 18.0);
+  cloud.color = normalize_optional_cloud_axis(data.color, cloud.count, 0.0);
   return cloud;
 }
 
 [[nodiscard]] Cloud3Points normalize_cloud3(const Cloud3Data& data) {
-  const auto xy = normalize_pairs(data.x, data.y);
-  std::vector<double> z = to_f64(data.z);
-  if (z.size() == 1 && xy.first.size() > 1) {
-    z.assign(xy.first.size(), z.front());
-  }
-  const auto count = std::min({xy.first.size(), xy.second.size(), z.size()});
   Cloud3Points cloud;
-  cloud.x = xy.first;
-  cloud.y = xy.second;
-  cloud.z = std::move(z);
-  cloud.x.resize(count);
-  cloud.y.resize(count);
-  cloud.z.resize(count);
-  cloud.size = broadcast_optional_series(data.size, count, 18.0);
-  if (data.color.has_value()) {
-    cloud.color = broadcast_optional_series(data.color, count, 0.0);
+  cloud.x = normalize_cloud_axis(data.x);
+  cloud.y = normalize_cloud_axis(data.y);
+  cloud.z = normalize_cloud_axis(data.z);
+  if (cloud.x.count == 0 || cloud.y.count == 0 || cloud.z.count == 0) {
+    return cloud;
   }
+  cloud.count = std::min({cloud.x.count, cloud.y.count, cloud.z.count});
+  if (cloud.x.count == 1 && cloud.count > 1) {
+    cloud.x.broadcast_scalar = true;
+    cloud.x.scalar = cloud.x.values->front();
+  }
+  if (cloud.y.count == 1 && cloud.count > 1) {
+    cloud.y.broadcast_scalar = true;
+    cloud.y.scalar = cloud.y.values->front();
+  }
+  if (cloud.z.count == 1 && cloud.count > 1) {
+    cloud.z.broadcast_scalar = true;
+    cloud.z.scalar = cloud.z.values->front();
+  }
+  cloud.x.count = cloud.count;
+  cloud.y.count = cloud.count;
+  cloud.z.count = cloud.count;
+  cloud.size = normalize_optional_cloud_axis(data.size, cloud.count, 18.0);
+  cloud.color = normalize_optional_cloud_axis(data.color, cloud.count, 0.0);
   return cloud;
 }
 
@@ -2444,14 +2636,14 @@ struct FiniteMinMax {
           if constexpr (std::is_same_v<Payload, TrendData>) {
             only_radial = false;
             const auto xy = normalize_pairs(payload.x, payload.y);
-            for (std::size_t i = 0; i < xy.first.size(); ++i) {
-              bounds.include(xy.first[i], xy.second[i]);
+            for (std::size_t i = 0; i < xy.count; ++i) {
+              bounds.include(xy.first.at(i), xy.second.at(i));
             }
           } else if constexpr (std::is_same_v<Payload, CloudData>) {
             only_radial = false;
             const auto cloud = normalize_cloud(payload);
-            for (std::size_t i = 0; i < cloud.x.size(); ++i) {
-              bounds.include(cloud.x[i], cloud.y[i]);
+            for (std::size_t i = 0; i < cloud.count; ++i) {
+              bounds.include(cloud.x.at(i), cloud.y.at(i));
             }
           } else if constexpr (std::is_same_v<Payload, FieldmapData>) {
             only_radial = false;
@@ -2469,9 +2661,9 @@ struct FiniteMinMax {
           } else if constexpr (std::is_same_v<Payload, SpikeData>) {
             only_radial = false;
             const auto xy = normalize_pairs(payload.x, payload.y);
-            for (std::size_t i = 0; i < xy.first.size(); ++i) {
-              bounds.include(xy.first[i], payload.base);
-              bounds.include(xy.first[i], xy.second[i]);
+            for (std::size_t i = 0; i < xy.count; ++i) {
+              bounds.include(xy.first.at(i), payload.base);
+              bounds.include(xy.first.at(i), xy.second.at(i));
             }
           } else if constexpr (std::is_same_v<Payload, WedgeData>) {
             only_radial = false;
@@ -2501,19 +2693,19 @@ struct FiniteMinMax {
             only_radial = false;
             const auto xy = normalize_pairs(payload.x, payload.y);
             const double half_width = 0.5 * payload.width;
-            for (std::size_t i = 0; i < xy.first.size(); ++i) {
+            for (std::size_t i = 0; i < xy.count; ++i) {
               if (payload.horizontal) {
-                const double x0 = std::min(payload.base, xy.first[i]);
-                const double x1 = std::max(payload.base, xy.first[i]);
-                const double y0 = xy.second[i] - half_width;
-                const double y1 = xy.second[i] + half_width;
+                const double x0 = std::min(payload.base, xy.first.at(i));
+                const double x1 = std::max(payload.base, xy.first.at(i));
+                const double y0 = xy.second.at(i) - half_width;
+                const double y1 = xy.second.at(i) + half_width;
                 bounds.include(x0, y0);
                 bounds.include(x1, y1);
               } else {
-                const double x0 = xy.first[i] - half_width;
-                const double x1 = xy.first[i] + half_width;
-                const double y0 = std::min(payload.base, xy.second[i]);
-                const double y1 = std::max(payload.base, xy.second[i]);
+                const double x0 = xy.first.at(i) - half_width;
+                const double x1 = xy.first.at(i) + half_width;
+                const double y0 = std::min(payload.base, xy.second.at(i));
+                const double y1 = std::max(payload.base, xy.second.at(i));
                 bounds.include(x0, y0);
                 bounds.include(x1, y1);
               }
@@ -2561,9 +2753,9 @@ struct FiniteMinMax {
             }
           } else if constexpr (std::is_same_v<Payload, RadialData>) {
             const auto polar = normalize_pairs(payload.theta, payload.radius);
-            for (std::size_t i = 0; i < polar.first.size(); ++i) {
-              bounds.include(std::cos(polar.first[i]) * polar.second[i],
-                             std::sin(polar.first[i]) * polar.second[i]);
+            for (std::size_t i = 0; i < polar.count; ++i) {
+              bounds.include(std::cos(polar.first.at(i)) * polar.second.at(i),
+                             std::sin(polar.first.at(i)) * polar.second.at(i));
             }
           } else {
             only_radial = false;
@@ -2627,14 +2819,14 @@ struct FiniteMinMax {
           if constexpr (std::is_same_v<Payload, Path3Data>) {
             const auto xy = normalize_pairs(payload.x, payload.y);
             const auto z = to_f64(payload.z);
-            const auto count = std::min({xy.first.size(), xy.second.size(), z.size()});
+            const auto count = std::min(xy.count, z.size());
             for (std::size_t i = 0; i < count; ++i) {
-              bounds.include(xy.first[i], xy.second[i], z[i]);
+              bounds.include(xy.first.at(i), xy.second.at(i), z[i]);
             }
           } else if constexpr (std::is_same_v<Payload, Cloud3Data>) {
             const auto cloud = normalize_cloud3(payload);
-            for (std::size_t i = 0; i < cloud.x.size(); ++i) {
-              bounds.include(cloud.x[i], cloud.y[i], cloud.z[i]);
+            for (std::size_t i = 0; i < cloud.count; ++i) {
+              bounds.include(cloud.x.at(i), cloud.y.at(i), cloud.z.at(i));
             }
           } else if constexpr (std::is_same_v<Payload, Spire3Data>) {
             const auto grid = normalize_surface_grid(payload);
@@ -3445,7 +3637,28 @@ void add_path(
   if (points.size() < (closed ? 3U : 2U)) {
     return;
   }
-  list.commands.emplace_back(PathCommand{std::move(points), style, closed});
+  list.commands.emplace_back(PathCommand{std::move(points), {0U}, style, closed});
+}
+
+void add_compound_path(
+    DrawList& list,
+    std::vector<Point2d> points,
+    std::vector<std::size_t> subpath_starts,
+    FillStroke style,
+    bool closed = false) {
+  if (points.empty() || subpath_starts.empty()) {
+    return;
+  }
+  subpath_starts.erase(
+      std::remove_if(
+          subpath_starts.begin(),
+          subpath_starts.end(),
+          [&](const std::size_t start) { return start >= points.size(); }),
+      subpath_starts.end());
+  if (subpath_starts.empty()) {
+    return;
+  }
+  list.commands.emplace_back(PathCommand{std::move(points), std::move(subpath_starts), style, closed});
 }
 
 void add_text(
@@ -4965,6 +5178,18 @@ void render_planar_axes(
   return points;
 }
 
+void append_marker_circle(std::vector<Point2d>& points,
+                          std::vector<std::size_t>& subpath_starts,
+                          Point2d center,
+                          double radius,
+                          int steps) {
+  subpath_starts.push_back(points.size());
+  for (int i = 0; i < steps; ++i) {
+    const double angle = 2.0 * kPi * static_cast<double>(i) / static_cast<double>(steps);
+    points.push_back({center.x + radius * std::cos(angle), center.y + radius * std::sin(angle)});
+  }
+}
+
 void render_planar_traces(
     DrawList& list,
     const Pane& pane,
@@ -4993,8 +5218,9 @@ void render_planar_traces(
               }
               path.clear();
             };
-            for (std::size_t i = 0; i < xy.first.size(); ++i) {
-              const Point2d mapped = map_planar_point(xy.first[i], xy.second[i], pane, bounds, layout.plot, false);
+            for (std::size_t i = 0; i < xy.count; ++i) {
+              const Point2d mapped =
+                  map_planar_point(xy.first.at(i), xy.second.at(i), pane, bounds, layout.plot, false);
               if (std::isfinite(mapped.x) && std::isfinite(mapped.y)) {
                 path.push_back(mapped);
               } else {
@@ -5015,16 +5241,46 @@ void render_planar_traces(
                 color_range.high += 0.5;
               }
             }
-            for (std::size_t i = 0; i < cloud.x.size(); ++i) {
+            const bool uniform_fill = !cloud.color.has_values() || cloud.color.values->size() == 1U;
+            const bool uniform_size = !cloud.size.has_values() || cloud.size.values->size() == 1U;
+            if (uniform_fill && uniform_size && cloud.count > 0U) {
+              Rgba fill = trace.stroke_color();
+              if (cloud.color.has_values()) {
+                fill = palette_lookup(trace.palette_ramp(), color_range, cloud.color.at(0));
+              }
+              fill.alpha = std::clamp(fill.alpha * 0.82, 0.18, 1.0);
+              const double radius = std::clamp(std::sqrt(std::max(cloud.size.at(0), 1.0)) * 0.31, 0.95, 9.0);
+              const int marker_steps = std::clamp(static_cast<int>(std::ceil(radius * 1.8)), 6, 14);
+              std::vector<Point2d> marker_points;
+              std::vector<std::size_t> subpath_starts;
+              marker_points.reserve(cloud.count * static_cast<std::size_t>(marker_steps));
+              subpath_starts.reserve(cloud.count);
+              for (std::size_t i = 0; i < cloud.count; ++i) {
+                const Point2d center =
+                    map_planar_point(cloud.x.at(i), cloud.y.at(i), pane, bounds, layout.plot, false);
+                if (!std::isfinite(center.x) || !std::isfinite(center.y)) {
+                  continue;
+                }
+                append_marker_circle(marker_points, subpath_starts, center, radius, marker_steps);
+              }
+              add_compound_path(
+                  list,
+                  std::move(marker_points),
+                  std::move(subpath_starts),
+                  FillStroke{{}, fill, false, true, 0.0},
+                  true);
+              return;
+            }
+            for (std::size_t i = 0; i < cloud.count; ++i) {
               const Point2d center =
-                  map_planar_point(cloud.x[i], cloud.y[i], pane, bounds, layout.plot, false);
+                  map_planar_point(cloud.x.at(i), cloud.y.at(i), pane, bounds, layout.plot, false);
               if (!std::isfinite(center.x) || !std::isfinite(center.y)) {
                 continue;
               }
-              const double radius = std::clamp(std::sqrt(std::max(cloud.size[i], 1.0)) * 0.31, 0.95, 9.0);
+              const double radius = std::clamp(std::sqrt(std::max(cloud.size.at(i), 1.0)) * 0.31, 0.95, 9.0);
               Rgba fill = trace.stroke_color();
-              if (cloud.color.has_value() && i < cloud.color->size()) {
-                fill = palette_lookup(trace.palette_ramp(), color_range, (*cloud.color)[i]);
+              if (cloud.color.has_values()) {
+                fill = palette_lookup(trace.palette_ramp(), color_range, cloud.color.at(i));
               }
               fill.alpha = std::clamp(fill.alpha * 0.82, 0.18, 1.0);
               add_path(
@@ -5085,11 +5341,11 @@ void render_planar_traces(
             }
           } else if constexpr (std::is_same_v<Payload, SpikeData>) {
             const auto xy = normalize_pairs(payload.x, payload.y);
-            for (std::size_t i = 0; i < xy.first.size(); ++i) {
+            for (std::size_t i = 0; i < xy.count; ++i) {
               const Point2d base =
-                  map_planar_point(xy.first[i], payload.base, pane, bounds, layout.plot, false);
+                  map_planar_point(xy.first.at(i), payload.base, pane, bounds, layout.plot, false);
               const Point2d top =
-                  map_planar_point(xy.first[i], xy.second[i], pane, bounds, layout.plot, false);
+                  map_planar_point(xy.first.at(i), xy.second.at(i), pane, bounds, layout.plot, false);
               add_path(list, {base, top}, FillStroke{trace.stroke_color(), {}, true, false, 1.0}, false);
               add_path(
                   list,
@@ -5225,25 +5481,25 @@ void render_planar_traces(
             const auto xy = normalize_pairs(payload.x, payload.y);
             const double half_width = 0.5 * payload.width;
             const Rgba fill = trace.palette_ramp().sample(0.62);
-            for (std::size_t i = 0; i < xy.first.size(); ++i) {
+            for (std::size_t i = 0; i < xy.count; ++i) {
               Point2d p00{};
               Point2d p10{};
               Point2d p11{};
               Point2d p01{};
               if (payload.horizontal) {
-                const double x0 = std::min(payload.base, xy.first[i]);
-                const double x1 = std::max(payload.base, xy.first[i]);
-                const double y0 = xy.second[i] - half_width;
-                const double y1 = xy.second[i] + half_width;
+                const double x0 = std::min(payload.base, xy.first.at(i));
+                const double x1 = std::max(payload.base, xy.first.at(i));
+                const double y0 = xy.second.at(i) - half_width;
+                const double y1 = xy.second.at(i) + half_width;
                 p00 = map_planar_point(x0, y0, pane, bounds, layout.plot, false);
                 p10 = map_planar_point(x1, y0, pane, bounds, layout.plot, false);
                 p11 = map_planar_point(x1, y1, pane, bounds, layout.plot, false);
                 p01 = map_planar_point(x0, y1, pane, bounds, layout.plot, false);
               } else {
-                const double x0 = xy.first[i] - half_width;
-                const double x1 = xy.first[i] + half_width;
-                const double y0 = std::min(payload.base, xy.second[i]);
-                const double y1 = std::max(payload.base, xy.second[i]);
+                const double x0 = xy.first.at(i) - half_width;
+                const double x1 = xy.first.at(i) + half_width;
+                const double y0 = std::min(payload.base, xy.second.at(i));
+                const double y1 = std::max(payload.base, xy.second.at(i));
                 p00 = map_planar_point(x0, y0, pane, bounds, layout.plot, false);
                 p10 = map_planar_point(x1, y0, pane, bounds, layout.plot, false);
                 p11 = map_planar_point(x1, y1, pane, bounds, layout.plot, false);
@@ -5455,9 +5711,9 @@ void render_planar_traces(
           } else if constexpr (std::is_same_v<Payload, RadialData>) {
             const auto polar = normalize_pairs(payload.theta, payload.radius);
             std::vector<Point2d> path;
-            for (std::size_t i = 0; i < polar.first.size(); ++i) {
-              const double x = std::cos(polar.first[i]) * polar.second[i];
-              const double y = std::sin(polar.first[i]) * polar.second[i];
+            for (std::size_t i = 0; i < polar.count; ++i) {
+              const double x = std::cos(polar.first.at(i)) * polar.second.at(i);
+              const double y = std::sin(polar.first.at(i)) * polar.second.at(i);
               const Point2d mapped = map_planar_point(x, y, pane, bounds, layout.plot, radial_only);
               if (std::isfinite(mapped.x) && std::isfinite(mapped.y)) {
                 path.push_back(mapped);
@@ -6055,11 +6311,11 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
           if constexpr (std::is_same_v<Payload, Path3Data>) {
             const auto xy = normalize_pairs(payload.x, payload.y);
             const auto z = to_f64(payload.z);
-            const auto count = std::min({xy.first.size(), xy.second.size(), z.size()});
+            const auto count = std::min(xy.count, z.size());
             std::vector<Point2d> path;
             double depth = 0.0;
             for (std::size_t i = 0; i < count; ++i) {
-              const Point3d world{xy.first[i], xy.second[i], z[i]};
+              const Point3d world{xy.first.at(i), xy.second.at(i), z[i]};
               path.push_back(map_projected_point(world, pane, bounds, layout.plot));
               depth += project_world(world, pane, bounds).z;
             }
@@ -6082,15 +6338,15 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
                 color_range.high += 0.5;
               }
             }
-            for (std::size_t i = 0; i < cloud.x.size(); ++i) {
-              const Point3d world{cloud.x[i], cloud.y[i], cloud.z[i]};
+            for (std::size_t i = 0; i < cloud.count; ++i) {
+              const Point3d world{cloud.x.at(i), cloud.y.at(i), cloud.z.at(i)};
               const Point2d center =
                   map_projected_point(world, pane, bounds, layout.plot);
               Rgba fill = trace.stroke_color();
-              if (cloud.color.has_value() && i < cloud.color->size()) {
-                fill = palette_lookup(trace.palette_ramp(), color_range, (*cloud.color)[i]);
+              if (cloud.color.has_values()) {
+                fill = palette_lookup(trace.palette_ramp(), color_range, cloud.color.at(i));
               }
-              const double radius = std::clamp(std::sqrt(std::max(cloud.size[i], 1.0)) * 0.33, 2.0, 11.0);
+              const double radius = std::clamp(std::sqrt(std::max(cloud.size.at(i), 1.0)) * 0.33, 2.0, 11.0);
               overlays.push_back(OverlayPath{
                   marker_circle(center, radius),
                   project_world(world, pane, bounds).z,
@@ -6390,6 +6646,7 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
 }
 
 DrawList build_draw_list(const Studio& studio) {
+  ScopedSeriesVectorCache normalization_cache;
   DrawList list;
   list.extent = studio.extent();
   list.background = studio.theme_tokens().background();
@@ -7118,9 +7375,20 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
           using Item = std::decay_t<decltype(item)>;
           if constexpr (std::is_same_v<Item, PathCommand>) {
             out << "<path d=\"";
-            if (!item.points.empty()) {
-              out << "M " << format_number(item.points.front().x) << " " << format_number(item.points.front().y) << " ";
-              for (std::size_t i = 1; i < item.points.size(); ++i) {
+            const auto& starts = item.subpath_starts.empty()
+                                     ? std::vector<std::size_t>{0U}
+                                     : item.subpath_starts;
+            for (std::size_t s = 0; s < starts.size(); ++s) {
+              const std::size_t start = starts[s];
+              if (start >= item.points.size()) {
+                continue;
+              }
+              const std::size_t end = (s + 1 < starts.size()) ? std::min(starts[s + 1], item.points.size()) : item.points.size();
+              if (end <= start) {
+                continue;
+              }
+              out << "M " << format_number(item.points[start].x) << " " << format_number(item.points[start].y) << " ";
+              for (std::size_t i = start + 1; i < end; ++i) {
                 out << "L " << format_number(item.points[i].x) << " " << format_number(item.points[i].y) << " ";
               }
               if (item.closed) {
@@ -7384,12 +7652,25 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
                      << format_number(item.style.fill.blue) << " rg\n";
             }
             const auto pdf_y = [&](double y) { return list.extent.height - y; };
-            stream << format_number(item.points.front().x) << " " << format_number(pdf_y(item.points.front().y)) << " m\n";
-            for (std::size_t i = 1; i < item.points.size(); ++i) {
-              stream << format_number(item.points[i].x) << " " << format_number(pdf_y(item.points[i].y)) << " l\n";
-            }
-            if (item.closed) {
-              stream << "h\n";
+            const auto& starts = item.subpath_starts.empty()
+                                     ? std::vector<std::size_t>{0U}
+                                     : item.subpath_starts;
+            for (std::size_t s = 0; s < starts.size(); ++s) {
+              const std::size_t start = starts[s];
+              if (start >= item.points.size()) {
+                continue;
+              }
+              const std::size_t end = (s + 1 < starts.size()) ? std::min(starts[s + 1], item.points.size()) : item.points.size();
+              if (end <= start) {
+                continue;
+              }
+              stream << format_number(item.points[start].x) << " " << format_number(pdf_y(item.points[start].y)) << " m\n";
+              for (std::size_t i = start + 1; i < end; ++i) {
+                stream << format_number(item.points[i].x) << " " << format_number(pdf_y(item.points[i].y)) << " l\n";
+              }
+              if (item.closed) {
+                stream << "h\n";
+              }
             }
             if (item.style.has_fill && item.style.has_stroke) {
               stream << "B\n";

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 02f899243fbb -->
 
 # DataFramePlotAccessor::pie
 

@@ -302,7 +302,7 @@ void example_13_thread_windows_casts_and_ts() {
   Thread words(pluss::make_note({"North-East", "South", "north-west", "Central"}));
 
   std::cout << "values + 3:\n" << (values + 3.0).to_string() << '\n';
-  std::cout << "between 2 and 8 inclusive:\n" << values.btw(2.0, 8.0, true).to_string() << '\n';
+  std::cout << "between 2 and 8 inclusive:\n" << values.between(2.0, 8.0, true).to_string() << '\n';
   std::cout << "rolling mean window 3 min 2:\n"
             << values.window(3, pluss::table::ThreadWindowOp::RollingMean, 2).to_string() << '\n';
   std::cout << "returns:\n" << values.ts().returns(1).to_string() << '\n';

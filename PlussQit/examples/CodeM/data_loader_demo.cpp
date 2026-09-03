@@ -8,7 +8,7 @@ int main() {
   const auto x = pluss::series::randn({64, 3}, cfg, 7ULL);
   const auto y = x.select(1, 0).reshape({64, 1}).gt(0.0).to(pluss::ScalarType::Float32);
 
-  pluss::DataLoader loader(
+  pluss::loader::DataLoader loader(
       {x, y},
       pluss::loader::DataLoaderOptions{
           .batch_size = 16,
@@ -21,7 +21,7 @@ int main() {
   double total = 0.0;
   for (const auto batch : loader) {
     const auto loss_like = batch.x().mean().abs() + batch.y().mean();
-    total += pluss::as_f64(loss_like);
+    total += pluss::tils::as_f64(loss_like);
     ++batches;
   }
 

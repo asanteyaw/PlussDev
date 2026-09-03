@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1102243bd05b -->
 
 # DataFramePlotAccessor::density
 

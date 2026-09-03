@@ -181,7 +181,7 @@ struct FactoryCore final {
   }
 
   static std::mt19937_64 make_rng(std::uint64_t seed) {
-    return std::mt19937_64(pluss::aux::seed_or_next(seed));
+    return std::mt19937_64(pluss::tils::seed_or_next(seed));
   }
 
   static bool same_shape(std::span<const std::int64_t> a, std::span<const std::int64_t> b) {

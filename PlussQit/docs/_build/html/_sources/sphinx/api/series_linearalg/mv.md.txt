@@ -1,0 +1,123 @@
+<!-- pluss-hand-authored -->
+
+# Series::mv
+
+[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference)
+
+## Signature
+
+```cpp
+Series::mv(const Series& vector) const -> Series
+Series::linearalg.mv(const Series& vector) const -> Series
+Series::linearalg(const Series& vector).mv() const -> Series
+```
+
+## What It Does
+
+`mv()` multiplies one two-dimensional matrix by one one-dimensional vector.
+
+For a matrix with shape `[m, k]` and a vector with shape `[k]`, the result has
+shape `[m]`. Each result entry is one matrix row dotted with the vector:
+
+```text
+out[i] = sum(matrix[i, t] * vector[t], over t)
+```
+
+This method is deliberately narrower than `matmul()`. It is useful when the
+right operand is semantically a vector and a matrix or batch at that position
+would indicate an upstream shape error.
+
+## Parameter
+
+**vector** (`const Series&`)
+    A one-dimensional right operand. Its length must equal the number of
+    columns in the left matrix. It must also share the matrix's dtype and
+    platform.
+
+## Returns
+
+`Series`
+    A new vector with one value per matrix row and shape `[matrix.size(0)]`.
+
+## Gradient
+
+For `y = A x` and incoming vector sensitivity `g = dL/dy`:
+
+```text
+dL/dA = outer(g, x)
+dL/dx = A^T g
+```
+
+The matrix and vector can both be tracked. `mv()` is out-of-place.
+
+## Examples
+
+Example 1. Multiply a 2x3 matrix by a length-3 vector.
+
+```cpp
+auto matrix = pluss::make_series({
+    {2.0, 0.0, -1.0},
+    {1.0, 3.0, 2.0},
+});
+auto vector = pluss::make_series({4.0, 5.0, 6.0});
+
+std::cout << matrix.linearalg.mv(vector) << "\n";
+```
+
+The first row produces `2*4 + 0*5 - 1*6 = 2`. The second produces
+`1*4 + 3*5 + 2*6 = 31`.
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[2, 31]
+```
+
+Example 2. Two vectors do not satisfy the matrix-vector contract.
+
+```cpp
+try {
+  std::cout << pluss::make_series({1.0, 2.0}).linearalg.mv(
+      pluss::make_series({3.0, 4.0})) << "\n";
+} catch (const std::exception& e) {
+  std::cout << e.what() << "\n";
+}
+```
+
+### Output
+
+```text
+mv: expected a 2D matrix and a 1D vector
+```
+
+## Gotchas And Failure Modes
+
+- The left operand must be rank 2 and the right operand rank 1.
+- The matrix column count must equal the vector length.
+- `mv()` does not broadcast a vector over a matrix batch. Use `matmul()` when
+  batched behavior is intentional.
+- Dtypes and platforms must match.
+
+## Summary
+
+Use `mv()` for a strict matrix-by-vector contract. The matrix rows determine
+the number of output values; the shared matrix-column/vector-length dimension
+is contracted away.
+
+## See Also
+
+- [`Series::matmul`](matmul.md): rank-polymorphic multiplication.
+- [`Series::mm`](mm.md): matrix-matrix multiplication.
+- [`Series::dot`](dot.md): vector-vector inner product.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="mm.html">
+    <span class="label">Previous</span>
+    <span class="title">mm</span>
+  </a>
+  <a class="next-link" href="dot.html">
+    <span class="label">Next</span>
+    <span class="title">dot</span>
+  </a>
+</div>

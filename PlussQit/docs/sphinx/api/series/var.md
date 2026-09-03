@@ -111,7 +111,7 @@ reverse-mode paths.
 
 ## Examples
 
-The examples below teach estimator choice first, then axis behavior, then shape
+The examples below introduce estimator choice first, then axis behavior, then shape
 retention, accessor parity, and finally edge cases.
 
 Example 1. With no arguments, `var()` uses the global sample estimator.

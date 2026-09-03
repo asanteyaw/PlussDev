@@ -33,13 +33,13 @@ TEST_CASE("make_series scalar and shaped factories", "[factory]") {
   REQUIRE(p[3] == 4);
 }
 
-TEST_CASE("from_buffer external memory", "[from_buffer]") {
+TEST_CASE("from_host external memory", "[from_host]") {
   auto* mem = (std::int32_t*)std::malloc(sizeof(std::int32_t)*6);
   for (int i=0;i<6;++i) mem[i]=i;
   bool freed=false;
   const std::vector<std::int64_t> sizes = {2,3};
   const std::vector<std::int64_t> strides = {3,1};
-  Series s = pluss::from_buffer(
+  Series s = pluss::series::from_host(
       mem,
       std::span<const std::int64_t>(sizes),
       std::span<const std::int64_t>(strides),

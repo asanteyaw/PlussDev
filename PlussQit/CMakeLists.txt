@@ -170,7 +170,9 @@ set(SERIES_GEN_DIR ${PLUSSQIT_GEN_DIR})
 file(MAKE_DIRECTORY ${PLUSSQIT_GEN_DIR})
 
 set(CODEM_NATIVE_YAML ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/native_functions.yaml)
+set(CODEM_DERIVATIVES_YAML ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/derivatives.yaml)
 set(CODEM_GEN_SCRIPT  ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_ops.py)
+set(CODEM_AUTOGRAD_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_autograd_gen.py)
 set(SERIES_METHODS_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_methods_gen_h.py)
 set(SERIES_METHODS_SEED_LIST ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/series_methods_seed.txt)
 set(SERIES_METHODS_TYPED_YAML ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/series_methods_typed.yaml)
@@ -182,6 +184,8 @@ set(SERIES_OPSINTERNAL_CPP ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/OpsInterna
 
 set(SERIES_OPSINTERNAL_DECLS ${PLUSSQIT_GEN_DIR}/CodeM/Series/SeriesOpsInternalMethods.inc)
 set(SERIES_OPSINTERNAL_DEFS  ${PLUSSQIT_GEN_DIR}/CodeM/Series/SeriesOpsInternalMethods.cpp.inc)
+set(SERIES_AUTOGRAD_REVERSE_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutogradUnaryReverseGen.h)
+set(SERIES_AUTOGRAD_DIFF_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutogradDiffUnaryGen.inc)
 
 add_custom_command(
   OUTPUT ${SERIES_OPSINTERNAL_DECLS} ${SERIES_OPSINTERNAL_DEFS}
@@ -210,6 +214,17 @@ add_custom_command(
           --out ${SERIES_METHODS_GEN_HEADER}
   DEPENDS ${CODEM_NATIVE_YAML} ${SERIES_OPSINTERNAL_H} ${SERIES_METHODS_SEED_LIST} ${SERIES_METHODS_TYPED_YAML} ${SERIES_METHODS_GEN_SCRIPT}
   COMMENT "Generating SeriesMethodsGen.h from native_functions.yaml"
+)
+
+add_custom_command(
+  OUTPUT ${SERIES_AUTOGRAD_REVERSE_GEN} ${SERIES_AUTOGRAD_DIFF_GEN}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${PLUSSQIT_GEN_DIR}/CodeM/generated
+  COMMAND ${Python3_EXECUTABLE} ${CODEM_AUTOGRAD_GEN_SCRIPT}
+          --spec ${CODEM_DERIVATIVES_YAML}
+          --out-reverse ${SERIES_AUTOGRAD_REVERSE_GEN}
+          --out-diff ${SERIES_AUTOGRAD_DIFF_GEN}
+  DEPENDS ${CODEM_DERIVATIVES_YAML} ${CODEM_AUTOGRAD_GEN_SCRIPT}
+  COMMENT "Generating Series autograd helpers from derivatives.yaml"
 )
 
 add_custom_command(
@@ -356,6 +371,8 @@ add_library(plussqit_codem
   ${SERIES_OPSINTERNAL_DECLS}
   ${SERIES_OPSINTERNAL_DEFS}
   ${SERIES_METHODS_GEN_HEADER}
+  ${SERIES_AUTOGRAD_REVERSE_GEN}
+  ${SERIES_AUTOGRAD_DIFF_GEN}
   ${PLUSSQIT_CODEM_CORE_CPP}
   ${PLUSSQIT_CODEM_MPS_SRC}
   ${PLUSSQIT_CODEM_CUDA_KERNEL_SRC}
@@ -456,6 +473,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_shape_reference_demo examples/CodeM/series_shape_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_shape_reference_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_rearrange_reference_demo examples/CodeM/series_rearrange_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_rearrange_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_series_read_index_reference_demo examples/CodeM/series_read_index_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_read_index_reference_demo PRIVATE PlussQit::CodeM)
 
@@ -486,11 +506,17 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_ordered_extrema_reference_demo examples/CodeM/series_ordered_extrema_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_ordered_extrema_reference_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_ordering_reference_demo examples/CodeM/series_ordering_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_ordering_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_series_factory_core_reference_demo examples/CodeM/series_factory_core_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_factory_core_reference_demo PRIVATE PlussQit::CodeM)
 
   add_executable(plussqit_codem_series_stats_reference_demo examples/CodeM/series_stats_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_stats_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_stat_accessor_reference_demo examples/CodeM/series_stat_accessor_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_stat_accessor_reference_demo PRIVATE PlussQit::CodeM)
 
   add_executable(plussqit_codem_series_arithmetic_reference_demo examples/CodeM/series_arithmetic_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_arithmetic_reference_demo PRIVATE PlussQit::CodeM)
@@ -503,6 +529,12 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
 
   add_executable(plussqit_codem_series_logic_reference_demo examples/CodeM/series_logic_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_logic_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_rounding_state_reference_demo examples/CodeM/series_rounding_state_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_rounding_state_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_activation_reference_demo examples/CodeM/series_activation_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_activation_reference_demo PRIVATE PlussQit::CodeM)
 
   add_executable(plussqit_codem_series_selection_count_reference_demo examples/CodeM/series_selection_count_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_selection_count_reference_demo PRIVATE PlussQit::CodeM)
@@ -519,11 +551,35 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_autograd_reference_demo examples/CodeM/series_autograd_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_autograd_reference_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_linearalg_product_reference_demo examples/CodeM/series_linearalg_product_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_linearalg_product_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_linearalg_determinant_reference_demo examples/CodeM/series_linearalg_determinant_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_linearalg_determinant_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_linearalg_transform_reference_demo examples/CodeM/series_linearalg_transform_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_linearalg_transform_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_linearalg_decomposition_solve_reference_demo examples/CodeM/series_linearalg_decomposition_solve_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_linearalg_decomposition_solve_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_matrix_reference_demo examples/CodeM/series_matrix_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_matrix_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_extrema_norm_reference_demo examples/CodeM/series_extrema_norm_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_extrema_norm_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_transport_reference_demo examples/CodeM/series_transport_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_transport_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_linear_alg_demo examples/CodeM/linear_alg_demo.cpp)
   target_link_libraries(plussqit_codem_linear_alg_demo PRIVATE PlussQit::CodeM)
 
   add_executable(plussqit_codem_traverse_demo examples/CodeM/traverse_demo.cpp)
   target_link_libraries(plussqit_codem_traverse_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_traverse_accessor_reference_demo examples/CodeM/series_traverse_accessor_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_traverse_accessor_reference_demo PRIVATE PlussQit::CodeM)
 
   add_executable(plussqit_codem_stats_demo examples/CodeM/stats_demo.cpp)
   target_link_libraries(plussqit_codem_stats_demo PRIVATE PlussQit::CodeM)

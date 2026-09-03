@@ -277,8 +277,8 @@ selector-aware, graduate to [`index_put_()`](index_put_.md) or
     <span class="label">Previous</span>
     <span class="title">prod</span>
   </a>
-  <a class="next-link" href="clamp_max.html">
+  <a class="next-link" href="reciprocal.html">
     <span class="label">Next</span>
-    <span class="title">clamp_max</span>
+    <span class="title">reciprocal</span>
   </a>
 </div>

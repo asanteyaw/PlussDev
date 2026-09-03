@@ -2,28 +2,32 @@
 
 ## What This Subfamily Owns
 
-`prep::route` owns construction of reusable route objects.
+`prep::route` owns the construction of reusable feature-selection objects. Three
+builders, one product:
 
-That means:
+- [`route::names({...})`](names.md) — explicit name selection
+- [`route::where(predicate)`](where.md) — predicate-driven selection over
+  `(name, dtype)`
+- [`route::remaining_of({...})`](remaining_of.md) — the declarative complement,
+  of a name list or of another route
 
-- explicit name selection with `names(...)`
-- predicate-driven selection with `where(...)`
-- declarative complements with `remaining_of(...)`
+Every one returns a [`lymph::prep::Route`](Route.md).
 
-The object these builders produce is `lymph::prep::Route`.
+## Why It Is A Separate Concern
 
-## Why It Exists
-
-Without a route object, preprocessing plans drift into repeated ad-hoc column
-lists and one-off predicates. That becomes difficult to audit once a project
-grows beyond one scaler and one encoder.
-
-`prep::Route` lets you construct the intent once, then resolve it repeatedly
-against real frames.
+Preprocessing plans without a route object drift into repeated ad-hoc column
+lists and one-off predicates copied between stage calls — hard to audit once a
+project grows past one scaler and one encoder, and easy to let a hand-maintained
+"everything else" list fall out of sync with the selection it is supposed to
+complement. A `Route` fixes the intent once. It is then
+[resolved](Route/resolve.md) against each real frame in turn, so the same rule
+serves the training frame, every cross-validation fold, and inference without
+being restated.
 
 ## Main Entry Points
 
-- [names](names.md)
-- [where](where.md)
-- [remaining_of](remaining_of.md)
-- [Route](Route.md)
+- [`route::names`](names.md), [`route::where`](where.md),
+  [`route::remaining_of`](remaining_of.md) — build a route.
+- [`Route::resolve`](Route/resolve.md) — turn it into column positions.
+- [`Route::with_remainder`](Route/with_remainder.md) — set what happens to the
+  unclaimed columns.

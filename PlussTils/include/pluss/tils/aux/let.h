@@ -3,16 +3,46 @@
 #include <functional>
 #include <type_traits>
 #include <utility>
-#include <variant>
 
-namespace pluss::aux {
+#include "pluss/codem/codem.h"
+#include "pluss/coden/coden.h"
+#include "pluss/codeh/codeh.h"
+#include "pluss/queue.h"
+
+namespace pluss::tils {
+
+namespace detail {
 
 template <class T>
-class let_box {
+struct is_let_payload : std::false_type {};
+
+template <>
+struct is_let_payload<::pluss::Series> : std::true_type {};
+
+template <>
+struct is_let_payload<::pluss::Note> : std::true_type {};
+
+template <>
+struct is_let_payload<::pluss::codeh::Timeline> : std::true_type {};
+
+template <>
+struct is_let_payload<::pluss::codeh::TimeIndex> : std::true_type {};
+
+template <>
+struct is_let_payload<::pluss::codeh::Duration> : std::true_type {};
+
+template <>
+struct is_let_payload<::pluss::codev::Queue> : std::true_type {};
+
+template <class T>
+inline constexpr bool is_let_payload_v = is_let_payload<std::remove_cvref_t<T>>::value;
+
+template <class T>
+class suppose_box {
 public:
   using value_type = T;
 
-  constexpr explicit let_box(T value) : value_(std::move(value)) {}
+  constexpr explicit suppose_box(T value) : value_(std::move(value)) {}
 
   constexpr T& value() & noexcept { return value_; }
   constexpr const T& value() const& noexcept { return value_; }
@@ -26,19 +56,19 @@ public:
 
   template <class F>
   constexpr auto then(F&& fn) & {
-    return let_box<std::decay_t<std::invoke_result_t<F&, T&>>>(
+    return suppose_box<std::decay_t<std::invoke_result_t<F&, T&>>>(
         std::invoke(std::forward<F>(fn), value_));
   }
 
   template <class F>
   constexpr auto then(F&& fn) const& {
-    return let_box<std::decay_t<std::invoke_result_t<F&, const T&>>>(
+    return suppose_box<std::decay_t<std::invoke_result_t<F&, const T&>>>(
         std::invoke(std::forward<F>(fn), value_));
   }
 
   template <class F>
   constexpr auto then(F&& fn) && {
-    return let_box<std::decay_t<std::invoke_result_t<F&, T&&>>>(
+    return suppose_box<std::decay_t<std::invoke_result_t<F&, T&&>>>(
         std::invoke(std::forward<F>(fn), std::move(value_)));
   }
 
@@ -52,120 +82,103 @@ public:
   constexpr auto transform(F&& fn) && { return std::move(*this).then(std::forward<F>(fn)); }
 
   template <class F>
-  constexpr let_box& tap(F&& fn) & {
+  constexpr suppose_box& tap(F&& fn) & {
     std::invoke(std::forward<F>(fn), value_);
     return *this;
   }
 
   template <class F>
-  constexpr const let_box& tap(F&& fn) const& {
+  constexpr const suppose_box& tap(F&& fn) const& {
     std::invoke(std::forward<F>(fn), value_);
     return *this;
   }
 
   template <class F>
-  constexpr let_box&& tap(F&& fn) && {
+  constexpr suppose_box&& tap(F&& fn) && {
     std::invoke(std::forward<F>(fn), value_);
     return std::move(*this);
   }
 
   template <class U>
   constexpr auto into() const& {
-    static_assert(std::is_constructible_v<U, const T&>, "let::into<U>: U must be constructible from const T&");
-    return let_box<U>(U(value_));
+    static_assert(std::is_constructible_v<U, const T&>,
+                  "suppose::into<U>: U must be constructible from const T&");
+    return suppose_box<U>(U(value_));
   }
 
   template <class U>
   constexpr auto into() && {
-    static_assert(std::is_constructible_v<U, T&&>, "let::into<U>: U must be constructible from T&&");
-    return let_box<U>(U(std::move(value_)));
+    static_assert(std::is_constructible_v<U, T&&>,
+                  "suppose::into<U>: U must be constructible from T&&");
+    return suppose_box<U>(U(std::move(value_)));
   }
 
 private:
   T value_;
 };
 
+} // namespace detail
+
+template <class T>
+concept let_payload = detail::is_let_payload_v<T>;
+
+template <let_payload T>
+class let : public std::remove_cvref_t<T> {
+public:
+  using value_type = std::remove_cvref_t<T>;
+  using base_type = value_type;
+  using base_type::base_type;
+
+  constexpr let(const base_type& value) : base_type(value) {}
+  constexpr let(base_type&& value) noexcept(std::is_nothrow_move_constructible_v<base_type>)
+      : base_type(std::move(value)) {}
+
+  constexpr let(const let&) = default;
+  constexpr let(let&&) noexcept = default;
+  constexpr let& operator=(const let&) = default;
+  constexpr let& operator=(let&&) noexcept = default;
+
+  constexpr let& operator=(const base_type& value)
+  requires std::is_copy_assignable_v<base_type> {
+    static_cast<base_type&>(*this) = value;
+    return *this;
+  }
+
+  constexpr let& operator=(base_type&& value)
+  requires std::is_move_assignable_v<base_type> {
+    static_cast<base_type&>(*this) = std::move(value);
+    return *this;
+  }
+
+  constexpr base_type& value() & noexcept { return static_cast<base_type&>(*this); }
+  constexpr const base_type& value() const& noexcept { return static_cast<const base_type&>(*this); }
+  constexpr base_type&& value() && noexcept { return static_cast<base_type&&>(*this); }
+  constexpr const base_type&& value() const&& noexcept { return static_cast<const base_type&&>(*this); }
+
+  constexpr base_type& unwrap() & noexcept { return value(); }
+  constexpr const base_type& unwrap() const& noexcept { return value(); }
+  constexpr base_type&& unwrap() && noexcept { return std::move(value()); }
+  constexpr const base_type&& unwrap() const&& noexcept { return std::move(value()); }
+};
+
+template <class T>
+requires let_payload<T>
+let(T) -> let<std::remove_cvref_t<T>>;
+
 struct suppose_t {
   template <class T>
   constexpr auto operator()(T&& value) const {
-    return let_box<std::decay_t<T>>(std::forward<T>(value));
+    return detail::suppose_box<std::decay_t<T>>(std::forward<T>(value));
   }
 
   template <class To, class From>
   constexpr auto as(From&& value) const {
     static_assert(std::is_constructible_v<To, From&&>,
                   "suppose.as<To>(value): To must be constructible from value");
-    return let_box<To>(To(std::forward<From>(value)));
+    return detail::suppose_box<To>(To(std::forward<From>(value)));
   }
 };
 
 inline constexpr suppose_t suppose{};
 
-template <class... Ts>
-class let_one_of {
-  static_assert(sizeof...(Ts) >= 2, "let_as(T1, T2, ...): provide at least two candidate types");
-
-public:
-  using variant_type = std::variant<Ts...>;
-
-  let_one_of() = delete;
-  let_one_of(const let_one_of&) = default;
-  let_one_of(let_one_of&&) noexcept = default;
-  let_one_of& operator=(const let_one_of&) = default;
-  let_one_of& operator=(let_one_of&&) noexcept = default;
-  ~let_one_of() = default;
-
-  template <class U,
-            class D = std::decay_t<U>,
-            std::enable_if_t<(std::is_same_v<D, Ts> || ...), int> = 0>
-  constexpr let_one_of(U&& value)
-      : value_(std::in_place_type<D>, std::forward<U>(value)) {}
-
-  template <class U,
-            class D = std::decay_t<U>,
-            std::enable_if_t<(std::is_same_v<D, Ts> || ...), int> = 0>
-  constexpr let_one_of& operator=(U&& value) {
-    value_.template emplace<D>(std::forward<U>(value));
-    return *this;
-  }
-
-  constexpr variant_type& value() & noexcept { return value_; }
-  constexpr const variant_type& value() const& noexcept { return value_; }
-  constexpr variant_type&& value() && noexcept { return std::move(value_); }
-  constexpr const variant_type&& value() const&& noexcept { return std::move(value_); }
-
-  template <class T>
-  constexpr bool is() const noexcept {
-    return std::holds_alternative<T>(value_);
-  }
-
-  template <class T>
-  constexpr T& get() & {
-    return std::get<T>(value_);
-  }
-
-  template <class T>
-  constexpr const T& get() const& {
-    return std::get<T>(value_);
-  }
-
-  template <class T>
-  constexpr T&& get() && {
-    return std::get<T>(std::move(value_));
-  }
-
-  template <class F>
-  constexpr decltype(auto) visit(F&& fn) & {
-    return std::visit(std::forward<F>(fn), value_);
-  }
-
-  template <class F>
-  constexpr decltype(auto) visit(F&& fn) const& {
-    return std::visit(std::forward<F>(fn), value_);
-  }
-
-private:
-  variant_type value_;
-};
-
-} // namespace pluss::aux
+} // namespace pluss::tils

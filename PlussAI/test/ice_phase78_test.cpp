@@ -75,9 +75,9 @@ bool run_phase78_deterministic_checks(std::ostream* err = nullptr) {
   options.shuffle = true;
   options.seed = 77;
 
-  pluss::rng_seed(options.seed);
+  pluss::tils::rng_seed(options.seed);
   auto model_a = build_model();
-  pluss::rng_seed(options.seed);
+  pluss::tils::rng_seed(options.seed);
   auto model_b = build_model();
   ice::Coach(options).learn(model_a, data.x, data.y);
   ice::Coach(options).learn(model_b, data.x, data.y);

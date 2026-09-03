@@ -6,7 +6,7 @@ Return the payload-family summary for every feature in the frame.
 
 returns = """
 `DTypes`
-    Feature-to-payload summary object mapping each feature name to `Series`, `Note`, `Timeline`, or `TimeIndex`.
+    An ordered `(feature name, payload family)` view. Members: `size()`, `empty()`, `contains(name)`, `at(name)` / `operator[](name)` (both throw on an unknown name), `entries()` (the whole `(name, family)` list by const reference), `payloads()` (the family strings alone, value-owned), range-based iteration over `(name, family)` pairs, and `operator<<` (a `features  dtype` header, a `--------  --------` rule, then one unpadded `name  family` line per feature). `dtypes()` returns the same object with `Series<float64>`-style strings instead.
 """
 
 see_also = [
@@ -19,7 +19,7 @@ notes = [
 Use `ptypes()` for high-level routing decisions: numeric work usually starts from `Series`, text work from `Note`, datetime work from `Timeline`, and time-axis work from `TimeIndex`.
 """,
   """
-Use `cast(...)` when you need to make a `Timeline` column into a `TimeIndex` column explicitly.
+References from `at()` / `operator[]` / `entries()` point into the `DTypes` object -- bind it to a name before taking one. `payloads()` returns owned strings and is safe on a temporary. `DTypes` is a snapshot and holds no reference to the frame.
 """
 ]
 

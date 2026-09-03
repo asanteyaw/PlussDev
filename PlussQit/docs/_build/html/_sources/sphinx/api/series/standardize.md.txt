@@ -74,7 +74,7 @@ numeric pipelines.
 
 ## Examples
 
-The examples below are arranged to teach the two big choices:
+The examples below are arranged to introduce the two big choices:
 
 - global versus lane-wise normalization
 - which lane direction `dim` is actually selecting

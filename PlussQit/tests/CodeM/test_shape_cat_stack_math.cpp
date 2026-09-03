@@ -89,3 +89,13 @@ TEST_CASE("unary math + reductions", "[math]") {
   REQUIRE(agp[0] == 2);
   REQUIRE(agp[1] == 2);
 }
+
+TEST_CASE("root rearrangement methods preserve their documented axes", "[shape]") {
+  auto table = pluss::make_series({{1, 2, 3}, {4, 5, 6}});
+  REQUIRE(table.flip(0).to_vec<std::int64_t>() == std::vector<std::int64_t>{4, 5, 6, 1, 2, 3});
+  REQUIRE(table.fliplr().to_vec<std::int64_t>() == std::vector<std::int64_t>{3, 2, 1, 6, 5, 4});
+  REQUIRE(table.roll(2).to_vec<std::int64_t>() == std::vector<std::int64_t>{5, 6, 1, 2, 3, 4});
+  REQUIRE(table.roll(-1, 1).to_vec<std::int64_t>() == std::vector<std::int64_t>{2, 3, 1, 5, 6, 4});
+  REQUIRE(table.rot90().to_vec<std::int64_t>() == std::vector<std::int64_t>{3, 6, 2, 5, 1, 4});
+  REQUIRE_THROWS(table.roll({1, 2}));
+}

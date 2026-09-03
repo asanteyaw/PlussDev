@@ -23,12 +23,18 @@ Config f64() {
 }
 
 DataFrame make_frame() {
-  const Series timestamp = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64());
+  // timeseries_split (behind Plan::splits / Plan::last) requires an actual
+  // timeline/timeindex column -- eight consecutive days, ascending like the old
+  // {1..8} row index so the ordered-fold assertions below are unchanged.
+  const Thread timestamp(pluss::make_timeline({
+      "2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", "2026-01-03T00:00:00Z",
+      "2026-01-04T00:00:00Z", "2026-01-05T00:00:00Z", "2026-01-06T00:00:00Z",
+      "2026-01-07T00:00:00Z", "2026-01-08T00:00:00Z"}));
   const Series x1 = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64());
   const Series x2 = pluss::make_series(std::vector<double>{1000, 2000, 500, 4000, 1500, 3000, 800, 3500}, {8}, f64());
   const Series y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1}, {8}, f64());
   return DataFrame({
-      {"timestamp", Thread(timestamp)},
+      {"timestamp", timestamp},
       {"x1", Thread(x1)},
       {"x2", Thread(x2)},
       {"category", Thread(pluss::make_note({"a", "b", "a", "b", "a", "b", "a", "b"}))},
@@ -141,15 +147,17 @@ bool run_validate_checks(std::ostream* err) {
   ordered_time.time_test_size = 2;
   const selection::Plan time_plan = selection::time(ordered_time);
   const auto ordered_splits = time_plan.splits(frame, "timestamp");
+  // x1 is row-aligned {1..8}, so its value in the last test block confirms that
+  // block starts at the 7th chronological row.
   if (ordered_splits.size() != 2
       || ordered_splits.back().test_set.ncases() != 2
-      || ordered_splits.back().test_set.features("timestamp").as_series().to_vec<double>().front() != 7.0) {
+      || ordered_splits.back().test_set.features("x1").as_series().to_vec<double>().front() != 7.0) {
     if (err) *err << "validate::time(...).splits(frame,time_feature) should sort by the time feature and expose ordered temporal folds\n";
     return false;
   }
   const prep::TimeSeriesSplit tail_holdout = time_plan.last(frame, "timestamp");
   if (tail_holdout.test_set.ncases() != 2
-      || tail_holdout.test_set.features("timestamp").as_series().to_vec<double>().front() != 7.0) {
+      || tail_holdout.test_set.features("x1").as_series().to_vec<double>().front() != 7.0) {
     if (err) *err << "validate::time(...).last(frame,time_feature) should return the last chronological holdout block\n";
     return false;
   }

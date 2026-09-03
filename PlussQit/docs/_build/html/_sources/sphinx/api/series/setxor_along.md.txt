@@ -178,8 +178,8 @@ Use `setxor_along()` for slice-wise symmetric difference.
     <span class="label">Previous</span>
     <span class="title">setxor1d</span>
   </a>
-  <a class="next-link" href="sign.html">
+  <a class="next-link" href="sigmoid.html">
     <span class="label">Next</span>
-    <span class="title">sign</span>
+    <span class="title">sigmoid</span>
   </a>
 </div>

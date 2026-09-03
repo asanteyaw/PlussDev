@@ -13,12 +13,10 @@
 // Role: keep frame/batch data and side-channel ML roles (labels, weights,
 // groups, time keys) in one value object without Python-style keyword routing
 // or adding a large method surface to Workflow. Construction is by the
-// lymph::payload::make(...) factory; after existence, roles are attached with
+// lymph::workflow::payload::make(...) factory; after existence, roles are attached with
 // short methods on Payload itself.
 
-namespace pluss::ai::lymph {
-
-namespace payload {
+namespace pluss::ai::lymph::workflow::payload {
 
 class Payload final {
  public:
@@ -45,21 +43,21 @@ class Payload final {
 
   [[nodiscard]] const pluss::table::DataFrame& frame() const {
     if (!frame_.has_value()) {
-      ::pluss::throw_error("lymph::Payload::frame: payload does not contain a DataFrame.");
+      ::pluss::throw_error("lymph::workflow::Payload::frame: payload does not contain a DataFrame.");
     }
     return *frame_;
   }
 
   [[nodiscard]] const FeatureBatch& features() const {
     if (!features_.has_value()) {
-      ::pluss::throw_error("lymph::Payload::features: payload does not contain a FeatureBatch.");
+      ::pluss::throw_error("lymph::workflow::Payload::features: payload does not contain a FeatureBatch.");
     }
     return *features_;
   }
 
   [[nodiscard]] const LabeledBatch& labeled() const {
     if (!labeled_.has_value()) {
-      ::pluss::throw_error("lymph::Payload::labeled: payload does not contain a LabeledBatch.");
+      ::pluss::throw_error("lymph::workflow::Payload::labeled: payload does not contain a LabeledBatch.");
     }
     return *labeled_;
   }
@@ -107,14 +105,14 @@ class Payload final {
 
   Payload& time(std::string feature_name) {
     if (feature_name.empty()) {
-      ::pluss::throw_error("lymph::Payload::time: time feature name cannot be empty.");
+      ::pluss::throw_error("lymph::workflow::Payload::time: time feature name cannot be empty.");
     }
     time_feature_ = std::move(feature_name);
     return *this;
   }
 
   Payload& time(TimeOptions options) {
-    validate_time_options(options, "lymph::Payload::time");
+    validate_time_options(options, "lymph::workflow::Payload::time");
     time_feature_ = options.index;
     time_options_ = std::move(options);
     return *this;
@@ -122,7 +120,7 @@ class Payload final {
 
   Payload& time(Series values) {
     if (!values.defined()) {
-      ::pluss::throw_error("lymph::Payload::time: time Series must be defined.");
+      ::pluss::throw_error("lymph::workflow::Payload::time: time Series must be defined.");
     }
     time_ = std::move(values);
     return *this;
@@ -153,9 +151,9 @@ class Payload final {
     if (features_.has_value()) return *features_;
     if (labeled_.has_value()) return labeled_->features;
     if (frame_.has_value()) {
-      return resolve(feature_batch_from_dataframe(*frame_, options_), "lymph::Payload::feature_batch");
+      return resolve(feature_batch_from_dataframe(*frame_, options_), "lymph::workflow::Payload::feature_batch");
     }
-    ::pluss::throw_error("lymph::Payload::feature_batch: payload has no frame or feature batch.");
+    ::pluss::throw_error("lymph::workflow::Payload::feature_batch: payload has no frame or feature batch.");
   }
 
   [[nodiscard]] LabeledBatch labeled_batch() const {
@@ -163,23 +161,23 @@ class Payload final {
     if (labeled_.has_value()) {
       out = *labeled_;
       if (weights_.defined() && !out.has_weights()) out.sample_weights = weights_;
-      resolve(validate_labeled(out), "lymph::Payload::labeled_batch");
+      resolve(validate_labeled(out), "lymph::workflow::Payload::labeled_batch");
       return out;
     }
     if (frame_.has_value() && options_.label_feature.has_value()) {
-      out = resolve(labeled_batch_from_dataframe(*frame_, options_), "lymph::Payload::labeled_batch");
+      out = resolve(labeled_batch_from_dataframe(*frame_, options_), "lymph::workflow::Payload::labeled_batch");
       if (weights_.defined() && !out.has_weights()) out.sample_weights = weights_;
-      resolve(validate_labeled(out), "lymph::Payload::labeled_batch");
+      resolve(validate_labeled(out), "lymph::workflow::Payload::labeled_batch");
       return out;
     }
     if (label_.defined()) {
       out.features = feature_batch();
       out.y = label_;
       out.sample_weights = weights_;
-      resolve(validate_labeled(out), "lymph::Payload::labeled_batch");
+      resolve(validate_labeled(out), "lymph::workflow::Payload::labeled_batch");
       return out;
     }
-    ::pluss::throw_error("lymph::Payload::labeled_batch: payload has no labels.");
+    ::pluss::throw_error("lymph::workflow::Payload::labeled_batch: payload has no labels.");
   }
 
  private:
@@ -207,7 +205,9 @@ class Payload final {
   friend Payload payload_make_(FeatureBatch features);
   friend Payload payload_make_(LabeledBatch labeled);
 };
-} // namespace payload
+} // namespace pluss::ai::lymph::workflow::payload
+
+namespace pluss::ai::lymph::workflow {
 
 using Payload = payload::Payload;
 
@@ -239,4 +239,4 @@ namespace payload {
 
 } // namespace payload
 
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::workflow

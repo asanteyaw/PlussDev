@@ -105,7 +105,7 @@
       }
     }
 
-    const methodMatch = path.match(/\/api\/([a-z0-9][a-z0-9-]*)\/([A-Za-z_][A-Za-z0-9_]*)\.html$/);
+    const methodMatch = path.match(/\/api\/([a-z0-9][a-z0-9_-]*)\/([A-Za-z_][A-Za-z0-9_]*)\.html$/);
     if (!methodMatch) {
       return null;
     }

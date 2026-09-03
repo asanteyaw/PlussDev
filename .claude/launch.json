@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8791", "--directory", "PlussPl/docs/sphinx/_build/html"],
       "port": 8791
+    },
+    {
+      "name": "plussai-api-docs",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8793", "--directory", "PlussAI/docs/sphinx/_build/html"],
+      "port": 8793
     }
   ]
 }

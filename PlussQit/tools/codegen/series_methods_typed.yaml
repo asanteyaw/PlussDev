@@ -2695,6 +2695,8 @@ skip_methods:
   - isinf_
   - isnan
   - isnan_
+  - invalid
+  - invalid_index
   - lgamma
   - lgamma_
   - log

@@ -116,5 +116,31 @@ int main() {
   heading("sqrt_domain_edge");
   std::cout << pluss::make_series({4.0, 0.0, -1.0}).sqrt() << "\n\n";
 
+  heading("asinh_values_and_integer_promotion");
+  std::cout << "anchors=" << pluss::make_series({-1.1752011936438014, 0.0, 1.1752011936438014}).asinh() << "\n";
+  std::cout << "integer=" << pluss::make_series({-1, 0, 1}, pluss::ScalarType::Int64).asinh() << "\n\n";
+
+  heading("asinh_gradient");
+  auto asinh_x = pluss::make_series({0.0, 0.75});
+  asinh_x.tracks_slope_(true);
+  asinh_x.asinh().sum().reverse();
+  std::cout << asinh_x.sensitivity() << "\n\n";
+
+  heading("acosh_values_domain_and_gradient");
+  std::cout << "anchors=" << pluss::make_series({1.0, 1.5430806348152437, 3.7621956910836314}).acosh() << "\n";
+  std::cout << "domain=" << pluss::make_series({0.5, 1.0, 2.0}).acosh() << "\n";
+  auto acosh_x = pluss::make_series({1.25, 2.0});
+  acosh_x.tracks_slope_(true);
+  acosh_x.acosh().sum().reverse();
+  std::cout << "gradient=" << acosh_x.sensitivity() << "\n\n";
+
+  heading("atanh_values_domain_and_gradient");
+  std::cout << "anchors=" << pluss::make_series({-0.7615941559557649, 0.0, 0.7615941559557649}).atanh() << "\n";
+  std::cout << "domain=" << pluss::make_series({-1.25, -1.0, 0.0, 1.0, 1.25}).atanh() << "\n";
+  auto atanh_x = pluss::make_series({-0.5, 0.0, 0.5});
+  atanh_x.tracks_slope_(true);
+  atanh_x.atanh().sum().reverse();
+  std::cout << "gradient=" << atanh_x.sensitivity() << "\n\n";
+
   return 0;
 }

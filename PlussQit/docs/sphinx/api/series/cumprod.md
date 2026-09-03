@@ -60,9 +60,9 @@ As of the current implementation, `cumprod()` does **not** attach a reverse-mode
 source link. The forward scan works, but downstream `reverse()` does not
 populate source sensitivity through `cumprod()`.
 
-That limitation is especially worth documenting because users familiar with
-Torch-like scan semantics may expect `cumprod()` to behave analogously to the
-fully differentiable `cumsum()` path. Right now it does not.
+That limitation is especially worth documenting because a multiplicative scan
+is often expected to behave analogously to the fully differentiable
+`cumsum()` path. Right now it does not.
 
 ## Examples
 
@@ -224,12 +224,12 @@ product:
 - [`Series::prod`](prod.md): multiplicative reduction instead of scan.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cosh.html">
+  <a class="prev-link" href="cummin.html">
     <span class="label">Previous</span>
-    <span class="title">cosh</span>
+    <span class="title">cummin</span>
   </a>
-  <a class="next-link" href="max.html">
+  <a class="next-link" href="cumsum.html">
     <span class="label">Next</span>
-    <span class="title">max</span>
+    <span class="title">cumsum</span>
   </a>
 </div>

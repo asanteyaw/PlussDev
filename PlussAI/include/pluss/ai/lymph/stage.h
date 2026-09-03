@@ -71,12 +71,31 @@ struct Stage {
       case TransformKind::FrequencyEncoder:
       case TransformKind::OrdinalEncoder:
       case TransformKind::LabelEncoder:
+      case TransformKind::BaseNEncoder:
         return TransformContract{
             .reversible = true,
             .inverse_available = false,
             .lossy = kind == TransformKind::FrequencyEncoder,
             .stateful = true,
-            .changes_feature_count = kind == TransformKind::OneHotEncoder,
+            .changes_feature_count = kind == TransformKind::OneHotEncoder
+                                     || kind == TransformKind::BaseNEncoder,
+        };
+      case TransformKind::HashingEncoder:
+        return TransformContract{
+            .reversible = false,
+            .inverse_available = false,
+            .lossy = true,
+            .stateful = false,
+            .changes_feature_count = true,
+        };
+      case TransformKind::TargetEncoder:
+      case TransformKind::WOEEncoder:
+        return TransformContract{
+            .reversible = false,
+            .inverse_available = false,
+            .lossy = true,
+            .stateful = true,
+            .target_aware = true,
         };
       case TransformKind::VectorNormalizer:
       case TransformKind::ThresholdBinarizer:
@@ -224,6 +243,22 @@ requires std::is_invocable_v<Fn&, const Series&>
 
 [[nodiscard]] inline Stage polynomial_lift(prep::PolynomialLiftOptions options = {}) {
   return Stage{.kind = TransformKind::PolynomialLift, .options = options};
+}
+
+[[nodiscard]] inline Stage basen_encoder(prep::BaseNEncoderOptions options = {}) {
+  return Stage{.kind = TransformKind::BaseNEncoder, .options = options};
+}
+
+[[nodiscard]] inline Stage hashing_encoder(prep::HashingEncoderOptions options = {}) {
+  return Stage{.kind = TransformKind::HashingEncoder, .options = options};
+}
+
+[[nodiscard]] inline Stage target_encoder(prep::TargetEncoderOptions options = {}) {
+  return Stage{.kind = TransformKind::TargetEncoder, .options = options};
+}
+
+[[nodiscard]] inline Stage woe_encoder(prep::WOEEncoderOptions options = {}) {
+  return Stage{.kind = TransformKind::WOEEncoder, .options = options};
 }
 
 } // namespace stage

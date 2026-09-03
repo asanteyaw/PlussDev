@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 72c5be14d456 -->
 
 # DataFramePlotAccessor::bar
 

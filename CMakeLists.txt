@@ -106,6 +106,7 @@ set(PLUSSQIT_BUILD_CODEH ON CACHE BOOL "Build CodeH (required by PlussMa libs)" 
 add_library(pluss STATIC)
 if(EXISTS "${CMAKE_SOURCE_DIR}/include")
     target_include_directories(pluss PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/generated>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>

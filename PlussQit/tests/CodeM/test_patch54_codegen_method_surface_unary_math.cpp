@@ -26,4 +26,9 @@ TEST_CASE("codegen method surface includes unary math ops", "[codegen][unary]") 
 
   auto ln = x.logical_not();
   REQUIRE(ln.scalar_type() == pluss::ScalarType::Bool);
+
+  auto x_inplace = x.clone();
+  x_inplace.logical_not_();
+  REQUIRE(x_inplace.scalar_type() == pluss::ScalarType::Bool);
+  REQUIRE(x_inplace.to_vec<std::uint8_t>() == std::vector<std::uint8_t>{1, 0, 0, 0});
 }

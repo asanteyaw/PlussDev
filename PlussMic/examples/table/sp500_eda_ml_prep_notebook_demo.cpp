@@ -21,7 +21,7 @@ int main() {
   pluss::loader::ReadCsvOptions read_opts;
   read_opts.skipcases = {1, 2};
   read_opts.parse_dates = {"Price"};
-  let df = DataFrame::load_csv(csv_path.string(), read_opts).rename("Price", "Date");
+  auto df = DataFrame::load_csv(csv_path.string(), read_opts).rename("Price", "Date");
   std::cout << "\n[Cell 1] Raw shape: [" << df.ncases() << " cs x " << df.nfeatures() << " feat]\n";
   df.head(8);
 
@@ -61,7 +61,7 @@ int main() {
   // Top three months with the most traded volumes
   //==============End Cell Three =============
   std::cout << "\n[Cell 3] Top (Year, Month) by traded volume\n";
-  let monthly_volume = df.group({.dropnull = true})
+  auto monthly_volume = df.group({.dropnull = true})
                            .by({"Year", "Month"})
                            .agg({
                                {"TotalVolume", "Volume", GroupOp::Sum},
@@ -93,8 +93,8 @@ int main() {
       .save_pdf("sp500_range_vs_logvolume_scatter.pdf");
 
 
-  let numeric = df.feataxis().series();
-  let corr_table = numeric.corr(DataFrame::CorrMethod::Spearman, false);
+  auto numeric = df.feataxis().series();
+  auto corr_table = numeric.corr(DataFrame::CorrMethod::Spearman, false);
   corr_table.save_csv("sp500_corr_matrix_spearman.csv");
   corr_table.head(12);
 
@@ -120,14 +120,14 @@ int main() {
 
   pluss::table::RadvizPlotOptions radviz_opts;
   radviz_opts.max_points = 3000;
-  let fig_radviz = df.plot().radviz({"Adj Close", "Close", "High", "Low", "Open", "LogVolume"}, "DayOfWeek", radviz_opts);
+  auto fig_radviz = df.plot().radviz({"Adj Close", "Close", "High", "Low", "Open", "LogVolume"}, "DayOfWeek", radviz_opts);
   fig_radviz.headline("Radviz by weekday");
   fig_radviz.save_pdf("sp500_radviz.pdf");
 
   pluss::table::LagPlotOptions lag_opts;
   lag_opts.lag = 1;
   lag_opts.max_points = 2500;
-  let fig_lag = df.plot().lag("Close", lag_opts);
+  auto fig_lag = df.plot().lag("Close", lag_opts);
   fig_lag.headline("Lag plot (Close, lag=1)");
   fig_lag.save_pdf("sp500_lag_close.pdf");
 
@@ -151,13 +151,13 @@ int main() {
   brief_opts.features_per_table = 1;
   brief_opts.tables_per_row = 3;
   brief_opts.table_gap_spaces = 8;
-  let fig_report = df.plot().line({"Close", "Open", "High", "Low", "Adj Close"}, "Date");
+  auto fig_report = df.plot().line({"Close", "Open", "High", "Low", "Adj Close"}, "Date");
   fig_report.mosaic(2, 1, 12.0, 10.0).tight_layout(true, 4.0).size(1480.0, 920.0);
   df.plot().brief(fig_report, {"Close", "Open", "High", "Low", "Adj Close"}, brief_opts);
   fig_report.headline("Price trends + supporting tables");
   fig_report.save_pdf("sp500_close_with_brief_table.pdf");
 
-  let monthly_top24 = monthly_volume.head(24, false);
+  auto monthly_top24 = monthly_volume.head(24, false);
   monthly_top24.plot()
       .bar("TotalVolume")
       .headline("Top 24 (Year, Month) by traded volume")
@@ -245,11 +245,11 @@ int main() {
   // preparing data for ML regression task
   //==============End Cell Six =============
   std::cout << "\n[Cell 6] ML prep (features, target, split, export)\n";
-  let ml_frame = df.features({"Date"}).combine(numeric);
-  let close_prev_1 = numeric.features({"Close"}).shift(1).rename("Close", "ClosePrev1");
-  let close_prev_5 = numeric.features({"Close"}).shift(5).rename("Close", "ClosePrev5");
-  let volume_prev_1 = numeric.features({"Volume"}).shift(1).rename("Volume", "VolumePrev1");
-  let close_next_1 = numeric.features({"Close"}).shift(-1).rename("Close", "CloseNext1");
+  auto ml_frame = df.features({"Date"}).combine(numeric);
+  auto close_prev_1 = numeric.features({"Close"}).shift(1).rename("Close", "ClosePrev1");
+  auto close_prev_5 = numeric.features({"Close"}).shift(5).rename("Close", "ClosePrev5");
+  auto volume_prev_1 = numeric.features({"Volume"}).shift(1).rename("Volume", "VolumePrev1");
+  auto close_next_1 = numeric.features({"Close"}).shift(-1).rename("Close", "CloseNext1");
 
   ml_frame = ml_frame.combine(close_prev_1).combine(close_prev_5).combine(volume_prev_1).combine(close_next_1).dropnull();
   ml_frame.set({"Ret1D", "Ret5D", "VolumeChange1D", "TargetNextRet"}) = {
@@ -264,8 +264,8 @@ int main() {
   ml_frame.head(6);
 
   const std::int64_t split = static_cast<std::int64_t>(static_cast<double>(ml_frame.ncases()) * 0.8);
-  let train = ml_frame.slice(0, split);
-  let valid = ml_frame.slice(split, ml_frame.ncases());
+  auto train = ml_frame.slice(0, split);
+  auto valid = ml_frame.slice(split, ml_frame.ncases());
 
   std::cout << "Train rows: " << train.ncases() << ", Validation rows: " << valid.ncases() << "\n";
   train.describe();

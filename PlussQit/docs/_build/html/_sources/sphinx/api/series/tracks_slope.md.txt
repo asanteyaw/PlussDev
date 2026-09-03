@@ -26,6 +26,17 @@ leaf.
 This is a state-inspection method. It does not change tracking behavior by
 itself. For mutation, use [`tracks_slope_()`](tracks_slope_.md).
 
+Conceptually, this answers a setup question, not a differentiation question.
+
+- `tracks_slope()` asks: "if reverse-mode reaches this value later, should a
+  sensitivity be stored here?"
+- [`reverse()`](reverse.md) asks: "given the finished forward result, what
+  sensitivities should propagate backward?"
+- [`sensitivity()`](sensitivity.md) asks: "what sensitivity is currently stored
+  on this series right now?"
+
+Those three stages belong to one workflow, but they are not interchangeable.
+
 ## Parameters
 
 None.
@@ -45,6 +56,9 @@ auto x = pluss::make_series({1.0, 2.0, 3.0});
 std::cout << "before=" << (x.tracks_slope() ? "true" : "false") << "\n";
 ```
 
+So ordinary construction gives you a normal numeric `Series`, not a tracked
+autograd leaf.
+
 ### Output
 
 ```text
@@ -63,6 +77,9 @@ x.tracks_slope_(false);
 std::cout << "after_disable=" << (x.tracks_slope() ? "true" : "false") << "\n";
 ```
 
+Notice that this is only configuration state. No derivative has been computed
+yet, and no stored sensitivity exists merely because the flag became `true`.
+
 ### Output
 
 ```text
@@ -75,24 +92,23 @@ Example 3. Tracking state and stored sensitivity are related, but not the same
 thing.
 
 ```cpp
-auto x = pluss::make_series({9.0, 10.0});
-x.tracks_slope_(true);
+auto x = pluss::make_series({9.0, 10.0}, pluss::cfg::tracks_slope());
 x.mul(4.0).sum().reverse();
 x.clear_sensitivity();
 
 std::cout << "tracks=" << (x.tracks_slope() ? "true" : "false") << "\n";
-std::cout << "has_dx=" << (x.has_sensitivity() ? "true" : "false") << "\n";
+std::cout << "has_dL_dx=" << (x.has_sensitivity() ? "true" : "false") << "\n";
 ```
+
+So `tracks_slope()` staying `true` does not imply a stored sensitivity is
+currently present.
 
 ### Output
 
 ```text
 tracks=true
-has_dx=false
+has_dL_dx=false
 ```
-
-So `tracks_slope()` staying `true` does not imply a stored sensitivity is
-currently present.
 
 ## Gotchas And Failure Modes
 
@@ -114,9 +130,9 @@ receive reverse-mode sensitivity as a tracked value.
 - [`Series::reverse`](reverse.md): propagate sensitivity to tracked leaves.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tanh.html">
+  <a class="prev-link" href="trace.html">
     <span class="label">Previous</span>
-    <span class="title">tanh</span>
+    <span class="title">trace</span>
   </a>
   <a class="next-link" href="tracks_slope_.html">
     <span class="label">Next</span>

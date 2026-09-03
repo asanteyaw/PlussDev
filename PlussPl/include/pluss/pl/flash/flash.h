@@ -4042,6 +4042,50 @@ struct PairPlotOptions {
 
 namespace detail {
 
+[[nodiscard]] inline std::int64_t pairplot_scatter_pane_count(
+    std::int64_t feature_count,
+    PairPlotTriangle triangle) {
+  if (feature_count <= 1) {
+    return 0;
+  }
+  switch (triangle) {
+    case PairPlotTriangle::Lower:
+    case PairPlotTriangle::Upper:
+      return (feature_count * (feature_count - 1)) / 2;
+    case PairPlotTriangle::Full:
+    default:
+      return feature_count * (feature_count - 1);
+  }
+}
+
+[[nodiscard]] inline std::int64_t adaptive_pairplot_max_points(
+    const PairPlotOptions& options,
+    std::int64_t feature_count) {
+  if (options.max_points <= 0 || feature_count <= 1) {
+    return options.max_points;
+  }
+
+  const double scatter_panes = static_cast<double>(
+      std::max<std::int64_t>(1, pairplot_scatter_pane_count(feature_count, options.triangle)));
+  const double viewport_area =
+      std::max(640.0, options.min_width) * std::max(420.0, options.min_height);
+  const double cell_area =
+      std::max(1.0, options.cell_width) * std::max(1.0, options.cell_height);
+  const double baseline_marker_area =
+      std::clamp(options.marker_area_min, 1.0, std::max(options.marker_area_min, options.marker_area_max));
+  const double marker_radius = std::clamp(std::sqrt(baseline_marker_area) * 0.31, 0.95, 9.0);
+  const double marker_diameter = std::max(2.0, (marker_radius * 2.0) + 1.0);
+  const double pane_budget = std::max(
+      48.0,
+      cell_area / std::max(10.0, marker_diameter * marker_diameter * 1.75));
+  const double global_budget = std::max(
+      96.0,
+      viewport_area / std::max(12.0, marker_diameter * marker_diameter * 2.5));
+  const double effective =
+      std::min({static_cast<double>(options.max_points), pane_budget, global_budget / scatter_panes});
+  return std::max<std::int64_t>(32, static_cast<std::int64_t>(std::llround(effective)));
+}
+
 [[nodiscard]] inline std::pair<std::vector<Series>, std::vector<std::string>> dataset_numeric_columns(
     const Dataset& data) {
   PLUSS_CHECK(!data.numeric_values.empty(), "flash::dataset_numeric_columns requires at least one numeric feature");
@@ -4084,7 +4128,7 @@ inline Studio& pairplot(
     }
   }
 
-  detail::downsample_columns(prepared, pair_options.max_points);
+  detail::downsample_columns(prepared, detail::adaptive_pairplot_max_points(pair_options, n));
   const std::int64_t row_count = prepared.front().numel();
   if (row_count <= 0) {
     throw std::invalid_argument("flash::pairplot has no rows after filtering/sampling");

@@ -23,6 +23,7 @@
 #include "pluss/detail/factory_containers.h"
 #include "pluss/detail/factory_core.h"
 #include "pluss/detail/nested_timeline_literal.h"
+#include "pluss/detail/select_core.h"
 
 #include "CodeH/compat/Invoke.h"
 
@@ -144,7 +145,7 @@ inline pluss::Timeline unite(std::initializer_list<pluss::Timeline> values) {
 }
 
 // pluss::timeline::print(t) -- human-readable rendering, mirroring
-// pluss::duration::print/pluss::print_series. `std::cout << t` also works
+// pluss::duration::print/pluss::series::print. `std::cout << t` also works
 // directly via pluss::codeh's Timeline operator<<.
 inline std::string print(const pluss::Timeline& t) {
   return pluss::codeh::print_timeline(t);
@@ -339,6 +340,87 @@ inline pluss::Timeline arange(std::string_view start,
     return arange(time(start), time(end), pluss::duration::seconds(step), inclusive);
   }
   CODEM_FAIL("pluss::timeline::arange(start, end, step): datetime endpoints require an explicit Duration step");
+}
+
+namespace detail {
+
+inline pluss::Timeline select_timeline_scalar(std::string_view value) {
+  const auto kind = pluss::codeh::factory_detail::classify_text(value);
+  if (kind == pluss::codeh::factory_detail::TimelineTextKind::DateOnly) {
+    return date(value);
+  }
+  if (kind == pluss::codeh::factory_detail::TimelineTextKind::TimeOnly) {
+    return time(value);
+  }
+  return make(value);
+}
+
+} // namespace detail
+
+inline pluss::Timeline select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+                              pluss::msharp::RangeView::Of<pluss::Timeline> choices,
+                              const pluss::Timeline& default_value) {
+  return pluss::detail::select_core::fold_select(
+      "pluss::timeline::select",
+      conditions,
+      choices,
+      default_value,
+      [](const pluss::Series& cond, const pluss::Timeline& choice, const pluss::Timeline& out) {
+        return ::pluss::codeh::_compat::invoke<pluss::Timeline>("where", choice, {cond, out});
+      });
+}
+
+inline pluss::Timeline select(std::initializer_list<pluss::Series> conditions,
+                              std::initializer_list<pluss::Timeline> choices,
+                              const pluss::Timeline& default_value) {
+  return pluss::detail::select_core::select_init(
+      "pluss::timeline::select",
+      conditions,
+      choices,
+      default_value,
+      [](std::string_view,
+         pluss::msharp::RangeView::Of<pluss::Series> conds,
+         pluss::msharp::RangeView::Of<pluss::Timeline> picks,
+         const pluss::Timeline& fallback) {
+        return select(conds, picks, fallback);
+      });
+}
+
+inline pluss::Timeline select(const pluss::Series& condition,
+                              const pluss::Timeline& choice,
+                              const pluss::Timeline& default_value) {
+  return pluss::detail::select_core::select_scalar(
+      "pluss::timeline::select",
+      condition,
+      choice,
+      default_value,
+      [](std::string_view,
+         pluss::msharp::RangeView::Of<pluss::Series> conds,
+         pluss::msharp::RangeView::Of<pluss::Timeline> picks,
+         const pluss::Timeline& fallback) {
+        return select(conds, picks, fallback);
+      });
+}
+
+inline pluss::Timeline select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+                              pluss::msharp::RangeView::Of<pluss::Timeline> choices,
+                              std::string_view default_value) {
+  return select(conditions, choices, detail::select_timeline_scalar(default_value));
+}
+
+inline pluss::Timeline select(std::initializer_list<pluss::Series> conditions,
+                              std::initializer_list<pluss::Timeline> choices,
+                              std::string_view default_value) {
+  return select(conditions, choices, detail::select_timeline_scalar(default_value));
+}
+
+inline pluss::Timeline select(const pluss::Series& condition,
+                              std::string_view choice,
+                              std::string_view default_value) {
+  return select(
+      condition,
+      detail::select_timeline_scalar(choice),
+      detail::select_timeline_scalar(default_value));
 }
 
 } // namespace pluss::timeline

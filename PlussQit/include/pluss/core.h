@@ -48,8 +48,8 @@
 #if __has_include("pluss/tils/aux/rng_seed.h")
 #include "pluss/tils/aux/rng_seed.h"
 namespace pluss {
-using aux::rng_seed;
-using aux::next_rng_seed;
-using aux::seed_or_next;
+using tils::rng_seed;
+using tils::next_rng_seed;
+using tils::seed_or_next;
 } // namespace pluss
 #endif

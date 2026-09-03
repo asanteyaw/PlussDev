@@ -44,7 +44,13 @@ inline void oss_args(std::ostringstream& oss, First&& first, Rest&&... rest) {
 
 inline bool native_trace_enabled_() {
   const char* raw = std::getenv("PLUSS_ERROR_NATIVE_TRACE");
-  if (!raw || *raw == '\0') return true; // default enabled
+  if (!raw || *raw == '\0') {
+#if defined(__APPLE__)
+    return false; // opt-in on macOS: atos-based resolution is too heavy for routine caught exceptions
+#else
+    return true;
+#endif
+  }
   return !(std::strcmp(raw, "0") == 0 ||
            std::strcmp(raw, "off") == 0 ||
            std::strcmp(raw, "false") == 0 ||
@@ -53,7 +59,13 @@ inline bool native_trace_enabled_() {
 
 inline bool native_trace_full_() {
   const char* raw = std::getenv("PLUSS_ERROR_NATIVE_TRACE");
-  if (!raw || *raw == '\0') return true; // default to full native trace
+  if (!raw || *raw == '\0') {
+#if defined(__APPLE__)
+    return false;
+#else
+    return true;
+#endif
+  }
   if (std::strcmp(raw, "focused") == 0 || std::strcmp(raw, "FOCUSED") == 0) return false;
   return std::strcmp(raw, "full") == 0 ||
          std::strcmp(raw, "FULL") == 0 ||

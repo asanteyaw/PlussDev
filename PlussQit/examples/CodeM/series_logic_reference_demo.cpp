@@ -77,6 +77,11 @@ int main() {
   auto cond = pluss::make_series({false, true, false, true});
   std::cout << self.where(cond, -1.0) << "\n\n";
 
+  heading("logical_not_inplace_numeric");
+  auto numeric = pluss::make_series({0.0, 2.0, 0.0, -5.0});
+  numeric.logical_not_();
+  pluss::series::print(std::cout, numeric) << "\n\n";
+
   heading("where_series_other");
   auto other = pluss::make_series({100.0, 200.0, 300.0, 400.0});
   std::cout << self.where(cond, other) << "\n\n";
@@ -120,6 +125,81 @@ int main() {
   heading("where_broadcast_error");
   try {
     std::cout << matrix.where(pluss::make_series({true, false}), -1.0) << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
+
+  auto bits_left = pluss::make_series({1, 6, 12, 10}, pluss::ScalarType::Int32);
+  auto bits_right = pluss::make_series({3, 10, 5, 12}, pluss::ScalarType::Int32);
+
+  heading("bitwise_and_integer");
+  std::cout << bits_left.bitwise_and(bits_right) << "\n\n";
+
+  heading("bitwise_or_integer");
+  std::cout << bits_left.bitwise_or(bits_right) << "\n\n";
+
+  heading("bitwise_xor_integer");
+  std::cout << bits_left.bitwise_xor(bits_right) << "\n\n";
+
+  heading("bitwise_not_integer");
+  pluss::series::print(std::cout, bits_left.bitwise_not()) << "\n\n";
+
+  heading("bitwise_bool");
+  auto bool_left = pluss::make_series({true, false, true, false}, pluss::ScalarType::Bool);
+  auto bool_right = pluss::make_series({true, true, false, false}, pluss::ScalarType::Bool);
+  std::cout << bool_left.bitwise_and(bool_right) << "\n";
+  std::cout << bool_left.bitwise_or(bool_right) << "\n";
+  std::cout << bool_left.bitwise_xor(bool_right) << "\n\n";
+
+  heading("bitwise_float_error");
+  try {
+    std::cout << pluss::make_series({1.0, 2.0}).bitwise_and(
+        pluss::make_series({1.0, 0.0})) << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
+
+  auto truth_left = pluss::make_series({0, 2, 0, -5}, pluss::ScalarType::Int32);
+  auto truth_right = pluss::make_series({1, 0, 3, 0}, pluss::ScalarType::Int32);
+
+  heading("logical_numeric_truthiness");
+  std::cout << truth_left.logical_and(truth_right) << "\n";
+  std::cout << truth_left.logical_or(truth_right) << "\n";
+  std::cout << truth_left.logical_xor(truth_right) << "\n\n";
+
+  heading("logical_and_broadcast");
+  auto truth_matrix = pluss::make_series({
+      {true, false},
+      {true, false},
+  }, pluss::ScalarType::Bool);
+  std::cout << truth_matrix.logical_and(
+      pluss::make_series({true, false}, pluss::ScalarType::Bool)) << "\n\n";
+
+  heading("logical_or_broadcast");
+  std::cout << truth_matrix.logical_or(
+      pluss::make_series({false, true}, pluss::ScalarType::Bool)) << "\n\n";
+
+  heading("logical_not_numeric");
+  pluss::series::print(std::cout, truth_left.logical_not()) << "\n\n";
+
+  heading("logical_not_out_of_place_preserves_source");
+  auto original_numeric = pluss::make_series({0.0, 2.0, 0.0, -5.0});
+  auto inverted_numeric = original_numeric.logical_not();
+  std::cout << original_numeric << "\n";
+  std::cout << inverted_numeric << "\n\n";
+
+  heading("logical_not_inplace_bool");
+  auto inplace_mask = pluss::make_series({true, false, true, false}, pluss::ScalarType::Bool);
+  auto& inplace_result = inplace_mask.logical_not_();
+  std::cout << inplace_result << "\n";
+  std::cout << inplace_mask << "\n\n";
+
+  heading("logical_broadcast_error");
+  try {
+    std::cout << truth_matrix.logical_or(
+        pluss::make_series({true, false, true}, pluss::ScalarType::Bool)) << "\n";
   } catch (const std::exception& e) {
     print_error(e);
   }

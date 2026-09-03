@@ -23,6 +23,10 @@ using OneHotEncoderOptions = ::pluss::ai::nodej::prep::OneHotEncoderOptions;
 using FrequencyEncoderOptions = ::pluss::ai::nodej::prep::FrequencyEncoderOptions;
 using OrdinalEncoderOptions = ::pluss::ai::nodej::prep::OrdinalEncoderOptions;
 using LabelEncoderOptions = ::pluss::ai::nodej::prep::LabelEncoderOptions;
+using BaseNEncoderOptions = ::pluss::ai::nodej::prep::BaseNEncoderOptions;
+using HashingEncoderOptions = ::pluss::ai::nodej::prep::HashingEncoderOptions;
+using TargetEncoderOptions = ::pluss::ai::nodej::prep::TargetEncoderOptions;
+using WOEEncoderOptions = ::pluss::ai::nodej::prep::WOEEncoderOptions;
 using NeighborImputerWeighting = ::pluss::ai::nodej::prep::NeighborImputerWeighting;
 using NeighborImputerOptions = ::pluss::ai::nodej::prep::NeighborImputerOptions;
 using IterativeImputerOptions = ::pluss::ai::nodej::prep::IterativeImputerOptions;
@@ -728,6 +732,8 @@ PLUSS_NODEJ_DECLARE_PREP_WRAPPER(QuantileMap, QuantileMapOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(PowerMap, PowerMapOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(ThresholdBinarizer, ThresholdBinarizerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(PolynomialLift, PolynomialLiftOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER(BaseNEncoder, BaseNEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER(HashingEncoder, HashingEncoderOptions)
 
 inline void prep_refresh_encoder_attrs_(OneHotEncoder& wrapper);
 inline void prep_refresh_encoder_attrs_(FrequencyEncoder& wrapper);
@@ -830,30 +836,18 @@ private:
 
 } // namespace prep
 
-using StandardScalerOptions = prep::StandardScalerOptions;
-using MinMaxScalerOptions = prep::MinMaxScalerOptions;
-using RobustScalerOptions = prep::RobustScalerOptions;
+// Public option types for documented prep subfamilies are NOT re-exported at
+// root `lymph::` scope. Name them `lymph::options::StandardScaler` (canonical)
+// or `lymph::prep::StandardScalerOptions` (family-local alias). See directive 3
+// of docs/lymph_api_doc_standards.md. Enums that parameterize those options,
+// and option types for not-yet-documented families, stay below for now.
 using SimpleImputerStrategy = prep::SimpleImputerStrategy;
-using SimpleImputerOptions = prep::SimpleImputerOptions;
 using CategoryOverflowPolicy = prep::CategoryOverflowPolicy;
-using OneHotEncoderOptions = prep::OneHotEncoderOptions;
-using FrequencyEncoderOptions = prep::FrequencyEncoderOptions;
-using OrdinalEncoderOptions = prep::OrdinalEncoderOptions;
-using LabelEncoderOptions = prep::LabelEncoderOptions;
 using NeighborImputerWeighting = prep::NeighborImputerWeighting;
-using NeighborImputerOptions = prep::NeighborImputerOptions;
-using IterativeImputerOptions = prep::IterativeImputerOptions;
 using VectorNorm = prep::VectorNorm;
-using VectorNormalizerOptions = prep::VectorNormalizerOptions;
-using MaxAbsScalerOptions = prep::MaxAbsScalerOptions;
 using QuantileMapOutput = prep::QuantileMapOutput;
-using QuantileMapOptions = prep::QuantileMapOptions;
 using PowerMapMode = prep::PowerMapMode;
-using PowerMapOptions = prep::PowerMapOptions;
-using ThresholdBinarizerOptions = prep::ThresholdBinarizerOptions;
-using PolynomialLiftOptions = prep::PolynomialLiftOptions;
 using OutlierIsolatorOptions = prep::OutlierIsolatorOptions;
-using FunctionTransformerOptions = prep::FunctionTransformerOptions;
 using FeatureRemainderPolicy = prep::FeatureRemainderPolicy;
 using FunctionTransformer = prep::FunctionTransformer;
 using FeatureTransformer = prep::FeatureTransformer;

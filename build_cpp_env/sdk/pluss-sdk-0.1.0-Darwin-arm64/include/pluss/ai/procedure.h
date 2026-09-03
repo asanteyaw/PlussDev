@@ -133,9 +133,9 @@ class Artifact final {
                              pluss::table::Thread,
                              lymph::FeatureBatch,
                              lymph::LabeledBatch,
-                             lymph::Payload,
-                             lymph::Model,
-                             lymph::Workflow,
+                             lymph::workflow::Payload,
+                             lymph::models::Model,
+                             lymph::workflow::Workflow,
                              lymph::MetricReport,
                              ice::Batch,
                              ice::AssessReport,
@@ -585,9 +585,9 @@ class Procedure final {
     if (artifact.is<pluss::table::Thread>()) return "Thread";
     if (artifact.is<lymph::FeatureBatch>()) return "lymph::FeatureBatch";
     if (artifact.is<lymph::LabeledBatch>()) return "lymph::LabeledBatch";
-    if (artifact.is<lymph::Payload>()) return "lymph::Payload";
-    if (artifact.is<lymph::Model>()) return "lymph::Model";
-    if (artifact.is<lymph::Workflow>()) return "lymph::Workflow";
+    if (artifact.is<lymph::workflow::Payload>()) return "lymph::workflow::Payload";
+    if (artifact.is<lymph::models::Model>()) return "lymph::models::Model";
+    if (artifact.is<lymph::workflow::Workflow>()) return "lymph::workflow::Workflow";
     if (artifact.is<lymph::MetricReport>()) return "lymph::MetricReport";
     if (artifact.is<ice::Batch>()) return "ice::Batch";
     if (artifact.is<ice::AssessReport>()) return "ice::AssessReport";
@@ -636,8 +636,8 @@ class Procedure final {
       out.rows = batch.features.sample_count();
       out.columns = batch.features.feature_count();
       out.elements = batch.features.x.defined() ? batch.features.x.numel() : 0;
-    } else if (artifact.is<lymph::Payload>()) {
-      const lymph::Payload& payload = artifact.get<lymph::Payload>();
+    } else if (artifact.is<lymph::workflow::Payload>()) {
+      const lymph::workflow::Payload& payload = artifact.get<lymph::workflow::Payload>();
       if (payload.has_frame()) {
         out.rows = payload.frame().ncases();
         out.columns = payload.frame().nfeatures();
@@ -720,8 +720,8 @@ class Procedure final {
       if (input.is<pluss::table::DataFrame>()) {
         saw_schema_carrier = true;
         require_columns_in_frame_(step.name(), input.get<pluss::table::DataFrame>(), step.options().require_columns);
-      } else if (input.is<lymph::Payload>()) {
-        const lymph::Payload& payload = input.get<lymph::Payload>();
+      } else if (input.is<lymph::workflow::Payload>()) {
+        const lymph::workflow::Payload& payload = input.get<lymph::workflow::Payload>();
         if (payload.has_frame()) {
           saw_schema_carrier = true;
           require_columns_in_frame_(step.name(), payload.frame(), step.options().require_columns);
@@ -757,8 +757,8 @@ class Procedure final {
     bool has_time = false;
     bool saw_schema_carrier = false;
     for (const Artifact& input : inputs) {
-      if (input.is<lymph::Payload>()) {
-        const lymph::Payload& payload = input.get<lymph::Payload>();
+      if (input.is<lymph::workflow::Payload>()) {
+        const lymph::workflow::Payload& payload = input.get<lymph::workflow::Payload>();
         if (payload.has_time()) has_time = true;
         if (payload.has_frame()) {
           saw_schema_carrier = true;
@@ -1903,7 +1903,7 @@ inline void bind(std::string key, Fn fn) {
 [[nodiscard]] inline Step step(std::string name,
                                std::string input_name,
                                std::string output_name,
-                               lymph::Policy policy) {
+                               lymph::workflow::Policy policy) {
   if (input_name.empty() || output_name.empty()) {
     ::pluss::throw_error("pluss::ai::procedure::step: input and output names must not be empty.");
   }
@@ -1912,15 +1912,15 @@ inline void bind(std::string key, Fn fn) {
   options.inputs = {std::move(input_name)};
   options.outputs = {output_name};
   options.persistable = true;
-  options.component = "lymph::Policy";
-  auto state = std::make_shared<lymph::Policy>(std::move(policy));
+  options.component = "lymph::workflow::Policy";
+  auto state = std::make_shared<lymph::workflow::Policy>(std::move(policy));
   StepPersistSpec persist{};
-  persist.key = "lymph::Policy";
+  persist.key = "lymph::workflow::Policy";
   persist.schema_version = 1;
   persist.component_schema_version = 2;
   persist.reloadable = true;
   persist.save = [state](std::string_view path) {
-    lymph::save_policy(std::string(path), *state);
+    lymph::workflow::save_policy(std::string(path), *state);
   };
   Step::Runner runner = [state = std::move(state), output = std::move(output_name)](
                             const std::vector<Artifact>& inputs, const RunOptions&) -> Artifact {
@@ -1931,14 +1931,14 @@ inline void bind(std::string key, Fn fn) {
     if (input.is<pluss::table::DataFrame>()) {
       return Artifact(output, Artifact::Value(state->apply(input.get<pluss::table::DataFrame>())));
     }
-    if (input.is<lymph::Payload>()) {
-      const lymph::Payload& payload = input.get<lymph::Payload>();
+    if (input.is<lymph::workflow::Payload>()) {
+      const lymph::workflow::Payload& payload = input.get<lymph::workflow::Payload>();
       if (!payload.has_frame()) {
         ::pluss::throw_error("pluss::ai::procedure::step(policy): Payload input must contain a DataFrame.");
       }
       return Artifact(output, Artifact::Value(payload.with_frame(state->apply(payload.frame()))));
     }
-    ::pluss::throw_error("pluss::ai::procedure::step(policy): expected DataFrame or lymph::Payload input.");
+    ::pluss::throw_error("pluss::ai::procedure::step(policy): expected DataFrame or lymph::workflow::Payload input.");
   };
   return step(std::move(name), std::move(options), std::move(persist), std::move(runner));
 }
@@ -1946,7 +1946,7 @@ inline void bind(std::string key, Fn fn) {
 [[nodiscard]] inline Step step(std::string name,
                                std::string input_name,
                                std::string output_name,
-                               lymph::Model model,
+                               lymph::models::Model model,
                                lymph::TrainOptions train_options = {},
                                lymph::InferOptions infer_options = {},
                                lymph::AssessOptions assess_options = {}) {
@@ -1959,10 +1959,10 @@ inline void bind(std::string key, Fn fn) {
   options.outputs = {output_name};
   options.persistable = true;
   options.trained = model.trained();
-  options.component = "lymph::Model";
-  auto state = std::make_shared<lymph::Model>(std::move(model));
+  options.component = "lymph::models::Model";
+  auto state = std::make_shared<lymph::models::Model>(std::move(model));
   StepPersistSpec persist{};
-  persist.key = "lymph::Model";
+  persist.key = "lymph::models::Model";
   persist.schema_version = 1;
   persist.component_schema_version = 1;
   persist.reloadable = true;
@@ -1995,8 +1995,8 @@ inline void bind(std::string key, Fn fn) {
     if (run_options.mode == ProcedureMode::Learn) {
       if (input.is<lymph::LabeledBatch>()) {
         state->learn_(input.get<lymph::LabeledBatch>(), train_options);
-      } else if (input.is<lymph::Payload>()) {
-        state->learn_(input.get<lymph::Payload>().labeled_batch(), train_options);
+      } else if (input.is<lymph::workflow::Payload>()) {
+        state->learn_(input.get<lymph::workflow::Payload>().labeled_batch(), train_options);
       } else {
         ::pluss::throw_error("pluss::ai::procedure::step(model): Learn mode expects LabeledBatch or Payload input.");
       }
@@ -2006,16 +2006,16 @@ inline void bind(std::string key, Fn fn) {
       if (input.is<lymph::LabeledBatch>()) {
         return Artifact(output, Artifact::Value(state->assess(input.get<lymph::LabeledBatch>(), assess_options)));
       }
-      if (input.is<lymph::Payload>()) {
-        return Artifact(output, Artifact::Value(state->assess(input.get<lymph::Payload>().labeled_batch(), assess_options)));
+      if (input.is<lymph::workflow::Payload>()) {
+        return Artifact(output, Artifact::Value(state->assess(input.get<lymph::workflow::Payload>().labeled_batch(), assess_options)));
       }
       ::pluss::throw_error("pluss::ai::procedure::step(model): Assess mode expects LabeledBatch or Payload input.");
     }
     if (input.is<lymph::FeatureBatch>()) {
       return Artifact(output, Artifact::Value(state->infer(input.get<lymph::FeatureBatch>(), infer_options)));
     }
-    if (input.is<lymph::Payload>()) {
-      return Artifact(output, Artifact::Value(state->infer(input.get<lymph::Payload>().feature_batch(), infer_options)));
+    if (input.is<lymph::workflow::Payload>()) {
+      return Artifact(output, Artifact::Value(state->infer(input.get<lymph::workflow::Payload>().feature_batch(), infer_options)));
     }
     if (input.is<pluss::table::DataFrame>()) {
       return Artifact(output, Artifact::Value(state->infer(input.get<pluss::table::DataFrame>(), infer_options)));
@@ -2028,7 +2028,7 @@ inline void bind(std::string key, Fn fn) {
 [[nodiscard]] inline Step step(std::string name,
                                std::string input_name,
                                std::string output_name,
-                               lymph::Workflow workflow,
+                               lymph::workflow::Workflow workflow,
                                lymph::TrainOptions train_options = {},
                                lymph::InferOptions infer_options = {},
                                lymph::AssessOptions assess_options = {}) {
@@ -2041,10 +2041,10 @@ inline void bind(std::string key, Fn fn) {
   options.outputs = {output_name};
   options.persistable = true;
   options.trained = workflow.trained();
-  options.component = "lymph::Workflow";
-  auto state = std::make_shared<lymph::Workflow>(std::move(workflow));
+  options.component = "lymph::workflow::Workflow";
+  auto state = std::make_shared<lymph::workflow::Workflow>(std::move(workflow));
   StepPersistSpec persist{};
-  persist.key = "lymph::Workflow";
+  persist.key = "lymph::workflow::Workflow";
   persist.schema_version = 1;
   persist.component_schema_version = 1;
   persist.reloadable = true;
@@ -2075,8 +2075,8 @@ inline void bind(std::string key, Fn fn) {
     }
     const Artifact& input = inputs.front();
     if (run_options.mode == ProcedureMode::Learn) {
-      if (input.is<lymph::Payload>()) {
-        state->learn_(input.get<lymph::Payload>(), train_options);
+      if (input.is<lymph::workflow::Payload>()) {
+        state->learn_(input.get<lymph::workflow::Payload>(), train_options);
       } else if (input.is<lymph::LabeledBatch>()) {
         state->learn_(input.get<lymph::LabeledBatch>(), train_options);
       } else {
@@ -2085,16 +2085,16 @@ inline void bind(std::string key, Fn fn) {
       return Artifact(output, Artifact::Value(*state));
     }
     if (run_options.mode == ProcedureMode::Assess) {
-      if (input.is<lymph::Payload>()) {
-        return Artifact(output, Artifact::Value(state->assess(input.get<lymph::Payload>(), assess_options)));
+      if (input.is<lymph::workflow::Payload>()) {
+        return Artifact(output, Artifact::Value(state->assess(input.get<lymph::workflow::Payload>(), assess_options)));
       }
       if (input.is<lymph::LabeledBatch>()) {
         return Artifact(output, Artifact::Value(state->assess(input.get<lymph::LabeledBatch>(), assess_options)));
       }
       ::pluss::throw_error("pluss::ai::procedure::step(workflow): Assess mode expects Payload or LabeledBatch input.");
     }
-    if (input.is<lymph::Payload>()) {
-      return Artifact(output, Artifact::Value(state->infer(input.get<lymph::Payload>(), infer_options)));
+    if (input.is<lymph::workflow::Payload>()) {
+      return Artifact(output, Artifact::Value(state->infer(input.get<lymph::workflow::Payload>(), infer_options)));
     }
     if (input.is<lymph::FeatureBatch>()) {
       return Artifact(output, Artifact::Value(state->infer(input.get<lymph::FeatureBatch>(), infer_options)));
@@ -2361,7 +2361,7 @@ inline void bind_ice(std::string key, Factory factory) {
 
 [[nodiscard]] inline std::unordered_map<std::string, StepLoader>& step_loaders_() {
   static std::unordered_map<std::string, StepLoader> loaders{
-      {"lymph::Policy",
+      {"lymph::workflow::Policy",
        [](std::string name,
           StepOptions options,
           std::string_view path,
@@ -2369,9 +2369,9 @@ inline void bind_ice(std::string key, Factory factory) {
          return step(std::move(name),
                      options.inputs.at(0),
                      options.outputs.at(0),
-                     lymph::load_policy(std::string(path)));
+                     lymph::workflow::load_policy(std::string(path)));
        }},
-      {"lymph::Model",
+      {"lymph::models::Model",
        [](std::string name,
           StepOptions options,
           std::string_view path,
@@ -2382,12 +2382,12 @@ inline void bind_ice(std::string key, Factory factory) {
          return step(std::move(name),
                      options.inputs.at(0),
                      options.outputs.at(0),
-                     lymph::Model::load(std::string(path)),
+                     lymph::models::Model::load(std::string(path)),
                      std::move(train),
                      std::move(infer),
                      std::move(assess));
        }},
-      {"lymph::Workflow",
+      {"lymph::workflow::Workflow",
        [](std::string name,
           StepOptions options,
           std::string_view path,

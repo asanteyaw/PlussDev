@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <initializer_list>
+#include <span>
 
 #include "CodeM/Traverse/TraverseFwd.h"
 #include "CodeM/Traverse/TraverseQuerySpec.h"
@@ -52,6 +54,8 @@ public:
   void rebind(Series& owner) noexcept;
 
   SeriesTraverseProxy operator()() const;
+  SeriesTraverseProxy operator()(std::initializer_list<ExtractSpec> on_specs) const;
+  SeriesTraverseProxy operator()(std::span<const ExtractSpec> on_specs) const;
   SeriesTraverseProxy operator()(pluss::msharp::RangeView::Of<ExtractSpec> on_specs) const;
 
   TraverseMatch find_all(const Series& mask) const;

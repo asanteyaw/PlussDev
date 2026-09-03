@@ -23,9 +23,9 @@ It does:
 
 It does not:
 
-- disable `tracks_slope()`
+- disable [`tracks_slope()`](tracks_slope.md)
 - alter the actual numeric data in the `Series`
-- rewrite the graph that future operations build from this value
+- remove the ability to build future reverse-mode graphs from this value
 
 So the right mental model is "clear the stored sensitivity state," not
 "detach this series from reverse-mode entirely."
@@ -39,7 +39,18 @@ This is a state-reset operation on `self`.
 ## Returns
 
 `void`
-    The method mutates the stored autograd state and does not return a value.
+    The method mutates stored autograd state and does not return a value.
+
+## Mathematical Meaning
+
+If a reverse pass stored `dL/dx` on a tracked leaf `x`, then
+`clear_sensitivity()` deletes that stored public result.
+
+It does not change what `dL/dx` was for the already-run computation. It only
+changes what is still stored on the object afterward.
+
+That is why this method is about bookkeeping, not differentiation. It does not
+recompute anything and does not change the forward function.
 
 ## When To Use It
 
@@ -47,7 +58,7 @@ This is a state-reset operation on `self`.
 
 - you want to inspect one reverse pass, then discard it before the next one
 - you are reusing a tracked leaf across separate computations and want a clean
-  sensitivity buffer
+  stored sensitivity buffer
 - you want `has_sensitivity()` to become `false` again without disabling
   tracking
 
@@ -60,8 +71,7 @@ Example 1. After a reverse pass, `clear_sensitivity()` removes the stored
 sensitivity and `has_sensitivity()` becomes `false` again.
 
 ```cpp
-auto life = pluss::make_series({2.0, 4.0, 8.0});
-life.tracks_slope_(true);
+auto life = pluss::make_series({2.0, 4.0, 8.0}, pluss::cfg::tracks_slope());
 
 std::cout << "before=" << (life.has_sensitivity() ? "true" : "false") << "\n";
 life.log().sum().reverse();
@@ -69,6 +79,14 @@ std::cout << "after_reverse=" << (life.has_sensitivity() ? "true" : "false") << 
 life.clear_sensitivity();
 std::cout << "after_clear=" << (life.has_sensitivity() ? "true" : "false") << "\n";
 ```
+
+The reverse pass computes a real stored sensitivity for the scalar objective
+
+```text
+L = log(2) + log(4) + log(8)
+```
+
+and `clear_sensitivity()` then removes that stored result.
 
 ### Output
 
@@ -86,19 +104,35 @@ auto reuse = pluss::make_series({1.0, 2.0, 3.0});
 reuse.tracks_slope_(true);
 
 reuse.mul(2.0).sum().reverse();
-std::cout << "first=" << reuse.sensitivity() << "\n";
+std::cout << "first_dL_dx=" << reuse.sensitivity() << "\n";
 
 reuse.clear_sensitivity();
 reuse.mul(5.0).sum().reverse();
-std::cout << "second=" << reuse.sensitivity() << "\n";
+std::cout << "second_dL_dx=" << reuse.sensitivity() << "\n";
 ```
+
+The first scalar objective is
+
+```text
+L1 = 2x1 + 2x2 + 2x3
+```
+
+so the stored sensitivity is `[2, 2, 2]`.
+
+After clearing, the second scalar objective is
+
+```text
+L2 = 5x1 + 5x2 + 5x3
+```
+
+so the new stored sensitivity is `[5, 5, 5]`.
 
 ### Output
 
 ```text
-first=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+first_dL_dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2, 2, 2]
-second=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+second_dL_dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[5, 5, 5]
 ```
 
@@ -114,19 +148,18 @@ keep_track.mul(4.0).sum().reverse();
 keep_track.clear_sensitivity();
 
 std::cout << "tracks=" << (keep_track.tracks_slope() ? "true" : "false") << "\n";
-std::cout << "has_dx=" << (keep_track.has_sensitivity() ? "true" : "false") << "\n";
+std::cout << "has_dL_dx=" << (keep_track.has_sensitivity() ? "true" : "false") << "\n";
 ```
+
+The leaf is still configured to participate in future reverse passes even
+though its current stored sensitivity was discarded.
 
 ### Output
 
 ```text
 tracks=true
-has_dx=false
+has_dL_dx=false
 ```
-
-That distinction matters in long-lived code. The leaf is still configured to
-participate in future reverse passes even though its current stored sensitivity
-was discarded.
 
 Example 4. Calling `clear_sensitivity()` on a series that does not currently
 store sensitivity is a harmless no-op.
@@ -134,13 +167,13 @@ store sensitivity is a harmless no-op.
 ```cpp
 auto noop = pluss::make_series({7.0, 8.0});
 noop.clear_sensitivity();
-std::cout << "has_dx=" << (noop.has_sensitivity() ? "true" : "false") << "\n";
+std::cout << "has_dL_dx=" << (noop.has_sensitivity() ? "true" : "false") << "\n";
 ```
 
 ### Output
 
 ```text
-has_dx=false
+has_dL_dx=false
 ```
 
 ## Gotchas And Failure Modes
@@ -148,8 +181,8 @@ has_dx=false
 - `clear_sensitivity()` does not turn tracking off. Use
   [`tracks_slope_`](tracks_slope_.md) for that.
 - Clearing stored sensitivity does not change the forward values.
-- This method is about the current stored result of reverse-mode, not about
-  future graph construction.
+- This method does not recompute derivatives. It only removes the stored
+  public result of an earlier reverse pass.
 
 ## Summary
 
@@ -169,8 +202,8 @@ intact.
     <span class="label">Previous</span>
     <span class="title">clamp_min</span>
   </a>
-  <a class="next-link" href="comp.html">
+  <a class="next-link" href="clone.html">
     <span class="label">Next</span>
-    <span class="title">comp</span>
+    <span class="title">clone</span>
   </a>
 </div>

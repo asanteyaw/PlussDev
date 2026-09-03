@@ -21,10 +21,13 @@ you need to know both *what kind* of column you have and *what precision or stor
 type* it actually holds — before deciding whether a cast, a join, or a numeric operation
 is safe.
 
-`dtypes()` returns a `DataFrame::DTypes` object rather than a raw map or vector. It
-supports `size()`, `empty()`, `contains(name)`, `at(name)` / `operator[](name)`, and
-range-based iteration over `(name, dtype)` pairs, and it has its own `operator<<` for a
-quick two-column printout (see the example).
+`dtypes()` returns a `DataFrame::DTypes` object rather than a raw map or vector — an
+ordered `(feature name, dtype string)` view. It supports `size()`, `empty()`,
+`contains(name)`, `at(name)` / `operator[](name)`, `entries()` (the whole
+`(name, dtype)` list by reference), `payloads()` (the dtype strings alone,
+value-owned), range-based iteration, and its own `operator<<` for a quick printout.
+`ptypes()` returns the *same* object with coarser type strings; its page carries
+the [full `DTypes` member reference](ptypes.md).
 
 ## Parameters
 
@@ -33,8 +36,11 @@ quick two-column printout (see the example).
 ## Returns
 
 `DTypes`
-    A feature-to-dtype summary. Iterate it directly, or look up one feature's dtype with
-    `dtypes()["feature_name"]` / `dtypes().at("feature_name")`.
+    An ordered `(feature name, dtype string)` view — one entry per column, in the
+    frame's feature order. Iterate it for pairs, look one up with `at("name")` /
+    `operator[]`, take the whole list with `entries()`, or take just the dtype
+    strings (value-owned) with `payloads()`. Full member reference on the
+    [`ptypes()` page](ptypes.md).
 
 ## Examples
 

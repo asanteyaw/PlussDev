@@ -129,9 +129,9 @@ int main() {
   std::cout << rand_a << "\n" << rand_b << "\n\n";
 
   heading("rand_global_seed_replay");
-  pluss::rng_seed(424242u);
+  pluss::tils::rng_seed(424242u);
   auto rand_g0 = pluss::series::rand({4}, pluss::ScalarType::Float32);
-  pluss::rng_seed(424242u);
+  pluss::tils::rng_seed(424242u);
   auto rand_g1 = pluss::series::rand({4}, pluss::ScalarType::Float32);
   std::cout << rand_g0 << "\n" << rand_g1 << "\n\n";
 
@@ -162,9 +162,9 @@ int main() {
       42) << "\n\n";
 
   heading("randn_global_seed_replay");
-  pluss::rng_seed(515151u);
+  pluss::tils::rng_seed(515151u);
   auto randn_g0 = pluss::series::randn({4}, pluss::ScalarType::Float32);
-  pluss::rng_seed(515151u);
+  pluss::tils::rng_seed(515151u);
   auto randn_g1 = pluss::series::randn({4}, pluss::ScalarType::Float32);
   std::cout << randn_g0 << "\n" << randn_g1 << "\n\n";
 

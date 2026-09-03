@@ -40,6 +40,57 @@ namespace {
   return layout_math_text(text, pixel_size).width;
 }
 
+[[nodiscard]] std::vector<int> compute_column_widths(const std::vector<std::string>& headers,
+                                                     const std::vector<std::vector<std::string>>& rows,
+                                                     const std::size_t row_start,
+                                                     const std::size_t row_end,
+                                                     const int text_px,
+                                                     const int pad,
+                                                     const int table_width) {
+  const std::size_t cols = column_count(headers, rows);
+  std::vector<int> widths(cols, std::max(60, pad * 4));
+  int desired_total = 0;
+  for (std::size_t c = 0; c < cols; ++c) {
+    int desired = std::max(60, text_width_px(c < headers.size() ? headers[c] : default_header(c), text_px) + (pad * 2));
+    for (std::size_t r = row_start; r < row_end; ++r) {
+      if (c >= rows[r].size()) continue;
+      desired = std::max(desired, text_width_px(rows[r][c], text_px) + (pad * 2));
+    }
+    widths[c] = desired;
+    desired_total += desired;
+  }
+
+  if (desired_total <= table_width) {
+    int extra = table_width - desired_total;
+    std::size_t cursor = 0;
+    while (extra > 0 && !widths.empty()) {
+      widths[cursor % widths.size()] += 1;
+      --extra;
+      ++cursor;
+    }
+    return widths;
+  }
+
+  const int min_col_w = 60;
+  std::vector<int> reduced = widths;
+  int reduced_total = desired_total;
+  while (reduced_total > table_width) {
+    bool changed = false;
+    for (std::size_t c = 0; c < reduced.size() && reduced_total > table_width; ++c) {
+      if (reduced[c] <= min_col_w) {
+        continue;
+      }
+      --reduced[c];
+      --reduced_total;
+      changed = true;
+    }
+    if (!changed) {
+      break;
+    }
+  }
+  return reduced;
+}
+
 [[nodiscard]] std::string truncate_to_width(const std::string& text,
                                             const int pixel_size,
                                             const int max_width) {
@@ -88,18 +139,21 @@ Scene build_table_scene(const std::vector<std::string>& headers,
   const int pad = clamp_px(config.cell_padding, 4);
 
   const std::size_t cols = column_count(headers, rows);
-  const int col_w = std::max(60, config.table_rect.width / static_cast<int>(cols));
-  const int total_w = col_w * static_cast<int>(cols);
   const int left = config.table_rect.x;
   const int top = config.table_rect.y;
   const int visible_rows = compute_visible_rows(config);
   const std::size_t row_start = std::min(window.row_offset, rows.size());
   const std::size_t row_end = std::min(rows.size(), row_start + static_cast<std::size_t>(visible_rows));
+  const auto col_widths =
+      compute_column_widths(headers, rows, row_start, row_end, text_px, pad, config.table_rect.width);
+  const int total_w = std::accumulate(col_widths.begin(), col_widths.end(), 0);
 
   scene.add(FillRectCommand{RectI{left, top, total_w, row_h}, config.header_fill});
 
+  int x_cursor = left;
   for (std::size_t c = 0; c < cols; ++c) {
-    const int x = left + static_cast<int>(c) * col_w;
+    const int col_w = col_widths[c];
+    const int x = x_cursor;
     const std::string header = c < headers.size() ? headers[c] : default_header(c);
     scene.add(TextCommand{
         PointI{x + pad, top + row_h - pad},
@@ -108,6 +162,7 @@ Scene build_table_scene(const std::vector<std::string>& headers,
         config.text_color,
     });
     scene.add(LineCommand{PointI{x, top}, PointI{x, top + config.table_rect.height}, 1, config.grid_color});
+    x_cursor += col_w;
   }
   scene.add(LineCommand{PointI{left + total_w, top},
                         PointI{left + total_w, top + config.table_rect.height},
@@ -122,8 +177,10 @@ Scene build_table_scene(const std::vector<std::string>& headers,
     scene.add(LineCommand{PointI{left, y}, PointI{left + total_w, y}, 1, config.grid_color});
 
     const auto& row = rows[r];
+    int row_x = left;
     for (std::size_t c = 0; c < cols; ++c) {
-      const int x = left + static_cast<int>(c) * col_w;
+      const int col_w = col_widths[c];
+      const int x = row_x;
       const std::string value = c < row.size() ? row[c] : std::string{};
       scene.add(TextCommand{
           PointI{x + pad, y + row_h - pad},
@@ -131,6 +188,7 @@ Scene build_table_scene(const std::vector<std::string>& headers,
           text_px,
           config.text_color,
       });
+      row_x += col_w;
     }
   }
 

@@ -140,12 +140,12 @@ support on this public path should be treated cautiously.
 - [`Series::acos`](acos.md): inverse cosine with a tighter domain.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="asin.html">
+  <a class="prev-link" href="asinh.html">
     <span class="label">Previous</span>
-    <span class="title">asin</span>
+    <span class="title">asinh</span>
   </a>
-  <a class="next-link" href="bincount.html">
+  <a class="next-link" href="atan2.html">
     <span class="label">Next</span>
-    <span class="title">bincount</span>
+    <span class="title">atan2</span>
   </a>
 </div>

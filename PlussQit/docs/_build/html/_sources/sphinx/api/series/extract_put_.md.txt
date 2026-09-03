@@ -304,8 +304,8 @@ selector could have stayed a plain view all along, then
     <span class="label">Previous</span>
     <span class="title">extract_put</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="factor.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">factor</span>
   </a>
 </div>

@@ -144,9 +144,9 @@ verified; current reverse-mode support on this public path is not.
 - [`Series::atan`](atan.md): inverse tangent.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="take.html">
+  <a class="prev-link" href="take_along_dim.html">
     <span class="label">Previous</span>
-    <span class="title">take</span>
+    <span class="title">take_along_dim</span>
   </a>
   <a class="next-link" href="tanh.html">
     <span class="label">Next</span>

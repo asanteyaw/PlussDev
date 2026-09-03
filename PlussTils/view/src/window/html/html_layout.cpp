@@ -1491,6 +1491,43 @@ void collect_table_rows_recursive(const HtmlNode& node,
   return 0;
 }
 
+[[nodiscard]] std::vector<int> extract_table_column_widths(const HtmlDocument& document,
+                                                            const HtmlNode& table_node,
+                                                            const std::vector<const HtmlNode*>& lineage,
+                                                            const ResolvedStyle& table_style,
+                                                            const int viewport_width,
+                                                            const int reference_width) {
+  std::vector<int> widths;
+  std::vector<const HtmlNode*> column_lineage = lineage;
+  column_lineage.push_back(&table_node);
+
+  const auto visit = [&](const auto& self, const HtmlNode& node) -> void {
+    if (node.tag == "col") {
+      const ResolvedStyle column_style =
+          resolve_style(document, node, column_lineage, &table_style, viewport_width);
+      const int width = resolve_length_px(column_style.explicit_width,
+                                          column_style.explicit_width_ratio,
+                                          reference_width);
+      const int minimum = resolve_length_px(column_style.min_width,
+                                            column_style.min_width_ratio,
+                                            reference_width);
+      widths.push_back(std::max(width, minimum));
+      return;
+    }
+
+    column_lineage.push_back(&node);
+    for (const auto& child : node.children) {
+      self(self, child);
+    }
+    column_lineage.pop_back();
+  };
+
+  for (const auto& child : table_node.children) {
+    visit(visit, child);
+  }
+  return widths;
+}
+
 [[nodiscard]] int estimate_node_preferred_width(const HtmlDocument& document,
                                                 const HtmlNode& node,
                                                 std::vector<const HtmlNode*>& lineage,
@@ -1585,7 +1622,8 @@ void collect_table_rows_recursive(const HtmlNode& node,
 
 [[nodiscard]] TableColumnPlan build_table_column_plan(const std::vector<TableRowData>& rows,
                                                       const ResolvedStyle& table_style,
-                                                      const int inner_width) {
+                                                      const int inner_width,
+                                                      const std::vector<int>& declared_widths = {}) {
   TableColumnPlan plan{};
   if (rows.empty() || inner_width <= 0) {
     return plan;
@@ -1600,29 +1638,37 @@ void collect_table_rows_recursive(const HtmlNode& node,
   }
 
   std::vector<int> desired(col_count, 112);
-  std::vector<bool> compact_sticky(col_count, false);
+  std::vector<bool> sticky_left(col_count, false);
   constexpr std::size_t kSampleRows = 48;
   const int probe_cap_px = std::clamp(inner_width * 2, 540, 1600);
   const std::size_t sample = std::min(rows.size(), kSampleRows);
   for (std::size_t c = 0; c < col_count; ++c) {
-    for (std::size_t r = 0; r < sample; ++r) {
+    for (std::size_t r = 0; r < rows.size(); ++r) {
       if (c < rows[r].cells.size() && node_has_class(rows[r].cells[c].node, "sticky-left")) {
-        compact_sticky[c] = true;
+        sticky_left[c] = true;
         break;
       }
     }
-    if (compact_sticky[c]) {
-      desired[c] = 72;
+    const int declared_width = c < declared_widths.size() ? declared_widths[c] : 0;
+    if (declared_width > 0) {
+      desired[c] = declared_width;
       continue;
     }
-    int max_w = 112;
-    for (std::size_t r = 0; r < sample; ++r) {
+
+    int max_w = sticky_left[c] ? 72 : 112;
+    const std::size_t probe_rows = sticky_left[c] ? rows.size() : sample;
+    for (std::size_t r = 0; r < probe_rows; ++r) {
       if (c >= rows[r].cells.size()) continue;
       const auto& cell = rows[r].cells[c];
-      const std::string probe = truncate_to_width(cell.text, table_style.font_size, probe_cap_px);
+      const std::string probe = sticky_left[c]
+                                    ? cell.text
+                                    : truncate_to_width(cell.text, table_style.font_size, probe_cap_px);
       const int text_w = layout_math_text(probe, table_style.font_size).width;
       const int pad = cell.is_header ? 36 : 28;
-      max_w = std::max(max_w, std::min(probe_cap_px + pad, text_w + pad));
+      const int capped_w = sticky_left[c]
+                               ? text_w + pad
+                               : std::min(probe_cap_px + pad, text_w + pad);
+      max_w = std::max(max_w, capped_w);
     }
     desired[c] = max_w;
   }
@@ -1630,8 +1676,8 @@ void collect_table_rows_recursive(const HtmlNode& node,
   const int min_col_w = 104;
   const int max_col_w = std::max(260, inner_width * 2);
   for (std::size_t c = 0; c < col_count; ++c) {
-    const int width = compact_sticky[c]
-                          ? std::clamp(desired[c], 56, 84)
+    const int width = sticky_left[c]
+                          ? std::clamp(desired[c], 72, max_col_w)
                           : std::clamp(desired[c], min_col_w, max_col_w);
     plan.source_indices.push_back(c);
     plan.widths.push_back(width);
@@ -1650,7 +1696,7 @@ void collect_table_rows_recursive(const HtmlNode& node,
     int extra = inner_width - used;
     std::vector<std::size_t> expandable;
     for (std::size_t c = 0; c < plan.widths.size(); ++c) {
-      if (!compact_sticky[c]) {
+      if (!sticky_left[c]) {
         expandable.push_back(c);
       }
     }
@@ -1754,7 +1800,9 @@ void collect_table_rows_recursive(const HtmlNode& node,
     return (margin * 2) + (padding * 2) + (border * 2) + 40;
   }
 
-  const TableColumnPlan plan = build_table_column_plan(rows, style, inner_width);
+  const auto declared_widths =
+      extract_table_column_widths(document, node, lineage, style, viewport_width, inner_width);
+  const TableColumnPlan plan = build_table_column_plan(rows, style, inner_width, declared_widths);
   int total_rows_height = 0;
   for (const auto& row : rows) {
     total_rows_height += measure_table_row_height(document, row, plan, style, viewport_width);
@@ -3089,7 +3137,9 @@ int render_table(Scene& scene,
     }
   }
   if (!geometry_cache_hit) {
-    plan = build_table_column_plan(rows, style, content_w);
+    const auto declared_widths =
+        extract_table_column_widths(document, node, lineage, style, viewport_width, content_w);
+    plan = build_table_column_plan(rows, style, content_w, declared_widths);
     row_heights.reserve(rows.size());
     for (const auto& row : rows) {
       row_heights.push_back(

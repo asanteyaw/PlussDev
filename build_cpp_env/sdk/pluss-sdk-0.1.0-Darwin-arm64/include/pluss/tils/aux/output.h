@@ -21,7 +21,7 @@
 #include <fmt/format.h>
 #endif
 
-namespace pluss::aux {
+namespace pluss::tils {
 
 enum class OutputLevel : std::size_t {
   Trace = 0,
@@ -325,7 +325,7 @@ public:
   }
 
   template <class... Args>
-  OutputEngine& writefln(std::string_view pattern, Args&&... args) {
+  OutputEngine& writelnf(std::string_view pattern, Args&&... args) {
     const std::string text = format_message(pattern, std::forward<Args>(args)...);
     std::scoped_lock lock(mu_);
     (*sink_) << text << '\n';
@@ -470,10 +470,4 @@ private:
   bool auto_flush_{false};
 };
 
-} // namespace pluss::aux
-
-namespace pluss {
-using aux::OutputEngine;
-using aux::OutputOptions;
-using aux::OutputLevel;
-} // namespace pluss
+} // namespace pluss::tils

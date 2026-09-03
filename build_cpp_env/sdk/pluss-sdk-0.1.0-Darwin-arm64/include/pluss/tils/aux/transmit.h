@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::aux {
+namespace pluss::tils {
 
 enum class transmit_exec {
   seq,
@@ -158,11 +158,4 @@ auto transmit(F&& fn, R1&& a, R2&& b) {
   return out;
 }
 
-} // namespace pluss::aux
-
-namespace pluss {
-using aux::transmit;
-using aux::transmit_exec;
-using aux::transmit_into;
-using aux::transmit_options;
-} // namespace pluss
+} // namespace pluss::tils

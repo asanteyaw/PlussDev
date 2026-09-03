@@ -24,6 +24,18 @@ computation.
 The underscore matters. This is a mutating state-control method, not a
 value-returning numeric transform.
 
+Mathematically, this method does not compute a derivative and does not run the
+chain rule. It only decides whether this `Series` should behave as a leaf that
+can later receive stored sensitivity from [`reverse()`](reverse.md).
+
+That is why `tracks_slope_()` belongs at the beginning of the workflow, while
+`reverse()` belongs at the end:
+
+1. mark the leaf with `tracks_slope_()`
+2. build the forward computation
+3. call `reverse()` on the final result
+4. inspect the stored value with [`sensitivity()`](sensitivity.md)
+
 ## Parameters
 
 **enabled** (`bool`)
@@ -66,6 +78,9 @@ x.tracks_slope_(false);
 std::cout << "after_disable=" << (x.tracks_slope() ? "true" : "false") << "\n";
 ```
 
+The no-argument overload means "enable tracking." It does not mean "toggle to
+the opposite state."
+
 ### Output
 
 ```text
@@ -85,17 +100,26 @@ tracked.tracks_slope_(true);
 untracked.mul(2.0).sum().reverse();
 tracked.mul(2.0).sum().reverse();
 
-std::cout << "untracked_has_dx=" << (untracked.has_sensitivity() ? "true" : "false") << "\n";
-std::cout << "tracked_has_dx=" << (tracked.has_sensitivity() ? "true" : "false") << "\n";
-std::cout << "tracked_dx=" << tracked.sensitivity() << "\n";
+std::cout << "untracked_has_dL_dx=" << (untracked.has_sensitivity() ? "true" : "false") << "\n";
+std::cout << "tracked_has_dL_dx=" << (tracked.has_sensitivity() ? "true" : "false") << "\n";
+std::cout << "tracked_dL_dx=" << tracked.sensitivity() << "\n";
 ```
+
+Both forward computations are the same scalar objective:
+
+```text
+L = 2x1 + 2x2 + 2x3
+```
+
+The mathematical sensitivity exists in either case, but only the tracked leaf
+keeps a stored public result after `reverse()`.
 
 ### Output
 
 ```text
-untracked_has_dx=false
-tracked_has_dx=true
-tracked_dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+untracked_has_dL_dx=false
+tracked_has_dL_dx=true
+tracked_dL_dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2, 2, 2]
 ```
 

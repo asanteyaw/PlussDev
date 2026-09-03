@@ -2,14 +2,11 @@
 
 `lymph` is PlussAI's high-level modeling workspace.
 
-It is not the lowest-level classical-ML substrate. It is the public layer you use
-when you want to build, validate, compare, tune, persist, and reuse modeling
-workflows without hand-plumbing every batch, split, metric, and persistence step
-yourself.
+It is the public layer you use when you want to build, validate, compare,
+persist, and reuse modeling workflows without hand-plumbing every batch, split,
+metric, and artifact step yourself.
 
 ## Public Positioning
-
-Teach `lymph` as the workspace for model-building and evaluation.
 
 Use `classic` when you want the lower-level contracts directly:
 
@@ -68,7 +65,8 @@ plumbing. You move into a smaller set of durable objects:
 - `models::Model` for trainable pipelines
 - `workflow::Workflow` for richer deployable orchestration
 - `workflow::Payload` for explicitly described inputs
-- `selection::CrossValOptions` and `selection::Plan` for validation policy
+- `selection::CrossValOptions`, `selection::HoldoutOptions`, and
+  `selection::Plan` for evidence policy
 - `models::Builder`, `selection::Suite`, and `selection::Search` for comparison and tuning
 
 That object model is what keeps large projects from collapsing into one-off helper
@@ -107,18 +105,19 @@ The left sidebar should narrow as:
       - object/type pages
       - option pages
 
-This first rebuilt slice focuses on the `models` family so the navigation
-pattern can be verified before the rest of the branch is expanded the same way.
+The families listed here are the public concerns a reader will expand in the
+left sidebar. Each family page explains what it owns, what it does not own,
+and which types or builders the reader should reach for first.
 
 ```{toctree}
 :maxdepth: 4
 
 lymph/models
 lymph/prep
-lymph/model
-lymph/split
+lymph/workflow
+lymph/selection
 lymph/metrics
-lymph/tune
+lymph/reports
 lymph/io
 ```
 
@@ -127,8 +126,11 @@ lymph/io
 If you are learning `lymph` for the first time, this is the most effective order:
 
 1. [models](lymph/models.md) to understand the main trainable artifacts
-2. verify the family/subfamily navigation pattern in the sidebar
-3. expand the remaining main families on the same pattern
+2. [prep](lymph/prep.md) to understand reusable transformation contracts
+3. [workflow](lymph/workflow.md) and [selection](lymph/selection.md) once a
+   project needs orchestration and evidence policy
+4. [metrics](lymph/metrics.md) and [reports](lymph/reports.md) when the workflow
+   is real enough to assess, then [io](lymph/io.md) to persist it
 
 That sequence mirrors how real projects usually mature.
 
@@ -136,6 +138,6 @@ That sequence mirrors how real projects usually mature.
 
 This handwritten branch is the public `lymph` reference.
 
-The goal is not to dump signatures. The goal is to teach the framework well enough
-that a reader can move from "I know the names" to "I know how to use this in a real
-project without improvising architecture every time."
+The goal is not to dump signatures. The goal is to make the reference strong
+enough that a careful reader can move from "I know the names" to "I know how
+to use this in a real project without improvising architecture every time."

@@ -183,8 +183,8 @@ show up in floating arithmetic.
     <span class="label">Previous</span>
     <span class="title">pos</span>
   </a>
-  <a class="next-link" href="prime.html">
+  <a class="next-link" href="prelu.html">
     <span class="label">Next</span>
-    <span class="title">prime</span>
+    <span class="title">prelu</span>
   </a>
 </div>

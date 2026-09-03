@@ -8,9 +8,12 @@ searched cleanly."
 
 ## Pages
 
+<!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 3
+:hidden:
 
 builder/Introduction
 builder/Builder
 ```
+<!-- apiref:toctree:end -->

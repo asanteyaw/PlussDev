@@ -242,7 +242,7 @@ Series matmul(const Series& a, const Series& b) {
     if (k != b.sizes()[0]) {
       throw_error("matmul: shape mismatch");
     }
-    return matmul_2d_core_(a.reshape({1, k}), b.reshape({k, 1})).reshape({1});
+    return matmul_2d_core_(a.reshape({1, k}), b.reshape({k, 1})).reshape({});
   }
 
   Series out = batched_matmul_(a, b);

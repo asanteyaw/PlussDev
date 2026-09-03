@@ -250,12 +250,12 @@ expression, `block()` is usually the clearest public surface.
 - [`Series::extract`](extract.md): richer mixed-selector indexing.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="traverse_put.html">
+  <a class="prev-link" href="bitwise_xor.html">
     <span class="label">Previous</span>
-    <span class="title">traverse_put</span>
+    <span class="title">bitwise_xor</span>
   </a>
-  <a class="next-link" href="extract.html">
+  <a class="next-link" href="broadcast_to.html">
     <span class="label">Next</span>
-    <span class="title">extract</span>
+    <span class="title">broadcast_to</span>
   </a>
 </div>

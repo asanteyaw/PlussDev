@@ -18,9 +18,9 @@ reverse-mode sensitivity value.
 That wording is deliberate.
 
 The method answers a storage-state question, not a mathematical question. It
-does not ask whether the correct sensitivity would be nonzero. It asks whether
-a reverse pass has populated a stored sensitivity on this value that has not
-since been cleared.
+does not ask whether the correct derivative would be zero or nonzero. It asks
+whether a reverse pass has populated a stored sensitivity on this value and
+that stored value has not since been cleared.
 
 This makes `has_sensitivity()` the right companion to
 [`sensitivity()`](sensitivity.md), especially because the current public
@@ -39,14 +39,31 @@ None.
 
 ## Relationship To Nearby Methods
 
-- `tracks_slope()` answers "is this series configured to participate in
-  reverse-mode as a tracked value?"
-- `has_sensitivity()` answers "does this series currently store a sensitivity
-  produced by reverse-mode?"
-- `sensitivity()` reads the stored value, or a same-shaped zero series when no
-  stored value currently exists
+- [`tracks_slope()`](tracks_slope.md) answers "is this series configured to
+  receive reverse-mode sensitivity if propagation reaches it?"
+- `has_sensitivity()` answers "does this series currently hold a stored
+  reverse-mode result?"
+- [`sensitivity()`](sensitivity.md) reads that stored result itself
 
-Those are related, but they are not interchangeable.
+Those are related, but they are different stages:
+
+1. configure tracking
+2. run reverse-mode
+3. inspect whether a stored result exists
+4. read the stored result
+
+## Mathematical Meaning
+
+Suppose a tracked leaf `x` participates in a scalar objective `L`.
+
+After `reverse()` runs, the stored value on `x` is the sensitivity `dL/dx`.
+
+`has_sensitivity()` does not tell you what `dL/dx` is. It only tells you
+whether that quantity is currently stored on the object.
+
+That distinction matters because a stored sensitivity can legitimately be all
+zeros, and on the current public surface a not-yet-populated sensitivity also
+reads back as zeros through `sensitivity()`.
 
 ## Examples
 
@@ -54,8 +71,7 @@ Example 1. A tracked `Series` starts without stored sensitivity, gains it after
 reverse, and loses it again after clearing.
 
 ```cpp
-auto life = pluss::make_series({2.0, 4.0, 8.0});
-life.tracks_slope_(true);
+auto life = pluss::make_series({2.0, 4.0, 8.0}, pluss::cfg::tracks_slope());
 
 std::cout << "before=" << (life.has_sensitivity() ? "true" : "false") << "\n";
 life.log().sum().reverse();
@@ -63,6 +79,15 @@ std::cout << "after_reverse=" << (life.has_sensitivity() ? "true" : "false") << 
 life.clear_sensitivity();
 std::cout << "after_clear=" << (life.has_sensitivity() ? "true" : "false") << "\n";
 ```
+
+The scalar objective is
+
+```text
+L = log(2) + log(4) + log(8)
+```
+
+so a real reverse pass does occur and produces a real stored sensitivity.
+`has_sensitivity()` is the boolean check that this stored result exists.
 
 ### Output
 
@@ -78,13 +103,22 @@ stored sensitivity on that leaf.
 ```cpp
 auto silent_x = pluss::make_series({1.0, 2.0, 3.0});
 silent_x.mul(2.0).sum().reverse();
-std::cout << "has_dx=" << (silent_x.has_sensitivity() ? "true" : "false") << "\n";
+std::cout << "has_dL_dx=" << (silent_x.has_sensitivity() ? "true" : "false") << "\n";
 ```
+
+The scalar objective here is
+
+```text
+L = 2x1 + 2x2 + 2x3
+```
+
+so the mathematical sensitivity exists, but this particular `Series` was never
+configured as a tracked leaf, so no public stored sensitivity is kept on it.
 
 ### Output
 
 ```text
-has_dx=false
+has_dL_dx=false
 ```
 
 Example 3. `has_sensitivity()` is the way to distinguish "no stored
@@ -94,20 +128,51 @@ sensitivity yet" from "a stored sensitivity that happens to contain zeros."
 auto x = pluss::make_series({1.0, 2.0, 3.0});
 x.tracks_slope_(true);
 
-std::cout << "has_dx=" << (x.has_sensitivity() ? "true" : "false") << "\n";
+std::cout << "has_dL_dx=" << (x.has_sensitivity() ? "true" : "false") << "\n";
 std::cout << x.sensitivity();
 ```
 
 ### Output
 
 ```text
-has_dx=false
+has_dL_dx=false
 pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[0, 0, 0]
 ```
 
 The zero values alone do not prove a reverse pass happened. The boolean state
 from `has_sensitivity()` is what disambiguates that case.
+
+Example 4. A retained intermediate can also report stored sensitivity after
+reverse.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0});
+x.tracks_slope_(true);
+
+auto mid = x.mul(2.0);
+mid.retain_grad();
+mid.sum().reverse();
+
+std::cout << "mid_has_dL_dmid=" << (mid.has_sensitivity() ? "true" : "false") << "\n";
+std::cout << "x_has_dL_dx=" << (x.has_sensitivity() ? "true" : "false") << "\n";
+```
+
+Here `mid = 2x`, and the scalar objective is
+
+```text
+L = sum(mid)
+```
+
+so `dL/dmid = [1, 1, 1]` and `dL/dx = [2, 2, 2]`. Because `mid` was marked to
+retain its own sensitivity, both booleans become `true`.
+
+### Output
+
+```text
+mid_has_dL_dmid=true
+x_has_dL_dx=true
+```
 
 ## Gotchas And Failure Modes
 
@@ -116,11 +181,14 @@ from `has_sensitivity()` is what disambiguates that case.
   `true`.
 - Clearing sensitivity resets this method back to `false` without disabling
   tracking.
+- On intermediates, this method is usually only interesting when retention was
+  enabled first.
 
 ## Summary
 
 Use `has_sensitivity()` as the authoritative test for whether a `Series`
-currently stores reverse-mode sensitivity.
+currently stores reverse-mode sensitivity. It answers a storage-state question,
+not a derivative-value question.
 
 ## See Also
 
@@ -130,9 +198,9 @@ currently stores reverse-mode sensitivity.
   sensitivity.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="histc.html">
+  <a class="prev-link" href="hardshrink.html">
     <span class="label">Previous</span>
-    <span class="title">histc</span>
+    <span class="title">hardshrink</span>
   </a>
   <a class="next-link" href="index.html">
     <span class="label">Next</span>

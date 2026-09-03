@@ -6,52 +6,7 @@ This page documents the value-ordering workflow entered via `DataFrame::sort()` 
 
 - Use the left sidebar to open one method page at a time.
 - Each method page contains its own signatures, parameter details, notes, verified outputs, and working previous/next navigation.
-- The sort surface is easiest to learn as a plan-building workflow.
-
-## The Surface In One Sentence
-
-`sort()` creates a reusable ordering plan, `by(...)` and `then(...)` define the tuple
-key, `within(...)` optionally partitions the frame first, and a terminal finally
-materializes the permutation or the sorted frame.
-
-## Learn It In This Order
-
-1. [`DataFrame::sort`](api/dataframe/sort.md)
-   Learn builder defaults and when to use the builder instead of direct
-   [`arrange()`](api/dataframe/arrange.md).
-2. [`by()`](api/dataframe-sort/by.md) and [`then()`](api/dataframe-sort/then.md)
-   Learn tuple-key ordering and plan growth.
-3. [`asc()`](api/dataframe-sort/asc.md), [`desc()`](api/dataframe-sort/desc.md), [`nulls_first()`](api/dataframe-sort/nulls_first.md), [`nulls_last()`](api/dataframe-sort/nulls_last.md)
-   Learn per-key refinement through the active-key model.
-4. [`within()`](api/dataframe-sort/within.md)
-   Learn partitioned sorting, where rows move only inside groups.
-5. [`order()`](api/dataframe-sort/order.md), [`yield()`](api/dataframe-sort/yield.md), [`head()`](api/dataframe-sort/head.md), [`tail()`](api/dataframe-sort/tail.md)
-   Learn how the same planned order can be exported or materialized.
-
-## The Key Distinctions
-
-- Multi-key sorting is lexicographic / tuple-based:
-  first key primary, later keys only break ties.
-- Builder defaults (`sort(false, false)`) apply uniformly to plain key-name overloads.
-- Per-key control requires either `ArrangeSpec` or active-key mutation after each key.
-- `within(...)` does not add another sort key. It partitions the frame first, then the
-  value-key plan runs independently inside each partition.
-- Validation is lazy. Unknown features typically fail only when a terminal runs.
-
-## Choosing The Right Terminal
-
-Use `yield()` when:
-
-- you want the sorted `DataFrame` directly
-
-Use `order()` when:
-
-- several aligned objects need the exact same permutation
-
-Use `head(n)` / `tail(n)` when:
-
-- only the top-ranked or bottom-ranked rows matter
-- you do not want to materialize the full sorted frame first
+- This landing page stays intentionally short so the content panel is not one giant scroll of every method.
 
 ## Method Pages
 

@@ -127,14 +127,19 @@ Series TraverseMatch::select_from(const Series& other) const {
     for (std::int64_t d = 0; d < indexed_rank_; ++d) {
       PLUSS_CHECK(
           other.size(d) == source_shape_[static_cast<std::size_t>(d)],
-          "TraverseMatch::select_from: selector/source shape mismatch at indexed dimension");
+      "TraverseMatch::select_from: selector/source shape mismatch at indexed dimension");
     }
   }
 
-  if (indexed_rank_ == 0) {
-    if (count() == 0) {
-      return Series::empty({0}, other.scalar_type(), other.platform());
+  if (count() == 0) {
+    std::vector<std::int64_t> empty_shape{0};
+    for (std::int64_t d = indexed_rank_; d < other.dim(); ++d) {
+      empty_shape.push_back(other.size(d));
     }
+    return Series::empty(empty_shape, other.scalar_type(), other.platform());
+  }
+
+  if (indexed_rank_ == 0) {
     PLUSS_CHECK(count() == 1, "TraverseMatch::select_from: scalar selector must have count 0 or 1");
     return other.clone();
   }

@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <iterator>
+#include <ostream>
 #include <ranges>
 #include <span>
 #include <string>
@@ -79,6 +80,9 @@ inline pluss::TimeIndex date_range(const pluss::Timeline& start,
 // works directly via pluss::codeh's TimeIndex operator<<.
 inline std::string print(const pluss::TimeIndex& idx) {
   return pluss::codeh::print_timeindex(idx);
+}
+inline std::ostream& print(std::ostream& os, const pluss::TimeIndex& idx) {
+  return pluss::codeh::print_timeindex(os, idx);
 }
 
 } // namespace pluss::timeindex

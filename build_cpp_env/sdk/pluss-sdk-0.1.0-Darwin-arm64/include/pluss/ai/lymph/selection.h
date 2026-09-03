@@ -16,7 +16,7 @@ struct Candidate {
   // Holds the public cheap-copy Model handle, so model registries can be
   // passed into selection without std::move and without exposing the internal
   // ModelCore implementation.
-  Model model;
+  models::Model model;
   // nullopt (default) = use compare()'s shared train_options, matching prior
   // behavior exactly. Set this when one candidate genuinely needs different
   // training settings than the rest of the grid (e.g. calibration on a
@@ -24,7 +24,7 @@ struct Candidate {
   // to get abandoned in favor of a hand-rolled loop whenever that came up.
   std::optional<TrainOptions> train_options{};
 
-  Candidate(std::string in_name, Model in_model, std::optional<TrainOptions> in_train_options = std::nullopt)
+  Candidate(std::string in_name, models::Model in_model, std::optional<TrainOptions> in_train_options = std::nullopt)
       : name(std::move(in_name)), model(std::move(in_model)), train_options(std::move(in_train_options)) {}
   Candidate(Candidate&&) noexcept = default;
   Candidate& operator=(Candidate&&) noexcept = default;
@@ -63,45 +63,45 @@ struct CompareResult {
   // Was best_workflow: Workflow -- field renamed alongside the type change
   // Holds public Models rather than internal implementation objects. std::optional
   // keeps CompareResult default-constructible before the winner is known.
-  std::optional<Model> best_model{};
-  std::optional<Model> worst_model{};
-  std::vector<Model> fitted{};
-  std::vector<Model> bottom_fitted{};
+  std::optional<models::Model> best_model{};
+  std::optional<models::Model> worst_model{};
+  std::vector<models::Model> fitted{};
+  std::vector<models::Model> bottom_fitted{};
 
-  [[nodiscard]] const Model& best() const {
+  [[nodiscard]] const models::Model& best() const {
     if (!best_model.has_value()) {
       ::pluss::throw_error("selection::CompareResult::best: no best model has been computed.");
     }
     return *best_model;
   }
-  [[nodiscard]] Model& best() {
+  [[nodiscard]] models::Model& best() {
     if (!best_model.has_value()) {
       ::pluss::throw_error("selection::CompareResult::best: no best model has been computed.");
     }
     return *best_model;
   }
 
-  [[nodiscard]] const Model& worst() const {
+  [[nodiscard]] const models::Model& worst() const {
     if (!worst_model.has_value()) {
       ::pluss::throw_error("selection::CompareResult::worst: no worst model has been computed.");
     }
     return *worst_model;
   }
-  [[nodiscard]] Model& worst() {
+  [[nodiscard]] models::Model& worst() {
     if (!worst_model.has_value()) {
       ::pluss::throw_error("selection::CompareResult::worst: no worst model has been computed.");
     }
     return *worst_model;
   }
 
-  [[nodiscard]] std::vector<std::pair<std::string, Model>> top(std::int64_t k) const {
+  [[nodiscard]] std::vector<std::pair<std::string, models::Model>> top(std::int64_t k) const {
     if (k < 0) {
       ::pluss::throw_error("selection::CompareResult::top: k must be non-negative.");
     }
     if (k > static_cast<std::int64_t>(fitted.size())) {
       ::pluss::throw_error("selection::CompareResult::top: requested k exceeds fitted model count; increase FitOptions.fit_top.");
     }
-    std::vector<std::pair<std::string, Model>> out{};
+    std::vector<std::pair<std::string, models::Model>> out{};
     out.reserve(static_cast<std::size_t>(k));
     for (std::int64_t i = 0; i < k; ++i) {
       const std::int64_t trial_index = report.ranked_indices[static_cast<std::size_t>(i)];
@@ -111,7 +111,7 @@ struct CompareResult {
     return out;
   }
 
-  [[nodiscard]] std::vector<std::pair<std::string, Model>> bottom(std::int64_t k) const {
+  [[nodiscard]] std::vector<std::pair<std::string, models::Model>> bottom(std::int64_t k) const {
     if (k < 0) {
       ::pluss::throw_error("selection::CompareResult::bottom: k must be non-negative.");
     }
@@ -129,7 +129,7 @@ struct CompareResult {
     if (k > static_cast<std::int64_t>(bottom_fitted.size())) {
       ::pluss::throw_error("selection::CompareResult::bottom: requested k exceeds bottom fitted model count; increase FitOptions.fit_bottom.");
     }
-    std::vector<std::pair<std::string, Model>> out{};
+    std::vector<std::pair<std::string, models::Model>> out{};
     out.reserve(static_cast<std::size_t>(k));
     const std::int64_t ranked_count = static_cast<std::int64_t>(report.ranked_indices.size());
     for (std::int64_t i = 0; i < k; ++i) {
@@ -288,7 +288,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
 // otherwise share every line of the actual grid-scheduling/ranking logic.
 [[nodiscard]] inline CompareResult compare_batch_(std::vector<Candidate> candidates,
                                                    const LabeledBatch& batch,
-                                                   metrics::ValidationOptions cv,
+                                                   CrossValOptions cv,
                                                    TrainOptions train_options,
                                                    AssessOptions assess_options,
                                                    MetricKind objective_metric,
@@ -354,7 +354,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
     const Candidate& candidate = candidates[cell.candidate_index];
     const auto& fold = plan.folds[cell.fold_index];
     const metrics::FoldBatchPair& fold_batch = fold_batches[cell.fold_index];
-    const Model trained = candidate.model.learn(
+    const models::Model trained = candidate.model.learn(
         fold_batch.train, candidate.train_options.value_or(train_options));
     const Series fold_metrics =
         trained.assess_series(fold_batch.test, assess_options).to(ScalarType::Float64).reshape({metric_count});
@@ -416,7 +416,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
     for (std::int64_t i = 0; i < fit_count; ++i) {
       const std::int64_t candidate_index = result.report.ranked_indices[static_cast<std::size_t>(i)];
       const auto& candidate = candidates[static_cast<std::size_t>(candidate_index)];
-      Model fitted = candidate.model.learn(batch, candidate.train_options.value_or(train_options));
+      models::Model fitted = candidate.model.learn(batch, candidate.train_options.value_or(train_options));
       result.fitted.push_back(std::move(fitted));
     }
     // ranked_indices.front() == best_index here (assign_objective_ranks_ sorts
@@ -436,7 +436,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
     for (std::int64_t i = 0; i < fit_count; ++i) {
       const std::int64_t candidate_index = result.report.ranked_indices[static_cast<std::size_t>(ranked_count - 1 - i)];
       const auto& candidate = candidates[static_cast<std::size_t>(candidate_index)];
-      Model fitted = candidate.model.learn(batch, candidate.train_options.value_or(train_options));
+      models::Model fitted = candidate.model.learn(batch, candidate.train_options.value_or(train_options));
       result.bottom_fitted.push_back(std::move(fitted));
     }
     result.worst_model = result.bottom_fitted.front().clone();
@@ -483,7 +483,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline CompareResult compare_frame_(std::vector<Candidate> candidates,
                                                    const pluss::table::DataFrame& frame,
                                                    const DataFrameBatchOptions& data_options,
-                                                   metrics::ValidationOptions cv,
+                                                   CrossValOptions cv,
                                                    TrainOptions train_options,
                                                    AssessOptions assess_options,
                                                    MetricKind objective_metric,
@@ -545,7 +545,7 @@ struct FoldFramePair_ {
     const Candidate& candidate = candidates[cell.candidate_index];
     const auto& fold = plan.folds[cell.fold_index];
     const FoldFramePair_& fold_frame = fold_frames[cell.fold_index];
-    const Model trained = candidate.model.learn(
+    const models::Model trained = candidate.model.learn(
         fold_frame.train, data_options, candidate.train_options.value_or(train_options));
     const Series fold_metrics =
         trained.assess_series(fold_frame.test, data_options, assess_options).to(ScalarType::Float64).reshape({metric_count});
@@ -607,7 +607,7 @@ struct FoldFramePair_ {
     for (std::int64_t i = 0; i < fit_count; ++i) {
       const std::int64_t candidate_index = result.report.ranked_indices[static_cast<std::size_t>(i)];
       const auto& candidate = candidates[static_cast<std::size_t>(candidate_index)];
-      Model fitted = candidate.model.learn(frame, data_options, candidate.train_options.value_or(train_options));
+      models::Model fitted = candidate.model.learn(frame, data_options, candidate.train_options.value_or(train_options));
       result.fitted.push_back(std::move(fitted));
     }
     result.best_model = result.fitted.front().clone();
@@ -621,7 +621,7 @@ struct FoldFramePair_ {
     for (std::int64_t i = 0; i < fit_count; ++i) {
       const std::int64_t candidate_index = result.report.ranked_indices[static_cast<std::size_t>(ranked_count - 1 - i)];
       const auto& candidate = candidates[static_cast<std::size_t>(candidate_index)];
-      Model fitted = candidate.model.learn(frame, data_options, candidate.train_options.value_or(train_options));
+      models::Model fitted = candidate.model.learn(frame, data_options, candidate.train_options.value_or(train_options));
       result.bottom_fitted.push_back(std::move(fitted));
     }
     result.worst_model = result.bottom_fitted.front().clone();
@@ -657,7 +657,7 @@ struct FoldFramePair_ {
 // the platform is a property of the data you hand in, not a policy knob.
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const LabeledBatch& batch,
-                                           metrics::ValidationOptions cv = {},
+                                           CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
                                            MetricKind objective_metric = MetricKind::Accuracy,
@@ -670,7 +670,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const pluss::table::DataFrame& x,
                                            const Series& y,
-                                           metrics::ValidationOptions cv = {},
+                                           CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
                                            MetricKind objective_metric = MetricKind::Accuracy,
@@ -692,7 +692,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const pluss::table::DataFrame& frame,
                                            const DataFrameBatchOptions& data_options,
-                                           metrics::ValidationOptions cv = {},
+                                           CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
                                            MetricKind objective_metric = MetricKind::Accuracy,
@@ -705,7 +705,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const pluss::table::DataFrame& x,
                                            const pluss::table::Thread& y,
-                                           metrics::ValidationOptions cv = {},
+                                           CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
                                            MetricKind objective_metric = MetricKind::Accuracy,

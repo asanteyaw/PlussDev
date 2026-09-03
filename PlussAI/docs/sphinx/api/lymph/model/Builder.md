@@ -122,5 +122,5 @@ identity explicit before any benchmarking or spotchecking happens.
 ## Related Pages
 
 - [Model](Model.md)
-- [Suite](../tune/Suite.md)
-- [Search](../tune/Search.md)
+- [Suite](../selection/spotcheck/Suite.md)
+- [Search](../selection/search/Search.md)

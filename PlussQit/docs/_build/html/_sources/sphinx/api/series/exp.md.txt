@@ -124,7 +124,7 @@ data=[1.0142321e+304, inf]
 
 ## Summary
 
-Teach `exp()` as a pure shape-preserving value transform whose derivative is
+Use `exp()` as a pure shape-preserving value transform whose derivative is
 the function itself. That gives students one clean mental model for both the
 forward pass and the backward pass.
 
@@ -136,12 +136,12 @@ forward pass and the backward pass.
 - [`Series::abs`](abs.md): non-exponential unary value transform.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="eq.html">
+  <a class="prev-link" href="erfc.html">
     <span class="label">Previous</span>
-    <span class="title">eq</span>
+    <span class="title">erfc</span>
   </a>
-  <a class="next-link" href="factor.html">
+  <a class="next-link" href="exp2.html">
     <span class="label">Next</span>
-    <span class="title">factor</span>
+    <span class="title">exp2</span>
   </a>
 </div>

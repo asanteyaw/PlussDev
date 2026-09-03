@@ -123,7 +123,7 @@ data=[0, -inf, nan]
 
 ## Summary
 
-Teach `log()` as a domain-sensitive unary transform. The key lesson is not
+Use `log()` as a domain-sensitive unary transform. The key point is not
 shape, but admissible values: positive inputs are ordinary, zero becomes
 `-inf`, and negatives become `nan`.
 
@@ -135,12 +135,12 @@ shape, but admissible values: positive inputs are ordinary, zero becomes
   `log()` call is sensible.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="le.html">
+  <a class="prev-link" href="linearalg.html">
     <span class="label">Previous</span>
-    <span class="title">le</span>
+    <span class="title">linearalg</span>
   </a>
-  <a class="next-link" href="lt.html">
+  <a class="next-link" href="log10.html">
     <span class="label">Next</span>
-    <span class="title">lt</span>
+    <span class="title">log10</span>
   </a>
 </div>

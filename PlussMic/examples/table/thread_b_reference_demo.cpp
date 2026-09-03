@@ -76,23 +76,23 @@ int main() {
   std::cout << "BOUNDED_TRAILING_TWO\n"
             << trailing_two_mean.to_string() << "\n\n";
 
-  std::cout << "BTW_NUMERIC_SHARED\n"
-            << scores.btw(20.0, 40.0, true).to_string() << "\n\n";
+  std::cout << "BETWEEN_NUMERIC_SHARED\n"
+            << scores.between(20.0, 40.0, true).to_string() << "\n\n";
 
-  std::cout << "BTW_NUMERIC_ASYMMETRIC\n"
-            << scores.btw(20.0, 40.0, false, true).to_string() << "\n\n";
+  std::cout << "BETWEEN_NUMERIC_ASYMMETRIC\n"
+            << scores.between(20.0, 40.0, false, true).to_string() << "\n\n";
 
-  std::cout << "BTW_TEMPORAL_SHARED\n"
-            << dates.btw("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true).to_string() << "\n\n";
+  std::cout << "BETWEEN_TEMPORAL_SHARED\n"
+            << dates.between("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true).to_string() << "\n\n";
 
-  std::cout << "BTW_TEMPORAL_ASYMMETRIC\n"
-            << dates.btw("2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", false, true).to_string() << "\n\n";
+  std::cout << "BETWEEN_TEMPORAL_ASYMMETRIC\n"
+            << dates.between("2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", false, true).to_string() << "\n\n";
 
-  std::cout << "BTW_ROWWISE_SHARED\n"
-            << scores.btw(lower, upper, true).to_string() << "\n\n";
+  std::cout << "BETWEEN_ROWWISE_SHARED\n"
+            << scores.between(lower, upper, true).to_string() << "\n\n";
 
-  std::cout << "BTW_ROWWISE_ASYMMETRIC\n"
-            << scores.btw(lower, upper, false, true).to_string() << "\n\n";
+  std::cout << "BETWEEN_ROWWISE_ASYMMETRIC\n"
+            << scores.between(lower, upper, false, true).to_string() << "\n\n";
 
   std::cout << "BUCKETIZE_AUTO_LABELS\n"
             << scores.bucketize({0.0, 20.0, 40.0, 60.0}).to_string() << "\n\n";

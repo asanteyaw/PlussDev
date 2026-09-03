@@ -47,7 +47,7 @@ struct ToFahrenheit {
 } // namespace
 
 int main() {
-  std::cout << "=== suppose / let / let_as demo ===\n\n";
+  std::cout << "=== suppose / let demo ===\n\n";
 
   std::cout << "1) suppose as a single-value pipeline (free functions)\n";
   const auto tagged = suppose(std::vector<int>{1, 2, 3, 4})
@@ -83,30 +83,14 @@ int main() {
                          .value();
   std::cout << "lambda pipeline result: " << shout << "\n\n";
 
-  std::cout << "5) `let` for concise value naming\n";
-  let final_score = suppose(7).then([](int x) { return x * x + 3; }).value();
-  std::cout << "let final_score = suppose(7).then(...).value() -> " << final_score << "\n\n";
+  std::cout << "5) `let` for concise Pluss payload naming\n";
+  let payload = pluss::make_series(std::vector<double>{1, 2, 3}, {3});
+  std::cout << "let payload = make_series(...) -> numel=" << payload.numel()
+            << ", mean=" << payload.mean().item<double>() << "\n";
 
-  std::cout << "6) `let_as(...)` to restrict to explicit candidate types\n";
-  let_as(int, double, std::string) content = std::string("hello");
-  std::cout << "content starts as std::string? " << (content.is<std::string>() ? "yes" : "no") << "\n";
-  content = 42;
-  std::cout << "content now int? " << (content.is<int>() ? "yes" : "no") << "\n";
-  content = 3.14;
-  std::cout << "content now double? " << (content.is<double>() ? "yes" : "no") << "\n";
-  content.visit([](const auto& v) {
-    std::cout << "content.visit -> " << v << "\n";
-  });
-
-  let_as(pluss::Series, double, std::string) payload = pluss::make_series(std::vector<double>{1, 2, 3}, {3});
-  payload.visit([](const auto& v) {
-    using V = std::decay_t<decltype(v)>;
-    if constexpr (std::is_same_v<V, pluss::Series>) {
-      std::cout << "payload is Series, numel=" << v.numel() << "\n";
-    } else {
-      std::cout << "payload is scalar/text: " << v << "\n";
-    }
-  });
+  let queue = pluss::Queue(std::vector<double>{1.5, 2.5, 3.5});
+  std::cout << "let queue = pluss::Queue(...) -> size=" << queue.size()
+            << ", front=" << queue.front<double>() << "\n";
 
   std::cout << "\nDone.\n";
   return 0;

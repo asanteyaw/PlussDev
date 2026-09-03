@@ -52,14 +52,6 @@ std::string Thread::info_string() const {
   return out;
 }
 
-void Thread::show(const display::DisplayOptions& options) const {
-  display::show(*this, options);
-}
-
-void Thread::show(std::ostream& os, const display::DisplayOptions& options) const {
-  display::print(os, *this, options);
-}
-
 void Thread::info() const {
   info(std::cout);
 }
@@ -74,7 +66,7 @@ std::ostream& operator<<(std::ostream& os, const Thread& thread) {
 }
 
 void output_render(std::ostream& os, const Thread& thread) {
-  thread.show(os);
+  display::print(os, thread);
 }
 
 ThreadView::ThreadView() : Thread(), state_(std::make_shared<State>()) {}
@@ -137,7 +129,7 @@ void ThreadView::show(const display::DisplayOptions& options) const {
   if (effective.window_title.empty()) {
     effective.window_title = resolved_window_title_();
   }
-  Thread::show(effective);
+  display::show(static_cast<const Thread&>(*this), effective);
 }
 
 void ThreadView::show(std::ostream& os, const display::DisplayOptions& options) const {
@@ -146,7 +138,7 @@ void ThreadView::show(std::ostream& os, const display::DisplayOptions& options) 
   if (effective.window_title.empty()) {
     effective.window_title = resolved_window_title_();
   }
-  Thread::show(os, effective);
+  display::print(os, static_cast<const Thread&>(*this), effective);
 }
 
 std::string ThreadView::resolved_window_title_() const {

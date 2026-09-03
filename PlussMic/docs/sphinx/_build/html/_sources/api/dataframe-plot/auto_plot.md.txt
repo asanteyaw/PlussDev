@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3f9665753399 -->
 
 # DataFramePlotAccessor::auto_plot
 

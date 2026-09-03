@@ -157,7 +157,111 @@ int main() {
   heading("clear_sensitivity_noop");
   auto noop = pluss::make_series({7.0, 8.0});
   noop.clear_sensitivity();
-  std::cout << "has_dx=" << tf(noop.has_sensitivity()) << "\n";
+  std::cout << "has_dx=" << tf(noop.has_sensitivity()) << "\n\n";
+
+  heading("detach_preserves_values");
+  auto detach_base = pluss::make_series({1.0, 2.0, 3.0});
+  auto detached_view = detach_base.detach();
+  std::cout << "base=" << detach_base << "\n";
+  std::cout << "detached=" << detached_view << "\n\n";
+
+  heading("detach_result_mutates_independently");
+  auto detach_copy_base = pluss::make_series({1.0, 2.0, 3.0});
+  auto detached_copy = detach_copy_base.detach();
+  detached_copy.add_(10.0);
+  std::cout << "base=" << detach_copy_base << "\n";
+  std::cout << "detached=" << detached_copy << "\n\n";
+
+  heading("detach_blocks_upstream_sensitivity");
+  auto detach_x = pluss::make_series({1.0, 2.0, 3.0});
+  detach_x.tracks_slope_(true);
+  auto detach_y = detach_x.detach().mul(3.0);
+  detach_y.sum().reverse();
+  std::cout << "has_dx=" << tf(detach_x.has_sensitivity()) << "\n\n";
+
+  heading("detach_clears_tracking_on_result");
+  auto detach_state = pluss::make_series({4.0, 5.0});
+  detach_state.tracks_slope_(true);
+  auto detached_state = detach_state.detach();
+  std::cout << "source_tracks=" << tf(detach_state.tracks_slope()) << "\n";
+  std::cout << "detached_tracks=" << tf(detached_state.tracks_slope()) << "\n\n";
+
+  heading("detach_inplace_blocks_existing_path");
+  auto inplace_x = pluss::make_series({1.0, 2.0, 3.0});
+  inplace_x.tracks_slope_(true);
+  auto inplace_y = inplace_x.mul(2.0);
+  inplace_y.detach_();
+  inplace_y.sum().reverse();
+  std::cout << "has_dx=" << tf(inplace_x.has_sensitivity()) << "\n\n";
+
+  heading("detach_inplace_clears_tracking");
+  auto inplace_state = pluss::make_series({6.0, 7.0});
+  inplace_state.tracks_slope_(true);
+  std::cout << "before=" << tf(inplace_state.tracks_slope()) << "\n";
+  inplace_state.detach_();
+  std::cout << "after=" << tf(inplace_state.tracks_slope()) << "\n\n";
+
+  heading("retains_grad_default_and_enabled");
+  auto retain_state_x = pluss::make_series({1.0, 2.0});
+  retain_state_x.tracks_slope_(true);
+  auto retain_state_mid = retain_state_x.mul(3.0);
+  std::cout << "before=" << tf(retain_state_mid.retains_grad().item<bool>()) << "\n";
+  retain_state_mid.retain_grad();
+  std::cout << "after=" << tf(retain_state_mid.retains_grad().item<bool>()) << "\n\n";
+
+  heading("retain_grad_intermediate");
+  auto retain_x = pluss::make_series({1.0, 2.0, 3.0});
+  retain_x.tracks_slope_(true);
+  auto retained_mid = retain_x.mul(2.0);
+  retained_mid.retain_grad();
+  retained_mid.sum().reverse();
+  std::cout << "retains=" << tf(retained_mid.retains_grad().item<bool>()) << "\n";
+  std::cout << "mid_has_dx=" << tf(retained_mid.has_sensitivity()) << "\n";
+  if (retained_mid.has_sensitivity()) {
+    std::cout << "mid_dx=" << retained_mid.sensitivity() << "\n";
+  }
+  std::cout << "leaf_dx=" << retain_x.sensitivity() << "\n\n";
+
+  heading("retain_grad_toggle_off");
+  auto retain_off_x = pluss::make_series({1.0, 2.0});
+  retain_off_x.tracks_slope_(true);
+  auto retain_off_mid = retain_off_x.mul(4.0);
+  retain_off_mid.retain_grad(false);
+  retain_off_mid.sum().reverse();
+  std::cout << "retains=" << tf(retain_off_mid.retains_grad().item<bool>()) << "\n";
+  std::cout << "mid_has_dx=" << tf(retain_off_mid.has_sensitivity()) << "\n\n";
+
+  heading("count_bool_true_false");
+  auto mask = pluss::make_series({true, false, true, true, false}, pluss::ScalarType::Bool);
+  std::cout << "true_count=" << mask.count() << "\n";
+  std::cout << "false_count=" << mask.count(false) << "\n\n";
+
+  heading("count_numeric_total");
+  auto numeric = pluss::make_series({
+      {5.0, 0.0, -2.0},
+      {8.0, 9.0, 10.0},
+  });
+  pluss::series::print(std::cout, numeric.count()) << "\n\n";
+
+  heading("count_numeric_false_error");
+  try {
+    std::cout << numeric.count(false) << "\n";
+  } catch (const std::exception& e) {
+    print_error_prefix(e);
+  }
+  std::cout << "\n\n";
+
+  heading("storage_version_nonmutating_read");
+  auto versioned_read = pluss::make_series(1.0).to(pluss::ScalarType::Float64);
+  std::cout << "before=" << versioned_read.storage_version() << "\n";
+  (void)versioned_read.exp();
+  std::cout << "after=" << versioned_read.storage_version() << "\n\n";
+
+  heading("storage_version_inplace_bump");
+  auto versioned = pluss::make_series(1.0).to(pluss::ScalarType::Float64);
+  std::cout << "before=" << versioned.storage_version() << "\n";
+  versioned.relu_();
+  std::cout << "after=" << versioned.storage_version() << "\n";
 
   return 0;
 }

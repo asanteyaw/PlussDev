@@ -40,23 +40,23 @@ TEST_CASE("rand/randn deterministic with seed", "[factory]") {
 }
 
 TEST_CASE("rng_seed drives deterministic zero-seed factory stream", "[factory][rng_seed]") {
-  pluss::rng_seed(424242u);
-  const auto seed0 = pluss::rng_seed();
+  pluss::tils::rng_seed(424242u);
+  const auto seed0 = pluss::tils::rng_seed();
   REQUIRE(seed0 == 424242u);
 
   const auto a0 = rand({8}, ScalarType::Float32);
   const auto a1 = rand({8}, ScalarType::Float32);
   REQUIRE(a0.to_vec<float>() != a1.to_vec<float>());
 
-  pluss::rng_seed(424242u);
+  pluss::tils::rng_seed(424242u);
   const auto b0 = rand({8}, ScalarType::Float32);
   const auto b1 = rand({8}, ScalarType::Float32);
   REQUIRE(b0.to_vec<float>() == a0.to_vec<float>());
   REQUIRE(b1.to_vec<float>() == a1.to_vec<float>());
 
-  pluss::rng_seed(999u);
+  pluss::tils::rng_seed(999u);
   const auto c0 = randn({8}, ScalarType::Float32);
-  pluss::rng_seed(999u);
+  pluss::tils::rng_seed(999u);
   const auto c1 = randn({8}, ScalarType::Float32);
   REQUIRE(c0.to_vec<float>() == c1.to_vec<float>());
 

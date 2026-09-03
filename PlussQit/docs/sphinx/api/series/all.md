@@ -193,8 +193,8 @@ Use `all()` when every value in a lane must pass.
     <span class="label">Previous</span>
     <span class="title">add</span>
   </a>
-  <a class="next-link" href="any.html">
+  <a class="next-link" href="amax.html">
     <span class="label">Next</span>
-    <span class="title">any</span>
+    <span class="title">amax</span>
   </a>
 </div>

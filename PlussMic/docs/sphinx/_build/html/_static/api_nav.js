@@ -190,6 +190,36 @@ window.PLUSS_API_NAV = {
       "zoom"
     ]
   },
+  "DataFramePlotAccessor": {
+    "title": "DataFramePlotAccessor",
+    "slug": "dataframe-plot",
+    "landing": "dataframe_plot_api_reference.html",
+    "methods": [
+      "act",
+      "andrews_curves",
+      "area",
+      "area_stacked",
+      "auto_plot",
+      "bar",
+      "bar_stacked",
+      "bootstrap",
+      "box",
+      "brief",
+      "corr_heatmap",
+      "density",
+      "heatmap",
+      "hist",
+      "lag",
+      "line",
+      "parallel",
+      "pie",
+      "radviz",
+      "scatter",
+      "scatter_matrix",
+      "step",
+      "violin"
+    ]
+  },
   "DataFrameNoteAccessor": {
     "title": "DataFrameNoteAccessor",
     "slug": "dataframe-note",
@@ -523,6 +553,7 @@ window.PLUSS_API_NAV = {
       "floordiv",
       "flow",
       "fold",
+      "framerize",
       "freq",
       "fullmatch",
       "ge",

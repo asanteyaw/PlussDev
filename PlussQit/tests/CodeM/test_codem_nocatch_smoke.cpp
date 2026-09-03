@@ -285,28 +285,28 @@ void test_aux_let_transmit() {
   expect_close(la, 3.5, 1e-12, "suppose typed conversion");
 
   let declared = pluss::make_series({1.0, 2.0, 3.0});
-  expect_true(declared.numel() == 3, "let declaration alias to auto");
+  expect_true(declared.numel() == 3, "let declaration works for Series");
 
   std::cout << "[RUN] aux:transmit_range\n";
   std::vector<int> xs{1, 2, 3, 4};
-  auto sq = pluss::transmit([](int x) { return x * x; }, xs);
+  auto sq = pluss::tils::transmit([](int x) { return x * x; }, xs);
   expect_eq(sq, std::vector<int>{1, 4, 9, 16}, "transmit range unary");
 
   std::cout << "[RUN] aux:transmit_indexed\n";
-  auto with_idx = pluss::transmit([](int x, std::size_t i) { return x + static_cast<int>(i); }, xs);
+  auto with_idx = pluss::tils::transmit([](int x, std::size_t i) { return x + static_cast<int>(i); }, xs);
   expect_eq(with_idx, std::vector<int>{1, 3, 5, 7}, "transmit indexed callable");
 
   std::cout << "[RUN] aux:transmit_iterators\n";
-  auto it_res = pluss::transmit([](int x) { return x - 1; }, xs.begin(), xs.end());
+  auto it_res = pluss::tils::transmit([](int x) { return x - 1; }, xs.begin(), xs.end());
   expect_eq(it_res, std::vector<int>{0, 1, 2, 3}, "transmit iterator overload");
 
   std::cout << "[RUN] aux:transmit_binary\n";
   std::vector<int> ys{10, 20, 30, 40};
-  auto sum = pluss::transmit([](int a, int b) { return a + b; }, xs, ys);
+  auto sum = pluss::tils::transmit([](int a, int b) { return a + b; }, xs, ys);
   expect_eq(sum, std::vector<int>{11, 22, 33, 44}, "transmit binary zip");
 
   std::cout << "[RUN] aux:transmit_parallel\n";
-  auto par = pluss::transmit(
+  auto par = pluss::tils::transmit(
       [](int x) { return x * 3; },
       xs,
       pluss::transmit_options{.exec = pluss::transmit_exec::par, .grain_size = 1, .workers = 2});
@@ -321,12 +321,12 @@ void test_aux_let_transmit() {
     Item operator()(const Item& it) const { return Item{it.v + delta}; }
   };
   std::vector<Item> items{{1}, {2}, {3}};
-  auto bumped = pluss::transmit(Bump{5}, items);
+  auto bumped = pluss::tils::transmit(Bump{5}, items);
   expect_true(bumped.size() == 3 && bumped[0].v == 6 && bumped[2].v == 8, "transmit callable object");
 
   std::cout << "[RUN] aux:transmit_series\n";
   auto s = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3});
-  auto ss = pluss::transmit([](const pluss::Series& t) { return t.mul(t); }, s);
+  auto ss = pluss::tils::transmit([](const pluss::Series& t) { return t.mul(t); }, s);
   expect_eq(ss.to_vec<double>(), std::vector<double>{1.0, 4.0, 9.0}, "transmit single-object apply");
 }
 

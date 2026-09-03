@@ -145,15 +145,15 @@ nearest bucket.
 
 - [`DataFrame::bucketize`](../dataframe/bucketize.md): bucketize selected
   numeric frame features while preserving the rest of the table.
-- [`Thread::btw`](btw.md): test interval membership directly, without
+- [`Thread::between`](between.md): test interval membership directly, without
   collapsing values into bucket labels.
 - [`Thread::clip`](clip.md): constrain values into a range instead of
   labeling which sub-interval they fall in.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="btw.html">
+  <a class="prev-link" href="bounded.html">
     <span class="label">Previous</span>
-    <span class="title">btw</span>
+    <span class="title">bounded</span>
   </a>
   <a class="next-link" href="casefold.html">
     <span class="label">Next</span>

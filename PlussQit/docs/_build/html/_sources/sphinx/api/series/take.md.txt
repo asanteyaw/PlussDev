@@ -249,8 +249,8 @@ surface.
     <span class="label">Previous</span>
     <span class="title">sum</span>
   </a>
-  <a class="next-link" href="tan.html">
+  <a class="next-link" href="take_along_dim.html">
     <span class="label">Next</span>
-    <span class="title">tan</span>
+    <span class="title">take_along_dim</span>
   </a>
 </div>

@@ -15,9 +15,14 @@ TEST_CASE("scatter_reduce supports include_self and initial", "[scatter][reduce]
   auto out = self.scatter_reduce(1, idx, src, "sum", /*include_self=*/false, /*has_initial=*/true, 5.0);
   REQUIRE(out.sizes()[0] == 1);
   REQUIRE(out.sizes()[1] == 4);
+  REQUIRE(out.to_vec<float>() == std::vector<float>{25.0f, 25.0f, 5.0f, 5.0f});
 
   // in-place variant
   auto a = self.clone();
   a.scatter_reduce_(1, idx, src, "sum", /*include_self=*/false, /*has_initial=*/true, 0.0);
   REQUIRE(a.numel() == 4);
+  REQUIRE(a.to_vec<float>() == std::vector<float>{20.0f, 20.0f, 0.0f, 0.0f});
+
+  auto named = self.scatter_reduce_sum(1, idx, src, /*include_self=*/false, 5.0);
+  REQUIRE(named.to_vec<float>() == std::vector<float>{25.0f, 25.0f, 5.0f, 5.0f});
 }

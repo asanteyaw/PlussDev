@@ -441,6 +441,7 @@ public:
   Thread slice(std::int64_t start, std::int64_t stop) const;
   Thread take(std::span<const std::int64_t> indices) const;
   Thread filter(const pluss::Series& bool_mask) const;
+  Thread filter(const Thread& bool_mask) const;
   Thread dropnull() const;
   Thread arrange(bool ascending = true, bool nulls_last = true) const;
   ThreadSortBuilder sort(bool ascending = true, bool nulls_last = true) const;
@@ -455,6 +456,12 @@ public:
                    pluss::msharp::RangeView::Int labels = {},
                    bool right = true,
                    bool include_lowest = true) const;
+
+  // Reshape this Thread into a one-column DataFrame -- the 1-D -> 2-D
+  // counterpart of pandas `Series.to_frame`. The column takes `name`; when
+  // `name` is empty it falls back to this Thread's own name, or "x" if it has
+  // none. This Thread's display labels (its index) become the frame's cases.
+  DataFrame framerize(std::string_view name = {}) const;
 
   ThreadNoteAccessor nt() const;
   ThreadTimelineAccessor tl() const;
@@ -751,28 +758,12 @@ public:
   Thread ror(const Thread& other) const;
   Thread lxor(const Thread& other) const;
   Thread rxor(const Thread& other) const;
-  Thread btw(double a, double b, bool inclusive = false) const;
-  Thread btw(double a, double b, bool include_left, bool include_right) const;
-  Thread btw(std::string_view lo, std::string_view hi, bool inclusive = true) const;
-  Thread btw(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const;
-  Thread btw(const Thread& lo, const Thread& hi, bool inclusive = true) const;
-  Thread btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const;
-  Thread between(double a, double b, bool inclusive = false) const { return btw(a, b, inclusive); }
-  Thread between(double a, double b, bool include_left, bool include_right) const {
-    return btw(a, b, include_left, include_right);
-  }
-  Thread between(std::string_view lo, std::string_view hi, bool inclusive = true) const {
-    return btw(lo, hi, inclusive);
-  }
-  Thread between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const {
-    return btw(lo, hi, include_left, include_right);
-  }
-  Thread between(const Thread& lo, const Thread& hi, bool inclusive = true) const {
-    return btw(lo, hi, inclusive);
-  }
-  Thread between(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const {
-    return btw(lo, hi, include_left, include_right);
-  }
+  Thread between(double a, double b, bool inclusive = false) const;
+  Thread between(double a, double b, bool include_left, bool include_right) const;
+  Thread between(std::string_view lo, std::string_view hi, bool inclusive = true) const;
+  Thread between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const;
+  Thread between(const Thread& lo, const Thread& hi, bool inclusive = true) const;
+  Thread between(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const;
   Thread window(std::int64_t window, ThreadWindowOp op, std::int64_t min_periods = 1) const;
   ThreadCastAccessor cast() const;
   ThreadCastAccessor cast(const ThreadCastOptions& options) const;
@@ -782,8 +773,10 @@ public:
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   std::string info_string() const;
-  void show(const display::DisplayOptions& options = {}) const;
-  void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
+  // A raw Thread has no show(): its terse column view is rarely what you want.
+  // Reach for `framerize(name).show()` for the aligned table view, `describe()`
+  // / `view()` for a ThreadView you can `.show()`, or `to_string()` for a
+  // string. `operator<<` still prints a Thread.
   void info() const;
   void info(std::ostream& os) const;
   ThreadPlotAccessor plot() const;

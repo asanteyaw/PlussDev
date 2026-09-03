@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ba20fb9e79d1 -->
 
 # DataFramePlotAccessor::area
 

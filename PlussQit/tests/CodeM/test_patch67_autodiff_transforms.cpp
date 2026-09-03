@@ -222,6 +222,21 @@ TEST_CASE("autodiff reverse propagates traverse_put_ through copy_ path", "[auto
   REQUIRE(gs[1] == Approx(1.0));
 }
 
+TEST_CASE("autodiff reverse preserves reshape source leaves", "[autodiff][reshape]") {
+  Series src = make_series(std::vector<double>{10.0, 20.0}, {2}).to(ScalarType::Float64);
+  src.tracks_slope_(true);
+
+  const Series shaped = src.reshape({2});
+  const Series loss = shaped.sum();
+  loss.reverse();
+
+  REQUIRE(src.has_sensitivity());
+  const auto gs = src.sensitivity().to_vec<double>();
+  REQUIRE(gs.size() == 2);
+  REQUIRE(gs[0] == Approx(1.0));
+  REQUIRE(gs[1] == Approx(1.0));
+}
+
 TEST_CASE("autodiff strict dependency stays connected for staged inplace write APIs", "[autodiff][inplace][strict]") {
   DerivativePolicy strict{};
   strict.strict_dependency = true;
@@ -644,6 +659,401 @@ TEST_CASE("autodiff reverse does not build higher-order graph by default", "[aut
   x.clear_sensitivity();
   first.reverse();
   REQUIRE_FALSE(x.has_sensitivity());
+}
+
+TEST_CASE("autodiff reverse handles scalar product quotient and chain rules", "[autodiff][reverse]") {
+  {
+    Series x = make_series(1.7).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x * x.cos();
+    y.reverse();
+
+    REQUIRE(x.has_sensitivity());
+    const double expected = std::cos(1.7) - 1.7 * std::sin(1.7);
+    REQUIRE(x.sensitivity().item<double>() == Approx(expected).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(1.7).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x.div(x.square().add(1.0));
+    y.reverse();
+
+    REQUIRE(x.has_sensitivity());
+    const double expected = (1.0 - 1.7 * 1.7) / std::pow(1.0 + 1.7 * 1.7, 2.0);
+    REQUIRE(x.sensitivity().item<double>() == Approx(expected).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(1.2).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x.square().cos();
+    y.reverse();
+
+    REQUIRE(x.has_sensitivity());
+    const double expected = -std::sin(1.2 * 1.2) * 2.0 * 1.2;
+    REQUIRE(x.sensitivity().item<double>() == Approx(expected).margin(1e-12));
+  }
+}
+
+TEST_CASE("autodiff reverse distinguishes tracked inputs from output sensitivity", "[autodiff][reverse]") {
+  {
+    Series x = make_series(1.7).to(ScalarType::Float64);
+    const Series y = x * x.cos();
+    y.reverse();
+
+    REQUIRE_FALSE(x.has_sensitivity());
+    REQUIRE_FALSE(y.has_sensitivity());
+    REQUIRE(y.sensitivity().item<double>() == Approx(0.0).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(1.7).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x * x.cos();
+    y.reverse();
+
+    REQUIRE(x.has_sensitivity());
+    const double expected = std::cos(1.7) - 1.7 * std::sin(1.7);
+    REQUIRE(x.sensitivity().item<double>() == Approx(expected).margin(1e-12));
+    REQUIRE(y.has_sensitivity());
+    REQUIRE(y.sensitivity().item<double>() == Approx(1.0).margin(1e-12));
+  }
+}
+
+TEST_CASE("autodiff sensitivity examples stay verified", "[autodiff][reverse][docs]") {
+  {
+    Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {2, 2}).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    x.mul(3.0).sum().reverse();
+
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 4);
+    REQUIRE(g[0] == Approx(3.0).margin(1e-12));
+    REQUIRE(g[1] == Approx(3.0).margin(1e-12));
+    REQUIRE(g[2] == Approx(3.0).margin(1e-12));
+    REQUIRE(g[3] == Approx(3.0).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+
+    REQUIRE_FALSE(x.has_sensitivity());
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 3);
+    REQUIRE(g[0] == Approx(0.0).margin(1e-12));
+    REQUIRE(g[1] == Approx(0.0).margin(1e-12));
+    REQUIRE(g[2] == Approx(0.0).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+
+    x.mul(2.0).sum().reverse();
+    {
+      const auto g = x.sensitivity().to_vec<double>();
+      REQUIRE(g.size() == 3);
+      REQUIRE(g[0] == Approx(2.0).margin(1e-12));
+      REQUIRE(g[1] == Approx(2.0).margin(1e-12));
+      REQUIRE(g[2] == Approx(2.0).margin(1e-12));
+    }
+
+    x.clear_sensitivity();
+    x.mul(5.0).sum().reverse();
+    {
+      const auto g = x.sensitivity().to_vec<double>();
+      REQUIRE(g.size() == 3);
+      REQUIRE(g[0] == Approx(5.0).margin(1e-12));
+      REQUIRE(g[1] == Approx(5.0).margin(1e-12));
+      REQUIRE(g[2] == Approx(5.0).margin(1e-12));
+    }
+  }
+
+  {
+    Series x = make_series(1.7).to(ScalarType::Float64);
+    const Series y = x * x.cos();
+    y.reverse();
+
+    REQUIRE(y.item<double>() == Approx(-0.21903564030239187).margin(1e-12));
+    REQUIRE_FALSE(x.has_sensitivity());
+    REQUIRE_FALSE(y.has_sensitivity());
+    REQUIRE(y.sensitivity().item<double>() == Approx(0.0).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(1.7, pluss::cfg::tracks_slope()).to(ScalarType::Float64);
+    const Series y = x * x.cos();
+    y.reverse();
+
+    REQUIRE(y.item<double>() == Approx(-0.21903564030239187).margin(1e-12));
+    REQUIRE(x.has_sensitivity());
+    REQUIRE(x.sensitivity().item<double>() ==
+            Approx(std::cos(1.7) - 1.7 * std::sin(1.7)).margin(1e-12));
+    REQUIRE(y.has_sensitivity());
+    REQUIRE(y.sensitivity().item<double>() == Approx(1.0).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(1.7).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x.div(x.square().add(1.0));
+    y.reverse();
+
+    REQUIRE(y.item<double>() == Approx(0.43701799485861187).margin(1e-12));
+    REQUIRE(x.sensitivity().item<double>() == Approx(-0.12490004692012345).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(1.2).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x.square().cos();
+    y.reverse();
+
+    REQUIRE(y.item<double>() == Approx(0.13042370873814554).margin(1e-12));
+    REQUIRE(x.sensitivity().item<double>() == Approx(-2.3795000356600475).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(0.25).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x.atanh();
+    y.reverse();
+
+    REQUIRE(y.item<double>() == Approx(0.2554128118829953).margin(1e-12));
+    REQUIRE(x.sensitivity().item<double>() == Approx(1.0666666666666667).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(0.4).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x.erf();
+    y.reverse();
+
+    REQUIRE(y.item<double>() == Approx(0.42839235504666845).margin(1e-12));
+    REQUIRE(x.sensitivity().item<double>() == Approx(0.9615412988393078).margin(1e-11));
+  }
+
+  {
+    Series x = make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series objective = 2.0 * x.pos(0) + 4.0 * x.pos(1) + x.pos(2).sqrt();
+    objective.reverse();
+
+    REQUIRE(objective.item<double>() == Approx(11.732050807568877).margin(1e-12));
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 3);
+    REQUIRE(g[0] == Approx(2.0).margin(1e-12));
+    REQUIRE(g[1] == Approx(4.0).margin(1e-12));
+    REQUIRE(g[2] == Approx(0.28867513459481287).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series objective = x.pos(0).sin() - 1.5 * x.pos(1).cos() + x.pos(2).log();
+    objective.reverse();
+
+    REQUIRE(objective.item<double>() == Approx(2.56430352829672).margin(1e-12));
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 3);
+    REQUIRE(g[0] == Approx(0.5403023058681398).margin(1e-12));
+    REQUIRE(g[1] == Approx(1.3639461402385225).margin(1e-12));
+    REQUIRE(g[2] == Approx(0.3333333333333333).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series objective = x.pos(0).sin() - 1.5 * x.pos(1).cos() * x.pos(2).log();
+    objective.reverse();
+
+    REQUIRE(objective.item<double>() == Approx(1.5272470275894714).margin(1e-12));
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 3);
+    REQUIRE(g[0] == Approx(0.5403023058681398).margin(1e-12));
+    REQUIRE(g[1] == Approx(1.4984479907474777).margin(1e-12));
+    REQUIRE(g[2] == Approx(0.2080734182735712).margin(1e-12));
+  }
+
+  {
+    Series x = make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = x.mul(x);
+    y.reverse(make_series(std::vector<double>{1.0, 10.0, 100.0}, {3}).to(ScalarType::Float64));
+
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 3);
+    REQUIRE(g[0] == Approx(2.0).margin(1e-12));
+    REQUIRE(g[1] == Approx(40.0).margin(1e-12));
+    REQUIRE(g[2] == Approx(600.0).margin(1e-12));
+  }
+}
+
+TEST_CASE("autodiff reverse attaches unary math sensitivities", "[autodiff][reverse]") {
+  auto require_scalar_slope = [](double x_value,
+                                 const std::function<Series(const Series&)>& f,
+                                 double expected,
+                                 double margin = 1e-12) {
+    Series x = make_series(x_value).to(ScalarType::Float64);
+    x.tracks_slope_(true);
+    const Series y = f(x);
+    y.reverse();
+    REQUIRE(x.has_sensitivity());
+    REQUIRE(x.sensitivity().item<double>() == Approx(expected).margin(margin));
+  };
+
+  require_scalar_slope(0.3, [](const Series& x) { return x.tan(); },
+                       1.0 / std::pow(std::cos(0.3), 2.0));
+  require_scalar_slope(0.5, [](const Series& x) { return x.asin(); },
+                       1.0 / std::sqrt(1.0 - 0.5 * 0.5));
+  require_scalar_slope(0.5, [](const Series& x) { return x.acos(); },
+                       -1.0 / std::sqrt(1.0 - 0.5 * 0.5));
+  require_scalar_slope(1.5, [](const Series& x) { return x.atan(); },
+                       1.0 / (1.0 + 1.5 * 1.5));
+  require_scalar_slope(0.4, [](const Series& x) { return x.sinh(); },
+                       std::cosh(0.4));
+  require_scalar_slope(0.4, [](const Series& x) { return x.cosh(); },
+                       std::sinh(0.4));
+  require_scalar_slope(0.4, [](const Series& x) { return x.log1p(); },
+                       1.0 / 1.4);
+  require_scalar_slope(0.4, [](const Series& x) { return x.expm1(); },
+                       std::exp(0.4));
+  require_scalar_slope(2.0, [](const Series& x) { return x.reciprocal(); },
+                       -0.25);
+  require_scalar_slope(0.4, [](const Series& x) { return x.erf(); },
+                       1.1283791670955126 * std::exp(-(0.4 * 0.4)), 1e-11);
+  require_scalar_slope(0.4, [](const Series& x) { return x.erfc(); },
+                       -1.1283791670955126 * std::exp(-(0.4 * 0.4)), 1e-11);
+  require_scalar_slope(0.4, [](const Series& x) { return x.asinh(); },
+                       1.0 / std::sqrt(1.0 + 0.4 * 0.4), 1e-11);
+  require_scalar_slope(1.8, [](const Series& x) { return x.acosh(); },
+                       1.0 / (std::sqrt(1.8 - 1.0) * std::sqrt(1.8 + 1.0)), 1e-11);
+  require_scalar_slope(0.25, [](const Series& x) { return x.atanh(); },
+                       1.0 / (1.0 - 0.25 * 0.25), 1e-11);
+}
+
+TEST_CASE("autodiff reverse handles mixed scalar objectives over selected entries", "[autodiff][reverse]") {
+  Series reuse = make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}).to(ScalarType::Float64);
+  reuse.tracks_slope_(true);
+
+  (2.0 * reuse.pos(0) + 4.0 * reuse.pos(1) + reuse.pos(2).sqrt()).reverse();
+  {
+    const auto g = reuse.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 3);
+    REQUIRE(g[0] == Approx(2.0).margin(1e-12));
+    REQUIRE(g[1] == Approx(4.0).margin(1e-12));
+    REQUIRE(g[2] == Approx(0.5 / std::sqrt(3.0)).margin(1e-12));
+  }
+
+  reuse.clear_sensitivity();
+  (reuse.pos(0).sin() - 1.5 * reuse.pos(1).cos() + reuse.pos(2).log()).reverse();
+  {
+    const auto g = reuse.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 3);
+    REQUIRE(g[0] == Approx(std::cos(1.0)).margin(1e-12));
+    REQUIRE(g[1] == Approx(1.5 * std::sin(2.0)).margin(1e-12));
+    REQUIRE(g[2] == Approx(1.0 / 3.0).margin(1e-12));
+  }
+
+  reuse.clear_sensitivity();
+  (reuse.pos(0).sin() - 1.5 * reuse.pos(1).cos() * reuse.pos(2).log()).reverse();
+  {
+    const auto g = reuse.sensitivity().to_vec<double>();
+    REQUIRE(g.size() == 3);
+    REQUIRE(g[0] == Approx(std::cos(1.0)).margin(1e-12));
+    REQUIRE(g[1] == Approx(1.5 * std::sin(2.0) * std::log(3.0)).margin(1e-12));
+    REQUIRE(g[2] == Approx(-1.5 * std::cos(2.0) / 3.0).margin(1e-12));
+  }
+}
+
+TEST_CASE("reverse-mode primitive families pass numerical gradient audits", "[autodiff][audit][reverse]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  DerivativeAuditOptions opt{};
+  opt.epsilon = 1e-6;
+  opt.atol = 1e-6;
+  opt.rtol = 1e-4;
+
+  REQUIRE(gradient_audit(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::acos;
+        using pluss::subsp::math::diff::acosh;
+        using pluss::subsp::math::diff::asin;
+        using pluss::subsp::math::diff::asinh;
+        using pluss::subsp::math::diff::atan;
+        using pluss::subsp::math::diff::atanh;
+        using pluss::subsp::math::diff::abs;
+        using pluss::subsp::math::diff::cos;
+        using pluss::subsp::math::diff::cosh;
+        using pluss::subsp::math::diff::erf;
+        using pluss::subsp::math::diff::erfc;
+        using pluss::subsp::math::diff::exp;
+        using pluss::subsp::math::diff::expm1;
+        using pluss::subsp::math::diff::log;
+        using pluss::subsp::math::diff::log1p;
+        using pluss::subsp::math::diff::reciprocal;
+        using pluss::subsp::math::diff::relu;
+        using pluss::subsp::math::diff::rsqrt;
+        using pluss::subsp::math::diff::sigmoid;
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::sinh;
+        using pluss::subsp::math::diff::sqrt;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        using pluss::subsp::math::diff::tan;
+        using pluss::subsp::math::diff::tanh;
+        return sum(
+            exp(z * 0.3) +
+            log(z + 2.0) +
+            sqrt(z + 2.0) +
+            sin(z) +
+            cos(z) +
+            tanh(z) +
+            tan(z * 0.2) +
+            asin(z * 0.2) +
+            acos(z * 0.2) +
+            atan(z) +
+            sinh(z) +
+            cosh(z) +
+            log1p(z + 2.0) +
+            expm1(z * 0.1) +
+            reciprocal(z + 2.0) +
+            rsqrt(z + 2.0) +
+            erf(z * 0.3) +
+            erfc(z * 0.3) +
+            abs(z) +
+            asinh(z) +
+            acosh(z + 1.5) +
+            atanh(z * 0.4) +
+            relu(z) +
+            sigmoid(z) +
+            square(z));
+      },
+      x,
+      opt));
+}
+
+TEST_CASE("reverse-mode handles scalar objectives beyond plain sums", "[autodiff][audit][reverse]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  DerivativeAuditOptions opt{};
+  opt.epsilon = 1e-6;
+  opt.atol = 1e-6;
+  opt.rtol = 1e-4;
+
+  REQUIRE(gradient_audit(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::cos;
+        using pluss::subsp::math::diff::log;
+        using pluss::subsp::math::diff::mean;
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        const auto energy = sum(square(z)) + 3.0;
+        return mean(z * cos(z)) * log(energy) - sum(sin(z)) / energy;
+      },
+      x,
+      opt));
 }
 
 TEST_CASE("autodiff reverse policy can drop source links after pass", "[autodiff][diagnostics]") {
@@ -1435,11 +1845,14 @@ TEST_CASE("expanded unary derivative coverage remains analytic-accurate", "[auto
         using pluss::subsp::math::diff::atan;
         using pluss::subsp::math::diff::cosh;
         using pluss::subsp::math::diff::erf;
+        using pluss::subsp::math::diff::erfc;
         using pluss::subsp::math::diff::expm1;
         using pluss::subsp::math::diff::log1p;
+        using pluss::subsp::math::diff::reciprocal;
         using pluss::subsp::math::diff::sinh;
         return asin(z * 0.2) + acos(z * 0.2) + atan(z) + sinh(z) + cosh(z) +
-               log1p(z + 2.0) + expm1(z * 0.1) + erf(z * 0.3);
+               log1p(z + 2.0) + expm1(z * 0.1) + reciprocal(z + 2.0) +
+               erf(z * 0.3) + erfc(z * 0.3);
       },
       x,
       tangent);
@@ -1459,7 +1872,9 @@ TEST_CASE("expanded unary derivative coverage remains analytic-accurate", "[auto
         std::sinh(s) +
         1.0 / (s + 3.0) +
         0.1 * std::exp(0.1 * s) +
-        0.3 * kTwoOverSqrtPi * std::exp(-(0.3 * s) * (0.3 * s));
+        (-1.0 / std::pow(s + 2.0, 2.0)) +
+        0.3 * kTwoOverSqrtPi * std::exp(-(0.3 * s) * (0.3 * s)) +
+        (-0.3 * kTwoOverSqrtPi * std::exp(-(0.3 * s) * (0.3 * s)));
     REQUIRE(dv[i] == Approx(slope * tv[i]).margin(1e-10));
   }
 }

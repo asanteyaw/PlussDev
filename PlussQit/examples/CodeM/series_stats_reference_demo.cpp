@@ -244,5 +244,121 @@ int main() {
   heading("kurtosis_negative_dim");
   std::cout << lopsided.stat.kurtosis(-1) << "\n";
 
+  auto order_values = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  heading("median_global_even");
+  pluss::series::print(std::cout, order_values.median());
+  std::cout << "\n\n";
+
+  auto order_table = pluss::make_series({
+      {1.0, 8.0, 3.0},
+      {4.0, 2.0, 6.0},
+      {7.0, 5.0, 9.0},
+  });
+  heading("median_dim0");
+  std::cout << order_table.median(0) << "\n\n";
+
+  heading("median_negative_dim");
+  std::cout << order_table.median(-1) << "\n\n";
+
+  heading("median_bad_dim_error");
+  try {
+    std::cout << order_table.median(2) << "\n";
+  } catch (const std::exception& error) {
+    print_error(error);
+  }
+  std::cout << "\n";
+
+  auto missing_order = pluss::make_series({1.0, std::numeric_limits<double>::quiet_NaN(), 5.0, 9.0});
+  heading("median_nan");
+  std::cout << missing_order.median() << "\n\n";
+
+  heading("nanmedian_ignore_nan");
+  std::cout << missing_order.nanmedian() << "\n\n";
+
+  heading("nanmedian_dim0");
+  std::cout << pluss::make_series({
+      {1.0, std::numeric_limits<double>::quiet_NaN(), 9.0},
+      {3.0, 5.0, std::numeric_limits<double>::quiet_NaN()},
+  }).nanmedian(0) << "\n\n";
+
+  heading("nanmedian_all_nan");
+  std::cout << pluss::make_series({
+      std::numeric_limits<double>::quiet_NaN(),
+      std::numeric_limits<double>::quiet_NaN(),
+  }).nanmedian() << "\n\n";
+
+  heading("nanmedian_bad_dim_error");
+  try {
+    std::cout << missing_order.nanmedian(1) << "\n";
+  } catch (const std::exception& error) {
+    print_error(error);
+  }
+  std::cout << "\n";
+
+  heading("quantile_default");
+  std::cout << order_values.quantile() << "\n\n";
+
+  heading("quantile_quarter");
+  std::cout << order_values.quantile(0.25) << "\n\n";
+
+  heading("quantile_endpoints");
+  std::cout << order_values.quantile(0.0) << "\n";
+  std::cout << order_values.quantile(1.0) << "\n\n";
+
+  heading("nanquantile_ignore_nan");
+  std::cout << missing_order.nanquantile(0.5) << "\n\n";
+
+  heading("nanquantile_default");
+  std::cout << missing_order.nanquantile() << "\n\n";
+
+  heading("quantile_vs_nanquantile");
+  std::cout << missing_order.quantile(0.5) << "\n";
+  std::cout << missing_order.nanquantile(0.5) << "\n\n";
+
+  heading("quantile_bad_q_error");
+  try {
+    std::cout << order_values.quantile(1.1) << "\n";
+  } catch (const std::exception& error) {
+    print_error(error);
+  }
+  std::cout << "\n";
+
+  heading("nanquantile_bad_q_error");
+  try {
+    std::cout << missing_order.nanquantile(-0.25) << "\n";
+  } catch (const std::exception& error) {
+    print_error(error);
+  }
+  std::cout << "\n";
+
+  auto modes = pluss::make_series({4.0, 2.0, 4.0, 3.0, 2.0, 4.0});
+  heading("mode_global");
+  std::cout << modes.mode() << "\n\n";
+
+  auto mode_table = pluss::make_series({
+      {1.0, 2.0, 2.0, 3.0},
+      {4.0, 4.0, 5.0, 5.0},
+  });
+  heading("mode_dim1_tie");
+  std::cout << mode_table.mode(1) << "\n\n";
+
+  heading("mode_dim0");
+  std::cout << mode_table.mode(0) << "\n\n";
+
+  heading("mode_empty_error");
+  try {
+    std::cout << pluss::series::zeros({0}).mode() << "\n";
+  } catch (const std::exception& error) {
+    print_error(error);
+  }
+  std::cout << "\n\n";
+
+  heading("mode_empty_dim_error");
+  try {
+    std::cout << pluss::series::zeros({2, 0}).mode(1) << "\n";
+  } catch (const std::exception& error) {
+    print_error(error);
+  }
+
   return 0;
 }

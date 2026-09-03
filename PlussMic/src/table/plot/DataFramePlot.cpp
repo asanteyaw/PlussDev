@@ -645,11 +645,7 @@ Studio scatter_matrix_from_names(const DataFrame& frame,
                                  const DataFramePlotOptions& plot_options) {
   PLUSS_CHECK(names.size() >= 2, "DataFrame::plot().scatter_matrix: need at least two numeric features");
 
-  std::vector<pluss::Series> columns;
-  columns.reserve(names.size());
-  std::transform(names.begin(), names.end(), std::back_inserter(columns), [&](const std::string& name) {
-    return frame.features(name).as_series();
-  });
+  auto columns = numeric_series_columns(frame, names, "DataFrame::plot().scatter_matrix");
 
   auto pair_options = options;
   if (pair_options.labels.empty()) {
@@ -2042,10 +2038,8 @@ pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(
 
 pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
                                                              const ScatterMatrixPlotOptions& options) const {
-  const auto scoped = features.size() > 0 ? frame_.features(features) : frame_;
-  const auto series_only = scoped.feataxis().series();
-  const auto names = series_only.features();
-  auto fig = scatter_matrix_from_names(series_only, names, resolve_scatter_matrix_pair_options(options), options_);
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().scatter_matrix");
+  auto fig = scatter_matrix_from_names(frame_, names, resolve_scatter_matrix_pair_options(options), options_);
   apply_figure_options(fig);
   return fig;
 }

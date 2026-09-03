@@ -71,6 +71,10 @@ namespace {
     case TransformKind::PolynomialLift: return "polynomial_lift";
     case TransformKind::OrdinalEncoder: return "ordinal_encoder";
     case TransformKind::LabelEncoder: return "label_encoder";
+    case TransformKind::BaseNEncoder: return "basen_encoder";
+    case TransformKind::HashingEncoder: return "hashing_encoder";
+    case TransformKind::TargetEncoder: return "target_encoder";
+    case TransformKind::WOEEncoder: return "woe_encoder";
   }
   return "unknown";
 }
@@ -92,6 +96,10 @@ namespace {
   if (text == "polynomial_lift") return TransformKind::PolynomialLift;
   if (text == "ordinal_encoder") return TransformKind::OrdinalEncoder;
   if (text == "label_encoder") return TransformKind::LabelEncoder;
+  if (text == "basen_encoder") return TransformKind::BaseNEncoder;
+  if (text == "hashing_encoder") return TransformKind::HashingEncoder;
+  if (text == "target_encoder") return TransformKind::TargetEncoder;
+  if (text == "woe_encoder") return TransformKind::WOEEncoder;
   return std::nullopt;
 }
 
@@ -182,6 +190,18 @@ template <class T>
     case TransformKind::LabelEncoder:
       return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::LabelEncoder>(
           std::get<prep::LabelEncoderOptions>(options)));
+    case TransformKind::BaseNEncoder:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::BaseNEncoder>(
+          std::get<prep::BaseNEncoderOptions>(options)));
+    case TransformKind::HashingEncoder:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::HashingEncoder>(
+          std::get<prep::HashingEncoderOptions>(options)));
+    case TransformKind::TargetEncoder:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::TargetEncoder>(
+          std::get<prep::TargetEncoderOptions>(options)));
+    case TransformKind::WOEEncoder:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::WOEEncoder>(
+          std::get<prep::WOEEncoderOptions>(options)));
   }
   return StatusOr<std::unique_ptr<TransformerBase>>(Status::invalid_argument("Unsupported transform kind."));
 }
@@ -308,6 +328,21 @@ void append_transform_option_param_keys(const TransformOptions& options, const s
           out.push_back(prefix + "degree");
           out.push_back(prefix + "interactions_only");
           out.push_back(prefix + "include_bias");
+        } else if constexpr (std::is_same_v<Opt, prep::BaseNEncoderOptions>) {
+          out.push_back(prefix + "base");
+          out.push_back(prefix + "max_categories");
+          out.push_back(prefix + "overflow");
+        } else if constexpr (std::is_same_v<Opt, prep::HashingEncoderOptions>) {
+          out.push_back(prefix + "n_components");
+          out.push_back(prefix + "seed");
+        } else if constexpr (std::is_same_v<Opt, prep::TargetEncoderOptions>) {
+          out.push_back(prefix + "smoothing");
+          out.push_back(prefix + "max_categories");
+          out.push_back(prefix + "overflow");
+        } else if constexpr (std::is_same_v<Opt, prep::WOEEncoderOptions>) {
+          out.push_back(prefix + "regularization");
+          out.push_back(prefix + "max_categories");
+          out.push_back(prefix + "overflow");
         }
       },
       options);
@@ -391,6 +426,21 @@ void append_transform_option_param_keys(const TransformOptions& options, const s
           if (param == "degree") return StatusOr<double>(static_cast<double>(opt.degree));
           if (param == "interactions_only") return StatusOr<double>(opt.interactions_only ? 1.0 : 0.0);
           if (param == "include_bias") return StatusOr<double>(opt.include_bias ? 1.0 : 0.0);
+        } else if constexpr (std::is_same_v<Opt, prep::BaseNEncoderOptions>) {
+          if (param == "base") return StatusOr<double>(static_cast<double>(opt.base));
+          if (param == "max_categories") return StatusOr<double>(static_cast<double>(opt.max_categories));
+          if (param == "overflow") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.overflow)));
+        } else if constexpr (std::is_same_v<Opt, prep::HashingEncoderOptions>) {
+          if (param == "n_components") return StatusOr<double>(static_cast<double>(opt.n_components));
+          if (param == "seed") return StatusOr<double>(static_cast<double>(opt.seed));
+        } else if constexpr (std::is_same_v<Opt, prep::TargetEncoderOptions>) {
+          if (param == "smoothing") return StatusOr<double>(opt.smoothing);
+          if (param == "max_categories") return StatusOr<double>(static_cast<double>(opt.max_categories));
+          if (param == "overflow") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.overflow)));
+        } else if constexpr (std::is_same_v<Opt, prep::WOEEncoderOptions>) {
+          if (param == "regularization") return StatusOr<double>(opt.regularization);
+          if (param == "max_categories") return StatusOr<double>(static_cast<double>(opt.max_categories));
+          if (param == "overflow") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.overflow)));
         }
         return StatusOr<double>(Status::invalid_argument("unsupported option parameter for this transform."));
       },
@@ -472,6 +522,21 @@ Status set_transform_option_param(TransformOptions& options, std::string_view pa
           if (param == "degree") { opt.degree = static_cast<std::int64_t>(value); return Status::success(); }
           if (param == "interactions_only") { opt.interactions_only = to_flag(value); return Status::success(); }
           if (param == "include_bias") { opt.include_bias = to_flag(value); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::BaseNEncoderOptions>) {
+          if (param == "base") { opt.base = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "max_categories") { opt.max_categories = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "overflow") { opt.overflow = static_cast<prep::CategoryOverflowPolicy>(static_cast<std::uint8_t>(value)); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::HashingEncoderOptions>) {
+          if (param == "n_components") { opt.n_components = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "seed") { opt.seed = static_cast<std::uint64_t>(value); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::TargetEncoderOptions>) {
+          if (param == "smoothing") { opt.smoothing = value; return Status::success(); }
+          if (param == "max_categories") { opt.max_categories = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "overflow") { opt.overflow = static_cast<prep::CategoryOverflowPolicy>(static_cast<std::uint8_t>(value)); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::WOEEncoderOptions>) {
+          if (param == "regularization") { opt.regularization = value; return Status::success(); }
+          if (param == "max_categories") { opt.max_categories = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "overflow") { opt.overflow = static_cast<prep::CategoryOverflowPolicy>(static_cast<std::uint8_t>(value)); return Status::success(); }
         }
         return Status::invalid_argument("unsupported option parameter for this transform.");
       },
@@ -512,6 +577,10 @@ Status set_transform_option_param(TransformOptions& options, std::string_view pa
     case TransformKind::PolynomialLift: options = prep::PolynomialLiftOptions{}; break;
     case TransformKind::OrdinalEncoder: options = prep::OrdinalEncoderOptions{}; break;
     case TransformKind::LabelEncoder: options = prep::LabelEncoderOptions{}; break;
+    case TransformKind::BaseNEncoder: options = prep::BaseNEncoderOptions{}; break;
+    case TransformKind::HashingEncoder: options = prep::HashingEncoderOptions{}; break;
+    case TransformKind::TargetEncoder: options = prep::TargetEncoderOptions{}; break;
+    case TransformKind::WOEEncoder: options = prep::WOEEncoderOptions{}; break;
   }
   if (text.empty()) return StatusOr<TransformOptions>(options);
   const std::map<std::string, std::string> kv = parse_option_map(text);
@@ -1230,6 +1299,16 @@ Status Flow::set_stage_remainder(std::int64_t stage_index, RouteRemainderPolicy 
 Status Flow::append_transform(std::unique_ptr<TransformerBase> transformer) {
   if (!transformer) return Status::invalid_argument("Flow::append_transform requires a non-null transformer.");
   transforms_.push_back(std::move(transformer));
+  // Keep transform_specs_ index-aligned with transforms_. An opaque stage
+  // (FeatureTransformer / FunctionTransformer) runs on the whole frame and does
+  // its own internal routing, so its placeholder spec carries an empty
+  // feature_route -- apply_learn_map / apply_map then feed it the full batch.
+  // Without this entry, a later add_named_transform() spec would land at this
+  // opaque stage's index and its route would be misapplied to the opaque stage.
+  // The placeholder `kind` is never used: execution dispatches through the
+  // polymorphic transforms_[i] object, and serialization refuses flows that
+  // contain opaque stages (see has_opaque_transforms()).
+  transform_specs_.push_back(TransformSpec{});
   has_opaque_transforms_ = true;
   trained_ = false;
   return Status::success();
@@ -1323,6 +1402,26 @@ Status Flow::add_ordinal_encoder(prep::OrdinalEncoderOptions options, pluss::msh
 Status Flow::add_label_encoder(prep::LabelEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
   return add_named_transform(
       TransformKind::LabelEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
+}
+
+Status Flow::add_basen_encoder(prep::BaseNEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
+  return add_named_transform(
+      TransformKind::BaseNEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
+}
+
+Status Flow::add_hashing_encoder(prep::HashingEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
+  return add_named_transform(
+      TransformKind::HashingEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
+}
+
+Status Flow::add_target_encoder(prep::TargetEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
+  return add_named_transform(
+      TransformKind::TargetEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
+}
+
+Status Flow::add_woe_encoder(prep::WOEEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
+  return add_named_transform(
+      TransformKind::WOEEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_function_transformer(prep::FunctionTransformer transformer) {
@@ -1433,9 +1532,35 @@ StatusOr<FeatureBatch> Flow::apply_map(const FeatureBatch& batch, const InferOpt
   return StatusOr<FeatureBatch>(std::move(current));
 }
 
+namespace {
+
+// One preprocessing stage's fit+apply during Flow::learn. Supervised stages
+// (target / weight-of-evidence encoders) are handed the training target; every
+// other stage takes the ordinary unsupervised learn_map().
+[[nodiscard]] StatusOr<Series> learn_map_stage_(TransformerBase& stage,
+                                                const FeatureBatch& batch,
+                                                const Series* target,
+                                                const TrainOptions& learn_options,
+                                                const InferOptions& infer_options) {
+  if (stage.needs_target()) {
+    if (target == nullptr || !target->defined()) {
+      return StatusOr<Series>(Status::invalid_argument(
+          "a supervised prep stage (target / woe encoder) needs a training target; "
+          "attach it inside Model::learn(x, y), not a target-free transform flow."));
+    }
+    Status fit = stage.learn_supervised(batch, *target, learn_options);
+    if (!fit.ok()) return StatusOr<Series>(std::move(fit));
+    return stage.map(batch, infer_options);
+  }
+  return stage.learn_map(batch, learn_options, infer_options);
+}
+
+} // namespace
+
 StatusOr<FeatureBatch> Flow::apply_learn_map(const FeatureBatch& batch,
                                              const TrainOptions& learn_options,
-                                             const InferOptions& infer_options) {
+                                             const InferOptions& infer_options,
+                                             const Series* target) {
   Status input_status = validate_features(batch);
   if (!input_status.ok()) return StatusOr<FeatureBatch>(std::move(input_status));
 
@@ -1448,7 +1573,7 @@ StatusOr<FeatureBatch> Flow::apply_learn_map(const FeatureBatch& batch,
     }
     const std::vector<std::int64_t>* stage_route = (i < transform_specs_.size()) ? &transform_specs_[i].feature_route : nullptr;
     if (stage_route == nullptr || stage_route->empty()) {
-      StatusOr<Series> mapped_or = transforms_[i]->learn_map(current, learn_options, infer_options);
+      StatusOr<Series> mapped_or = learn_map_stage_(*transforms_[i], current, target, learn_options, infer_options);
       if (!mapped_or.ok()) return StatusOr<FeatureBatch>(mapped_or.status());
       StatusOr<FeatureBatch> next_or = mapped_batch_checked(
           mapped_or.move_value(), current.layout, expected_samples, static_cast<std::int64_t>(i), "Flow::learn");
@@ -1465,7 +1590,7 @@ StatusOr<FeatureBatch> Flow::apply_learn_map(const FeatureBatch& batch,
     StatusOr<FeatureBatch> routed_or = select_routed_features(current, route, static_cast<std::int64_t>(i), "Flow::learn");
     if (!routed_or.ok()) return StatusOr<FeatureBatch>(routed_or.status());
 
-    StatusOr<Series> mapped_or = transforms_[i]->learn_map(routed_or.value(), learn_options, infer_options);
+    StatusOr<Series> mapped_or = learn_map_stage_(*transforms_[i], routed_or.value(), target, learn_options, infer_options);
     if (!mapped_or.ok()) return StatusOr<FeatureBatch>(mapped_or.status());
     StatusOr<FeatureBatch> mapped_routed_or = mapped_batch_checked(
         mapped_or.move_value(), current.layout, expected_samples, static_cast<std::int64_t>(i), "Flow::learn");
@@ -1490,7 +1615,7 @@ Status Flow::learn(const LabeledBatch& batch, const TrainOptions& options) {
       .missing = options.missing,
       .unknown_categorical = options.unknown_categorical,
   };
-  StatusOr<FeatureBatch> mapped_or = apply_learn_map(batch.features, options, infer_options);
+  StatusOr<FeatureBatch> mapped_or = apply_learn_map(batch.features, options, infer_options, &batch.y);
   if (!mapped_or.ok()) return mapped_or.status();
 
   if (!has_model()) {

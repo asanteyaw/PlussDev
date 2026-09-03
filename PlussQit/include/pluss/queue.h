@@ -21,7 +21,7 @@
 #include "pluss/coden/coden.h"
 #include "pluss/codeh/codeh.h"
 
-namespace pluss {
+namespace pluss::codev {
 
 // Queue: dynamic holder for core Pluss native column/value types.
 //
@@ -645,4 +645,8 @@ inline std::ostream& operator<<(std::ostream& os, const Queue& q) {
   return os;
 }
 
+} // namespace pluss::codev
+
+namespace pluss {
+using Queue = codev::Queue;
 } // namespace pluss

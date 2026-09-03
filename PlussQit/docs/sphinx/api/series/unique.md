@@ -162,9 +162,9 @@ Use `unique()` for distinct extraction, then decide which ordering you need.
   equality classes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="transpose.html">
+  <a class="prev-link" href="triu_.html">
     <span class="label">Previous</span>
-    <span class="title">transpose</span>
+    <span class="title">triu_</span>
   </a>
   <a class="next-link" href="unite.html">
     <span class="label">Next</span>

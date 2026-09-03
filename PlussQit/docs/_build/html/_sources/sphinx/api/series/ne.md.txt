@@ -168,9 +168,9 @@ interpreting that by hand.
 - [`Series::gt`](gt.md): strict greater-than comparison.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="mul.html">
+  <a class="prev-link" href="narrow_copy.html">
     <span class="label">Previous</span>
-    <span class="title">mul</span>
+    <span class="title">narrow_copy</span>
   </a>
   <a class="next-link" href="permute.html">
     <span class="label">Next</span>

@@ -106,7 +106,7 @@ add_library(Pluss::PlussMic STATIC IMPORTED)
 
 set_target_properties(Pluss::PlussMic PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-  INTERFACE_LINK_LIBRARIES "Pluss::pluss_sdk_zip_link;\$<LINK_ONLY:Arrow::arrow_shared>;\$<LINK_ONLY:Parquet::parquet_shared>;Pluss::plussmic_curl_link;Pluss::PlussPl;Pluss::PlussTils;Pluss::pluss;pluss::plussqit_codeh;pluss::plussqit_codem;pluss::plussqit_coden"
+  INTERFACE_LINK_LIBRARIES "Pluss::pluss_sdk_zip_link;\$<LINK_ONLY:Arrow::arrow_shared>;\$<LINK_ONLY:Parquet::parquet_shared>;Pluss::plussmic_curl_link;Pluss::PlussPl;Pluss::PlussTils;Pluss::pluss;pluss::plussqit_codeh;pluss::plussqit_codem;pluss::plussqit_coden;\$<LINK_ONLY:SQLite::SQLite3>"
 )
 
 # Create imported target Pluss::pluss

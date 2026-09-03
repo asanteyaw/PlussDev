@@ -170,7 +170,18 @@ namespace pluss::series {
     return full(sizes, fill_value, pluss::config(kv));
   }
 
-  // Scalar constants (factories)
+  // Plain-`double` IEEE-754 constants -- the scalar counterparts of the 0-D-`Series`
+  // factories below. Use these for bounds, sentinels, struct defaults, and scalar
+  // comparisons (`NumericRule{.upper = pluss::series::scalar_inf}`,
+  // `x.clip(-pluss::series::scalar_inf, cap)`). There is deliberately no `neg_inf`:
+  // negate `scalar_inf` (or the Series `inf()`). A scalar has no device -- when it
+  // enters a computation it is broadcast to wherever the tensors live.
+  inline constexpr double scalar_inf = std::numeric_limits<double>::infinity();
+  inline constexpr double scalar_nan = std::numeric_limits<double>::quiet_NaN();
+
+  // Scalar constants (factories) -- these return a 0-D `Series` (Float32 by default,
+  // CPU unless a Config with a platform is passed). For a bare `double`, use
+  // `scalar_inf` / `scalar_nan` above instead.
   inline Series nan(ScalarType dt = ScalarType::Float32) { return codem::nan(dt); }
   inline Series nan(Config cfg) {
     return full({}, std::numeric_limits<double>::quiet_NaN(), cfg);

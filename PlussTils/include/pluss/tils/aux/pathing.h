@@ -14,7 +14,7 @@
 
 #include "CodeM/core/Errors.h"
 
-namespace pluss::aux {
+namespace pluss::tils {
 
 enum class RootResolve {
   WorkingDirectory,
@@ -654,26 +654,26 @@ inline std::filesystem::path join_path(std::filesystem::path base,
   return base;
 }
 
-} // namespace pluss::aux
+} // namespace pluss::tils
 
 namespace pluss::loader {
-using aux::DirRef;
-using aux::PathContext;
-using aux::PathOptions;
-using aux::PathPolicy;
-using aux::PathRef;
-using aux::RootResolve;
-using aux::UrlContext;
-using aux::UrlRef;
-using aux::absolute_path;
-using aux::file_dir;
-using aux::file_path;
-using aux::file_path_map;
-using aux::file_paths;
-using aux::join_path;
-using aux::path_policy;
-using aux::reset_root_path;
-using aux::root_path;
-using aux::set_path_policy;
-using aux::set_root_path;
+using tils::DirRef;
+using tils::PathContext;
+using tils::PathOptions;
+using tils::PathPolicy;
+using tils::PathRef;
+using tils::RootResolve;
+using tils::UrlContext;
+using tils::UrlRef;
+using tils::absolute_path;
+using tils::file_dir;
+using tils::file_path;
+using tils::file_path_map;
+using tils::file_paths;
+using tils::join_path;
+using tils::path_policy;
+using tils::reset_root_path;
+using tils::root_path;
+using tils::set_path_policy;
+using tils::set_root_path;
 } // namespace pluss::loader

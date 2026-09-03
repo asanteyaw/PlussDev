@@ -9,14 +9,14 @@
 #include <vector>
 
 int main() {
-  pluss::OutputOptions opts;
+  pluss::tils::OutputOptions opts;
   opts.separator = " | ";
   opts.levels_enabled = true;
-  opts.min_level = pluss::OutputLevel::Debug;
+  opts.min_level = pluss::tils::OutputLevel::Debug;
   opts.auto_flush = false;
   opts.level_prefixes = {"[T]", "[D]", "[I]", "[W]", "[E]"};
 
-  pluss::OutputEngine out{std::cout, opts};
+  pluss::tils::OutputEngine out{std::cout, opts};
 
   const std::vector<double> xs{1.25, 2.50, 5.00};
   const std::map<std::string, int> counts{{"A", 3}, {"B", 7}};

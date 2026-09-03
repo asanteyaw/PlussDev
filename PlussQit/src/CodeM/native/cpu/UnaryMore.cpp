@@ -5,6 +5,7 @@
 #include "CodeM/core/Half.h"
 
 #include <cmath>
+#include <limits>
 
 namespace pluss::codem::native::cpu {
 
@@ -30,6 +31,32 @@ static void unary_apply(const Series& a, Series& out, Fn&& fn) {
 }
 
 #define DISPATCH_FLOAT_ONLY(name, EXPR_D, EXPR_F)   void name(const Series& a, Series& out) {     switch (a.scalar_type()) {       case ScalarType::Float64: unary_apply<double>(a, out, [](double x){ return (EXPR_D); }); return;       case ScalarType::Float32: unary_apply<float>(a, out, [](float x){ return (float)(EXPR_F); }); return;       case ScalarType::Float16: unary_apply_convert<Float16, Float16>(a, out,         [](Float16 x){ return float16_to_float(x); },         [](float y){ return float16_from_float(y); },         [](float x){ return (float)(EXPR_F); }); return;       case ScalarType::BFloat16: unary_apply_convert<BFloat16, BFloat16>(a, out,         [](BFloat16 x){ return bfloat16_to_float(x); },         [](float y){ return bfloat16_from_float(y); },         [](float x){ return (float)(EXPR_F); }); return;       default: break;     }     throw_error(#name ": dtype not implemented (float-only)");   }
+
+// psi(x) = d/dx ln|Gamma(x)|. Reflection for x <= 0, upward recurrence to the
+// asymptotic-series regime (x >= 6), then the standard Bernoulli tail. Poles at
+// 0 and the negative integers return NaN; NaN in maps to NaN out.
+static double digamma_real_(double x) {
+  if (std::isnan(x)) return x;
+  if (x <= 0.0) {
+    const double frac = x - std::floor(x);
+    if (frac == 0.0) return std::numeric_limits<double>::quiet_NaN();
+    constexpr double kPi = 3.14159265358979323846;
+    return digamma_real_(1.0 - x) - kPi / std::tan(kPi * x);
+  }
+  double acc = 0.0;
+  double y = x;
+  while (y < 6.0) {
+    acc -= 1.0 / y;
+    y += 1.0;
+  }
+  const double inv = 1.0 / y;
+  const double inv2 = inv * inv;
+  acc += std::log(y) - 0.5 * inv -
+      inv2 * (1.0 / 12.0 - inv2 * (1.0 / 120.0 - inv2 * (1.0 / 252.0)));
+  return acc;
+}
+
+DISPATCH_FLOAT_ONLY(digamma, digamma_real_(x), digamma_real_(x))
 
 DISPATCH_FLOAT_ONLY(tan, std::tan(x), std::tan(x))
 DISPATCH_FLOAT_ONLY(asin, std::asin(x), std::asin(x))
@@ -96,6 +123,10 @@ static void unary_is_predicate_(const Series& a, Series& out, bool(*pred)(double
 static bool pred_isfinite(double x) { return std::isfinite(x); }
 
 void isfinite(const Series& a, Series& out) { unary_is_predicate_(a, out, &pred_isfinite); }
+
+static bool pred_signbit(double x) { return std::signbit(x); }
+
+void signbit(const Series& a, Series& out) { unary_is_predicate_(a, out, &pred_signbit); }
 
 void logical_not(const Series& a, Series& out) {
   if (a.scalar_type() != ScalarType::Bool || out.scalar_type() != ScalarType::Bool) {

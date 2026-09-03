@@ -639,8 +639,8 @@ int main(int argc, char** argv) {
   const auto& lat_t = df.features("Start_Lat");
   const auto& lng_t = df.features("Start_Lng");
 
-  let something = distance_t.mean();
-  let something_else = df.features({"Distance(mi)", "Severity"});
+  auto something = distance_t.mean();
+  auto something_else = df.features({"Distance(mi)", "Severity"});
 
   const auto& start_note_t = start_as_note.features("Start_Time");
   const auto& start_ns_t = times_ns.features("Start_Time");

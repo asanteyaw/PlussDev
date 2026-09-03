@@ -30,6 +30,7 @@ enum class UnaryOpId {
   Erf,
   Erfc,
   LGamma,
+  Digamma,
   Asinh,
   Acosh,
   Atanh,

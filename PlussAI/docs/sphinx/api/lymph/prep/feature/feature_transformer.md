@@ -1,47 +1,282 @@
 # `lymph::prep::feature_transformer`
 
+`feature_transformer` assembles a [`prep::FeatureTransformer`](FeatureTransformer.md)
+from an ordered feature space, a list of [branches](branch.md), and a remainder
+policy. It is the entry point for the [`prep::feature`](../feature.md) subfamily.
+
 ## Signature
 
 ```cpp
+// (a) from an explicit ordered name list
 lymph::prep::FeatureTransformer lymph::prep::feature_transformer(
-    const pluss::table::DataFrame& frame,
-    const lymph::options::DFBatch& data_options,
-    std::initializer_list<lymph::prep::Branch> branches,
-    lymph::prep::FeatureRemainderPolicy remainder = lymph::prep::FeatureRemainderPolicy::PassThrough);
+    const std::vector<std::string>&            feature_order,
+    const std::vector<lymph::prep::Branch>&    branches,
+    lymph::prep::FeatureRemainderPolicy        remainder = lymph::prep::FeatureRemainderPolicy::PassThrough);
+
+// (b) from a frame -- feature_order = frame.features()
+lymph::prep::FeatureTransformer lymph::prep::feature_transformer(
+    const pluss::table::DataFrame&            frame,
+    const std::vector<lymph::prep::Branch>&   branches,
+    lymph::prep::FeatureRemainderPolicy       remainder = lymph::prep::FeatureRemainderPolicy::PassThrough);
+
+// (c) from a frame + explicit batch options -- feature_order resolved from data_options
+lymph::prep::FeatureTransformer lymph::prep::feature_transformer(
+    const pluss::table::DataFrame&           frame,
+    const lymph::options::DFBatch&           data_options,
+    const std::vector<lymph::prep::Branch>&  branches,
+    lymph::prep::FeatureRemainderPolicy      remainder = lymph::prep::FeatureRemainderPolicy::PassThrough);
 ```
 
-## What It Does
+Each form also accepts `branches` as a braced `{...}` list or any range, and the
+name-list form accepts a range of names.
 
-This factory builds a branch-aware composite feature transformer from:
+## Parameters
 
-- an ordered feature space
-- one or more branch-local preprocessing plans
-- one remainder policy
+`feature_order` / `frame` / `frame` + `data_options`
+: The ordered feature space the branch routes index into. From a bare frame it
+  is `frame.features()`; with `data_options` it is the resolved
+  `data_options.feature_names` (so you can restrict or reorder, and set
+  `note_policy` for categorical columns).
 
-This is the entry point you use when several routed transformations must become
-one reusable object.
+`branches`
+: One [`prep::Branch`](branch.md) per pipeline — from
+  [`branch::compose`](branch.md) or a one-stage builder such as
+  `branch::standard_scaler`. Applied in the given order; their outputs
+  concatenate left to right.
 
-## Practical Example
+`remainder`
+: What to do with routed columns no branch claims. **Defaults to
+  `PassThrough`** here — note the [`FeatureTransformer`](FeatureTransformer.md#construction)
+  constructor defaults to `Drop`.
 
-```{literalinclude} ../../../../../../examples/NodeJ/lymph/lymph_prep_feature_transformer_docverify_demo.cpp
-:language: cpp
+## Returns
+
+A fitted-on-demand `lymph::prep::FeatureTransformer`. Move-only. Hand it to a
+model with [`Model::feature_transformer`](../../models/Model/feature_transformer.md) or drive
+it directly with `learn_map` on a `FeatureBatch`.
+
+## Errors
+
+- A branch route naming a column absent from `feature_order` is rejected when
+  the transformer is built.
+- Fitting errors (from a branch's own stages) surface through the `Status` /
+  `StatusOr` returned by `learn` / `map`; wrap with `lymph::resolve(...)`.
+
+## The remainder policy
+
+```cpp
+enum class FeatureRemainderPolicy : std::uint8_t { Drop = 0, PassThrough = 1 };
+```
+
+The **remainder** is every column in `feature_order` that no branch routes to.
+`Drop` leaves it out of the output; `PassThrough` appends it unchanged, after
+all branch outputs. See [`FeatureTransformer` Example 2](FeatureTransformer.md#practical-examples).
+
+## Practical Examples
+
+<!-- these examples establish: the frame short form, name-list / frame equivalence, and the data_options + model form. -->
+
+### Example 1
+
+The frame short form: `feature_order` is taken from the frame, two branches,
+`Drop` remainder.
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::Series;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame raw({
+      {"income",  Thread(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"region",  Thread(pluss::make_series({0., 1., 0., 1.}, {4}, f64))},
+      {"balance", Thread(pluss::make_series({10., 20., 30., 40.}, {4}, f64))},
+  });
+
+  lymph::prep::FeatureTransformer transformer = lymph::prep::feature_transformer(
+      raw,
+      {
+          lymph::prep::branch::standard_scaler({}, {"income", "balance"}),
+          lymph::prep::branch::one_hot_encoder({}, {"region"}),
+      },
+      lymph::prep::FeatureRemainderPolicy::Drop);
+
+  const lymph::FeatureBatch batch =
+      lymph::workflow::payload::make(raw).features({"income", "region", "balance"}).feature_batch();
+  const Series out = lymph::resolve(transformer.learn_map(batch), "learn_map");
+
+  std::cout << "stage_count = " << transformer.stage_count()
+            << ", output shape = [" << out.sizes()[0] << ", " << out.sizes()[1] << "]\n\n";
+  std::cout << out << "\n";
+
+  return 0;
+}
 ```
 
 Output
 
 ```text
-== feature_transformer ==
-trained = true, stage_count = 2, rows = 8, features = 7
+stage_count = 2, output shape = [4, 5]
 
-pluss::Series(shape=[8,7], strides=[7,1], dtype=float64, platform=cpu, numel=56, contiguous=true)
-data=[[-1.3608276, 0, ... , 0.2],
-  [-1.0886621, 0, ... , 0.4],
-  ...
- [1.3608276, 1, ... , 2.7]]
+pluss::Series(shape=[4,5], strides=[5,1], dtype=float64, platform=cpu, numel=20, contiguous=true)
+data=[[-1.3416408, -1.3416408, 1, 0, 0],
+  [-0.4472136, -0.4472136, 0, 1, 0],
+  [0.4472136, 0.4472136, 1, 0, 0],
+  [1.3416408, 1.3416408, 0, 1, 0]]
 ```
 
-## Related Pages
+### Example 2
 
-- [FeatureTransformer](FeatureTransformer.md)
-- [../route/Route.md](../route/Route.md)
-- [../stage/Stage.md](../stage/Stage.md)
+The name-list form (c) and the frame form (b) build the same transformer given
+the same branches.
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::Series;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame raw({
+      {"a", Thread(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"b", Thread(pluss::make_series({40., 30., 20., 10.}, {4}, f64))},
+  });
+  const auto batch = [&] {
+    return lymph::workflow::payload::make(raw).features({"a", "b"}).feature_batch();
+  };
+  auto branches = [] {
+    return std::vector<lymph::prep::branch::Branch>{
+        lymph::prep::branch::minmax_scaler({}, {"a", "b"})};
+  };
+
+  lymph::prep::FeatureTransformer from_frame = lymph::prep::feature_transformer(raw, branches());
+  lymph::prep::FeatureTransformer from_names = lymph::prep::feature_transformer(
+      std::vector<std::string>{"a", "b"}, branches(),
+      lymph::prep::FeatureRemainderPolicy::PassThrough);
+
+  const Series o1 = lymph::resolve(from_frame.learn_map(batch()), "f1");
+  const Series o2 = lymph::resolve(from_names.learn_map(batch()), "f2");
+
+  std::cout << "from frame:\n" << o1 << "\n";
+  std::cout << "from name list:\n" << o2 << "\n";
+  std::cout << "identical = " << std::boolalpha
+            << (o1.sub(o2).abs().max().item<double>() == 0.0) << "\n";
+
+  return 0;
+}
+```
+
+Output
+
+```text
+from frame:
+pluss::Series(shape=[4,2], strides=[2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[0, 1],
+  [0.33333333, 0.66666667],
+  [0.66666667, 0.33333333],
+  [1, 0]]
+from name list:
+pluss::Series(shape=[4,2], strides=[2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[0, 1],
+  [0.33333333, 0.66666667],
+  [0.66666667, 0.33333333],
+  [1, 0]]
+identical = true
+```
+
+### Example 3
+
+Form (c) — frame plus `options::DFBatch` — handed to a model. `data_options`
+also carries the label feature the model trains against.
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame train({
+      {"income",  Thread(pluss::make_series({1.0, 1.5, 2.0, 3.5, 4.0, 4.5}, {6}, f64))},
+      {"region",  Thread(pluss::make_series({0., 1., 0., 1., 0., 1.}, {6}, f64))},
+      {"target",  Thread(pluss::make_series({0., 0., 0., 1., 1., 1.}, {6}, f64))},
+  });
+
+  lymph::options::DFBatch data_options{};
+  data_options.feature_names = {"income", "region"};
+  data_options.label_feature = "target";
+
+  lymph::prep::FeatureTransformer preprocessing = lymph::prep::feature_transformer(
+      train, data_options,
+      {
+          lymph::prep::branch::standard_scaler({}, {"income"}),
+          lymph::prep::branch::one_hot_encoder({}, {"region"}),
+      },
+      lymph::prep::FeatureRemainderPolicy::PassThrough);
+
+  lymph::models::Model model = lymph::models::logistic_regression();
+  model.feature_transformer(std::move(preprocessing));
+  model.learn_(train, data_options);
+
+  std::cout << "trained = " << std::boolalpha << model.trained() << "\n";
+  std::cout << DataFrame({
+      {"income",    Thread(train.features("income"))},
+      {"region",    Thread(train.features("region"))},
+      {"actual",    Thread(train.features("target"))},
+      {"predicted", Thread(model.infer(train, data_options))},
+  });
+
+  return 0;
+}
+```
+
+Output
+
+```text
+trained = true
+========================================
+     | income  region  actual  predicted
+----------------------------------------
+0    | 1       0       0       0        
+1    | 1.5     1       0       0        
+2    | 2       0       0       0        
+3    | 3.5     1       1       1        
+4    | 4       0       1       1        
+5    | 4.5     1       1       1        
+----------------------------------------
+[6 cs x 4 feat]
+```
+
+## See Also
+
+- [`prep::FeatureTransformer`](FeatureTransformer.md) — the object this returns.
+- [`prep::branch`](branch.md) — building the `branches` argument.
+- [`prep::stage`](../stage_family.md) — the stage factories a branch composes.
+- [`Model::feature_transformer`](../../models/Model/feature_transformer.md) — attaching one to
+  a model.

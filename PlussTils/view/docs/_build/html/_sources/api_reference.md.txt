@@ -13,7 +13,7 @@ PlussTils' reference material is organized by domain:
 - [MATLAB-style popup viewer roadmap](matlab_popup_viewer_roadmap.md): planned work for
   a popup-viewer surface.
 
-**Pathing** and **Aux** (including `pluss::OutputEngine`) are not documented here yet.
+**Pathing** and **Tils** utilities (including `pluss::tils::OutputEngine`) are not documented here yet.
 
 ```{toctree}
 :glob:

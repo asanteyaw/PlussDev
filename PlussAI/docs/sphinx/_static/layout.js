@@ -57,6 +57,10 @@
     if (window.DOCUMENTATION_OPTIONS && typeof window.DOCUMENTATION_OPTIONS.URL_ROOT === "string") {
       return window.DOCUMENTATION_OPTIONS.URL_ROOT;
     }
+    const htmlRoot = document.documentElement.getAttribute("data-content_root");
+    if (typeof htmlRoot === "string" && htmlRoot.length) {
+      return htmlRoot;
+    }
     return "";
   }
 
@@ -183,23 +187,40 @@
     const renderNode = (node, depth) => {
       const hasChildren = Array.isArray(node.children) && node.children.length > 0;
       if (hasChildren) {
-        const details = document.createElement("details");
-        details.className = `tree-item depth-${depth}`;
+        const branch = document.createElement("div");
+        branch.className = `tree-branch depth-${depth}`;
         if (nodeContainsCurrentPage(node)) {
-          details.open = true;
+          branch.classList.add("open");
         }
 
-        const summary = document.createElement("summary");
-        summary.appendChild(makeLink(node));
-        details.appendChild(summary);
+        const row = document.createElement("div");
+        row.className = "tree-row";
+
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "tree-toggle";
+        toggle.setAttribute("aria-label", `${branch.classList.contains("open") ? "Collapse" : "Expand"} ${node.label || "section"}`);
+        toggle.setAttribute("aria-expanded", branch.classList.contains("open") ? "true" : "false");
+        toggle.addEventListener("click", () => {
+          const opening = !branch.classList.contains("open");
+          branch.classList.toggle("open", opening);
+          toggle.setAttribute("aria-expanded", opening ? "true" : "false");
+          toggle.setAttribute("aria-label", `${opening ? "Collapse" : "Expand"} ${node.label || "section"}`);
+        });
+        row.appendChild(toggle);
+
+        const link = makeLink(node);
+        link.classList.add("tree-link");
+        row.appendChild(link);
+        branch.appendChild(row);
 
         const children = document.createElement("div");
         children.className = "tree-children";
         node.children.forEach((child) => {
           children.appendChild(renderNode(child, depth + 1));
         });
-        details.appendChild(children);
-        return details;
+        branch.appendChild(children);
+        return branch;
       }
 
       const leaf = makeLink(node);
@@ -620,14 +641,19 @@
     }
 
     const current = window.location.pathname;
-    const detailsNodes = Array.from(tree.querySelectorAll("details"));
+    const branchNodes = Array.from(tree.querySelectorAll(".tree-branch"));
 
-    detailsNodes.forEach((details) => {
-      const summaryLink = details.querySelector(":scope > summary a");
-      const currentSummary = summaryLink && absoluteDocPath(summaryLink.getAttribute("href")) === current;
-      const activeDescendant = details.querySelector(':scope > .tree-children a.active');
-      if (currentSummary || activeDescendant) {
-        details.open = true;
+    branchNodes.forEach((branch) => {
+      const branchLink = branch.querySelector(":scope > .tree-row .tree-link");
+      const currentBranch = branchLink && absoluteDocPath(branchLink.getAttribute("href")) === current;
+      const activeDescendant = branch.querySelector(':scope > .tree-children a.active');
+      if (currentBranch || activeDescendant) {
+        branch.classList.add("open");
+        const toggle = branch.querySelector(":scope > .tree-row .tree-toggle");
+        if (toggle) {
+          toggle.setAttribute("aria-expanded", "true");
+          toggle.setAttribute("aria-label", `Collapse ${text(branchLink) || "section"}`);
+        }
       }
     });
   }

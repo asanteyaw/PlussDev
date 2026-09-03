@@ -161,9 +161,9 @@ Use `prime()` when your input values are ordinal requests for prime numbers.
   factor.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="pow.html">
+  <a class="prev-link" href="prelu.html">
     <span class="label">Previous</span>
-    <span class="title">pow</span>
+    <span class="title">prelu</span>
   </a>
   <a class="next-link" href="prod.html">
     <span class="label">Next</span>

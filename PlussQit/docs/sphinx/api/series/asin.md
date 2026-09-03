@@ -145,8 +145,8 @@ and whether your workflow needs verified gradient propagation.
     <span class="label">Previous</span>
     <span class="title">argmin</span>
   </a>
-  <a class="next-link" href="atan.html">
+  <a class="next-link" href="asinh.html">
     <span class="label">Next</span>
-    <span class="title">atan</span>
+    <span class="title">asinh</span>
   </a>
 </div>

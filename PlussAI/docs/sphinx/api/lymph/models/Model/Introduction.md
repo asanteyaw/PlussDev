@@ -39,8 +39,37 @@ The pages below are ordered so you can move from setup to execution:
 6. `save`
 7. `load`
 
+## Notes
+
+### State
+
+Three quick state readings explain most surprises on this surface: `trained()`,
+`stage_count()`, and `task_kind()`. The most common source of confusion is
+pending materialization — a model can have a real preparation plan attached while
+`stage_count()` still reads `0`. That is not a contradiction: the plan is staged
+but not yet resolved against a concrete frame.
+
+### Ownership
+
+`learn_` changes the left-hand object; `learn` returns a trained copy. That split
+is useful in experiments where one template is reused several times without
+accidental mutation.
+
+### Persistence
+
+`save` and `load` belong to the artifact layer. If the thing you need to persist
+is broader than one model, step upward into `workflow` or `io`.
+
 ## Related Pages
 
 - [models family](../../models.md)
 - [Builder type](../builder/Builder.md)
-- [Model notes](Notes.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="append.html">
+    <span class="label">Next</span>
+    <span class="title">append</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

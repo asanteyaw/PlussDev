@@ -74,6 +74,45 @@ void expect(const bool condition, const std::string& message) {
   return html;
 }
 
+[[nodiscard]] std::string sticky_label_html() {
+  return R"HTML(
+<!doctype html>
+<html>
+<head>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    table { width: 980px; border: 1px solid #cbd5e1; }
+    thead th { position: sticky; top: 0; }
+    th, td { padding: 8px 12px; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <table>
+    <thead>
+      <tr>
+        <th class="sticky-left">case</th>
+        <th>count</th>
+        <th>mean</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="sticky-left">customer_age_years_at_observation</td>
+        <td>4500</td>
+        <td>44.64</td>
+      </tr>
+      <tr>
+        <td class="sticky-left">district_entrepreneurs_per_1000</td>
+        <td>4500</td>
+        <td>14662.86</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>
+)HTML";
+}
+
 void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
                           HtmlScrollModel& model,
                           const SizeI viewport,
@@ -180,6 +219,38 @@ void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
          "document scrolling should visibly differ from nested table scrolling");
   expect(save_canvas(runtime.canvas(), "/tmp/plussview_scroll_document.png"),
          "document-scrolled validation frame should save");
+}
+
+void test_sticky_case_column_expands_for_text_labels() {
+  using namespace pluss::view::window;
+
+  const auto document = parse_html_document(sticky_label_html());
+  HtmlRenderStats stats;
+  HtmlRenderConfig config{};
+  config.render_stats = &stats;
+  std::vector<HtmlHitRegion> hit_regions;
+  config.hit_regions = &hit_regions;
+  const auto scene = build_html_document_scene(document, SizeI{1100, 520}, config);
+
+  const auto sticky_hit = std::find_if(hit_regions.begin(), hit_regions.end(), [](const auto& hit) {
+    return hit.action == "table.sort.column" && hit.value == 0;
+  });
+  const auto regular_hit = std::find_if(hit_regions.begin(), hit_regions.end(), [](const auto& hit) {
+    return hit.action == "table.sort.column" && hit.value == 1;
+  });
+  expect(sticky_hit != hit_regions.end(), "sticky case header hit region should exist");
+  expect(regular_hit != hit_regions.end(), "regular data header hit region should exist");
+  expect(sticky_hit->rect.width > 84,
+         "sticky case column should grow beyond the old compact width when labels are textual");
+  expect(sticky_hit->rect.width > regular_hit->rect.width,
+         "sticky case column should expand to fit longer case labels when they exceed data-column headers");
+
+  const auto long_label = std::find_if(scene.commands().begin(), scene.commands().end(), [](const auto& command) {
+    const auto* text = std::get_if<TextCommand>(&command);
+    return text != nullptr && text->text.find("customer_age_years_at_observation") != std::string::npos;
+  });
+  expect(long_label != scene.commands().end(),
+         "long textual case labels should render without being collapsed to an ellipsis");
 }
 
 void test_automatic_table_identity() {
@@ -900,6 +971,7 @@ int main() {
     test_retina_scene_scaling();
     test_form_control_alignment_and_caret();
     test_table_body_values_share_left_edge();
+    test_sticky_case_column_expands_for_text_labels();
     test_virtual_table_only_materializes_viewport_cells();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
@@ -907,6 +979,7 @@ int main() {
     std::cout << "[PASS] retina_scene_scaling\n";
     std::cout << "[PASS] form_control_alignment_and_caret\n";
     std::cout << "[PASS] table_body_values_share_left_edge\n";
+    std::cout << "[PASS] sticky_case_column_expands_for_text_labels\n";
     std::cout << "[PASS] virtual_table_only_materializes_viewport_cells\n";
     std::cout << "[PASS] svg_styles_override_presentation_size\n";
     return 0;

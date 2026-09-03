@@ -79,7 +79,7 @@ int main() {
    loaded.sheets("Sheet 1").head();
 
    // grab one sheet to use
-   let grades_df = loaded.sheets("Sheet 2");
+   auto grades_df = loaded.sheets("Sheet 2");
    grades_df.head();
 
    // list all sheet names

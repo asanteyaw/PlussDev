@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::aux {
+namespace pluss::tils {
 
 struct DataBatch {
   std::vector<Series> fields{};
@@ -184,7 +184,7 @@ public:
     iterator(DataLoader* owner, std::size_t index) : owner_(owner), index_(index) {}
 
     batch_type operator*() const {
-      PLUSS_CHECK(owner_ != nullptr, "pluss::DataLoader::iterator: invalid iterator dereference");
+      PLUSS_CHECK(owner_ != nullptr, "pluss::loader::DataLoader::iterator: invalid iterator dereference");
       return owner_->batch_at(index_);
     }
 
@@ -275,7 +275,7 @@ public:
   }
 
   batch_type batch_at(std::size_t batch_index) const {
-    PLUSS_CHECK(batch_index < batch_count(), "pluss::DataLoader::batch_at: batch index out of range");
+    PLUSS_CHECK(batch_index < batch_count(), "pluss::loader::DataLoader::batch_at: batch index out of range");
     const std::int64_t start = static_cast<std::int64_t>(batch_index) * options_.batch_size;
     std::int64_t count = options_.batch_size;
     if (!options_.drop_last) {
@@ -300,7 +300,7 @@ private:
     auto fields = dataset.materialize_fields();
     PLUSS_CHECK(
         !fields.empty(),
-        "pluss::DataLoader(dataset): dataset must provide map-style fields via materialize_fields()");
+        "pluss::loader::DataLoader(dataset): dataset must provide map-style fields via materialize_fields()");
     return fields;
   }
 
@@ -320,24 +320,24 @@ private:
   }
 
   void validate_and_initialize_() {
-    PLUSS_CHECK(!fields_.empty(), "pluss::DataLoader: expected at least one Series field");
-    PLUSS_CHECK(options_.batch_size > 0, "pluss::DataLoader: batch_size must be > 0");
+    PLUSS_CHECK(!fields_.empty(), "pluss::loader::DataLoader: expected at least one Series field");
+    PLUSS_CHECK(options_.batch_size > 0, "pluss::loader::DataLoader: batch_size must be > 0");
 
     dims_.clear();
     dims_.reserve(fields_.size());
 
     const auto check_field = [&](const Series& s, std::size_t idx) {
-      PLUSS_CHECK(s.defined(), "pluss::DataLoader: field[" + std::to_string(idx) + "] must be defined");
-      PLUSS_CHECK(s.dim() >= 1, "pluss::DataLoader: field[" + std::to_string(idx) + "] must have rank >= 1");
+      PLUSS_CHECK(s.defined(), "pluss::loader::DataLoader: field[" + std::to_string(idx) + "] must be defined");
+      PLUSS_CHECK(s.dim() >= 1, "pluss::loader::DataLoader: field[" + std::to_string(idx) + "] must have rank >= 1");
     };
 
     check_field(fields_.front(), 0);
     const std::int64_t d0 = normalize_dim_(options_.batch_dim, fields_.front().dim());
     PLUSS_CHECK(
         d0 >= 0 && d0 < fields_.front().dim(),
-        "pluss::DataLoader: batch_dim out of range for field[0]");
+        "pluss::loader::DataLoader: batch_dim out of range for field[0]");
     sample_count_ = fields_.front().sizes()[d0];
-    PLUSS_CHECK(sample_count_ >= 0, "pluss::DataLoader: invalid sample dimension");
+    PLUSS_CHECK(sample_count_ >= 0, "pluss::loader::DataLoader: invalid sample dimension");
     dims_.push_back(d0);
 
     for (std::size_t i = 1; i < fields_.size(); ++i) {
@@ -345,10 +345,10 @@ private:
       const std::int64_t d = normalize_dim_(options_.batch_dim, fields_[i].dim());
       PLUSS_CHECK(
           d >= 0 && d < fields_[i].dim(),
-          "pluss::DataLoader: batch_dim out of range for field[" + std::to_string(i) + "]");
+          "pluss::loader::DataLoader: batch_dim out of range for field[" + std::to_string(i) + "]");
       PLUSS_CHECK(
           fields_[i].sizes()[d] == sample_count_,
-          "pluss::DataLoader: all fields must share identical sample count on batch_dim");
+          "pluss::loader::DataLoader: all fields must share identical sample count on batch_dim");
       dims_.push_back(d);
     }
 
@@ -367,9 +367,9 @@ private:
   }
 
   batch_type make_batch_(std::int64_t start, std::int64_t count) const {
-    PLUSS_CHECK(start >= 0, "pluss::DataLoader: internal batch start must be >= 0");
-    PLUSS_CHECK(count >= 0, "pluss::DataLoader: internal batch count must be >= 0");
-    PLUSS_CHECK(start + count <= sample_count_, "pluss::DataLoader: internal batch span out of bounds");
+    PLUSS_CHECK(start >= 0, "pluss::loader::DataLoader: internal batch start must be >= 0");
+    PLUSS_CHECK(count >= 0, "pluss::loader::DataLoader: internal batch count must be >= 0");
+    PLUSS_CHECK(start + count <= sample_count_, "pluss::loader::DataLoader: internal batch span out of bounds");
 
     std::vector<std::int64_t> ids(static_cast<std::size_t>(count));
     std::copy_n(order_.begin() + start, count, ids.begin());
@@ -765,27 +765,27 @@ inline DataLoaderSplit split_loaders(
   return split_loaders(dataset.materialize_fields(), split_options, train_options, val_options, test_options);
 }
 
-} // namespace pluss::aux
+} // namespace pluss::tils
 
 namespace pluss::loader {
-using aux::Dataset;
-using aux::SeriesDataset;
-using aux::DataBatch;
-using aux::DataLoader;
-using aux::DataLoaderOptions;
-using aux::DataLoaderSplit;
-using aux::DataSplit;
-using aux::DataSplitOptions;
-using aux::TemporalSplitOptions;
-using aux::TemporalIndexFold;
-using aux::TemporalIndexSplit;
-using aux::TemporalFieldFold;
-using aux::TemporalFieldSplit;
-using aux::TemporalLoaderFold;
-using aux::TemporalLoaderSplit;
-using aux::split_fields;
-using aux::split_loaders;
-using aux::temporal_split_indices;
-using aux::temporal_split_fields;
-using aux::temporal_split_loaders;
+using tils::Dataset;
+using tils::SeriesDataset;
+using tils::DataBatch;
+using tils::DataLoader;
+using tils::DataLoaderOptions;
+using tils::DataLoaderSplit;
+using tils::DataSplit;
+using tils::DataSplitOptions;
+using tils::TemporalSplitOptions;
+using tils::TemporalIndexFold;
+using tils::TemporalIndexSplit;
+using tils::TemporalFieldFold;
+using tils::TemporalFieldSplit;
+using tils::TemporalLoaderFold;
+using tils::TemporalLoaderSplit;
+using tils::split_fields;
+using tils::split_loaders;
+using tils::temporal_split_indices;
+using tils::temporal_split_fields;
+using tils::temporal_split_loaders;
 } // namespace pluss::loader

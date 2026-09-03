@@ -176,11 +176,30 @@ DataFrameView DataFrame::tail(std::int64_t n, bool render) const {
 
 DataFrameView DataFrame::observe(std::int64_t row, bool render) const {
   const auto idx = normalize_row_index(row, ncases());
-  return observe(idx, idx + 1, render);
-}
+  const auto& names = features();
+  const auto dt = dtypes();
 
-DataFrameView DataFrame::observe(std::int64_t start, std::int64_t stop, bool render) const {
-  auto out = slice(start, stop).title(title());
+  std::vector<std::string> dtype_values;
+  std::vector<std::string> cell_values;
+  dtype_values.reserve(names.size());
+  cell_values.reserve(names.size());
+
+  for (const auto& name : names) {
+    const auto col = features(name);
+    dtype_values.push_back(dt.contains(name) ? dt.at(name) : col.dtype());
+    if (detail::valid_at(col, idx)) {
+      cell_values.emplace_back(col.cast().note().as_note().at(idx));
+    } else {
+      cell_values.emplace_back("<null>");
+    }
+  }
+
+  std::vector<std::pair<std::string, Thread>> out_cols;
+  out_cols.reserve(2);
+  out_cols.emplace_back("dtype", Thread(pluss::make_note(dtype_values)));
+  out_cols.emplace_back("value", Thread(pluss::make_note(cell_values)));
+
+  auto out = DataFrame(std::move(out_cols), Thread(pluss::make_note(names))).title(title());
   return DataFrameView(std::move(out), render, "observe", title());
 }
 
@@ -567,7 +586,7 @@ Thread DataFrame::transform(
   std::vector<Thread> mapped;
   mapped.reserve(static_cast<std::size_t>(ncases()));
   for (std::int64_t row = 0; row < ncases(); ++row) {
-    auto value = fn(DataFrame(observe(row, false)));
+    auto value = fn(slice(row, row + 1));
     PLUSS_CHECK(value.defined() && value.thread().size() == 1,
                 "DataFrame::transform: callback must return one value");
     if (!mapped.empty()) {
@@ -641,7 +660,7 @@ DataFrame DataFrame::transform(
   std::int64_t callback_cases = -1;
   std::vector<std::string> callback_features;
   for (std::int64_t row = 0; row < ncases(); ++row) {
-    auto mapped = fn(DataFrame(observe(row, false)));
+    auto mapped = fn(slice(row, row + 1));
     PLUSS_CHECK(mapped.defined(),
                 "DataFrame::transform: callback returned undefined");
     if (shape == ResultShape::Reduce ||
@@ -1188,7 +1207,7 @@ DataFrame DataFrame::transform(const std::function<Thread(const Thread&)>& fn) c
   PLUSS_CHECK(static_cast<bool>(fn), "DataFrame::transform: transform function is empty");
   const auto& src = impl_ref_();
 
-  auto out_cols = pluss::transmit([&](const Thread& feature) {
+  auto out_cols = pluss::tils::transmit([&](const Thread& feature) {
     auto transformed = fn(feature);
     PLUSS_CHECK(transformed.defined(), "DataFrame::transform: transform returned undefined Thread");
     PLUSS_CHECK(transformed.size() == src.nrows_,

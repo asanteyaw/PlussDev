@@ -92,10 +92,13 @@ That order moves from concept, to write path, to read path.
 
 ## Main Objects
 
+<!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 2
+:hidden:
 
 io/save
 io/load
 io/persistence
 ```
+<!-- apiref:toctree:end -->

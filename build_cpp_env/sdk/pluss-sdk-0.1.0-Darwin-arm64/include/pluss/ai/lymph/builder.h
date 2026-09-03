@@ -41,10 +41,10 @@
 // deliberate in-place swap; eject the old one first if a real replacement
 // is intended.
 //
-// Construction still goes through the lowercase `builder::` namespace per
-// the redesign's construction-vs-method rule (LYMPH_REDESIGN_PLAN.md 2.0):
-// `builder::build()` for an empty Builder,
-// `builder::build({{"name", model}, {"inline", models::...()}})` for
+// Construction still goes through the lowercase `models::builder::`
+// subfamily per the redesign's construction-vs-method rule
+// (LYMPH_REDESIGN_PLAN.md 2.0): `models::builder::build()` for an empty
+// Builder, `models::builder::build({{"name", model}, {"inline", models::...()}})` for
 // Nexus-like construction-time population, or the map/vector overloads for
 // preassembled registries. Builder entries are strictly named; there is no
 // unnamed injection or implicit model_0/model_1 counter in this surface.
@@ -63,7 +63,7 @@ namespace pluss::ai::lymph {
   return "task";
 }
 
-namespace builder {
+namespace models::builder {
 
 class Builder final {
  public:
@@ -183,7 +183,7 @@ class Builder final {
   // detour and no separate "which platform" argument required -- the
   // platform already lives on the Series you hand in.
   [[nodiscard]] selection::CompareResult benchmark(const LabeledBatch& batch,
-                                                    metrics::ValidationOptions cv = {},
+                                                    selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
                                                     MetricKind objective_metric = MetricKind::Accuracy,
@@ -195,7 +195,7 @@ class Builder final {
 
   [[nodiscard]] selection::CompareResult benchmark(const pluss::table::DataFrame& x,
                                                     const Series& y,
-                                                    metrics::ValidationOptions cv = {},
+                                                    selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
                                                     MetricKind objective_metric = MetricKind::Accuracy,
@@ -211,7 +211,7 @@ class Builder final {
   // the (x, y) form).
   [[nodiscard]] selection::CompareResult benchmark(const pluss::table::DataFrame& frame,
                                                     const DataFrameBatchOptions& data_options,
-                                                    metrics::ValidationOptions cv = {},
+                                                    selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
                                                     MetricKind objective_metric = MetricKind::Accuracy,
@@ -249,11 +249,13 @@ class Builder final {
   std::vector<std::pair<std::string, Model>> items_{};
   mutable std::optional<selection::CompareResult> last_result_{};
 };
-} // namespace builder
+} // namespace models::builder
 
+namespace models {
 using Builder = builder::Builder;
+} // namespace models
 
-namespace builder {
+namespace models::builder {
 
 [[nodiscard]] inline pluss::table::DataFrame Builder::report(std::int64_t n) const {
   const std::int64_t count = (n < 0 || n > size()) ? size() : n;
@@ -325,6 +327,10 @@ namespace builder {
   return out;
 }
 
-} // namespace builder
+} // namespace models::builder
+
+namespace models {
+using builder::build;
+} // namespace models
 
 } // namespace pluss::ai::lymph

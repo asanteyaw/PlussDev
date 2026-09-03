@@ -967,6 +967,10 @@
 
   // `intersect1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
+  // `invalid` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `invalid_index` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `is_coalesced` (staged migration off variadic surface).
   Series is_coalesced() const { return pluss::codem::_compat::invoke("is_coalesced", *this); }
 

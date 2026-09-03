@@ -22,7 +22,7 @@ Like [`Series::log`](log.md), `sqrt()` is strongly domain-sensitive:
 - non-negative inputs produce ordinary real outputs
 - negative inputs produce `nan`
 
-So this method teaches two ideas at once: a familiar numeric transform and the
+So this method presents two ideas at once: a familiar numeric transform and the
 importance of validating the value domain before applying it blindly.
 
 ## Parameters
@@ -124,7 +124,7 @@ data=[2, 0, nan]
 
 ## Summary
 
-Teach `sqrt()` as a shape-preserving unary transform with a real-valued domain
+Use `sqrt()` as a shape-preserving unary transform with a real-valued domain
 of non-negative inputs. It is a good method for showing how mathematically
 familiar functions still need explicit domain awareness in practical code.
 
@@ -140,8 +140,8 @@ familiar functions still need explicit domain awareness in practical code.
     <span class="label">Previous</span>
     <span class="title">slice</span>
   </a>
-  <a class="next-link" href="squeeze.html">
+  <a class="next-link" href="square.html">
     <span class="label">Next</span>
-    <span class="title">squeeze</span>
+    <span class="title">square</span>
   </a>
 </div>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::linearalg &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
+    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::log" href="log.html" />
+    <link rel="prev" title="Series::lgamma" href="lgamma.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-linearalg">
+<h1>Series::linearalg<a class="headerlink" href="#series-linearalg" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">linearalg</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesLinearAlgAccessor</span>
+
+<span class="n">Series</span><span class="o">::</span><span class="n">linearalg</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesLinearAlgProxy</span>
+<span class="n">Series</span><span class="o">::</span><span class="n">linearalg</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesLinearAlgProxy</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">linearalg</span></code> is a namespace-like accessor for vector and matrix operations. It
+does not compute a value by itself. It selects the linear-algebra method family
+and keeps the owning <code class="docutils literal notranslate"><span class="pre">Series</span></code> as the left operand.</p>
+<p>The distinction matters because these methods do not use one common
+elementwise shape rule. A matrix product contracts dimensions, a batched
+matrix product broadcasts only its batch dimensions, and a dot product
+requires two equally long vectors and reduces them to a scalar. The accessor
+gives those related rules one visible home.</p>
+</section>
+<section id="how-the-accessor-organizes-matrix-work">
+<h2>How The Accessor Organizes Matrix Work<a class="headerlink" href="#how-the-accessor-organizes-matrix-work" title="Link to this heading">¶</a></h2>
+<p>Think of <code class="docutils literal notranslate"><span class="pre">linearalg</span></code> as a door, not an operation. The owning <code class="docutils literal notranslate"><span class="pre">Series</span></code> stays on
+the left side of every binary operation; the accessor chooses a family in
+which dimensions have algebraic roles:</p>
+<ul class="simple">
+<li><p>a vector dimension is contracted by an inner product</p></li>
+<li><p>a matrix’s last two dimensions mean rows and columns</p></li>
+<li><p>leading dimensions in <code class="docutils literal notranslate"><span class="pre">matmul()</span></code> identify batches of independent products</p></li>
+<li><p>strict methods such as <code class="docutils literal notranslate"><span class="pre">mm()</span></code>, <code class="docutils literal notranslate"><span class="pre">mv()</span></code>, and <code class="docutils literal notranslate"><span class="pre">dot()</span></code> reject ranks that would
+change the intended operation</p></li>
+</ul>
+<p>That distinction is why <code class="docutils literal notranslate"><span class="pre">linearalg</span></code> deserves its own reference. Elementwise
+<code class="docutils literal notranslate"><span class="pre">mul()</span></code> asks which positions broadcast together. Linear-algebra products ask
+which dimensions contract and which survive in the output.</p>
+</section>
+<section id="calling-styles">
+<h2>Calling Styles<a class="headerlink" href="#calling-styles" title="Link to this heading">¶</a></h2>
+<p>The dot-style form passes peers to individual methods:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The proxy style binds a peer first:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">linearalg</span><span class="p">(</span><span class="n">right</span><span class="p">).</span><span class="n">matmul</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Both calls treat <code class="docutils literal notranslate"><span class="pre">left</span></code> as the left operand and <code class="docutils literal notranslate"><span class="pre">right</span></code> as the right operand.
+Binding a peer does not reverse the order.</p>
+<p>Unary methods do not need a peer:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">determinant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">det</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">same_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">().</span><span class="n">det</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The complete accessor surface is documented: products, norms, determinants,
+matrix transformations, factorizations, and structured or general solves.</p>
+<p>Use the <a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">SeriesLinearAlgAccessor API Reference</span></a>
+as the landing page for this family. Each accessor method is documented there
+on its own page:</p>
+<ul class="simple">
+<li><p>rank-polymorphic multiplication: <a class="reference internal" href="../series-linearalg/matmul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matmul()</span></code></span></a></p></li>
+<li><p>strict matrix products: <a class="reference internal" href="../series-linearalg/mm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mm()</span></code></span></a> and
+<a class="reference internal" href="../series-linearalg/mv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mv()</span></code></span></a></p></li>
+<li><p>vector inner products: <a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dot()</span></code></span></a> and
+<a class="reference internal" href="../series-linearalg/vdot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">vdot()</span></code></span></a></p></li>
+<li><p>determinant values: <a class="reference internal" href="../series-linearalg/det.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">det()</span></code></span></a>,
+<a class="reference internal" href="../series-linearalg/logdet.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">logdet()</span></code></span></a>, and
+<a class="reference internal" href="../series-linearalg/slogdet.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slogdet()</span></code></span></a></p></li>
+<li><p>matrix inversion: <a class="reference internal" href="../series-linearalg/inverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">inverse()</span></code></span></a></p></li>
+<li><p>integer and continuous matrix transforms:
+<a class="reference internal" href="../series-linearalg/matrix_power.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matrix_power()</span></code></span></a> and
+<a class="reference internal" href="../series-linearalg/matrix_exp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matrix_exp()</span></code></span></a></p></li>
+<li><p>rectangular and rank-deficient reversal:
+<a class="reference internal" href="../series-linearalg/pinverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pinverse()</span></code></span></a></p></li>
+<li><p>global magnitude: <a class="reference internal" href="../series-linearalg/norm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">norm()</span></code></span></a></p></li>
+<li><p>positive-definite factorization: <a class="reference internal" href="../series-linearalg/cholesky.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cholesky()</span></code></span></a></p></li>
+<li><p>orthogonal-triangular factorization:
+<a class="reference internal" href="../series-linearalg/qr_q.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">qr_q()</span></code></span></a> and <a class="reference internal" href="../series-linearalg/qr_r.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">qr_r()</span></code></span></a></p></li>
+<li><p>singular-value decomposition: <a class="reference internal" href="../series-linearalg/svd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd()</span></code></span></a>,
+<a class="reference internal" href="../series-linearalg/svd_u.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd_u()</span></code></span></a>,
+<a class="reference internal" href="../series-linearalg/svd_s.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd_s()</span></code></span></a>, and
+<a class="reference internal" href="../series-linearalg/svd_vh.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd_vh()</span></code></span></a></p></li>
+<li><p>structured and general systems:
+<a class="reference internal" href="../series-linearalg/triangular_solve.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">triangular_solve()</span></code></span></a>,
+<a class="reference internal" href="../series-linearalg/cholesky_solve.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cholesky_solve()</span></code></span></a>,
+<a class="reference internal" href="../series-linearalg/cholesky_inverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cholesky_inverse()</span></code></span></a>, and
+<a class="reference internal" href="../series-linearalg/lu_solve.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lu_solve()</span></code></span></a></p></li>
+</ul>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor</span></code> or <code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgProxy</span></code>
+A lightweight method-selection object bound to the owning <code class="docutils literal notranslate"><span class="pre">Series</span></code>, and
+optionally to a peer <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Accessing `linearalg` does not copy numeric data and does not mutate the
+owner.
+</pre></div>
+</div>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<p>The two binary call styles are equivalent.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;peer_argument=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">right</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;peer_bound=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">linearalg</span><span class="p">(</span><span class="n">right</span><span class="p">).</span><span class="n">mm</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>peer_argument=pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[4, 4],
+  [10, 8]]
+peer_bound=pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[4, 4],
+  [10, 8]]
+</pre></div>
+</div>
+<p>The accessor is bound to <code class="docutils literal notranslate"><span class="pre">left</span></code>, so both forms calculate <code class="docutils literal notranslate"><span class="pre">left</span> <span class="pre">*</span> <span class="pre">right</span></code>. This
+is observable with non-commuting matrices: changing which object owns the
+accessor can change the result.</p>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">linearalg</span></code> is an accessor, not a materialized result.</p></li>
+<li><p>A peer-bound zero-argument binary method requires a peer to have been passed
+to <code class="docutils literal notranslate"><span class="pre">linearalg(...)</span></code> first.</p></li>
+<li><p>The owner remains the left operand. This is important for non-commutative
+methods such as matrix multiplication and linear solves.</p></li>
+<li><p>Individual methods still enforce their own shape, dtype, platform, and
+decomposition requirements.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">SeriesLinearAlgAccessor API Reference</span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/matmul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::matmul</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::dot</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/det.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::det</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/inverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::inverse</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/matrix_exp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::matrix_exp</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/pinverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::pinverse</span></code></span></a></p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lgamma.html">
+    <span class="label">Previous</span>
+    <span class="title">lgamma</span>
+  </a>
+  <a class="next-link" href="../../series_linearalg_accessor_api_reference.html">
+    <span class="label">Next</span>
+    <span class="title">SeriesLinearAlgAccessor</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="lgamma.html" title="previous chapter">Series::lgamma</a></li>
+      <li>Next: <a href="log.html" title="next chapter">Series::log</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/linearalg.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

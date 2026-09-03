@@ -251,25 +251,9 @@ int main() {
   colored.pretty_cell_max_width = 10;
   std::cout << "colorized (if terminal supports ANSI):\n" << pluss::series::print(rand_vals, colored) << "\n";
 
-  // 9) Constrained let-like declarations (`let_as`)
-  let_as(int, float) price = 25;
-  price = 19.5f;
-  std::cout << "price one-of<int,float>: ";
-  price.visit([](const auto& v) { std::cout << v; });
-  std::cout << "\n";
-
-  let_as(pluss::Series, double, std::string) content = std::string("headline");
-  content = 3.14159;
-  std::cout << "content one-of<Series,double,string>: ";
-  content.visit([](const auto& v) {
-    using V = std::decay_t<decltype(v)>;
-    if constexpr (std::is_same_v<V, pluss::Series>) {
-      std::cout << "Series(numel=" << v.numel() << ")";
-    } else {
-      std::cout << v;
-    }
-  });
-  std::cout << "\n";
+  // 9) Typed `let` stays focused on Pluss payloads
+  let series_alias = pluss::make_series(std::vector<double>{2.0, 4.0, 8.0}, {3});
+  std::cout << "typed let on Series:\n" << pluss::series::print(series_alias) << "\n";
 
   return 0;
 }

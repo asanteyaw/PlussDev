@@ -159,7 +159,7 @@ public:
     return *this;
   }
 
-  // Model::append(Stage, ColumnRouter) -- the one method the redesign
+  // Model::append(prep::Stage, prep::Route) -- the one method the redesign
   // replaces the 16 builders above with (kept, unmodified, alongside this
   // one per LYMPH_REDESIGN_PLAN.md phase 2: nothing above breaks while this
   // gets proven out). Deliberately does not resolve `router` here: .append()
@@ -168,7 +168,7 @@ public:
   // real column names -- see materialize_pending_stages_() below. A bare
   // learn_(LabeledBatch) has no column names to resolve against at all and
   // throws if any stage is still pending.
-  ModelCore& append(Stage stage, ColumnRouter router) {
+  ModelCore& append(prep::Stage stage, prep::Route router) {
     pending_stages_.emplace_back(std::move(stage), std::move(router));
     return *this;
   }
@@ -860,13 +860,13 @@ private:
   // model's lifetime, including after save()/load(). See nodej/data.h's
   // CategoryMaps doc comment for the fit/reuse contract.
   CategoryMaps category_maps_{};
-  // append()'d (Stage, ColumnRouter) pairs not yet folded into workflow_ --
+  // append()'d (prep::Stage, prep::Route) pairs not yet folded into workflow_ --
   // cleared by materialize_pending_stages_() the first time a DataFrame-
   // based learn_(...) overload runs. See append()'s own doc comment.
-  std::vector<std::pair<Stage, ColumnRouter>> pending_stages_{};
+  std::vector<std::pair<prep::Stage, prep::Route>> pending_stages_{};
   std::optional<TargetTransform> target_transform_{};
 };
-[[nodiscard]] inline SplitOptions effective_workflow_split_options_(metrics::ValidationOptions cv, TaskKind task) {
+[[nodiscard]] inline SplitOptions effective_workflow_split_options_(selection::CrossValOptions cv, TaskKind task) {
   SplitOptions split = make_validation_split_options(cv);
   if (split.reliability_defaults && task == TaskKind::Classification
       && !split.stratified
@@ -911,7 +911,7 @@ private:
   }
   if (split.plan == CVPlanKind::GroupCrossVal) {
     if (!split.groups.defined()) {
-      ::pluss::throw_error(std::string(where) + ": GroupCrossVal requires ValidationOptions.groups.");
+      ::pluss::throw_error(std::string(where) + ": GroupCrossVal requires selection::CrossValOptions.groups.");
     }
     if (split.groups.numel() != batch.features.sample_count()) {
       ::pluss::throw_error(std::string(where) + ": GroupCrossVal requires groups length to match sample count.");
@@ -1149,7 +1149,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
                                                                    const LabeledBatch& batch,
-                                                                   metrics::ValidationOptions cv = {},
+                                                                   selection::CrossValOptions cv = {},
                                                                    TrainOptions train_options = {},
                                                                    AssessOptions assess_options = {}) {
   resolve(validate_labeled(batch), "cross_validate(model).validate_labeled");
@@ -1167,7 +1167,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
                                                                    const pluss::table::DataFrame& frame,
                                                                    const DataFrameBatchOptions& data_options,
-                                                                   metrics::ValidationOptions cv = {},
+                                                                   selection::CrossValOptions cv = {},
                                                                    TrainOptions train_options = {},
                                                                    AssessOptions assess_options = {}) {
   const LabeledBatch plan_batch = resolve(labeled_batch_from_dataframe(frame, data_options),
@@ -1189,7 +1189,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
                                                                    const pluss::table::DataFrame& x,
                                                                    const Series& y,
-                                                                   metrics::ValidationOptions cv = {},
+                                                                   selection::CrossValOptions cv = {},
                                                                    TrainOptions train_options = {},
                                                                    AssessOptions assess_options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "cross_validate(model,x,y)");
@@ -1200,7 +1200,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
                                                                    const pluss::table::DataFrame& x,
                                                                    const pluss::table::Thread& y,
-                                                                   metrics::ValidationOptions cv = {},
+                                                                   selection::CrossValOptions cv = {},
                                                                    TrainOptions train_options = {},
                                                                    AssessOptions assess_options = {}) {
   return cross_validate(model, x, as_stratify_series(y), cv, train_options, assess_options);
@@ -1209,7 +1209,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline Series cross_validate_scores(const ModelCore& model,
                                                   const LabeledBatch& batch,
                                                   MetricKind metric,
-                                                  metrics::ValidationOptions cv = {},
+                                                  selection::CrossValOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   if (!model.workflow().model_spec().has_value()) {
@@ -1222,7 +1222,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline double cross_validate_score(const ModelCore& model,
                                                  const LabeledBatch& batch,
                                                  MetricKind metric,
-                                                 metrics::ValidationOptions cv = {},
+                                                 selection::CrossValOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   if (!model.workflow().model_spec().has_value()) {
@@ -1236,7 +1236,7 @@ struct FoldFramePair_ {
                                                   const pluss::table::DataFrame& x,
                                                   const Series& y,
                                                   MetricKind metric,
-                                                  metrics::ValidationOptions cv = {},
+                                                  selection::CrossValOptions cv = {},
                                                   TrainOptions train_options = {},
                                                   AssessOptions assess_options = {}) {
   if (!model.workflow().model_spec().has_value()) {
@@ -1250,7 +1250,7 @@ struct FoldFramePair_ {
                                                  const pluss::table::DataFrame& x,
                                                  const Series& y,
                                                  MetricKind metric,
-                                                 metrics::ValidationOptions cv = {},
+                                                 selection::CrossValOptions cv = {},
                                                  TrainOptions train_options = {},
                                                  AssessOptions assess_options = {}) {
   if (!model.workflow().model_spec().has_value()) {

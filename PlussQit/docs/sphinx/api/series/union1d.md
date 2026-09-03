@@ -187,9 +187,9 @@ Use `union1d()` when you want one copy of every value seen across two inputs.
 - [`Series::setxor1d`](setxor1d.md): keep only values exclusive to one side.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="unique.html">
+  <a class="prev-link" href="unfold.html">
     <span class="label">Previous</span>
-    <span class="title">unique</span>
+    <span class="title">unfold</span>
   </a>
   <a class="next-link" href="unionize.html">
     <span class="label">Next</span>

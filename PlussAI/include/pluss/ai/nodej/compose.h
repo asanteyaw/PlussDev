@@ -33,6 +33,10 @@ enum class TransformKind : std::uint8_t {
   PolynomialLift = 13,
   OrdinalEncoder = 14,
   LabelEncoder = 15,
+  BaseNEncoder = 16,
+  HashingEncoder = 17,
+  TargetEncoder = 18,
+  WOEEncoder = 19,
 };
 
 enum class RouteRemainderPolicy : std::uint8_t {
@@ -55,7 +59,11 @@ using TransformOptions = std::variant<prep::StandardScalerOptions,
                                       prep::ThresholdBinarizerOptions,
                                       prep::PolynomialLiftOptions,
                                       prep::OrdinalEncoderOptions,
-                                      prep::LabelEncoderOptions>;
+                                      prep::LabelEncoderOptions,
+                                      prep::BaseNEncoderOptions,
+                                      prep::HashingEncoderOptions,
+                                      prep::TargetEncoderOptions,
+                                      prep::WOEEncoderOptions>;
 
 struct TransformSpec {
   TransformKind kind = TransformKind::StandardScaler;
@@ -150,6 +158,10 @@ public:
   Status add_polynomial_lift(prep::PolynomialLiftOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
   Status add_ordinal_encoder(prep::OrdinalEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
   Status add_label_encoder(prep::LabelEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_basen_encoder(prep::BaseNEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_hashing_encoder(prep::HashingEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_target_encoder(prep::TargetEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_woe_encoder(prep::WOEEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
   Status add_function_transformer(prep::FunctionTransformer transformer);
   Status add_feature_transformer(prep::FeatureTransformer transformer);
 
@@ -191,7 +203,8 @@ private:
   [[nodiscard]] StatusOr<FeatureBatch> apply_map(const FeatureBatch& batch, const InferOptions& options) const;
   [[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch,
                                                        const TrainOptions& learn_options,
-                                                       const InferOptions& infer_options);
+                                                       const InferOptions& infer_options,
+                                                       const Series* target = nullptr);
   [[nodiscard]] Status check_ready_for_infer(const char* where) const;
 
   std::vector<std::unique_ptr<TransformerBase>> transforms_{};

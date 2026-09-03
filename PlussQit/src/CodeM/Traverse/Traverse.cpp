@@ -1,5 +1,8 @@
 #include "CodeM/Traverse/Traverse.h"
 
+#include <algorithm>
+#include <cstring>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -45,13 +48,91 @@ Series normalize_mask_for_source_(const Series& source, const Series& mask) {
 TraverseMatch make_match_from_mask_(const Series& source, const Series& mask) {
   const Series normalized_mask = normalize_mask_for_source_(source, mask);
   const Series coords = normalized_mask.nonzero();
-  return TraverseMatch(coords, shape_vec_(source), source.dim());
+  TraverseMatch positional(coords, shape_vec_(source), source.dim());
+  return TraverseMatch(
+      coords,
+      positional.select_from(source),
+      shape_vec_(source),
+      source.dim());
 }
 
-TraverseMatch make_empty_match_(const Series& source) {
+TraverseMatch make_match_from_coords_(const Series& source, Series coords) {
   const std::vector<std::int64_t> shape = shape_vec_(source);
-  Series coords = Series::empty({0, source.dim()}, ScalarType::Int64, source.platform());
-  return TraverseMatch(std::move(coords), shape, source.dim());
+  TraverseMatch positional(coords, shape, source.dim());
+  return TraverseMatch(
+      std::move(coords),
+      positional.select_from(source),
+      shape,
+      source.dim());
+}
+
+Series select_first_coords_(
+    const Series& source,
+    const Series& all_coords,
+    std::optional<std::int64_t> lane_dim,
+    bool per_batch) {
+  if (all_coords.size(0) == 0) {
+    return Series::empty({0, source.dim()}, ScalarType::Int64, source.platform());
+  }
+  if (!lane_dim.has_value() && !per_batch) {
+    return all_coords.select(0, 0).unsqueeze(0);
+  }
+
+  const Series cpu_coords = all_coords.to(Platform::CPU, ScalarType::Int64).contiguous();
+  const auto* data = reinterpret_cast<const std::int64_t*>(cpu_coords.raw_data());
+  const std::int64_t count = cpu_coords.size(0);
+  const std::int64_t rank = source.dim();
+
+  std::int64_t lane_count = 1;
+  if (per_batch) {
+    lane_count = source.size(0);
+  } else {
+    for (std::int64_t d = 0; d < rank; ++d) {
+      if (d != *lane_dim) lane_count *= source.size(d);
+    }
+  }
+
+  std::vector<std::int64_t> winners(
+      static_cast<std::size_t>(lane_count * rank),
+      static_cast<std::int64_t>(-1));
+  std::vector<bool> seen(static_cast<std::size_t>(lane_count), false);
+
+  for (std::int64_t row = 0; row < count; ++row) {
+    const auto* coord = data + row * rank;
+    std::int64_t lane = 0;
+    if (per_batch) {
+      lane = coord[0];
+    } else {
+      for (std::int64_t d = 0; d < rank; ++d) {
+        if (d == *lane_dim) continue;
+        lane = lane * source.size(d) + coord[d];
+      }
+    }
+    if (seen[static_cast<std::size_t>(lane)]) continue;
+    seen[static_cast<std::size_t>(lane)] = true;
+    std::copy_n(
+        coord,
+        rank,
+        winners.data() + static_cast<std::size_t>(lane * rank));
+  }
+
+  const auto selected_count = static_cast<std::int64_t>(
+      std::count(seen.begin(), seen.end(), true));
+  Series selected = Series::empty({selected_count, rank}, ScalarType::Int64, Platform::CPU);
+  auto* selected_data = reinterpret_cast<std::int64_t*>(selected.raw_mutable_data());
+  std::int64_t out_row = 0;
+  for (std::int64_t lane = 0; lane < lane_count; ++lane) {
+    if (!seen[static_cast<std::size_t>(lane)]) continue;
+    std::copy_n(
+        winners.data() + static_cast<std::size_t>(lane * rank),
+        rank,
+        selected_data + out_row * rank);
+    ++out_row;
+  }
+  if (source.platform() != Platform::CPU) {
+    selected = selected.to(source.platform(), ScalarType::Int64);
+  }
+  return selected;
 }
 
 } // namespace
@@ -157,21 +238,27 @@ TraverseMatch SeriesTraverseProxy::find_not(const Series& mask) const {
 }
 
 TraverseMatch SeriesTraverseProxy::find_first(const Series& mask, std::int64_t dim, bool per_batch) const {
-  PLUSS_CHECK(
-      dim == -1 && !per_batch,
-      "Series::traverse.find_first: only global-first mode is currently supported; "
-      "dim/per_batch variants are intentionally deferred");
-
   const Series source = source_();
   const Series normalized_mask = normalize_mask_for_source_(source, mask);
   const Series all_coords = normalized_mask.nonzero();
+  const bool explicit_dim = dim != -1;
+  PLUSS_CHECK(
+      !(explicit_dim && per_batch),
+      "Series::traverse.find_first: choose either an explicit dim or per_batch=true");
+  PLUSS_CHECK(
+      !per_batch || source.dim() > 0,
+      "Series::traverse.find_first: per_batch=true requires rank >= 1");
 
-  if (all_coords.size(0) == 0) {
-    return make_empty_match_(source);
+  std::optional<std::int64_t> lane_dim;
+  if (explicit_dim) {
+    lane_dim = dim < 0 ? dim + source.dim() : dim;
+    PLUSS_CHECK(
+        *lane_dim >= 0 && *lane_dim < source.dim(),
+        "Series::traverse.find_first: dim out of range");
   }
-
-  const Series first = all_coords.select(0, 0).unsqueeze(0);
-  return TraverseMatch(first, shape_vec_(source), source.dim());
+  return make_match_from_coords_(
+      source,
+      select_first_coords_(source, all_coords, lane_dim, per_batch));
 }
 
 SeriesTraverseAccessor::SeriesTraverseAccessor(Series& owner) : owner_(&owner) {}
@@ -189,10 +276,18 @@ SeriesTraverseProxy SeriesTraverseAccessor::operator()() const {
   return SeriesTraverseProxy(owner());
 }
 
-SeriesTraverseProxy SeriesTraverseAccessor::operator()(pluss::msharp::RangeView::Of<ExtractSpec> on_specs) const {
+SeriesTraverseProxy SeriesTraverseAccessor::operator()(std::initializer_list<ExtractSpec> on_specs) const {
+  return (*this)(std::span<const ExtractSpec>(on_specs.begin(), on_specs.size()));
+}
+
+SeriesTraverseProxy SeriesTraverseAccessor::operator()(std::span<const ExtractSpec> on_specs) const {
   TraverseQuerySpec spec;
   spec.on_specs.assign(on_specs.begin(), on_specs.end());
   return SeriesTraverseProxy(owner(), std::move(spec));
+}
+
+SeriesTraverseProxy SeriesTraverseAccessor::operator()(pluss::msharp::RangeView::Of<ExtractSpec> on_specs) const {
+  return (*this)(std::span<const ExtractSpec>(on_specs.begin(), on_specs.size()));
 }
 
 TraverseMatch SeriesTraverseAccessor::find_all(const Series& mask) const {

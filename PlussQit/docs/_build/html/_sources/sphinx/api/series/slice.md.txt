@@ -301,8 +301,8 @@ the right surface.
     <span class="label">Previous</span>
     <span class="title">pile</span>
   </a>
-  <a class="next-link" href="traverse_slice.html">
+  <a class="next-link" href="softplus.html">
     <span class="label">Next</span>
-    <span class="title">traverse_slice</span>
+    <span class="title">softplus</span>
   </a>
 </div>

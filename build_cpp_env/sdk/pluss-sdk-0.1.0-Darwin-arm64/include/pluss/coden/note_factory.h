@@ -28,6 +28,7 @@
 #include "pluss/coden/note_content.h"
 #include "pluss/detail/factory_containers.h"
 #include "pluss/detail/nested_note_literal.h"
+#include "pluss/detail/select_core.h"
 
 // `Note` (capital N) names the type; `pluss::note::` (lowercase) is its
 // dedicated factory namespace -- the construction surface, kept separate
@@ -1245,11 +1246,194 @@ inline pluss::Note format(std::string_view tpl,
   return make(detail::note_format_render(tpl, binding_map));
 }
 
+namespace detail {
+
+inline bool select_scalar_like(const pluss::Series& value) {
+  return value.numel() == 1;
+}
+
+inline bool select_scalar_like(const pluss::Note& value) {
+  return value.numel() == 1;
+}
+
+template <class Value>
+inline void select_capture_shape(std::vector<std::int64_t>& target_shape,
+                                 bool& have_shape,
+                                 const Value& value,
+                                 std::string_view where,
+                                 std::string_view label) {
+  if (select_scalar_like(value)) {
+    return;
+  }
+  const auto shape = value.sizes();
+  const std::vector<std::int64_t> shape_vec(shape.begin(), shape.end());
+  if (!have_shape) {
+    target_shape = shape_vec;
+    have_shape = true;
+    return;
+  }
+  PLUSS_CHECK(shape_vec == target_shape,
+              std::string(where) + ": " + std::string(label)
+                  + " must be scalar-like or match the selected output shape");
+}
+
+inline std::int64_t select_numel(const std::vector<std::int64_t>& shape) {
+  std::int64_t out = 1;
+  for (const auto dim : shape) {
+    out *= dim;
+  }
+  return out;
+}
+
+inline std::vector<std::int64_t> select_note_shape(
+    std::string_view where,
+    pluss::msharp::RangeView::Of<pluss::Series> conditions,
+    pluss::msharp::RangeView::Of<pluss::Note> choices,
+    const pluss::Note& default_value) {
+  std::vector<std::int64_t> target_shape;
+  bool have_shape = false;
+
+  for (const auto& cond : conditions) {
+    select_capture_shape(target_shape, have_shape, cond, where, "each condition");
+  }
+  for (const auto& choice : choices) {
+    select_capture_shape(target_shape, have_shape, choice, where, "each choice");
+  }
+  select_capture_shape(target_shape, have_shape, default_value, where, "default value");
+
+  return target_shape;
+}
+
+inline std::string_view select_note_value_at(std::span<const pluss::Note::value_type> flat,
+                                             bool scalar_like,
+                                             std::int64_t linear) {
+  return flat[scalar_like ? 0 : static_cast<std::size_t>(linear)];
+}
+
+inline pluss::Note select_note_impl(std::string_view where,
+                                    pluss::msharp::RangeView::Of<pluss::Series> conditions,
+                                    pluss::msharp::RangeView::Of<pluss::Note> choices,
+                                    const pluss::Note& default_value) {
+  PLUSS_CHECK(!conditions.empty(), std::string(where) + ": at least one condition is required");
+  PLUSS_CHECK(conditions.size() == choices.size(),
+              std::string(where) + ": condition/choice count mismatch");
+  PLUSS_CHECK(default_value.defined(), std::string(where) + ": default value is undefined");
+
+  const auto target_shape = select_note_shape(where, conditions, choices, default_value);
+  const auto target_numel = select_numel(target_shape);
+  const bool default_scalar = select_scalar_like(default_value);
+  const auto default_flat = default_value.vector();
+
+  std::vector<std::string> out(static_cast<std::size_t>(target_numel));
+  for (std::int64_t linear = 0; linear < target_numel; ++linear) {
+    out[static_cast<std::size_t>(linear)] = select_note_value_at(default_flat, default_scalar, linear);
+  }
+
+  for (std::size_t i = conditions.size(); i > 0; --i) {
+    const auto& cond = conditions[i - 1];
+    const auto& choice = choices[i - 1];
+
+    PLUSS_CHECK(cond.defined(), std::string(where) + ": condition is undefined");
+    PLUSS_CHECK(choice.defined(), std::string(where) + ": choice is undefined");
+    PLUSS_CHECK(cond.scalar_type() == pluss::ScalarType::Bool,
+                std::string(where) + ": conditions must use Bool dtype");
+
+    const bool cond_scalar = select_scalar_like(cond);
+    const bool choice_scalar = select_scalar_like(choice);
+    const auto choice_flat = choice.vector();
+    const auto mask_flat = cond.reshape({cond.numel()}).to_vec<bool>();
+
+    for (std::int64_t linear = 0; linear < target_numel; ++linear) {
+      const bool take_choice = mask_flat[cond_scalar ? 0 : static_cast<std::size_t>(linear)];
+      if (take_choice) {
+        out[static_cast<std::size_t>(linear)] = select_note_value_at(choice_flat, choice_scalar, linear);
+      }
+    }
+  }
+
+  return make(out, target_shape);
+}
+
+} // namespace detail
+
+inline pluss::Note select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+                          pluss::msharp::RangeView::Of<pluss::Note> choices,
+                          const pluss::Note& default_value) {
+  return pluss::detail::select_core::select_range(
+      "pluss::note::select",
+      conditions,
+      choices,
+      default_value,
+      [](std::string_view where,
+         pluss::msharp::RangeView::Of<pluss::Series> conds,
+         pluss::msharp::RangeView::Of<pluss::Note> picks,
+         const pluss::Note& fallback) {
+        return detail::select_note_impl(where, conds, picks, fallback);
+      });
+}
+
+inline pluss::Note select(std::initializer_list<pluss::Series> conditions,
+                          std::initializer_list<pluss::Note> choices,
+                          const pluss::Note& default_value) {
+  return pluss::detail::select_core::select_init(
+      "pluss::note::select",
+      conditions,
+      choices,
+      default_value,
+      [](std::string_view where,
+         pluss::msharp::RangeView::Of<pluss::Series> conds,
+         pluss::msharp::RangeView::Of<pluss::Note> picks,
+         const pluss::Note& fallback) {
+        return detail::select_note_impl(where, conds, picks, fallback);
+      });
+}
+
+inline pluss::Note select(const pluss::Series& condition,
+                          const pluss::Note& choice,
+                          const pluss::Note& default_value) {
+  return pluss::detail::select_core::select_scalar(
+      "pluss::note::select",
+      condition,
+      choice,
+      default_value,
+      [](std::string_view where,
+         pluss::msharp::RangeView::Of<pluss::Series> conds,
+         pluss::msharp::RangeView::Of<pluss::Note> picks,
+         const pluss::Note& fallback) {
+        return detail::select_note_impl(where, conds, picks, fallback);
+      });
+}
+
+inline pluss::Note select(pluss::msharp::RangeView::Of<pluss::Series> conditions,
+                          pluss::msharp::RangeView::Of<pluss::Note> choices,
+                          std::string_view default_value) {
+  return select(conditions, choices, make(default_value));
+}
+
+inline pluss::Note select(std::initializer_list<pluss::Series> conditions,
+                          std::initializer_list<pluss::Note> choices,
+                          std::string_view default_value) {
+  return select(conditions, choices, make(default_value));
+}
+
+inline pluss::Note select(const pluss::Series& condition,
+                          std::string_view choice,
+                          std::string_view default_value) {
+  return select(condition, make(choice), make(default_value));
+}
+
 // pluss::note::print(n) -- human-readable rendering, mirroring
-// pluss::duration::print/pluss::timeline::print. `std::cout << n` also works
+// pluss::series::print/pluss::timeline::print. `std::cout << n` also works
 // directly via pluss::coden's Note operator<<.
 inline std::string print(const pluss::Note& n) {
   return pluss::coden::print_note(n);
+}
+inline std::string print(const pluss::Note& n, const pluss::NotePrintOptions& opt) {
+  return pluss::coden::print_note(n, opt);
+}
+inline std::ostream& print(std::ostream& os, const pluss::Note& n,
+                           const pluss::NotePrintOptions& opt = {}) {
+  return pluss::coden::print_note(os, n, opt);
 }
 
 } // namespace pluss::note

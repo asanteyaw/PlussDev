@@ -143,12 +143,12 @@ decomposition.
 - [`Series::prime`](prime.md): ordinal-to-prime lookup.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="exp.html">
+  <a class="prev-link" href="extract_put_.html">
     <span class="label">Previous</span>
-    <span class="title">exp</span>
+    <span class="title">extract_put_</span>
   </a>
-  <a class="next-link" href="extract.html">
+  <a class="next-link" href="factorial.html">
     <span class="label">Next</span>
-    <span class="title">extract</span>
+    <span class="title">factorial</span>
   </a>
 </div>

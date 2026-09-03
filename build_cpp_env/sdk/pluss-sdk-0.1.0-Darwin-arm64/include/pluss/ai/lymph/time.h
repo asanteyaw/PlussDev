@@ -13,9 +13,7 @@
 // upgrade it to calendar-aware Timeline/TimeIndex semantics without changing
 // the public family split.
 
-namespace pluss::ai::lymph {
-
-namespace time {
+namespace pluss::ai::lymph::workflow::time {
 
 using TimeOffset = std::int64_t;
 
@@ -52,7 +50,9 @@ inline void validate_time_options(const TimeOptions& options, const char* where)
   }
 }
 
-} // namespace time
+} // namespace pluss::ai::lymph::workflow::time
+
+namespace pluss::ai::lymph::workflow {
 
 using TimeOffset = time::TimeOffset;
 using TimeOptions = time::TimeOptions;
@@ -61,4 +61,4 @@ using time::has_time_index;
 using time::steps;
 using time::validate_time_options;
 
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::workflow

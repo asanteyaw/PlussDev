@@ -5,6 +5,7 @@
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/dispense.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/core.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/msharp/msharp.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/msharp/lister.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/export.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/config.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/null.h
@@ -32,6 +33,7 @@
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/detail/series_finalize.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/detail/factory_deduction.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/detail/factory_core.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/detail/select_core.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/detail/nested_note_literal.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/detail/factory_containers.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/detail/nested_series_literal.h
@@ -53,6 +55,7 @@
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/coden/METHOD_INDEX.md
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/coden/note_content.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/coden/coden.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/queue.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/slicing.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/toolchain/cmake_run_commands.txt
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/toolchain/generic_look_up.h
@@ -222,7 +225,9 @@
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeH/compat/Invoke.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeH/compat/Access.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeH/compat/Dispatch.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeM/generated/SeriesAutogradUnaryReverseGen.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeM/generated/SeriesMethodsGen.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeM/generated/SeriesAutogradDiffUnaryGen.inc
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeM/Series/SeriesOpsInternalMethods.cpp.inc
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeM/Series/SeriesOpsInternalMethods.inc
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/CodeH/generated/TimelineMethodsGen.h
@@ -353,6 +358,7 @@
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/payload.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/factories.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/shape.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/options.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/spotcheck.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/detect.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/validate.h
@@ -367,6 +373,7 @@
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/builder.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/model.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/metrics.h
+/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/selection_options.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/sparse.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/inspection.h
 /Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64/include/pluss/ai/lymph/feature_select.h

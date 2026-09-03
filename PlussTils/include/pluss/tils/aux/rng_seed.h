@@ -3,7 +3,7 @@
 #include <atomic>
 #include <cstdint>
 
-namespace pluss::aux {
+namespace pluss::tils {
 namespace detail {
 
 inline constexpr std::uint64_t kDefaultSeed = 0x4d595df4d0f33173ULL;
@@ -48,4 +48,4 @@ inline std::uint64_t seed_or_next(std::uint64_t seed) noexcept {
   return seed == 0 ? next_rng_seed() : seed;
 }
 
-} // namespace pluss::aux
+} // namespace pluss::tils

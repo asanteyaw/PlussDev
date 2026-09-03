@@ -1,33 +1,54 @@
-# `lymph::prep::OneHotEncoderOptions`
+# `lymph::options::OneHotEncoder`
 
-`OneHotEncoderOptions` controls category budget and unknown handling for
-one-hot expansion.
+`options::OneHotEncoder` (family alias `prep::OneHotEncoderOptions`) configures
+the category budget and unknown handling for one-hot expansion. It is passed to
+the [`prep::OneHotEncoder`](OneHotEncoder.md) constructor and to the
+[`prep::stage::one_hot_encoder`](../stage/one_hot_encoder.md) factory.
 
-## Field Reference
+```cpp
+struct OneHotEncoderOptions {
+  std::int64_t           max_categories = 20;
+  CategoryOverflowPolicy overflow       = CategoryOverflowPolicy::KeepMostFrequent;
+  bool                   include_unknown_bucket = true;
+};
+```
 
-### `std::int64_t max_categories = 20`
+## Fields
 
-This is the maximum explicit category budget per encoded feature.
+### `max_categories`
 
-Larger values preserve more detail. Smaller values constrain feature-space
-explosion more aggressively.
+`std::int64_t max_categories = 20`
 
-### `lymph::prep::CategoryOverflowPolicy overflow = KeepMostFrequent`
+The maximum number of distinct categories tracked per encoded column. Past this
+count, `overflow` decides what happens. Raising it preserves more detail at the
+cost of a wider output frame; lowering it caps feature-space growth.
 
-This controls what happens when observed category count exceeds the configured
-budget.
+### `overflow`
 
-Use `KeepMostFrequent` when you want a pragmatic cap. Use stricter policies
-when feature growth must fail loudly instead of being compacted.
+`CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent`
 
-### `bool include_unknown_bucket = true`
+What to do when a column has more than `max_categories` distinct values:
 
-If `true`, unseen categories encountered later can map into a learned unknown
-bucket.
+| Value | Effect |
+| --- | --- |
+| `KeepMostFrequent` (default) | keep the most frequent `max_categories`; fold the rest into the unknown slot |
+| `Error` | reject the column |
+| `SkipFeature` | drop the column from the output |
 
-This is usually the more inference-robust choice.
+`lymph::prep::CategoryOverflowPolicy` is the family spelling of the enum.
+
+### `include_unknown_bucket`
+
+`bool include_unknown_bucket = true`
+
+When `true`, `learn` reserves one extra output column — `<name>_unknown` — to
+absorb categories not seen at fit time. Whether an unknown row actually lands
+there is a replay-time choice on
+[`InferOptions::unknown_categorical`](OneHotEncoder.md#map); the bucket must
+exist for `MissingBucket` to have somewhere to write.
 
 ## Related Pages
 
-- [OneHotEncoder](OneHotEncoder.md)
-- [../stage/one_hot_encoder.md](../stage/one_hot_encoder.md)
+- [`prep::OneHotEncoder`](OneHotEncoder.md) — the object these options configure.
+- [`prep::stage::one_hot_encoder`](../stage/one_hot_encoder.md) — the stage twin,
+  with the transform arithmetic in full.

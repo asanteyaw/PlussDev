@@ -12,6 +12,29 @@ namespace {
 
 constexpr int kBlockSize = 256;
 
+// psi(x): iterative recurrence to x >= 6 then Bernoulli asymptotic tail, with
+// the reflection formula for x <= 0. Matches the CPU digamma kernel.
+__device__ inline double pluss_digamma_device_(double x) {
+  if (isnan(x)) return x;
+  double reflect = 0.0;
+  if (x <= 0.0) {
+    if (x == floor(x)) return nan("");
+    const double kPi = 3.14159265358979323846;
+    reflect = -kPi / tan(kPi * x);
+    x = 1.0 - x;
+  }
+  double acc = 0.0;
+  while (x < 6.0) {
+    acc -= 1.0 / x;
+    x += 1.0;
+  }
+  const double inv = 1.0 / x;
+  const double inv2 = inv * inv;
+  acc += log(x) - 0.5 * inv -
+      inv2 * (1.0 / 12.0 - inv2 * (1.0 / 120.0 - inv2 * (1.0 / 252.0)));
+  return acc + reflect;
+}
+
 template <typename T>
 __device__ T unary_apply_(native::cpu::UnaryOpId op, T x) {
   switch (op) {
@@ -63,6 +86,8 @@ __device__ T unary_apply_(native::cpu::UnaryOpId op, T x) {
       return static_cast<T>(erfc(static_cast<double>(x)));
     case native::cpu::UnaryOpId::LGamma:
       return static_cast<T>(lgamma(static_cast<double>(x)));
+    case native::cpu::UnaryOpId::Digamma:
+      return static_cast<T>(pluss_digamma_device_(static_cast<double>(x)));
     case native::cpu::UnaryOpId::Asinh:
       return static_cast<T>(asinh(static_cast<double>(x)));
     case native::cpu::UnaryOpId::Acosh:
@@ -126,6 +151,8 @@ __device__ float unary_apply_<float>(native::cpu::UnaryOpId op, float x) {
       return erfcf(x);
     case native::cpu::UnaryOpId::LGamma:
       return lgammaf(x);
+    case native::cpu::UnaryOpId::Digamma:
+      return static_cast<float>(pluss_digamma_device_(static_cast<double>(x)));
     case native::cpu::UnaryOpId::Asinh:
       return asinhf(x);
     case native::cpu::UnaryOpId::Acosh:

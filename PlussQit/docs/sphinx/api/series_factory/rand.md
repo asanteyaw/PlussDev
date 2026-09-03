@@ -82,7 +82,7 @@ Two rules matter in practice:
   nondeterminism"
 
 That second rule is easy to miss. The zero-seed path is still deterministic if
-the process-level RNG state has been reset through `pluss::rng_seed(...)`.
+the process-level RNG state has been reset through `pluss::tils::rng_seed(...)`.
 
 ## Examples
 
@@ -150,9 +150,9 @@ Example 5. The zero-seed path is still replayable when you reset the library
 RNG state.
 
 ```cpp
-pluss::rng_seed(424242u);
+pluss::tils::rng_seed(424242u);
 auto g0 = pluss::series::rand({4}, pluss::ScalarType::Float32);
-pluss::rng_seed(424242u);
+pluss::tils::rng_seed(424242u);
 auto g1 = pluss::series::rand({4}, pluss::ScalarType::Float32);
 
 std::cout << g0 << "\n" << g1;
@@ -189,7 +189,7 @@ data=[0.74156487, 0.1599104, 0.27860114, 0.34419072]
 - `rand()` is a floating factory; it is the wrong constructor when you need
   integer draws or permutations.
 - `seed=0` uses the current library RNG stream and can therefore still be
-  replayed after `pluss::rng_seed(...)`.
+  replayed after `pluss::tils::rng_seed(...)`.
 - The config path changes routing and dtype policy, not the fundamental
   distribution.
 

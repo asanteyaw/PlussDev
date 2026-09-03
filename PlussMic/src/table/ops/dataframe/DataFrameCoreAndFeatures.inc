@@ -79,6 +79,15 @@ const std::vector<DataFrame::DTypes::Entry>& DataFrame::DTypes::entries() const 
   return entries_;
 }
 
+std::vector<std::string> DataFrame::DTypes::payloads() const {
+  std::vector<std::string> out;
+  out.reserve(entries_.size());
+  for (const auto& entry : entries_) {
+    out.push_back(entry.second);
+  }
+  return out;
+}
+
 DataFrame::DTypes::const_iterator DataFrame::DTypes::begin() const noexcept {
   return entries_.begin();
 }

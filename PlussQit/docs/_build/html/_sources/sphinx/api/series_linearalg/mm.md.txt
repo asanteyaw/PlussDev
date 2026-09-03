@@ -1,0 +1,131 @@
+<!-- pluss-hand-authored -->
+
+# Series::mm
+
+[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference)
+
+## Signature
+
+```cpp
+Series::mm(const Series& other) const -> Series
+Series::linearalg.mm(const Series& other) const -> Series
+Series::linearalg(const Series& other).mm() const -> Series
+```
+
+## What It Does
+
+`mm()` performs matrix-matrix multiplication and requires both operands to be
+two-dimensional.
+
+If the left matrix has shape `[m, k]` and the right matrix has shape `[k, n]`,
+the result has shape `[m, n]`. Each output entry is the inner product of one
+left row and one right column.
+
+Choose `mm()` when two-dimensionality is part of your program's contract. If a
+vector or batched matrix arrives accidentally, the method rejects it at the
+call site instead of changing the meaning or rank of the result.
+
+## Parameter
+
+**other** (`const Series&`)
+    The right-hand matrix. It must be two-dimensional, share dtype and platform
+    with the left matrix, and have a first dimension equal to the left matrix's
+    second dimension.
+
+## Returns
+
+`Series`
+    A new two-dimensional matrix with shape `[left.size(0), other.size(1)]`.
+
+## Gradient
+
+`mm()` uses the ordinary matrix-product reverse rule. For `C = A B` and
+incoming sensitivity `G`:
+
+```text
+dL/dA = G B^T
+dL/dB = A^T G
+```
+
+Both operands can be tracked. Neither operand is mutated.
+
+## Examples
+
+Example 1. The direct-peer and peer-bound accessor spellings are equivalent.
+
+```cpp
+auto left = pluss::make_series({
+    {1.0, 2.0},
+    {3.0, 4.0},
+});
+auto right = pluss::make_series({
+    {2.0, 0.0},
+    {1.0, 2.0},
+});
+
+std::cout << "peer_argument=" << left.linearalg.mm(right) << "\n";
+std::cout << "peer_bound=" << left.linearalg(right).mm() << "\n";
+```
+
+The first output column is `[1*2 + 2*1, 3*2 + 4*1] = [4, 10]`. The second is
+`[4, 8]`.
+
+### Output
+
+```text
+peer_argument=pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[4, 4],
+  [10, 8]]
+peer_bound=pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[4, 4],
+  [10, 8]]
+```
+
+Example 2. A vector is not a matrix and is rejected.
+
+```cpp
+try {
+  auto matrix = pluss::make_series({
+      {1.0, 2.0},
+      {3.0, 4.0},
+  });
+  std::cout << matrix.linearalg.mm(pluss::make_series({1.0, 2.0})) << "\n";
+} catch (const std::exception& e) {
+  std::cout << e.what() << "\n";
+}
+```
+
+### Output
+
+```text
+mm: expected two 2D Series
+```
+
+## Gotchas And Failure Modes
+
+- Both operands must be rank 2. Use `matmul()` for vectors or batches.
+- The inner dimensions must match.
+- Dtypes and platforms must match.
+- `mm()` does not perform elementwise multiplication.
+
+## Summary
+
+Use `mm()` when the operation is specifically matrix by matrix and rank drift
+should fail early.
+
+## See Also
+
+- [`Series::matmul`](matmul.md): rank-polymorphic multiplication.
+- [`Series::mv`](mv.md): matrix-vector multiplication.
+- [`Series::mul`](../series/mul.md): elementwise multiplication.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="matmul.html">
+    <span class="label">Previous</span>
+    <span class="title">matmul</span>
+  </a>
+  <a class="next-link" href="mv.html">
+    <span class="label">Next</span>
+    <span class="title">mv</span>
+  </a>
+</div>

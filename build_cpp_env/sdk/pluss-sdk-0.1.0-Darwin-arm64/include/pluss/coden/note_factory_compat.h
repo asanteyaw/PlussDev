@@ -21,6 +21,7 @@
 #include "MSharp/RangeView.h"
 #include "pluss/coden/coden.h"
 #include "pluss/detail/nested_note_literal.h"
+#include "pluss/coden/note_factory.h"
 
 namespace pluss {
 

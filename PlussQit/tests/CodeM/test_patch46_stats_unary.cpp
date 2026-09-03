@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+#include <cmath>
 #include <limits>
 
 TEST_CASE("var/std run", "[stats]") {
@@ -44,4 +45,23 @@ TEST_CASE("exp/log/sqrt run", "[unary]") {
   REQUIRE(e.numel() == 3);
   REQUIRE(l.numel() == 3);
   REQUIRE(r.numel() == 3);
+}
+
+TEST_CASE("root order statistics validate ranks and missing values", "[stats]") {
+  auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  REQUIRE(values.median().item<double>() == 2.5);
+  REQUIRE(values.quantile(0.25).item<double>() == 1.75);
+  REQUIRE_THROWS(values.quantile(-0.1));
+  REQUIRE_THROWS(values.nanquantile(1.1));
+
+  auto missing = pluss::make_series({1.0, std::numeric_limits<double>::quiet_NaN(), 5.0});
+  REQUIRE(std::isnan(missing.median().item<double>()));
+  REQUIRE(missing.nanmedian().item<double>() == 3.0);
+  REQUIRE(missing.nanquantile(0.5).item<double>() == 3.0);
+
+  auto empty = pluss::series::zeros({0});
+  REQUIRE_THROWS(empty.mode());
+
+  auto empty_lane = pluss::series::zeros({2, 0});
+  REQUIRE_THROWS(empty_lane.mode(1));
 }

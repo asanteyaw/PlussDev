@@ -63,7 +63,7 @@ When `rhs` is a scalar, that scalar is compared against every element of
 ## Gradient
 
 `eq()` is a mask-producing comparison, not a numerically meaningful
-differentiable transform. In practice, you teach and use it as control logic:
+differentiable transform. In practice, you use it as control logic:
 build a boolean mask, then feed that mask into selection, replacement, or
 filtering operations.
 
@@ -197,8 +197,8 @@ into the next stage of your pipeline.
     <span class="label">Previous</span>
     <span class="title">div</span>
   </a>
-  <a class="next-link" href="extract.html">
+  <a class="next-link" href="erf.html">
     <span class="label">Next</span>
-    <span class="title">extract</span>
+    <span class="title">erf</span>
   </a>
 </div>

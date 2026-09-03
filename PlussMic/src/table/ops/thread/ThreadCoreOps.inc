@@ -1521,6 +1521,12 @@ Thread Thread::filter(const pluss::Series& bool_mask) const {
   return take(indices);
 }
 
+Thread Thread::filter(const Thread& bool_mask) const {
+  PLUSS_CHECK(bool_mask.kind() == ThreadKind::Series,
+              "Thread::filter: bool mask must be a Bool-typed Series thread");
+  return filter(bool_mask.as_series());
+}
+
 Thread Thread::dropnull() const {
   if (!has_validity_mask()) {
     return *this;
@@ -2628,11 +2634,18 @@ Thread Thread::has(const Thread& values) const {
   if (detail::has_display_labels(*this)) {
     out = detail::with_display_labels(out, detail::display_labels(*this));
   }
+  // The numeric fast path routes through has(double) -> eq(double), which only
+  // accepts a Series-backed receiver. Take it only when *this* is numeric too;
+  // otherwise fall back to string-form comparison (matching how freq()/
+  // distinct()/duplicated() group across payload kinds) so that, e.g.,
+  // note_thread.has(numeric_thread) yields all-false instead of throwing.
+  const bool self_numeric = kind() == ThreadKind::Series && is_numeric_series_type(as_series());
   for (std::int64_t i = 0; i < values.size(); ++i) {
     if (!values.is_valid(i)) {
       continue;
     }
-    if (values.kind() == ThreadKind::Series && is_numeric_series_type(values.as_series())) {
+    if (self_numeric && values.kind() == ThreadKind::Series &&
+        is_numeric_series_type(values.as_series())) {
       double scalar = 0.0;
       PLUSS_CHECK(extract_numeric_value(values.as_series(), i, scalar),
                   "Thread::has: failed to extract numeric membership value");
@@ -2874,15 +2887,15 @@ Thread Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const {
   return aligned_compare_(*this, other, op, "Thread::compare");
 }
 
-Thread Thread::btw(double a, double b, bool inclusive) const {
-  return btw(a, b, inclusive, inclusive);
+Thread Thread::between(double a, double b, bool inclusive) const {
+  return between(a, b, inclusive, inclusive);
 }
 
-Thread Thread::btw(double a, double b, bool include_left, bool include_right) const {
+Thread Thread::between(double a, double b, bool include_left, bool include_right) const {
   PLUSS_CHECK(kind() == ThreadKind::Series,
-              "Thread::btw(double,double,...): requires Series payload; use temporal overloads for date/time threads");
+              "Thread::between(double,double,...): requires Series payload; use temporal overloads for date/time threads");
   PLUSS_CHECK(is_numeric_series_type(as_series()),
-              "Thread::btw(double,double,...): Series payload must be numeric");
+              "Thread::between(double,double,...): Series payload must be numeric");
 
   auto lower = a;
   auto upper = b;
@@ -2898,13 +2911,13 @@ Thread Thread::btw(double a, double b, bool include_left, bool include_right) co
   return (left & right);
 }
 
-Thread Thread::btw(std::string_view lo, std::string_view hi, bool inclusive) const {
-  return btw(lo, hi, inclusive, inclusive);
+Thread Thread::between(std::string_view lo, std::string_view hi, bool inclusive) const {
+  return between(lo, hi, inclusive, inclusive);
 }
 
-Thread Thread::btw(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const {
+Thread Thread::between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const {
   PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
-              "Thread::btw(string,string,...): requires Timeline/TimeIndex payload");
+              "Thread::between(string,string,...): requires Timeline/TimeIndex payload");
 
   auto lower = pluss::make_timeline(lo);
   auto upper = pluss::make_timeline(hi);
@@ -2919,12 +2932,12 @@ Thread Thread::btw(std::string_view lo, std::string_view hi, bool include_left, 
   return Thread(left.logical_and(right), validity_mask());
 }
 
-Thread Thread::btw(const Thread& lo, const Thread& hi, bool inclusive) const {
-  return btw(lo, hi, inclusive, inclusive);
+Thread Thread::between(const Thread& lo, const Thread& hi, bool inclusive) const {
+  return between(lo, hi, inclusive, inclusive);
 }
 
-Thread Thread::btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const {
-  PLUSS_CHECK(lo.defined() && hi.defined(), "Thread::btw(Thread,Thread,...): lower/upper bounds must be defined");
+Thread Thread::between(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const {
+  PLUSS_CHECK(lo.defined() && hi.defined(), "Thread::between(Thread,Thread,...): lower/upper bounds must be defined");
   const auto left = include_left ? (*this >= lo) : (*this > lo);
   const auto right = include_right ? (*this <= hi) : (*this < hi);
   return (left & right);

@@ -1,5 +1,11 @@
 # Lymph API Reference Doc Standards
 
+> **Superseded.** `lymph_api_doc_standards.md` is now the canonical, non-
+> negotiable doc-standards file, including the standing "Working Directives"
+> section. Keep this file only as background; where the two disagree, the other
+> one wins.
+
+
 This note is a standing authoring contract for Lymph API documentation work.
 
 Use it before and during every Lymph docs pass so the quality does not drift.

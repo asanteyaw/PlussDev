@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/ai/lymph/model.h"
+#include "pluss/ai/lymph/selection.h"
 #include "pluss/ai/lymph/workflow.h"
 
 #include <utility>
@@ -14,14 +15,21 @@
 
 namespace pluss::ai::lymph::reports {
 
-[[nodiscard]] inline ConfusionTable confusion_table(const Model& model,
+using Class = ClassReport;
+using Compare = selection::CompareReport;
+using CrossVal = metrics::CrossValidationReport;
+using Metric = metrics::MetricReport;
+using SeriesCompare = metrics::SeriesCompareReport;
+using Tune = TuneReport;
+
+[[nodiscard]] inline ConfusionTable confusion_table(const models::Model& model,
                                                     const LabeledBatch& batch,
                                                     const InferOptions& infer_options = {},
                                                     const ConfusionOptions& options = {}) {
   return detail::confusion_table(detail::model_core(model), batch, infer_options, options);
 }
 
-[[nodiscard]] inline ConfusionTable confusion_table(const Model& model,
+[[nodiscard]] inline ConfusionTable confusion_table(const models::Model& model,
                                                     const pluss::table::DataFrame& x,
                                                     const Series& y,
                                                     const InferOptions& infer_options = {},
@@ -29,7 +37,7 @@ namespace pluss::ai::lymph::reports {
   return detail::confusion_table(detail::model_core(model), x, y, infer_options, options);
 }
 
-[[nodiscard]] inline ConfusionTable confusion_table(const Model& model,
+[[nodiscard]] inline ConfusionTable confusion_table(const models::Model& model,
                                                     const pluss::table::DataFrame& frame,
                                                     const DataFrameBatchOptions& data_options,
                                                     const InferOptions& infer_options = {},
@@ -37,14 +45,14 @@ namespace pluss::ai::lymph::reports {
   return detail::confusion_table(detail::model_core(model), frame, data_options, infer_options, options);
 }
 
-[[nodiscard]] inline ClassReport classification_summary(const Model& model,
+[[nodiscard]] inline ClassReport classification_summary(const models::Model& model,
                                                         const LabeledBatch& batch,
                                                         const InferOptions& infer_options = {},
                                                         const ClassReportOptions& options = {}) {
   return detail::classification_summary(detail::model_core(model), batch, infer_options, options);
 }
 
-[[nodiscard]] inline ClassReport classification_summary(const Model& model,
+[[nodiscard]] inline ClassReport classification_summary(const models::Model& model,
                                                         const pluss::table::DataFrame& x,
                                                         const Series& y,
                                                         const InferOptions& infer_options = {},
@@ -52,7 +60,7 @@ namespace pluss::ai::lymph::reports {
   return detail::classification_summary(detail::model_core(model), x, y, infer_options, options);
 }
 
-[[nodiscard]] inline ClassReport classification_summary(const Model& model,
+[[nodiscard]] inline ClassReport classification_summary(const models::Model& model,
                                                         const pluss::table::DataFrame& frame,
                                                         const DataFrameBatchOptions& data_options,
                                                         const InferOptions& infer_options = {},
@@ -60,27 +68,27 @@ namespace pluss::ai::lymph::reports {
   return detail::classification_summary(detail::model_core(model), frame, data_options, infer_options, options);
 }
 
-[[nodiscard]] inline Series classification_metric_series(const Model& model,
+[[nodiscard]] inline Series classification_metric_series(const models::Model& model,
                                                          const LabeledBatch& batch,
                                                          const AssessOptions& options = {}) {
   return detail::classification_metric_series(detail::model_core(model), batch, options);
 }
 
-[[nodiscard]] inline Series classification_metric_series(const Model& model,
+[[nodiscard]] inline Series classification_metric_series(const models::Model& model,
                                                          const pluss::table::DataFrame& x,
                                                          const Series& y,
                                                          const AssessOptions& options = {}) {
   return detail::classification_metric_series(detail::model_core(model), x, y, options);
 }
 
-[[nodiscard]] inline Series classification_metric_series(const Model& model,
+[[nodiscard]] inline Series classification_metric_series(const models::Model& model,
                                                          const pluss::table::DataFrame& x,
                                                          const pluss::table::Thread& y,
                                                          const AssessOptions& options = {}) {
   return detail::classification_metric_series(detail::model_core(model), x, y, options);
 }
 
-[[nodiscard]] inline Series classification_metric_series(const Model& model,
+[[nodiscard]] inline Series classification_metric_series(const models::Model& model,
                                                          const pluss::table::DataFrame& frame,
                                                          const DataFrameBatchOptions& data_options,
                                                          const AssessOptions& options = {}) {
@@ -89,8 +97,8 @@ namespace pluss::ai::lymph::reports {
   return reports::classification_metric_series(model, batch, options);
 }
 
-[[nodiscard]] inline ConfusionTable confusion_table(const Workflow& workflow,
-                                                    const Payload& payload,
+[[nodiscard]] inline ConfusionTable confusion_table(const workflow::Workflow& workflow,
+                                                    const workflow::Payload& payload,
                                                     const InferOptions& infer_options = {},
                                                     const ConfusionOptions& options = {}) {
   const detail::WorkflowLabeledInput input =
@@ -101,8 +109,8 @@ namespace pluss::ai::lymph::reports {
   return reports::confusion_table(workflow.model(), *input.batch, infer_options, options);
 }
 
-[[nodiscard]] inline ClassReport classification_summary(const Workflow& workflow,
-                                                        const Payload& payload,
+[[nodiscard]] inline ClassReport classification_summary(const workflow::Workflow& workflow,
+                                                        const workflow::Payload& payload,
                                                         const InferOptions& infer_options = {},
                                                         const ClassReportOptions& options = {}) {
   const detail::WorkflowLabeledInput input =
@@ -113,8 +121,8 @@ namespace pluss::ai::lymph::reports {
   return reports::classification_summary(workflow.model(), *input.batch, infer_options, options);
 }
 
-[[nodiscard]] inline Series classification_metric_series(const Workflow& workflow,
-                                                         const Payload& payload,
+[[nodiscard]] inline Series classification_metric_series(const workflow::Workflow& workflow,
+                                                         const workflow::Payload& payload,
                                                          const AssessOptions& options = {}) {
   const detail::WorkflowLabeledInput input =
       detail::workflow_labeled_input_(workflow, payload, "reports::classification_metric_series(workflow,payload)");
@@ -124,35 +132,35 @@ namespace pluss::ai::lymph::reports {
   return reports::classification_metric_series(workflow.model(), *input.batch, options);
 }
 
-[[nodiscard]] inline ThresholdCurve threshold_curve(const Model& model,
+[[nodiscard]] inline ThresholdCurve threshold_curve(const models::Model& model,
                                                     const LabeledBatch& batch,
                                                     const InferOptions& infer_options = {}) {
   return detail::threshold_curve(detail::model_core(model), batch, infer_options);
 }
 
-[[nodiscard]] inline ThresholdCurve threshold_curve(const Model& model,
+[[nodiscard]] inline ThresholdCurve threshold_curve(const models::Model& model,
                                                     const pluss::table::DataFrame& x,
                                                     const Series& y,
                                                     const InferOptions& infer_options = {}) {
   return detail::threshold_curve(detail::model_core(model), x, y, infer_options);
 }
 
-[[nodiscard]] inline ThresholdCurve threshold_curve(const Model& model,
+[[nodiscard]] inline ThresholdCurve threshold_curve(const models::Model& model,
                                                     const pluss::table::DataFrame& x,
                                                     const pluss::table::Thread& y,
                                                     const InferOptions& infer_options = {}) {
   return detail::threshold_curve(detail::model_core(model), x, y, infer_options);
 }
 
-[[nodiscard]] inline ThresholdCurve threshold_curve(const Model& model,
+[[nodiscard]] inline ThresholdCurve threshold_curve(const models::Model& model,
                                                     const pluss::table::DataFrame& frame,
                                                     const DataFrameBatchOptions& data_options,
                                                     const InferOptions& infer_options = {}) {
   return detail::threshold_curve(detail::model_core(model), frame, data_options, infer_options);
 }
 
-[[nodiscard]] inline ThresholdCurve threshold_curve(const Workflow& workflow,
-                                                    const Payload& payload,
+[[nodiscard]] inline ThresholdCurve threshold_curve(const workflow::Workflow& workflow,
+                                                    const workflow::Payload& payload,
                                                     const InferOptions& infer_options = {}) {
   const detail::WorkflowLabeledInput input =
       detail::workflow_labeled_input_(workflow, payload, "reports::threshold_curve(workflow,payload)");
@@ -162,14 +170,14 @@ namespace pluss::ai::lymph::reports {
   return reports::threshold_curve(workflow.model(), *input.batch, infer_options);
 }
 
-[[nodiscard]] inline double best_threshold(const Model& model,
+[[nodiscard]] inline double best_threshold(const models::Model& model,
                                            const LabeledBatch& batch,
                                            MetricKind objective = MetricKind::F1,
                                            const InferOptions& infer_options = {}) {
   return detail::best_threshold(detail::model_core(model), batch, objective, infer_options);
 }
 
-[[nodiscard]] inline double best_threshold(const Model& model,
+[[nodiscard]] inline double best_threshold(const models::Model& model,
                                            const pluss::table::DataFrame& x,
                                            const Series& y,
                                            MetricKind objective = MetricKind::F1,
@@ -177,7 +185,7 @@ namespace pluss::ai::lymph::reports {
   return detail::best_threshold(detail::model_core(model), x, y, objective, infer_options);
 }
 
-[[nodiscard]] inline double best_threshold(const Model& model,
+[[nodiscard]] inline double best_threshold(const models::Model& model,
                                            const pluss::table::DataFrame& x,
                                            const pluss::table::Thread& y,
                                            MetricKind objective = MetricKind::F1,
@@ -185,7 +193,7 @@ namespace pluss::ai::lymph::reports {
   return detail::best_threshold(detail::model_core(model), x, y, objective, infer_options);
 }
 
-[[nodiscard]] inline double best_threshold(const Model& model,
+[[nodiscard]] inline double best_threshold(const models::Model& model,
                                            const pluss::table::DataFrame& frame,
                                            const DataFrameBatchOptions& data_options,
                                            MetricKind objective = MetricKind::F1,
@@ -193,8 +201,8 @@ namespace pluss::ai::lymph::reports {
   return detail::best_threshold(detail::model_core(model), frame, data_options, objective, infer_options);
 }
 
-[[nodiscard]] inline double best_threshold(const Workflow& workflow,
-                                           const Payload& payload,
+[[nodiscard]] inline double best_threshold(const workflow::Workflow& workflow,
+                                           const workflow::Payload& payload,
                                            MetricKind objective = MetricKind::F1,
                                            const InferOptions& infer_options = {}) {
   const detail::WorkflowLabeledInput input =
@@ -207,9 +215,9 @@ namespace pluss::ai::lymph::reports {
 
 class ModelReports final {
  public:
-  explicit ModelReports(Model model) : model_(std::move(model)) {}
+  explicit ModelReports(models::Model model) : model_(std::move(model)) {}
 
-  [[nodiscard]] const Model& model() const noexcept { return model_; }
+  [[nodiscard]] const models::Model& model() const noexcept { return model_; }
 
   [[nodiscard]] ConfusionTable confusion_table(const LabeledBatch& batch,
                                                const InferOptions& infer_options = {},
@@ -306,8 +314,10 @@ class ModelReports final {
   }
 
  private:
-  Model model_;
+  models::Model model_;
 };
+
+using Model = ModelReports;
 
 } // namespace pluss::ai::lymph::reports
 
@@ -319,7 +329,7 @@ using ModelReports = reports::ModelReports;
 
 namespace pluss::ai::lymph {
 
-[[nodiscard]] inline reports::ModelReports Model::reports() const {
+[[nodiscard]] inline reports::ModelReports models::Model::reports() const {
   return reports::ModelReports(*this);
 }
 

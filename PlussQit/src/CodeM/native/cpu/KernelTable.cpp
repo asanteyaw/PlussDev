@@ -39,6 +39,7 @@ UnaryKernelFn lookup_unary(UnaryOpId op, ScalarType dt) {
     case UnaryOpId::Erf: return &erf;
     case UnaryOpId::Erfc: return &erfc;
     case UnaryOpId::LGamma: return &lgamma;
+    case UnaryOpId::Digamma: return &digamma;
     case UnaryOpId::Asinh: return &asinh;
     case UnaryOpId::Acosh: return &acosh;
     case UnaryOpId::Atanh: return &atanh;

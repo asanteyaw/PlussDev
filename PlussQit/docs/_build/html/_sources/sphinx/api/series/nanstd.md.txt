@@ -248,5 +248,5 @@ should NaN mean in this analysis?"
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nanvar.html"><span class="label">Previous</span><span class="title">nanvar</span></a>
-  <a class="next-link" href="center.html"><span class="label">Next</span><span class="title">center</span></a>
+  <a class="next-link" href="nansum.html"><span class="label">Next</span><span class="title">nansum</span></a>
 </div>

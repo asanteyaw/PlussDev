@@ -1239,18 +1239,44 @@ inline Trace& barplot(
   if (use_bivariate) {
     const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
         frame, columns, "flash::barplot(DataFrame)");
-    PLUSS_CHECK(
-        ::pluss::table::detail::is_continuous_thread_(x_col.second) &&
-            ::pluss::table::detail::is_continuous_thread_(y_col.second),
-        "flash::barplot(DataFrame): 2D bar plots require numeric or temporal x/y features");
-    const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
-        x_col.second, y_col.second, "flash::barplot(DataFrame)");
-    if (options.horizontal) {
-      ::pluss::table::detail::set_bivariate_labels_(pane, y_col.first, x_col.first);
-    } else {
-      ::pluss::table::detail::set_bivariate_labels_(pane, x_col.first, y_col.first);
+    if (::pluss::table::detail::is_continuous_thread_(x_col.second) &&
+        ::pluss::table::detail::is_continuous_thread_(y_col.second)) {
+      const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
+          x_col.second, y_col.second, "flash::barplot(DataFrame)");
+      if (options.horizontal) {
+        ::pluss::table::detail::set_bivariate_labels_(pane, y_col.first, x_col.first);
+      } else {
+        ::pluss::table::detail::set_bivariate_labels_(pane, x_col.first, y_col.first);
+      }
+      return barplot(pane, x, y, options);
     }
-    return barplot(pane, x, y, options);
+
+    if (x_col.second.kind() == ::pluss::table::ThreadKind::Note &&
+        ::pluss::table::detail::is_continuous_thread_(y_col.second)) {
+      const auto [labels, values] = ::pluss::table::detail::grouped_note_series_(
+          x_col.second, y_col.second, "flash::barplot(DataFrame)");
+      if (options.horizontal) {
+        ::pluss::table::detail::set_bivariate_labels_(pane, y_col.first, x_col.first);
+      } else {
+        ::pluss::table::detail::set_bivariate_labels_(pane, x_col.first, y_col.first);
+      }
+      return barplot(pane, labels, values, options);
+    }
+
+    if (y_col.second.kind() == ::pluss::table::ThreadKind::Note &&
+        ::pluss::table::detail::is_continuous_thread_(x_col.second)) {
+      const auto [labels, values] = ::pluss::table::detail::grouped_note_series_(
+          y_col.second, x_col.second, "flash::barplot(DataFrame)");
+      if (options.horizontal) {
+        ::pluss::table::detail::set_bivariate_labels_(pane, x_col.first, y_col.first);
+      } else {
+        ::pluss::table::detail::set_bivariate_labels_(pane, y_col.first, x_col.first);
+      }
+      return barplot(pane, labels, values, options);
+    }
+
+    PLUSS_FAIL(
+        "flash::barplot(DataFrame): 2D bar plots require numeric/temporal pairs or one text axis with one numeric/temporal value axis");
   }
 
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
@@ -1770,8 +1796,10 @@ inline Trace& heatmap(
       tall.has_value()) {
     const auto [x, y, z] = ::pluss::table::detail::triplet_continuous_series_(
         tall->x.second, tall->y.second, tall->z.second, "flash::heatmap(DataFrame)");
+    const auto [grid_x, grid_y, grid_z] = ::pluss::pl::flash::detail::triplot_bin_surface(
+        x, y, z);
     ::pluss::table::detail::set_trivariate_labels_(pane, tall->x.first, tall->y.first, tall->z.first);
-    return heatmap(pane, x, y, z, options);
+    return heatmap(pane, grid_x, grid_y, grid_z, options);
   }
   auto matrix = ::pluss::table::detail::matrix_heatmap_payload_(
       frame, "flash::heatmap(DataFrame)");

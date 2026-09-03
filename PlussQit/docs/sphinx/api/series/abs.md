@@ -145,8 +145,8 @@ possible, all values reflected onto the non-negative side."
     <span class="label">Previous</span>
     <span class="title">Series API Reference</span>
   </a>
-  <a class="next-link" href="acos.html">
+  <a class="next-link" href="abs2.html">
     <span class="label">Next</span>
-    <span class="title">acos</span>
+    <span class="title">abs2</span>
   </a>
 </div>

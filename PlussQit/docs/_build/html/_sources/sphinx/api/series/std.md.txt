@@ -106,7 +106,7 @@ clearer public surface than manually chaining mean and standard deviation.
 
 ## Examples
 
-These examples teach `std()` as the readable companion to `var()`, so they
+These examples present `std()` as the readable companion to `var()`, so they
 emphasize estimator choice, axis grouping, accessor parity, and the same edge
 cases.
 

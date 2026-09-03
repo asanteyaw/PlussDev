@@ -57,6 +57,10 @@
     if (window.DOCUMENTATION_OPTIONS && typeof window.DOCUMENTATION_OPTIONS.URL_ROOT === "string") {
       return window.DOCUMENTATION_OPTIONS.URL_ROOT;
     }
+    const htmlRoot = document.documentElement.getAttribute("data-content_root");
+    if (typeof htmlRoot === "string" && htmlRoot.length) {
+      return htmlRoot;
+    }
     return "";
   }
 
@@ -98,7 +102,146 @@
     document.body.insertBefore(topbar, document.body.firstChild);
   }
 
+  function isPlussApiPage() {
+    if (!window.PLUSS_API_TREE) {
+      return false;
+    }
+    return /\/api\/(?:plussai_[^/]+|lymph\/.+|lymph\.html)$/.test(window.location.pathname);
+  }
+
+  function isPlussAiApiPage() {
+    return siteBrandFromTitle() === "PlussAI" && /\/api\//.test(window.location.pathname);
+  }
+
+  function docBaseUrl() {
+    return new URL(urlRoot(), window.location.href);
+  }
+
+  function absoluteDocPath(path) {
+    if (!path) {
+      return "";
+    }
+    try {
+      return new URL(path, docBaseUrl()).pathname;
+    } catch (_err) {
+      return "";
+    }
+  }
+
+  function nodeContainsCurrentPage(node) {
+    if (!node) {
+      return false;
+    }
+    const current = window.location.pathname;
+    if (node.path && absoluteDocPath(node.path) === current) {
+      return true;
+    }
+    return Array.isArray(node.children) && node.children.some((child) => nodeContainsCurrentPage(child));
+  }
+
+  function buildApiTreeSidebar() {
+    if (!isPlussApiPage()) {
+      return false;
+    }
+
+    if (document.querySelector(".pluss-api-sidebar")) {
+      return true;
+    }
+
+    const wrapper = document.querySelector(".sphinxsidebarwrapper");
+    if (!wrapper) {
+      return false;
+    }
+
+    const searchBox = wrapper.querySelector("#searchbox");
+    Array.from(wrapper.children).forEach((child) => {
+      if (child !== searchBox) {
+        child.remove();
+      }
+    });
+
+    const sidebar = document.createElement("div");
+    sidebar.className = "pluss-api-sidebar";
+
+    const title = document.createElement("div");
+    title.className = "sidebar-title";
+    title.textContent = "API Reference";
+    sidebar.appendChild(title);
+
+    const nav = document.createElement("nav");
+    nav.className = "pluss-api-tree";
+    nav.setAttribute("aria-label", "Pluss API navigation");
+    sidebar.appendChild(nav);
+
+    const makeLink = (node) => {
+      const link = document.createElement("a");
+      link.textContent = node.label || "";
+      link.href = node.path ? new URL(node.path, docBaseUrl()).href : "#";
+      if (node.path && absoluteDocPath(node.path) === window.location.pathname) {
+        link.classList.add("active");
+        link.setAttribute("aria-current", "page");
+      }
+      return link;
+    };
+
+    const renderNode = (node, depth) => {
+      const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+      if (hasChildren) {
+        const branch = document.createElement("div");
+        branch.className = `tree-branch depth-${depth}`;
+        if (nodeContainsCurrentPage(node)) {
+          branch.classList.add("open");
+        }
+
+        const row = document.createElement("div");
+        row.className = "tree-row";
+
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "tree-toggle";
+        toggle.setAttribute("aria-label", `${branch.classList.contains("open") ? "Collapse" : "Expand"} ${node.label || "section"}`);
+        toggle.setAttribute("aria-expanded", branch.classList.contains("open") ? "true" : "false");
+        toggle.addEventListener("click", () => {
+          const opening = !branch.classList.contains("open");
+          branch.classList.toggle("open", opening);
+          toggle.setAttribute("aria-expanded", opening ? "true" : "false");
+          toggle.setAttribute("aria-label", `${opening ? "Collapse" : "Expand"} ${node.label || "section"}`);
+        });
+        row.appendChild(toggle);
+
+        const link = makeLink(node);
+        link.classList.add("tree-link");
+        row.appendChild(link);
+        branch.appendChild(row);
+
+        const children = document.createElement("div");
+        children.className = "tree-children";
+        node.children.forEach((child) => {
+          children.appendChild(renderNode(child, depth + 1));
+        });
+        branch.appendChild(children);
+        return branch;
+      }
+
+      const leaf = makeLink(node);
+      leaf.classList.add("tree-leaf", `depth-${depth}`);
+      return leaf;
+    };
+
+    const treeRoot = window.PLUSS_API_TREE;
+    const topNodes = Array.isArray(treeRoot.children) ? treeRoot.children : [];
+    topNodes.forEach((child) => {
+      nav.appendChild(renderNode(child, 0));
+    });
+
+    wrapper.insertBefore(sidebar, searchBox || wrapper.firstChild);
+    return true;
+  }
+
   function buildMethodSidebar() {
+    if (isPlussAiApiPage() || window.PLUSS_API_TREE || document.querySelector(".pluss-api-sidebar")) {
+      return null;
+    }
     const apiRoots = Array.from(document.querySelectorAll("section")).filter((section) => {
       const h2 = section.querySelector(":scope > h2");
       return h2 && text(h2).startsWith("API Reference Style");
@@ -335,6 +478,9 @@
   }
 
   function buildSectionSidebar() {
+    if (isPlussAiApiPage() || window.PLUSS_API_TREE || document.querySelector(".pluss-api-sidebar")) {
+      return null;
+    }
     const documentRoot = document.querySelector("div.document");
     const bodywrapper = document.querySelector(".bodywrapper");
     if (!documentRoot || !bodywrapper) {
@@ -435,6 +581,81 @@
       getActiveIndex: () => activeIndex,
       setActive: (idx) => setActive(idx, { updateHash: true, resetScroll: true }),
     };
+  }
+
+  function addCopyButtons() {
+    document.querySelectorAll("section").forEach((section) => {
+      const heading = section.querySelector(":scope > h3, :scope > h4");
+      if (!heading || !/^Example\\b/i.test(heading.textContent.trim())) {
+        return;
+      }
+      section.querySelectorAll(":scope div.highlight").forEach((block) => {
+        if (block.querySelector(".pluss-copy-code")) {
+          return;
+        }
+        const button = document.createElement("button");
+        button.className = "pluss-copy-code";
+        button.type = "button";
+        button.title = "Copy code";
+        button.setAttribute("aria-label", "Copy code");
+        button.addEventListener("click", async () => {
+          const pre = block.querySelector("pre");
+          if (!pre) {
+            return;
+          }
+          const value = pre.textContent;
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(value);
+          } else {
+            const fallback = document.createElement("textarea");
+            fallback.value = value;
+            fallback.setAttribute("readonly", "");
+            fallback.style.cssText = "position:fixed;opacity:0";
+            document.body.appendChild(fallback);
+            fallback.select();
+            document.execCommand("copy");
+            fallback.remove();
+          }
+          button.classList.add("copied");
+          button.title = "Copied";
+          window.setTimeout(() => {
+            button.classList.remove("copied");
+            button.title = "Copy code";
+          }, 1200);
+        });
+        block.appendChild(button);
+      });
+    });
+  }
+
+  function scheduleCopyButtons() {
+    [0, 150, 600, 1800].forEach((delay) => {
+      window.setTimeout(addCopyButtons, delay);
+    });
+  }
+
+  function initPlussApiSidebar() {
+    const tree = document.querySelector(".pluss-api-sidebar .pluss-api-tree");
+    if (!tree) {
+      return;
+    }
+
+    const current = window.location.pathname;
+    const branchNodes = Array.from(tree.querySelectorAll(".tree-branch"));
+
+    branchNodes.forEach((branch) => {
+      const branchLink = branch.querySelector(":scope > .tree-row .tree-link");
+      const currentBranch = branchLink && absoluteDocPath(branchLink.getAttribute("href")) === current;
+      const activeDescendant = branch.querySelector(':scope > .tree-children a.active');
+      if (currentBranch || activeDescendant) {
+        branch.classList.add("open");
+        const toggle = branch.querySelector(":scope > .tree-row .tree-toggle");
+        if (toggle) {
+          toggle.setAttribute("aria-expanded", "true");
+          toggle.setAttribute("aria-label", `Collapse ${text(branchLink) || "section"}`);
+        }
+      }
+    });
   }
 
   function buildPrevNext(methodNav) {
@@ -568,8 +789,9 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     buildTopbar();
-    const methodNav = buildMethodSidebar();
-    const sectionNav = methodNav ? null : buildSectionSidebar();
+    const hasApiTree = buildApiTreeSidebar();
+    const methodNav = hasApiTree ? null : buildMethodSidebar();
+    const sectionNav = hasApiTree ? null : (methodNav ? null : buildSectionSidebar());
 
     // Safety fallback: never leave the left rail empty.
     if (document.body.classList.contains("has-method-sidebar")) {
@@ -583,6 +805,22 @@
       }
     }
 
+    if (isPlussAiApiPage() && document.querySelector(".pluss-api-sidebar")) {
+      const sidebar = document.getElementById("pluss-method-sidebar");
+      if (sidebar) {
+        sidebar.remove();
+      }
+      document.body.classList.remove("has-method-sidebar");
+    }
+
+    initPlussApiSidebar();
     buildPrevNext(methodNav || sectionNav);
+    scheduleCopyButtons();
   });
+
+  window.addEventListener("pageshow", () => {
+    scheduleCopyButtons();
+  });
+
+  window.setTimeout(addCopyButtons, 2500);
 })();

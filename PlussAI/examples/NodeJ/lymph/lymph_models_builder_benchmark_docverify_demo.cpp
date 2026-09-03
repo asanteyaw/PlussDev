@@ -29,23 +29,15 @@ int main() {
   cv.shuffle = false;
 
   const lymph::selection::CompareResult ranked = builder.benchmark(
-      x,
-      y,
-      cv,
-      lymph::options::Train{},
-      lymph::options::Assess{},
-      lymph::MetricKind::Accuracy,
-      lymph::TuneObjectivePolicy::Auto,
-      lymph::options::Fit{.fit_top = 2});
+      x, y, cv, lymph::options::Train{}, lymph::options::Assess{}, lymph::MetricKind::Accuracy,
+      lymph::TuneObjectivePolicy::Auto, lymph::options::Fit{.fit_top = 2});
 
   std::cout << "== benchmark ==\n";
   std::cout << ranked.report.board() << "\n\n";
-  std::cout << "best_name = " << ranked.report.best_name
-            << ", benchmarked = " << std::boolalpha << builder.benchmarked()
-            << ", best_trained = " << builder.best().trained()
+  std::cout << "best_name = " << ranked.report.best_name << ", benchmarked = " << std::boolalpha
+            << builder.benchmarked() << ", best_trained = " << builder.best().trained()
             << ", worst_trained = " << builder.worst().trained()
-            << ", stored_logreg_trained = " << builder.get("logreg").trained()
-            << "\n";
+            << ", stored_logreg_trained = " << builder.get("logreg").trained() << "\n";
 
   return 0;
 }

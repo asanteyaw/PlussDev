@@ -41,7 +41,6 @@ api/thread/between
 api/thread/bfill
 api/thread/bottom
 api/thread/bounded
-api/thread/btw
 api/thread/bucketize
 api/thread/casefold
 api/thread/cast
@@ -77,6 +76,7 @@ api/thread/filter
 api/thread/floordiv
 api/thread/flow
 api/thread/fold
+api/thread/framerize
 api/thread/freq
 api/thread/fullmatch
 api/thread/ge
@@ -154,7 +154,6 @@ api/thread/se
 api/thread/select
 api/thread/shape
 api/thread/shift
-api/thread/show
 api/thread/shuffle
 api/thread/size
 api/thread/skew

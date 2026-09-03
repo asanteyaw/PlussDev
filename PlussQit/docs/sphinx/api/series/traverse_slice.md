@@ -281,8 +281,8 @@ an aliasing view. If yes, `traverse_slice()` is the right surface.
     <span class="label">Previous</span>
     <span class="title">slice</span>
   </a>
-  <a class="next-link" href="traverse_put_.html">
+  <a class="next-link" href="tril.html">
     <span class="label">Next</span>
-    <span class="title">traverse_put_</span>
+    <span class="title">tril</span>
   </a>
 </div>

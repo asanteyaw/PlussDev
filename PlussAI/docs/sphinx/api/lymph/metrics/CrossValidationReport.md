@@ -1,70 +1,60 @@
+<!-- pluss-hand-authored -->
+
 # `lymph::metrics::CrossValidationReport`
 
-## Summary
+[Back to `metrics`](../metrics.md)
 
-`CrossValidationReport` is the structured output of validation execution in Lymph.
+`CrossValidationReport` holds the outcome of a cross-validation run: every
+fold's assessment, the metric **mean** and **stdev** across folds, and a
+`board()` table. It is what a validation [`Plan::run`](../selection/validate/Plan/run.md)
+returns.
 
-Use it when you want fold-level evaluation plus aggregate metric summaries in one
-object.
+## Scope And Alias
 
-## What The Report Contains
+The type is `lymph::metrics::CrossValidationReport`, re-exported at `lymph::`
+scope with the umbrella alias `lymph::reports::CrossVal`. On `selection` pages it
+is usually spelled `reports::CrossVal`; here in its home family the full name is
+fine. All three name one type.
 
-The report carries several layers of evidence:
+## Fields
 
-- fold-level trial information underneath
-- metric-wise mean values
-- metric-wise standard deviations
-- a board materialization surface for inspection or export
+`CrossAssessReport report`
+: The per-fold detail. `report.folds` is one entry per fold (each with its own
+  metric values and train / test index split); `report.metrics` is the metric
+  order; `report.mean_metrics` / `report.std_metrics` are the raw aggregate
+  `Series`.
 
-That combination matters because a useful validation surface should answer both:
+`MetricReport mean`
+: The across-fold **mean** of every requested metric, as a
+  [`MetricReport`](MetricReport.md) — read `mean.accuracy.item<double>()`,
+  `mean.f1`, `mean.r2`, and so on, or `mean.values` for all of them in
+  `report.metrics` order.
 
-- how good is the model on average?
-- how stable is that goodness across folds?
+`MetricReport stdev`
+: The across-fold **standard deviation**, same shape as `mean`.
 
-Too many APIs only answer the first question.
+## Methods
 
-## `board()`
-
-`board()` materializes the report as a `DataFrame`.
-
-The board is usually what users want to inspect first because it exposes one row
-per requested metric with columns such as:
-
-- metric name
-- fold mean
-- fold standard deviation
-
-Use it when you want:
-
-- terminal inspection
-- a saved report artifact
-- a board you can join into experiment tracking
-
-## Signature
+### `board`
 
 ```cpp
-lymph::metrics::CrossValidationReport lymph::ValidationPlan::run(...) const;
-pluss::table::DataFrame lymph::metrics::CrossValidationReport::board() const;
+pluss::table::DataFrame board() const;
 ```
 
-## Practical Example
+A three-column table — `metric`, `mean`, `stdev` — one row per requested
+metric, titled *Cross-Validation Results*. This is the surface you print or
+export.
 
-This page uses the exact verifier program `lymph_validate_docverify_demo.cpp`.
-
-### Example 1
-
-This example constructs a validation plan, runs it against one model, and prints
-the resulting cross-validation report board.
+#### Example
 
 ```cpp
-#include <pluss/lymph.h>
-#include <pluss/mic.h>
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
 
 #include <iostream>
 
 int main() {
   namespace lymph = pluss::ai::lymph;
-  namespace classic = pluss::ai::classic;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
@@ -72,56 +62,32 @@ int main() {
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const DataFrame frame({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
-      {"late", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"target", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"when", Thread(pluss::make_timeline({
-          "2026-01-01T00:00:00Z",
-          "2026-01-02T00:00:00Z",
-          "2026-01-03T00:00:00Z",
-          "2026-01-04T00:00:00Z",
-          "2026-01-05T00:00:00Z",
-          "2026-01-06T00:00:00Z",
-          "2026-01-07T00:00:00Z",
-          "2026-01-08T00:00:00Z",
-      }))},
-  });
+  const pluss::Series income = pluss::make_series(
+      {1.0, 1.4, 1.8, 2.2, 2.6, 3.0, 2.4, 1.6, 2.0, 2.8,
+       3.2, 3.6, 4.0, 4.4, 4.8, 3.4, 5.0, 3.8, 4.2, 3.0}, {20}, f64);
+  const pluss::Series balance = pluss::make_series(
+      {0.6, 1.0, 1.3, 1.6, 1.9, 2.2, 2.6, 2.0, 0.8, 1.4,
+       2.4, 2.8, 3.1, 3.4, 3.7, 1.8, 4.0, 3.6, 2.2, 3.2}, {20}, f64);
+  const pluss::Series y = pluss::make_series(
+      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {20}, f64);
+  const DataFrame frame({{"income", Thread(income)}, {"balance", Thread(balance)},
+                         {"target", Thread(y)}});
 
-  lymph::DataFrameBatchOptions data_options{};
-  data_options.feature_names = {"income", "balance", "late"};
+  lymph::options::DFBatch data_options{};
+  data_options.feature_names = {"income", "balance"};
   data_options.label_feature = "target";
 
-  lymph::TrainOptions train_options{};
-  train_options.max_iterations = 600;
-  train_options.tolerance = 1e-8;
-  train_options.random = {.seed = 20260825ULL, .deterministic = true};
+  lymph::AssessOptions assess{};
+  assess.metrics = {lymph::MetricKind::Accuracy, lymph::MetricKind::F1};
 
-  lymph::AssessOptions assess_options{};
-  assess_options.metrics = {lymph::MetricKind::Accuracy, lymph::MetricKind::F1};
+  const lymph::selection::Plan plan =
+      lymph::selection::cross().folds(4).shuffle(true).seed(20260901ULL);
 
-  classic::LinearFamilyOptions logistic_options{};
-  logistic_options.regularization = classic::RegularizationKind::L2;
-  logistic_options.regularization_strength = 1e-3;
-  logistic_options.fit_intercept = true;
+  const lymph::reports::CrossVal report =
+      plan.run(lymph::models::logistic_regression(), frame, data_options, {}, assess);
 
-  const lymph::Model logistic = lymph::model::logistic_regression(logistic_options);
-
-  lymph::ValidationOptions cross_options{};
-  cross_options.folds = 4;
-  cross_options.repeats = 1;
-  cross_options.shuffle = true;
-  cross_options.random_state = 20260825ULL;
-  cross_options.deterministic = true;
-  cross_options.max_parallel = 1;
-
-  const lymph::ValidationPlan cross_plan = lymph::validate::cross(cross_options);
-  const lymph::metrics::CrossValidationReport cross_report =
-      cross_plan.run(logistic, frame, data_options, train_options, assess_options);
-
-  std::cout << "== cross_validation_report ==\n";
-  std::cout << cross_report.board() << "\n";
+  std::cout << "folds = " << report.report.folds.size() << "\n\n";
+  std::cout << report.board();
 
   return 0;
 }
@@ -130,26 +96,150 @@ int main() {
 Output
 
 ```text
-== cross_validation_report ==
-============================
-     | metric    mean  stdev
-----------------------------
-0    | accuracy  1     0
-1    | f1        1     0
-----------------------------
+folds = 4
+
+===========================================
+     | metric    mean          stdev       
+-------------------------------------------
+0    | accuracy  0.8541666667  0.1487797589
+1    | f1        0.825         0.2046338193
+-------------------------------------------
 [2 cs x 3 feat]
 ```
 
-This is the normal report flow:
+### Reading `mean` / `stdev` by name
 
-1. define the validation contract
-2. run the plan
-3. keep the structured report
-4. materialize the board when you need a readable summary
+`mean` and `stdev` are [`MetricReport`](MetricReport.md)s. `report.folds` and
+`report.metrics` describe the run.
 
-## Related Pages
+#### Example
 
-- [ValidationOptions](ValidationOptions.md)
-- [validate](../split.md)
-- [confusion_table](confusion_table.md)
-- [classification_summary](classification_summary.md)
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series income = pluss::make_series(
+      {1.0, 1.4, 1.8, 2.2, 2.6, 3.0, 2.4, 1.6, 2.0, 2.8,
+       3.2, 3.6, 4.0, 4.4, 4.8, 3.4, 5.0, 3.8, 4.2, 3.0}, {20}, f64);
+  const pluss::Series balance = pluss::make_series(
+      {0.6, 1.0, 1.3, 1.6, 1.9, 2.2, 2.6, 2.0, 0.8, 1.4,
+       2.4, 2.8, 3.1, 3.4, 3.7, 1.8, 4.0, 3.6, 2.2, 3.2}, {20}, f64);
+  const pluss::Series y = pluss::make_series(
+      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {20}, f64);
+  const DataFrame frame({{"income", Thread(income)}, {"balance", Thread(balance)},
+                         {"target", Thread(y)}});
+
+  lymph::options::DFBatch data_options{};
+  data_options.feature_names = {"income", "balance"};
+  data_options.label_feature = "target";
+
+  lymph::AssessOptions assess{};
+  assess.metrics = {lymph::MetricKind::Accuracy, lymph::MetricKind::F1};
+
+  const lymph::selection::Plan plan =
+      lymph::selection::cross().folds(4).shuffle(true).seed(20260901ULL);
+
+  const lymph::metrics::CrossValidationReport report =
+      plan.run(lymph::models::logistic_regression(), frame, data_options, {}, assess);
+
+  std::cout << "folds        = " << report.report.folds.size() << "\n";
+  std::cout << "metrics      = " << report.report.metrics.size() << "\n";
+  std::cout << "mean.accuracy  = " << report.mean.accuracy.item<double>() << "\n";
+  std::cout << "stdev.accuracy = " << report.stdev.accuracy.item<double>() << "\n";
+  std::cout << "mean.f1        = " << report.mean.f1.item<double>() << "\n";
+  std::cout << "stdev.f1       = " << report.stdev.f1.item<double>() << "\n";
+
+  return 0;
+}
+```
+
+Output
+
+```text
+folds        = 4
+metrics      = 2
+mean.accuracy  = 0.854167
+stdev.accuracy = 0.14878
+mean.f1        = 0.825
+stdev.f1       = 0.204634
+```
+
+### Walking `mean.values` / `stdev.values`
+
+`mean.values` and `stdev.values` are aligned to `report.metrics` — the row
+order `board()` prints.
+
+#### Example
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series step = pluss::make_series(
+      {1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.,
+       13., 14., 15., 16., 17., 18., 19., 20.}, {20}, f64);
+  const pluss::Series demand = pluss::make_series(
+      {12., 13.5, 15., 16.6, 18., 19.4, 21., 22.5, 24., 25.4,
+       27., 28.6, 30., 31.5, 33., 34.4, 36., 37.5, 39., 40.6}, {20}, f64);
+  const DataFrame frame({{"step", Thread(step)}, {"demand", Thread(demand)}});
+
+  lymph::options::DFBatch data_options{};
+  data_options.feature_names = {"step"};
+  data_options.label_feature = "demand";
+
+  lymph::AssessOptions assess{};
+  assess.metrics = {lymph::MetricKind::R2, lymph::MetricKind::Mse, lymph::MetricKind::Mae};
+
+  const lymph::reports::CrossVal report =
+      lymph::selection::cross().folds(4).seed(20260901ULL)
+          .run(lymph::models::linear_regression(), frame, data_options, {}, assess);
+
+  const std::vector<double> means = report.mean.values.to_vec<double>();
+  const std::vector<double> stdevs = report.stdev.values.to_vec<double>();
+  for (std::size_t i = 0; i < report.report.metrics.size(); ++i) {
+    std::cout << "metric[" << i << "] mean=" << means[i]
+              << " stdev=" << stdevs[i] << "\n";
+  }
+
+  return 0;
+}
+```
+
+Output
+
+```text
+metric[0] mean=0.999853 stdev=9.34929e-05
+metric[1] mean=0.00410799 stdev=0.00136384
+metric[2] mean=0.0451075 stdev=0.0115999
+```
+
+## Changelog
+
+- **0.1** — `report` (per-fold `CrossAssessReport`), `mean` / `stdev`
+  `MetricReport`s, and `board()`; umbrella alias `reports::CrossVal`.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

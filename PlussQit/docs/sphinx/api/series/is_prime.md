@@ -139,12 +139,12 @@ Use `is_prime()` when you need a prime/non-prime mask over integer data.
   boolean decision.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="intersection_along.html">
+  <a class="prev-link" href="invalid_index.html">
     <span class="label">Previous</span>
-    <span class="title">intersection_along</span>
+    <span class="title">invalid_index</span>
   </a>
-  <a class="next-link" href="isin.html">
+  <a class="next-link" href="isfinite.html">
     <span class="label">Next</span>
-    <span class="title">isin</span>
+    <span class="title">isfinite</span>
   </a>
 </div>

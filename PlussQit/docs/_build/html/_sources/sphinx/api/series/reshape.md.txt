@@ -195,12 +195,12 @@ and `5`, so those are exactly the source positions that receive gradient.
   fallback path.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="view.html">
+  <a class="prev-link" href="repeat_interleave.html">
     <span class="label">Previous</span>
-    <span class="title">view</span>
+    <span class="title">repeat_interleave</span>
   </a>
-  <a class="next-link" href="reverse.html">
+  <a class="next-link" href="retain_grad.html">
     <span class="label">Next</span>
-    <span class="title">reverse</span>
+    <span class="title">retain_grad</span>
   </a>
 </div>

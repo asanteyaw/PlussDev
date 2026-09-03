@@ -181,8 +181,8 @@ the boundary that [`Series::gt`](gt.md) leaves open.
     <span class="label">Previous</span>
     <span class="title">gather</span>
   </a>
-  <a class="next-link" href="gt.html">
+  <a class="next-link" href="gelu.html">
     <span class="label">Next</span>
-    <span class="title">gt</span>
+    <span class="title">gelu</span>
   </a>
 </div>

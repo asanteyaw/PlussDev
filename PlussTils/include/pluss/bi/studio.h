@@ -254,9 +254,9 @@ namespace detail {
       return (column >= std::get<double>(range.low)) &
              (column <= std::get<double>(range.high));
     case pluss::table::ThreadKind::Timeline:
-      return column.btw(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
+      return column.between(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
     case pluss::table::ThreadKind::TimeIndex:
-      return column.btw(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
+      return column.between(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
     case pluss::table::ThreadKind::Note:
       PLUSS_FAIL("pluss::bi: between filter is not supported for text features");
   }
@@ -499,7 +499,7 @@ namespace detail {
 
 [[nodiscard]] inline std::string scalar_text_(const pluss::table::ThreadValue& value) {
   try {
-    return std::to_string(pluss::aux::as_f64(value.as_series()));
+    return std::to_string(pluss::tils::as_f64(value.as_series()));
   } catch (...) {
   }
   try {

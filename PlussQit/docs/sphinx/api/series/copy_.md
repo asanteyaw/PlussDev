@@ -177,12 +177,12 @@ that fact.
 - [`Series::slice`](slice.md): how to create the kind of view used in Example 3.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clamp_min.html">
+  <a class="prev-link" href="contiguous.html">
     <span class="label">Previous</span>
-    <span class="title">clamp_min</span>
+    <span class="title">contiguous</span>
   </a>
-  <a class="next-link" href="cos.html">
+  <a class="next-link" href="copysign.html">
     <span class="label">Next</span>
-    <span class="title">cos</span>
+    <span class="title">copysign</span>
   </a>
 </div>

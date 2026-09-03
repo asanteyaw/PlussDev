@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b6c9c311c9b4 -->
 
 # DataFramePlotAccessor::lag
 

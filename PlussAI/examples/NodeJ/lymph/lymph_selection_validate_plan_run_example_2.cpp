@@ -1,0 +1,43 @@
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+// Plan::run also takes an (x, y) pair directly: x is a features-only DataFrame,
+// y a Series of labels. No DataFrameBatchOptions needed -- every column of x is
+// a feature. Same return as the (frame, data_options) form: a reports::CrossVal.
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series income = pluss::make_series(
+      {1.0, 1.4, 1.8, 2.2, 2.6, 3.0, 2.4, 1.6, 2.0, 2.8,
+       3.2, 3.6, 4.0, 4.4, 4.8, 3.4, 5.0, 3.8, 4.2, 3.0}, {20}, f64);
+  const pluss::Series balance = pluss::make_series(
+      {0.6, 1.0, 1.3, 1.6, 1.9, 2.2, 2.6, 2.0, 0.8, 1.4,
+       2.4, 2.8, 3.1, 3.4, 3.7, 1.8, 4.0, 3.6, 2.2, 3.2}, {20}, f64);
+  const pluss::Series y = pluss::make_series(
+      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {20}, f64);
+
+  // Features-only frame -- no label column, no data_options.
+  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+
+  lymph::AssessOptions assess{};
+  assess.metrics = {lymph::MetricKind::Accuracy, lymph::MetricKind::F1};
+
+  const lymph::selection::Plan plan =
+      lymph::selection::cross().folds(4).seed(20260901ULL);
+
+  const lymph::reports::CrossVal report =
+      plan.run(lymph::models::logistic_regression(), x, y, {}, assess);
+
+  std::cout << "folds = " << report.report.folds.size() << "\n\n";
+  std::cout << report.board();
+
+  return 0;
+}

@@ -4,57 +4,126 @@
 
 [Back to Series API Reference](series_api_reference.md)
 
-This page documents the handwritten `SeriesStatAccessor` subset reached through
-`Series::stat`.
+`SeriesStatAccessor` groups statistical reductions, normal-distribution
+functions, trailing-window calculations, normalization transforms, and
+pairwise distances. Start here when the question is statistical rather than a
+generic elementwise or shape operation.
 
-## Using This Reference
+## Calling Styles
 
-- Use the left sidebar to open one method page at a time.
-- Each method page contains its own signatures, parameter details, failure
-  cases, verified outputs, and working previous/next navigation.
-- This landing page stays intentionally short so the content panel is not one
-  giant scroll of every statistical method at once.
+Unary methods have two equivalent spellings:
 
-## Entry Surface
+```cpp
+auto a = x.stat.mean(0);
+auto b = x.stat().mean(0);
+```
 
-The accessor is available in two ordinary spellings:
+The first calls the accessor directly. The second creates a `SeriesStatProxy`
+bound to `x`, then calls the same implementation. Prefer direct style for
+ordinary code; recognize proxy style because it becomes useful for binary
+methods:
 
-- dot-style convenience: `x.stat.var(...)`, `x.stat.center(...)`
-- explicit proxy style: `x.stat().var(...)`, `x.stat().center(...)`
+```cpp
+auto direct = left.stat.cdist(right);
+auto bound = left.stat(right).cdist();
+```
 
-For the current handwritten batch, the dot-style forms are the main examples
-because they are the most concise everyday spelling on the public surface.
+Here `stat(right)` binds the peer before the terminal method is selected. The
+owner `left` remains the first point table in either spelling.
 
-## Current Coverage
+## Describing A Population
 
-The current handwritten `SeriesStatAccessor` subset focuses on descriptive and
-normalization-heavy methods users typically reach first:
+- [`mean`](api/series-stat/mean.md) summarizes location globally or by axis.
+- [`var`](api/series-stat/var.md) measures squared spread with sample or
+  population normalization.
+- [`std`](api/series-stat/std.md) reports the same spread in original units.
+- [`nanvar`](api/series-stat/nanvar.md) and
+  [`nanstd`](api/series-stat/nanstd.md) omit NaNs under an explicit
+  missing-observation policy.
+- [`skewness`](api/series-stat/skewness.md) measures asymmetry.
+- [`kurtosis`](api/series-stat/kurtosis.md) reports excess fourth-moment shape.
 
-- dispersion: `var`, `std`, `nanvar`, `nanstd`
-- transforms: `center`, `standardize`
-- higher moments: `skewness`, `kurtosis`
+Axis choice defines the population being summarized. On a matrix, `dim=0`
+groups values by column and `dim=1` groups them by row. A global statistic pools
+all entries and generally cannot be reconstructed by averaging lane-wise
+statistics.
 
-The accessor surface is wider than this. Pair-bound distance methods, density
-helpers, and moving-window methods should be documented in later batches rather
-than stubbed here without the same example rigor.
+## Evaluating A Normal Model
+
+- [`pdf`](api/series-stat/pdf.md) gives local density.
+- [`logpdf`](api/series-stat/logpdf.md) gives log density.
+- [`cdf`](api/series-stat/cdf.md) gives accumulated lower-tail probability.
+- [`logcdf`](api/series-stat/logcdf.md) preserves very small lower-tail values
+  in log space.
+
+All four preserve shape and support standard normal, scale-only, and explicit
+`(mu,sigma)` overloads. These methods evaluate a chosen normal model; they do
+not estimate `mu` or `sigma` from the owner.
+
+## Following A Trailing Window
+
+- [`movsum`](api/series-stat/movsum.md) and
+  [`movmean`](api/series-stat/movmean.md) track local level.
+- [`movmin`](api/series-stat/movmin.md) and
+  [`movmax`](api/series-stat/movmax.md) track local bounds.
+- [`movvar`](api/series-stat/movvar.md) and
+  [`movstd`](api/series-stat/movstd.md) track local population spread.
+
+Every moving method preserves shape, includes the current position, looks
+backward, and uses the available prefix before a full window exists. Omitted
+arguments mean window three on the last axis.
+
+## Transforming Statistical Geometry
+
+- [`center`](api/series-stat/center.md) subtracts a global or lane mean.
+- [`standardize`](api/series-stat/standardize.md) produces population z-scores.
+- [`normr`](api/series-stat/normr.md) gives nonzero rows unit L2 length.
+- [`normc`](api/series-stat/normc.md) gives nonzero columns unit L2 length.
+
+These operations all preserve shape, but they solve different problems.
+Centering removes offset, standardization removes offset and spread, and norm
+operations remove vector magnitude without subtracting a mean.
+
+## Comparing Point Tables
+
+- [`cdist`](api/series-stat/cdist.md) computes all Euclidean row-to-row
+  distances between two rank-2 point tables.
+- [`pdist2`](api/series-stat/pdist2.md) provides the equivalent two-table
+  pairwise-distance surface; the `2` does not mean squared distance.
+
+For owner shape `[m,d]` and peer shape `[n,d]`, both return `[m,n]` and
+differentiate with respect to both point tables.
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
-api/series/var
-api/series/std
-api/series/nanvar
-api/series/nanstd
-api/series/center
-api/series/standardize
-api/series/skewness
-api/series/kurtosis
+api/series-stat/cdf
+api/series-stat/cdist
+api/series-stat/center
+api/series-stat/kurtosis
+api/series-stat/logcdf
+api/series-stat/logpdf
+api/series-stat/mean
+api/series-stat/movmax
+api/series-stat/movmean
+api/series-stat/movmin
+api/series-stat/movstd
+api/series-stat/movsum
+api/series-stat/movvar
+api/series-stat/nanstd
+api/series-stat/nanvar
+api/series-stat/normc
+api/series-stat/normr
+api/series-stat/pdf
+api/series-stat/pdist2
+api/series-stat/skewness
+api/series-stat/standardize
+api/series-stat/std
+api/series-stat/var
 ```
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="api/series/stat.html">
-    <span class="label">Previous</span>
-    <span class="title">stat</span>
-  </a>
+  <a class="prev-link" href="api/series/stat.html"><span class="label">Previous</span><span class="title">stat</span></a>
+  <a class="next-link" href="api/series-stat/cdf.html"><span class="label">Next</span><span class="title">cdf</span></a>
 </div>

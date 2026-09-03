@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3a6950602f1e -->
 
 # DataFramePlotAccessor::scatter_matrix
 
@@ -30,19 +31,18 @@ matrix is inherently pairwise — fewer than two numeric features throws
 `"DataFrame::plot().scatter_matrix: need at least two numeric features"`.
 ```
 
-```{note} Feature selection here doesn't validate non-numeric names — it filters instead
-Unlike [`box()`](box.md)/[`hist()`](hist.md)/[`corr_heatmap()`](corr_heatmap.md), an
-explicit `features` list here is first narrowed to the requested columns and then filtered
-down to only the `Series`-kind ones — passing a non-numeric feature name doesn't throw,
-it's simply excluded from the matrix. If that filtering leaves fewer than two features, the
-"at least two" check above still throws.
+```{note} Explicit feature lists are validated
+If you pass `features`, every requested name must resolve to a numeric `Series`; a missing
+or non-numeric feature throws, matching the rest of the plotting accessor. If you leave
+`features` empty, `scatter_matrix()` uses the frame's numeric features as-is.
 ```
 
 ## Parameters
 
 **features** (`RangeView<std::string_view>`, default `{}`)
-    Features to scope the matrix to before filtering down to the numeric ones. Empty (the
-    default) considers every feature in the frame.
+    Numeric features to include in the matrix. Empty (the default) means "take the frame's
+    numeric features automatically." Wide analytical tables therefore stay fully visible by
+    default instead of being silently truncated.
 
 **triangle** (`ScatterMatrixTriangle`, two-argument overload)
     `Full` (the default elsewhere too), `Lower`, or `Upper` — restricts the grid to only the
@@ -164,10 +164,14 @@ DataFrame::plot().scatter_matrix: need at least two numeric features
 
 ## Notes
 
-- At least two numeric features are required after filtering — see the important callout
-  above.
-- Non-numeric feature names in an explicit `features` list are silently filtered out
-  instead of throwing — see the note above (contrast most other methods on this accessor).
+- At least two numeric features are required after validation/selection.
+- An explicit `features` list is strict: unknown or non-numeric names throw instead of being
+  silently dropped.
+- The no-argument form uses the full numeric feature set. If you want a smaller inspection
+  grid, pass an explicit subset through `features`.
+- Wide scatter matrices no longer rely on silent feature caps or grid-wide point throttling.
+  The plotting stack now reuses normalized numeric columns during rendering so repeated
+  pairwise panes do not keep rematerializing the same point vectors.
 - `corner = true` only overrides `pair.triangle` if it's still at its default `Full`; an
   explicitly set `pair.triangle` is left alone.
 - Returns a `pluss::pl::Studio` — see [`line()`](line.md)'s important callout for how to

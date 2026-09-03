@@ -3888,7 +3888,7 @@ void test_dataframe_shownull_and_zoom() {
          "DataFrame::zoom should project the requested feature block");
   expect(zoomed.features("y").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({10, 11}),
          "DataFrame::zoom should preserve the values inside the carved block");
-  expect(zoomed.label().values().as_note().vector() == std::vector<std::string>({"r1", "r2"}),
+  expect(zoomed.label().values().as_note().vector() == std::vector<std::string_view>({"r1", "r2"}),
          "DataFrame::zoom should preserve the matching case labels for the carved block");
 }
 
@@ -3932,6 +3932,12 @@ void test_thread_arrange_and_corr_stability() {
   expect(std::isfinite(actual), "Thread::corr should remain finite for large-offset data");
   expect(actual > 0.99,
          fmt::format("Thread::corr should remain strongly positive on monotone data (actual={})", actual));
+
+  const auto centered = lhs.as_series().sub(lhs.as_series().mean().item<double>(), 1.0);
+  const auto centered_values = centered.to_vec<double>();
+  expect(centered_values.size() == x.size(), "Series::sub(double, alpha) should preserve length");
+  expect(std::fabs(centered_values.front() - (x.front() - lhs.as_series().mean().item<double>())) < 1e-9,
+         "Series::sub(double, alpha) should subtract scalar operands correctly");
 }
 
 void test_corr_feature_projection_and_sort_chain() {

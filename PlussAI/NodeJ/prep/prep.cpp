@@ -2911,6 +2911,527 @@ Status LabelEncoder::load_state(pluss::msharp::RangeView::Series state) {
   return Status::success();
 }
 
+// --------------------------------------------------------------------------- //
+// BaseNEncoder / HashingEncoder
+//
+// Both work the map path entirely in vectorized Series kernels: one elementwise
+// pass builds a code column, then a small fixed number of elementwise digit /
+// bucket columns are assembled with unite(). The only host-side scan is the
+// one-off vocabulary fit, shared with the other categorical encoders.
+// --------------------------------------------------------------------------- //
+namespace {
+
+// A single feature column as a contiguous rank-1 Float64 Series, regardless of
+// the batch's observation layout.
+[[nodiscard]] Series encoder_feature_column_(const FeatureBatch& batch, std::int64_t feature_idx) {
+  const std::int64_t select_dim = batch.layout == ObservationLayout::Rows ? 1 : 0;
+  const std::int64_t rows = batch.sample_count();
+  const Series idx = make_index_series({feature_idx}, batch.x.platform());
+  return batch.x.index_select(select_dim, idx).to(ScalarType::Float64).reshape({rows});
+}
+
+// code(row) = 0 for an unseen / missing value, else the 1-based position of the
+// value in `keys`. Vectorized: one masked fused-add per fitted category.
+[[nodiscard]] Series encoder_codes_(const Series& column, const std::vector<std::uint64_t>& keys) {
+  const std::int64_t rows = column.numel();
+  Series codes = Series::zeros({rows}, ScalarType::Float64, column.platform());
+  for (std::size_t position = 0; position < keys.size(); ++position) {
+    const double value = std::bit_cast<double>(keys[position]);
+    codes = codes.add(column.eq(value).to(ScalarType::Float64).mul(static_cast<double>(position + 1)));
+  }
+  return codes;
+}
+
+// Number of radix-`base` digits needed to represent codes 0..k.
+[[nodiscard]] std::int64_t encoder_digit_count_(std::int64_t k, std::int64_t base) {
+  if (k <= 0) return 1;
+  std::int64_t digits = 0;
+  std::int64_t capacity = 1;
+  while (capacity <= k) {
+    capacity *= base;
+    ++digits;
+  }
+  return digits < 1 ? 1 : digits;
+}
+
+[[nodiscard]] Series encoder_finish_layout_(Series canonical_rows, const DenseMatrix& like) {
+  Series out = like.layout == ObservationLayout::Rows ? std::move(canonical_rows)
+                                                      : canonical_rows.transpose(0, 1);
+  return out.to(like.original_platform, like.original_dtype);
+}
+
+} // namespace
+
+BaseNEncoder::BaseNEncoder(BaseNEncoderOptions options) : options_(options) {}
+
+bool BaseNEncoder::trained() const noexcept { return trained_; }
+
+Status BaseNEncoder::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  if (options_.base < 2) {
+    return Status::invalid_argument("BaseNEncoder requires base >= 2.");
+  }
+  Status max_cat_status = validate_max_categories(options_.max_categories, "BaseNEncoder");
+  if (!max_cat_status.ok()) return max_cat_status;
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "BaseNEncoder::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  const DenseMatrix matrix = matrix_or.move_value();
+
+  auto keys_or = fit_category_keys(matrix, options_, "BaseNEncoder::learn");
+  if (!keys_or.ok()) return keys_or.status();
+
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  category_keys_ = keys_or.move_value();
+  digit_counts_.assign(static_cast<std::size_t>(feature_count_), 1);
+  out_feature_count_ = 0;
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    const std::int64_t d = encoder_digit_count_(
+        static_cast<std::int64_t>(category_keys_[static_cast<std::size_t>(f)].size()), options_.base);
+    digit_counts_[static_cast<std::size_t>(f)] = d;
+    out_feature_count_ += d;
+  }
+  trained_ = true;
+  return Status::success();
+}
+
+Status BaseNEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "BaseNEncoder::learn(Thread)");
+  if (!batch_or.ok()) return batch_or.status();
+  return learn(batch_or.value(), options);
+}
+
+StatusOr<Series> BaseNEncoder::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "BaseNEncoder::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "BaseNEncoder::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  const DenseMatrix matrix = matrix_or.move_value();
+  const double base = static_cast<double>(options_.base);
+
+  std::vector<Series> columns{};
+  columns.reserve(static_cast<std::size_t>(out_feature_count_));
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    const Series codes = encoder_codes_(encoder_feature_column_(batch, f),
+                                        category_keys_[static_cast<std::size_t>(f)]);
+    const std::int64_t digits = digit_counts_[static_cast<std::size_t>(f)];
+    for (std::int64_t d = 0; d < digits; ++d) {
+      double divisor = 1.0;
+      for (std::int64_t e = 0; e < d; ++e) divisor *= base;
+      const Series shifted = codes.div(divisor).floor();          // floor(code / base^d)
+      const Series digit = shifted.sub(shifted.div(base).floor().mul(base)); // shifted mod base
+      columns.push_back(digit.reshape({matrix.sample_count, 1}));
+    }
+  }
+
+  Series canonical = columns.front();
+  for (std::size_t i = 1; i < columns.size(); ++i) canonical = canonical.unite({columns[i]}, 1);
+  return StatusOr<Series>(encoder_finish_layout_(std::move(canonical), matrix));
+}
+
+StatusOr<Series> BaseNEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "BaseNEncoder::map(Thread)");
+  if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
+  return map(batch_or.value(), options);
+}
+
+StatusOr<Series> BaseNEncoder::learn_map(const FeatureBatch& batch,
+                                         const TrainOptions& learn_options,
+                                         const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+StatusOr<Series> BaseNEncoder::learn_map(const pluss::table::Thread& feature,
+                                         const TrainOptions& learn_options,
+                                         const InferOptions& infer_options) {
+  Status s = learn(feature, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(feature, infer_options);
+}
+
+HashingEncoder::HashingEncoder(HashingEncoderOptions options) : options_(options) {}
+
+bool HashingEncoder::trained() const noexcept { return trained_; }
+
+Status HashingEncoder::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  if (options_.n_components < 1) {
+    return Status::invalid_argument("HashingEncoder requires n_components >= 1.");
+  }
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "HashingEncoder::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  const DenseMatrix matrix = matrix_or.move_value();
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  trained_ = true;
+  return Status::success();
+}
+
+Status HashingEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "HashingEncoder::learn(Thread)");
+  if (!batch_or.ok()) return batch_or.status();
+  return learn(batch_or.value(), options);
+}
+
+StatusOr<Series> HashingEncoder::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "HashingEncoder::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "HashingEncoder::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  const DenseMatrix matrix = matrix_or.move_value();
+
+  const double components = static_cast<double>(options_.n_components);
+  const double golden = 0.6180339887498949;
+  const double seed_offset = static_cast<double>(options_.seed % 1000000ULL) * 0.7548776662466927;
+
+  std::vector<Series> columns{};
+  columns.reserve(static_cast<std::size_t>(feature_count_ * options_.n_components));
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    const Series column = encoder_feature_column_(batch, f);
+    const Series hashed = column.mul(golden).add(seed_offset);
+    const Series frac = hashed.sub(hashed.floor());                 // [0, 1); NaN -> NaN row
+    const Series bucket = frac.mul(components).floor().clamp_max(components - 1.0);
+    for (std::int64_t j = 0; j < options_.n_components; ++j) {
+      columns.push_back(bucket.eq(static_cast<double>(j)).to(ScalarType::Float64).reshape({matrix.sample_count, 1}));
+    }
+  }
+
+  Series canonical = columns.front();
+  for (std::size_t i = 1; i < columns.size(); ++i) canonical = canonical.unite({columns[i]}, 1);
+  return StatusOr<Series>(encoder_finish_layout_(std::move(canonical), matrix));
+}
+
+StatusOr<Series> HashingEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "HashingEncoder::map(Thread)");
+  if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
+  return map(batch_or.value(), options);
+}
+
+StatusOr<Series> HashingEncoder::learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options,
+                                           const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+StatusOr<Series> HashingEncoder::learn_map(const pluss::table::Thread& feature,
+                                           const TrainOptions& learn_options,
+                                           const InferOptions& infer_options) {
+  Status s = learn(feature, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(feature, infer_options);
+}
+
+StatusOr<std::vector<Series>> BaseNEncoder::dump_state() const {
+  std::vector<std::int64_t> sizes{};
+  std::vector<double> flat_keys{};
+  sizes.reserve(category_keys_.size());
+  for (const auto& keys : category_keys_) {
+    sizes.push_back(static_cast<std::int64_t>(keys.size()));
+    for (std::uint64_t key : keys) flat_keys.push_back(std::bit_cast<double>(key));
+  }
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({
+          trained_ ? 1.0 : 0.0,
+          static_cast<double>(static_cast<std::int64_t>(layout_)),
+          static_cast<double>(feature_count_),
+          static_cast<double>(out_feature_count_),
+          static_cast<double>(options_.base),
+      }),
+      state_i64(std::move(sizes)),
+      state_f64(std::move(flat_keys)),
+      state_i64(digit_counts_),
+  });
+}
+
+Status BaseNEncoder::load_state(pluss::msharp::RangeView::Series state) {
+  if (state.size() < 4) return Status::invalid_argument("BaseNEncoder::load_state expects 4 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 5) return Status::invalid_argument("BaseNEncoder::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  out_feature_count_ = static_cast<std::int64_t>(meta[3]);
+  options_.base = static_cast<std::int64_t>(meta[4]);
+
+  const auto nested = unflatten_nested(vec_f64(state[2]), vec_i64(state[1]));
+  category_keys_.clear();
+  category_keys_.reserve(nested.size());
+  for (const auto& row : nested) {
+    std::vector<std::uint64_t> keys{};
+    keys.reserve(row.size());
+    for (double v : row) keys.push_back(key_for_value(v));
+    category_keys_.push_back(std::move(keys));
+  }
+  digit_counts_ = vec_i64(state[3]);
+  if (!trained_) {
+    category_keys_.clear();
+    digit_counts_.clear();
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> HashingEncoder::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({
+          trained_ ? 1.0 : 0.0,
+          static_cast<double>(static_cast<std::int64_t>(layout_)),
+          static_cast<double>(feature_count_),
+      }),
+  });
+}
+
+Status HashingEncoder::load_state(pluss::msharp::RangeView::Series state) {
+  if (state.size() < 1) return Status::invalid_argument("HashingEncoder::load_state expects 1 state tensor.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("HashingEncoder::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  return Status::success();
+}
+
+// --------------------------------------------------------------------------- //
+// SupervisedEncoderBase / TargetEncoder / WOEEncoder
+// --------------------------------------------------------------------------- //
+namespace {
+
+// Column f of a batch as a host vector, NaN preserved.
+[[nodiscard]] std::vector<double> encoder_feature_host_(const DenseMatrix& matrix, std::int64_t f) {
+  std::vector<double> out(static_cast<std::size_t>(matrix.sample_count));
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) out[static_cast<std::size_t>(i)] = matrix.values[offset(matrix, i, f)];
+  return out;
+}
+
+// Options shim so fit_category_keys<> can be reused for the supervised encoders.
+struct SupervisedFitOptions {
+  std::int64_t max_categories = 0;
+  CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent;
+};
+
+} // namespace
+
+Status SupervisedEncoderBase::learn(const FeatureBatch&, const TrainOptions&) {
+  return Status::invalid_argument(std::string(encoder_name_())
+                                  + " is supervised; provide a target via learn_supervised() or attach it as a stage in Model::learn(x, y).");
+}
+
+StatusOr<Series> SupervisedEncoderBase::learn_map(const FeatureBatch&, const TrainOptions&, const InferOptions&) {
+  return StatusOr<Series>(Status::invalid_argument(std::string(encoder_name_())
+                          + " is supervised; it has no target-free learn_map()."));
+}
+
+Status SupervisedEncoderBase::learn_supervised(const FeatureBatch& batch,
+                                               const Series& target,
+                                               const TrainOptions& options) {
+  (void)options;
+  Status max_cat_status = validate_max_categories(max_categories_(), encoder_name_());
+  if (!max_cat_status.ok()) return max_cat_status;
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "SupervisedEncoder::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  const DenseMatrix matrix = matrix_or.move_value();
+
+  if (!target.defined() || target.numel() != matrix.sample_count) {
+    return Status::shape_mismatch(std::string(encoder_name_()) + " target length must match the sample count.");
+  }
+  const std::vector<double> y = target.to(pluss::pCPU, ScalarType::Float64).reshape({target.numel()}).to_vec<double>();
+
+  const SupervisedFitOptions fit_options{.max_categories = max_categories_(), .overflow = overflow_()};
+  auto keys_or = fit_category_keys(matrix, fit_options, encoder_name_());
+  if (!keys_or.ok()) return keys_or.status();
+
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  category_keys_ = keys_or.move_value();
+  category_values_.assign(static_cast<std::size_t>(feature_count_), {});
+  unknown_values_.assign(static_cast<std::size_t>(feature_count_), 0.0);
+
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    const std::vector<double> column = encoder_feature_host_(matrix, f);
+    std::vector<double> values{};
+    double unknown = 0.0;
+    Status s = fit_feature_values_(column, y, category_keys_[static_cast<std::size_t>(f)], values, unknown);
+    if (!s.ok()) return s;
+    category_values_[static_cast<std::size_t>(f)] = std::move(values);
+    unknown_values_[static_cast<std::size_t>(f)] = unknown;
+  }
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> SupervisedEncoderBase::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "SupervisedEncoder::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "SupervisedEncoder::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  const DenseMatrix matrix = matrix_or.move_value();
+
+  std::vector<Series> columns{};
+  columns.reserve(static_cast<std::size_t>(feature_count_));
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    const Series column = encoder_feature_column_(batch, f);
+    const double unknown = unknown_values_[static_cast<std::size_t>(f)];
+    const auto& keys = category_keys_[static_cast<std::size_t>(f)];
+    const auto& values = category_values_[static_cast<std::size_t>(f)];
+    Series encoded = Series::full({column.numel()}, unknown, ScalarType::Float64, column.platform());
+    for (std::size_t k = 0; k < keys.size(); ++k) {
+      const double kv = std::bit_cast<double>(keys[k]);
+      encoded = encoded.add(column.eq(kv).to(ScalarType::Float64).mul(values[k] - unknown));
+    }
+    columns.push_back(encoded.reshape({matrix.sample_count, 1}));
+  }
+
+  Series canonical = columns.front();
+  for (std::size_t i = 1; i < columns.size(); ++i) canonical = canonical.unite({columns[i]}, 1);
+  return StatusOr<Series>(encoder_finish_layout_(std::move(canonical), matrix));
+}
+
+StatusOr<std::vector<Series>> SupervisedEncoderBase::dump_state() const {
+  std::vector<std::int64_t> sizes{};
+  std::vector<double> flat_keys{};
+  std::vector<double> flat_values{};
+  sizes.reserve(category_keys_.size());
+  for (std::size_t f = 0; f < category_keys_.size(); ++f) {
+    sizes.push_back(static_cast<std::int64_t>(category_keys_[f].size()));
+    for (std::uint64_t key : category_keys_[f]) flat_keys.push_back(std::bit_cast<double>(key));
+    for (double v : category_values_[f]) flat_values.push_back(v);
+  }
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({
+          trained_ ? 1.0 : 0.0,
+          static_cast<double>(static_cast<std::int64_t>(layout_)),
+          static_cast<double>(feature_count_),
+      }),
+      state_i64(std::move(sizes)),
+      state_f64(std::move(flat_keys)),
+      state_f64(std::move(flat_values)),
+      state_f64(unknown_values_),
+  });
+}
+
+Status SupervisedEncoderBase::load_state(pluss::msharp::RangeView::Series state) {
+  if (state.size() < 5) return Status::invalid_argument("SupervisedEncoder::load_state expects 5 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("SupervisedEncoder::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+
+  const auto sizes = vec_i64(state[1]);
+  const auto flat_keys = unflatten_nested(vec_f64(state[2]), sizes);
+  const auto flat_values = unflatten_nested(vec_f64(state[3]), sizes);
+  category_keys_.clear();
+  category_values_.clear();
+  category_keys_.reserve(flat_keys.size());
+  category_values_.reserve(flat_values.size());
+  for (std::size_t f = 0; f < flat_keys.size(); ++f) {
+    std::vector<std::uint64_t> keys{};
+    keys.reserve(flat_keys[f].size());
+    for (double v : flat_keys[f]) keys.push_back(key_for_value(v));
+    category_keys_.push_back(std::move(keys));
+    category_values_.push_back(f < flat_values.size() ? flat_values[f] : std::vector<double>{});
+  }
+  unknown_values_ = vec_f64(state[4]);
+  if (!trained_) {
+    category_keys_.clear();
+    category_values_.clear();
+    unknown_values_.clear();
+  }
+  return Status::success();
+}
+
+namespace {
+
+// One O(n) pass: per-category { sum of target, row count }, keyed by value bits.
+struct CategoryStat {
+  double sum = 0.0;
+  double count = 0.0;
+};
+
+[[nodiscard]] std::unordered_map<std::uint64_t, CategoryStat> accumulate_category_stats_(
+    const std::vector<double>& column, const std::vector<double>& target) {
+  std::unordered_map<std::uint64_t, CategoryStat> stats{};
+  stats.reserve(column.size());
+  for (std::size_t i = 0; i < column.size(); ++i) {
+    const double cv = column[i];
+    const double yv = target[i];
+    if (std::isnan(cv) || std::isnan(yv)) continue;
+    CategoryStat& s = stats[key_for_value(cv)];
+    s.sum += yv;
+    s.count += 1.0;
+  }
+  return stats;
+}
+
+} // namespace
+
+Status TargetEncoder::fit_feature_values_(const std::vector<double>& column,
+                                          const std::vector<double>& target,
+                                          const std::vector<std::uint64_t>& keys,
+                                          std::vector<double>& values_out,
+                                          double& unknown_out) {
+  double prior_sum = 0.0;
+  std::int64_t prior_count = 0;
+  for (double v : target) {
+    if (std::isnan(v)) continue;
+    prior_sum += v;
+    ++prior_count;
+  }
+  const double prior = prior_count > 0 ? prior_sum / static_cast<double>(prior_count) : 0.0;
+  unknown_out = prior;
+
+  const double m = options_.smoothing;
+  const auto stats = accumulate_category_stats_(column, target);
+  values_out.assign(keys.size(), prior);
+  for (std::size_t k = 0; k < keys.size(); ++k) {
+    const auto it = stats.find(keys[k]);
+    const double sum_y = it != stats.end() ? it->second.sum : 0.0;
+    const double count = it != stats.end() ? it->second.count : 0.0;
+    values_out[k] = (sum_y + m * prior) / (count + m);
+  }
+  return Status::success();
+}
+
+Status WOEEncoder::fit_feature_values_(const std::vector<double>& column,
+                                       const std::vector<double>& target,
+                                       const std::vector<std::uint64_t>& keys,
+                                       std::vector<double>& values_out,
+                                       double& unknown_out) {
+  double total_pos = 0.0;
+  double total = 0.0;
+  for (double v : target) {
+    if (std::isnan(v)) continue;
+    if (v != 0.0 && v != 1.0) {
+      return Status::invalid_argument("WOEEncoder requires a binary 0/1 target.");
+    }
+    total_pos += v;
+    total += 1.0;
+  }
+  const double total_neg = total - total_pos;
+  const double reg = options_.regularization;
+  unknown_out = 0.0;
+
+  const auto stats = accumulate_category_stats_(column, target);
+  values_out.assign(keys.size(), 0.0);
+  for (std::size_t k = 0; k < keys.size(); ++k) {
+    const auto it = stats.find(keys[k]);
+    const double pos = it != stats.end() ? it->second.sum : 0.0;
+    const double neg = (it != stats.end() ? it->second.count : 0.0) - pos;
+    const double numerator = (pos + reg) / (total_pos + 2.0 * reg);
+    const double denominator = (neg + reg) / (total_neg + 2.0 * reg);
+    values_out[k] = (numerator > 0.0 && denominator > 0.0) ? std::log(numerator / denominator) : 0.0;
+  }
+  return Status::success();
+}
+
 OutlierIsolator::OutlierIsolator(OutlierIsolatorOptions options) : options_(options) {}
 
 bool OutlierIsolator::learned() const noexcept { return learned_; }

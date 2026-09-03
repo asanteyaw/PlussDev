@@ -108,8 +108,8 @@ int main() {
     if (epoch == 1 || epoch % 30 == 0) {
       const auto val_loss = pluss::nn::losses::BCEWithLogits(model->forward(x_val), y_val);
       std::cout << "epoch=" << epoch
-                << " train_loss=" << pluss::as_f64(loss)
-                << " val_loss=" << pluss::as_f64(val_loss) << "\n";
+                << " train_loss=" << pluss::tils::as_f64(loss)
+                << " val_loss=" << pluss::tils::as_f64(val_loss) << "\n";
     }
   }
 
@@ -125,8 +125,8 @@ int main() {
             << " train=" << x_train.sizes()[0]
             << " val=" << x_val.sizes()[0]
             << " test=" << x_test.sizes()[0] << "\n";
-  std::cout << "test_loss=" << pluss::as_f64(test_loss)
-            << " test_acc=" << pluss::as_f64(test_acc) << "\n";
+  std::cout << "test_loss=" << pluss::tils::as_f64(test_loss)
+            << " test_acc=" << pluss::tils::as_f64(test_acc) << "\n";
 
   return 0;
 }

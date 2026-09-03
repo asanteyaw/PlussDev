@@ -145,9 +145,9 @@ Example 6. Just like `rand()`, the zero-seed path can still be replayed if you
 reset the library RNG state first.
 
 ```cpp
-pluss::rng_seed(515151u);
+pluss::tils::rng_seed(515151u);
 auto g0 = pluss::series::randn({4}, pluss::ScalarType::Float32);
-pluss::rng_seed(515151u);
+pluss::tils::rng_seed(515151u);
 auto g1 = pluss::series::randn({4}, pluss::ScalarType::Float32);
 
 std::cout << g0 << "\n" << g1;

@@ -21,7 +21,7 @@
 #include <fmt/format.h>
 #endif
 
-namespace pluss::aux {
+namespace pluss::tils {
 
 enum class OutputLevel : std::size_t {
   Trace = 0,
@@ -470,10 +470,4 @@ private:
   bool auto_flush_{false};
 };
 
-} // namespace pluss::aux
-
-namespace pluss {
-using aux::OutputEngine;
-using aux::OutputOptions;
-using aux::OutputLevel;
-} // namespace pluss
+} // namespace pluss::tils

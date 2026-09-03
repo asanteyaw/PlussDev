@@ -4,7 +4,7 @@
 
 #include <limits>
 
-namespace pluss::ai::lymph::detect {
+namespace pluss::ai::lymph::models::detect {
 namespace detail {
 
 inline void require_anomaly_model_(const Model& model, std::string_view where) {
@@ -149,4 +149,4 @@ class ModelRunner final {
   return ModelRunner(std::move(model));
 }
 
-} // namespace pluss::ai::lymph::detect
+} // namespace pluss::ai::lymph::models::detect

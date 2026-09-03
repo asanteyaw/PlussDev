@@ -147,12 +147,12 @@ and current backward-support expectations.
 - [`Series::cos`](cos.md): forward cosine transform.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="abs.html">
+  <a class="prev-link" href="abs2.html">
     <span class="label">Previous</span>
-    <span class="title">abs</span>
+    <span class="title">abs2</span>
   </a>
-  <a class="next-link" href="add.html">
+  <a class="next-link" href="acosh.html">
     <span class="label">Next</span>
-    <span class="title">add</span>
+    <span class="title">acosh</span>
   </a>
 </div>

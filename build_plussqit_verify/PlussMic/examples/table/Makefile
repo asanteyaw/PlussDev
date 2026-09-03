@@ -626,6 +626,20 @@ plussmic_flash_dataset_bridge_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_plussqit_verify && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_flash_dataset_bridge_demo.dir/build
 .PHONY : plussmic_flash_dataset_bridge_demo/fast
 
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_plussqit_verify && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/rule
+
+# Convenience name for target.
+plussmic_bi_demo_suite: PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/rule
+.PHONY : plussmic_bi_demo_suite
+
+# fast build rule for target.
+plussmic_bi_demo_suite/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_plussqit_verify && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/build
+.PHONY : plussmic_bi_demo_suite/fast
+
 atlas_plot_demo.o: atlas_plot_demo.cpp.o
 .PHONY : atlas_plot_demo.o
 
@@ -649,6 +663,30 @@ atlas_plot_demo.s: atlas_plot_demo.cpp.s
 atlas_plot_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_plussqit_verify && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_atlas_plot_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_atlas_plot_demo.dir/atlas_plot_demo.cpp.s
 .PHONY : atlas_plot_demo.cpp.s
+
+bi_demo_suite.o: bi_demo_suite.cpp.o
+.PHONY : bi_demo_suite.o
+
+# target to build an object file
+bi_demo_suite.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_plussqit_verify && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/bi_demo_suite.cpp.o
+.PHONY : bi_demo_suite.cpp.o
+
+bi_demo_suite.i: bi_demo_suite.cpp.i
+.PHONY : bi_demo_suite.i
+
+# target to preprocess a source file
+bi_demo_suite.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_plussqit_verify && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/bi_demo_suite.cpp.i
+.PHONY : bi_demo_suite.cpp.i
+
+bi_demo_suite.s: bi_demo_suite.cpp.s
+.PHONY : bi_demo_suite.s
+
+# target to generate assembly for a file
+bi_demo_suite.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_plussqit_verify && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/bi_demo_suite.cpp.s
+.PHONY : bi_demo_suite.cpp.s
 
 bike_sharing_eda_dfplot.o: bike_sharing_eda_dfplot.cpp.o
 .PHONY : bike_sharing_eda_dfplot.o
@@ -1386,6 +1424,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... plussmic_atlas_plot_demo"
+	@echo "... plussmic_bi_demo_suite"
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
 	@echo "... plussmic_csv_engine_bench"
 	@echo "... plussmic_dataframe_ab_reference_demo"
@@ -1419,6 +1458,9 @@ help:
 	@echo "... atlas_plot_demo.o"
 	@echo "... atlas_plot_demo.i"
 	@echo "... atlas_plot_demo.s"
+	@echo "... bi_demo_suite.o"
+	@echo "... bi_demo_suite.i"
+	@echo "... bi_demo_suite.s"
 	@echo "... bike_sharing_eda_dfplot.o"
 	@echo "... bike_sharing_eda_dfplot.i"
 	@echo "... bike_sharing_eda_dfplot.s"

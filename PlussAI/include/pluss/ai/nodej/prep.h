@@ -80,6 +80,50 @@ struct LabelEncoderOptions {
   bool one_based = false;
 };
 
+// Base-N encoding (category_encoders.BaseNEncoder): ordinal-encode categories to
+// codes 1..K (0 reserved for unseen / missing), then represent each code in
+// radix `base` across a fixed number of digit columns. base == 2 is the popular
+// "binary encoder". K categories cost ceil(log_base(K+1)) columns instead of the
+// K columns one-hot would spend.
+struct BaseNEncoderOptions {
+  std::int64_t base = 2;
+  std::int64_t max_categories = 1024;
+  CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent;
+};
+
+// Feature hashing (the "hashing trick"): map each category value into one of
+// `n_components` buckets with a fixed multiplicative hash and emit an
+// n_components-wide indicator. Output width is independent of cardinality and no
+// vocabulary is stored, so unseen categories are handled for free (at the cost
+// of possible collisions). A missing value produces an all-zero row.
+struct HashingEncoderOptions {
+  std::int64_t n_components = 8;
+  std::uint64_t seed = 0;
+};
+
+// Target / mean encoding with additive m-estimate smoothing
+// (category_encoders.MEstimateEncoder): each category is replaced by
+// (sum_y_in_cat + smoothing * prior) / (count_in_cat + smoothing), where `prior`
+// is the global target mean. Larger `smoothing` shrinks rare categories toward
+// the prior. Supervised: the target is supplied at fit time. Appropriate for
+// regression and binary (0/1) targets; one output column per input feature.
+struct TargetEncoderOptions {
+  double smoothing = 10.0;
+  std::int64_t max_categories = 4096;
+  CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent;
+};
+
+// Weight-of-evidence encoding (category_encoders.WOEEncoder) for a binary 0/1
+// target: each category is replaced by
+// ln( ((pos_c + reg)/(P + 2 reg)) / ((neg_c + reg)/(N + 2 reg)) ), with P/N the
+// total positives/negatives and `reg` a Laplace term. Unseen categories encode
+// to 0 (neutral). Supervised; one output column per input feature.
+struct WOEEncoderOptions {
+  double regularization = 1.0;
+  std::int64_t max_categories = 4096;
+  CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent;
+};
+
 enum class NeighborImputerWeighting : std::uint8_t {
   Uniform = 0,
   Distance = 1,
@@ -641,6 +685,132 @@ private:
   ObservationLayout layout_{ObservationLayout::Rows};
   std::int64_t feature_count_{0};
   std::vector<std::vector<std::uint64_t>> category_keys_{};
+};
+
+class BaseNEncoder final : public TransformerBase {
+public:
+  explicit BaseNEncoder(BaseNEncoderOptions options = {});
+
+  [[nodiscard]] bool trained() const noexcept override;
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
+  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) override;
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {});
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
+
+private:
+  BaseNEncoderOptions options_{};
+  bool trained_{false};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  std::int64_t feature_count_{0};
+  std::int64_t out_feature_count_{0};
+  std::vector<std::vector<std::uint64_t>> category_keys_{};
+  std::vector<std::int64_t> digit_counts_{};
+};
+
+class HashingEncoder final : public TransformerBase {
+public:
+  explicit HashingEncoder(HashingEncoderOptions options = {});
+
+  [[nodiscard]] bool trained() const noexcept override;
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
+  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) override;
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {});
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
+
+private:
+  HashingEncoderOptions options_{};
+  bool trained_{false};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  std::int64_t feature_count_{0};
+};
+
+// Shared machinery for the supervised categorical encoders (target / woe).
+class SupervisedEncoderBase : public TransformerBase {
+public:
+  [[nodiscard]] bool trained() const noexcept final { return trained_; }
+  [[nodiscard]] bool needs_target() const noexcept final { return true; }
+
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) final;
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) final;
+  Status learn_supervised(const FeatureBatch& batch,
+                          const Series& target,
+                          const TrainOptions& options = {}) final;
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const final;
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const final;
+  Status load_state(pluss::msharp::RangeView::Series state) final;
+
+protected:
+  [[nodiscard]] virtual const char* encoder_name_() const noexcept = 0;
+  [[nodiscard]] virtual std::int64_t max_categories_() const noexcept = 0;
+  [[nodiscard]] virtual CategoryOverflowPolicy overflow_() const noexcept = 0;
+  // Fill `values_out[f]` with one encoded value per category key, and
+  // `unknown_out[f]` with the value an unseen category receives.
+  virtual Status fit_feature_values_(const std::vector<double>& column,
+                                     const std::vector<double>& target,
+                                     const std::vector<std::uint64_t>& keys,
+                                     std::vector<double>& values_out,
+                                     double& unknown_out) = 0;
+
+  bool trained_{false};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  std::int64_t feature_count_{0};
+  std::vector<std::vector<std::uint64_t>> category_keys_{};
+  std::vector<std::vector<double>> category_values_{};
+  std::vector<double> unknown_values_{};
+};
+
+class TargetEncoder final : public SupervisedEncoderBase {
+public:
+  explicit TargetEncoder(TargetEncoderOptions options = {}) : options_(options) {}
+
+protected:
+  [[nodiscard]] const char* encoder_name_() const noexcept override { return "TargetEncoder"; }
+  [[nodiscard]] std::int64_t max_categories_() const noexcept override { return options_.max_categories; }
+  [[nodiscard]] CategoryOverflowPolicy overflow_() const noexcept override { return options_.overflow; }
+  Status fit_feature_values_(const std::vector<double>& column,
+                             const std::vector<double>& target,
+                             const std::vector<std::uint64_t>& keys,
+                             std::vector<double>& values_out,
+                             double& unknown_out) override;
+
+private:
+  TargetEncoderOptions options_{};
+};
+
+class WOEEncoder final : public SupervisedEncoderBase {
+public:
+  explicit WOEEncoder(WOEEncoderOptions options = {}) : options_(options) {}
+
+protected:
+  [[nodiscard]] const char* encoder_name_() const noexcept override { return "WOEEncoder"; }
+  [[nodiscard]] std::int64_t max_categories_() const noexcept override { return options_.max_categories; }
+  [[nodiscard]] CategoryOverflowPolicy overflow_() const noexcept override { return options_.overflow; }
+  Status fit_feature_values_(const std::vector<double>& column,
+                             const std::vector<double>& target,
+                             const std::vector<std::uint64_t>& keys,
+                             std::vector<double>& values_out,
+                             double& unknown_out) override;
+
+private:
+  WOEEncoderOptions options_{};
 };
 
 } // namespace pluss::ai::nodej::prep

@@ -224,9 +224,9 @@ Use `select()` when you want exactly one lane and you want rank to drop.
   selection.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sizes.html">
+  <a class="prev-link" href="scatter_reduce_sum.html">
     <span class="label">Previous</span>
-    <span class="title">sizes</span>
+    <span class="title">scatter_reduce_sum</span>
   </a>
   <a class="next-link" href="sensitivity.html">
     <span class="label">Next</span>

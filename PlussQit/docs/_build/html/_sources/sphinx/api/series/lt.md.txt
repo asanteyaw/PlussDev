@@ -179,9 +179,9 @@ must count as a match, step to [`Series::le`](le.md) instead.
 - [`Series::eq`](eq.md): exact equality.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="le.html">
+  <a class="prev-link" href="logsumexp.html">
     <span class="label">Previous</span>
-    <span class="title">le</span>
+    <span class="title">logsumexp</span>
   </a>
   <a class="next-link" href="max.html">
     <span class="label">Next</span>

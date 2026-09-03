@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=d2a74cb6" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=15722e59" />
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=608a74fd"></script>
+    <script src="_static/api_nav.js?v=0653d070"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,73 +44,7 @@
 <ul class="simple">
 <li><p>Use the left sidebar to open one method page at a time.</p></li>
 <li><p>Each method page contains its own signatures, parameter details, notes, verified outputs, and working previous/next navigation.</p></li>
-<li><p>Grouping is best learned as a workflow, not as a loose list of methods.</p></li>
-</ul>
-</section>
-<section id="the-surface-in-one-sentence">
-<h2>The Surface In One Sentence<a class="headerlink" href="#the-surface-in-one-sentence" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">group()</span></code> captures grouping policy, <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> defines group identity, and then a
-grouped terminal decides whether you want one row per group, one row per source row,
-or a regrouped row-grain view.</p>
-</section>
-<section id="learn-it-in-this-order">
-<h2>Learn It In This Order<a class="headerlink" href="#learn-it-in-this-order" title="Link to this heading">¶</a></h2>
-<ol class="arabic simple">
-<li><p><a class="reference internal" href="api/dataframe/group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::group</span></code></span></a>
-Learn the top-level mental model and what <code class="docutils literal notranslate"><span class="pre">GroupOptions</span></code> actually control.</p></li>
-<li><p><a class="reference internal" href="api/dataframe-group/by.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">by()</span></code></span></a>
-Learn the two grouping domains: ordinary feature keys and case-label keys.</p></li>
-<li><p><a class="reference internal" href="api/dataframe-group/agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a>, <a class="reference internal" href="api/dataframe-group/yield.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">yield()</span></code></span></a>
-Learn the four grouped execution shapes.</p></li>
-<li><p>The convenience terminals
-Learn when <code class="docutils literal notranslate"><span class="pre">count()</span></code>, <code class="docutils literal notranslate"><span class="pre">mean()</span></code>, <code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">mode()</span></code>, and friends are just concise
-syntax for uniform grouped reductions.</p></li>
-</ol>
-</section>
-<section id="the-four-execution-shapes">
-<h2>The Four Execution Shapes<a class="headerlink" href="#the-four-execution-shapes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">agg(...)</span></code>: collapse to one row per group</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">transform(...)</span></code>: compute one grouped value per group, then broadcast it back to
-every row in that group</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">filter(keep)</span></code>: keep or drop whole groups from the original frame</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">yield()</span></code>: keep the original rows, but physically reorder them into grouped blocks</p></li>
-</ul>
-</section>
-<section id="the-big-conceptual-distinctions">
-<h2>The Big Conceptual Distinctions<a class="headerlink" href="#the-big-conceptual-distinctions" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Grouping by several keys is tuple grouping, not “first key now, second key later.”</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sort</span></code> in <code class="docutils literal notranslate"><span class="pre">GroupOptions</span></code> affects the order of groups in collapsed outputs; it does
-not sort rows <em>within</em> a group by a value column.</p></li>
-<li><p>Convenience terminals operate on non-key value features by default, but many of them
-also accept a targeted feature list when you do not want to aggregate the full value
-side.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">count()</span></code> is special: when no value features remain after excluding keys, it still
-returns an explicit row-count column named <code class="docutils literal notranslate"><span class="pre">count</span></code>.</p></li>
-</ul>
-</section>
-<section id="choosing-the-right-grouped-method">
-<h2>Choosing The Right Grouped Method<a class="headerlink" href="#choosing-the-right-grouped-method" title="Link to this heading">¶</a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">agg(...)</span></code> when:</p>
-<ul class="simple">
-<li><p>you want mixed grouped operations</p></li>
-<li><p>you want explicit output names</p></li>
-<li><p>you want row count beside other grouped metrics</p></li>
-</ul>
-<p>Use <code class="docutils literal notranslate"><span class="pre">transform(...)</span></code> when:</p>
-<ul class="simple">
-<li><p>the output must stay aligned to original row order</p></li>
-<li><p>you are engineering row-wise features from group statistics</p></li>
-</ul>
-<p>Use <code class="docutils literal notranslate"><span class="pre">filter(...)</span></code> when:</p>
-<ul class="simple">
-<li><p>the keep/drop decision is at the group level, not the row level</p></li>
-</ul>
-<p>Use <code class="docutils literal notranslate"><span class="pre">yield()</span></code> when:</p>
-<ul class="simple">
-<li><p>you want grouped row neighborhoods before a later row-wise operation</p></li>
-<li><p>you are debugging or inspecting how the grouping plan partitions the frame</p></li>
+<li><p>This landing page stays intentionally short so the content panel is not one giant scroll of every method.</p></li>
 </ul>
 </section>
 <section id="method-pages">

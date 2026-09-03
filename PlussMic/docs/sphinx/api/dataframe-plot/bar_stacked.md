@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fc1314bac9eb -->
 
 # DataFramePlotAccessor::bar_stacked
 

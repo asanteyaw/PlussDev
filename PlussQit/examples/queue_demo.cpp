@@ -25,8 +25,8 @@ int main() {
   std::cout << "Type binary +: " << (qs + pluss::Type(pluss::make_series({1.0, 1.0, 1.0}))) << "\n";
   std::cout << "Type binary >: " << (qs > pluss::Type(pluss::make_series({0.0, 0.0, 0.0}))) << "\n";
   auto qs_abs = qs.invoke("abs");
-  let qs_itm = qs_b.item<double>();
-  let qs_item = qs_b.item(); // if you want to dispense the single scalar result directly
+  auto qs_itm = qs_b.item<double>();
+  auto qs_item = qs_b.item(); // if you want to dispense the single scalar result directly
   std::cout << "Series after explicit item: " << qs_itm << "\n";
   std::cout << "Dispensed item: " << qs_item << "\n";
   std::cout << "Dispensed item dtype: " << qs_b.item().dtype() << "\n";

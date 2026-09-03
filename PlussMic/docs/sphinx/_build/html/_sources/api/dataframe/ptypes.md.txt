@@ -20,10 +20,11 @@ Returns the coarse payload family of every feature in the frame — `Series`, `N
 routing logic by payload family (numeric work needs `Series`, text work needs `Note`,
 and so on) and don't need the extra precision `dtypes()` provides.
 
-Like [`dtypes()`](dtypes.md), `ptypes()` returns a `DataFrame::DTypes` object rather
-than a raw map — it supports `size()`, `empty()`, `contains(name)`,
-`at(name)`/`operator[](name)`, and range-based iteration over `(name, ptype)` pairs,
-and has its own `operator<<` for a quick printout.
+Both `ptypes()` and [`dtypes()`](dtypes.md) hand back a `DataFrame::DTypes` object
+rather than a raw map — an ordered feature-to-type view with lookup, iteration, a
+bulk value accessor, and its own `operator<<`. Its full member surface is
+[documented below](#the-dtypes-result-type); the two calls produce the same object
+shape and differ only in what each type string says.
 
 ## Parameters
 
@@ -32,9 +33,115 @@ and has its own `operator<<` for a quick printout.
 ## Returns
 
 `DTypes`
-    A feature-to-payload-family summary. Iterate it directly, or look up one
-    feature's payload family with `ptypes()["feature_name"]` /
-    `ptypes().at("feature_name")`.
+    An ordered `(feature name, payload family)` view — one entry per column, in the
+    frame's feature order. See [The `DTypes` result type](#the-dtypes-result-type)
+    for every member.
+
+(the-dtypes-result-type)=
+
+## The `DTypes` result type
+
+`DataFrame::DTypes` is the small read-only object returned by both `ptypes()` and
+`dtypes()`. It is an **ordered feature-to-type map**: one `(feature name, type
+string)` pair per column, in the frame's current feature order. `ptypes()` fills
+the type string with the payload family alone (`Series`, `Note`, ...); `dtypes()`
+fills it with family *and* concrete type (`Series<float64>`, `Note<utf8>`, ...).
+Everything here applies to the object from either call.
+
+```cpp
+using Entry = std::pair<std::string, std::string>;   // (feature name, type string)
+```
+
+| Member | Returns | Purpose |
+| --- | --- | --- |
+| `size()` / `empty()` | `std::int64_t` / `bool` | feature count described (always matches the frame), and whether it is zero |
+| `contains(name)` | `bool` | whether `name` is one of the described columns — guard a lookup instead of catching `at()`'s throw |
+| `at(name)` | `const std::string&` | the type string for one feature by name; throws `"DataFrame::DTypes::at: unknown feature '<name>'"` if absent |
+| `operator[](name)` | `const std::string&` | identical to `at(name)` — same throw on an unknown name, no separate unchecked path |
+| `entries()` | `const std::vector<Entry>&` | the whole `(name, type)` list by reference, in feature order — hold it, index it, hand it to an algorithm |
+| `payloads()` | `std::vector<std::string>` | just the type strings, **value-owned**, in feature order — safe to call on a temporary |
+| `begin()` / `end()` | `const_iterator` | range-`for` over `Entry` pairs; same order as `entries()` |
+| `operator<<` | `std::ostream&` | a fixed `features  dtype` header, a `--------  --------` rule, then one unpadded `name  type` line per feature |
+
+Notes on lifetime: `at()` / `operator[]` / `entries()` return references *into* the
+`DTypes` object, so bind it to a name (`const auto dt = df.dtypes();`) before
+taking a reference — a reference into a temporary dangles. `payloads()` is the
+exception: it returns owned strings and is safe directly on `df.ptypes().payloads()`.
+
+`DTypes` holds no reference to the frame. It is a snapshot — mutating the frame
+afterwards does not change a `DTypes` you already have.
+
+### The full surface at a glance
+
+```cpp
+#include <iostream>
+#include <pluss/pluss.h>
+
+int main() {
+  using namespace pluss::table;
+  using pluss::make_note;
+  using pluss::make_series;
+
+  const auto df = DataFrame({
+      {"user_id", make_series({101.0, 102.0, 103.0})},
+      {"score",   make_series({1.5, 2.0, 3.5})},
+      {"name",    make_note({"Ada", "Bola", "Chen"})},
+  });
+
+  const auto pt = df.ptypes();
+
+  std::cout << pt << "\n\n";                                  // operator<<
+  std::cout << "size=" << pt.size() << " empty=" << std::boolalpha << pt.empty() << "\n";
+  std::cout << "contains(name)=" << pt.contains("name")
+            << " contains(missing)=" << pt.contains("missing") << "\n";
+  std::cout << "at(name)=" << pt.at("name")
+            << "  operator[](score)=" << pt["score"] << "\n";
+
+  std::cout << "entries():\n";
+  for (const auto& [feature, type] : pt.entries()) {
+    std::cout << "  " << feature << " -> " << type << "\n";
+  }
+
+  std::cout << "payloads():";
+  for (const auto& p : pt.payloads()) std::cout << " " << p;
+  std::cout << "\n";
+
+  std::cout << "range-for:\n";
+  for (const auto& [feature, type] : pt) {
+    std::cout << "  " << feature << " : " << type << "\n";
+  }
+
+  // dtypes() -> same object, richer strings
+  std::cout << "dtypes payloads():";
+  for (const auto& p : df.dtypes().payloads()) std::cout << " [" << p << "]";
+  std::cout << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+features  dtype
+--------  --------
+user_id  Series
+score  Series
+name  Note
+
+size=3 empty=false
+contains(name)=true contains(missing)=false
+at(name)=Note  operator[](score)=Series
+entries():
+  user_id -> Series
+  score -> Series
+  name -> Note
+payloads(): Series Series Note
+range-for:
+  user_id : Series
+  score : Series
+  name : Note
+dtypes payloads(): [Series<float64>] [Series<float64>] [Note<utf8>]
+```
 
 ## Examples
 
@@ -76,18 +183,51 @@ if (out.contains("signup_note")) {
 }
 ```
 
+Example 3. Route work by payload family — iterate the pairs, keep the names you
+want.
+
+```cpp
+const auto pt = users.ptypes();
+
+std::vector<std::string> numeric;
+std::vector<std::string> text;
+for (const auto& [name, family] : pt) {
+  if (family == "Series") numeric.push_back(name);
+  else if (family == "Note") text.push_back(name);
+}
+
+std::cout << "numeric:";
+for (const auto& n : numeric) std::cout << " " << n;
+std::cout << "\ntext:";
+for (const auto& n : text) std::cout << " " << n;
+std::cout << "\n";
+```
+
+### Output
+
+```text
+numeric: user_id
+text: signup_note
+```
+
 ## Notes
 
 - `ptypes()` reports the *coarse* payload family only (`Series`, `Note`, `Timeline`,
   `TimeIndex`). Use [`dtypes()`](dtypes.md) when you need the concrete scalar type
   (`Series<float64>` vs `Series<int64>`) as well.
-- Iteration order matches the frame's current feature order, the same order
-  [`features()`](features.md) returns.
+- Iteration order, `entries()`, and `payloads()` all follow the frame's current
+  feature order — the same order [`features()`](features.md) returns.
+- `payloads()` returns owned strings, so `const auto p = df.ptypes().payloads();`
+  is safe; a reference from `at()` / `operator[]` / `entries()` is not — bind the
+  `DTypes` object to a name first.
 
 ## See Also
 
-- [`DataFrame::dtypes`](dtypes.md): the concrete-dtype counterpart.
-- [`DataFrame::feataxis`](feataxis.md): select or route features by payload family.
+- [`DataFrame::dtypes`](dtypes.md): the same `DTypes` object, with concrete type
+  strings (`Series<float64>`).
+- [`DataFrame::features`](features.md): the feature-name order `DTypes` follows.
+- [`DataFrame::feataxis`](feataxis.md): select or route features by payload family
+  in one call.
 - [`DataFrame::cast`](cast.md), [`DataFrame::astype`](astype.md): change a feature's
   dtype (and, for `Timeline`/`TimeIndex`, its payload family) after inspecting it here.
 

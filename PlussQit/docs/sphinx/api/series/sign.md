@@ -114,12 +114,12 @@ summarize polarity without preserving scale.
   determines whether the call is meaningful.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="setxor_along.html">
+  <a class="prev-link" href="sigmoid.html">
     <span class="label">Previous</span>
-    <span class="title">setxor_along</span>
+    <span class="title">sigmoid</span>
   </a>
-  <a class="next-link" href="sin.html">
+  <a class="next-link" href="signbit.html">
     <span class="label">Next</span>
-    <span class="title">sin</span>
+    <span class="title">signbit</span>
   </a>
 </div>

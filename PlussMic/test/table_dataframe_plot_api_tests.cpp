@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
@@ -42,6 +43,22 @@ DataFrame make_xy_frame() {
       {"z", Thread(pluss::make_series(std::vector<double>{0.8, 1.0, 1.6, 2.4}))},
       {"grp", Thread(pluss::make_note({"alpha", "alpha", "beta", "beta"}))},
   });
+}
+
+DataFrame make_wide_numeric_frame(std::int64_t nfeatures) {
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(static_cast<std::size_t>(nfeatures));
+  for (const auto idx : std::views::iota(std::int64_t{0}, nfeatures)) {
+    columns.emplace_back(
+        "f" + std::to_string(idx + 1),
+        Thread(pluss::make_series(std::vector<double>{
+            static_cast<double>(idx),
+            static_cast<double>(idx + 1),
+            static_cast<double>(idx + 2),
+            static_cast<double>(idx + 3),
+        })));
+  }
+  return DataFrame(std::move(columns));
 }
 
 void test_thread_plot_apis() {
@@ -261,6 +278,25 @@ void test_scatter_heatmap_and_validation() {
                "plot().scatter with missing feature should throw");
 }
 
+void test_scatter_matrix_guardrails() {
+  const auto wide = make_wide_numeric_frame(15);
+  const auto fig_auto = wide.plot().scatter_matrix();
+  expect(fig_auto.pane_count() == 225,
+         "plot().scatter_matrix() should keep the full numeric feature set when features are implicit");
+  expect(fig_auto.to_svg().find("<svg") != std::string::npos,
+         "plot().scatter_matrix() should render wide numeric frames without truncating features");
+
+  std::vector<std::string_view> explicit_features;
+  explicit_features.reserve(13);
+  for (const auto idx : std::views::iota(std::int64_t{0}, std::int64_t{13})) {
+    explicit_features.push_back(wide.features()[static_cast<std::size_t>(idx)]);
+  }
+  const auto fig_explicit =
+      wide.plot().scatter_matrix(pluss::msharp::RangeView::Of<std::string_view>(explicit_features));
+  expect(fig_explicit.pane_count() == 169,
+         "plot().scatter_matrix(features) should honor explicit feature selection");
+}
+
 void test_plot_options_defaults() {
   const auto df = make_xy_frame();
   pluss::table::DataFramePlotOptions options;
@@ -398,6 +434,7 @@ int main() {
   test_thread_plot_apis();
   test_object_plot_apis();
   test_scatter_heatmap_and_validation();
+  test_scatter_matrix_guardrails();
   test_plot_options_defaults();
   test_corr_methods_and_plot3d();
   return 0;

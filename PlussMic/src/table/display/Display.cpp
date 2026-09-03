@@ -30,6 +30,7 @@
 #include "CodeM/core/Half.h"
 #include "CodeM/core/ScalarType.h"
 #include "pluss/tils/view/html_window.h"
+#include "pluss/tils/view/window/text_layout.h"
 #include "table/Atlas.h"
 #include "table/DataFrame.h"
 #include "table/Thread.h"
@@ -1172,9 +1173,6 @@ std::string html_shell_(std::string_view title,
     .sticky-left {{
       position: sticky;
       left: 0;
-      width: 72px;
-      min-width: 72px;
-      max-width: 72px;
       z-index: 1;
       background: #edf6f7;
       border-right: 2px solid var(--success);
@@ -1421,7 +1419,32 @@ std::string render_html_table_body_(const DataFrame& frame,
   body += "</div>";
 
   body += "<div class=\"table-wrap\"><div class=\"table-scroll\">";
-  body += fmt::format("<table id=\"{}\" data-filterable=\"true\"><thead><tr>", escape_html_(table_id));
+  int case_width_px = 0;
+  if (options.show_case_index) {
+    case_width_px = pluss::view::window::layout_math_text("case", 14).width;
+    for (std::int64_t row = 0; row < frame.ncases(); ++row) {
+      case_width_px = std::max(
+          case_width_px,
+          pluss::view::window::layout_math_text(thread_value_at(display_cases, row), 14).width);
+    }
+    case_width_px += 5;
+  }
+
+  body += fmt::format("<table id=\"{}\" data-filterable=\"true\">", escape_html_(table_id));
+  if (options.show_case_index) {
+    body += "<colgroup>";
+    body += fmt::format(
+        "<col class=\"case-col\" style=\"width:{}px; min-width:{}px; max-width:{}px;\">",
+        case_width_px,
+        case_width_px,
+        case_width_px);
+    for (std::size_t i = 0; i < names.size(); ++i) {
+      (void)i;
+      body += "<col>";
+    }
+    body += "</colgroup>";
+  }
+  body += "<thead><tr>";
 
   std::size_t column_index = 0;
   if (options.show_case_index) {

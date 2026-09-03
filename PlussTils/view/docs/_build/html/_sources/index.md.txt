@@ -28,7 +28,7 @@
 <div class="pluss-card">
 <span class="card-name">Aux</span>
 <span class="card-model">Not yet documented</span>
-<p class="card-desc">Auxiliary helpers including <code>pluss::OutputEngine</code>. Add a <code>docs/</code> folder next to this domain's source to have it appear here automatically.</p>
+<p class="card-desc">Utility helpers including <code>pluss::tils::OutputEngine</code>. Add a <code>docs/</code> folder next to this domain's source to have it appear here automatically.</p>
 </div>
 
 </div>

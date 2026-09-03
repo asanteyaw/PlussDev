@@ -167,12 +167,12 @@ Use `isin()` when you want a mask from a membership question.
   coordinates if needed.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_prime.html">
+  <a class="prev-link" href="isfinite.html">
     <span class="label">Previous</span>
-    <span class="title">is_prime</span>
+    <span class="title">isfinite</span>
   </a>
-  <a class="next-link" href="le.html">
+  <a class="next-link" href="isinf.html">
     <span class="label">Next</span>
-    <span class="title">le</span>
+    <span class="title">isinf</span>
   </a>
 </div>

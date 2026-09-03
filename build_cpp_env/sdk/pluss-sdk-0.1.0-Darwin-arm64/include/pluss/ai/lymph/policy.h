@@ -23,8 +23,8 @@
 //   - Policy::apply(DataFrame) -> DataFrame.
 //   - Policy method surface: drop(...), require(...), forbid(...),
 //     reject_missing(...), allow_missing(...), reject_any_missing().
-//   - lymph::Policy remains the ergonomic root alias; lymph::policy::Policy is
-//     the explicit family-local spelling.
+//   - workflow::policy::Policy as the implementation home
+//   - workflow::Policy as the family-level public spelling
 //
 // What does NOT live here: save_policy/load_policy (the bundle sidecar
 // persistence) -- those are Workflow concerns, since only Workflow::save/load
@@ -36,9 +36,7 @@
 //
 // Consumed by: workflow.h (Workflow = Model + Policy).
 
-namespace pluss::ai::lymph {
-
-namespace policy {
+namespace pluss::ai::lymph::workflow::policy {
 
 struct Policy {
   // Columns stripped before modeling. Use for IDs, leakage columns, audit-only
@@ -182,16 +180,16 @@ struct Policy {
   }
 
   void validate_(const pluss::table::DataFrame& frame) const {
-    require_present_(frame, require_columns, "lymph::Policy::apply");
-    require_present_(frame, drop_columns, "lymph::Policy::apply(drop_columns)");
-    require_present_(frame, reject_missing, "lymph::Policy::apply(reject_missing)");
-    require_present_(frame, allow_missing, "lymph::Policy::apply(allow_missing)");
-    require_present_(frame, null_filter_columns, "lymph::Policy::apply(null_filter_columns)");
+    require_present_(frame, require_columns, "lymph::workflow::Policy::apply");
+    require_present_(frame, drop_columns, "lymph::workflow::Policy::apply(drop_columns)");
+    require_present_(frame, reject_missing, "lymph::workflow::Policy::apply(reject_missing)");
+    require_present_(frame, allow_missing, "lymph::workflow::Policy::apply(allow_missing)");
+    require_present_(frame, null_filter_columns, "lymph::workflow::Policy::apply(null_filter_columns)");
 
     const std::vector<std::string>& available = frame.features();
     for (const std::string& name : forbid_columns) {
       if (contains_(available, name) && !contains_(drop_columns, name)) {
-        ::pluss::throw_error("lymph::Policy::apply: forbidden raw column \"" + name +
+        ::pluss::throw_error("lymph::workflow::Policy::apply: forbidden raw column \"" + name +
                              "\" is present; drop it explicitly if it is intentionally audit-only.");
       }
     }
@@ -215,8 +213,10 @@ struct Policy {
   return std::move(options);
 }
 
-} // namespace policy
+} // namespace pluss::ai::lymph::workflow::policy
+
+namespace pluss::ai::lymph::workflow {
 
 using Policy = policy::Policy;
 
-} // namespace pluss::ai::lymph
+} // namespace pluss::ai::lymph::workflow

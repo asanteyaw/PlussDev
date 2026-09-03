@@ -29,7 +29,7 @@
 // that layer. Search::run's (trial x fold) dispatch is new, real lymph-level
 // engineering (not a rename), built here mirroring the exact shape
 // selection::compare_batch_ already uses for its own (candidate x fold)
-// dispatch -- same pluss::aux::transmit flattening, same
+// dispatch -- same pluss::tils::transmit flattening, same
 // materialize_fold_batches_/cross_validation_report_from_folds_ helpers,
 // same fit_top-controlled final-refit-on-the-whole-batch step -- just with
 // each grid cell's Model built on demand via make_model(point) instead of
@@ -407,15 +407,15 @@ class search::Search final {
     };
   };
 
-  pluss::aux::transmit_options topts{};
+  pluss::tils::transmit_options topts{};
   topts.grain_size = 1;
   if (split_options.max_parallel == 1 || cells.size() <= 1) {
-    topts.exec = pluss::aux::transmit_exec::seq;
+    topts.exec = pluss::tils::transmit_exec::seq;
   } else {
-    topts.exec = pluss::aux::transmit_exec::par;
+    topts.exec = pluss::tils::transmit_exec::par;
     topts.workers = split_options.max_parallel > 0 ? static_cast<std::size_t>(split_options.max_parallel) : 0;
   }
-  const std::vector<FoldAssessResult> cell_results = pluss::aux::transmit(evaluate_cell, cells, topts);
+  const std::vector<FoldAssessResult> cell_results = pluss::tils::transmit(evaluate_cell, cells, topts);
 
   Result result{};
   result.report.objective_metric = objective_metric;

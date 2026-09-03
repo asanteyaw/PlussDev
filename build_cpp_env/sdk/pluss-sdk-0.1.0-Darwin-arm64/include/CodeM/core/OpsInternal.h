@@ -27,7 +27,7 @@ class PlatformScope final {
   bool active_{false};
 };
 
-// Enforce Torch-like same-platform semantics for tensor interop ops.
+// Enforce same-platform semantics for tensor interop ops.
 void require_same_platform(const Series& a, const Series& b, std::string_view op);
 
   Series add(const Series& a, const Series& b);
@@ -84,6 +84,8 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series trunc(const Series& a);
   Series isnan(const Series& a);
   Series isinf(const Series& a);
+  Series invalid(const Series& a);
+  Series invalid_index(const Series& a);
   // In-place arithmetic (scalar and elementwise)
   Series& add_(Series& a, double s);
   Series& sub_(Series& a, double s);
@@ -132,7 +134,7 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series& masked_fill_(Series& a, const Series& mask, double value);
 
 
-// Reductions (CPU-only, Torch-inspired)
+// Reductions (CPU-only)
   Series sum(const Series& a);
   Series sum(const Series& a, std::int64_t dim, bool keepdim=false);
   Series mean(const Series& a);
@@ -189,13 +191,15 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series relu(const Series& a);
   Series& relu_(Series& a);
 
-  // Scatter (Torch-inspired CPU-only)
+  // Scatter (CPU-only)
   Series scatter(const Series& a, std::int64_t dim, const Series& index, const Series& src);
   Series& scatter_(Series& a, std::int64_t dim, const Series& index, const Series& src);
   Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const Series& src);
   Series& scatter_add_(Series& a, std::int64_t dim, const Series& index, const Series& src);
   Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self=true);
+  Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self, bool has_initial, double initial);
   Series& scatter_reduce_(Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self=true);
+  Series& scatter_reduce_(Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self, bool has_initial, double initial);
 
   // Indexing helpers
   Series gather(const Series& input, std::int64_t dim, const Series& index);

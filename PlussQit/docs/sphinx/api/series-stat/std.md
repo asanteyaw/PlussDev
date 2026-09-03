@@ -1,0 +1,68 @@
+<!-- pluss-hand-authored -->
+
+# SeriesStatAccessor::std
+
+[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+
+## Signatures
+
+```cpp
+Series SeriesStatAccessor::std(bool unbiased = true) const
+Series SeriesStatAccessor::std(std::int64_t dim, bool unbiased = true,
+                               bool keepdim = false) const
+```
+
+## What It Does
+
+`std()` computes the square root of `var()` using the same axis, estimator, and
+shape rules. It is usually easier to interpret than variance because its units
+match the input: seconds remain seconds rather than seconds squared.
+
+`unbiased=true` selects sample standard deviation (`N-1`); `false` selects
+population standard deviation (`N`).
+
+## Examples
+
+```cpp
+auto x = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
+std::cout << x.stat.std() << "\n";
+std::cout << x.stat.std(false) << "\n";
+std::cout << x.stat().std(1, false) << "\n";
+std::cout << x.stat.std(0, false, true) << "\n";
+```
+
+### Output
+
+```text
+data=[1.8708287]
+data=1.7078251
+data=[0.81649658, 0.81649658]
+data=[[1.5, 1.5, 1.5]]
+```
+
+Squaring each result recovers the corresponding `var()` result, up to floating
+rounding. `keepdim=true` is especially useful in manual normalization:
+`(x - x.stat.mean(0, true)) / x.stat.std(0, false, true)`.
+
+## Gradient
+
+Away from zero spread, the population derivative is
+`(x_i-mean)/(N*std)`, scaled by the upstream sensitivity. At an exactly
+constant lane the mathematical derivative is not unique; do not rely on it as
+a useful optimization signal.
+
+## Gotchas And Failure Modes
+
+- The default is sample, not population, standard deviation.
+- Sample standard deviation rejects singleton lanes.
+- Use `nanstd()` when and only when NaNs represent omitted observations.
+
+## See Also
+
+- [`Series::std`](../series/std.md): complete root-surface treatment.
+- [`standardize`](standardize.md): subtract a mean and divide by population std.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="standardize.html"><span class="label">Previous</span><span class="title">standardize</span></a>
+  <a class="next-link" href="var.html"><span class="label">Next</span><span class="title">var</span></a>
+</div>

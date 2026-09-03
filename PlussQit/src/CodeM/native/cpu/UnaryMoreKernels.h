@@ -15,12 +15,14 @@ namespace pluss::codem::native::cpu {
   void erf(const Series& a, Series& out);
   void erfc(const Series& a, Series& out);
   void lgamma(const Series& a, Series& out);
+  void digamma(const Series& a, Series& out);  // psi(x): derivative of lgamma
   void asinh(const Series& a, Series& out);
   void acosh(const Series& a, Series& out);
   void atanh(const Series& a, Series& out);
   void isnan(const Series& a, Series& out);     // bool out
   void isinf(const Series& a, Series& out);     // bool out
   void isfinite(const Series& a, Series& out);  // bool out
+  void signbit(const Series& a, Series& out);   // bool out (IEEE sign bit, incl. -0.0 / -NaN)
 
   void floor(const Series& a, Series& out);
   void ceil(const Series& a, Series& out);

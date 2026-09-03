@@ -208,11 +208,11 @@ TEST_CASE("aux seriesdataset supports row access and dataloader construction", "
 TEST_CASE("aux scalar helpers provide concise scalar extraction", "[aux][scalars]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const Series d = pluss::make_series(3.25, cfg);
-  REQUIRE(pluss::as_f64(d) == Approx(3.25));
+  REQUIRE(pluss::tils::as_f64(d) == Approx(3.25));
 
   const Series i = pluss::make_series(std::int64_t{42}, Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
-  REQUIRE(pluss::as_i64(i) == 42);
-  REQUIRE(pluss::as_I64(i) == 42);
+  REQUIRE(pluss::tils::as_i64(i) == 42);
+  REQUIRE(pluss::tils::as_I64(i) == 42);
 }
 
 TEST_CASE("aux pathing supports lean root+file API", "[aux][pathing]") {

@@ -1,4 +1,5 @@
 <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 31360c6c26fe -->
 
 # DataFramePlotAccessor::area_stacked
 

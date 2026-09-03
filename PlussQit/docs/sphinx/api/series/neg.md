@@ -22,7 +22,7 @@ Applies unary negation elementwise.
   some floating outputs
 
 This is the method form of unary minus. It is useful when you want the
-transform as part of a chain, or when you want to teach the explicit method
+transform as part of a chain, or when you want to use the explicit method form
 before relying on operator shorthand.
 
 ## Parameters
@@ -112,8 +112,8 @@ data=[-1, -1, -1]
 
 ## Summary
 
-Teach `neg()` as the explicit method form of unary minus. It is simple, but it
-is also a useful anchor because its derivative is constant and easy to reason
+Use `neg()` as the explicit method form of unary minus. It is simple, but it is
+also a useful anchor because its derivative is constant and easy to reason
 about.
 
 ## See Also
@@ -127,8 +127,8 @@ about.
     <span class="label">Previous</span>
     <span class="title">ne</span>
   </a>
-  <a class="next-link" href="permute.html">
+  <a class="next-link" href="nextafter.html">
     <span class="label">Next</span>
-    <span class="title">permute</span>
+    <span class="title">nextafter</span>
   </a>
 </div>

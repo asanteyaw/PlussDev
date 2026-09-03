@@ -83,7 +83,7 @@ remains because the pattern here is `id-`, not `id`.
 ```cpp
 auto note = pluss::make_note({"id-001-id", "id-204"});
 auto cleaned = note.remove_all("id-");
-pluss::OutputEngine out;
+pluss::tils::OutputEngine out;
 out.writeln("remove_all_marker:");
 out.writeln(cleaned);
 ```

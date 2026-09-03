@@ -5,7 +5,7 @@
 // For CodeM (Series/Tensor-style API), this exports:
 // - pluss::Series
 // - pluss::make_series(...)
-// - pluss::from_buffer(...)
+// - pluss::series::from_host(...)
 // - pluss::zeros/ones/full/rand/... factories
 // - pluss::series::print(...)
 // - pluss::distr::{sample,sample_like,pdf,logpdf,cdf,mixture_normal} when PlussMa is available
@@ -52,9 +52,9 @@
 //
 // PlussTils is intentionally opt-in:
 // - include <pluss/tils.h> for utility helpers (aux + view utilities), including:
-//   - pluss::transmit(...), pluss::transform_axis(...)
-//   - pluss::DataLoader + pluss::loader::* helpers
-//   - pluss::to_scalar<T>(series) + pluss::as_f64/as_f32/as_i64/... helpers
+//   - pluss::tils::transmit(...), pluss::tils::transform_axis(...)
+//   - pluss::loader::DataLoader + pluss::loader::* helpers
+//   - pluss::tils::to_scalar<T>(series) + pluss::tils::as_f64/as_f32/as_i64/... helpers
 //   - pluss::view::* utilities
 
 #if __has_include("pluss/mic.h")

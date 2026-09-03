@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::atan2 &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
+    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::atanh" href="atanh.html" />
+    <link rel="prev" title="Series::atan" href="atan.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-atan2">
+<h1>Series::atan2<a class="headerlink" href="#series-atan2" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">atan2</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">atan2_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">atan2()</span></code> computes the angle, in radians, of the point <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> measured from
+the positive x-axis, where <code class="docutils literal notranslate"><span class="pre">y</span></code> is the receiver and <code class="docutils literal notranslate"><span class="pre">x</span></code> is <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
+<p>Call it <code class="docutils literal notranslate"><span class="pre">a.atan2(b)</span></code> and read it as <code class="docutils literal notranslate"><span class="pre">atan2(y</span> <span class="pre">=</span> <span class="pre">a,</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">b)</span></code>.</p>
+<p>The plain <a class="reference internal" href="atan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">atan()</span></code></span></a> of <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">/</span> <span class="pre">x</span></code> only knows the <em>ratio</em>, so it always
+returns an angle in <code class="docutils literal notranslate"><span class="pre">(-pi/2,</span> <span class="pre">pi/2)</span></code> and cannot tell <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code> from <code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>.
+<code class="docutils literal notranslate"><span class="pre">atan2()</span></code> takes the two coordinates separately, so it knows which quadrant the
+point is in and returns a full-range angle in <code class="docutils literal notranslate"><span class="pre">(-pi,</span> <span class="pre">pi]</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>point <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code></p></th>
+<th class="head"><p>quadrant</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">atan2(y,</span> <span class="pre">x)</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code></p></td>
+<td><p>I</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pi/4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code></p></td>
+<td><p>II</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3pi/4</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code></p></td>
+<td><p>III</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-3pi/4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code></p></td>
+<td><p>IV</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-pi/4</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Combined with <a class="reference internal" href="hypot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hypot()</span></code></span></a>, which gives the radius, <code class="docutils literal notranslate"><span class="pre">atan2()</span></code> is the
+angular half of converting <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> to polar form.</p>
+<p>The convention at the origin is <code class="docutils literal notranslate"><span class="pre">atan2(0,</span> <span class="pre">0)</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
+<p>The x-coordinate <code class="docutils literal notranslate"><span class="pre">x</span></code>. Broadcasts against the receiver <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> or <code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code>
+The elementwise angle in radians, in <code class="docutils literal notranslate"><span class="pre">(-pi,</span> <span class="pre">pi]</span></code>. <code class="docutils literal notranslate"><span class="pre">atan2_()</span></code> writes the
+result back into the receiver.</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">atan2()</span></code> is differentiable. With <code class="docutils literal notranslate"><span class="pre">r2</span> <span class="pre">=</span> <span class="pre">x^2</span> <span class="pre">+</span> <span class="pre">y^2</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">/</span><span class="n">dy</span> <span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">=</span>  <span class="n">x</span> <span class="o">/</span> <span class="n">r2</span>
+<span class="n">d</span><span class="o">/</span><span class="n">dx</span> <span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span><span class="n">y</span> <span class="o">/</span> <span class="n">r2</span>
+</pre></div>
+</div>
+<p>That gradient is the same as the tangential unit vector scaled by <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">r</span></code>: a
+small change in the point perpendicular to the radius changes the angle, a
+change along the radius does not. The derivative blows up as <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code>
+approaches the origin, where the angle is genuinely ill-defined.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. One point per quadrant, plus the two axis directions.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.7854, 2.3562, -2.3562, -0.7854, 0.0000, 3.1416]
+</pre></div>
+</div>
+<p>The first four are <code class="docutils literal notranslate"><span class="pre">+/-pi/4</span></code> and <code class="docutils literal notranslate"><span class="pre">+/-3pi/4</span></code>. The last two are the angle of the
+positive x-axis (<code class="docutils literal notranslate"><span class="pre">0</span></code>) and the negative x-axis (<code class="docutils literal notranslate"><span class="pre">pi</span></code>).</p>
+<p>Example 2. The origin returns <code class="docutils literal notranslate"><span class="pre">0</span></code> by convention rather than <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">}).</span><span class="n">atan2</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">})));</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.0000]
+</pre></div>
+</div>
+<p>Example 3. The backward is <code class="docutils literal notranslate"><span class="pre">(x</span> <span class="pre">/</span> <span class="pre">r2,</span> <span class="pre">-y</span> <span class="pre">/</span> <span class="pre">r2)</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">});</span>
+<span class="n">y</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">y</span><span class="p">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dy=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dy=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.5, -0.5, -0.5]
+dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.5, -0.5, 0.5]
+</pre></div>
+</div>
+<p>Every point here has <code class="docutils literal notranslate"><span class="pre">r2</span> <span class="pre">=</span> <span class="pre">2</span></code>, so the derivatives are <code class="docutils literal notranslate"><span class="pre">x/2</span></code> and <code class="docutils literal notranslate"><span class="pre">-y/2</span></code>.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">other</span></code> broadcasts. A scalar x-coordinate is applied to every <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">}).</span><span class="n">atan2</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)));</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.7854, -0.7854]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Argument order is <code class="docutils literal notranslate"><span class="pre">y.atan2(x)</span></code>, not <code class="docutils literal notranslate"><span class="pre">x.atan2(y)</span></code>. Getting it backward
+reflects the angle across the line <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">x</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">atan2()</span></code> is not <code class="docutils literal notranslate"><span class="pre">atan()</span></code> of a ratio. Use <code class="docutils literal notranslate"><span class="pre">atan2()</span></code> whenever the sign of each
+coordinate matters, which is almost always.</p></li>
+<li><p>The gradient is unbounded near the origin; a tracked <code class="docutils literal notranslate"><span class="pre">atan2()</span></code> on points that
+can reach <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">0)</span></code> will produce very large or non-finite sensitivities there.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> in either coordinate propagates.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">atan2(y,</span> <span class="pre">x)</span></code> is the quadrant-aware angle of <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code>:</p>
+<ul class="simple">
+<li><p>range <code class="docutils literal notranslate"><span class="pre">(-pi,</span> <span class="pre">pi]</span></code>; <code class="docutils literal notranslate"><span class="pre">atan2(0,</span> <span class="pre">0)</span> <span class="pre">=</span> <span class="pre">0</span></code></p></li>
+<li><p>the angular half of polar form, paired with <a class="reference internal" href="hypot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hypot()</span></code></span></a></p></li>
+<li><p>differentiable, gradient <code class="docutils literal notranslate"><span class="pre">(x</span> <span class="pre">/</span> <span class="pre">r2,</span> <span class="pre">-y</span> <span class="pre">/</span> <span class="pre">r2)</span></code> with <code class="docutils literal notranslate"><span class="pre">r2</span> <span class="pre">=</span> <span class="pre">x^2</span> <span class="pre">+</span> <span class="pre">y^2</span></code></p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="atan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::atan</span></code></span></a>: single-argument arctangent, range <code class="docutils literal notranslate"><span class="pre">(-pi/2,</span> <span class="pre">pi/2)</span></code>,
+no quadrant information.</p></li>
+<li><p><a class="reference internal" href="hypot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::hypot</span></code></span></a>: the radius <code class="docutils literal notranslate"><span class="pre">sqrt(x^2</span> <span class="pre">+</span> <span class="pre">y^2)</span></code> to go with this
+angle.</p></li>
+<li><p><a class="reference internal" href="tan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tan</span></code></span></a>: the forward direction, undoing an angle back to a
+slope.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="atan.html">
+    <span class="label">Previous</span>
+    <span class="title">atan</span>
+  </a>
+  <a class="next-link" href="atanh.html">
+    <span class="label">Next</span>
+    <span class="title">atanh</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="atan.html" title="previous chapter">Series::atan</a></li>
+      <li>Next: <a href="atanh.html" title="next chapter">Series::atanh</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/atan2.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

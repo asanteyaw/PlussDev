@@ -29,8 +29,36 @@ workspace."
 6. `best`
 7. `worst`
 
+## Notes
+
+### Registry
+
+`Builder` is not a generic map. It is a candidate-model workspace. That is why
+names matter so much here: they become the stable identity used by reports and
+comparison results.
+
+### Benchmark memory
+
+The central semantic point is non-destructive benchmark memory: the registry
+keeps the originally stored candidates, `benchmark()` stores comparison outcomes
+separately, `best()` and `worst()` return fitted remembered artifacts, and
+`get(name)` still returns the original registered entry.
+
+### Inspection by cost
+
+`has()` for presence, `names()` for full identity, `list()` for a quick preview,
+`report()` for tabular inspection.
+
 ## Related Pages
 
 - [builder subfamily](../Introduction.md)
 - [Model type](../../Model.md)
-- [Builder notes](Notes.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="benchmark.html">
+    <span class="label">Next</span>
+    <span class="title">benchmark</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

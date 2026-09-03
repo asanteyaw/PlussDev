@@ -9,16 +9,16 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=d2a74cb6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=33944c6a"></script>
-    <script src="../../../_static/layout.js?v=34ad04f2"></script>
+    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
+    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::select" href="select.html" />
-    <link rel="prev" title="Series::reshape" href="reshape.html" />
+    <link rel="next" title="Series::roll" href="roll.html" />
+    <link rel="prev" title="Series::retains_grad" href="retains_grad.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -64,6 +64,43 @@ leaves.</p>
 method you call after the forward computation is complete and you are ready to
 populate sensitivities on the leaves that had tracking enabled.</p>
 </section>
+<section id="read-this-first">
+<h2>Read This First<a class="headerlink" href="#read-this-first" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> propagates sensitivity backward from the current output node. The
+stored result then lives on whichever <code class="docutils literal notranslate"><span class="pre">Series</span></code> you inspect.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">y</span></code> was built from <code class="docutils literal notranslate"><span class="pre">x</span></code> and you call</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>then the two most common reads mean different things:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x.sensitivity()</span></code> means <code class="docutils literal notranslate"><span class="pre">dL/dx</span></code>, which for scalar <code class="docutils literal notranslate"><span class="pre">y</span></code> is the familiar
+<code class="docutils literal notranslate"><span class="pre">dy/dx</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y.sensitivity()</span></code> means <code class="docutils literal notranslate"><span class="pre">dL/dy</span></code>, which for scalar <code class="docutils literal notranslate"><span class="pre">y</span></code> as the objective is
+usually <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+</ul>
+<p>So the usual workflow is:</p>
+<ol class="arabic simple">
+<li><p>mark the leaf or leaves you want tracked</p></li>
+<li><p>build the forward computation</p></li>
+<li><p>call <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> on the finished objective</p></li>
+<li><p>read <code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code> from the tracked leaves whose derivatives you want</p></li>
+</ol>
+<p>That rule does not change for products, quotients, chains, trigonometric
+expressions, or any other composition. <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> always propagates from the
+current output back to tracked leaves; <code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code> always answers “with
+respect to this specific <code class="docutils literal notranslate"><span class="pre">Series</span></code>.”</p>
+<p>Three nearby methods often get conflated when you first meet this part of the
+API:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="tracks_slope_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tracks_slope_()</span></code></span></a> is the opt-in step. It marks a <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+as a leaf that should receive reverse-mode sensitivity later.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> is the propagation step. It applies the chain rule from the
+current output back through the recorded computation.</p></li>
+<li><p><a class="reference internal" href="sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code></span></a> is the read step. It returns the stored
+sensitivity that <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> populated on a tracked leaf.</p></li>
+</ul>
+</section>
 <section id="overload-map">
 <h2>Overload Map<a class="headerlink" href="#overload-map" title="Link to this heading">¶</a></h2>
 <p>There are two independent questions:</p>
@@ -96,7 +133,8 @@ scalar seed.</p></li>
 <li><p>For non-scalar outputs, you supply a same-shaped seed that says how much each
 output position contributes upstream.</p></li>
 </ul>
-<p>That seed is not a cosmetic option. It changes the reverse computation.</p>
+<p>That seed is mathematically load-bearing. It defines the weighted scalar
+objective whose sensitivity will be propagated backward.</p>
 <p><strong>keep_graph</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>)</p>
 <p>Controls whether the recorded source links used by this reverse pass are kept
 after the pass finishes.</p>
@@ -129,23 +167,59 @@ reverse work can be built on top of it.</p>
 <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> populates sensitivity state on tracked leaves rather than
 returning a numeric value.</p>
 </section>
+<section id="gradient-model">
+<h2>Gradient Model<a class="headerlink" href="#gradient-model" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> always computes the sensitivity of a scalar objective with respect
+to tracked leaves.</p>
+<p>That scalar objective can arise in two different ways:</p>
+<ul class="simple">
+<li><p>directly, because the current <code class="docutils literal notranslate"><span class="pre">Series</span></code> already has one element</p></li>
+<li><p>indirectly, because you supplied <code class="docutils literal notranslate"><span class="pre">sensitivity_output</span></code> for a non-scalar result</p></li>
+</ul>
+<p>For a scalar output <code class="docutils literal notranslate"><span class="pre">L</span></code>, the stored sensitivity on <code class="docutils literal notranslate"><span class="pre">x</span></code> is the elementwise
+quantity <code class="docutils literal notranslate"><span class="pre">dL/dx</span></code>.</p>
+<p>For a non-scalar output <code class="docutils literal notranslate"><span class="pre">y</span></code>, calling <code class="docutils literal notranslate"><span class="pre">y.reverse(sensitivity_output)</span></code> means
+Pluss treats the effective scalar objective as</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = sum(sensitivity_output * y)
+</pre></div>
+</div>
+<p>and then propagates <code class="docutils literal notranslate"><span class="pre">dL/dx</span></code> backward.</p>
+<p>This sum should not be read narrowly as “the only allowed arithmetic total.”
+It is one standard way of collapsing a non-scalar output into a scalar
+objective for differentiation. In ordinary user code, any expression whose
+final result is scalar can play that role: a sum, a weighted sum, a
+difference, a product, a ratio, or a more elaborate composition.</p>
+<p>This is why a non-scalar reverse pass cannot guess its seed. Until you provide
+that seed, there is no single scalar objective yet.</p>
+</section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. A scalar objective can reverse directly without an explicit seed.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.25</span><span class="p">);</span>
-<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.25</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">cfg</span><span class="o">::</span><span class="n">tracks_slope</span><span class="p">());</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
 <span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Here the scalar objective is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = x³ - 2x² + x
+</pre></div>
+</div>
+<p>so</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dL/dx = 3x² - 4x + 1
+</pre></div>
+</div>
+<p>Evaluating at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">1.25</span></code> gives</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3(1.25)^2 - 4(1.25) + 1 = 0.6875
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=0.078125
-dx=0.6875
+dL_dx=0.6875
 </pre></div>
 </div>
 <p>Example 2. A non-scalar result is commonly reduced first, then reversed as a
@@ -157,15 +231,31 @@ scalar objective.</p>
 <span class="n">y</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
+<p>The forward value <code class="docutils literal notranslate"><span class="pre">y</span></code> is vector-valued:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y = [10x₁, 20x₂, 30x₃]
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">y.sum()</span></code> is just the chosen scalar objective builder for the example. It
+is common, but it is not the only possibility.</p>
+<p><code class="docutils literal notranslate"><span class="pre">y.sum()</span></code> turns this particular vector output into the scalar objective</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = 10x₁ + 20x₂ + 30x₃
+</pre></div>
+</div>
+<p>Differentiating with respect to <code class="docutils literal notranslate"><span class="pre">x</span></code> gives</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dL/dx = [10, 20, 30]
+</pre></div>
+</div>
+<p>The actual values of <code class="docutils literal notranslate"><span class="pre">x</span></code> do not matter here because the objective is linear in
+each entry.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[10, 40, 90]
-dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+dL_dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[10, 20, 30]
 </pre></div>
 </div>
@@ -180,7 +270,24 @@ upstream sensitivity explicitly.</p>
 <span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">}));</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This is the key seeded case.</p>
+<p>The forward output is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y = [x₁², x₂², x₃²]
+</pre></div>
+</div>
+<p>Because the seed is <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">10,</span> <span class="pre">100]</span></code>, the effective scalar objective is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = 1·y₁ + 10·y₂ + 100·y₃
+  = 1·x₁² + 10·x₂² + 100·x₃²
+</pre></div>
+</div>
+<p>Different output positions therefore contribute with different weights.</p>
+<p>Now differentiate entrywise at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dL/dx₁ = 1 · 2x₁ = 1 · 2(1) = 2
+dL/dx₂ = 10 · 2x₂ = 10 · 2(2) = 40
+dL/dx₃ = 100 · 2x₃ = 100 · 2(3) = 600
 </pre></div>
 </div>
 </section>
@@ -188,7 +295,7 @@ upstream sensitivity explicitly.</p>
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[1, 4, 9]
-dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+dL_dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2, 40, 600]
 </pre></div>
 </div>
@@ -207,6 +314,9 @@ too.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>Without the seed there is no single scalar objective yet. A vector output has
+many possible downstream uses, so <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> cannot guess how those output
+positions should be combined.</p>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
@@ -221,16 +331,19 @@ overwrite the stored sensitivity rather than adding to it.</p>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
 <span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;first=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;first_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;second=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;second_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">L</span> <span class="pre">=</span> <span class="pre">x²</span></code>, so each reverse pass computes <code class="docutils literal notranslate"><span class="pre">dL/dx</span> <span class="pre">=</span> <span class="pre">2x</span> <span class="pre">=</span> <span class="pre">4</span></code> at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">2</span></code>.
+The only question is whether the second pass replaces the stored value or adds
+to it.</p>
 </section>
 <section id="id4">
 <h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>first=4
-second=4
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>first_dL_dx=4
+second_dL_dx=4
 </pre></div>
 </div>
 <p>Example 6. With <code class="docutils literal notranslate"><span class="pre">accumulate_sensitivity=true</span></code>, the second pass adds on top of
@@ -240,16 +353,18 @@ the first one.</p>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
 <span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;first=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;first_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;second=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;second_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
+<p>The derivative of one pass is still <code class="docutils literal notranslate"><span class="pre">4</span></code>. With accumulation enabled, the second
+pass stores <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">+</span> <span class="pre">4</span> <span class="pre">=</span> <span class="pre">8</span></code>.</p>
 </section>
 <section id="id5">
 <h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>first=4
-second=8
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>first_dL_dx=4
+second_dL_dx=8
 </pre></div>
 </div>
 <p>Examples 5 and 6 are the important toggle pair. The forward objective did not
@@ -258,13 +373,210 @@ change. Only the accumulation policy changed.</p>
 stored sensitivity on that leaf.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
 <span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;has_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;has_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> still runs on the scalar result. What is missing is not the
+backward pass itself, but a tracked leaf on which to store the propagated
+sensitivity.</p>
 </section>
 <section id="id6">
 <h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>has_dx=false
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>has_dL_dx=false
+</pre></div>
+</div>
+<p>Example 8. A scalar expression such as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">x.cos()</span></code> does run the reverse
+pass, but if the input leaf was never marked for tracking then there is
+nowhere to store <code class="docutils literal notranslate"><span class="pre">dy/dx</span></code>, and reading <code class="docutils literal notranslate"><span class="pre">y.sensitivity()</span></code> does not recover it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.7</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">cos</span><span class="p">();</span>
+
+<span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;x_has_dy_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y_has_stored_sensitivity=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y_sensitivity=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This is the current public distinction on the verified surface:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> is the propagation step</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tracks_slope_()</span></code> is the opt-in storage step for input leaves</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x.sensitivity()</span></code> is where <code class="docutils literal notranslate"><span class="pre">dy/dx</span></code> is stored after you tracked <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y.sensitivity()</span></code> is about stored sensitivity on the output object itself,
+not a shortcut for “please give me the derivative with respect to the input”</p></li>
+</ul>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>x_has_dy_dx=false
+y_has_stored_sensitivity=false
+y_sensitivity=0
+</pre></div>
+</div>
+<p>Example 9. The corrected product-rule usage marks <code class="docutils literal notranslate"><span class="pre">x</span></code> for tracking before the
+forward expression is built, then reads the derivative from <code class="docutils literal notranslate"><span class="pre">x.sensitivity()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.7</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">cos</span><span class="p">();</span>
+<span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dy_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dL_dy=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The forward function is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y = x cos(x)
+</pre></div>
+</div>
+<p>Use the product rule:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>d/dx [x cos(x)] = 1·cos(x) + x·(-sin(x))
+                = cos(x) - x sin(x)
+</pre></div>
+</div>
+<p>Evaluating at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">1.7</span></code> gives</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dy/dx = cos(1.7) - 1.7 sin(1.7) = -1.8146746720647213
+</pre></div>
+</div>
+<p>The output object itself is the scalar objective, so its own stored root
+sensitivity is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=-0.21903564030239187
+dy_dx=-1.8146746720647213
+dL_dy=1
+</pre></div>
+</div>
+<p>Example 10. Quotient-rule objectives work the same way.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.7</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">square</span><span class="p">().</span><span class="n">add</span><span class="p">(</span><span class="mf">1.0</span><span class="p">));</span>
+<span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dy_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The forward function is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y = x / (1 + x²)
+</pre></div>
+</div>
+<p>Differentiate with the quotient rule:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dy/dx = ((1 + x²)·1 - x·2x) / (1 + x²)²
+      = (1 - x²) / (1 + x²)²
+</pre></div>
+</div>
+<p>At <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">1.7</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dy/dx = (1 - 1.7²) / (1 + 1.7²)² = -0.12490004692012345
+</pre></div>
+</div>
+</section>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0.43701799485861187
+dy_dx=-0.12490004692012345
+</pre></div>
+</div>
+<p>Example 11. Chain-rule compositions are also recorded correctly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.2</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">square</span><span class="p">().</span><span class="n">cos</span><span class="p">();</span>
+<span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dy_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Here the outer function is <code class="docutils literal notranslate"><span class="pre">cos(u)</span></code> and the inner function is <code class="docutils literal notranslate"><span class="pre">u</span> <span class="pre">=</span> <span class="pre">x²</span></code>, so</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dy/dx = (-sin(u)) · du/dx
+      = -sin(x²) · 2x
+</pre></div>
+</div>
+<p>At <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">1.2</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dy/dx = -sin(1.2²) · 2(1.2) = -2.3795000356600475
+</pre></div>
+</div>
+</section>
+<section id="id10">
+<h3>Output<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=0.13042370873814554
+dy_dx=-2.3795000356600475
+</pre></div>
+</div>
+<p>Example 12. Scalar objectives do not need to be sums. Any expression whose
+final result is scalar can be the objective you reverse.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">4.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">sqrt</span><span class="p">();</span>
+<span class="n">objective</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;L=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">objective</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The scalar objective is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = 2x₁ + 4x₂ + √x₃
+</pre></div>
+</div>
+<p>Differentiate entrywise:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dL/dx₁ = 2
+dL/dx₂ = 4
+dL/dx₃ = 1 / (2√x₃)
+</pre></div>
+</div>
+<p>At <code class="docutils literal notranslate"><span class="pre">x₃</span> <span class="pre">=</span> <span class="pre">3</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dL/dx₃ = 1 / (2√3) = 0.28867513459481287
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h3>Output<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L=11.732050807568877
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2, 4, 0.28867513459481287]
+</pre></div>
+</div>
+<p>Example 13. Mixed transcendental objectives can combine trigonometric and
+logarithmic terms, and the stored sensitivity remains the entrywise partial
+derivative of that scalar objective.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">sin</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">cos</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pos</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">log</span><span class="p">();</span>
+<span class="n">objective</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;L=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">objective</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The scalar objective is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = sin(x₁) - 1.5 cos(x₂) + log(x₃)
+</pre></div>
+</div>
+<p>Differentiate each entry:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dL/dx₁ = cos(x₁)
+dL/dx₂ = 1.5 sin(x₂)
+dL/dx₃ = 1 / x₃
+</pre></div>
+</div>
+<p>At <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dL/dx = [cos(1), 1.5 sin(2), 1/3]
+      = [0.5403023058681398, 1.3639461402385225, 0.3333333333333333]
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h3>Output<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L=2.56430352829672
+dL_dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.5403023058681398, 1.3639461402385225, 0.3333333333333333]
 </pre></div>
 </div>
 </section>
@@ -272,45 +584,48 @@ stored sensitivity on that leaf.</p>
 <section id="gotchas-and-failure-modes">
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> acts on the current result, not automatically on the original
-inputs.</p></li>
-<li><p>Non-scalar outputs need either an explicit seed or a prior scalar reduction.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">keep_graph</span></code> and <code class="docutils literal notranslate"><span class="pre">accumulate_sensitivity</span></code> solve different problems:
-graph reuse versus sensitivity reuse.</p></li>
-<li><p>Stored sensitivity lives on the tracked leaves. Use
-<a class="reference internal" href="has_sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has_sensitivity</span></code></span></a> and <a class="reference internal" href="sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sensitivity</span></code></span></a>
-to inspect it afterward.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> computes sensitivities for tracked leaves. If you never enabled
+tracking on a leaf, there is nothing to store there afterward.</p></li>
+<li><p>The exact snippet <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">make_series(1.7);</span> <span class="pre">y</span> <span class="pre">=</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">x.cos();</span> <span class="pre">y.reverse();</span></code>
+does not store <code class="docutils literal notranslate"><span class="pre">dy/dx</span></code> on <code class="docutils literal notranslate"><span class="pre">x</span></code> unless you first opt <code class="docutils literal notranslate"><span class="pre">x</span></code> into tracking.</p></li>
+<li><p>Reading <code class="docutils literal notranslate"><span class="pre">y.sensitivity()</span></code> is not the same thing as asking for <code class="docutils literal notranslate"><span class="pre">dy/dx</span></code>. Read
+the tracked input leaf you care about, usually <code class="docutils literal notranslate"><span class="pre">x.sensitivity()</span></code>.</p></li>
+<li><p>Scalar outputs can use the implicit root seed <code class="docutils literal notranslate"><span class="pre">1</span></code>. Non-scalar outputs must
+receive an explicit seed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensitivity_output</span></code> changes the mathematics of the result. It is not merely
+an overload-disambiguation token.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keep_graph=true</span></code> keeps the captured reverse path available for another pass,
+but it does not by itself request accumulation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">accumulate_sensitivity=true</span></code> adds the new result on top of what was already
+stored. Leave it <code class="docutils literal notranslate"><span class="pre">false</span></code> when you want a fresh answer per pass.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">track_higher_order=true</span></code> is for higher-order workflows, not ordinary first
+sensitivities.</p></li>
 </ul>
 </section>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> to propagate sensitivity from the current objective back to
+<p>Use <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> when the forward computation is complete and you want
+reverse-mode sensitivities propagated onto tracked leaves. First decide which
+leaves should track, then decide whether your output is already scalar or needs
+an explicit seed, and finally read the result from <code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code> on the
 tracked leaves.</p>
-<ul class="simple">
-<li><p>use the short form for scalar objectives</p></li>
-<li><p>seed non-scalar objectives explicitly, or reduce them first</p></li>
-<li><p>set <code class="docutils literal notranslate"><span class="pre">keep_graph=true</span></code> only when the same objective must be reversed again</p></li>
-<li><p>set <code class="docutils literal notranslate"><span class="pre">accumulate_sensitivity=true</span></code> only when you intentionally want repeated
-contributions to add together</p></li>
-</ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="tracks_slope_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tracks_slope_</span></code></span></a>: enable tracking on leaves before
-the forward pass.</p></li>
-<li><p><a class="reference internal" href="sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::sensitivity</span></code></span></a>: read the stored result afterward.</p></li>
-<li><p><a class="reference internal" href="clear_sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clear_sensitivity</span></code></span></a>: reset stored
-sensitivity between passes.</p></li>
+<li><p><a class="reference internal" href="tracks_slope_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tracks_slope_</span></code></span></a>: mark a leaf for tracking.</p></li>
+<li><p><a class="reference internal" href="sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::sensitivity</span></code></span></a>: read the stored result.</p></li>
+<li><p><a class="reference internal" href="has_sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::has_sensitivity</span></code></span></a>: distinguish stored state
+from zero-valued readback.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="reshape.html">
+  <a class="prev-link" href="reshape_as.html">
     <span class="label">Previous</span>
-    <span class="title">reshape</span>
+    <span class="title">reshape_as</span>
   </a>
-  <a class="next-link" href="select.html">
+  <a class="next-link" href="round.html">
     <span class="label">Next</span>
-    <span class="title">select</span>
+    <span class="title">round</span>
   </a>
 </div>
 </section>
@@ -404,8 +719,8 @@ sensitivity between passes.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
-      <li>Previous: <a href="reshape.html" title="previous chapter">Series::reshape</a></li>
-      <li>Next: <a href="select.html" title="next chapter">Series::select</a></li>
+      <li>Previous: <a href="retains_grad.html" title="previous chapter">Series::retains_grad</a></li>
+      <li>Next: <a href="roll.html" title="next chapter">Series::roll</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

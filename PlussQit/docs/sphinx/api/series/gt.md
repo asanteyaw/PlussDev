@@ -174,12 +174,12 @@ reach for [`Series::ge`](ge.md).
 - [`Series::ne`](ne.md): inequality without ordering.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ge.html">
+  <a class="prev-link" href="grouped_var.html">
     <span class="label">Previous</span>
-    <span class="title">ge</span>
+    <span class="title">grouped_var</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="hardshrink.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">hardshrink</span>
   </a>
 </div>

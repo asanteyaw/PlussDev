@@ -9,16 +9,16 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=d2a74cb6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=33944c6a"></script>
-    <script src="../../../_static/layout.js?v=34ad04f2"></script>
+    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
+    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::histc" href="histc.html" />
-    <link rel="prev" title="Series::gt" href="gt.html" />
+    <link rel="prev" title="Series::hardshrink" href="hardshrink.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -52,9 +52,9 @@
 reverse-mode sensitivity value.</p>
 <p>That wording is deliberate.</p>
 <p>The method answers a storage-state question, not a mathematical question. It
-does not ask whether the correct sensitivity would be nonzero. It asks whether
-a reverse pass has populated a stored sensitivity on this value that has not
-since been cleared.</p>
+does not ask whether the correct derivative would be zero or nonzero. It asks
+whether a reverse pass has populated a stored sensitivity on this value and
+that stored value has not since been cleared.</p>
 <p>This makes <code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> the right companion to
 <a class="reference internal" href="sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code></span></a>, especially because the current public
 surface returns a zero-valued series from <code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code> even before any
@@ -73,21 +73,35 @@ otherwise <code class="docutils literal notranslate"><span class="pre">false</sp
 <section id="relationship-to-nearby-methods">
 <h2>Relationship To Nearby Methods<a class="headerlink" href="#relationship-to-nearby-methods" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tracks_slope()</span></code> answers “is this series configured to participate in
-reverse-mode as a tracked value?”</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> answers “does this series currently store a sensitivity
-produced by reverse-mode?”</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code> reads the stored value, or a same-shaped zero series when no
-stored value currently exists</p></li>
+<li><p><a class="reference internal" href="tracks_slope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tracks_slope()</span></code></span></a> answers “is this series configured to
+receive reverse-mode sensitivity if propagation reaches it?”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> answers “does this series currently hold a stored
+reverse-mode result?”</p></li>
+<li><p><a class="reference internal" href="sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code></span></a> reads that stored result itself</p></li>
 </ul>
-<p>Those are related, but they are not interchangeable.</p>
+<p>Those are related, but they are different stages:</p>
+<ol class="arabic simple">
+<li><p>configure tracking</p></li>
+<li><p>run reverse-mode</p></li>
+<li><p>inspect whether a stored result exists</p></li>
+<li><p>read the stored result</p></li>
+</ol>
+</section>
+<section id="mathematical-meaning">
+<h2>Mathematical Meaning<a class="headerlink" href="#mathematical-meaning" title="Link to this heading">¶</a></h2>
+<p>Suppose a tracked leaf <code class="docutils literal notranslate"><span class="pre">x</span></code> participates in a scalar objective <code class="docutils literal notranslate"><span class="pre">L</span></code>.</p>
+<p>After <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> runs, the stored value on <code class="docutils literal notranslate"><span class="pre">x</span></code> is the sensitivity <code class="docutils literal notranslate"><span class="pre">dL/dx</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> does not tell you what <code class="docutils literal notranslate"><span class="pre">dL/dx</span></code> is. It only tells you
+whether that quantity is currently stored on the object.</p>
+<p>That distinction matters because a stored sensitivity can legitimately be all
+zeros, and on the current public surface a not-yet-populated sensitivity also
+reads back as zeros through <code class="docutils literal notranslate"><span class="pre">sensitivity()</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. A tracked <code class="docutils literal notranslate"><span class="pre">Series</span></code> starts without stored sensitivity, gains it after
 reverse, and loses it again after clearing.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">life</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">});</span>
-<span class="n">life</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">life</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">cfg</span><span class="o">::</span><span class="n">tracks_slope</span><span class="p">());</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;before=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">life</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">life</span><span class="p">.</span><span class="n">log</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
@@ -96,6 +110,12 @@ reverse, and loses it again after clearing.</p>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after_clear=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">life</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
+<p>The scalar objective is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = log(2) + log(4) + log(8)
+</pre></div>
+</div>
+<p>so a real reverse pass does occur and produces a real stored sensitivity.
+<code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> is the boolean check that this stored result exists.</p>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>before=false
@@ -107,13 +127,19 @@ after_clear=false
 stored sensitivity on that leaf.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">silent_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
 <span class="n">silent_x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;has_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">silent_x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;has_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">silent_x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
+<p>The scalar objective here is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = 2x1 + 2x2 + 2x3
+</pre></div>
+</div>
+<p>so the mathematical sensitivity exists, but this particular <code class="docutils literal notranslate"><span class="pre">Series</span></code> was never
+configured as a tracked leaf, so no public stored sensitivity is kept on it.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>has_dx=false
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>has_dL_dx=false
 </pre></div>
 </div>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> is the way to distinguish “no stored
@@ -121,20 +147,46 @@ sensitivity yet” from “a stored sensitivity that happens to contain zeros.�
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
 <span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;has_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;has_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>has_dx=false
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>has_dL_dx=false
 pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[0, 0, 0]
 </pre></div>
 </div>
 <p>The zero values alone do not prove a reverse pass happened. The boolean state
 from <code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> is what disambiguates that case.</p>
+<p>Example 4. A retained intermediate can also report stored sensitivity after
+reverse.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">mid</span><span class="p">.</span><span class="n">retain_grad</span><span class="p">();</span>
+<span class="n">mid</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;mid_has_dL_dmid=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">mid</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;x_has_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">mid</span> <span class="pre">=</span> <span class="pre">2x</span></code>, and the scalar objective is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = sum(mid)
+</pre></div>
+</div>
+<p>so <code class="docutils literal notranslate"><span class="pre">dL/dmid</span> <span class="pre">=</span> <span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> and <code class="docutils literal notranslate"><span class="pre">dL/dx</span> <span class="pre">=</span> <span class="pre">[2,</span> <span class="pre">2,</span> <span class="pre">2]</span></code>. Because <code class="docutils literal notranslate"><span class="pre">mid</span></code> was marked to
+retain its own sensitivity, both booleans become <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mid_has_dL_dmid=true
+x_has_dL_dx=true
+</pre></div>
+</div>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">
@@ -145,12 +197,15 @@ from <code class="docutils literal notranslate"><span class="pre">has_sensitivit
 <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
 <li><p>Clearing sensitivity resets this method back to <code class="docutils literal notranslate"><span class="pre">false</span></code> without disabling
 tracking.</p></li>
+<li><p>On intermediates, this method is usually only interesting when retention was
+enabled first.</p></li>
 </ul>
 </section>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> as the authoritative test for whether a <code class="docutils literal notranslate"><span class="pre">Series</span></code>
-currently stores reverse-mode sensitivity.</p>
+currently stores reverse-mode sensitivity. It answers a storage-state question,
+not a derivative-value question.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
@@ -161,9 +216,9 @@ currently stores reverse-mode sensitivity.</p>
 sensitivity.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="histc.html">
+  <a class="prev-link" href="hardshrink.html">
     <span class="label">Previous</span>
-    <span class="title">histc</span>
+    <span class="title">hardshrink</span>
   </a>
   <a class="next-link" href="index.html">
     <span class="label">Next</span>
@@ -261,7 +316,7 @@ sensitivity.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
-      <li>Previous: <a href="gt.html" title="previous chapter">Series::gt</a></li>
+      <li>Previous: <a href="hardshrink.html" title="previous chapter">Series::hardshrink</a></li>
       <li>Next: <a href="histc.html" title="next chapter">Series::histc</a></li>
   </ul></li>
   </ul></li>

@@ -1,105 +1,65 @@
 # Lymph `metrics`
 
-`metrics` is the Lymph family for evaluation outputs, metric helpers, validation
-contracts, threshold inspection, and workflow-facing report surfaces.
+`metrics` is the lymph family that turns a `Series` of truth values and a
+`Series` of predictions into structured evidence — scalar and per-fold metric
+values, per-class breakdowns, confusion tables, and operating-point curves.
 
-Use this branch when you are deciding:
+It is the **compute layer**. Everything here takes data you already hold; it
+does not run a model. When you have a trained `models::Model` and want the same
+evidence *and* the inference done for you, use [`reports`](reports.md).
 
-- how to score classification or regression outputs
-- how to interpret validation reports
-- how to inspect thresholds and summary tables after inference
+## The Surface
 
-## What This Family Owns
+| Entity | What it gives you |
+| --- | --- |
+| [`classification`](metrics/classification.md) | `classification(truth, pred)` → a `Classification` accessor: `confusion_table()`, `summary()`, `values()`, `report()` |
+| [`regression`](metrics/regression.md) | `regression(truth, pred)` → a `Regression` accessor: `values()`, `report()` |
+| [`Threshold`](metrics/Threshold.md) | `threshold(scores, labels)` → `curve()` and `best(objective)` for choosing an operating point |
+| [`MetricReport`](metrics/MetricReport.md) | the per-metric value bag (`accuracy`, `f1`, `rmse`, …) returned by every `report()` |
+| [`CrossValidationReport`](metrics/CrossValidationReport.md) | per-fold reports + metric mean / stdev + `board()` — what a validation `Plan::run` returns |
+| [`ClassReport`](metrics/ClassReport.md) | per-class precision / recall / f1 / support; `ConfusionTable` is documented here too |
+| [`SeriesCompareReport`](metrics/SeriesCompareReport.md) | element-wise difference from `compare_series` / `max_abs_diff` |
+| [`confusion_table`](metrics/confusion_table.md) / [`classification_summary`](metrics/classification_summary.md) | the free-function forms of the two classification tables |
+| [`calibrate`](metrics/calibrate.md) | `calibrate_with_platt` / `_isotonic` / `_temperature` → a `TrainOptions` with score calibration set |
 
-The `metrics` family is where raw predictive outcomes are turned into interpretable
-evidence.
+## Two Ways In
 
-That includes:
+- **Fluent accessor** — `metrics::classification(truth, pred).summary()`,
+  `metrics::regression(truth, pred).report()`,
+  `metrics::threshold(scores, labels).best()`. One object, several views, no
+  repeated argument threading.
+- **Free function** — `metrics::confusion_table(truth, pred)`,
+  `metrics::classification_summary(truth, pred)` when you want exactly one table
+  and nothing else.
 
-- validation options
-- metric-value summaries
-- cross-validation reports
-- confusion tables
-- classification summaries
-- threshold inspection surfaces
-
-In other words, this is not just "the math after inference." It is the part of the
-API that tells you whether a modeling result is actually worth trusting.
-
-## Why This Family Matters
-
-A modeling API is only as good as the honesty of its evaluation surface.
-
-Without a strong `metrics` family, users end up with:
-
-- one-off score calculations
-- half-tracked fold results
-- confusion tables computed differently in different scripts
-- thresholds chosen without inspection
-
-The `metrics` family solves that by keeping evaluation artifacts structured and
-reusable.
-
-## The Main Evaluation Layers
-
-### Scalar and vector metrics
-
-These answer questions like:
-
-- what is the accuracy?
-- what is the F1?
-- what is the RMSE?
-- how do fold scores vary?
-
-### Report objects
-
-These answer higher-level questions like:
-
-- what are the mean and standard deviation across folds?
-- which classes are failing?
-- where is the threshold tradeoff acceptable?
-
-### Presentation-ready tables
-
-Objects such as confusion tables and classification summaries exist because teams
-often need artifacts that can be inspected, exported, or attached to reports.
+Both compute the same numbers; the accessor just caches the inputs.
 
 ## Relationship To Other Families
 
-`metrics` works closely with:
+- [`selection::validate`](selection/validate.md) consumes the validation
+  contract and runs it; the `CrossValidationReport` it hands back is defined
+  here (`reports::CrossVal`).
+- [`reports`](reports.md) is the model-backed twin — the same helpers, but they
+  take a `models::Model` or `workflow::Workflow` and do the inference for you.
+- The umbrella aliases (`reports::Metric`, `reports::Class`,
+  `reports::CrossVal`, `reports::SeriesCompare`) live in
+  [`reports`](reports.md); the types themselves are `metrics` types.
 
-- `validate`, which decides how evidence is earned
-- `model`, which produces predictions
-- `tune`, which uses metrics to rank candidates and search trials
-
-That relationship is important:
-
-- `metrics` owns the validation options bag
-- `validate` consumes that contract to build executable plans
-- `metrics` describes the evidence that contract produced
-
-## How To Read This Family
-
-Use this family in roughly this order:
-
-1. understand fold-oriented reporting with `CrossValidationReport`
-2. inspect class behavior with `confusion_table` and `classification_summary`
-3. move to threshold analysis when operating points matter
-
-That order mirrors real model review.
-
-First ask whether the model is broadly good.
-Then ask where it fails.
-Then ask where to place the operating threshold.
-
-## Main Objects
-
+<!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 2
+:hidden:
 
-metrics/ValidationOptions
-metrics/Threshold
+metrics/Introduction
+metrics/MetricReport
 metrics/CrossValidationReport
+metrics/ClassReport
+metrics/SeriesCompareReport
+metrics/Threshold
+metrics/classification
+metrics/regression
 metrics/confusion_table
 metrics/classification_summary
+metrics/calibrate
 ```
+<!-- apiref:toctree:end -->

@@ -165,7 +165,7 @@ void Coach::train_loop_(Model& model, Source& source, const TrainOptions& option
   const ScalarType target_dtype = resolve_precision_(options.execution.precision);
   model.to(target_platform, target_dtype);
   if (options.execution.deterministic) {
-    pluss::rng_seed(options.seed);
+    pluss::tils::rng_seed(options.seed);
   }
 
   auto optimizer = make_optimizer(parameters, options);

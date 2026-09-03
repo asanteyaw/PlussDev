@@ -328,7 +328,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
   std::int64_t best_index = -1;
   double best_objective = std::numeric_limits<double>::quiet_NaN();
 
-  // Flatten every (candidate, fold) pair into one pluss::aux::transmit(...,
+  // Flatten every (candidate, fold) pair into one pluss::tils::transmit(...,
   // par) dispatch instead of nesting "parallel folds, sequential
   // candidates" (cross_validate_batches_'s own shape, used one candidate at
   // a time by the loop this replaced): on an 8+ core machine tuning 5
@@ -365,15 +365,15 @@ inline void assign_objective_ranks_(CompareReport& report) {
     };
   };
 
-  pluss::aux::transmit_options topts{};
+  pluss::tils::transmit_options topts{};
   topts.grain_size = 1;
   if (split.max_parallel == 1 || cells.size() <= 1) {
-    topts.exec = pluss::aux::transmit_exec::seq;
+    topts.exec = pluss::tils::transmit_exec::seq;
   } else {
-    topts.exec = pluss::aux::transmit_exec::par;
+    topts.exec = pluss::tils::transmit_exec::par;
     topts.workers = split.max_parallel > 0 ? static_cast<std::size_t>(split.max_parallel) : 0;
   }
-  const std::vector<FoldAssessResult> cell_results = pluss::aux::transmit(evaluate_cell, cells, topts);
+  const std::vector<FoldAssessResult> cell_results = pluss::tils::transmit(evaluate_cell, cells, topts);
 
   for (std::size_t ci = 0; ci < candidate_n; ++ci) {
     CrossAssessReport report{};
@@ -556,15 +556,15 @@ struct FoldFramePair_ {
     };
   };
 
-  pluss::aux::transmit_options topts{};
+  pluss::tils::transmit_options topts{};
   topts.grain_size = 1;
   if (split.max_parallel == 1 || cells.size() <= 1) {
-    topts.exec = pluss::aux::transmit_exec::seq;
+    topts.exec = pluss::tils::transmit_exec::seq;
   } else {
-    topts.exec = pluss::aux::transmit_exec::par;
+    topts.exec = pluss::tils::transmit_exec::par;
     topts.workers = split.max_parallel > 0 ? static_cast<std::size_t>(split.max_parallel) : 0;
   }
-  const std::vector<FoldAssessResult> cell_results = pluss::aux::transmit(evaluate_cell, cells, topts);
+  const std::vector<FoldAssessResult> cell_results = pluss::tils::transmit(evaluate_cell, cells, topts);
 
   for (std::size_t ci = 0; ci < candidate_n; ++ci) {
     CrossAssessReport report{};

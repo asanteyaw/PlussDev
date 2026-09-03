@@ -402,9 +402,9 @@ and route tie gradients to the left operand.
   values.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="gather.html">
+  <a class="prev-link" href="masked_select.html">
     <span class="label">Previous</span>
-    <span class="title">gather</span>
+    <span class="title">masked_select</span>
   </a>
   <a class="next-link" href="min.html">
     <span class="label">Next</span>

@@ -185,7 +185,7 @@ Thread::compare: positional alignment requires identical lengths
 
 - [`Thread::eq`](eq.md) / [`ne`](ne.md) / [`lt`](lt.md) / [`le`](le.md) / [`gt`](gt.md) /
   [`ge`](ge.md): the fixed-operator convenience methods `compare()` is generalized from.
-- [`Thread::btw`](btw.md): interval membership — two comparisons combined with a logical
+- [`Thread::between`](between.md): interval membership — two comparisons combined with a logical
   AND, in one call.
 
 <div class="pluss-inline-prev-next">

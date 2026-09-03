@@ -21,7 +21,7 @@ int main() {
   using pluss::pCPU;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
-  pluss::OutputEngine out;
+  pluss::tils::OutputEngine out;
   using Clock = std::chrono::steady_clock;
   auto secs = [](Clock::time_point a, Clock::time_point b) {
     return std::chrono::duration<double>(b - a).count();
