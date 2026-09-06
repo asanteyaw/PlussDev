@@ -41,7 +41,7 @@ See [DataFrame API Reference](../dataframe_api_reference.md).
 | Numeric | `abs`, `clip`, `log`, `exp`, reductions |
 | Text | `lower`, `replace`, `contains` |
 | Time | `tl`, `tl().year`, `tl().month`, `tl().day`, `tl().hour`, `tl().weekday_name`, `ts` |
-| Compare | `compare`, `btw` |
+| Compare | `compare`, `between` |
 | Cast | `cast`, `astype` |
 | Payload | `as_series`, `as_note`, `as_timeline`, `as_timeindex` |
 | Display | `show`, `with_display_labels`, `name`, `named`, `unname` |

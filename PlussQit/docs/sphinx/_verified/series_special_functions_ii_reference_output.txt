@@ -1,0 +1,149 @@
+=== digamma_landmarks ===
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[-1.9635, -0.5772, 0.4228, 0.9228]
+
+=== digamma_signed_zero_and_poles ===
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[-inf, inf, nan, 0.0365]
+
+=== digamma_reverse ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.9348, 0.4904, 0.3304]
+
+=== polygamma_orders ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.5772, 0.4228, 0.9228]
+
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.6449, 0.6449, 0.3949]
+
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-2.4041, -0.4041, -0.1541]
+
+=== polygamma_negative_noninteger ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[8.9348, 4.9348, 0.9348]
+
+=== polygamma_reverse ===
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[-0.8288, -0.2362]
+
+=== mvlgamma_dimension ===
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.6931, 1.7918]
+
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1.5502, 3.5651]
+
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[2.6949, 5.4030]
+
+=== mvlgamma_domain ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[nan, 3.2233, 1.1447]
+
+=== mvlgamma_reverse ===
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1.6259, 2.3593]
+
+=== erfinv_landmarks ===
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-1.1631, -0.4769, 0.0000, 0.4769, 1.1631]
+
+=== erfinv_composition ===
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[-0.8000, -0.2000, 0.3000, 0.9500]
+
+=== erfinv_domain ===
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[nan, -inf, inf, nan, nan]
+
+=== erfinv_reverse ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.8862, 0.9545, 1.2629]
+
+=== erfinv_normal_quantiles ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-1.9600, 0.0000, 1.9600]
+
+=== i0_even_and_growth ===
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[4.8808, 1.2661, 1.0000, 1.2661, 4.8808, 427.5641]
+
+=== i0_reverse_is_odd ===
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-1.5906, -0.5652, 0.0000, 0.5652, 1.5906]
+
+=== sinc_landmarks ===
+Series(shape=[7], strides=[1], dtype=float64, platform=cpu, numel=7, contiguous=true)
+data=[-2.1221e-01, 3.8982e-17, 6.3662e-01, 1.0000e+00, 6.3662e-01, 3.8982e-17, -2.1221e-01]
+
+=== sinc_matrix_shape ===
+Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 1.0000e+00 9.0032e-01 ⎤
+⎣ 6.3662e-01 3.8982e-17 ⎦
+
+=== sinc_integral_promotion ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[3.8982e-17, 1.0000e+00, 3.8982e-17]
+
+=== sinc_reverse ===
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.0000, -1.2732, -1.0000, 0.1415]
+
+=== igamma_progression ===
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.0000, 0.2642, 0.8009, 1.0000]
+
+=== igamma_broadcast ===
+Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 0.3935 0.6321 0.8647 ⎤
+⎣ 0.0902 0.2642 0.5940 ⎦
+
+=== igamma_complement_and_infinity ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.0000, 0.8009, 1.0000]
+
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.0000, 0.1991, 0.0000]
+
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.0000, 1.0000, 1.0000]
+
+=== igamma_reverse_limit ===
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.3679, 0.1494]
+
+=== zeta_landmarks ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.6449, 1.0823, 1.0173]
+
+=== zeta_shift ===
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1.0000, 1.0000]
+
+=== zeta_nonpositive_offset ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[8.9348, 0.4144, nan]
+
+Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[inf]
+
+=== beta_values_and_log ===
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.3333, 0.0833, 0.0333, 0.0167]
+
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[-1.0986, -2.4849, -3.4012, -4.0943]
+
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.3333, 0.0833, 0.0333, 0.0167]
+
+=== beta_reverse ===
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[-0.0903, -0.0103]
+
+=== inplace_integral_error ===
+erfinv_: in-place form requires a floating-point Series

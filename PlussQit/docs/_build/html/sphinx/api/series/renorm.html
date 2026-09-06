@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::renorm &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::repeat" href="repeat.html" />
+    <link rel="prev" title="Series::remainder" href="remainder.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-renorm">
+<h1>Series::renorm<a class="headerlink" href="#series-renorm" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">renorm</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">maxnorm</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">renorm</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">renorm_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">maxnorm</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Caps the norm of every sub-tensor along one axis.</p>
+<p>Pick an axis <code class="docutils literal notranslate"><span class="pre">dim</span></code>. Each index along that axis selects a sub-tensor — for a
+<code class="docutils literal notranslate"><span class="pre">[rows,</span> <span class="pre">cols]</span></code> matrix and <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code>, that is each row. <code class="docutils literal notranslate"><span class="pre">renorm</span></code> computes the
+<code class="docutils literal notranslate"><span class="pre">p</span></code>-norm of every such sub-tensor and, for any whose norm exceeds <code class="docutils literal notranslate"><span class="pre">maxnorm</span></code>,
+scales the whole sub-tensor down so its norm lands exactly on <code class="docutils literal notranslate"><span class="pre">maxnorm</span></code>.
+Sub-tensors already within the cap are passed through untouched.</p>
+<p>The classic use is keeping the rows of an embedding table from growing without
+bound during training: after each step, <code class="docutils literal notranslate"><span class="pre">weights.renorm_(2,</span> <span class="pre">0,</span> <span class="pre">max_norm)</span></code> pulls
+any over-long row back onto the ball of radius <code class="docutils literal notranslate"><span class="pre">max_norm</span></code> and leaves the rest
+alone.</p>
+<p>Three forms:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">renorm(p,</span> <span class="pre">dim,</span> <span class="pre">maxnorm)</span></code></strong> — the full form.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">renorm(p)</span></code></strong> — a convenience: <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">maxnorm</span> <span class="pre">=</span> <span class="pre">1</span></code>. Caps each row at
+unit norm.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">renorm_(p,</span> <span class="pre">dim,</span> <span class="pre">maxnorm)</span></code></strong> — the in-place form. Mutates the receiver and
+returns a reference to it.</p></li>
+</ul>
+<p>The norm of a sub-tensor is taken over <strong>every axis except <code class="docutils literal notranslate"><span class="pre">dim</span></code></strong>, so for a
+higher-rank input each <code class="docutils literal notranslate"><span class="pre">dim</span></code>-slice is flattened before its norm is measured.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>p</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): which norm to constrain — <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, any positive real. Must
+be <code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">0</span></code>.</p>
+<p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): the axis whose sub-tensors are normalized. Negative
+values count from the end.</p>
+<p><strong>maxnorm</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): the ceiling. Sub-tensors with norm above this are
+rescaled to hit it exactly; <code class="docutils literal notranslate"><span class="pre">maxnorm</span> <span class="pre">=</span> <span class="pre">0</span></code> zeroes every non-zero sub-tensor.
+Must be <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
+Same shape and dtype as the input, in <code class="docutils literal notranslate"><span class="pre">float64</span></code> precision internally then
+cast back. <code class="docutils literal notranslate"><span class="pre">renorm_</span></code> returns <code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code> to the mutated receiver.</p>
+<p>The input must have <strong>at least 2 dimensions</strong>.</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p>Differentiable. For a sub-tensor left untouched the gradient passes straight
+through. For a rescaled sub-tensor the scale factor <code class="docutils literal notranslate"><span class="pre">maxnorm</span> <span class="pre">/</span> <span class="pre">norm</span></code> itself
+depends on the data, so the backward carries both the direct <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">grad</span></code>
+term and the contribution through the shrinking factor.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code>: each row is a vector; the over-long ones are pulled in.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w">     </span><span class="c1">// 2-norm 5  -&gt; rescaled</span>
+<span class="w">                             </span><span class="p">{</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">},</span><span class="w">     </span><span class="c1">// 2-norm 0.5 -&gt; kept</span>
+<span class="w">                             </span><span class="p">{</span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}});</span><span class="w">   </span><span class="c1">// 2-norm 10 -&gt; rescaled</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">renorm</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1.2, 1.6],
+  [0.3, 0.4],
+  [1.2, 1.6]]
+</pre></div>
+</div>
+<p>Row 0 was scaled by <code class="docutils literal notranslate"><span class="pre">2/5</span></code>, row 2 by <code class="docutils literal notranslate"><span class="pre">2/10</span></code>, row 1 (already under <code class="docutils literal notranslate"><span class="pre">2</span></code>) is
+verbatim.</p>
+<p>Example 2. Confirm the contract: each rescaled row now has norm exactly
+<code class="docutils literal notranslate"><span class="pre">maxnorm</span></code>, each kept row is unchanged.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">renorm</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;row 2-norms = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">y</span><span class="p">).</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">sqrt</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>row 2-norms = pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2, 0.5, 2]
+</pre></div>
+</div>
+<p>The cap is a ceiling, not a target — row 1 keeps its norm of <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code> treats each column as the sub-tensor instead.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">},</span>
+<span class="w">                             </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">}});</span><span class="w">   </span><span class="c1">// col 0 norm 5, col 1 norm 0.5</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">renorm</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1.2, 0.3],
+  [1.6, 0.4]]
+</pre></div>
+</div>
+<p>Column 0 (norm <code class="docutils literal notranslate"><span class="pre">5</span></code>) is scaled by <code class="docutils literal notranslate"><span class="pre">2/5</span></code>; column 1 (norm <code class="docutils literal notranslate"><span class="pre">0.5</span></code>) is left alone.
+Same data as Example 1 transposed, and the result is the transpose too.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">=</span> <span class="pre">1</span></code> caps the sum of absolute values of each row.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w">   </span><span class="c1">// L1 = 6 -&gt; scaled by 4/6</span>
+<span class="w">                             </span><span class="p">{</span><span class="mf">0.5</span><span class="p">,</span><span class="w">  </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}});</span><span class="w">  </span><span class="c1">// L1 = 1 -&gt; kept</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">renorm</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[0.66666666, -1.3333333, 2],
+  [0.5, 0.5, 0]]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">p</span></code> only changes which norm is measured and constrained; the rescale is still a
+single scalar multiply per row, so signs and ratios within a row are preserved.</p>
+<p>Example 5. The one-argument form: <code class="docutils literal notranslate"><span class="pre">p</span></code> only, with <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">maxnorm</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="p">}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">renorm</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[0.59999999, 0.79999998],
+  [0.6, 0.8]]
+</pre></div>
+</div>
+<p>Row 0 (norm <code class="docutils literal notranslate"><span class="pre">5</span></code>) becomes a unit vector; row 1 already has norm <code class="docutils literal notranslate"><span class="pre">1</span></code>, so
+<code class="docutils literal notranslate"><span class="pre">renorm</span></code> leaves it exactly as it was — the cap is <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>.</p>
+<p>Example 6. Gradient flows through the scaling.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">renorm</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[0.064000005, -0.04799999],
+  [0.032000001, -0.023999998]]
+</pre></div>
+</div>
+<p>The sensitivities are small and mixed in sign because rescaling a row does two
+things at once: it shrinks the row (a positive push along the direction that
+grows the sum) and it makes the shrink factor <code class="docutils literal notranslate"><span class="pre">maxnorm</span> <span class="pre">/</span> <span class="pre">norm</span></code> respond to the
+row’s own components (a negative pull back). Both rows started over the cap, so
+both receive a gradient.</p>
+<p>Example 7. A 1-D input is rejected — <code class="docutils literal notranslate"><span class="pre">renorm</span></code> needs an axis to hold the
+sub-tensors and an axis to take the norm over.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}).</span><span class="n">renorm</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>renorm: expected input with at least 2 dimensions
+</pre></div>
+</div>
+<p>Example 8. <code class="docutils literal notranslate"><span class="pre">maxnorm</span> <span class="pre">=</span> <span class="pre">0</span></code> zeroes every non-zero sub-tensor.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">renorm</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[0, 0],
+  [0, 0]]
+</pre></div>
+</div>
+<p>Row 0 has norm <code class="docutils literal notranslate"><span class="pre">5</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> so it is scaled to zero; row 1 already has norm <code class="docutils literal notranslate"><span class="pre">0</span></code>, so
+it is “within” the cap and untouched (still zero).</p>
+<p>Example 9. The in-place form mutates the receiver and returns it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">renorm_</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1.2, 1.6],
+  [1.2, 1.6]]
+</pre></div>
+</div>
+<p>Both rows were over the cap, so both are pulled onto norm <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>The norm of a sub-tensor is taken over every axis except <code class="docutils literal notranslate"><span class="pre">dim</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">dim</span></code> is
+the axis you are indexing <em>into</em> to pick a sub-tensor, not the axis you
+reduce. <code class="docutils literal notranslate"><span class="pre">renorm(2,</span> <span class="pre">0,</span> <span class="pre">m)</span></code> normalizes rows; <code class="docutils literal notranslate"><span class="pre">renorm(2,</span> <span class="pre">1,</span> <span class="pre">m)</span></code> normalizes
+columns.</p></li>
+<li><p>The cap is strict-greater: a sub-tensor whose norm equals <code class="docutils literal notranslate"><span class="pre">maxnorm</span></code> exactly
+is left alone, not rescaled.</p></li>
+<li><p>Input must be at least 2-D. To cap a single vector’s norm use
+<a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max</span></code></span></a> on its <a class="reference internal" href="norm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">norm</span></code></span></a>, or
+<code class="docutils literal notranslate"><span class="pre">x.unsqueeze(0).renorm(...)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxnorm</span> <span class="pre">=</span> <span class="pre">0</span></code> collapses every non-zero sub-tensor to zeros.</p></li>
+<li><p>The computation runs in <code class="docutils literal notranslate"><span class="pre">float64</span></code> and casts back, so a low-precision input
+round-trips through <code class="docutils literal notranslate"><span class="pre">float64</span></code> (visible as trailing <code class="docutils literal notranslate"><span class="pre">...9999</span></code> in the examples).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">renorm_</span></code> mutates in place — do not call it on a tensor that other live
+tensors view.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">renorm(p,</span> <span class="pre">dim,</span> <span class="pre">maxnorm)</span></code> caps the <code class="docutils literal notranslate"><span class="pre">p</span></code>-norm of every sub-tensor along <code class="docutils literal notranslate"><span class="pre">dim</span></code>:</p>
+<ul class="simple">
+<li><p>each <code class="docutils literal notranslate"><span class="pre">dim</span></code>-slice with norm <code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">maxnorm</span></code> is scaled down to hit <code class="docutils literal notranslate"><span class="pre">maxnorm</span></code>
+exactly; the rest pass through</p></li>
+<li><p>the norm is measured over all axes except <code class="docutils literal notranslate"><span class="pre">dim</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">renorm(p)</span></code> is the shorthand for <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">maxnorm</span> <span class="pre">=</span> <span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">renorm_</span></code> is the in-place form</p></li>
+<li><p>input must be 2-D or higher; differentiable</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="norm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::norm</span></code></span></a>: the norm <code class="docutils literal notranslate"><span class="pre">renorm</span></code> measures and constrains.</p></li>
+<li><p><a class="reference internal" href="dist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::dist</span></code></span></a>: the other norm-constraint neighbor — the <code class="docutils literal notranslate"><span class="pre">p</span></code>-norm
+distance between two tensors.</p></li>
+<li><p><a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_max</span></code></span></a>: cap raw <em>values</em>; <code class="docutils literal notranslate"><span class="pre">renorm</span></code> caps a
+<em>norm</em>.</p></li>
+<li><p><a class="reference internal" href="standardize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::standardize</span></code></span></a>: a different per-row rescale — to
+unit variance rather than to a norm ceiling.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="remainder.html">
+    <span class="label">Previous</span>
+    <span class="title">remainder</span>
+  </a>
+  <a class="next-link" href="repeat.html">
+    <span class="label">Next</span>
+    <span class="title">repeat</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="remainder.html" title="previous chapter">Series::remainder</a></li>
+      <li>Next: <a href="repeat.html" title="next chapter">Series::repeat</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/renorm.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

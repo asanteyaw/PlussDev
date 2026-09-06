@@ -74,8 +74,8 @@ Use `isnan()` when the question is specifically whether a value is undefined as
     <span class="label">Previous</span>
     <span class="title">isinf</span>
   </a>
-  <a class="next-link" href="le.html">
+  <a class="next-link" href="kron.html">
     <span class="label">Next</span>
-    <span class="title">le</span>
+    <span class="title">kron</span>
   </a>
 </div>

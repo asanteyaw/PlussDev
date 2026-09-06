@@ -159,9 +159,9 @@ Use `nonzero()` when you want to convert truthiness into explicit positions.
   coordinate-like inputs.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nextafter.html">
+  <a class="prev-link" href="no_grad.html">
     <span class="label">Previous</span>
-    <span class="title">nextafter</span>
+    <span class="title">no_grad</span>
   </a>
   <a class="next-link" href="norm.html">
     <span class="label">Next</span>

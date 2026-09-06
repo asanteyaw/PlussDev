@@ -1,109 +1,96 @@
-# `lymph::metrics::Threshold`
+<!-- pluss-hand-authored -->
 
-## Summary
+# `lymph::metrics::classification::Threshold`
 
-`Threshold` is the Lymph threshold-inspection surface for score-based
-classification.
+[Back to `metrics`](../metrics.md)
 
-Use it when you want to:
+`Threshold` is the **operating-point accessor**. Built from a score `Series` and
+a label `Series` by `metrics::classification::threshold(scores, labels)`, it answers two
+questions: what does precision / recall / f1 look like across *every* achievable
+cutoff (`curve()`), and which single cutoff maximizes a chosen objective
+(`best()`).
 
-- inspect a threshold curve
-- choose a threshold by an explicit objective
-- move beyond the default decision boundary
+## Scope And Alias
 
-## Why Threshold Analysis Matters
+The type is `lymph::metrics::classification::Threshold`. There is no shorter alias — it is a
+compute accessor, not a report. `scores()` and `labels()` read the cached
+inputs back.
 
-Many classifiers produce scores or probabilities before they produce final labels.
-
-The default decision boundary is convenient, but it is not automatically the right
-operating point for the business problem.
-
-Threshold analysis exists because the cost of errors is usually asymmetric:
-
-- false positives may be expensive
-- false negatives may be expensive
-- recall may matter more than precision, or the reverse
-
-`Threshold` is the object you use when you want that tradeoff to be explicit.
-
-## Core Surface
-
-The main operations are:
-
-- inspect the threshold curve with `curve()`
-- compute the best threshold under an objective with `best(...)`
-
-That means the object supports both:
-
-- descriptive inspection
-- decision-oriented threshold choice
-
-## Signature
+## Construction
 
 ```cpp
-lymph::metrics::Threshold lymph::metrics::threshold(
-    const pluss::Series& scores,
-    const pluss::Series& truth);
-double lymph::metrics::Threshold::best(lymph::MetricKind metric) const;
+lymph::metrics::classification::Threshold lymph::metrics::classification::threshold(
+    pluss::Series scores,
+    pluss::Series labels);
 ```
 
-## Practical Example
+`scores` are the model's raw positive-class scores (e.g. from
+`model.infer_scores(...)`); `labels` are the matching ground-truth 0/1 labels.
+Nothing is computed at construction — each method call runs the sweep.
 
-This page uses the exact verifier program `lymph_metrics_docverify_demo.cpp`.
+## The `ThresholdCurve` type
 
-### Example 1
+`curve()` returns a `ThresholdCurve` — four aligned `Series`:
 
-This example fits a model, obtains its score vector, constructs a `Threshold`
-object, and prints both the best F1 cutoff and the first three thresholds from the
-curve.
+`Series thresholds`
+: Every achievable decision threshold, **descending**.
+
+`Series precision` · `recall` · `f1`
+: The metric at each corresponding threshold.
+
+Index *i* across all four is one operating point. The sweep is a single
+`O(n log n)` pass (one sort, cumulative true / false positive counts).
+
+## Methods
+
+### `curve`
 
 ```cpp
-#include <pluss/lymph.h>
-#include <pluss/mic.h>
+ThresholdCurve curve() const;
+```
+
+The full precision / recall / f1 sweep.
+
+#### Example
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
 
 #include <iostream>
 
 int main() {
   namespace lymph = pluss::ai::lymph;
-  namespace classic = pluss::ai::classic;
   using pluss::ScalarType;
-  using pluss::Series;
   using pluss::table::DataFrame;
   using pluss::table::Thread;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const DataFrame frame({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
-      {"late", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"target", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-  });
+  const pluss::Series x = pluss::make_series(
+      {1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5,
+       6.0, 6.5, 7.0, 7.5, 8.0, 8.5}, {16}, f64);
+  const pluss::Series y = pluss::make_series(
+      {0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1}, {16}, f64);
+  const DataFrame frame({{"x", Thread(x)}, {"target", Thread(y)}});
 
-  lymph::DataFrameBatchOptions data_options{};
-  data_options.feature_names = {"income", "balance", "late"};
+  lymph::options::DFBatch data_options{};
+  data_options.feature_names = {"x"};
   data_options.label_feature = "target";
 
-  lymph::TrainOptions train_options{};
-  train_options.max_iterations = 600;
-  train_options.tolerance = 1e-8;
-  train_options.random = {.seed = 20260825ULL, .deterministic = true};
+  const lymph::models::Model model =
+      lymph::models::logistic_regression().learn(frame, data_options);
+  const pluss::Series scores = model.infer_scores(frame, data_options);
 
-  classic::LinearFamilyOptions logistic_options{};
-  logistic_options.regularization = classic::RegularizationKind::L2;
-  logistic_options.regularization_strength = 1e-3;
-  logistic_options.fit_intercept = true;
+  const lymph::ThresholdCurve curve =
+      lymph::metrics::classification::threshold(scores, frame.features("target").as_series()).curve();
 
-  const lymph::Model logistic = lymph::model::logistic_regression(logistic_options);
-  const Series scores =
-      logistic.learn(frame, data_options, train_options).infer_scores(frame, data_options);
-
-  const lymph::metrics::Threshold threshold =
-      lymph::metrics::threshold(scores, frame.features("target").as_series());
-  std::cout << "== threshold ==\n";
-  std::cout << "best_f1=" << threshold.best(lymph::MetricKind::F1) << "\n";
-  std::cout << threshold.curve().thresholds.slice(0, 0, 3) << "\n";
+  std::cout << "points     = " << curve.thresholds.numel() << "\n";
+  std::cout << "thresholds = " << curve.thresholds.slice(0, 0, 4) << "\n";
+  std::cout << "precision  = " << curve.precision.slice(0, 0, 4) << "\n";
+  std::cout << "recall     = " << curve.recall.slice(0, 0, 4) << "\n";
+  std::cout << "f1         = " << curve.f1.slice(0, 0, 4) << "\n";
 
   return 0;
 }
@@ -112,23 +99,147 @@ int main() {
 Output
 
 ```text
-== threshold ==
-best_f1=4.36761
-pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[9.9535291, 8.0915577, 6.2295863]
+points     = 16
+thresholds = pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[4.1479996, 3.594933, 3.0418664, 2.4887998]
+precision  = pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1, 1, 1, 1]
+recall     = pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.125, 0.25, 0.375, 0.5]
+f1         = pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.22222222, 0.4, 0.54545455, 0.66666667]
 ```
 
-This output shows two things clearly:
+### `best`
 
-- `best(...)` returns one concrete cutoff under the chosen metric objective
-- `curve()` exposes the broader sweep so you can inspect threshold behavior before
-  committing to that cutoff
+```cpp
+double best(MetricKind objective = MetricKind::F1) const;
+```
 
-## Related Pages
+The threshold that maximizes `objective` over the sweep. `Precision`, `Recall` /
+`Sensitivity`, and `F1` are supported; any other `MetricKind` falls back to
+`F1`.
 
-- [CrossValidationReport](CrossValidationReport.md)
-- [classification_summary](classification_summary.md)
-- [confusion_table](confusion_table.md)
+#### Example
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series x = pluss::make_series(
+      {1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5,
+       6.0, 6.5, 7.0, 7.5, 8.0, 8.5}, {16}, f64);
+  const pluss::Series y = pluss::make_series(
+      {0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1}, {16}, f64);
+  const DataFrame frame({{"x", Thread(x)}, {"target", Thread(y)}});
+
+  lymph::options::DFBatch data_options{};
+  data_options.feature_names = {"x"};
+  data_options.label_feature = "target";
+
+  const lymph::models::Model model =
+      lymph::models::logistic_regression().learn(frame, data_options);
+  const pluss::Series scores = model.infer_scores(frame, data_options);
+
+  const lymph::metrics::classification::Threshold th =
+      lymph::metrics::classification::threshold(scores, frame.features("target").as_series());
+
+  std::cout << "best for F1        = " << th.best(lymph::MetricKind::F1) << "\n";
+  std::cout << "best for Precision = " << th.best(lymph::MetricKind::Precision) << "\n";
+  std::cout << "best for Recall    = " << th.best(lymph::MetricKind::Recall) << "\n";
+
+  return 0;
+}
+```
+
+Output
+
+```text
+best for F1        = 0.276533
+best for Precision = 4.148
+best for Recall    = -1.38267
+```
+
+### Using `best()` for inference
+
+Feed the chosen threshold back through
+[`InferOptions`](../models/Model/infer.md)`.positive_threshold` so labelling
+happens at that cutoff instead of the default `0.5`.
+
+#### Example
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series x = pluss::make_series(
+      {1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5,
+       6.0, 6.5, 7.0, 7.5, 8.0, 8.5}, {16}, f64);
+  const pluss::Series y = pluss::make_series(
+      {0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1}, {16}, f64);
+  const DataFrame frame({{"x", Thread(x)}, {"target", Thread(y)}});
+
+  lymph::options::DFBatch data_options{};
+  data_options.feature_names = {"x"};
+  data_options.label_feature = "target";
+
+  const lymph::models::Model model =
+      lymph::models::logistic_regression().learn(frame, data_options);
+  const pluss::Series scores = model.infer_scores(frame, data_options);
+
+  const double tuned =
+      lymph::metrics::classification::threshold(scores, frame.features("target").as_series())
+          .best(lymph::MetricKind::F1);
+  std::cout << "tuned threshold = " << tuned << "\n";
+
+  lymph::InferOptions tuned_infer{};
+  tuned_infer.positive_threshold = tuned;
+
+  const pluss::Series at_default = model.infer(frame.features({"x"}));
+  const pluss::Series at_tuned = model.infer(frame.features({"x"}), tuned_infer);
+  std::cout << "labels @ 0.5   = " << at_default << "\n";
+  std::cout << "labels @ tuned = " << at_tuned << "\n";
+
+  return 0;
+}
+```
+
+Output
+
+```text
+tuned threshold = 0.276533
+labels @ 0.5   = pluss::Series(shape=[16], strides=[1], dtype=float64, platform=cpu, numel=16, contiguous=true)
+data=[0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
+labels @ tuned = pluss::Series(shape=[16], strides=[1], dtype=float64, platform=cpu, numel=16, contiguous=true)
+data=[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+```
+
+## Changelog
+
+- **0.1** — `metrics::classification::threshold(scores, labels)` → `curve()` (full
+  `ThresholdCurve` sweep) and `best(objective)`.
 
 <!-- apiref:toctree:start -->
 

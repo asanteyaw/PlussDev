@@ -10,6 +10,9 @@
 Series SeriesStatAccessor::pdf() const
 Series SeriesStatAccessor::pdf(double sigma) const
 Series SeriesStatAccessor::pdf(double mu, double sigma) const
+Series SeriesStatProxy::pdf() const
+Series SeriesStatProxy::pdf(double sigma) const
+Series SeriesStatProxy::pdf(double mu, double sigma) const
 ```
 
 ## What It Does
@@ -32,6 +35,14 @@ threshold.
 - `pdf(mu,sigma)` uses the supplied center and positive scale.
 
 All forms preserve shape and return `float64`. `sigma<=0` is rejected.
+
+## Parameters And Returns
+
+`mu` is the distribution mean: moving it translates the density peak without
+changing its shape. `sigma` is the strictly positive standard deviation:
+increasing it spreads the same total probability over a wider interval and
+therefore lowers the peak. The returned `float64` `Series` has exactly the
+owner's shape; this is elementwise model evaluation, not a reduction.
 
 ## Gradient
 
@@ -90,6 +101,8 @@ data=[0.24197072, -0, -0.24197072]
 - `pdf()` evaluates a supplied normal model; it does not fit `mu` or `sigma`.
 - Density values are not cumulative probabilities.
 - `sigma` is a standard deviation and must be strictly positive.
+- A wider distribution may assign greater density in a far tail while still
+  having a lower peak; density comparisons depend on the evaluation point.
 
 ## See Also
 

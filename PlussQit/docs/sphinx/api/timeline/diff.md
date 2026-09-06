@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::diff(const Timeline& other) -> Duration
+Duration Timeline::diff(const Timeline& other) const
 ```
 
 ## What It Does
@@ -31,8 +31,8 @@ The result is signed:
 
 The timeline to subtract from `self`.
 
-The method follows the same elementwise/broadcasting mental model as the rest
-of the temporal arithmetic family. In the common case, you either compare:
+The method follows the same elementwise broadcasting rules as the rest of the
+temporal arithmetic family. In the common case, you either compare:
 
 - one scalar to one scalar
 - one aligned 1D timeline to another aligned 1D timeline
@@ -47,11 +47,11 @@ of the temporal arithmetic family. In the common case, you either compare:
 Example 1. Compute the distance between two scalar instants.
 
 ```cpp
+auto scalar = pluss::timeline::make("2024-11-01T09:00:00Z");
+auto scalar_later = pluss::timeline::make("2024-11-01T10:30:00Z");
 auto dt = scalar_later.diff(scalar);
-std::cout << pluss::note::print(
-    pluss::codeh::_compat::invoke<pluss::Note>("to_note_iso", dt)) << "\n";
-std::cout << pluss::series::print(
-    pluss::codeh::_compat::invoke<pluss::Series>("total", dt, {"s"})) << "\n";
+std::cout << pluss::note::print(dt.to_note_iso()) << "\n";
+std::cout << pluss::series::print(dt.total().seconds()) << "\n";
 ```
 
 ### Output
@@ -73,11 +73,21 @@ data=5400.0000
 Example 2. Compute elementwise signed distances across a vector.
 
 ```cpp
+auto base = pluss::timeline::make({
+    "2024-11-01T09:00:00Z",
+    "2024-11-01T10:15:30Z",
+    "2024-12-31T23:59:59Z",
+    "2025-01-01T00:00:00Z",
+});
+auto other = pluss::timeline::make({
+    "2024-11-01T09:00:00Z",
+    "2024-11-01T10:30:00Z",
+    "2024-12-31T20:00:00Z",
+    "2025-01-02T00:00:00Z",
+});
 auto dt = base.diff(other);
-std::cout << pluss::note::print(
-    pluss::codeh::_compat::invoke<pluss::Note>("to_note_iso", dt)) << "\n";
-std::cout << pluss::series::print(
-    pluss::codeh::_compat::invoke<pluss::Series>("total", dt, {"s"})) << "\n";
+std::cout << pluss::note::print(dt.to_note_iso()) << "\n";
+std::cout << pluss::series::print(dt.total().seconds()) << "\n";
 ```
 
 ### Output
@@ -121,10 +131,9 @@ Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
 data=true
 ```
 
-Same broadcasting rules as [`add_duration`](add_duration.md) apply here too
-(see that page's "Broadcasting" section): `diff`/`operator-` align shapes via
-the same `SeriesIterator::broadcast_shape` model any two `Series` operands
-use, so a scalar `Timeline` can be diffed against an N-D one. There is no
+The same broadcasting rules as [`add_duration`](add_duration.md) apply here
+too (see that page's "Broadcasting" section): `diff`/`operator-` align trailing
+axes, so a scalar `Timeline` can be diffed against an N-D one. There is no
 `Duration - Timeline` form and no compound assignment -- `diff` always
 produces a fresh `Duration`.
 

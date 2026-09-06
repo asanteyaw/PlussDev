@@ -165,8 +165,8 @@ Read `comp(universe)` as "the complement of `self` inside `universe`."
     <span class="label">Previous</span>
     <span class="title">clone</span>
   </a>
-  <a class="next-link" href="contiguous.html">
+  <a class="next-link" href="conj.html">
     <span class="label">Next</span>
-    <span class="title">contiguous</span>
+    <span class="title">conj</span>
   </a>
 </div>

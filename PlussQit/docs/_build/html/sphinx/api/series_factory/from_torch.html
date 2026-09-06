@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::series::from_torch &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Note API Reference" href="../../note_api_reference.html" />
+    <link rel="prev" title="pluss::series::polar" href="polar.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="pluss-series-from-torch">
+<h1>pluss::series::from_torch<a class="headerlink" href="#pluss-series-from-torch" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_factory_api_reference.html"><span class="doc std std-doc">Back to Series Factory API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+</pre></div>
+</div>
+<p><strong>Availability.</strong> This factory exists only when the library is built with
+<code class="docutils literal notranslate"><span class="pre">-DPLUSS_ENABLE_TORCH=ON</span></code>. In a build without LibTorch it is not declared and
+<code class="docutils literal notranslate"><span class="pre">&lt;torch/torch.h&gt;</span></code> is not pulled in.</p>
+</section>
+<section id="what-it-builds">
+<h2>What It Builds<a class="headerlink" href="#what-it-builds" title="Link to this heading">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Series</span></code> that <strong>views</strong> a CPU <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code> — no data is copied. The series
+shares the tensor’s storage, adopts its <code class="docutils literal notranslate"><span class="pre">dtype</span></code>, shape, and strides, and holds
+a reference that keeps the tensor’s memory alive for the series’ lifetime.</p>
+<p>The result is not a restricted interop wrapper. It is an ordinary <code class="docutils literal notranslate"><span class="pre">Series</span></code>:
+you can reshape it, filter it, aggregate it, combine it with other series,
+move it to a Pluss accelerator, or make it the leaf of a new Pluss reverse-mode
+graph. The only information that does not cross the boundary is the source
+library’s autograd graph.</p>
+<p>It is the inverse of the <a class="reference internal" href="../series/tensor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tensor()</span></code></span></a> method. The
+pair is deliberately asymmetric: you <em>construct</em> a series from a tensor with
+this factory, and once you have a series the way back is a method call, not
+another free function. There is no <code class="docutils literal notranslate"><span class="pre">pluss::series::to_torch</span></code>.</p>
+<p>The contract:</p>
+<ul class="simple">
+<li><p>the tensor must be on the <strong>CPU</strong></p></li>
+<li><p>its layout must be <strong>non-overlapping and dense</strong> (contiguous, or a plain
+strided view such as a transpose or a slice) — a stride-0 broadcast is
+rejected</p></li>
+<li><p>the dtype must have a pluss equivalent (all the real and integer dtypes,
+plus <code class="docutils literal notranslate"><span class="pre">Complex64</span></code> / <code class="docutils literal notranslate"><span class="pre">Complex128</span></code>)</p></li>
+</ul>
+</section>
+<section id="verified-examples">
+<h2>Verified Examples<a class="headerlink" href="#verified-examples" title="Link to this heading">¶</a></h2>
+<blockquote>
+<div><p>These examples require a <code class="docutils literal notranslate"><span class="pre">-DPLUSS_ENABLE_TORCH=ON</span></code> build.</p>
+</div></blockquote>
+<p>Example 1. Wrap a contiguous tensor.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">kFloat64</span><span class="p">).</span><span class="n">reshape</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 0.0000 1.0000 2.0000 ⎤
+⎣ 3.0000 4.0000 5.0000 ⎦
+</pre></div>
+</div>
+<p>Example 2. The series is a live view — mutating the tensor is visible through
+it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">kFloat64</span><span class="p">).</span><span class="n">reshape</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+<span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">99.0</span><span class="p">;</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 99.0000 1.0000 2.0000 ⎤
+⎣  3.0000 4.0000 5.0000 ⎦
+</pre></div>
+</div>
+<p>Example 3. A strided view (here a transpose) is wrapped without a copy — the
+result is non-contiguous.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">kFloat64</span><span class="p">).</span><span class="n">reshape</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)));</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3,2], strides=[1,3], dtype=float64, platform=cpu, numel=6, contiguous=false)
+data=
+⎡ 0.0000 3.0000 ⎤
+⎢ 1.0000 4.0000 ⎥
+⎣ 2.0000 5.0000 ⎦
+</pre></div>
+</div>
+<p>Example 4. Start a Pluss reverse-mode computation from imported values.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">tensor</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">kFloat64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">source</span><span class="p">);</span>
+
+<span class="n">values</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">();</span>
+<span class="n">loss</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">sensitivity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sensitivity</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sensitivity</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sensitivity</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2, 4, 6
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">from_torch()</span></code> deliberately does not copy the source tensor’s autograd state.
+Calling <code class="docutils literal notranslate"><span class="pre">tracks_slope_(true)</span></code> says that the imported values are leaves in a
+<strong>new Pluss graph</strong>. Here the objective is</p>
+<p>[
+L = x_0^2 + x_1^2 + x_2^2,
+]</p>
+<p>so reverse propagation stores (2x = [2, 4, 6]) as the imported series’
+sensitivity.</p>
+<p>Example 5. An overlapping layout (a stride-0 broadcast) is rejected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">torch</span><span class="o">::</span><span class="n">ones</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">kFloat64</span><span class="p">).</span><span class="n">expand</span><span class="p">({</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>from_torch: tensor must be non-overlapping and dense (or contiguous)
+</pre></div>
+</div>
+<p>Example 6. Integer dtypes carry across unchanged.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">tensor</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">kInt32</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=int32, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, 3]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The result is a <strong>view</strong>, not a copy, but it is not a fragile borrowed
+pointer. The series retains a tensor handle internally, so its storage stays
+alive even if the source variable leaves scope. Treat the tensor and series
+as two lifetime-safe handles on one CPU buffer.</p></li>
+<li><p>A GPU tensor raises <code class="docutils literal notranslate"><span class="pre">from_torch:</span> <span class="pre">CPU</span> <span class="pre">only</span></code>. Move it to the CPU first.</p></li>
+<li><p>No autograd crosses the boundary: a tensor with <code class="docutils literal notranslate"><span class="pre">requires_grad</span></code> produces a
+plain series. Call <code class="docutils literal notranslate"><span class="pre">tracks_slope_(true)</span></code> when the imported values should be
+leaves in a new Pluss graph. Returning with <code class="docutils literal notranslate"><span class="pre">Series::tensor()</span></code> likewise
+starts a fresh LibTorch graph rather than reconnecting the graph that existed
+before import.</p></li>
+<li><p>The reverse trip is <a class="reference internal" href="../series/tensor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tensor()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="entering-pluss-computation">
+<h2>Entering Pluss Computation<a class="headerlink" href="#entering-pluss-computation" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">from_torch()</span></code> is the handoff into Pluss. On the CPU, that handoff is
+zero-copy, and the imported series can immediately use the complete CPU
+operation surface:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">observations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">cpu_tensor</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">standardized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">observations</span>
+<span class="w">    </span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">observations</span><span class="p">.</span><span class="n">stat</span><span class="p">().</span><span class="n">mean</span><span class="p">())</span>
+<span class="w">    </span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="n">observations</span><span class="p">.</span><span class="n">stat</span><span class="p">().</span><span class="n">std</span><span class="p">());</span>
+</pre></div>
+</div>
+<p>To continue on a Pluss-supported accelerator, move the imported series with
+the same <code class="docutils literal notranslate"><span class="pre">to()</span></code> method used by every other series:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cpu_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">cpu_tensor</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">device_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cpu_values</span><span class="p">.</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCUDA</span><span class="p">);</span>
+
+<span class="n">device_values</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">device_values</span><span class="p">.</span><span class="n">square</span><span class="p">().</span><span class="n">mean</span><span class="p">();</span>
+<span class="n">loss</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The first line adopts the tensor’s CPU storage without copying. The second
+line allocates Pluss-managed CUDA storage and transfers the values. From that
+point onward, <code class="docutils literal notranslate"><span class="pre">device_values</span></code> is a normal CUDA <code class="docutils literal notranslate"><span class="pre">Series</span></code>, and supported Pluss
+operations and reverse propagation run under the CUDA backend.</p>
+<p>If the source tensor already lives on an accelerator, first obtain a CPU
+tensor before calling <code class="docutils literal notranslate"><span class="pre">from_torch()</span></code>, then select the desired Pluss platform:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">source_tensor</span><span class="p">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">::</span><span class="n">kCPU</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">device_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCUDA</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This explicit staging keeps ownership and backend selection unambiguous. The
+temporary CPU tensor remains alive because the returned series retains its
+storage handle.</p>
+</section>
+<section id="returning-to-libtorch">
+<h2>Returning To LibTorch<a class="headerlink" href="#returning-to-libtorch" title="Link to this heading">¶</a></h2>
+<p>Importing a tensor does not trap the data in pluss. After analysis or
+preparation, call <code class="docutils literal notranslate"><span class="pre">Series::tensor()</span></code> to obtain a LibTorch tensor over the
+result. The returned CPU tensor can be consumed directly by a CPU model or
+transferred to the model’s device:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cpu_batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">raw_batch</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">prepared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prepare_for_training</span><span class="p">(</span><span class="n">cpu_batch</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">training_batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prepared</span><span class="p">.</span><span class="n">tensor</span><span class="p">().</span><span class="n">to</span><span class="p">(</span><span class="n">model_device</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">prediction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="o">-&gt;</span><span class="n">forward</span><span class="p">(</span><span class="n">training_batch</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">model_device</span></code> is the CPU, the view remains zero-copy. If it is an
+accelerator, <code class="docutils literal notranslate"><span class="pre">.to(model_device)</span></code> creates an owning device allocation. In both
+cases, the resulting tensor is valid training input; only cross-library
+autograd history is intentionally absent.</p>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">from_torch()</span></code> is a full entry point into Pluss:</p>
+<ul class="simple">
+<li><p>it creates a lifetime-safe, zero-copy CPU <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
+<li><p>the result supports ordinary Pluss computation immediately</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to(pluss::pCUDA)</span></code> or another supported platform performs the Pluss-side
+device transfer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tracks_slope_(true)</span></code> begins a new Pluss reverse-mode graph</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Series::tensor()</span></code> provides the symmetric route back to LibTorch</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../series/tensor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tensor</span></code></span></a>: the method that goes the other way,
+Series to <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code>.</p></li>
+<li><p><a class="reference internal" href="make.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::make</span></code></span></a>: build a series by <strong>copying</strong> host data
+when a shared view is not what you want.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="polar.html">
+    <span class="label">Previous</span>
+    <span class="title">polar</span>
+  </a>
+  <a class="next-link" href="../../series_factory_api_reference.html">
+    <span class="label">Next</span>
+    <span class="title">Series Factory API Reference</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_factory_api_reference.html">Series Factory API Reference</a><ul>
+      <li>Previous: <a href="polar.html" title="previous chapter">pluss::series::polar</a></li>
+      <li>Next: <a href="../../note_api_reference.html" title="next chapter">Note API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series_factory/from_torch.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

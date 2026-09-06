@@ -169,8 +169,8 @@ data=[-1, -9, -90, -900, -9000, 10000]
     <span class="label">Previous</span>
     <span class="title">diagonal_scatter</span>
   </a>
-  <a class="next-link" href="div.html">
+  <a class="next-link" href="digamma.html">
     <span class="label">Next</span>
-    <span class="title">div</span>
+    <span class="title">digamma</span>
   </a>
 </div>

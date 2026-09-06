@@ -126,8 +126,8 @@ data=[inf, 0.33333333]
     <span class="label">Previous</span>
     <span class="title">cartprod</span>
   </a>
-  <a class="next-link" href="ceil.html">
+  <a class="next-link" href="cauchy_.html">
     <span class="label">Next</span>
-    <span class="title">ceil</span>
+    <span class="title">cauchy_</span>
   </a>
 </div>

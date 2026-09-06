@@ -54,16 +54,17 @@ int main() {
   logistic_options.regularization_strength = 1e-3;
   logistic_options.fit_intercept = true;
 
-  const lymph::Model logistic = lymph::model::logistic_regression(logistic_options);
+  const lymph::models::Model logistic = lymph::models::logistic_regression(logistic_options);
 
-  lymph::ValidationOptions cv{};
+  lymph::selection::CrossValOptions cv{};
   cv.folds = 4;
+  cv.repeats = 1;
   cv.shuffle = true;
   cv.random_state = 20260825ULL;
   cv.deterministic = true;
+  cv.max_parallel = 1;
 
-  const lymph::ValidationPlan cross_plan =
-      lymph::validate::cross(cv).folds(4).repeat(1).shuffle(true).seed(20260825ULL).workers(1);
+  const lymph::selection::Plan cross_plan = lymph::selection::cross(cv);
 
   std::cout << "== validation_options_cross ==\n";
   std::cout << "plan=" << static_cast<int>(cross_plan.options().plan)
@@ -83,84 +84,84 @@ int main() {
   std::cout << "== cross_validation_report ==\n";
   std::cout << cross_report.board() << "\n";
 
-  const lymph::HoldoutPlan holdout_plan =
-      lymph::validate::holdout().test_size(0.25).shuffle(true).seed(20260825ULL);
-  const auto holdout = holdout_plan.split(frame);
+  const lymph::selection::HoldoutPlan holdout_plan =
+      lymph::selection::holdout().test_size(0.25).shuffle(true).seed(20260825ULL);
+  const lymph::prep::HoldoutSplit holdout = holdout_plan.split(frame);
   std::cout << "== holdout_split ==\n";
   std::cout << "train_rows=" << holdout.train_set.ncases()
             << " test_rows=" << holdout.test_set.ncases() << "\n";
-  const lymph::HoldoutPlan holdout_half_plan =
-      lymph::validate::holdout().test_size(0.5).shuffle(false).seed(20260825ULL);
-  const auto holdout_half = holdout_half_plan.split(frame);
+  const lymph::selection::HoldoutPlan holdout_half_plan =
+      lymph::selection::holdout().test_size(0.5).shuffle(false).seed(20260825ULL);
+  const lymph::prep::HoldoutSplit holdout_half = holdout_half_plan.split(frame);
   std::cout << "== holdout_split_half ==\n";
   std::cout << "train_rows=" << holdout_half.train_set.ncases()
             << " test_rows=" << holdout_half.test_set.ncases() << "\n";
 
-  lymph::ValidationOptions time_options{};
+  lymph::selection::CrossValOptions time_options{};
   time_options.folds = 3;
   time_options.time_test_size = 2;
   time_options.time_gap = 0;
+  time_options.time_max_train_size = 4;
   time_options.shuffle = false;
   time_options.random_state = 20260825ULL;
   time_options.deterministic = true;
-  const lymph::ValidationPlan time_plan =
-      lymph::validate::time(time_options).gap(0).horizon(2).lookback(4);
-  const auto last_block = time_plan.last(frame, "when");
+  const lymph::selection::Plan time_plan = lymph::selection::time(time_options);
+  const lymph::prep::TimeSeriesSplit last_block = time_plan.last(frame, "when");
   std::cout << "== time_plan_last ==\n";
   std::cout << "train_rows=" << last_block.train_set.ncases()
             << " test_rows=" << last_block.test_set.ncases() << "\n";
   std::cout << "train_last_when=" << last_block.train_set.features("when").tail(1)
             << " test_first_when=" << last_block.test_set.features("when").head(1) << "\n";
-  const lymph::ValidationPlan time_gap_plan =
-      lymph::validate::time(time_options).gap(1).horizon(2).lookback(3);
-  const auto gap_block = time_gap_plan.last(frame, "when");
+
+  lymph::selection::CrossValOptions time_gap_options = time_options;
+  time_gap_options.time_gap = 1;
+  time_gap_options.time_max_train_size = 3;
+  const lymph::selection::Plan time_gap_plan = lymph::selection::time(time_gap_options);
+  const lymph::prep::TimeSeriesSplit gap_block = time_gap_plan.last(frame, "when");
   std::cout << "== time_plan_gap_last ==\n";
   std::cout << "train_rows=" << gap_block.train_set.ncases()
             << " test_rows=" << gap_block.test_set.ncases() << "\n";
   std::cout << "train_last_when=" << gap_block.train_set.features("when").tail(1)
             << " test_first_when=" << gap_block.test_set.features("when").head(1) << "\n";
 
-  lymph::Builder builder = lymph::builder::build({
-      {"logreg", lymph::model::logistic_regression(logistic_options)},
-      {"tree", lymph::model::decision_tree_classifier()},
+  lymph::models::Builder builder = lymph::models::build({
+      {"logreg", lymph::models::logistic_regression(logistic_options)},
+      {"tree", lymph::models::tree::decision_tree_classifier()},
   });
 
   std::cout << "== builder_report ==\n";
   std::cout << builder.report() << "\n";
 
-  lymph::Suite suite = lymph::spotcheck::suite(builder);
-  suite.strategy("plain", TrainOptions{});
-  suite.strategy("weighted", TrainOptions{
-      .class_weight = lymph::ClassWeightMode::Balanced,
-  });
-
-  const lymph::spotcheck::Result suite_result =
-      suite.run(frame, data_options, cv, assess_options, MetricKind::F1,
-                lymph::TuneObjectivePolicy::Auto, {.fit_top = 1});
+  const lymph::selection::spotcheck::Result suite_result =
+      lymph::selection::suite(builder)
+          .strategy("plain", TrainOptions{})
+          .strategy("weighted", TrainOptions{.class_weight = lymph::ClassWeightMode::Balanced})
+          .run(frame, data_options, cv, assess_options, MetricKind::F1,
+               lymph::TuneObjectivePolicy::Maximize, lymph::selection::FitOptions{.fit_top = 1});
   std::cout << "== suite_compare_report ==\n";
   std::cout << "best=" << suite_result.report.best_name << "\n";
   std::cout << suite_result.report.board() << "\n";
 
-  const std::vector<lymph::GridAxis> axes = {
+  const std::vector<lymph::selection::GridAxis> axes = {
       {"regularization_strength", {1e-4, 1e-3, 1e-2}},
   };
-  const lymph::Search search = lymph::search::grid(axes, cv);
-  const lymph::search::Result search_result =
+  const lymph::selection::Search search = lymph::selection::grid(axes, cv);
+  const lymph::selection::search::Result search_result =
       search.run(
-          [](const lymph::GridPoint& point) {
+          [](const lymph::selection::GridPoint& point) {
             LinearFamilyOptions tuned{};
             tuned.regularization = RegularizationKind::L2;
             tuned.regularization_strength = point.at("regularization_strength");
             tuned.fit_intercept = true;
-            return lymph::model::logistic_regression(tuned);
+            return lymph::models::logistic_regression(tuned);
           },
           frame,
           data_options,
           train_options,
           assess_options,
           MetricKind::F1,
-          lymph::TuneObjectivePolicy::Auto,
-          {.fit_top = 1});
+          lymph::TuneObjectivePolicy::Maximize,
+          lymph::selection::FitOptions{.fit_top = 1});
 
   std::cout << "== search_result ==\n";
   std::cout << "best=" << search_result.report.best_name << "\n";
@@ -168,7 +169,7 @@ int main() {
 
   const Series predicted = logistic.learn(frame, data_options, train_options).infer(frame, data_options);
   std::cout << "== confusion_table ==\n";
-  const lymph::ConfusionTable confusion = lymph::confusion_table(
+  const lymph::ConfusionTable confusion = lymph::metrics::classification::confusion_table(
       frame.features("target").as_series(),
       predicted,
       ConfusionOptions{
@@ -179,7 +180,7 @@ int main() {
   std::cout << "normalize=" << static_cast<int>(confusion.normalize) << "\n";
 
   std::cout << "== classification_summary ==\n";
-  const lymph::ClassReport summary = lymph::classification_summary(
+  const lymph::ClassReport summary = lymph::metrics::classification::summary(
       frame.features("target").as_series(),
       predicted,
       ClassReportOptions{
@@ -193,7 +194,8 @@ int main() {
   std::cout << "macro_average=" << summary.macro_average << "\n";
 
   const Series scores = logistic.learn(frame, data_options, train_options).infer_scores(frame, data_options);
-  const lymph::metrics::Threshold threshold = lymph::metrics::threshold(scores, frame.features("target").as_series());
+  const lymph::metrics::classification::Threshold threshold =
+      lymph::metrics::classification::threshold(scores, frame.features("target").as_series());
   std::cout << "== threshold ==\n";
   std::cout << "best_f1=" << threshold.best(MetricKind::F1) << "\n";
   std::cout << threshold.curve().thresholds.slice(0, 0, 3) << "\n";

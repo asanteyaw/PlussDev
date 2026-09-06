@@ -12,7 +12,7 @@ Series::sort(std::int64_t dim) const -> Series
 Series::sort(std::int64_t dim, bool descending) const -> Series
 Series::sort(std::int64_t dim, bool descending, bool stable) const -> Series
 Series::sort_pair(std::int64_t dim = -1, bool descending = false,
-                  bool stable = false) const -> pluss::StackArray<Series>
+                  bool stable = false) const -> std::pair<Series, Series>
 ```
 
 ## What It Does
@@ -23,10 +23,11 @@ By default it orders the final axis ascending. `dim` chooses another axis,
 `descending` changes direction, and `stable` controls the relative order of
 equal values.
 
-`sort_pair()` is the provenance-preserving form. It returns two aligned series:
-element `0` is the sorted values, and element `1` is the local `int64` index
-that each value had before sorting. The pair makes it possible to reorder other
-aligned series consistently without re-running comparison logic.
+`sort_pair()` is the provenance-preserving form. It returns a
+`std::pair<Series, Series>`: `.first` is the sorted values, and `.second` is
+the local `int64` index that each value had before sorting. The pair makes it
+possible to reorder other aligned series consistently without re-running
+comparison logic.
 
 ## Parameters
 
@@ -46,9 +47,13 @@ returns value and index series with the same shape as the source.
 
 ## Gradient
 
-Sorting changes value positions discontinuously when values cross. Treat it as
-a data-ordering operation, not a smooth differentiable transform for an
-objective.
+`sort()` moves values without altering them, so its **value channel is
+differentiable**: in backpropagation each output's gradient is routed back to
+the position that value held in the input. What is *not* differentiable is the
+ordering itself — which input position maps to which rank is a discrete
+function of the data, held fixed during the backward pass, so no gradient flows
+through a rank change when two values cross. The `int64` index series from
+`sort_pair()` never carries gradient.
 
 ## Examples
 
@@ -107,8 +112,8 @@ Example 4. `sort_pair()` keeps values and their original positions together.
 ```cpp
 auto tied = pluss::make_series({2LL, 1LL, 2LL, 1LL});
 auto ordered = tied.sort_pair(0, false, true);
-std::cout << "values=" << ordered[0] << "\n";
-std::cout << "indices=" << ordered[1];
+std::cout << "values=" << ordered.first << "\n";
+std::cout << "indices=" << ordered.second;
 ```
 
 ### Output
@@ -137,6 +142,30 @@ catch (const std::exception& error) { std::cout << error.what(); }
 sort: dim out of range
 ```
 
+Example 6. The value channel is differentiable — a weighted sum of the sorted
+values sends each weight back to the position that supplied that rank.
+
+```cpp
+auto x = pluss::make_series({3.0, 1.0, 4.0, 1.0, 5.0});
+x.tracks_slope_(true);
+
+auto weights = pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0});
+(x.sort() * weights).sum().reverse();
+
+pluss::series::print(std::cout, x.sensitivity());
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[30.0000, 10.0000, 40.0000, 20.0000, 50.0000]
+```
+
+The ascending order is `[1, 1, 3, 4, 5]`, drawn from input positions
+`[1, 3, 0, 2, 4]`, so weight `30` (the third) lands on position `0`, weight
+`40` on position `2`, and so on.
+
 ## Gotchas And Failure Modes
 
 - `sort()` returns values; [`argsort()`](argsort.md) returns the indices needed
@@ -145,6 +174,8 @@ sort: dim out of range
 - Sorting non-final axes can produce a non-contiguous result. Call
   [`contiguous()`](contiguous.md) only when a downstream operation requires
   contiguous layout.
+- The value channel is differentiable; the ordering and the `sort_pair()`
+  indices are not.
 - Complex-valued inputs are rejected.
 
 ## Summary
@@ -164,8 +195,8 @@ the source positions must travel with that sequence.
     <span class="label">Previous</span>
     <span class="title">softplus</span>
   </a>
-  <a class="next-link" href="sqrt.html">
+  <a class="next-link" href="split.html">
     <span class="label">Next</span>
-    <span class="title">sqrt</span>
+    <span class="title">split</span>
   </a>
 </div>

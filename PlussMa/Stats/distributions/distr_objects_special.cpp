@@ -150,7 +150,7 @@ Config mixture_cfg_like(const Series& like) {
   return Config{}
       .with_dtype(like.scalar_type())
       .with_platform(like.platform())
-      .with_pinned(like.is_pinned().item<bool>());
+      .with_pinned(like.is_pinned());
 }
 
 void require_mixture_shape_compatibility(const Series& weights, const Series& means, const Series& stddevs) {

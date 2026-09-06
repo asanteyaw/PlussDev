@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -339,6 +340,38 @@ bool run_workflow_checks(std::ostream* err) {
   const Series mapped = embedder.learn_map(raw.drop({"y"}));
   if (!embedder.trained() || mapped.numel() != 10) {
     if (err) *err << "Workflow::learn_map should support transform-style models after Policy cleanup\n";
+    return false;
+  }
+
+  // 5b) learn_map must resolve stages appended through the branch/route DSL
+  // before mapping, exactly like learn_ does -- not silently skip them
+  // because they were never folded into the underlying flow yet. map(...)
+  // on a workflow with unresolved pending stages must fail loudly instead
+  // of silently passing raw features through.
+  workflow::Workflow pending = workflow::make(models::Model(linear_spec()), cleanup);
+  pending.on({"x"}).add(prep::stage::standard_scaler());
+  bool threw_map_pending = false;
+  try {
+    (void)pending.map(raw.drop({"y"}));
+  } catch (const pluss::Error&) {
+    threw_map_pending = true;
+  }
+  if (!threw_map_pending) {
+    if (err) *err << "Workflow::map should reject a workflow with unresolved pending stages\n";
+    return false;
+  }
+  const Series learn_mapped = pending.learn_map(raw.drop({"y"}));
+  if (pending.stage_count() != 1) {
+    if (err) *err << "Workflow::learn_map should resolve pending branch/route stages, stage_count stayed "
+                  << pending.stage_count() << "\n";
+    return false;
+  }
+  const auto learn_mapped_values = as_f64(learn_mapped);
+  const double mapped_mean =
+      std::accumulate(learn_mapped_values.begin(), learn_mapped_values.end(), 0.0) / learn_mapped_values.size();
+  if (std::abs(mapped_mean) > 1e-6) {
+    if (err) *err << "Workflow::learn_map should standardize through the resolved scaler stage (mean ~0), got "
+                  << mapped_mean << "\n";
     return false;
   }
 

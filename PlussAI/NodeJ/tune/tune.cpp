@@ -28,29 +28,8 @@ namespace {
 
 void populate_tune_ledger(TuneReport& report);
 
-[[nodiscard]] bool metric_prefers_max(MetricKind metric) {
-  switch (metric) {
-    case MetricKind::Accuracy:
-    case MetricKind::BalancedAccuracy:
-    case MetricKind::Precision:
-    case MetricKind::Recall:
-    case MetricKind::Sensitivity:
-    case MetricKind::F1:
-    case MetricKind::RocAuc:
-    case MetricKind::Specificity:
-    case MetricKind::GeometricMean:
-    case MetricKind::BalanceQuality:
-    case MetricKind::R2:
-      return true;
-    case MetricKind::LogLoss:
-    case MetricKind::Mse:
-    case MetricKind::Rmse:
-    case MetricKind::Mae:
-    case MetricKind::QuantileLoss:
-      return false;
-  }
-  return true;
-}
+// metric_prefers_max lives in nodej/options.h now (shared with
+// sparse_runtime.cpp and inspection.cpp instead of a fourth private copy).
 
 [[nodiscard]] bool maximize_objective(TuneObjectivePolicy policy, MetricKind metric) {
   if (policy == TuneObjectivePolicy::Maximize) return true;

@@ -129,10 +129,50 @@ std::cout << out;
 ptype: Series
 ```
 
+Example 5. Mismatched payload kinds compare by string form rather than throwing — a
+`Note`-backed thread tested against a numeric candidate set simply finds no matches
+(here the candidates are the *counts* from a [`freq()`](freq.md) result, a common
+mistake — the distinct values live on the label axis, reachable via
+[`label().values()`](label.md)).
+
+```cpp
+auto ids = Thread(pluss::make_note({"H-104", "H-887", "H-104", "H-231"}));
+auto counts = ids.freq();               // values: 2, 1, 1 ; case labels: H-104, H-887, H-231
+
+auto wrong = ids.has(counts);           // tests "H-104" against 2, 1, 1 -> all false
+std::cout << wrong;
+
+auto right = ids.has(counts.label().values());  // tests against H-104, H-887, H-231
+std::cout << right;
+```
+
+### Output
+
+```text
+0  false
+1  false
+2  false
+3  false
+ptype: Series
+```
+
+```text
+0  true
+1  true
+2  true
+3  true
+ptype: Series
+```
+
 ## Notes
 
 - The scalar overloads are a pure alias for [`eq()`](eq.md) — prefer whichever name reads
   better at the call site.
+- The numeric fast path in `has(const Thread&)` is only taken when **both** `*this` and
+  the candidate set are numeric `Series`. Any other kind combination compares by string
+  form (matching [`freq()`](freq.md)/[`distinct()`](distinct.md)/[`duplicated()`](duplicated.md)),
+  so `note_thread.has(numeric_thread)` yields all-`false` instead of raising
+  `"Thread::eq(double): operation requires a Series-backed Thread"`.
 - The `Thread`-argument overload is the genuinely distinct behavior: a per-row `isin` test
   against a candidate set, not a whole-thread containment check.
 - Invalid rows in the `values` candidate set are skipped and never produce a match; an

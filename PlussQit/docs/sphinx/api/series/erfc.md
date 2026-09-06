@@ -266,8 +266,8 @@ accurate:
     <span class="label">Previous</span>
     <span class="title">erf</span>
   </a>
-  <a class="next-link" href="exp.html">
+  <a class="next-link" href="erfcinv.html">
     <span class="label">Next</span>
-    <span class="title">exp</span>
+    <span class="title">erfcinv</span>
   </a>
 </div>

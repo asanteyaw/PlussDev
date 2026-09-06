@@ -687,6 +687,19 @@ lymph_expansion_surface_test/fast:
 .PHONY : lymph_expansion_surface_test/fast
 
 #=============================================================================
+# Target rules for targets named lymph_feature_select_test
+
+# Build rule for target.
+lymph_feature_select_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_feature_select_test
+.PHONY : lymph_feature_select_test
+
+# fast build rule for target.
+lymph_feature_select_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/build
+.PHONY : lymph_feature_select_test/fast
+
+#=============================================================================
 # Target rules for targets named lymph_metrics_test
 
 # Build rule for target.
@@ -4249,6 +4262,513 @@ plussai_lymph_selection_comparereport_example_3/fast:
 .PHONY : plussai_lymph_selection_comparereport_example_3/fast
 
 #=============================================================================
+# Target rules for targets named plussai_lymph_selection_scorer_example_1
+
+# Build rule for target.
+plussai_lymph_selection_scorer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_selection_scorer_example_1
+.PHONY : plussai_lymph_selection_scorer_example_1
+
+# fast build rule for target.
+plussai_lymph_selection_scorer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_selection_scorer_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_selection_scorer_example_1.dir/build
+.PHONY : plussai_lymph_selection_scorer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_selection_scorer_example_2
+
+# Build rule for target.
+plussai_lymph_selection_scorer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_selection_scorer_example_2
+.PHONY : plussai_lymph_selection_scorer_example_2
+
+# fast build rule for target.
+plussai_lymph_selection_scorer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_selection_scorer_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_selection_scorer_example_2.dir/build
+.PHONY : plussai_lymph_selection_scorer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_on_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_on_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_on_example_1
+.PHONY : plussai_lymph_workflow_workflow_on_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_on_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_on_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_on_example_1.dir/build
+.PHONY : plussai_lymph_workflow_workflow_on_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_on_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_on_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_on_example_2
+.PHONY : plussai_lymph_workflow_workflow_on_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_on_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_on_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_on_example_2.dir/build
+.PHONY : plussai_lymph_workflow_workflow_on_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_on_example_3
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_on_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_on_example_3
+.PHONY : plussai_lymph_workflow_workflow_on_example_3
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_on_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_on_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_on_example_3.dir/build
+.PHONY : plussai_lymph_workflow_workflow_on_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_payload_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_payload_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_payload_example_1
+.PHONY : plussai_lymph_workflow_payload_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_payload_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_payload_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_payload_example_1.dir/build
+.PHONY : plussai_lymph_workflow_payload_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_payload_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_payload_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_payload_example_2
+.PHONY : plussai_lymph_workflow_payload_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_payload_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_payload_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_payload_example_2.dir/build
+.PHONY : plussai_lymph_workflow_payload_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_policy_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_policy_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_policy_example_1
+.PHONY : plussai_lymph_workflow_policy_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_policy_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_policy_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_policy_example_1.dir/build
+.PHONY : plussai_lymph_workflow_policy_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_policy_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_policy_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_policy_example_2
+.PHONY : plussai_lymph_workflow_policy_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_policy_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_policy_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_policy_example_2.dir/build
+.PHONY : plussai_lymph_workflow_policy_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_timeoptions_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_timeoptions_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_timeoptions_example_1
+.PHONY : plussai_lymph_workflow_timeoptions_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_timeoptions_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_timeoptions_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_timeoptions_example_1.dir/build
+.PHONY : plussai_lymph_workflow_timeoptions_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_learn_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_learn_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_learn_example_1
+.PHONY : plussai_lymph_workflow_workflow_learn_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_learn_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_learn_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_learn_example_1.dir/build
+.PHONY : plussai_lymph_workflow_workflow_learn_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_learn_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_learn_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_learn_example_2
+.PHONY : plussai_lymph_workflow_workflow_learn_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_learn_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_learn_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_learn_example_2.dir/build
+.PHONY : plussai_lymph_workflow_workflow_learn_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_learn_example_3
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_learn_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_learn_example_3
+.PHONY : plussai_lymph_workflow_workflow_learn_example_3
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_learn_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_learn_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_learn_example_3.dir/build
+.PHONY : plussai_lymph_workflow_workflow_learn_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_map_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_map_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_map_example_1
+.PHONY : plussai_lymph_workflow_workflow_map_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_map_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_map_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_map_example_1.dir/build
+.PHONY : plussai_lymph_workflow_workflow_map_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_map_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_map_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_map_example_2
+.PHONY : plussai_lymph_workflow_workflow_map_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_map_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_map_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_map_example_2.dir/build
+.PHONY : plussai_lymph_workflow_workflow_map_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_map_example_3
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_map_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_map_example_3
+.PHONY : plussai_lymph_workflow_workflow_map_example_3
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_map_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_map_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_map_example_3.dir/build
+.PHONY : plussai_lymph_workflow_workflow_map_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_infer_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_infer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_infer_example_1
+.PHONY : plussai_lymph_workflow_workflow_infer_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_infer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_infer_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_infer_example_1.dir/build
+.PHONY : plussai_lymph_workflow_workflow_infer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_infer_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_infer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_infer_example_2
+.PHONY : plussai_lymph_workflow_workflow_infer_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_infer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_infer_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_infer_example_2.dir/build
+.PHONY : plussai_lymph_workflow_workflow_infer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_infer_example_3
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_infer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_infer_example_3
+.PHONY : plussai_lymph_workflow_workflow_infer_example_3
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_infer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_infer_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_infer_example_3.dir/build
+.PHONY : plussai_lymph_workflow_workflow_infer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_assess_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_assess_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_assess_example_1
+.PHONY : plussai_lymph_workflow_workflow_assess_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_assess_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_assess_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_assess_example_1.dir/build
+.PHONY : plussai_lymph_workflow_workflow_assess_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_assess_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_assess_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_assess_example_2
+.PHONY : plussai_lymph_workflow_workflow_assess_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_assess_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_assess_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_assess_example_2.dir/build
+.PHONY : plussai_lymph_workflow_workflow_assess_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_assess_example_3
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_assess_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_assess_example_3
+.PHONY : plussai_lymph_workflow_workflow_assess_example_3
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_assess_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_assess_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_assess_example_3.dir/build
+.PHONY : plussai_lymph_workflow_workflow_assess_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_save_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_save_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_save_example_1
+.PHONY : plussai_lymph_workflow_workflow_save_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_save_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_save_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_save_example_1.dir/build
+.PHONY : plussai_lymph_workflow_workflow_save_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_save_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_save_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_save_example_2
+.PHONY : plussai_lymph_workflow_workflow_save_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_save_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_save_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_save_example_2.dir/build
+.PHONY : plussai_lymph_workflow_workflow_save_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_save_example_3
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_save_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_save_example_3
+.PHONY : plussai_lymph_workflow_workflow_save_example_3
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_save_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_save_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_save_example_3.dir/build
+.PHONY : plussai_lymph_workflow_workflow_save_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_with_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_with_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_with_example_1
+.PHONY : plussai_lymph_workflow_workflow_with_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_with_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_with_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_with_example_1.dir/build
+.PHONY : plussai_lymph_workflow_workflow_with_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_with_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_with_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_with_example_2
+.PHONY : plussai_lymph_workflow_workflow_with_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_with_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_with_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_with_example_2.dir/build
+.PHONY : plussai_lymph_workflow_workflow_with_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_workflow_with_example_3
+
+# Build rule for target.
+plussai_lymph_workflow_workflow_with_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_workflow_with_example_3
+.PHONY : plussai_lymph_workflow_workflow_with_example_3
+
+# fast build rule for target.
+plussai_lymph_workflow_workflow_with_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_with_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_workflow_with_example_3.dir/build
+.PHONY : plussai_lymph_workflow_workflow_with_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_make_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_make_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_make_example_1
+.PHONY : plussai_lymph_workflow_make_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_make_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_1.dir/build
+.PHONY : plussai_lymph_workflow_make_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_make_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_make_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_make_example_2
+.PHONY : plussai_lymph_workflow_make_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_make_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_2.dir/build
+.PHONY : plussai_lymph_workflow_make_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_make_example_3
+
+# Build rule for target.
+plussai_lymph_workflow_make_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_make_example_3
+.PHONY : plussai_lymph_workflow_make_example_3
+
+# fast build rule for target.
+plussai_lymph_workflow_make_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_3.dir/build
+.PHONY : plussai_lymph_workflow_make_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_make_example_4
+
+# Build rule for target.
+plussai_lymph_workflow_make_example_4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_make_example_4
+.PHONY : plussai_lymph_workflow_make_example_4
+
+# fast build rule for target.
+plussai_lymph_workflow_make_example_4/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_4.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_4.dir/build
+.PHONY : plussai_lymph_workflow_make_example_4/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_make_example_5
+
+# Build rule for target.
+plussai_lymph_workflow_make_example_5: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_make_example_5
+.PHONY : plussai_lymph_workflow_make_example_5
+
+# fast build rule for target.
+plussai_lymph_workflow_make_example_5/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_5.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_5.dir/build
+.PHONY : plussai_lymph_workflow_make_example_5/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_make_example_6
+
+# Build rule for target.
+plussai_lymph_workflow_make_example_6: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_make_example_6
+.PHONY : plussai_lymph_workflow_make_example_6
+
+# fast build rule for target.
+plussai_lymph_workflow_make_example_6/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_6.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_6.dir/build
+.PHONY : plussai_lymph_workflow_make_example_6/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_make_example_7
+
+# Build rule for target.
+plussai_lymph_workflow_make_example_7: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_make_example_7
+.PHONY : plussai_lymph_workflow_make_example_7
+
+# fast build rule for target.
+plussai_lymph_workflow_make_example_7/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_7.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_make_example_7.dir/build
+.PHONY : plussai_lymph_workflow_make_example_7/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_vs_sklearn_columntransformer_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_vs_sklearn_columntransformer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_vs_sklearn_columntransformer_example_1
+.PHONY : plussai_lymph_workflow_vs_sklearn_columntransformer_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_vs_sklearn_columntransformer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_vs_sklearn_columntransformer_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_vs_sklearn_columntransformer_example_1.dir/build
+.PHONY : plussai_lymph_workflow_vs_sklearn_columntransformer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1
+.PHONY : plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1.dir/build
+.PHONY : plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1
+
+# Build rule for target.
+plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1
+.PHONY : plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1
+
+# fast build rule for target.
+plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1.dir/build
+.PHONY : plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_workflow_vs_sklearn_columntransformer_example_2
+
+# Build rule for target.
+plussai_lymph_workflow_vs_sklearn_columntransformer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_vs_sklearn_columntransformer_example_2
+.PHONY : plussai_lymph_workflow_vs_sklearn_columntransformer_example_2
+
+# fast build rule for target.
+plussai_lymph_workflow_vs_sklearn_columntransformer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_vs_sklearn_columntransformer_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_vs_sklearn_columntransformer_example_2.dir/build
+.PHONY : plussai_lymph_workflow_vs_sklearn_columntransformer_example_2/fast
+
+#=============================================================================
 # Target rules for targets named plussai_lymph_selection_gridaxis_example_1
 
 # Build rule for target.
@@ -4366,6 +4886,32 @@ plussai_lymph_metrics_metric_report_example_3/fast:
 .PHONY : plussai_lymph_metrics_metric_report_example_3/fast
 
 #=============================================================================
+# Target rules for targets named plussai_lymph_metrics_metric_report_example_4
+
+# Build rule for target.
+plussai_lymph_metrics_metric_report_example_4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_metric_report_example_4
+.PHONY : plussai_lymph_metrics_metric_report_example_4
+
+# fast build rule for target.
+plussai_lymph_metrics_metric_report_example_4/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_metric_report_example_4.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_metric_report_example_4.dir/build
+.PHONY : plussai_lymph_metrics_metric_report_example_4/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_score_report_example_1
+
+# Build rule for target.
+plussai_lymph_metrics_score_report_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_score_report_example_1
+.PHONY : plussai_lymph_metrics_score_report_example_1
+
+# fast build rule for target.
+plussai_lymph_metrics_score_report_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_score_report_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_score_report_example_1.dir/build
+.PHONY : plussai_lymph_metrics_score_report_example_1/fast
+
+#=============================================================================
 # Target rules for targets named plussai_lymph_metrics_crossval_report_example_1
 
 # Build rule for target.
@@ -4442,6 +4988,279 @@ plussai_lymph_metrics_series_compare_example_3: cmake_check_build_system
 plussai_lymph_metrics_series_compare_example_3/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_series_compare_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_series_compare_example_3.dir/build
 .PHONY : plussai_lymph_metrics_series_compare_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_classification_example_1
+
+# Build rule for target.
+plussai_lymph_metrics_classification_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_classification_example_1
+.PHONY : plussai_lymph_metrics_classification_example_1
+
+# fast build rule for target.
+plussai_lymph_metrics_classification_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_example_1.dir/build
+.PHONY : plussai_lymph_metrics_classification_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_classification_example_2
+
+# Build rule for target.
+plussai_lymph_metrics_classification_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_classification_example_2
+.PHONY : plussai_lymph_metrics_classification_example_2
+
+# fast build rule for target.
+plussai_lymph_metrics_classification_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_example_2.dir/build
+.PHONY : plussai_lymph_metrics_classification_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_classification_example_3
+
+# Build rule for target.
+plussai_lymph_metrics_classification_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_classification_example_3
+.PHONY : plussai_lymph_metrics_classification_example_3
+
+# fast build rule for target.
+plussai_lymph_metrics_classification_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_example_3.dir/build
+.PHONY : plussai_lymph_metrics_classification_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_regression_example_1
+
+# Build rule for target.
+plussai_lymph_metrics_regression_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_regression_example_1
+.PHONY : plussai_lymph_metrics_regression_example_1
+
+# fast build rule for target.
+plussai_lymph_metrics_regression_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_regression_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_regression_example_1.dir/build
+.PHONY : plussai_lymph_metrics_regression_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_regression_example_2
+
+# Build rule for target.
+plussai_lymph_metrics_regression_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_regression_example_2
+.PHONY : plussai_lymph_metrics_regression_example_2
+
+# fast build rule for target.
+plussai_lymph_metrics_regression_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_regression_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_regression_example_2.dir/build
+.PHONY : plussai_lymph_metrics_regression_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_regression_example_3
+
+# Build rule for target.
+plussai_lymph_metrics_regression_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_regression_example_3
+.PHONY : plussai_lymph_metrics_regression_example_3
+
+# fast build rule for target.
+plussai_lymph_metrics_regression_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_regression_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_regression_example_3.dir/build
+.PHONY : plussai_lymph_metrics_regression_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_class_report_example_1
+
+# Build rule for target.
+plussai_lymph_metrics_class_report_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_class_report_example_1
+.PHONY : plussai_lymph_metrics_class_report_example_1
+
+# fast build rule for target.
+plussai_lymph_metrics_class_report_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_class_report_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_class_report_example_1.dir/build
+.PHONY : plussai_lymph_metrics_class_report_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_class_report_example_2
+
+# Build rule for target.
+plussai_lymph_metrics_class_report_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_class_report_example_2
+.PHONY : plussai_lymph_metrics_class_report_example_2
+
+# fast build rule for target.
+plussai_lymph_metrics_class_report_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_class_report_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_class_report_example_2.dir/build
+.PHONY : plussai_lymph_metrics_class_report_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_class_report_example_3
+
+# Build rule for target.
+plussai_lymph_metrics_class_report_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_class_report_example_3
+.PHONY : plussai_lymph_metrics_class_report_example_3
+
+# fast build rule for target.
+plussai_lymph_metrics_class_report_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_class_report_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_class_report_example_3.dir/build
+.PHONY : plussai_lymph_metrics_class_report_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_confusion_table_example_1
+
+# Build rule for target.
+plussai_lymph_metrics_confusion_table_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_confusion_table_example_1
+.PHONY : plussai_lymph_metrics_confusion_table_example_1
+
+# fast build rule for target.
+plussai_lymph_metrics_confusion_table_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_confusion_table_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_confusion_table_example_1.dir/build
+.PHONY : plussai_lymph_metrics_confusion_table_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_confusion_table_example_2
+
+# Build rule for target.
+plussai_lymph_metrics_confusion_table_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_confusion_table_example_2
+.PHONY : plussai_lymph_metrics_confusion_table_example_2
+
+# fast build rule for target.
+plussai_lymph_metrics_confusion_table_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_confusion_table_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_confusion_table_example_2.dir/build
+.PHONY : plussai_lymph_metrics_confusion_table_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_confusion_table_example_3
+
+# Build rule for target.
+plussai_lymph_metrics_confusion_table_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_confusion_table_example_3
+.PHONY : plussai_lymph_metrics_confusion_table_example_3
+
+# fast build rule for target.
+plussai_lymph_metrics_confusion_table_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_confusion_table_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_confusion_table_example_3.dir/build
+.PHONY : plussai_lymph_metrics_confusion_table_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_classification_summary_example_1
+
+# Build rule for target.
+plussai_lymph_metrics_classification_summary_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_classification_summary_example_1
+.PHONY : plussai_lymph_metrics_classification_summary_example_1
+
+# fast build rule for target.
+plussai_lymph_metrics_classification_summary_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_summary_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_summary_example_1.dir/build
+.PHONY : plussai_lymph_metrics_classification_summary_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_classification_summary_example_2
+
+# Build rule for target.
+plussai_lymph_metrics_classification_summary_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_classification_summary_example_2
+.PHONY : plussai_lymph_metrics_classification_summary_example_2
+
+# fast build rule for target.
+plussai_lymph_metrics_classification_summary_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_summary_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_summary_example_2.dir/build
+.PHONY : plussai_lymph_metrics_classification_summary_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_classification_summary_example_3
+
+# Build rule for target.
+plussai_lymph_metrics_classification_summary_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_classification_summary_example_3
+.PHONY : plussai_lymph_metrics_classification_summary_example_3
+
+# fast build rule for target.
+plussai_lymph_metrics_classification_summary_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_summary_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_classification_summary_example_3.dir/build
+.PHONY : plussai_lymph_metrics_classification_summary_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_threshold_example_1
+
+# Build rule for target.
+plussai_lymph_metrics_threshold_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_threshold_example_1
+.PHONY : plussai_lymph_metrics_threshold_example_1
+
+# fast build rule for target.
+plussai_lymph_metrics_threshold_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_threshold_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_threshold_example_1.dir/build
+.PHONY : plussai_lymph_metrics_threshold_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_threshold_example_2
+
+# Build rule for target.
+plussai_lymph_metrics_threshold_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_threshold_example_2
+.PHONY : plussai_lymph_metrics_threshold_example_2
+
+# fast build rule for target.
+plussai_lymph_metrics_threshold_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_threshold_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_threshold_example_2.dir/build
+.PHONY : plussai_lymph_metrics_threshold_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_threshold_example_3
+
+# Build rule for target.
+plussai_lymph_metrics_threshold_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_threshold_example_3
+.PHONY : plussai_lymph_metrics_threshold_example_3
+
+# fast build rule for target.
+plussai_lymph_metrics_threshold_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_threshold_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_threshold_example_3.dir/build
+.PHONY : plussai_lymph_metrics_threshold_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_calibrate_example_1
+
+# Build rule for target.
+plussai_lymph_metrics_calibrate_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_calibrate_example_1
+.PHONY : plussai_lymph_metrics_calibrate_example_1
+
+# fast build rule for target.
+plussai_lymph_metrics_calibrate_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_calibrate_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_calibrate_example_1.dir/build
+.PHONY : plussai_lymph_metrics_calibrate_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_calibrate_example_2
+
+# Build rule for target.
+plussai_lymph_metrics_calibrate_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_calibrate_example_2
+.PHONY : plussai_lymph_metrics_calibrate_example_2
+
+# fast build rule for target.
+plussai_lymph_metrics_calibrate_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_calibrate_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_calibrate_example_2.dir/build
+.PHONY : plussai_lymph_metrics_calibrate_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_metrics_calibrate_example_3
+
+# Build rule for target.
+plussai_lymph_metrics_calibrate_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_metrics_calibrate_example_3
+.PHONY : plussai_lymph_metrics_calibrate_example_3
+
+# fast build rule for target.
+plussai_lymph_metrics_calibrate_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_calibrate_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_metrics_calibrate_example_3.dir/build
+.PHONY : plussai_lymph_metrics_calibrate_example_3/fast
 
 #=============================================================================
 # Target rules for targets named plussai_lymph_models_model_feature_transformer_example_1
@@ -5094,19 +5913,6 @@ plussai_lymph_models_builder_methods_docverify_demo/fast:
 .PHONY : plussai_lymph_models_builder_methods_docverify_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussai_lymph_policy_docverify_demo
-
-# Build rule for target.
-plussai_lymph_policy_docverify_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_policy_docverify_demo
-.PHONY : plussai_lymph_policy_docverify_demo
-
-# fast build rule for target.
-plussai_lymph_policy_docverify_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_policy_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_policy_docverify_demo.dir/build
-.PHONY : plussai_lymph_policy_docverify_demo/fast
-
-#=============================================================================
 # Target rules for targets named plussai_lymph_tune_docverify_demo
 
 # Build rule for target.
@@ -5118,19 +5924,6 @@ plussai_lymph_tune_docverify_demo: cmake_check_build_system
 plussai_lymph_tune_docverify_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_tune_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_tune_docverify_demo.dir/build
 .PHONY : plussai_lymph_tune_docverify_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_lymph_workflow_payload_docverify_demo
-
-# Build rule for target.
-plussai_lymph_workflow_payload_docverify_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_workflow_payload_docverify_demo
-.PHONY : plussai_lymph_workflow_payload_docverify_demo
-
-# fast build rule for target.
-plussai_lymph_workflow_payload_docverify_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_payload_docverify_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_workflow_payload_docverify_demo.dir/build
-.PHONY : plussai_lymph_workflow_payload_docverify_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussai_lymph_prep_docverify_demo
@@ -7239,6 +8032,97 @@ plussqit_codem_series_unary_math_reference_demo/fast:
 .PHONY : plussqit_codem_series_unary_math_reference_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussqit_codem_series_special_functions_ii_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_special_functions_ii_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_special_functions_ii_reference_demo
+.PHONY : plussqit_codem_series_special_functions_ii_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_special_functions_ii_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_functions_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_functions_ii_reference_demo.dir/build
+.PHONY : plussqit_codem_series_special_functions_ii_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_complex_components_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_complex_components_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_complex_components_reference_demo
+.PHONY : plussqit_codem_series_complex_components_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_complex_components_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_complex_components_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_complex_components_reference_demo.dir/build
+.PHONY : plussqit_codem_series_complex_components_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_elementwise_ii_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_elementwise_ii_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_elementwise_ii_reference_demo
+.PHONY : plussqit_codem_series_elementwise_ii_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_elementwise_ii_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_elementwise_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_elementwise_ii_reference_demo.dir/build
+.PHONY : plussqit_codem_series_elementwise_ii_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_scatter_index_ii_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_scatter_index_ii_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_scatter_index_ii_reference_demo
+.PHONY : plussqit_codem_series_scatter_index_ii_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_scatter_index_ii_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_scatter_index_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_scatter_index_ii_reference_demo.dir/build
+.PHONY : plussqit_codem_series_scatter_index_ii_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_introspection_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_introspection_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_introspection_reference_demo
+.PHONY : plussqit_codem_series_introspection_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_introspection_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_introspection_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_introspection_reference_demo.dir/build
+.PHONY : plussqit_codem_series_introspection_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_random_sampling_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_random_sampling_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_random_sampling_reference_demo
+.PHONY : plussqit_codem_series_random_sampling_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_random_sampling_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_random_sampling_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_random_sampling_reference_demo.dir/build
+.PHONY : plussqit_codem_series_random_sampling_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_no_grad_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_no_grad_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_no_grad_reference_demo
+.PHONY : plussqit_codem_series_no_grad_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_no_grad_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_no_grad_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_no_grad_reference_demo.dir/build
+.PHONY : plussqit_codem_series_no_grad_reference_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussqit_codem_series_logic_reference_demo
 
 # Build rule for target.
@@ -7744,6 +8628,45 @@ plussqit_codeh_timeline_docverify_demo: cmake_check_build_system
 plussqit_codeh_timeline_docverify_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_docverify_demo.dir/build
 .PHONY : plussqit_codeh_timeline_docverify_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codeh_timeline_foundations_reference_demo
+
+# Build rule for target.
+plussqit_codeh_timeline_foundations_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeline_foundations_reference_demo
+.PHONY : plussqit_codeh_timeline_foundations_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_foundations_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_foundations_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_foundations_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_foundations_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codeh_timeline_calendar_fields_reference_demo
+
+# Build rule for target.
+plussqit_codeh_timeline_calendar_fields_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeline_calendar_fields_reference_demo
+.PHONY : plussqit_codeh_timeline_calendar_fields_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_calendar_fields_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_calendar_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_calendar_fields_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_calendar_fields_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codeh_timeline_calendar_predicates_reference_demo
+
+# Build rule for target.
+plussqit_codeh_timeline_calendar_predicates_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeline_calendar_predicates_reference_demo
+.PHONY : plussqit_codeh_timeline_calendar_predicates_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_calendar_predicates_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_calendar_predicates_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_calendar_predicates_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_calendar_predicates_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codeh_duration_docverify_demo
@@ -14531,6 +15454,7 @@ help:
 	@echo "... lymph_column_router_test"
 	@echo "... lymph_detect_test"
 	@echo "... lymph_expansion_surface_test"
+	@echo "... lymph_feature_select_test"
 	@echo "... lymph_metrics_test"
 	@echo "... lymph_model_append_test"
 	@echo "... lymph_namespace_surface_test"
@@ -14617,6 +15541,21 @@ help:
 	@echo "... plussai_lymph_feature_transformer_workflow_demo"
 	@echo "... plussai_lymph_general_ml_demo"
 	@echo "... plussai_lymph_housing_ch2_end_to_end_notebook"
+	@echo "... plussai_lymph_metrics_calibrate_example_1"
+	@echo "... plussai_lymph_metrics_calibrate_example_2"
+	@echo "... plussai_lymph_metrics_calibrate_example_3"
+	@echo "... plussai_lymph_metrics_class_report_example_1"
+	@echo "... plussai_lymph_metrics_class_report_example_2"
+	@echo "... plussai_lymph_metrics_class_report_example_3"
+	@echo "... plussai_lymph_metrics_classification_example_1"
+	@echo "... plussai_lymph_metrics_classification_example_2"
+	@echo "... plussai_lymph_metrics_classification_example_3"
+	@echo "... plussai_lymph_metrics_classification_summary_example_1"
+	@echo "... plussai_lymph_metrics_classification_summary_example_2"
+	@echo "... plussai_lymph_metrics_classification_summary_example_3"
+	@echo "... plussai_lymph_metrics_confusion_table_example_1"
+	@echo "... plussai_lymph_metrics_confusion_table_example_2"
+	@echo "... plussai_lymph_metrics_confusion_table_example_3"
 	@echo "... plussai_lymph_metrics_crossval_report_example_1"
 	@echo "... plussai_lymph_metrics_crossval_report_example_2"
 	@echo "... plussai_lymph_metrics_crossval_report_example_3"
@@ -14624,9 +15563,17 @@ help:
 	@echo "... plussai_lymph_metrics_metric_report_example_1"
 	@echo "... plussai_lymph_metrics_metric_report_example_2"
 	@echo "... plussai_lymph_metrics_metric_report_example_3"
+	@echo "... plussai_lymph_metrics_metric_report_example_4"
+	@echo "... plussai_lymph_metrics_regression_example_1"
+	@echo "... plussai_lymph_metrics_regression_example_2"
+	@echo "... plussai_lymph_metrics_regression_example_3"
+	@echo "... plussai_lymph_metrics_score_report_example_1"
 	@echo "... plussai_lymph_metrics_series_compare_example_1"
 	@echo "... plussai_lymph_metrics_series_compare_example_2"
 	@echo "... plussai_lymph_metrics_series_compare_example_3"
+	@echo "... plussai_lymph_metrics_threshold_example_1"
+	@echo "... plussai_lymph_metrics_threshold_example_2"
+	@echo "... plussai_lymph_metrics_threshold_example_3"
 	@echo "... plussai_lymph_model_builder_docverify_demo"
 	@echo "... plussai_lymph_model_prep_io_docverify_demo"
 	@echo "... plussai_lymph_models_builder_benchmark_docverify_demo"
@@ -14705,7 +15652,6 @@ help:
 	@echo "... plussai_lymph_models_model_prepare_example_2"
 	@echo "... plussai_lymph_models_model_prepare_example_3"
 	@echo "... plussai_lymph_online_demo"
-	@echo "... plussai_lymph_policy_docverify_demo"
 	@echo "... plussai_lymph_prep_column_router_docverify_demo"
 	@echo "... plussai_lymph_prep_docverify_demo"
 	@echo "... plussai_lymph_prep_encoding_basen_encoder_example_1"
@@ -14849,6 +15795,8 @@ help:
 	@echo "... plussai_lymph_selection_gridaxis_example_1"
 	@echo "... plussai_lymph_selection_gridaxis_example_2"
 	@echo "... plussai_lymph_selection_gridaxis_example_3"
+	@echo "... plussai_lymph_selection_scorer_example_1"
+	@echo "... plussai_lymph_selection_scorer_example_2"
 	@echo "... plussai_lymph_selection_search_demo"
 	@echo "... plussai_lymph_selection_search_grid_example_1"
 	@echo "... plussai_lymph_selection_search_grid_example_2"
@@ -14888,7 +15836,43 @@ help:
 	@echo "... plussai_lymph_supervised_workflow_demo"
 	@echo "... plussai_lymph_tune_docverify_demo"
 	@echo "... plussai_lymph_validate_docverify_demo"
-	@echo "... plussai_lymph_workflow_payload_docverify_demo"
+	@echo "... plussai_lymph_workflow_make_example_1"
+	@echo "... plussai_lymph_workflow_make_example_2"
+	@echo "... plussai_lymph_workflow_make_example_3"
+	@echo "... plussai_lymph_workflow_make_example_4"
+	@echo "... plussai_lymph_workflow_make_example_5"
+	@echo "... plussai_lymph_workflow_make_example_6"
+	@echo "... plussai_lymph_workflow_make_example_7"
+	@echo "... plussai_lymph_workflow_payload_example_1"
+	@echo "... plussai_lymph_workflow_payload_example_2"
+	@echo "... plussai_lymph_workflow_policy_example_1"
+	@echo "... plussai_lymph_workflow_policy_example_2"
+	@echo "... plussai_lymph_workflow_timeoptions_example_1"
+	@echo "... plussai_lymph_workflow_vs_sklearn_columntransformer_example_1"
+	@echo "... plussai_lymph_workflow_vs_sklearn_columntransformer_example_2"
+	@echo "... plussai_lymph_workflow_vs_sklearn_custom_transformer_example_1"
+	@echo "... plussai_lymph_workflow_vs_sklearn_flat_pipeline_example_1"
+	@echo "... plussai_lymph_workflow_workflow_assess_example_1"
+	@echo "... plussai_lymph_workflow_workflow_assess_example_2"
+	@echo "... plussai_lymph_workflow_workflow_assess_example_3"
+	@echo "... plussai_lymph_workflow_workflow_infer_example_1"
+	@echo "... plussai_lymph_workflow_workflow_infer_example_2"
+	@echo "... plussai_lymph_workflow_workflow_infer_example_3"
+	@echo "... plussai_lymph_workflow_workflow_learn_example_1"
+	@echo "... plussai_lymph_workflow_workflow_learn_example_2"
+	@echo "... plussai_lymph_workflow_workflow_learn_example_3"
+	@echo "... plussai_lymph_workflow_workflow_map_example_1"
+	@echo "... plussai_lymph_workflow_workflow_map_example_2"
+	@echo "... plussai_lymph_workflow_workflow_map_example_3"
+	@echo "... plussai_lymph_workflow_workflow_on_example_1"
+	@echo "... plussai_lymph_workflow_workflow_on_example_2"
+	@echo "... plussai_lymph_workflow_workflow_on_example_3"
+	@echo "... plussai_lymph_workflow_workflow_save_example_1"
+	@echo "... plussai_lymph_workflow_workflow_save_example_2"
+	@echo "... plussai_lymph_workflow_workflow_save_example_3"
+	@echo "... plussai_lymph_workflow_workflow_with_example_1"
+	@echo "... plussai_lymph_workflow_workflow_with_example_2"
+	@echo "... plussai_lymph_workflow_workflow_with_example_3"
 	@echo "... plussai_minimax_demo"
 	@echo "... plussai_minimax_multiblock_constraints_demo"
 	@echo "... plussai_nn_binary_classifier_minimal_demo"
@@ -15130,9 +16114,12 @@ help:
 	@echo "... plussqit_codeh_duration_docverify_demo"
 	@echo "... plussqit_codeh_tests"
 	@echo "... plussqit_codeh_timeindex_docverify_demo"
+	@echo "... plussqit_codeh_timeline_calendar_fields_reference_demo"
+	@echo "... plussqit_codeh_timeline_calendar_predicates_reference_demo"
 	@echo "... plussqit_codeh_timeline_dataframe_timeindex_methods_demo"
 	@echo "... plussqit_codeh_timeline_docverify_demo"
 	@echo "... plussqit_codeh_timeline_duration_interop_docverify_demo"
+	@echo "... plussqit_codeh_timeline_foundations_reference_demo"
 	@echo "... plussqit_codeh_timeline_non_generated_and_factory_methods_demo"
 	@echo "... plussqit_codeh_timeline_printing_2d_3d_demo"
 	@echo "... plussqit_codem"
@@ -15156,10 +16143,13 @@ help:
 	@echo "... plussqit_codem_series_bounds_reference_demo"
 	@echo "... plussqit_codem_series_combine_reference_demo"
 	@echo "... plussqit_codem_series_comparison_reference_demo"
+	@echo "... plussqit_codem_series_complex_components_reference_demo"
 	@echo "... plussqit_codem_series_copy_gather_reference_demo"
+	@echo "... plussqit_codem_series_elementwise_ii_reference_demo"
 	@echo "... plussqit_codem_series_extract_index_take_reference_demo"
 	@echo "... plussqit_codem_series_extrema_norm_reference_demo"
 	@echo "... plussqit_codem_series_factory_core_reference_demo"
+	@echo "... plussqit_codem_series_introspection_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_decomposition_solve_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_determinant_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_product_reference_demo"
@@ -15168,17 +16158,21 @@ help:
 	@echo "... plussqit_codem_series_matrix_reference_demo"
 	@echo "... plussqit_codem_series_max_reference_demo"
 	@echo "... plussqit_codem_series_methods_demo"
+	@echo "... plussqit_codem_series_no_grad_reference_demo"
 	@echo "... plussqit_codem_series_number_reference_demo"
 	@echo "... plussqit_codem_series_ordered_extrema_reference_demo"
 	@echo "... plussqit_codem_series_ordering_reference_demo"
+	@echo "... plussqit_codem_series_random_sampling_reference_demo"
 	@echo "... plussqit_codem_series_read_index_reference_demo"
 	@echo "... plussqit_codem_series_rearrange_reference_demo"
 	@echo "... plussqit_codem_series_reduction_reference_demo"
 	@echo "... plussqit_codem_series_rounding_state_reference_demo"
+	@echo "... plussqit_codem_series_scatter_index_ii_reference_demo"
 	@echo "... plussqit_codem_series_selection_count_reference_demo"
 	@echo "... plussqit_codem_series_selector_write_reference_demo"
 	@echo "... plussqit_codem_series_setops_reference_demo"
 	@echo "... plussqit_codem_series_shape_reference_demo"
+	@echo "... plussqit_codem_series_special_functions_ii_reference_demo"
 	@echo "... plussqit_codem_series_stat_accessor_reference_demo"
 	@echo "... plussqit_codem_series_stats_reference_demo"
 	@echo "... plussqit_codem_series_transport_reference_demo"

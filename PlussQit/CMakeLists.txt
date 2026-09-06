@@ -527,6 +527,27 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_unary_math_reference_demo examples/CodeM/series_unary_math_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_unary_math_reference_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_special_functions_ii_reference_demo examples/CodeM/series_special_functions_ii_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_special_functions_ii_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_complex_components_reference_demo examples/CodeM/series_complex_components_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_complex_components_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_elementwise_ii_reference_demo examples/CodeM/series_elementwise_ii_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_elementwise_ii_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_scatter_index_ii_reference_demo examples/CodeM/series_scatter_index_ii_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_scatter_index_ii_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_introspection_reference_demo examples/CodeM/series_introspection_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_introspection_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_random_sampling_reference_demo examples/CodeM/series_random_sampling_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_random_sampling_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_no_grad_reference_demo examples/CodeM/series_no_grad_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_no_grad_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_series_logic_reference_demo examples/CodeM/series_logic_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_logic_reference_demo PRIVATE PlussQit::CodeM)
 
@@ -844,6 +865,21 @@ if (PLUSSQIT_BUILD_CODEH)
     )
     target_link_libraries(plussqit_codeh_timeline_docverify_demo PRIVATE PlussQit::CodeH)
 
+    add_executable(plussqit_codeh_timeline_foundations_reference_demo
+      examples/CodeH/timeline_foundations_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_foundations_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_calendar_fields_reference_demo
+      examples/CodeH/timeline_calendar_fields_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_calendar_fields_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_calendar_predicates_reference_demo
+      examples/CodeH/timeline_calendar_predicates_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_calendar_predicates_reference_demo PRIVATE PlussQit::CodeH)
+
     add_executable(plussqit_codeh_duration_docverify_demo
       examples/CodeH/duration_docverify_demo.cpp
     )
@@ -902,7 +938,7 @@ if (PLUSSQIT_BUILD_TESTS)
     FetchContent_MakeAvailable(Catch2)
   endif()
 
-  if (NOT Catch2_FOUND)
+  if (NOT TARGET Catch2::Catch2WithMain)
     message(STATUS "Catch2 v3 not found; building no-catch CodeM/CodeN smoke tests instead.")
     if (PLUSSQIT_BUILD_CODEM)
       add_executable(plussqit_codem_nocatch_tests

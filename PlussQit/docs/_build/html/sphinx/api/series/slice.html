@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::softplus" href="softplus.html" />
+    <link rel="next" title="Series::slice_scatter" href="slice_scatter.html" />
     <link rel="prev" title="Series::skewness" href="skewness.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -213,7 +213,24 @@ data=[[10, 12],
 </pre></div>
 </div>
 <p>For a rank-2 <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the last axis, so this is column slicing.</p>
-<p>Example 7. Negative-step reversal is intentionally rejected here.</p>
+<p>Example 7. Out-of-range bounds saturate to the axis rather than raising — the
+same forgiving behavior as a Python list slice. Here <code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">=</span> <span class="pre">99</span></code> simply stops at
+the real axis length.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">99</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,2], strides=[4,1], dtype=float64, platform=cpu, numel=6, contiguous=false)
+data=[[12, 13],
+  [22, 23],
+  [32, 33]]
+</pre></div>
+</div>
+<p>When you want an out-of-range request to be an error instead, use the
+materializing <a class="reference internal" href="narrow_copy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">narrow_copy()</span></code></span></a>.</p>
+<p>Example 8. Negative-step reversal is intentionally rejected here.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Slicing</span><span class="o">::</span><span class="n">Slice</span><span class="o">::</span><span class="n">kUnbounded</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -223,14 +240,14 @@ data=[[10, 12],
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::slice: negative-step slices are not supported by this cheap view helper
 </pre></div>
 </div>
 <p>This is not an accident. Reverse traversal belongs on a richer indexing
 surface.</p>
-<p>Example 8. Zero step is also illegal.</p>
+<p>Example 9. Zero step is also illegal.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -240,12 +257,12 @@ surface.</p>
 </pre></div>
 </div>
 </section>
-<section id="id7">
-<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::slice: step must be non-zero
 </pre></div>
 </div>
-<p>Example 9. Backpropagation marks exactly the positions that were sliced.</p>
+<p>Example 10. Backpropagation marks exactly the positions that were sliced.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked_grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">},</span>
@@ -258,8 +275,8 @@ surface.</p>
 </pre></div>
 </div>
 </section>
-<section id="id8">
-<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3,4], strides=[4,1], dtype=float64, platform=cpu, numel=12, contiguous=true)
 data=[[0, 1, 0, 1],
   [0, 1, 0, 1],
@@ -310,9 +327,9 @@ semantics.</p></li>
     <span class="label">Previous</span>
     <span class="title">pile</span>
   </a>
-  <a class="next-link" href="softplus.html">
+  <a class="next-link" href="softmax.html">
     <span class="label">Next</span>
-    <span class="title">softplus</span>
+    <span class="title">softmax</span>
   </a>
 </div>
 </section>
@@ -407,7 +424,7 @@ semantics.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="skewness.html" title="previous chapter">Series::skewness</a></li>
-      <li>Next: <a href="softplus.html" title="next chapter">Series::softplus</a></li>
+      <li>Next: <a href="slice_scatter.html" title="next chapter">Series::slice_scatter</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

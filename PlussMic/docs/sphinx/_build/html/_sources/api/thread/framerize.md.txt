@@ -21,7 +21,7 @@ The single output column takes `name`. This Thread's display labels -- its index
 The name of the single output column.
 
 - pass a name for a self-describing column (`"unique_values"`, `"count"`, ...)
-- leave it empty to fall back to this Thread's own name, or to `0` if the Thread is unnamed
+- leave it empty to fall back to this Thread's own name, or to `x` if the Thread is unnamed
 
 ## Returns
 
@@ -35,7 +35,7 @@ The name of the single output column.
 
 ## Notes
 
-Column-name resolution: an explicit non-empty `name` wins; otherwise the Thread's own name is used; otherwise the column is labelled `0` (matching pandas' default).
+Column-name resolution: an explicit non-empty `name` wins; otherwise the Thread's own name is used; otherwise the column is labelled `x`.
 
 The Thread's own name is not copied onto the column -- only the resolved column name applies. The index, if present, is moved to the frame's cases rather than duplicated on the column.
 
@@ -95,7 +95,7 @@ status  | 2
 [4 cs x 1 feat]
 ```
 
-Example 3. A bare Thread with no name and no index frames to column 0 over default cases.
+Example 3. A bare Thread with no name and no index frames to column `x` over default cases.
 
 ```cpp
 using namespace pluss::table;
@@ -107,7 +107,7 @@ auto out = Thread(pluss::make_series({7.0, 8.0})).framerize();
 
 ```text
 ===========
-     | 0
+     | x
 -----------
 0    | 7
 1    | 8

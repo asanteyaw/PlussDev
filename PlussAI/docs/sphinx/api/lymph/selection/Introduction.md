@@ -27,6 +27,11 @@ parameter search — and returns a [`CompareReport`](CompareReport.md).
 custom-sampler variant `probe_specs`) tune a `ModelSpec` grid instead of
 pre-built models.
 
+[`compare`](compare.md), [`search`](search.md), and [`spotcheck`](spotcheck.md)
+all rank by a [`Scorer`](Scorer.md) objective — a built-in `MetricKind`, or a
+`make_scorer(name, fn)` callable scored on each fold's `(truth, prediction)`
+when the metric you need has no `MetricKind`.
+
 ## The Three Jobs, Kept Distinct
 
 | You have… | and you want to… | reach for |

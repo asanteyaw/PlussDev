@@ -29,7 +29,8 @@ auto gamma_like = pluss::distr::sample_like("gamma", {2.0}, like);
 auto signs_like = pluss::distr::sample_like("rademacher", like);
 ```
 
-`sample_like(...)` preserves the visible tensor contract from `like`: shape, dtype, and platform. It also forwards the pinned flag into the sampling config, but the current runtime does not surface pinned-memory state through `is_pinned()` yet.
+`sample_like(...)` preserves the visible tensor contract from `like`: shape,
+dtype, and platform.
 
 ## Evaluate Densities And CDFs
 

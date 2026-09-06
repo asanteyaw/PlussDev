@@ -23,6 +23,7 @@
 #include "CodeM/native/cuda/MatmulOps.h"
 #include "CodeM/native/cuda/StochasticOps.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
+#include "pluss/tils/aux/rng_seed.h"
 
 #include <sstream>
 #include <array>
@@ -638,6 +639,31 @@ static Series& assign_inplace_preserve_storage_(Series& self, const Series& valu
   }
   SeriesIterator it = SeriesIterator::unary(value, self);
   it.copy_out_from_in(value, self);
+  return self;
+}
+
+static Series& assign_stochastic_inplace_(Series& self, const Series& value) {
+  assign_inplace_preserve_storage_(self, value);
+  if (self.defined()) self.storage().bump_version();
+  return self;
+}
+
+// Result of an in-place (`_`-suffixed) op. When `value` has the same shape,
+// dtype, and platform as `self` -- the case for essentially every `x.op_()`
+// where the op does not change the tensor's type or geometry -- the values are
+// written back into `self`'s existing storage so that aliases (`auto y = x;`)
+// observe the mutation and `is_set_to` identity is preserved. Only when the
+// result genuinely changes shape/dtype/platform (a comparison `_` producing
+// Bool, a shape-changing `squeeze_`, a cross-platform move) does `self` rebind
+// to the new buffer, exactly as before.
+static Series& inplace_result_(Series& self, const Series& value) {
+  if (self.defined() && value.defined() &&
+      self.platform() == value.platform() &&
+      self.scalar_type() == value.scalar_type() &&
+      self.is_same_size(value)) {
+    return assign_inplace_preserve_storage_(self, value);
+  }
+  self = value;
   return self;
 }
 
@@ -1288,7 +1314,18 @@ static ScalarType compat_real_dtype_for_(const Series& s) {
   return s.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64;
 }
 
+static ScalarType special_real_dtype_for_(const Series& s) {
+  if (s.platform() == Platform::MPS) return ScalarType::Float32;
+  return is_floating_dtype(s.scalar_type()) ? s.scalar_type() : ScalarType::Float64;
+}
+
 static double read_real_(const Series& s, std::int64_t i) {
+  if (s.scalar_type() == ScalarType::Float16) {
+    return static_cast<double>(float16_to_float(reinterpret_cast<const Float16*>(s.raw_data())[i]));
+  }
+  if (s.scalar_type() == ScalarType::BFloat16) {
+    return static_cast<double>(bfloat16_to_float(reinterpret_cast<const BFloat16*>(s.raw_data())[i]));
+  }
   if (s.scalar_type() == ScalarType::Float32) {
     return static_cast<double>(reinterpret_cast<const float*>(s.raw_data())[i]);
   }
@@ -1296,6 +1333,14 @@ static double read_real_(const Series& s, std::int64_t i) {
 }
 
 static void write_real_(Series& s, std::int64_t i, double v) {
+  if (s.scalar_type() == ScalarType::Float16) {
+    reinterpret_cast<Float16*>(s.raw_mutable_data())[i] = float16_from_float(static_cast<float>(v));
+    return;
+  }
+  if (s.scalar_type() == ScalarType::BFloat16) {
+    reinterpret_cast<BFloat16*>(s.raw_mutable_data())[i] = bfloat16_from_float(static_cast<float>(v));
+    return;
+  }
   if (s.scalar_type() == ScalarType::Float32) {
     reinterpret_cast<float*>(s.raw_mutable_data())[i] = static_cast<float>(v);
     return;
@@ -1304,8 +1349,45 @@ static void write_real_(Series& s, std::int64_t i, double v) {
 }
 
 static Series combine_beta_alpha(const Series& base, const Series& update, double beta, double alpha) {
+  PLUSS_CHECK(base.scalar_type() == update.scalar_type(),
+              "fused add: receiver and product must have the same dtype");
+  PLUSS_CHECK(base.platform() == update.platform(),
+              "fused add: receiver and product must use the same platform");
+  const auto broadcast = SeriesIterator::broadcast_shape(base.sizes(), update.sizes());
+  PLUSS_CHECK(broadcast.size() == update.sizes().size() &&
+                  std::equal(broadcast.begin(), broadcast.end(), update.sizes().begin()),
+              "fused add: receiver must be broadcastable to the product shape");
   if (beta == 1.0 && alpha == 1.0) return ops_internal::add(base, update);
+  if (beta == 0.0) return alpha == 1.0 ? update : mul_scalar(update, alpha);
   return ops_internal::add(mul_scalar(base, beta), mul_scalar(update, alpha));
+}
+
+static void check_mm_contract_(const Series& lhs, const Series& rhs, const char* op) {
+  PLUSS_CHECK(lhs.dim() == 2 && rhs.dim() == 2,
+              std::string(op) + ": expected two 2D Series");
+  PLUSS_CHECK(lhs.sizes()[1] == rhs.sizes()[0],
+              std::string(op) + ": inner dimensions must match");
+}
+
+static void check_bmm_contract_(const Series& lhs, const Series& rhs, const char* op) {
+  PLUSS_CHECK(lhs.dim() == 3 && rhs.dim() == 3,
+              std::string(op) + ": expected two 3D Series");
+  PLUSS_CHECK(lhs.sizes()[0] == rhs.sizes()[0],
+              std::string(op) + ": batch dimensions must match");
+  PLUSS_CHECK(lhs.sizes()[2] == rhs.sizes()[1],
+              std::string(op) + ": inner dimensions must match");
+}
+
+static void check_mv_contract_(const Series& mat, const Series& vec, const char* op) {
+  PLUSS_CHECK(mat.dim() == 2 && vec.dim() == 1,
+              std::string(op) + ": expected a 2D matrix and a 1D vector");
+  PLUSS_CHECK(mat.sizes()[1] == vec.sizes()[0],
+              std::string(op) + ": inner dimensions must match");
+}
+
+static void check_outer_contract_(const Series& lhs, const Series& rhs, const char* op) {
+  PLUSS_CHECK(lhs.dim() == 1 && rhs.dim() == 1,
+              std::string(op) + ": expected two 1D Series");
 }
 
 static std::int64_t wrap_dim(std::int64_t dim, std::int64_t nd, const char* op_name) {
@@ -1810,15 +1892,20 @@ Series randn_work_(pluss::msharp::RangeView::Int sizes, Platform platform, std::
 }
 
 static Series bernoulli_sample_from_probs_cpu_(const Series& probs) {
-  auto p = ops_internal::clamp(probs.to(Platform::CPU).to(ScalarType::Float64), 0.0, 1.0);
+  PLUSS_CHECK(is_floating_dtype(probs.scalar_type()),
+              "bernoulli: probability receiver must have a floating-point dtype");
+  auto p = probs.to(Platform::CPU).to(ScalarType::Float64).contiguous();
+  const auto* values = reinterpret_cast<const double*>(p.raw_data());
+  for (std::int64_t i = 0; i < p.numel(); ++i) {
+    PLUSS_CHECK(std::isfinite(values[i]) && values[i] >= 0.0 && values[i] <= 1.0,
+                "bernoulli: probabilities must be finite and in [0, 1]");
+  }
   auto u = Series::rand(p.sizes(), ScalarType::Float64, /*seed=*/0);
-  return ops_internal::lt(u, p);
+  return ops_internal::lt(u, p).to(probs.scalar_type());
 }
 
 static Series bernoulli_sample_from_probs_mps_(const Series& probs) {
-  auto p = ops_internal::clamp(probs.to(ScalarType::Float32), 0.0, 1.0);
-  auto u = rand_work_(p.sizes(), Platform::MPS, /*seed=*/0);
-  return ops_internal::lt(u, p);
+  return bernoulli_sample_from_probs_cpu_(probs).to(Platform::MPS);
 }
 
 static Series bernoulli_sample_from_probs(const Series& probs) {
@@ -1840,13 +1927,45 @@ static Series bernoulli_sample_from_probs(const Series& probs) {
 }
 
 static Series uniform_like_cpu_(const Series& self, double from, double to) {
-  PLUSS_CHECK(to > from, "uniform_: expected to > from");
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type()),
+              "uniform_: receiver must have a floating-point or complex dtype");
+  PLUSS_CHECK(std::isfinite(from) && std::isfinite(to) && to >= from,
+              "uniform_: expected finite bounds with to >= from");
+  if (is_complex_dtype(self.scalar_type())) {
+    const ScalarType real_dtype = self.scalar_type() == ScalarType::Complex64
+                                      ? ScalarType::Float32 : ScalarType::Float64;
+    Series real = Series::rand(self.sizes(), ScalarType::Float64, 0);
+    Series imag = Series::rand(self.sizes(), ScalarType::Float64, 0);
+    real = add_scalar(mul_scalar(real, to - from), from).to(real_dtype).contiguous();
+    imag = add_scalar(mul_scalar(imag, to - from), from).to(real_dtype).contiguous();
+    Series out = Series::empty(self.sizes(), self.scalar_type());
+    if (self.scalar_type() == ScalarType::Complex64) {
+      const auto* rp = reinterpret_cast<const float*>(real.raw_data());
+      const auto* ip = reinterpret_cast<const float*>(imag.raw_data());
+      auto* op = reinterpret_cast<Complex64*>(out.raw_data());
+      for (std::int64_t i = 0; i < out.numel(); ++i) op[i] = Complex64(rp[i], ip[i]);
+    } else {
+      const auto* rp = reinterpret_cast<const double*>(real.raw_data());
+      const auto* ip = reinterpret_cast<const double*>(imag.raw_data());
+      auto* op = reinterpret_cast<Complex128*>(out.raw_data());
+      for (std::int64_t i = 0; i < out.numel(); ++i) op[i] = Complex128(rp[i], ip[i]);
+    }
+    return out;
+  }
   Series x = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   x = add_scalar(mul_scalar(x, to - from), from);
   return x.to(Platform::CPU).to(self.scalar_type());
 }
 
 static Series uniform_like(const Series& self, double from, double to) {
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type()),
+              "uniform_: receiver must have a floating-point or complex dtype");
+  PLUSS_CHECK(std::isfinite(from) && std::isfinite(to) && to >= from,
+              "uniform_: expected finite bounds with to >= from");
+  if (is_complex_dtype(self.scalar_type())) {
+    Series out = uniform_like_cpu_(self, from, to);
+    return self.platform() == Platform::CPU ? out : out.to(self.platform());
+  }
   if (self.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_stochastic_enabled();
     const bool native_strict = native::cuda::native_stochastic_strict();
@@ -1859,7 +1978,10 @@ static Series uniform_like(const Series& self, double from, double to) {
         [&]() { return uniform_like_cpu_(self, from, to).to(Platform::CUDA); });
   }
   if (self.platform() == Platform::MPS) {
-    PLUSS_CHECK(to > from, "uniform_: expected to > from");
+    PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+                "uniform_: receiver must have a floating-point or complex dtype");
+    PLUSS_CHECK(std::isfinite(from) && std::isfinite(to) && to >= from,
+                "uniform_: expected finite bounds with to >= from");
     Series x = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
     x = add_scalar(mul_scalar(x, to - from), from);
     return x.to(self.scalar_type());
@@ -1868,13 +1990,47 @@ static Series uniform_like(const Series& self, double from, double to) {
 }
 
 static Series normal_like_cpu_(const Series& self, double mean, double std) {
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type()),
+              "normal_: receiver must have a floating-point or complex dtype");
+  PLUSS_CHECK(std::isfinite(mean) && std::isfinite(std),
+              "normal_: mean and std must be finite");
   PLUSS_CHECK(std >= 0.0, "normal_: expected std >= 0");
+  if (is_complex_dtype(self.scalar_type())) {
+    const ScalarType real_dtype = self.scalar_type() == ScalarType::Complex64
+                                      ? ScalarType::Float32 : ScalarType::Float64;
+    const double component_std = std / std::sqrt(2.0);
+    Series real = add_scalar(mul_scalar(Series::randn(self.sizes(), ScalarType::Float64, 0),
+                                        component_std), mean).to(real_dtype).contiguous();
+    Series imag = mul_scalar(Series::randn(self.sizes(), ScalarType::Float64, 0),
+                             component_std).to(real_dtype).contiguous();
+    Series out = Series::empty(self.sizes(), self.scalar_type());
+    if (self.scalar_type() == ScalarType::Complex64) {
+      const auto* rp = reinterpret_cast<const float*>(real.raw_data());
+      const auto* ip = reinterpret_cast<const float*>(imag.raw_data());
+      auto* op = reinterpret_cast<Complex64*>(out.raw_data());
+      for (std::int64_t i = 0; i < out.numel(); ++i) op[i] = Complex64(rp[i], ip[i]);
+    } else {
+      const auto* rp = reinterpret_cast<const double*>(real.raw_data());
+      const auto* ip = reinterpret_cast<const double*>(imag.raw_data());
+      auto* op = reinterpret_cast<Complex128*>(out.raw_data());
+      for (std::int64_t i = 0; i < out.numel(); ++i) op[i] = Complex128(rp[i], ip[i]);
+    }
+    return out;
+  }
   Series x = Series::randn(self.sizes(), ScalarType::Float64, /*seed=*/0);
   x = add_scalar(mul_scalar(x, std), mean);
   return x.to(Platform::CPU).to(self.scalar_type());
 }
 
 static Series normal_like(const Series& self, double mean, double std) {
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type()),
+              "normal_: receiver must have a floating-point or complex dtype");
+  PLUSS_CHECK(std::isfinite(mean) && std::isfinite(std) && std >= 0.0,
+              "normal_: expected finite parameters with std >= 0");
+  if (is_complex_dtype(self.scalar_type())) {
+    Series out = normal_like_cpu_(self, mean, std);
+    return self.platform() == Platform::CPU ? out : out.to(self.platform());
+  }
   if (self.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_stochastic_enabled();
     const bool native_strict = native::cuda::native_stochastic_strict();
@@ -1896,6 +2052,8 @@ static Series normal_like(const Series& self, double mean, double std) {
 }
 
 static Series exponential_like_cpu_(const Series& self, double lambda) {
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+              "exponential_: receiver must have a floating-point dtype");
   PLUSS_CHECK(lambda > 0.0, "exponential_: expected lambda > 0");
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   u = ops_internal::clamp_min(u, 1e-12);
@@ -1904,6 +2062,10 @@ static Series exponential_like_cpu_(const Series& self, double lambda) {
 }
 
 static Series exponential_like(const Series& self, double lambda) {
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+              "exponential_: receiver must have a floating-point dtype");
+  PLUSS_CHECK(std::isfinite(lambda) && lambda > 0.0,
+              "exponential_: expected a finite lambda > 0");
   if (self.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_stochastic_enabled();
     const bool native_strict = native::cuda::native_stochastic_strict();
@@ -1926,7 +2088,9 @@ static Series exponential_like(const Series& self, double lambda) {
 }
 
 static Series geometric_like_cpu_(const Series& self, double p) {
-  PLUSS_CHECK(p > 0.0 && p <= 1.0, "geometric_: expected 0 < p <= 1");
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+              "geometric_: receiver must have a floating-point dtype");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "geometric_: expected 0 < p < 1");
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series one_minus_u = ops_internal::sub(scalar_like(u, 1.0), u);
   const double denom = std::log(1.0 - p);
@@ -1948,7 +2112,9 @@ static Series geometric_like(const Series& self, double p) {
         [&]() { return geometric_like_cpu_(self, p).to(Platform::CUDA); });
   }
   if (self.platform() == Platform::MPS) {
-    PLUSS_CHECK(p > 0.0 && p <= 1.0, "geometric_: expected 0 < p <= 1");
+    PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+                "geometric_: receiver must have a floating-point dtype");
+    PLUSS_CHECK(p > 0.0 && p < 1.0, "geometric_: expected 0 < p < 1");
     Series u = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
     Series one_minus_u = ops_internal::sub(scalar_like(u, 1.0), u);
     const double denom = std::log(1.0 - p);
@@ -1960,6 +2126,8 @@ static Series geometric_like(const Series& self, double p) {
 }
 
 static Series cauchy_like_cpu_(const Series& self, double median, double sigma) {
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+              "cauchy_: receiver must have a floating-point dtype");
   PLUSS_CHECK(sigma > 0.0, "cauchy_: expected sigma > 0");
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series centered = sub_scalar(u, 0.5);
@@ -1969,6 +2137,10 @@ static Series cauchy_like_cpu_(const Series& self, double median, double sigma) 
 }
 
 static Series cauchy_like(const Series& self, double median, double sigma) {
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+              "cauchy_: receiver must have a floating-point dtype");
+  PLUSS_CHECK(std::isfinite(median) && std::isfinite(sigma) && sigma > 0.0,
+              "cauchy_: expected finite parameters with sigma > 0");
   if (self.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_stochastic_enabled();
     const bool native_strict = native::cuda::native_stochastic_strict();
@@ -1992,12 +2164,17 @@ static Series cauchy_like(const Series& self, double median, double sigma) {
 }
 
 static Series bernoulli_like_cpu_(const Series& self, double p) {
-  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "bernoulli_: expected 0 <= p <= 1");
+  PLUSS_CHECK(!is_complex_dtype(self.scalar_type()),
+              "bernoulli_: complex receivers are not supported");
+  PLUSS_CHECK(std::isfinite(p) && p >= 0.0 && p <= 1.0,
+              "bernoulli_: expected a finite probability in [0, 1]");
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   return ops_internal::lt(u, scalar_like(u, p)).to(Platform::CPU).to(self.scalar_type());
 }
 
 static Series bernoulli_like(const Series& self, double p) {
+  PLUSS_CHECK(!is_complex_dtype(self.scalar_type()),
+              "bernoulli_: complex receivers are not supported");
   if (self.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_stochastic_enabled();
     const bool native_strict = native::cuda::native_stochastic_strict();
@@ -2010,7 +2187,8 @@ static Series bernoulli_like(const Series& self, double p) {
         [&]() { return bernoulli_like_cpu_(self, p).to(Platform::CUDA); });
   }
   if (self.platform() == Platform::MPS) {
-    PLUSS_CHECK(p >= 0.0 && p <= 1.0, "bernoulli_: expected 0 <= p <= 1");
+    PLUSS_CHECK(std::isfinite(p) && p >= 0.0 && p <= 1.0,
+                "bernoulli_: expected a finite probability in [0, 1]");
     Series u = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
     return ops_internal::lt(u, scalar_like(u, p)).to(self.scalar_type());
   }
@@ -2327,18 +2505,50 @@ static Series unary_f64_impl(const Series& self, Fn&& fn) {
   return out;
 }
 
+template <class Fn>
+static Series unary_special_impl_(const Series& self, Fn&& fn) {
+  const auto dt = special_real_dtype_for_(self);
+  auto x = self.to(dt).contiguous();
+  auto out = Series::empty(x.sizes(), dt, x.platform());
+  for (std::int64_t i = 0; i < out.numel(); ++i) {
+    write_real_(out, i, fn(read_real_(x, i)));
+  }
+  return out;
+}
+
 static double erfinv_approx(double x) {
-  constexpr double a = 0.147;
-  const double xc = std::clamp(x, -0.999999999, 0.999999999);
-  const double ln = std::log(1.0 - xc * xc);
-  const double tt = 2.0 / (kPi * a) + ln / 2.0;
-  const double inside = tt * tt - ln / a;
-  return std::copysign(std::sqrt(std::sqrt(std::max(inside, 0.0)) - tt), xc);
+  if (std::isnan(x)) return x;
+  const double ax = std::abs(x);
+  if (ax > 1.0) return std::numeric_limits<double>::quiet_NaN();
+  if (ax == 1.0) return std::copysign(std::numeric_limits<double>::infinity(), x);
+
+  // Rational initial approximations on the center and tails, followed by the
+  // same two Newton corrections used by the established tensor implementation.
+  double r;
+  if (ax <= 0.7) {
+    const double z = x * x;
+    const double num = ((-0.140543331 * z + 0.914624893) * z - 1.645349621) * z + 0.886226899;
+    const double den = (((0.012229801 * z - 0.329097515) * z + 1.442710462) * z - 2.118377725) * z + 1.0;
+    r = x * num / den;
+  } else {
+    const double z = std::sqrt(-std::log((1.0 - ax) / 2.0));
+    const double num = ((1.641345311 * z + 3.429567803) * z - 1.624906493) * z - 1.970840454;
+    const double den = (1.637067800 * z + 3.543889200) * z + 1.0;
+    r = std::copysign(num / den, x);
+  }
+  constexpr double two_over_sqrt_pi = 1.1283791670955126;
+  for (int i = 0; i < 2; ++i) {
+    const double err = std::erf(r) - x;
+    r -= err / (two_over_sqrt_pi * std::exp(-r * r));
+  }
+  return r;
 }
 
 static double erfcinv_approx(double y) {
-  if (y <= 0.0) return std::numeric_limits<double>::infinity();
-  if (y >= 2.0) return -std::numeric_limits<double>::infinity();
+  if (std::isnan(y)) return y;
+  if (y < 0.0 || y > 2.0) return std::numeric_limits<double>::quiet_NaN();
+  if (y == 0.0) return std::numeric_limits<double>::infinity();
+  if (y == 2.0) return -std::numeric_limits<double>::infinity();
   return erfinv_approx(1.0 - y);
 }
 
@@ -2347,9 +2557,10 @@ static Series erfcinv_impl(const Series& self) {
 }
 
 static Series betaln_impl(const Series& a, const Series& b) {
+  const auto promoted = promote_types(a.scalar_type(), b.scalar_type());
   const auto dt = (a.platform() == Platform::MPS || b.platform() == Platform::MPS)
                       ? ScalarType::Float32
-                      : ScalarType::Float64;
+                      : (is_floating_dtype(promoted) ? promoted : ScalarType::Float64);
   auto aa = a.to(dt);
   auto bb = b.to(dt);
   return ops_internal::sub(
@@ -2361,10 +2572,64 @@ static Series beta_impl(const Series& a, const Series& b) {
   return ops_internal::exp(betaln_impl(a, b));
 }
 
+// Hurwitz zeta zeta(x, q) = sum_{k>=0} (q + k)^{-x}, for x > 1 and q > 0.
+// Stirling/Euler-Maclaurin acceleration (Cephes `zeta`): a short direct sum
+// pushes the argument past ~9, then an asymptotic correction with Bernoulli
+// coefficients converges to full double precision in a handful of terms --
+// far more accurate and far cheaper than a long naive partial sum.
+static double hurwitz_zeta_scalar(double x, double q) {
+  if (std::isnan(x) || std::isnan(q)) return std::numeric_limits<double>::quiet_NaN();
+  if (x == 1.0) return std::numeric_limits<double>::infinity();
+  if (x < 1.0) return std::numeric_limits<double>::quiet_NaN();
+  if (q <= 0.0) {
+    if (q == std::floor(q)) return std::numeric_limits<double>::infinity();
+    if (x != std::floor(x)) return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  // A[i] = (2 i + 2)! / B_{2 i + 2}; the asymptotic tail terms are t = a*b/A[i].
+  static const double A[] = {
+      12.0, -720.0, 30240.0, -1209600.0, 47900160.0,
+      -1.8924375803183791606e9, 7.47242496e10, -2.950130727918164224e12,
+      1.1646782814350067249e14, -4.5979787224074726105e15,
+      1.8152105401943546773e17, -7.1661652561756670113e18};
+  constexpr double kMachEps = 1.11022302462515654042e-16;
+
+  double s = std::pow(q, -x);
+  double a = q;
+  int i = 0;
+  double b = 0.0;
+  while (i < 9 || a <= 9.0) {
+    i += 1;
+    a += 1.0;
+    b = std::pow(a, -x);
+    s += b;
+    if (std::fabs(b / s) < kMachEps) return s;
+  }
+
+  const double w = a;
+  s += b * w / (x - 1.0);
+  s -= 0.5 * b;
+  a = 1.0;
+  double k = 0.0;
+  for (int j = 0; j < 12; ++j) {
+    a *= x + k;
+    b /= w;
+    const double t = a * b / A[j];
+    s += t;
+    if (std::fabs(t / s) < kMachEps) return s;
+    k += 1.0;
+    a *= x + k;
+    b /= w;
+    k += 1.0;
+  }
+  return s;
+}
+
 static Series zeta_impl(const Series& s, const Series& q) {
+  const auto promoted = promote_types(s.scalar_type(), q.scalar_type());
   const auto dt = (s.platform() == Platform::MPS || q.platform() == Platform::MPS)
                       ? ScalarType::Float32
-                      : ScalarType::Float64;
+                      : (is_floating_dtype(promoted) ? promoted : ScalarType::Float64);
   auto ss = s.to(dt);
   auto qq = q.to(dt);
   auto shape = SeriesIterator::broadcast_shape(ss.sizes(), qq.sizes());
@@ -2372,17 +2637,8 @@ static Series zeta_impl(const Series& s, const Series& q) {
   auto qqe = expand_impl(qq, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto out = Series::empty(shape, dt);
   const auto n = out.numel();
-  constexpr std::int64_t kTerms = 4096;
   for (std::int64_t i = 0; i < n; ++i) {
-    const double sv = read_real_(sse, i);
-    const double qv = read_real_(qqe, i);
-    if (!(sv > 1.0) || !(qv > 0.0)) {
-      write_real_(out, i, std::numeric_limits<double>::quiet_NaN());
-      continue;
-    }
-    double acc = 0.0;
-    for (std::int64_t k = 0; k < kTerms; ++k) acc += std::pow(qv + static_cast<double>(k), -sv);
-    write_real_(out, i, acc);
+    write_real_(out, i, hurwitz_zeta_scalar(read_real_(sse, i), read_real_(qqe, i)));
   }
   return out;
 }
@@ -2519,7 +2775,7 @@ static Series cdf_impl(const Series& self, double mean, double std) {
   PLUSS_CHECK(std > 0.0, "cdf: std must be > 0");
   const double den = std * std::sqrt(2.0);
   Series out = unary_f64_impl(self, [mean, den](double x) {
-    return 0.5 * (1.0 + std::erf((x - mean) / den));
+    return 0.5 * std::erfc(-(x - mean) / den);
   });
   bind_normal_stat_backward_(out, self, mean, std, NormalStatKind::Cdf, "cdf");
   return out;
@@ -2532,7 +2788,7 @@ static Series logcdf_impl(const Series& self, double mean, double std) {
   Series out = unary_f64_impl(self, [mean, std, sqrt2, log2pi](double x) {
     const double z = (x - mean) / std;
     if (std::isnan(z)) return z;
-    if (z < -10.0) {
+    if (z < -37.0) {
       const double inv = 1.0 / z;
       const double inv2 = inv * inv;
       const double corr = 1.0 - inv2 + 3.0 * inv2 * inv2 - 15.0 * inv2 * inv2 * inv2;
@@ -3016,15 +3272,41 @@ static Series nextafter_impl(const Series& self, double toward) {
 
 static Series random_like_cpu_(const Series& self, double lo, double hi) {
   PLUSS_CHECK(hi > lo, "random_: expected hi > lo");
-  if (is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type())) {
-    return uniform_like_cpu_(self, lo, hi);
-  }
+  PLUSS_CHECK(!is_complex_dtype(self.scalar_type()), "random_: complex receivers are not supported");
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series x = ops_internal::floor(add_scalar(mul_scalar(u, hi - lo), lo));
   return x.to(Platform::CPU).to(self.scalar_type());
 }
 
+static void check_random_bounds_fit_(ScalarType dtype, double lo, double hi) {
+  auto within = [lo, hi](long double minimum, long double maximum) {
+    return static_cast<long double>(lo) >= minimum &&
+           static_cast<long double>(hi) - 1.0L <= maximum;
+  };
+  bool valid = false;
+  switch (dtype) {
+    case ScalarType::Bool: valid = lo >= 0.0 && hi <= 2.0; break;
+    case ScalarType::UInt8: valid = within(0, UINT8_MAX); break;
+    case ScalarType::UInt16: valid = within(0, UINT16_MAX); break;
+    case ScalarType::UInt32: valid = within(0, UINT32_MAX); break;
+    case ScalarType::UInt64: valid = lo >= 0.0; break;
+    case ScalarType::Int8: valid = within(INT8_MIN, INT8_MAX); break;
+    case ScalarType::Int16: valid = within(INT16_MIN, INT16_MAX); break;
+    case ScalarType::Int32: valid = within(INT32_MIN, INT32_MAX); break;
+    case ScalarType::Int64: valid = true; break;
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+    case ScalarType::Float32:
+    case ScalarType::Float64: valid = true; break;
+    default: break;
+  }
+  PLUSS_CHECK(valid, "random_: requested range is outside the receiver dtype");
+}
+
 static Series random_like(const Series& self, double lo, double hi) {
+  PLUSS_CHECK(!is_complex_dtype(self.scalar_type()),
+              "random_: complex receivers are not supported");
+  check_random_bounds_fit_(self.scalar_type(), lo, hi);
   if (self.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_stochastic_enabled();
     const bool native_strict = native::cuda::native_stochastic_strict();
@@ -3038,14 +3320,31 @@ static Series random_like(const Series& self, double lo, double hi) {
   }
   if (self.platform() == Platform::MPS) {
     PLUSS_CHECK(hi > lo, "random_: expected hi > lo");
-    if (is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type())) {
-      return uniform_like(self, lo, hi);
-    }
+    PLUSS_CHECK(!is_complex_dtype(self.scalar_type()), "random_: complex receivers are not supported");
     Series u = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
     Series x = ops_internal::floor(add_scalar(mul_scalar(u, hi - lo), lo));
     return x.to(self.scalar_type());
   }
   return random_like_cpu_(self, lo, hi);
+}
+
+static double random_default_upper_(ScalarType dtype) {
+  switch (dtype) {
+    case ScalarType::Bool: return 2.0;
+    case ScalarType::UInt8: return 256.0;
+    case ScalarType::Int8: return 128.0;
+    case ScalarType::UInt16: return 65536.0;
+    case ScalarType::Int16: return 32768.0;
+    case ScalarType::UInt32: return 4294967296.0;
+    case ScalarType::Int32: return 2147483648.0;
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+    case ScalarType::Float32: return 16777216.0;
+    case ScalarType::UInt64:
+    case ScalarType::Int64:
+    case ScalarType::Float64: return 9007199254740992.0;
+    default: PLUSS_FAIL("random_: complex receivers are not supported");
+  }
 }
 
 static Series bitshift_scalar_impl(const Series& self, std::int64_t shift, bool left) {
@@ -3082,6 +3381,10 @@ static Series bitshift_series_impl(const Series& self, const Series& other, bool
 }
 
 static Series gcd_impl(const Series& self, const Series& other) {
+  PLUSS_CHECK(self.scalar_type() != ScalarType::Bool && other.scalar_type() != ScalarType::Bool &&
+                  !is_floating_dtype(self.scalar_type()) && !is_complex_dtype(self.scalar_type()) &&
+                  !is_floating_dtype(other.scalar_type()) && !is_complex_dtype(other.scalar_type()),
+              "gcd: integer inputs required");
   auto a = self.to(ScalarType::Int64);
   auto b = other.to(ScalarType::Int64);
   auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
@@ -3093,10 +3396,14 @@ static Series gcd_impl(const Series& self, const Series& other) {
   const auto* bp = reinterpret_cast<const std::int64_t*>(bb.raw_data());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   for (std::int64_t i = 0; i < n; ++i) op[i] = std::gcd(ap[i], bp[i]);
-  return out.to(self.scalar_type());
+  return out.to(promote_types(self.scalar_type(), other.scalar_type()));
 }
 
 static Series lcm_impl(const Series& self, const Series& other) {
+  PLUSS_CHECK(self.scalar_type() != ScalarType::Bool && other.scalar_type() != ScalarType::Bool &&
+                  !is_floating_dtype(self.scalar_type()) && !is_complex_dtype(self.scalar_type()) &&
+                  !is_floating_dtype(other.scalar_type()) && !is_complex_dtype(other.scalar_type()),
+              "lcm: integer inputs required");
   auto a = self.to(ScalarType::Int64);
   auto b = other.to(ScalarType::Int64);
   auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
@@ -3108,21 +3415,64 @@ static Series lcm_impl(const Series& self, const Series& other) {
   const auto* bp = reinterpret_cast<const std::int64_t*>(bb.raw_data());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   for (std::int64_t i = 0; i < n; ++i) op[i] = std::lcm(ap[i], bp[i]);
-  return out.to(self.scalar_type());
+  return out.to(promote_types(self.scalar_type(), other.scalar_type()));
+}
+
+// fmax / fmin differ from maximum / minimum only in NaN handling: a NaN in one
+// operand is ignored (the other operand wins); NaN results only when both are
+// NaN. Built from where() so the backward still routes to the winning operand.
+static Series fmax_fmin_impl_(const Series& a, const Series& b, bool is_max) {
+  PLUSS_CHECK(!is_complex_dtype(a.scalar_type()) && !is_complex_dtype(b.scalar_type()),
+              is_max ? "fmax: complex inputs are not supported"
+                     : "fmin: complex inputs are not supported");
+  const bool has_nan = is_floating_dtype(a.scalar_type()) || is_floating_dtype(b.scalar_type());
+  if (!has_nan) return is_max ? ops_internal::maximum(a, b) : ops_internal::minimum(a, b);
+
+  const auto dt = promote_types(a.scalar_type(), b.scalar_type());
+  const Series aa = a.to(dt);
+  const Series bb = b.to(dt);
+  Series an, bn;
+  {
+    series_tape::NoGradGuard ng;
+    an = ops_internal::isnan(aa);
+    bn = ops_internal::isnan(bb);
+  }
+  // The arithmetic tie branch gives each finite operand half of the reverse
+  // sensitivity. The outer selections preserve the NaN-skipping convention.
+  const Series tie = ops_internal::mul(ops_internal::add(aa, bb), scalar_like(aa, 0.5));
+  const Series ordered = is_max
+      ? ops_internal::where(ops_internal::gt(aa, bb), aa,
+                            ops_internal::where(ops_internal::lt(aa, bb), bb, tie))
+      : ops_internal::where(ops_internal::lt(aa, bb), aa,
+                            ops_internal::where(ops_internal::gt(aa, bb), bb, tie));
+  return ops_internal::where(an, bb, ops_internal::where(bn, aa, ordered));
+}
+
+// float_power always computes in floating point: integer operands are promoted
+// to float64 (complex128 if either side is complex) and the result stays float.
+static ScalarType float_power_dtype_(ScalarType a, ScalarType b) {
+  if (is_complex_dtype(a) || is_complex_dtype(b)) return ScalarType::Complex128;
+  return ScalarType::Float64;
+}
+static Series float_power_impl_(const Series& a, const Series& b) {
+  const auto dt = float_power_dtype_(a.scalar_type(), b.scalar_type());
+  return ops_internal::pow(a.to(dt), b.to(dt));
+}
+
+// floor_divide rounds the quotient toward negative infinity. With two integral
+// operands the result stays integral (promoted); otherwise it is floating.
+static Series floor_divide_impl_(const Series& a, const Series& b) {
+  Series q = ops_internal::floor(ops_internal::div(a, b));
+  const bool ai = !is_floating_dtype(a.scalar_type()) && !is_complex_dtype(a.scalar_type());
+  const bool bi = !is_floating_dtype(b.scalar_type()) && !is_complex_dtype(b.scalar_type());
+  if (ai && bi) return q.to(promote_types(a.scalar_type(), b.scalar_type()));
+  return q;
 }
 
 static Series sinc_impl(const Series& self) {
-  auto x = self.to(ScalarType::Float64).contiguous();
-  auto out = Series::empty(x.sizes(), ScalarType::Float64);
-  const auto n = x.numel();
-  const auto* ip = reinterpret_cast<const double*>(x.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
-  for (std::int64_t i = 0; i < n; ++i) {
-    const double t = ip[i];
-    if (t == 0.0) op[i] = 1.0;
-    else op[i] = std::sin(kPi * t) / (kPi * t);
-  }
-  return out.to(self.scalar_type());
+  return unary_special_impl_(self, [](double x) {
+    return x == 0.0 ? 1.0 : std::sin(kPi * x) / (kPi * x);
+  });
 }
 
 static Series hardshrink_impl(const Series& self, double lambda) {
@@ -3156,6 +3506,10 @@ static Series hardshrink_backward_impl(const Series& grad_out, const Series& inp
 }
 
 static Series heaviside_impl(const Series& self, const Series& values) {
+  PLUSS_CHECK(!is_complex_dtype(self.scalar_type()) && !is_complex_dtype(values.scalar_type()),
+              "heaviside: complex inputs are not supported");
+  PLUSS_CHECK(self.scalar_type() == values.scalar_type(),
+              "heaviside: receiver and values must have the same dtype");
   auto x = self.to(ScalarType::Float64);
   auto v = values.to(ScalarType::Float64);
   auto shape = SeriesIterator::broadcast_shape(x.sizes(), v.sizes());
@@ -3167,7 +3521,8 @@ static Series heaviside_impl(const Series& self, const Series& values) {
   const auto* vp = reinterpret_cast<const double*>(vv.raw_data());
   auto* op = reinterpret_cast<double*>(out.raw_data());
   for (std::int64_t i = 0; i < n; ++i) {
-    if (xp[i] < 0.0) op[i] = 0.0;
+    if (std::isnan(xp[i])) op[i] = xp[i];          // torch: NaN input -> NaN
+    else if (xp[i] < 0.0) op[i] = 0.0;
     else if (xp[i] > 0.0) op[i] = 1.0;
     else op[i] = vp[i];
   }
@@ -3621,7 +3976,7 @@ static bool mps_selection_cache_matches_(
       entry.key.flag2 == key.flag2;
 }
 
-static Series sort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
+static Series sort_values_only_impl_(const Series& self, std::int64_t dim, bool descending, bool stable) {
   dim = wrap_dim(dim, self.dim(), "sort");
   if (self.platform() == Platform::MPS) {
     static thread_local MpsSelectionCacheEntry cache{};
@@ -3692,7 +4047,7 @@ static Series sort_values_only(const Series& self, std::int64_t dim, bool descen
   return pair.first;
 }
 
-static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t dim, bool largest, bool sorted) {
+static Series topk_values_only_impl_(const Series& self, std::int64_t k, std::int64_t dim, bool largest, bool sorted) {
   dim = wrap_dim(dim, self.dim(), "topk");
   if (self.platform() == Platform::MPS) {
     static thread_local MpsSelectionCacheEntry cache{};
@@ -3917,6 +4272,75 @@ static Series argsort_values_only(const Series& self, std::int64_t dim, bool des
   return native::cpu::argsort(self, dim, descending, stable);
 }
 
+// Value-channel backward for a selection-by-permutation op (`sort` / `topk`).
+// The forward gathers `out[..i..] = self[.. gather_index[..i..] ..]` along
+// `dim`; the ordering itself is a discrete, non-differentiable function of the
+// data, but the values pass straight through a fixed permutation, so the
+// backward simply scatters the upstream gradient back to the positions it was
+// gathered from. Vectorized: one `scatter_add` into a zero buffer, no host
+// loop. `gather_index` must be the index set that produced `out` (a full
+// per-lane permutation for `sort`, the first-`k` slice of it for `topk`).
+static Series bind_selection_permutation_backward_(Series out,
+                                                   const Series& self,
+                                                   const Series& gather_index,
+                                                   std::int64_t dim,
+                                                   const char* op_name) {
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(self)) return out;
+  if (!dtype_of(self.scalar_type()).is_floating()) return out;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = op_name;
+  link->parents = {self};
+  const std::int64_t d = dim;
+  link->propagate = [self, gather_index, d](const Series& out_sens) {
+    const Series idx = gather_index.to(self.platform()).contiguous();
+    const Series g = out_sens.to(self.platform()).to(self.scalar_type()).contiguous();
+    Series grad_in =
+        Series::zeros(self.sizes(), self.scalar_type(), self.platform())
+            .scatter_add(d, idx, g);
+    series_tape::accumulate_sensitivity(self, grad_in);
+  };
+  series_tape::bind_source_link(out, std::move(link));
+  return out;
+}
+
+static Series sort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
+  Series values = sort_values_only_impl_(self, dim, descending, stable);
+  if (series_tape::recording_enabled() && series_tape::tracks_slope(self) &&
+      dtype_of(self.scalar_type()).is_floating()) {
+    const std::int64_t d = wrap_dim(dim, self.dim(), "sort");
+    Series perm;
+    {
+      // The index computation must not itself record onto the tape, but the
+      // link below must be bound with recording still active -- so the guard
+      // scope closes before bind_selection_permutation_backward_ runs.
+      series_tape::NoGradGuard ng;
+      perm = argsort_values_only(self, d, descending, stable);
+    }
+    values = bind_selection_permutation_backward_(std::move(values), self, perm, d, "sort");
+  }
+  return values;
+}
+
+static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t dim, bool largest, bool sorted) {
+  Series values = topk_values_only_impl_(self, k, dim, largest, sorted);
+  if (sorted && k > 0 && series_tape::recording_enabled() &&
+      series_tape::tracks_slope(self) &&
+      dtype_of(self.scalar_type()).is_floating()) {
+    const std::int64_t d = wrap_dim(dim, self.dim(), "topk");
+    Series idx;
+    {
+      series_tape::NoGradGuard ng;
+      // `topk(sorted=true)` returns the k selected values in the same order the
+      // full descending/ascending argsort would place them, so the first k
+      // entries of that argsort are exactly the source positions.
+      Series order = argsort_values_only(self, d, /*descending=*/largest, /*stable=*/false);
+      idx = order.slice(d, 0, k).contiguous();
+    }
+    values = bind_selection_permutation_backward_(std::move(values), self, idx, d, "topk");
+  }
+  return values;
+}
+
 static Series tril_triu_impl(const Series& self, std::int64_t diagonal, bool upper) {
   PLUSS_CHECK(self.dim() >= 2, "tril/triu: expected tensor with at least 2 dimensions");
   auto x = self.contiguous();
@@ -4042,14 +4466,32 @@ static Series diag_embed_from_1d(const Series& self, std::int64_t diagonal) {
 }
 
 static Series isclose_impl(const Series& a, const Series& b, double rtol, double atol, bool equal_nan) {
-  Series diff = ops_internal::abs(ops_internal::sub(a, b));
-  Series tol = add_scalar(mul_scalar(ops_internal::abs(b), rtol), atol);
-  Series close = ops_internal::le(diff, tol);
+  PLUSS_CHECK(a.scalar_type() == b.scalar_type(),
+              "isclose: receiver and other must have the same dtype");
+  PLUSS_CHECK(a.platform() == b.platform(),
+              "isclose: receiver and other must use the same platform");
+  PLUSS_CHECK(rtol >= 0.0, "isclose: rtol must be greater than or equal to zero");
+  PLUSS_CHECK(atol >= 0.0, "isclose: atol must be greater than or equal to zero");
+
+  Series close = ops_internal::eq(a, b);
   if (equal_nan) {
     Series both_nan = ops_internal::logical_and(ops_internal::isnan(a), ops_internal::isnan(b));
     close = ops_internal::logical_or(close, both_nan);
   }
-  return close;
+  if (rtol == 0.0 && atol == 0.0) return close;
+
+  Series aa = a;
+  Series bb = b;
+  if (a.scalar_type() == ScalarType::Bool || dtype_of(a.scalar_type()).is_integral()) {
+    aa = a.to(ScalarType::Float32);
+    bb = b.to(ScalarType::Float32);
+  }
+  const Series actual_error = ops_internal::abs(ops_internal::sub(aa, bb));
+  const Series allowed_error =
+      add_scalar(mul_scalar(ops_internal::abs(bb), rtol), atol);
+  const Series finite_close = ops_internal::logical_and(
+      ops_internal::isfinite(actual_error), ops_internal::le(actual_error, allowed_error));
+  return ops_internal::logical_or(close, finite_close);
 }
 
 static Series identity_f64(std::int64_t n) {
@@ -4326,102 +4768,139 @@ static Series cholesky_solve_impl(const Series& b, const Series& factor, bool up
 }
 
 static Series kron_impl(const Series& a, const Series& b) {
+  // Kronecker product as a broadcast-multiply of interleaved shapes, so it
+  // stays differentiable through `mul` + `reshape` (no host loop).
+  const ScalarType rt = compat_real_dtype_for_(a);
   if (a.dim() == 2 && b.dim() == 2) {
-    auto aa = a.to(ScalarType::Float64).contiguous();
-    auto bb = b.to(ScalarType::Float64).contiguous();
-    const auto m = aa.sizes()[0], n = aa.sizes()[1];
-    const auto p = bb.sizes()[0], q = bb.sizes()[1];
-    auto out = Series::empty({m * p, n * q}, ScalarType::Float64);
-    const auto* ap = reinterpret_cast<const double*>(aa.raw_data());
-    const auto* bp = reinterpret_cast<const double*>(bb.raw_data());
-    auto* op = reinterpret_cast<double*>(out.raw_data());
-    for (std::int64_t i = 0; i < m; ++i) {
-      for (std::int64_t j = 0; j < n; ++j) {
-        const double av = ap[i * n + j];
-        for (std::int64_t r = 0; r < p; ++r) {
-          for (std::int64_t c = 0; c < q; ++c) {
-            op[(i * p + r) * (n * q) + (j * q + c)] = av * bp[r * q + c];
-          }
-        }
-      }
-    }
-    return out;
+    const auto m = a.sizes()[0], n = a.sizes()[1];
+    const auto p = b.sizes()[0], q = b.sizes()[1];
+    Series prod = ops_internal::mul(a.to(rt).reshape({m, 1, n, 1}),
+                                    b.to(rt).reshape({1, p, 1, q}));
+    return prod.reshape({m * p, n * q});
   }
-  auto af = a.to(ScalarType::Float64).flatten(0, -1).contiguous();
-  auto bf = b.to(ScalarType::Float64).flatten(0, -1).contiguous();
-  const auto an = af.numel();
-  const auto bn = bf.numel();
-  auto out = Series::empty({an * bn}, ScalarType::Float64);
-  const auto* ap = reinterpret_cast<const double*>(af.raw_data());
-  const auto* bp = reinterpret_cast<const double*>(bf.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
-  for (std::int64_t i = 0; i < an; ++i) {
-    for (std::int64_t j = 0; j < bn; ++j) op[i * bn + j] = ap[i] * bp[j];
-  }
+  // General fallback: outer product of the flattened operands, then reshape to
+  // the concatenation of the two input shapes (matches the prior behavior).
+  const Series af = a.to(rt).flatten(0, -1);
+  const Series bf = b.to(rt).flatten(0, -1);
+  const std::int64_t an = af.numel();
+  const std::int64_t bn = bf.numel();
+  Series prod = ops_internal::mul(af.reshape({an, 1}), bf.reshape({1, bn}));
   std::vector<std::int64_t> shape;
   shape.reserve((std::size_t)(a.dim() + b.dim()));
   shape.insert(shape.end(), a.sizes().begin(), a.sizes().end());
   shape.insert(shape.end(), b.sizes().begin(), b.sizes().end());
-  return out.reshape(std::span<const std::int64_t>(shape.data(), shape.size()));
+  return prod.reshape(std::span<const std::int64_t>(shape.data(), shape.size()));
 }
 
-static Series covariance_impl(const Series& self) {
-  auto x = self.to(ScalarType::Float64).contiguous();
+// cov(X): treat each row of a 2D X as a variable observed across the columns
+// (a 1D X is one variable). Centre each variable, then X_c @ X_c^T scaled by
+// 1 / (num_observations - correction). Built through matmul_with_tape_ so the
+// whole thing is differentiable.
+static Series covariance_impl(const Series& self, std::int64_t correction = 1) {
+  auto x = self.to(ScalarType::Float64);
+  PLUSS_CHECK(x.dim() == 1 || x.dim() == 2, "cov: expected a 1D or 2D input");
   if (x.dim() == 1) {
-    auto xc = centered_impl(x);
-    const double n = static_cast<double>(x.numel());
-    return div_scalar(ops_internal::sum(ops_internal::square(xc)), std::max(1.0, n - 1.0));
+    const double denom = static_cast<double>(x.numel()) - static_cast<double>(correction);
+    Series xc = centered_impl(x);
+    Series v = div_scalar(ops_internal::sum(ops_internal::square(xc)), denom);
+    return v.reshape(std::vector<std::int64_t>{});
   }
-  PLUSS_CHECK(x.dim() == 2, "cov: expected 1D or 2D");
-  const auto obs = x.sizes()[1];
-  PLUSS_CHECK(obs >= 1, "cov: expected at least one observation");
-  auto xc = centered_impl(x, 1);
-  auto cov = matmul_dispatch_(xc, xc.transpose(0, 1));
-  return div_scalar(cov, std::max<std::int64_t>(1, obs - 1));
+  const auto num_obs = x.sizes()[1];
+  const double denom = static_cast<double>(num_obs) - static_cast<double>(correction);
+  Series xc = centered_impl(x, /*dim=*/1);
+  Series c = matmul_with_tape_(xc, xc.transpose(0, 1));
+  return div_scalar(c, denom);
 }
 
+// corrcoef(X): cov(X) with each entry divided by the geometric mean of the two
+// variables' variances, so the diagonal is 1 and every entry lies in [-1, 1].
+// The (num_obs - correction) factor cancels in the ratio, so correction is
+// irrelevant here. Vectorized and differentiable.
 static Series corrcoef_impl(const Series& self) {
-  auto cov = covariance_impl(self).to(ScalarType::Float64).contiguous();
-  PLUSS_CHECK(cov.dim() == 2 && cov.sizes()[0] == cov.sizes()[1], "corrcoef: expected square covariance");
-  const auto n = cov.sizes()[0];
-  auto out = Series::empty(cov.sizes(), ScalarType::Float64);
-  const auto* cp = reinterpret_cast<const double*>(cov.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
-  std::vector<double> s((std::size_t)n, 0.0);
-  for (std::int64_t i = 0; i < n; ++i) s[(std::size_t)i] = std::sqrt(std::max(0.0, cp[i * n + i]));
-  for (std::int64_t i = 0; i < n; ++i) {
-    for (std::int64_t j = 0; j < n; ++j) {
-      const double den = s[(std::size_t)i] * s[(std::size_t)j];
-      op[i * n + j] = (den > 0.0) ? (cp[i * n + j] / den) : 0.0;
-    }
-  }
+  auto x = self.to(ScalarType::Float64);
+  PLUSS_CHECK(x.dim() == 1 || x.dim() == 2, "corrcoef: expected a 1D or 2D input");
+  const bool was_1d = x.dim() == 1;
+  if (was_1d) x = x.unsqueeze(0);           // one variable -> [1, N]
+
+  Series c = covariance_impl(x, /*correction=*/1);          // [V, V]
+  Series inv_sd = ops_internal::reciprocal(
+      ops_internal::sqrt(diag_extract_2d(c, /*diagonal=*/0)));  // [V]
+  Series corr = ops_internal::mul(
+      ops_internal::mul(c, inv_sd.unsqueeze(1)), inv_sd.unsqueeze(0));
+  corr = ops_internal::clamp_max(ops_internal::clamp_min(corr, -1.0), 1.0);
+
+  return was_1d ? corr.reshape(std::vector<std::int64_t>{}) : corr;
+}
+
+// Straight-through backward for a special function whose derivative w.r.t. its
+// tracked input `wrt` is `deriv(wrt)`. `deriv` runs under a NoGradGuard during
+// the reverse pass, so it may call the (non-recording) special-function impls
+// freely. Handles the case where `out` is a broadcast of `wrt` (two-arg funcs
+// like igamma/zeta binding only their second operand).
+static Series bind_special_grad_(
+    Series out, const Series& wrt,
+    std::function<Series(const Series&)> deriv, const char* op_name) {
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(wrt)) return out;
+  if (!dtype_of(wrt.scalar_type()).is_floating()) return out;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = op_name;
+  link->parents = {wrt};
+  link->propagate = [wrt, deriv = std::move(deriv), op_name](const Series& g) {
+    series_tape::NoGradGuard ng;
+    Series contrib = ops_internal::mul(
+        g.to(wrt.platform()).to(ScalarType::Float64),
+        deriv(wrt).to(wrt.platform()).to(ScalarType::Float64));
+    contrib = reduce_broadcasted_like_(contrib, wrt, op_name);
+    series_tape::accumulate_sensitivity(wrt, contrib.to(wrt.scalar_type()));
+  };
+  series_tape::bind_source_link(out, std::move(link));
   return out;
+}
+
+static void check_special_inplace_dtype_(const Series& self, const char* op_name) {
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+              std::string(op_name) + ": in-place form requires a floating-point Series");
+}
+
+// d/dx sinc(x) = (pi x cos(pi x) - sin(pi x)) / (pi x^2), with the removable
+// singularity at 0 taking the limit value 0.
+static double sinc_deriv_scalar(double x) {
+  if (x == 0.0) return 0.0;
+  const double px = kPi * x;
+  return (px * std::cos(px) - std::sin(px)) / (kPi * x * x);
 }
 
 static double digamma_scalar(double x) {
   if (std::isnan(x)) return x;
-  if (x <= 0.0) {
-    const double r = x - std::floor(x);
-    if (std::abs(r) < 1e-15) return std::numeric_limits<double>::quiet_NaN();
-    return digamma_scalar(1.0 - x) - kPi / std::tan(kPi * x);
+  if (x == 0.0) return std::copysign(std::numeric_limits<double>::infinity(), -x);
+  if (x < 0.0) {
+    if (x == std::trunc(x)) return std::numeric_limits<double>::quiet_NaN();
+    double integral = 0.0;
+    const double r = std::modf(x, &integral);
+    return digamma_scalar(1.0 - x) - kPi / std::tan(kPi * r);
   }
   double y = 0.0;
-  while (x < 6.0) {
+  while (x < 10.0) {
     y -= 1.0 / x;
     x += 1.0;
   }
+  // psi(x) ~ ln x - 1/(2x) - sum B_{2k} / (2k x^{2k}).
   const double inv = 1.0 / x;
   const double inv2 = inv * inv;
-  y += std::log(x) - 0.5 * inv - inv2 * (1.0 / 12.0 - inv2 * (1.0 / 120.0 - inv2 * (1.0 / 252.0)));
+  y += std::log(x) - 0.5 * inv -
+       inv2 * (1.0 / 12.0 -
+               inv2 * (1.0 / 120.0 -
+                       inv2 * (1.0 / 252.0 -
+                               inv2 * (1.0 / 240.0 - inv2 * (1.0 / 132.0)))));
   return y;
 }
 
 static Series digamma_impl(const Series& self) {
-  return unary_f64_impl(self, [](double x) { return digamma_scalar(x); });
+  return unary_special_impl_(self, [](double x) { return digamma_scalar(x); });
 }
 
 static Series erfinv_impl(const Series& self) {
-  return unary_f64_impl(self, [](double x) { return erfinv_approx(x); });
+  return unary_special_impl_(self, [](double x) { return erfinv_approx(x); });
 }
 
 // Elementwise integer factorial. Discrete integer-domain op in the same family
@@ -4474,14 +4953,35 @@ static double i0_scalar(double x) {
          t * (-0.01647633 + t * 0.00392377))))))));
 }
 
+static double i1_scalar(double x) {
+  const double ax = std::abs(x);
+  double value;
+  if (ax < 3.75) {
+    const double y = (x / 3.75) * (x / 3.75);
+    value = ax * (0.5 + y * (0.87890594 + y * (0.51498869 + y *
+            (0.15084934 + y * (0.02658733 + y * (0.00301532 + y * 0.00032411))))));
+  } else {
+    const double y = 3.75 / ax;
+    value = (std::exp(ax) / std::sqrt(ax)) *
+            (0.39894228 + y * (-0.03988024 + y * (-0.00362018 + y *
+            (0.00163801 + y * (-0.01031555 + y * (0.02282967 + y *
+            (-0.02895312 + y * (0.01787654 - y * 0.00420059))))))));
+  }
+  return std::copysign(value, x);
+}
+
 static Series i0_impl(const Series& self) {
-  return unary_f64_impl(self, [](double x) { return i0_scalar(x); });
+  return unary_special_impl_(self, [](double x) { return i0_scalar(x); });
 }
 
 static Series mvlgamma_impl(const Series& self, std::int64_t p) {
   PLUSS_CHECK(p >= 1, "mvlgamma: p must be >= 1");
   const double c = 0.25 * static_cast<double>(p) * static_cast<double>(p - 1) * std::log(kPi);
-  return unary_f64_impl(self, [p, c](double x) {
+  // Domain: every gamma argument x - (j-1)/2 must be positive, i.e.
+  // x > (p - 1) / 2. Outside it the multivariate gamma is undefined.
+  const double lo = 0.5 * static_cast<double>(p - 1);
+  return unary_special_impl_(self, [p, c, lo](double x) {
+    if (!(x > lo)) return std::numeric_limits<double>::quiet_NaN();
     double acc = c;
     for (std::int64_t j = 1; j <= p; ++j) acc += std::lgamma(x + 0.5 * (1.0 - static_cast<double>(j)));
     return acc;
@@ -4491,15 +4991,13 @@ static Series mvlgamma_impl(const Series& self, std::int64_t p) {
 static Series polygamma_impl(const Series& self, std::int64_t n) {
   PLUSS_CHECK(n >= 0, "polygamma: n must be >= 0");
   if (n == 0) return digamma_impl(self);
+  // psi^(n)(x) = (-1)^(n+1) * n! * zeta(n+1, x) for n >= 1.
   double fact = 1.0;
   for (std::int64_t i = 2; i <= n; ++i) fact *= static_cast<double>(i);
   const double sign = ((n + 1) % 2 == 0) ? 1.0 : -1.0;
-  return unary_f64_impl(self, [n, fact, sign](double x) {
-    if (x <= 0.0) return std::numeric_limits<double>::quiet_NaN();
-    double acc = 0.0;
-    constexpr std::int64_t terms = 2048;
-    for (std::int64_t k = 0; k < terms; ++k) acc += std::pow(x + static_cast<double>(k), -static_cast<double>(n + 1));
-    return sign * fact * acc;
+  const double order = static_cast<double>(n + 1);
+  return unary_special_impl_(self, [order, fact, sign](double x) {
+    return sign * fact * hurwitz_zeta_scalar(order, x);
   });
 }
 
@@ -4510,24 +5008,18 @@ static Series frexp_impl(const Series& self) {
   });
 }
 
+// ldexp(x, e) = x * 2^e. Built as a multiply by a power-of-two scale so the
+// backward carries d/dx = 2^e; the exponent is treated as a constant.
 static Series ldexp_impl(const Series& self, double expv) {
-  const int ie = static_cast<int>(expv);
-  return unary_f64_impl(self, [ie](double x) { return std::ldexp(x, ie); });
+  const auto dt = compat_real_dtype_for_(self);
+  const double scale = std::exp2(expv);
+  return ops_internal::mul(self.to(dt), scalar_like(self.to(dt), scale));
 }
 
 static Series ldexp_impl(const Series& self, const Series& exponents) {
-  auto x = self.to(ScalarType::Float64);
-  auto e = exponents.to(ScalarType::Int64);
-  auto shape = SeriesIterator::broadcast_shape(x.sizes(), e.sizes());
-  auto xx = expand_impl(x, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto ee = expand_impl(e, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Float64);
-  const auto n = out.numel();
-  const auto* xp = reinterpret_cast<const double*>(xx.raw_data());
-  const auto* ep = reinterpret_cast<const std::int64_t*>(ee.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
-  for (std::int64_t i = 0; i < n; ++i) op[i] = std::ldexp(xp[i], static_cast<int>(ep[i]));
-  return out;
+  const auto dt = compat_real_dtype_for_(self);
+  const Series scale = ops_internal::exp2(exponents.to(dt));
+  return ops_internal::mul(self.to(dt), scale);
 }
 
 static Series prelu_impl(const Series& self, const Series& weight) {
@@ -4550,38 +5042,69 @@ static Series prelu_impl(const Series& self, double weight) {
   return prelu_impl(self, Series::full({1}, weight, wdt).to(self.platform()));
 }
 
+// renorm(p, dim, maxnorm): rescale every sub-tensor select(dim, i) whose p-norm
+// exceeds maxnorm so that it lands exactly on maxnorm; leave the rest untouched.
+// The sub-tensor's norm is taken over *all* axes except `dim`, so the scale is
+// broadcast back with shape 1 everywhere but `dim`.
 static Series renorm_impl(const Series& self, double p, std::int64_t dim, double maxnorm) {
   PLUSS_CHECK(p > 0.0, "renorm: p must be > 0");
+  PLUSS_CHECK(maxnorm >= 0.0, "renorm: maxnorm must be >= 0");
   auto x = self.to(ScalarType::Float64);
+  PLUSS_CHECK(x.dim() >= 2, "renorm: expected input with at least 2 dimensions");
   dim = wrap_dim(dim, x.dim(), "renorm");
-  auto norm = ops_internal::pow(ops_internal::sum(ops_internal::pow(ops_internal::abs(x), scalar_like(x, p)), dim, true),
-                                scalar_like(x, 1.0 / p));
-  auto denom = ops_internal::maximum(norm, scalar_like(norm, 1e-12));
-  auto scale = ops_internal::minimum(scalar_like(norm, 1.0), ops_internal::div(scalar_like(norm, maxnorm), denom));
+  Series acc = ops_internal::pow(ops_internal::abs(x), scalar_like(x, p));
+  for (std::int64_t d = 0; d < x.dim(); ++d) {
+    if (d == dim) continue;
+    acc = ops_internal::sum(acc, d, /*keepdim=*/true);
+  }
+  Series norm = ops_internal::pow(acc, scalar_like(acc, 1.0 / p));
+  Series over = ops_internal::gt(norm, scalar_like(norm, maxnorm));
+  Series factor = ops_internal::div(scalar_like(norm, maxnorm),
+                                    ops_internal::add(norm, scalar_like(norm, 1e-7)));
+  Series scale = ops_internal::where(over, factor, scalar_like(norm, 1.0));
   return ops_internal::mul(x, scale).to(self.scalar_type());
 }
 
 static Series multinomial_impl_cpu_(const Series& self, std::int64_t num_samples, bool replacement) {
-  PLUSS_CHECK(num_samples >= 0, "multinomial: num_samples must be >= 0");
-  auto p = self.to(Platform::CPU).to(ScalarType::Float64).flatten(0, -1).contiguous();
-  const auto n = p.numel();
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+              "multinomial: probabilities must have a floating-point dtype");
+  PLUSS_CHECK(self.dim() == 1 || self.dim() == 2,
+              "multinomial: probability input must be 1-D or 2-D");
+  PLUSS_CHECK(num_samples > 0, "multinomial: num_samples must be greater than zero");
+  const std::int64_t rows = self.dim() == 1 ? 1 : self.size(0);
+  const std::int64_t categories = self.size(-1);
+  PLUSS_CHECK(categories > 0, "multinomial: each distribution must contain at least one category");
+  PLUSS_CHECK(replacement || num_samples <= categories,
+              "multinomial: cannot sample more entries than categories without replacement");
+  auto p = self.to(Platform::CPU).to(ScalarType::Float64).contiguous();
   const auto* pp = reinterpret_cast<const double*>(p.raw_data());
-  std::vector<double> probs((std::size_t)n, 0.0);
-  double z = 0.0;
-  for (std::int64_t i = 0; i < n; ++i) {
-    probs[(std::size_t)i] = std::max(0.0, pp[i]);
-    z += probs[(std::size_t)i];
-  }
-  PLUSS_CHECK(z > 0.0, "multinomial: probabilities must sum to > 0");
-  for (auto& v : probs) v /= z;
-  std::mt19937_64 gen(0);
-  auto out = Series::empty({num_samples}, ScalarType::Int64);
+  std::vector<std::int64_t> out_shape = self.dim() == 1
+      ? std::vector<std::int64_t>{num_samples}
+      : std::vector<std::int64_t>{rows, num_samples};
+  auto out = Series::empty(out_shape, ScalarType::Int64);
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
-  for (std::int64_t s = 0; s < num_samples; ++s) {
-    std::discrete_distribution<std::int64_t> dist(probs.begin(), probs.end());
-    const auto idx = dist(gen);
-    op[s] = idx;
-    if (!replacement) probs[(std::size_t)idx] = 0.0;
+  std::mt19937_64 gen(pluss::tils::seed_or_next(0));
+  for (std::int64_t row = 0; row < rows; ++row) {
+    std::vector<double> probs(static_cast<std::size_t>(categories));
+    double total = 0.0;
+    std::int64_t positive = 0;
+    for (std::int64_t col = 0; col < categories; ++col) {
+      const double value = pp[row * categories + col];
+      PLUSS_CHECK(std::isfinite(value) && value >= 0.0,
+                  "multinomial: probabilities must be finite and nonnegative");
+      probs[static_cast<std::size_t>(col)] = value;
+      total += value;
+      positive += value > 0.0 ? 1 : 0;
+    }
+    PLUSS_CHECK(total > 0.0, "multinomial: each probability row must have a positive sum");
+    PLUSS_CHECK(replacement || num_samples <= positive,
+                "multinomial: too few nonzero categories to sample without replacement");
+    for (std::int64_t sample = 0; sample < num_samples; ++sample) {
+      std::discrete_distribution<std::int64_t> dist(probs.begin(), probs.end());
+      const auto index = dist(gen);
+      op[row * num_samples + sample] = index;
+      if (!replacement) probs[static_cast<std::size_t>(index)] = 0.0;
+    }
   }
   return out;
 }
@@ -4601,7 +5124,8 @@ static Series multinomial_impl(const Series& self, std::int64_t num_samples, boo
           return multinomial_impl_cpu_(self, num_samples, replacement).to(Platform::CUDA);
         });
   }
-  return multinomial_impl_cpu_(self, num_samples, replacement);
+  Series out = multinomial_impl_cpu_(self, num_samples, replacement);
+  return self.platform() == Platform::CPU ? out : out.to(self.platform());
 }
 
 static double igamma_p_scalar(double a, double x) {
@@ -4609,6 +5133,8 @@ static double igamma_p_scalar(double a, double x) {
     return std::numeric_limits<double>::quiet_NaN();
   }
   if (x == 0.0) return 0.0;
+  if (std::isinf(x)) return 1.0;
+  if (std::isinf(a)) return 0.0;
   constexpr int itmax = 512;
   constexpr double eps = 1e-12;
   constexpr double fpmin = 1e-300;
@@ -4649,19 +5175,20 @@ static double igamma_p_scalar(double a, double x) {
 }
 
 static Series igamma_impl(const Series& a, const Series& x, bool complement) {
-  auto aa = a.to(ScalarType::Float64);
-  auto xx = x.to(ScalarType::Float64);
+  const auto promoted = promote_types(a.scalar_type(), x.scalar_type());
+  const auto dt = (a.platform() == Platform::MPS || x.platform() == Platform::MPS)
+                      ? ScalarType::Float32
+                      : (is_floating_dtype(promoted) ? promoted : ScalarType::Float64);
+  auto aa = a.to(dt);
+  auto xx = x.to(dt);
   auto shape = SeriesIterator::broadcast_shape(aa.sizes(), xx.sizes());
   auto abb = expand_impl(aa, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto xbb = expand_impl(xx, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Float64);
+  auto out = Series::empty(shape, dt, aa.platform());
   const auto n = out.numel();
-  const auto* ap = reinterpret_cast<const double*>(abb.raw_data());
-  const auto* xp = reinterpret_cast<const double*>(xbb.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
   for (std::int64_t i = 0; i < n; ++i) {
-    const double p = igamma_p_scalar(ap[i], xp[i]);
-    op[i] = complement ? (1.0 - p) : p;
+    const double p = igamma_p_scalar(read_real_(abb, i), read_real_(xbb, i));
+    write_real_(out, i, complement ? (1.0 - p) : p);
   }
   return out;
 }
@@ -4777,12 +5304,16 @@ static Series select_scatter_impl(const Series& self, const Series& src, std::in
   const auto dsz = self.sizes()[(std::size_t)dim];
   if (index < 0) index += dsz;
   PLUSS_CHECK(index >= 0 && index < dsz, "select_scatter: index out of range");
-  auto x = src.to(self.scalar_type());
-  if (x.dim() == self.dim() - 1) x = x.unsqueeze(dim);
-  PLUSS_CHECK(x.dim() == self.dim(), "select_scatter: src rank mismatch");
-  PLUSS_CHECK(x.sizes()[(std::size_t)dim] == 1, "select_scatter: src size at dim must be 1");
+  PLUSS_CHECK(src.platform() == self.platform(), "select_scatter: self and src must be on the same platform");
+  PLUSS_CHECK(src.scalar_type() == self.scalar_type(), "select_scatter: self and src must have the same dtype");
+  std::vector<std::int64_t> expected(self.sizes().begin(), self.sizes().end());
+  expected.erase(expected.begin() + dim);
+  PLUSS_CHECK(src.sizes().size() == expected.size() &&
+                  std::equal(src.sizes().begin(), src.sizes().end(), expected.begin()),
+              "select_scatter: src shape must match self.select(dim, index)");
+  auto x = src.unsqueeze(dim);
   auto idx = Series::full(x.sizes(), static_cast<double>(index), ScalarType::Int64).to(self.platform());
-  return ops_internal::scatter(self, dim, idx, x.to(self.platform()));
+  return ops_internal::scatter(self, dim, idx, x);
 }
 
 static Series slice_scatter_impl(
@@ -4803,12 +5334,14 @@ static Series slice_scatter_impl(
   std::vector<std::int64_t> ids;
   for (std::int64_t i = start; i < end; i += step) ids.push_back(i);
 
-  auto x = src.to(self.scalar_type());
-  if (x.dim() == self.dim() - 1 && ids.size() == 1) return select_scatter_impl(self, x, dim, ids[0]);
-  if (x.dim() == self.dim() - 1) x = x.unsqueeze(dim);
-  PLUSS_CHECK(x.dim() == self.dim(), "slice_scatter: src rank mismatch");
-  PLUSS_CHECK(x.sizes()[(std::size_t)dim] == static_cast<std::int64_t>(ids.size()),
-              "slice_scatter: src slice length mismatch");
+  PLUSS_CHECK(src.platform() == self.platform(), "slice_scatter: self and src must be on the same platform");
+  PLUSS_CHECK(src.scalar_type() == self.scalar_type(), "slice_scatter: self and src must have the same dtype");
+  std::vector<std::int64_t> expected(self.sizes().begin(), self.sizes().end());
+  expected[(std::size_t)dim] = static_cast<std::int64_t>(ids.size());
+  PLUSS_CHECK(src.sizes().size() == expected.size() &&
+                  std::equal(src.sizes().begin(), src.sizes().end(), expected.begin()),
+              "slice_scatter: src shape must match the selected slice of self");
+  const auto& x = src;
 
   auto idx = Series::empty(x.sizes(), ScalarType::Int64).to(self.platform()).contiguous();
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_mutable_data());
@@ -4822,7 +5355,96 @@ static Series slice_scatter_impl(
       for (std::int64_t i = 0; i < inner; ++i) ip[(o * n + k) * inner + i] = ids[(std::size_t)k];
     }
   }
-  return ops_internal::scatter(self, dim, idx, x.to(self.platform()));
+  return ops_internal::scatter(self, dim, idx, x);
+}
+
+static Series expand_axis_index_(
+    const Series& self,
+    std::int64_t& dim,
+    const Series& index,
+    const Series& source,
+    const char* name) {
+  PLUSS_CHECK(self.dim() > 0, std::string(name) + ": scalar receivers are not supported");
+  dim = wrap_dim(dim, self.dim(), name);
+  PLUSS_CHECK(index.dim() <= 1, std::string(name) + ": index must be a scalar or one-dimensional Series");
+  PLUSS_CHECK(index.scalar_type() == ScalarType::Int32 || index.scalar_type() == ScalarType::Int64,
+              std::string(name) + ": index dtype must be int32 or int64");
+  PLUSS_CHECK(self.platform() == index.platform() && self.platform() == source.platform(),
+              std::string(name) + ": self, index, and source must be on the same platform");
+  PLUSS_CHECK(self.scalar_type() == source.scalar_type(),
+              std::string(name) + ": self and source must have the same dtype");
+  PLUSS_CHECK(source.dim() == self.dim(),
+              std::string(name) + ": source and self must have the same rank");
+  PLUSS_CHECK(source.sizes()[(std::size_t)dim] == index.numel(),
+              std::string(name) + ": index length must equal source.size(dim)");
+  for (std::int64_t axis = 0; axis < self.dim(); ++axis) {
+    if (axis == dim) continue;
+    PLUSS_CHECK(source.sizes()[(std::size_t)axis] == self.sizes()[(std::size_t)axis],
+                std::string(name) + ": source shape must match self outside dim");
+  }
+
+  const Series normalized_index = index.to(ScalarType::Int64).contiguous();
+  const Series host_index = normalized_index.to(Platform::CPU).contiguous();
+  const auto* positions = reinterpret_cast<const std::int64_t*>(host_index.raw_data());
+  const auto destination_size = self.sizes()[(std::size_t)dim];
+  for (std::int64_t i = 0; i < host_index.numel(); ++i) {
+    PLUSS_CHECK(positions[i] >= 0 && positions[i] < destination_size,
+                std::string(name) + ": index value out of range");
+  }
+
+  std::vector<std::int64_t> index_shape((std::size_t)self.dim(), 1);
+  index_shape[(std::size_t)dim] = index.numel();
+  return normalized_index
+      .reshape(index_shape)
+      .expand(source.sizes(), true)
+      .contiguous();
+}
+
+static Series index_add_impl_(
+    const Series& self,
+    std::int64_t dim,
+    const Series& index,
+    const Series& source,
+    double alpha) {
+  const Series expanded_index = expand_axis_index_(self, dim, index, source, "index_add");
+  const Series scaled = alpha == 1.0 ? source : mul_scalar(source, alpha).to(self.scalar_type());
+  return ops_internal::scatter_add(self, dim, expanded_index, scaled);
+}
+
+static Series index_copy_impl_(
+    const Series& self,
+    std::int64_t dim,
+    const Series& index,
+    const Series& source) {
+  const Series expanded_index = expand_axis_index_(self, dim, index, source, "index_copy");
+  return ops_internal::scatter(self, dim, expanded_index, source);
+}
+
+static Series index_fill_impl_(
+    const Series& self,
+    std::int64_t dim,
+    const Series& index,
+    double value) {
+  PLUSS_CHECK(self.dim() > 0, "index_fill: scalar receivers are not supported");
+  dim = wrap_dim(dim, self.dim(), "index_fill");
+  std::vector<std::int64_t> source_shape(self.sizes().begin(), self.sizes().end());
+  source_shape[(std::size_t)dim] = index.numel();
+  const Series source = Series::full(source_shape, value, self.scalar_type()).to(self.platform());
+  const Series expanded_index = expand_axis_index_(self, dim, index, source, "index_fill");
+  return ops_internal::scatter(self, dim, expanded_index, source);
+}
+
+static Series index_reduce_impl_(
+    const Series& self,
+    std::int64_t dim,
+    const Series& index,
+    const Series& source,
+    std::string_view reduce,
+    bool include_self) {
+  PLUSS_CHECK(reduce == "prod" || reduce == "mean" || reduce == "amax" || reduce == "amin",
+              "index_reduce: reduce must be one of 'prod', 'mean', 'amax', or 'amin'");
+  const Series expanded_index = expand_axis_index_(self, dim, index, source, "index_reduce");
+  return ops_internal::scatter_reduce(self, dim, expanded_index, source, std::string(reduce), include_self);
 }
 
 static Series triangular_solve_impl(const Series& b, const Series& a, bool upper, bool unitriangular) {
@@ -5226,6 +5848,18 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "abs") return ops_internal::abs(self);
     if (op == "abs2") return abs2_impl(self);
     if (op == "sign" || op == "sgn") {
+      if (is_complex_dtype(self.scalar_type())) {
+        // sign() has no ordering to fall back on for complex numbers; sgn()
+        // generalizes to the unit-modulus projection z / |z| (and 0 at z = 0).
+        PLUSS_CHECK(op == "sgn",
+                    "sign: not supported for complex dtypes; use sgn()");
+        Series mag = ops_internal::abs(self);
+        // denom = |z| everywhere, except 1 where |z| == 0 -- there z is also 0,
+        // so z / 1 = 0 gives the documented sgn(0) = 0 without a branch.
+        Series is_zero = ops_internal::eq(mag, scalar_like(mag, 0.0)).to(mag.scalar_type());
+        Series denom = ops_internal::add(mag, is_zero);
+        return ops_internal::div(self, denom.to(self.scalar_type()));
+      }
       ScalarType work_dt = ScalarType::Float64;
       if (self.platform() == Platform::MPS) {
         work_dt = ScalarType::Float32;
@@ -5315,10 +5949,17 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     }
     if (op == "positive") return self;
     if (op == "ravel") return self.flatten(0, -1);
-    if (op == "mT") return self.transpose(-2, -1);
-    if (op == "mH" || op == "matrix_H") return ops_internal::conj(self.transpose(-2, -1));
-    if (op == "adjoint") return ops_internal::conj(self.transpose(-2, -1));
-    if (op == "numpy_T") return self.transpose(-2, -1);
+    if (op == "mT" || op == "mH" || op == "matrix_H" || op == "adjoint" ||
+        op == "numpy_T") {
+      PLUSS_CHECK(self.dim() >= 2,
+                  std::string(op) +
+                      ": expected a series with at least 2 dimensions, got a " +
+                      std::to_string(self.dim()) + "-D series");
+      const Series swapped = self.transpose(-2, -1);
+      return (op == "mH" || op == "matrix_H" || op == "adjoint")
+                 ? ops_internal::conj(swapped)
+                 : swapped;
+    }
     if (op == "sort") return sort_values_only(self, /*dim=*/-1, /*descending=*/false, /*stable=*/false);
     if (op == "argsort") return argsort_values_only(self, /*dim=*/-1, /*descending=*/false, /*stable=*/false);
     if (op == "msort") return sort_values_only(self, /*dim=*/0, /*descending=*/false, /*stable=*/false);
@@ -5374,12 +6015,27 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "corrcoef") return corrcoef_impl(self);
     if (op == "cummax") return (self.dim() == 0) ? self.clone() : cum_extrema_impl(self, 0, /*is_max=*/true);
     if (op == "cummin") return (self.dim() == 0) ? self.clone() : cum_extrema_impl(self, 0, /*is_max=*/false);
-    if (op == "digamma") return digamma_impl(self);
-    if (op == "erfinv") return erfinv_impl(self);
-    if (op == "i0") return i0_impl(self);
+    if (op == "digamma")
+      return bind_special_grad_(digamma_impl(self), self,
+          [](const Series& x) { return polygamma_impl(x, 1); }, "digamma");
+    if (op == "erfinv")
+      return bind_special_grad_(erfinv_impl(self), self,
+          [](const Series& x) {
+            return ops_internal::mul(ops_internal::exp(ops_internal::square(erfinv_impl(x))),
+                                     scalar_like(x, std::sqrt(kPi) / 2.0));
+          }, "erfinv");
+    if (op == "i0")
+      return bind_special_grad_(i0_impl(self), self,
+          [](const Series& x) {
+            return unary_special_impl_(x, [](double v) { return i1_scalar(v); });
+          }, "i0");
     if (op == "frexp") return frexp_impl(self);
-    if (op == "mvlgamma") return mvlgamma_impl(self, 1);
-    if (op == "polygamma") return polygamma_impl(self, 1);
+    if (op == "mvlgamma")
+      return bind_special_grad_(mvlgamma_impl(self, 1), self,
+          [](const Series& x) { return digamma_impl(x); }, "mvlgamma");
+    if (op == "polygamma")
+      return bind_special_grad_(polygamma_impl(self, 1), self,
+          [](const Series& x) { return polygamma_impl(x, 2); }, "polygamma");
     if (op == "multinomial") return multinomial_impl(self, 1, /*replacement=*/true);
     if (op == "histogram") return self.histc(/*bins=*/10, /*min=*/0.0, /*max=*/0.0);
     if (op == "pinverse") return pinverse_impl(self, 1e-12);
@@ -5388,7 +6044,12 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "qscheme") return i64_scalar(0);
     if (op == "q_per_channel_scales") return Series::ones({1}, ScalarType::Float64);
     if (op == "q_per_channel_zero_points") return Series::zeros({1}, ScalarType::Int64);
-    if (op == "erfcinv") return erfcinv_impl(self);
+    if (op == "erfcinv")
+      return bind_special_grad_(erfcinv_impl(self), self,
+          [](const Series& y) {
+            return ops_internal::mul(ops_internal::exp(ops_internal::square(erfcinv_impl(y))),
+                                     scalar_like(y, -std::sqrt(kPi) / 2.0));
+          }, "erfcinv");
     if (op == "airy") return airy_impl(self);
     if (op == "zeta") return zeta_impl(self, scalar_like(self, 1.0));
     if (op == "besselj") return bessel_impl(self, /*order=*/0.0, "j");
@@ -5397,7 +6058,9 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "besselk") return bessel_impl(self, /*order=*/0.0, "k");
     if (op == "histcounts") return self.histc(/*bins=*/10, /*min=*/0.0, /*max=*/0.0);
     if (op == "stft" || op == "istft") return self;
-    if (op == "sinc") return sinc_impl(self);
+    if (op == "sinc")
+      return bind_special_grad_(sinc_impl(self), self,
+          [](const Series& x) { return unary_f64_impl(x, sinc_deriv_scalar); }, "sinc");
     if (op == "hardshrink") return hardshrink_impl(self, 0.5);
     if (op == "aminmax") return aminmax_impl(self);
     if (op == "logcumsumexp") return logcumsumexp_impl(self, -1);
@@ -5492,8 +6155,15 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "add") return add_scalar(self, s);
       if (op == "sub") return sub_scalar(self, s);
       if (op == "div") return div_scalar(self, s);
-      if (op == "float_power") return pow_scalar(self, s);
-      if (op == "floor_divide") return ops_internal::floor(div_scalar(self, s));
+      if (op == "float_power") return float_power_impl_(self, scalar_like(self, s));
+      if (op == "floor_divide") {
+        // Weak-scalar rule: an integer-valued scalar against an integral series
+        // keeps the result integral; a fractional scalar makes it floating.
+        const bool keep_int = !is_floating_dtype(self.scalar_type()) &&
+                              !is_complex_dtype(self.scalar_type()) && s == std::trunc(s);
+        return floor_divide_impl_(
+            self, keep_int ? scalar_like(self, s) : Series::full({}, s, ScalarType::Float64));
+      }
       if (op == "pow") return pow_scalar(self, s);
       if (op == "norm") return self.norm(s);
       if (op == "copysign") {
@@ -5518,6 +6188,15 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "gt") return ops_internal::gt(self, scalar_like(self, s));
       if (op == "ge") return ops_internal::ge(self, scalar_like(self, s));
       if (op == "bincount") return ops_internal::bincount(self, (std::int64_t)s);
+      if (op == "count_nonzero") {
+        const std::int64_t nd = self.dim();
+        std::int64_t d = (std::int64_t)s;
+        if (d < 0) d += nd;
+        PLUSS_CHECK(d >= 0 && d < nd, "count_nonzero: dim out of range");
+        return ops_internal::sum(ops_internal::ne(self, scalar_like(self, 0.0)).to(ScalarType::Int64),
+                                 d, /*keepdim=*/false);
+      }
+      if (op == "cov") return covariance_impl(self, (std::int64_t)s);
       if (op == "beta") return beta_impl(self, scalar_like(self, s));
       if (op == "betaln") return betaln_impl(self, scalar_like(self, s));
       if (op == "nextafter") return nextafter_impl(self, s);
@@ -5532,8 +6211,23 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "prelu") return prelu_impl(self, s);
       if (op == "ldexp") return ldexp_impl(self, s);
       if (op == "matrix_power") return matrix_power_impl(self, (std::int64_t)s);
-      if (op == "mvlgamma") return mvlgamma_impl(self, (std::int64_t)s);
-      if (op == "polygamma") return polygamma_impl(self, (std::int64_t)s);
+      if (op == "mvlgamma") {
+        const std::int64_t p = (std::int64_t)s;
+        return bind_special_grad_(mvlgamma_impl(self, p), self,
+            [p](const Series& x) {
+              Series acc = digamma_impl(x);
+              for (std::int64_t j = 2; j <= p; ++j)
+                acc = ops_internal::add(
+                    acc, digamma_impl(ops_internal::add(
+                             x, scalar_like(x, 0.5 * (1.0 - (double)j)))));
+              return acc;
+            }, "mvlgamma");
+      }
+      if (op == "polygamma") {
+        const std::int64_t n = (std::int64_t)s;
+        return bind_special_grad_(polygamma_impl(self, n), self,
+            [n](const Series& x) { return polygamma_impl(x, n + 1); }, "polygamma");
+      }
       if (op == "multinomial") return multinomial_impl(self, (std::int64_t)s, /*replacement=*/false);
       if (op == "cummax") return cum_extrema_impl(self, (std::int64_t)s, /*is_max=*/true);
       if (op == "cummin") return cum_extrema_impl(self, (std::int64_t)s, /*is_max=*/false);
@@ -5689,14 +6383,29 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "cholesky_solve") return cholesky_solve_impl(self, other, /*upper=*/false);
       if (op == "lu_solve") return matmul_dispatch_(inverse_impl(other), self.to(ScalarType::Float64));
       if (op == "triangular_solve") return triangular_solve_impl(self, other, /*upper=*/true, /*unitriangular=*/false);
-      if (op == "igamma") return igamma_impl(self, other, /*complement=*/false);
-      if (op == "igammac") return igamma_impl(self, other, /*complement=*/true);
+      if (op == "igamma" || op == "igammac") {
+        const bool complement = (op == "igammac");
+        // d/dx of the regularized lower incomplete gamma P(a, x) is
+        //   x^(a-1) e^(-x) / Gamma(a);  the upper form Q = 1 - P negates it.
+        Series a_copy = self;
+        return bind_special_grad_(
+            igamma_impl(self, other, complement), other,
+            [a_copy, complement](const Series& x) {
+              Series d = ops_internal::exp(ops_internal::sub(
+                  ops_internal::sub(
+                      ops_internal::mul(ops_internal::sub(a_copy, scalar_like(a_copy, 1.0)),
+                                        ops_internal::log(x)),
+                      x),
+                  ops_internal::lgamma(a_copy)));
+              return complement ? ops_internal::neg(d) : d;
+            }, op == "igammac" ? "igammac" : "igamma");
+      }
       if (op == "add") return ops_internal::add(self, other);
       if (op == "sub") return ops_internal::sub(self, other);
       if (op == "mul") return ops_internal::mul(self, other);
       if (op == "div") return ops_internal::div(self, other);
       if (op == "pow") return ops_internal::pow(self, other);
-      if (op == "floor_divide") return ops_internal::floor(ops_internal::div(self, other));
+      if (op == "floor_divide") return floor_divide_impl_(self, other);
 
       if (op == "eq") return ops_internal::eq(self, other);
       if (op == "ne") return ops_internal::ne(self, other);
@@ -5722,7 +6431,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "fmod") return ops_internal::fmod(self, other);
       if (op == "remainder") return ops_internal::remainder(self, other);
       if (op == "atan2") return ops_internal::atan2(self, other);
-      if (op == "float_power") return ops_internal::pow(self, other);
+      if (op == "float_power") return float_power_impl_(self, other);
       if (op == "copysign") {
         Series mag = ops_internal::abs(self);
         Series pos = ops_internal::ge(other, scalar_like(other, 0.0));
@@ -5732,8 +6441,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "logaddexp2") return ops_internal::logaddexp2(self, other);
       if (op == "hypot") return ops_internal::hypot(self, other);
       if (op == "xlogy") return ops_internal::xlogy(self, other);
-      if (op == "fmax") return ops_internal::maximum(self, other);
-      if (op == "fmin") return ops_internal::minimum(self, other);
+      if (op == "fmax") return fmax_fmin_impl_(self, other, /*is_max=*/true);
+      if (op == "fmin") return fmax_fmin_impl_(self, other, /*is_max=*/false);
       if (op == "max") return ops_internal::maximum(self, other);
       if (op == "min") return ops_internal::minimum(self, other);
       if (op == "equal") return ops_internal::all(ops_internal::eq(self, other));
@@ -5743,7 +6452,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
                                                    std::equal(self.sizes().begin(), self.sizes().end(), other.sizes().begin()));
       if (op == "reshape_as" || op == "view_as") return self.reshape(other.sizes());
       if (op == "type_as") return self.to(other.scalar_type());
-      if (op == "ger") return matmul_dispatch_(self.unsqueeze(1), other.unsqueeze(0));
+      if (op == "ger") return matmul_with_tape_(self.unsqueeze(1), other.unsqueeze(0));
 
       if (op == "matmul") return matmul_with_tape_(self, other);
       if (op == "mm") {
@@ -5755,7 +6464,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
                     "mv: expected a 2D matrix and a 1D vector");
         return matmul_with_tape_(self, other);
       }
-      if (op == "bmm") return matmul_with_tape_(self, other);
+      if (op == "bmm") {
+        check_bmm_contract_(self, other, "bmm");
+        return matmul_with_tape_(self, other);
+      }
       if (op == "index") return self.take(other);
       if (op == "take") return self.take(other);
       if (op == "take_along_dim") {
@@ -5774,10 +6486,14 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
         PLUSS_CHECK(a1.numel() == b1.numel(), "inner: flattened inputs must have same numel");
         return ops_internal::sum(ops_internal::mul(a1, b1));
       }
-      if (op == "outer") return matmul_dispatch_(self.unsqueeze(1), other.unsqueeze(0));
+      if (op == "outer") {
+        check_outer_contract_(self, other, "outer");
+        return matmul_with_tape_(self.unsqueeze(1), other.unsqueeze(0));
+      }
       if (op == "vdot") return vdot_impl(self, other);
       if (op == "cross") return cross_impl(self, other, -1);
-      if (op == "dist") return ops_internal::sub(self, other).norm(2.0);
+      if (op == "dist")
+        return ops_internal::sub(self, other).norm(2.0).reshape(std::vector<std::int64_t>{});
       if (op == "expand_as") return self.expand(other.sizes());
       if (op == "expand_like") return expand_impl(self, other.sizes());
       if (op == "repeat_like") {
@@ -5791,7 +6507,18 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "lcm") return lcm_impl(self, other);
       if (op == "beta") return beta_impl(self, other);
       if (op == "betaln") return betaln_impl(self, other);
-      if (op == "zeta") return zeta_impl(self, other);
+      if (op == "zeta") {
+        // Hurwitz zeta zeta(s, q): d/dq = -s * zeta(s + 1, q). The exponent
+        // slot has no closed-form routing and is left non-differentiable.
+        Series s_copy = self;
+        return bind_special_grad_(
+            zeta_impl(self, other), other,
+            [s_copy](const Series& q) {
+              return ops_internal::mul(
+                  ops_internal::neg(s_copy),
+                  zeta_impl(ops_internal::add(s_copy, scalar_like(s_copy, 1.0)), q));
+            }, "zeta");
+      }
       if (op == "cdist" || op == "pdist2") return cdist_impl(self, other, 2.0);
       if (op == "sparse_mask") return ops_internal::where(other.to(ScalarType::Bool), self, scalar_like(self, 0.0));
       if (op == "smm") return matmul_dispatch_(self, other);
@@ -5865,8 +6592,23 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "squeeze") return ops_internal::squeeze(self, (std::int64_t)x);
       if (op == "unsqueeze") return self.unsqueeze((std::int64_t)x);
       if (op == "transpose") return self.transpose((std::int64_t)x, (std::int64_t)y);
-      if (op == "movedim" || op == "moveaxis" || op == "swapdims" || op == "swapaxes")
+      if (op == "swapdims" || op == "swapaxes")
         return self.transpose((std::int64_t)x, (std::int64_t)y);
+      if (op == "movedim" || op == "moveaxis") {
+        // Move axis `src` to position `dst`, shifting the rest — not a plain
+        // two-axis swap (which is what `swapaxes` does).
+        const std::int64_t nd = self.dim();
+        const std::int64_t src = wrap_dim((std::int64_t)x, nd, "moveaxis");
+        const std::int64_t dst = wrap_dim((std::int64_t)y, nd, "moveaxis");
+        if (src == dst) return self;
+        std::vector<std::int64_t> order;
+        order.reserve((std::size_t)nd);
+        for (std::int64_t i = 0; i < nd; ++i) {
+          if (i != src) order.push_back(i);
+        }
+        order.insert(order.begin() + dst, src);
+        return self.permute(order);
+      }
       if (op == "sum") return ops_internal::sum(self, (std::int64_t)x, as_bool(args[1]));
       if (op == "mean") return ops_internal::mean(self, (std::int64_t)x, as_bool(args[1]));
       if (op == "prod") return ops_internal::prod(self, (std::int64_t)x, as_bool(args[1]));
@@ -5915,6 +6657,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       const auto dim = as_i64(args[0]);
       const double p = as_double(args[0]);
       const bool keepdim = as_bool(args[1]);
+      if (op == "multinomial") return multinomial_impl(self, dim, keepdim);
       if (is_dropout_family_(op)) {
         return dropout_family_impl_(op, self, p, keepdim);
       }
@@ -6020,6 +6763,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "betaln") return betaln_impl(self, scalar_like(self, s));
       if (op == "zeta") return zeta_impl(self, scalar_like(self, s));
       if (op == "cdist" || op == "pdist2") return cdist_impl(self, other, s);
+      if (op == "dist")
+        return ops_internal::sub(self, other).norm(s).reshape(std::vector<std::int64_t>{});
       if (op == "hardshrink_backward") return hardshrink_backward_impl(self, other, s);
       if (op == "cross") return cross_impl(self, other, (std::int64_t)s);
       return not_impl(op, args, self);
@@ -6049,14 +6794,26 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "where") return self.where(m, s);
       if (op == "masked_fill") return ops_internal::masked_fill(self, m, s);
       if (op == "cdist" || op == "pdist2") return cdist_impl(self, m, 2.0);
-      if (op == "addmm") return combine_beta_alpha(self, matmul_dispatch_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
-      if (op == "addmv") return combine_beta_alpha(self, matmul_dispatch_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
-      if (op == "addr") return combine_beta_alpha(self, matmul_dispatch_(m.unsqueeze(1), s.unsqueeze(0)), /*beta=*/1.0, /*alpha=*/1.0);
+      if (op == "addmm") {
+        check_mm_contract_(m, s, "addmm");
+        return combine_beta_alpha(self, matmul_with_tape_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
+      }
+      if (op == "addmv") {
+        check_mv_contract_(m, s, "addmv");
+        return combine_beta_alpha(self, matmul_with_tape_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
+      }
+      if (op == "addr") {
+        check_outer_contract_(m, s, "addr");
+        return combine_beta_alpha(self, matmul_with_tape_(m.unsqueeze(1), s.unsqueeze(0)), /*beta=*/1.0, /*alpha=*/1.0);
+      }
       if (op == "addbmm") {
-        Series upd = matmul_dispatch_(m, s).sum(/*dim=*/0, /*keepdim=*/false);
+        Series upd = matmul_with_tape_(m, s).sum(/*dim=*/0, /*keepdim=*/false);
         return combine_beta_alpha(self, upd, /*beta=*/1.0, /*alpha=*/1.0);
       }
-      if (op == "baddbmm") return combine_beta_alpha(self, matmul_dispatch_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
+      if (op == "baddbmm") {
+        check_bmm_contract_(m, s, "baddbmm");
+        return combine_beta_alpha(self, matmul_with_tape_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
+      }
       if (op == "lerp") return ops_internal::add(self, ops_internal::mul(ops_internal::sub(m, self), s));
       if (op == "masked_scatter") return self.masked_scatter(m, s);
       if (op == "where") return ops_internal::where(self, m, s);
@@ -6120,12 +6877,10 @@ if (is_numeric_scalar_arg(args[0]) &&
         return ops_internal::scatter_add(self, dim, index, src);
       }
       if (op == "index_copy") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_copy: currently implemented for 1D dim=0");
-        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/false);
+        return index_copy_impl_(self, dim, index, as_series(args[2]));
       }
       if (op == "index_add") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_add: currently implemented for 1D dim=0");
-        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return index_add_impl_(self, dim, index, as_series(args[2]), 1.0);
       }
       return not_impl(op, args, self);
     }
@@ -6137,10 +6892,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       const auto& index = as_series(args[1]);
       const double fill_value = as_double(args[2]);
       if (op == "index_fill") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_fill: currently implemented for 1D dim=0");
-        const auto n = index.numel();
-        auto src = Series::full({n}, fill_value, self.scalar_type()).to(self.platform());
-        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/false);
+        return index_fill_impl_(self, dim, index, fill_value);
       }
       return not_impl(op, args, self);
     }
@@ -6189,23 +6941,39 @@ if (is_numeric_scalar_arg(args[0]) &&
       const auto dsz = self.sizes()[(std::size_t)wd];
       auto st = start;
       if (st < 0) st += dsz;
+
+      if (op == "narrow" || op == "narrow_copy") {
+        // Single-axis range select with an independent (freshly materialized)
+        // result. A start or length that runs past the axis is an error --
+        // the saturating variant is `slice`, which follows Python slice
+        // semantics instead.
+        PLUSS_CHECK(len >= 0,
+                    std::string(op) + ": length must be non-negative, got " +
+                        std::to_string(len));
+        PLUSS_CHECK(st >= 0 && st <= dsz,
+                    std::string(op) + ": start " + std::to_string(start) +
+                        " is out of range for axis " + std::to_string(wd) +
+                        " of size " + std::to_string(dsz));
+        PLUSS_CHECK(st + len <= dsz,
+                    std::string(op) + ": start + length (" +
+                        std::to_string(st) + " + " + std::to_string(len) +
+                        ") exceeds axis " + std::to_string(wd) + " size " +
+                        std::to_string(dsz));
+        // select_range() routes through gather(), which registers a proper
+        // backward (scatter-add back into a zero-padded input shape) and
+        // returns an independent buffer (the native gather kernels never
+        // alias the source), so the storage-independence contract holds with
+        // no extra copy. A trailing .clone() that once sat here was silently
+        // detaching the result from the autograd graph -- Series::clone()
+        // registers no backward, unlike Series::contiguous() -- so gradients
+        // could never reach a parameter through a narrow_copy(); confirmed in
+        // a real training loop. See PlussAI/Ice/ICE_BLUEPRINT.md's TFT
+        // section for the original repro.
+        return select_range(self, wd, st, len);
+      }
+
+      // slice / select / slice_inverse: saturating start, Python slice style.
       st = std::clamp<std::int64_t>(st, 0, dsz);
-      if (op == "narrow") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
-      // select_range() already routes through gather(), which registers a
-      // proper backward (scatter-add back into a zero-padded input shape)
-      // -- the same machinery index_select()/narrow()/slice() ride on, and
-      // it already returns an independent, freshly-materialized buffer (the
-      // native gather kernels never alias the source), so narrow_copy()'s
-      // storage-independence contract holds without an extra copy. The
-      // trailing .clone() that used to sit here was silently detaching the
-      // result from the autograd graph (Series::clone() doesn't register a
-      // backward, unlike its sibling Series::contiguous()), which meant
-      // gradients could never reach a parameter through a narrow_copy() —
-      // confirmed via a real training loop where this made every parameter
-      // upstream of a narrow_copy() call report zero gradient throughout
-      // training. See PlussAI/Ice/ICE_BLUEPRINT.md's TFT section for the
-      // original repro.
-      if (op == "narrow_copy") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
       if (op == "slice") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
       if (op == "select") {
         // Route through the core Series::select implementation so reverse-mode
@@ -6373,9 +7141,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       auto src = as_series(args[2]).to(self.scalar_type());
       const double alpha = as_double(args[3]);
       if (op == "index_add") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_add: currently implemented for 1D dim=0");
-        if (alpha != 1.0) src = mul_scalar(src, alpha).to(self.scalar_type());
-        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return index_add_impl_(self, dim, index, as_series(args[2]), alpha);
       }
       return not_impl(op, args, self);
     }
@@ -6389,9 +7155,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       auto src = as_series(args[2]).to(self.scalar_type());
       const auto reduce = as_string(args[3]);
       if (op == "index_reduce") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_reduce: currently implemented for 1D dim=0");
-        PLUSS_CHECK(reduce == "sum", "index_reduce: only 'sum' is implemented");
-        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return index_reduce_impl_(self, dim, index, as_series(args[2]), reduce, /*include_self=*/true);
       }
       if (op == "scatter_reduce") {
         return ops_internal::scatter_reduce(self, dim, index, src, std::string(reduce), /*include_self=*/true);
@@ -6419,14 +7183,26 @@ if (is_numeric_scalar_arg(args[0]) &&
       const Series& c = as_series(args[1]);
       const double beta = as_double(args[2]);
       const double alpha = as_double(args[3]);
-      if (op == "addmm") return combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha);
-      if (op == "addmv") return combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha);
-      if (op == "addr") return combine_beta_alpha(self, matmul_dispatch_(b.unsqueeze(1), c.unsqueeze(0)), beta, alpha);
+      if (op == "addmm") {
+        check_mm_contract_(b, c, "addmm");
+        return combine_beta_alpha(self, matmul_with_tape_(b, c), beta, alpha);
+      }
+      if (op == "addmv") {
+        check_mv_contract_(b, c, "addmv");
+        return combine_beta_alpha(self, matmul_with_tape_(b, c), beta, alpha);
+      }
+      if (op == "addr") {
+        check_outer_contract_(b, c, "addr");
+        return combine_beta_alpha(self, matmul_with_tape_(b.unsqueeze(1), c.unsqueeze(0)), beta, alpha);
+      }
       if (op == "addbmm") {
-        Series upd = matmul_dispatch_(b, c).sum(/*dim=*/0, /*keepdim=*/false);
+        Series upd = matmul_with_tape_(b, c).sum(/*dim=*/0, /*keepdim=*/false);
         return combine_beta_alpha(self, upd, beta, alpha);
       }
-      if (op == "baddbmm") return combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha);
+      if (op == "baddbmm") {
+        check_bmm_contract_(b, c, "baddbmm");
+        return combine_beta_alpha(self, matmul_with_tape_(b, c), beta, alpha);
+      }
     }
     return not_impl(op, args, self);
   }
@@ -6456,14 +7232,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       const auto reduce = as_string(args[3]);
       const bool include_self = as_bool(args[4]);
       if (op == "index_reduce") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_reduce: currently implemented for 1D dim=0");
-        PLUSS_CHECK(reduce == "sum", "index_reduce: only 'sum' is implemented");
-        auto out = include_self ? self.clone() : self.clone();
-        if (!include_self) {
-          auto zeros = Series::zeros({index.numel()}, out.scalar_type()).to(out.platform());
-          out = put_dispatch_copy_(out, index.to(ScalarType::Int64), zeros, /*accumulate=*/false);
-        }
-        return put_dispatch_copy_(out, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return index_reduce_impl_(self, dim, index, as_series(args[2]), reduce, include_self);
       }
       if (op == "scatter_reduce") {
         return ops_internal::scatter_reduce(self, dim, index, src, std::string(reduce), include_self);
@@ -6565,36 +7334,35 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
   if (args.empty()) {
     if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_") return self;
     if (op == "sparse_resize_and_clear_") {
-      self = Series::zeros(self.sizes(), self.scalar_type());
-      return self;
+      return inplace_result_(self, Series::zeros(self.sizes(), self.scalar_type()));
     }
-    if (op == "digamma_") { self = digamma_impl(self).to(self.scalar_type()); return self; }
-    if (op == "erfinv_") { self = erfinv_impl(self).to(self.scalar_type()); return self; }
-    if (op == "i0_") { self = i0_impl(self).to(self.scalar_type()); return self; }
+    if (op == "digamma_") { check_special_inplace_dtype_(self, "digamma_"); return assign_inplace_preserve_storage_(self, digamma_impl(self).to(self.scalar_type())); }
+    if (op == "erfinv_") { check_special_inplace_dtype_(self, "erfinv_"); return assign_inplace_preserve_storage_(self, erfinv_impl(self).to(self.scalar_type())); }
+    if (op == "i0_") { check_special_inplace_dtype_(self, "i0_"); return assign_inplace_preserve_storage_(self, i0_impl(self).to(self.scalar_type())); }
 
     if (op == "relu_") return ops_internal::relu_(self);
-    if (op == "relu6_") { self = ops_internal::clamp(self, 0.0, 6.0); return self; }
+    if (op == "relu6_") { return inplace_result_(self, ops_internal::clamp(self, 0.0, 6.0)); }
     if (op == "sigmoid_") return ops_internal::sigmoid_(self);
-    if (op == "hardsigmoid_") { self = hardsigmoid_impl_(self).to(self.scalar_type()); return self; }
-    if (op == "hardswish_") { self = hardswish_impl_(self).to(self.scalar_type()); return self; }
+    if (op == "hardsigmoid_") { return inplace_result_(self, hardsigmoid_impl_(self).to(self.scalar_type())); }
+    if (op == "hardswish_") { return inplace_result_(self, hardswish_impl_(self).to(self.scalar_type())); }
     if (op == "softplus_") return ops_internal::softplus_(self, 1.0, 20.0);
-    if (op == "mish_") { self = mish_impl_(self).to(self.scalar_type()); return self; }
+    if (op == "mish_") { return inplace_result_(self, mish_impl_(self).to(self.scalar_type())); }
     if (op == "silu_") return ops_internal::silu_(self);
-    if (op == "selu_") { self = selu_impl_(self).to(self.scalar_type()); return self; }
-    if (op == "hardtanh_") { self = ops_internal::clamp(self, -1.0, 1.0); return self; }
-    if (op == "celu_") { self = celu_impl_(self, 1.0).to(self.scalar_type()); return self; }
-    if (op == "elu_") { self = elu_impl_(self, 1.0, 1.0, 1.0).to(self.scalar_type()); return self; }
-    if (op == "rrelu_") { self = rrelu_impl_(self, 0.125, 0.3333333333333333, /*training=*/false).to(self.scalar_type()); return self; }
+    if (op == "selu_") { return inplace_result_(self, selu_impl_(self).to(self.scalar_type())); }
+    if (op == "hardtanh_") { return inplace_result_(self, ops_internal::clamp(self, -1.0, 1.0)); }
+    if (op == "celu_") { return inplace_result_(self, celu_impl_(self, 1.0).to(self.scalar_type())); }
+    if (op == "elu_") { return inplace_result_(self, elu_impl_(self, 1.0, 1.0, 1.0).to(self.scalar_type())); }
+    if (op == "rrelu_") { return inplace_result_(self, rrelu_impl_(self, 0.125, 0.3333333333333333, /*training=*/false).to(self.scalar_type())); }
     if (op == "gelu_") return ops_internal::gelu_(self);
 
     if (op == "exp_") return ops_internal::exp_(self);
     if (op == "log_") return ops_internal::log_(self);
     if (op == "sqrt_") return ops_internal::sqrt_(self);
-    if (op == "rsqrt_") { self = ops_internal::rsqrt(self); return self; }
-    if (op == "log2_") { self = ops_internal::log2(self); return self; }
-    if (op == "log10_") { self = ops_internal::log10(self); return self; }
-    if (op == "exp2_") { self = ops_internal::exp2(self); return self; }
-    if (op == "square_") { self = ops_internal::square(self); return self; }
+    if (op == "rsqrt_") { return inplace_result_(self, ops_internal::rsqrt(self)); }
+    if (op == "log2_") { return inplace_result_(self, ops_internal::log2(self)); }
+    if (op == "log10_") { return inplace_result_(self, ops_internal::log10(self)); }
+    if (op == "exp2_") { return inplace_result_(self, ops_internal::exp2(self)); }
+    if (op == "square_") { return inplace_result_(self, ops_internal::square(self)); }
 
     if (op == "sin_") return self.sin_();
     if (op == "cos_") return self.cos_();
@@ -6620,20 +7388,19 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (op == "asinh_") return self.asinh_();
     if (op == "acosh_") return self.acosh_();
     if (op == "atanh_") return self.atanh_();
-    if (op == "erfcinv_") { self = erfcinv_impl(self).to(self.scalar_type()); return self; }
+    if (op == "erfcinv_") { return inplace_result_(self, erfcinv_impl(self).to(self.scalar_type())); }
 
-    if (op == "conj_physical_") { self = ops_internal::conj(self); return self; }
-    if (op == "neg_") { self = ops_internal::neg(self); return self; }
+    if (op == "conj_physical_") { return inplace_result_(self, ops_internal::conj(self)); }
+    if (op == "neg_") { return inplace_result_(self, ops_internal::neg(self)); }
     if (op == "sign_" || op == "sgn_") {
       Series pos = ops_internal::gt(self, scalar_like(self, 0.0)).to(ScalarType::Float64);
       Series neg = ops_internal::lt(self, scalar_like(self, 0.0)).to(ScalarType::Float64);
-      self = ops_internal::sub(pos, neg).to(self.scalar_type());
-      return self;
+      return inplace_result_(self, ops_internal::sub(pos, neg).to(self.scalar_type()));
     }
-    if (op == "fix_") { self = ops_internal::trunc(self); return self; }
-    if (op == "frac_") { self = ops_internal::sub(self, ops_internal::floor(self)); return self; }
-    if (op == "deg2rad_") { self = mul_scalar(self, kPi / 180.0); return self; }
-    if (op == "rad2deg_") { self = mul_scalar(self, 180.0 / kPi); return self; }
+    if (op == "fix_") { return inplace_result_(self, ops_internal::trunc(self)); }
+    if (op == "frac_") { return inplace_result_(self, ops_internal::sub(self, ops_internal::floor(self))); }
+    if (op == "deg2rad_") { return inplace_result_(self, mul_scalar(self, kPi / 180.0)); }
+    if (op == "rad2deg_") { return inplace_result_(self, mul_scalar(self, 180.0 / kPi)); }
     if (op == "positive_") return self;
     if (op == "isnan_") return self.isnan_();
     if (op == "isinf_") return self.isinf_();
@@ -6654,40 +7421,35 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       return self;
     }
     if (op == "rename_" || op == "set_") return self;
-    if (op == "abs_") { self = ops_internal::abs(self); return self; }
+    if (op == "abs_") { return inplace_result_(self, ops_internal::abs(self)); }
     if (op == "signbit_") {
-      self = ops_internal::lt(self, scalar_like(self, 0.0)).to(self.scalar_type());
-      return self;
+      return inplace_result_(self, ops_internal::lt(self, scalar_like(self, 0.0)).to(self.scalar_type()));
     }
     if (op == "bitwise_not_") return ops_internal::bitwise_not_(self);
-    if (op == "squeeze_") { self = ops_internal::squeeze(self); return self; }
+    if (op == "squeeze_") { return inplace_result_(self, ops_internal::squeeze(self)); }
     if (op == "t_") {
       if (self.dim() == 2) self = self.transpose(0, 1);
       return self;
     }
-    if (op == "tril_") { self = tril_triu_impl(self, /*diagonal=*/0, /*upper=*/false); return self; }
-    if (op == "triu_") { self = tril_triu_impl(self, /*diagonal=*/0, /*upper=*/true); return self; }
-    if (op == "zero_") { self = Series::zeros(self.sizes(), self.scalar_type()); return self; }
-    if (op == "uniform_") { self = uniform_like(self, 0.0, 1.0); return self; }
-    if (op == "normal_") { self = normal_like(self, 0.0, 1.0); return self; }
-    if (op == "log_normal_") { self = ops_internal::exp(normal_like(self, 1.0, 2.0)); return self; }
-    if (op == "exponential_") { self = exponential_like(self, 1.0); return self; }
-    if (op == "geometric_") { self = geometric_like(self, 0.5); return self; }
-    if (op == "cauchy_") { self = cauchy_like(self, 0.0, 1.0); return self; }
-    if (op == "bernoulli_") { self = bernoulli_sample_from_probs(self).to(self.scalar_type()); return self; }
+    if (op == "tril_") { return inplace_result_(self, tril_triu_impl(self, /*diagonal=*/0, /*upper=*/false)); }
+    if (op == "triu_") { return inplace_result_(self, tril_triu_impl(self, /*diagonal=*/0, /*upper=*/true)); }
+    if (op == "zero_") { return inplace_result_(self, Series::zeros(self.sizes(), self.scalar_type())); }
+    if (op == "uniform_") return assign_stochastic_inplace_(self, uniform_like(self, 0.0, 1.0));
+    if (op == "normal_") return assign_stochastic_inplace_(self, normal_like(self, 0.0, 1.0));
+    if (op == "log_normal_") {
+      PLUSS_CHECK(is_floating_dtype(self.scalar_type()), "log_normal_: receiver must have a floating-point dtype");
+      return assign_stochastic_inplace_(self, ops_internal::exp(normal_like(self, 1.0, 2.0)));
+    }
+    if (op == "exponential_") return assign_stochastic_inplace_(self, exponential_like(self, 1.0));
+    if (op == "geometric_") return assign_stochastic_inplace_(self, geometric_like(self, 0.5));
+    if (op == "cauchy_") return assign_stochastic_inplace_(self, cauchy_like(self, 0.0, 1.0));
+    if (op == "bernoulli_") return assign_stochastic_inplace_(self, bernoulli_like(self, 0.5));
     if (is_inplace_dropout_family_(op)) {
-      self = dropout_family_impl_(op, self, /*p=*/0.5, /*train=*/true).to(self.scalar_type());
-      return self;
+      return inplace_result_(self, dropout_family_impl_(op, self, /*p=*/0.5, /*train=*/true).to(self.scalar_type()));
     }
-    if (op == "sinc_") { self = sinc_impl(self).to(self.scalar_type()); return self; }
-    if (op == "random_") {
-      if (is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type())) {
-        self = uniform_like(self, 0.0, 1.0);
-      } else {
-        self = random_like(self, 0.0, 2147483647.0);
-      }
-      return self;
-    }
+    if (op == "sinc_") { check_special_inplace_dtype_(self, "sinc_"); return assign_inplace_preserve_storage_(self, sinc_impl(self).to(self.scalar_type())); }
+    if (op == "random_")
+      return assign_stochastic_inplace_(self, random_like(self, 0.0, random_default_upper_(self.scalar_type())));
 
     return not_impl_inplace(op, args, self);
   }
@@ -6700,131 +7462,152 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "sub_") { return assign_inplace_preserve_storage_(self, sub_scalar(self, s)); }
       if (op == "mul_") { return assign_inplace_preserve_storage_(self, mul_scalar(self, s)); }
       if (op == "div_") { return assign_inplace_preserve_storage_(self, div_scalar(self, s)); }
-      if (op == "fill_") { self = Series::full(self.sizes(), s, self.scalar_type()); return self; }
-      if (op == "pow_" || op == "float_power_") { self = pow_scalar(self, s); return self; }
-      if (op == "floor_divide_") { self = ops_internal::floor(div_scalar(self, s)); return self; }
-      if (op == "fmod_") { self = ops_internal::fmod(self, scalar_like(self, s)); return self; }
-      if (op == "remainder_") { self = ops_internal::remainder(self, scalar_like(self, s)); return self; }
-      if (op == "atan2_") { self = ops_internal::atan2(self, scalar_like(self, s)); return self; }
-      if (op == "minimum_") { self = ops_internal::minimum(self, scalar_like(self, s)); return self; }
-      if (op == "maximum_") { self = ops_internal::maximum(self, scalar_like(self, s)); return self; }
-      if (op == "eq_") { self = ops_internal::eq(self, scalar_like(self, s)); return self; }
-      if (op == "ne_") { self = ops_internal::ne(self, scalar_like(self, s)); return self; }
-      if (op == "lt_") { self = ops_internal::lt(self, scalar_like(self, s)); return self; }
-      if (op == "le_") { self = ops_internal::le(self, scalar_like(self, s)); return self; }
-      if (op == "gt_") { self = ops_internal::gt(self, scalar_like(self, s)); return self; }
-      if (op == "ge_") { self = ops_internal::ge(self, scalar_like(self, s)); return self; }
-      if (op == "heaviside_") { self = heaviside_impl(self, scalar_like(self, s)); return self; }
-      if (op == "celu_") { self = celu_impl_(self, s).to(self.scalar_type()); return self; }
-      if (op == "elu_") { self = elu_impl_(self, s, 1.0, 1.0).to(self.scalar_type()); return self; }
-      if (is_inplace_dropout_family_(op)) {
-        self = dropout_family_impl_(op, self, s, /*train=*/true).to(self.scalar_type());
-        return self;
+      if (op == "fill_") { return inplace_result_(self, Series::full(self.sizes(), s, self.scalar_type())); }
+      if (op == "pow_") { return assign_inplace_preserve_storage_(self, pow_scalar(self, s).to(self.scalar_type())); }
+      if (op == "float_power_") {
+        PLUSS_CHECK(self.scalar_type() == ScalarType::Float64 || self.scalar_type() == ScalarType::Complex128,
+                    "float_power_: receiver must be float64 or complex128");
+        return assign_inplace_preserve_storage_(self, float_power_impl_(self, scalar_like(self, s)));
       }
-      if (op == "gcd_") { self = gcd_impl(self, scalar_like(self, s)); return self; }
-      if (op == "lcm_") { self = lcm_impl(self, scalar_like(self, s)); return self; }
-      if (op == "logit_") { self = logit_impl(self, s).to(self.scalar_type()); return self; }
-      if (op == "nextafter_") { self = nextafter_impl(self, s).to(self.scalar_type()); return self; }
-      if (op == "ldexp_") { self = ldexp_impl(self, s).to(self.scalar_type()); return self; }
-      if (op == "mvlgamma_") { self = mvlgamma_impl(self, (std::int64_t)s).to(self.scalar_type()); return self; }
-      if (op == "polygamma_") { self = polygamma_impl(self, (std::int64_t)s).to(self.scalar_type()); return self; }
-      if (op == "renorm_") { self = renorm_impl(self, s, /*dim=*/0, /*maxnorm=*/1.0).to(self.scalar_type()); return self; }
-      if (op == "bitwise_left_shift_") { self = bitshift_scalar_impl(self, (std::int64_t)s, /*left=*/true); return self; }
-      if (op == "bitwise_right_shift_") { self = bitshift_scalar_impl(self, (std::int64_t)s, /*left=*/false); return self; }
+      if (op == "floor_divide_") {
+        const bool keep_int = !is_floating_dtype(self.scalar_type()) &&
+                              !is_complex_dtype(self.scalar_type()) && s == std::trunc(s);
+        const Series divisor = keep_int ? scalar_like(self, s)
+                                        : Series::full({}, s, ScalarType::Float64).to(self.platform());
+        return assign_inplace_preserve_storage_(self, floor_divide_impl_(self, divisor));
+      }
+      if (op == "fmod_") { return inplace_result_(self, ops_internal::fmod(self, scalar_like(self, s))); }
+      if (op == "remainder_") { return inplace_result_(self, ops_internal::remainder(self, scalar_like(self, s))); }
+      if (op == "atan2_") { return inplace_result_(self, ops_internal::atan2(self, scalar_like(self, s))); }
+      if (op == "minimum_") { return inplace_result_(self, ops_internal::minimum(self, scalar_like(self, s))); }
+      if (op == "maximum_") { return inplace_result_(self, ops_internal::maximum(self, scalar_like(self, s))); }
+      if (op == "eq_") { return inplace_result_(self, ops_internal::eq(self, scalar_like(self, s))); }
+      if (op == "ne_") { return inplace_result_(self, ops_internal::ne(self, scalar_like(self, s))); }
+      if (op == "lt_") { return inplace_result_(self, ops_internal::lt(self, scalar_like(self, s))); }
+      if (op == "le_") { return inplace_result_(self, ops_internal::le(self, scalar_like(self, s))); }
+      if (op == "gt_") { return inplace_result_(self, ops_internal::gt(self, scalar_like(self, s))); }
+      if (op == "ge_") { return inplace_result_(self, ops_internal::ge(self, scalar_like(self, s))); }
+      if (op == "heaviside_") { return assign_inplace_preserve_storage_(self, heaviside_impl(self, scalar_like(self, s))); }
+      if (op == "celu_") { return inplace_result_(self, celu_impl_(self, s).to(self.scalar_type())); }
+      if (op == "elu_") { return inplace_result_(self, elu_impl_(self, s, 1.0, 1.0).to(self.scalar_type())); }
+      if (is_inplace_dropout_family_(op)) {
+        return inplace_result_(self, dropout_family_impl_(op, self, s, /*train=*/true).to(self.scalar_type()));
+      }
+      if (op == "gcd_") { return assign_inplace_preserve_storage_(self, gcd_impl(self, scalar_like(self, s))); }
+      if (op == "lcm_") { return assign_inplace_preserve_storage_(self, lcm_impl(self, scalar_like(self, s))); }
+      if (op == "logit_") { return inplace_result_(self, logit_impl(self, s).to(self.scalar_type())); }
+      if (op == "nextafter_") { return inplace_result_(self, nextafter_impl(self, s).to(self.scalar_type())); }
+      if (op == "ldexp_") {
+        check_special_inplace_dtype_(self, "ldexp_");
+        return assign_inplace_preserve_storage_(self, ldexp_impl(self, s).to(self.scalar_type()));
+      }
+      if (op == "igamma_") { check_special_inplace_dtype_(self, "igamma_"); return assign_inplace_preserve_storage_(self, igamma_impl(self, scalar_like(self, s), /*complement=*/false).to(self.scalar_type())); }
+      if (op == "igammac_") { check_special_inplace_dtype_(self, "igammac_"); return assign_inplace_preserve_storage_(self, igamma_impl(self, scalar_like(self, s), /*complement=*/true).to(self.scalar_type())); }
+      if (op == "mvlgamma_") { check_special_inplace_dtype_(self, "mvlgamma_"); return assign_inplace_preserve_storage_(self, mvlgamma_impl(self, (std::int64_t)s).to(self.scalar_type())); }
+      if (op == "polygamma_") { check_special_inplace_dtype_(self, "polygamma_"); return assign_inplace_preserve_storage_(self, polygamma_impl(self, (std::int64_t)s).to(self.scalar_type())); }
+      if (op == "renorm_") { return inplace_result_(self, renorm_impl(self, s, /*dim=*/0, /*maxnorm=*/1.0).to(self.scalar_type())); }
+      if (op == "bitwise_left_shift_") { return inplace_result_(self, bitshift_scalar_impl(self, (std::int64_t)s, /*left=*/true)); }
+      if (op == "bitwise_right_shift_") { return inplace_result_(self, bitshift_scalar_impl(self, (std::int64_t)s, /*left=*/false)); }
       if (op == "copysign_") {
         const double sign = std::signbit(s) ? -1.0 : 1.0;
-        self = mul_scalar(ops_internal::abs(self), sign);
-        return self;
+        return inplace_result_(self, mul_scalar(ops_internal::abs(self), sign));
       }
       if (op == "logaddexp_") {
-        self = ops_internal::log(ops_internal::add(ops_internal::exp(self), ops_internal::exp(scalar_like(self, s))));
-        return self;
+        return inplace_result_(self, ops_internal::log(ops_internal::add(ops_internal::exp(self), ops_internal::exp(scalar_like(self, s)))));
       }
       if (op == "logaddexp2_") {
-        self = ops_internal::log2(ops_internal::add(ops_internal::exp2(self), ops_internal::exp2(scalar_like(self, s))));
-        return self;
+        return inplace_result_(self, ops_internal::log2(ops_internal::add(ops_internal::exp2(self), ops_internal::exp2(scalar_like(self, s)))));
       }
       if (op == "hypot_") {
-        self = ops_internal::sqrt(ops_internal::add(ops_internal::square(self), ops_internal::square(scalar_like(self, s))));
-        return self;
+        return inplace_result_(self, ops_internal::sqrt(ops_internal::add(ops_internal::square(self), ops_internal::square(scalar_like(self, s)))));
       }
-      if (op == "xlogy_") { self = ops_internal::mul(self, ops_internal::log(scalar_like(self, s))); return self; }
+      if (op == "xlogy_") { return inplace_result_(self, ops_internal::mul(self, ops_internal::log(scalar_like(self, s)))); }
       if (op == "leaky_relu_") return ops_internal::leaky_relu_(self, s);
       if (op == "clamp_min_") return ops_internal::clamp_min_(self, s);
       if (op == "clamp_max_") return ops_internal::clamp_max_(self, s);
-      if (op == "squeeze_") { self = ops_internal::squeeze(self, (std::int64_t)s); return self; }
-      if (op == "unsqueeze_") { self = self.unsqueeze((std::int64_t)s); return self; }
-      if (op == "tril_") { self = tril_triu_impl(self, (std::int64_t)s, /*upper=*/false); return self; }
-      if (op == "triu_") { self = tril_triu_impl(self, (std::int64_t)s, /*upper=*/true); return self; }
+      if (op == "squeeze_") { return inplace_result_(self, ops_internal::squeeze(self, (std::int64_t)s)); }
+      if (op == "unsqueeze_") { return inplace_result_(self, self.unsqueeze((std::int64_t)s)); }
+      if (op == "tril_") { return inplace_result_(self, tril_triu_impl(self, (std::int64_t)s, /*upper=*/false)); }
+      if (op == "triu_") { return inplace_result_(self, tril_triu_impl(self, (std::int64_t)s, /*upper=*/true)); }
       if (op == "fill_diagonal_") return fill_diagonal_impl(self, s, /*wrap=*/false);
       if (op == "cumsum_") return self.cumsum_((std::int64_t)s, /*keepdim=*/false);
       if (op == "cumprod_") return self.cumprod_((std::int64_t)s, /*keepdim=*/false);
       if (op == "nan_to_num_") return ops_internal::nan_to_num_(self, s, 0.0, 0.0);
-      if (op == "bernoulli_") { self = bernoulli_like(self, s); return self; }
-      if (op == "normal_") { self = normal_like(self, s, 1.0); return self; }
-      if (op == "log_normal_") { self = ops_internal::exp(normal_like(self, s, 1.0)); return self; }
-      if (op == "exponential_") { self = exponential_like(self, s); return self; }
-      if (op == "geometric_") { self = geometric_like(self, s); return self; }
-      if (op == "cauchy_") { self = cauchy_like(self, s, 1.0); return self; }
-      if (op == "random_") { self = random_like(self, 0.0, s); return self; }
+      if (op == "bernoulli_") return assign_stochastic_inplace_(self, bernoulli_like(self, s));
+      if (op == "normal_") return assign_stochastic_inplace_(self, normal_like(self, s, 1.0));
+      if (op == "log_normal_") {
+        PLUSS_CHECK(is_floating_dtype(self.scalar_type()), "log_normal_: receiver must have a floating-point dtype");
+        PLUSS_CHECK(std::isfinite(s), "log_normal_: expected a finite mean");
+        return assign_stochastic_inplace_(self, ops_internal::exp(normal_like(self, s, 1.0)));
+      }
+      if (op == "exponential_") return assign_stochastic_inplace_(self, exponential_like(self, s));
+      if (op == "geometric_") return assign_stochastic_inplace_(self, geometric_like(self, s));
+      if (op == "cauchy_") return assign_stochastic_inplace_(self, cauchy_like(self, s, 1.0));
+      if (op == "random_") return assign_stochastic_inplace_(self, random_like(self, 0.0, s));
       return not_impl_inplace(op, args, self);
     }
 
     if (std::holds_alternative<const Series*>(a0)) {
       const Series& other = as_series(args[0]);
-      if (op == "ldexp_") { self = ldexp_impl(self, other).to(self.scalar_type()); return self; }
-      if (op == "igamma_") { self = igamma_impl(self, other, /*complement=*/false).to(self.scalar_type()); return self; }
-      if (op == "igammac_") { self = igamma_impl(self, other, /*complement=*/true).to(self.scalar_type()); return self; }
-      if (op == "resize_as_") { self = Series::empty(other.sizes(), self.scalar_type()); return self; }
-      if (op == "resize_as_sparse_") { self = Series::empty(other.sizes(), self.scalar_type()); return self; }
+      if (op == "ldexp_") {
+        check_special_inplace_dtype_(self, "ldexp_");
+        return assign_inplace_preserve_storage_(self, ldexp_impl(self, other).to(self.scalar_type()));
+      }
+      if (op == "igamma_") { check_special_inplace_dtype_(self, "igamma_"); return assign_inplace_preserve_storage_(self, igamma_impl(self, other, /*complement=*/false).to(self.scalar_type())); }
+      if (op == "igammac_") { check_special_inplace_dtype_(self, "igammac_"); return assign_inplace_preserve_storage_(self, igamma_impl(self, other, /*complement=*/true).to(self.scalar_type())); }
+      if (op == "resize_as_") { return inplace_result_(self, Series::empty(other.sizes(), self.scalar_type())); }
+      if (op == "resize_as_sparse_") { return inplace_result_(self, Series::empty(other.sizes(), self.scalar_type())); }
       if (op == "add_") { return assign_inplace_preserve_storage_(self, ops_internal::add(self, other)); }
       if (op == "sub_") { return assign_inplace_preserve_storage_(self, ops_internal::sub(self, other)); }
       if (op == "mul_") { return assign_inplace_preserve_storage_(self, ops_internal::mul(self, other)); }
       if (op == "div_") { return assign_inplace_preserve_storage_(self, ops_internal::div(self, other)); }
-      if (op == "pow_" || op == "float_power_") { self = ops_internal::pow(self, other); return self; }
-      if (op == "floor_divide_") { self = ops_internal::floor(ops_internal::div(self, other)); return self; }
-      if (op == "fmod_") { self = ops_internal::fmod(self, other); return self; }
-      if (op == "remainder_") { self = ops_internal::remainder(self, other); return self; }
-      if (op == "atan2_") { self = ops_internal::atan2(self, other); return self; }
-      if (op == "minimum_") { self = ops_internal::minimum(self, other); return self; }
-      if (op == "maximum_") { self = ops_internal::maximum(self, other); return self; }
-      if (op == "eq_") { self = ops_internal::eq(self, other); return self; }
-      if (op == "ne_") { self = ops_internal::ne(self, other); return self; }
-      if (op == "lt_") { self = ops_internal::lt(self, other); return self; }
-      if (op == "le_") { self = ops_internal::le(self, other); return self; }
-      if (op == "gt_") { self = ops_internal::gt(self, other); return self; }
-      if (op == "ge_") { self = ops_internal::ge(self, other); return self; }
-      if (op == "logical_and_") { self = ops_internal::logical_and(self, other); return self; }
-      if (op == "logical_or_") { self = ops_internal::logical_or(self, other); return self; }
-      if (op == "logical_xor_") { self = ops_internal::logical_xor(self, other); return self; }
+      if (op == "pow_") { return assign_inplace_preserve_storage_(self, ops_internal::pow(self, other).to(self.scalar_type())); }
+      if (op == "float_power_") {
+        PLUSS_CHECK(self.scalar_type() == ScalarType::Float64 || self.scalar_type() == ScalarType::Complex128,
+                    "float_power_: receiver must be float64 or complex128");
+        return assign_inplace_preserve_storage_(self, float_power_impl_(self, other));
+      }
+      if (op == "floor_divide_") { return assign_inplace_preserve_storage_(self, floor_divide_impl_(self, other)); }
+      if (op == "fmod_") { return inplace_result_(self, ops_internal::fmod(self, other)); }
+      if (op == "remainder_") { return inplace_result_(self, ops_internal::remainder(self, other)); }
+      if (op == "atan2_") { return inplace_result_(self, ops_internal::atan2(self, other)); }
+      if (op == "minimum_") { return inplace_result_(self, ops_internal::minimum(self, other)); }
+      if (op == "maximum_") { return inplace_result_(self, ops_internal::maximum(self, other)); }
+      if (op == "eq_") { return inplace_result_(self, ops_internal::eq(self, other)); }
+      if (op == "ne_") { return inplace_result_(self, ops_internal::ne(self, other)); }
+      if (op == "lt_") { return inplace_result_(self, ops_internal::lt(self, other)); }
+      if (op == "le_") { return inplace_result_(self, ops_internal::le(self, other)); }
+      if (op == "gt_") { return inplace_result_(self, ops_internal::gt(self, other)); }
+      if (op == "ge_") { return inplace_result_(self, ops_internal::ge(self, other)); }
+      if (op == "logical_and_") { return inplace_result_(self, ops_internal::logical_and(self, other)); }
+      if (op == "logical_or_") { return inplace_result_(self, ops_internal::logical_or(self, other)); }
+      if (op == "logical_xor_") { return inplace_result_(self, ops_internal::logical_xor(self, other)); }
       if (op == "bitwise_and_") return ops_internal::bitwise_and_(self, other);
       if (op == "bitwise_or_") return ops_internal::bitwise_or_(self, other);
       if (op == "bitwise_xor_") return ops_internal::bitwise_xor_(self, other);
-      if (op == "bitwise_left_shift_") { self = bitshift_series_impl(self, other, /*left=*/true); return self; }
-      if (op == "bitwise_right_shift_") { self = bitshift_series_impl(self, other, /*left=*/false); return self; }
-      if (op == "nextafter_") { self = nextafter_impl(self, other).to(self.scalar_type()); return self; }
-      if (op == "heaviside_") { self = heaviside_impl(self, other); return self; }
-      if (op == "gcd_") { self = gcd_impl(self, other); return self; }
-      if (op == "lcm_") { self = lcm_impl(self, other); return self; }
-      if (op == "fmax_") { self = ops_internal::maximum(self, other); return self; }
-      if (op == "fmin_") { self = ops_internal::minimum(self, other); return self; }
+      if (op == "bitwise_left_shift_") { return inplace_result_(self, bitshift_series_impl(self, other, /*left=*/true)); }
+      if (op == "bitwise_right_shift_") { return inplace_result_(self, bitshift_series_impl(self, other, /*left=*/false)); }
+      if (op == "nextafter_") { return inplace_result_(self, nextafter_impl(self, other).to(self.scalar_type())); }
+      if (op == "heaviside_") { return assign_inplace_preserve_storage_(self, heaviside_impl(self, other)); }
+      if (op == "gcd_") { return assign_inplace_preserve_storage_(self, gcd_impl(self, other)); }
+      if (op == "lcm_") { return assign_inplace_preserve_storage_(self, lcm_impl(self, other)); }
+      if (op == "fmax_") { return assign_inplace_preserve_storage_(self, fmax_fmin_impl_(self, other, /*is_max=*/true)); }
+      if (op == "fmin_") { return assign_inplace_preserve_storage_(self, fmax_fmin_impl_(self, other, /*is_max=*/false)); }
       if (op == "copysign_") {
         Series mag = ops_internal::abs(self);
         Series pos = ops_internal::ge(other, scalar_like(other, 0.0));
-        self = ops_internal::where(pos, mag, ops_internal::neg(mag));
-        return self;
+        return inplace_result_(self, ops_internal::where(pos, mag, ops_internal::neg(mag)));
       }
-      if (op == "logaddexp_") { self = ops_internal::log(ops_internal::add(ops_internal::exp(self), ops_internal::exp(other))); return self; }
-      if (op == "logaddexp2_") { self = ops_internal::log2(ops_internal::add(ops_internal::exp2(self), ops_internal::exp2(other))); return self; }
-      if (op == "hypot_") { self = ops_internal::sqrt(ops_internal::add(ops_internal::square(self), ops_internal::square(other))); return self; }
-      if (op == "xlogy_") { self = ops_internal::mul(self, ops_internal::log(other)); return self; }
-      if (op == "type_as_") { self = self.to(other.scalar_type()); return self; }
+      if (op == "logaddexp_") { return inplace_result_(self, ops_internal::log(ops_internal::add(ops_internal::exp(self), ops_internal::exp(other)))); }
+      if (op == "logaddexp2_") { return inplace_result_(self, ops_internal::log2(ops_internal::add(ops_internal::exp2(self), ops_internal::exp2(other)))); }
+      if (op == "hypot_") { return inplace_result_(self, ops_internal::sqrt(ops_internal::add(ops_internal::square(self), ops_internal::square(other)))); }
+      if (op == "xlogy_") { return inplace_result_(self, ops_internal::mul(self, ops_internal::log(other))); }
+      if (op == "type_as_") { return inplace_result_(self, self.to(other.scalar_type())); }
       if (op == "copy_") {
         return copy_dispatch_inplace_(self, other);
       }
       if (op == "set_" || op == "set_data") {
-        self = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
-        return self;
+        return inplace_result_(self, (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type()));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -6834,17 +7617,15 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
         return self;
       }
       if (op == "rrelu_") {
-        self = rrelu_impl_(self, 0.125, 0.3333333333333333, std::get<bool>(a0)).to(self.scalar_type());
-        return self;
+        return inplace_result_(self, rrelu_impl_(self, 0.125, 0.3333333333333333, std::get<bool>(a0)).to(self.scalar_type()));
       }
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<Arg::IntList>(a0)) {
       auto sizes = as_intlist(args[0]);
-      if (op == "resize_") { self = Series::empty(sizes, self.scalar_type()); return self; }
+      if (op == "resize_") { return inplace_result_(self, Series::empty(sizes, self.scalar_type())); }
       if (op == "as_strided_") {
-        self = as_strided_impl(self, sizes, contiguous_strides(sizes));
-        return self;
+        return inplace_result_(self, as_strided_impl(self, sizes, contiguous_strides(sizes)));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -6873,28 +7654,30 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const double x = as_double(args[0]);
       const double y = as_double(args[1]);
       if (op == "clamp_") return ops_internal::clamp_(self, x, y);
-      if (op == "hardtanh_") { self = ops_internal::clamp(self, x, y); return self; }
-      if (op == "threshold_") { self = threshold_impl_(self, x, y).to(self.scalar_type()); return self; }
-      if (op == "rrelu_") { self = rrelu_impl_(self, x, y, /*training=*/false).to(self.scalar_type()); return self; }
+      if (op == "hardtanh_") { return inplace_result_(self, ops_internal::clamp(self, x, y)); }
+      if (op == "threshold_") { return inplace_result_(self, threshold_impl_(self, x, y).to(self.scalar_type())); }
+      if (op == "rrelu_") { return inplace_result_(self, rrelu_impl_(self, x, y, /*training=*/false).to(self.scalar_type())); }
       if (op == "softplus_") return ops_internal::softplus_(self, x, y);
-      if (op == "elu_") { self = elu_impl_(self, x, y, 1.0).to(self.scalar_type()); return self; }
+      if (op == "elu_") { return inplace_result_(self, elu_impl_(self, x, y, 1.0).to(self.scalar_type())); }
       if (op == "nan_to_num_") return ops_internal::nan_to_num_(self, x, y, y);
       if (op == "transpose_" || op == "movedim_" || op == "moveaxis_" || op == "swapdims_" || op == "swapaxes_") {
-        self = self.transpose((std::int64_t)x, (std::int64_t)y);
-        return self;
+        return inplace_result_(self, self.transpose((std::int64_t)x, (std::int64_t)y));
       }
       if (op == "lerp_") {
-        self = ops_internal::add(self, mul_scalar(ops_internal::sub(scalar_like(self, x), self), y));
-        return self;
+        return inplace_result_(self, ops_internal::add(self, mul_scalar(ops_internal::sub(scalar_like(self, x), self), y)));
       }
-      if (op == "uniform_") { self = uniform_like(self, x, y); return self; }
-      if (op == "normal_") { self = normal_like(self, x, y); return self; }
-      if (op == "log_normal_") { self = ops_internal::exp(normal_like(self, x, y)); return self; }
-      if (op == "cauchy_") { self = cauchy_like(self, x, y); return self; }
-      if (op == "random_") { self = random_like(self, x, y); return self; }
+      if (op == "uniform_") return assign_stochastic_inplace_(self, uniform_like(self, x, y));
+      if (op == "normal_") return assign_stochastic_inplace_(self, normal_like(self, x, y));
+      if (op == "log_normal_") {
+        PLUSS_CHECK(is_floating_dtype(self.scalar_type()), "log_normal_: receiver must have a floating-point dtype");
+        PLUSS_CHECK(std::isfinite(x), "log_normal_: expected a finite mean");
+        PLUSS_CHECK(std::isfinite(y) && y > 0.0, "log_normal_: expected stddev > 0");
+        return assign_stochastic_inplace_(self, ops_internal::exp(normal_like(self, x, y)));
+      }
+      if (op == "cauchy_") return assign_stochastic_inplace_(self, cauchy_like(self, x, y));
+      if (op == "random_") return assign_stochastic_inplace_(self, random_like(self, x, y));
       if (is_inplace_dropout_family_(op)) {
-        self = dropout_family_impl_(op, self, x, /*train=*/(y != 0.0)).to(self.scalar_type());
-        return self;
+        return inplace_result_(self, dropout_family_impl_(op, self, x, /*train=*/(y != 0.0)).to(self.scalar_type()));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -6903,8 +7686,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const double p = as_double(args[0]);
       const bool keepdim = as_bool(args[1]);
       if (is_inplace_dropout_family_(op)) {
-        self = dropout_family_impl_(op, self, p, keepdim).to(self.scalar_type());
-        return self;
+        return inplace_result_(self, dropout_family_impl_(op, self, p, keepdim).to(self.scalar_type()));
       }
       if (op == "fill_diagonal_") return fill_diagonal_impl(self, as_double(args[0]), keepdim);
       if (op == "cumsum_") return self.cumsum_(dim, keepdim);
@@ -6915,26 +7697,17 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const Series& other = as_series(args[0]);
       const double s = as_double(args[1]);
       if (op == "add_") {
-        self = ops_internal::add(self, mul_scalar(other, s));
-        return self;
+        return inplace_result_(self, ops_internal::add(self, mul_scalar(other, s)));
       }
       if (op == "sub_") {
-        self = ops_internal::sub(self, mul_scalar(other, s));
-        return self;
+        return inplace_result_(self, ops_internal::sub(self, mul_scalar(other, s)));
       }
       if (op == "lerp_") {
-        self = ops_internal::add(self, mul_scalar(ops_internal::sub(other, self), s));
-        return self;
+        return inplace_result_(self, ops_internal::add(self, mul_scalar(ops_internal::sub(other, self), s)));
       }
       if (op == "masked_fill_") return ops_internal::masked_fill_(self, other, s);
       if (op == "index_fill_") {
-        PLUSS_CHECK(self.dim() == 1, "index_fill_: currently implemented for 1D");
-        self = put_dispatch_copy_(
-            self,
-            other.to(ScalarType::Int64),
-            Series::full({other.numel()}, s, self.scalar_type()).to(self.platform()),
-            /*accumulate=*/false);
-        return self;
+        return assign_inplace_preserve_storage_(self, index_fill_impl_(self, 0, other, s));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -6959,25 +7732,24 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (std::holds_alternative<const Series*>(a0) && std::holds_alternative<const Series*>(a1)) {
       const Series& b = as_series(args[0]);
       const Series& c = as_series(args[1]);
-      if (op == "addmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0); return self; }
-      if (op == "addmv_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0); return self; }
-      if (op == "addr_") { self = combine_beta_alpha(self, matmul_dispatch_(b.unsqueeze(1), c.unsqueeze(0)), 1.0, 1.0); return self; }
+      if (op == "addmm_") { return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0)); }
+      if (op == "addmv_") { return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0)); }
+      if (op == "addr_") { return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b.unsqueeze(1), c.unsqueeze(0)), 1.0, 1.0)); }
       if (op == "addbmm_") {
-        self = combine_beta_alpha(self, matmul_dispatch_(b, c).sum(/*dim=*/0, /*keepdim=*/false), 1.0, 1.0);
-        return self;
+        return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b, c).sum(/*dim=*/0, /*keepdim=*/false), 1.0, 1.0));
       }
-      if (op == "baddbmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0); return self; }
+      if (op == "baddbmm_") { return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0)); }
       if (op == "masked_scatter_") return ops_internal::masked_scatter_(self, b, c);
       if (op == "masked_fill_") return ops_internal::masked_fill_(self, b, c);
       if (op == "index_put_") { return put_dispatch_inplace_(self, b, c, /*accumulate=*/false); }
       if (op == "put_") { return put_dispatch_inplace_(self, b, c, /*accumulate=*/false); }
-      if (op == "lerp_") { self = ops_internal::add(self, ops_internal::mul(ops_internal::sub(b, self), c)); return self; }
+      if (op == "lerp_") { return inplace_result_(self, ops_internal::add(self, ops_internal::mul(ops_internal::sub(b, self), c))); }
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<Arg::IntList>(a0) && std::holds_alternative<Arg::IntList>(a1)) {
       auto sizes = as_intlist(args[0]);
       auto strides = as_intlist(args[1]);
-      if (op == "as_strided_") { self = as_strided_impl(self, sizes, strides); return self; }
+      if (op == "as_strided_") { return inplace_result_(self, as_strided_impl(self, sizes, strides)); }
       return not_impl_inplace(op, args, self);
     }
     return not_impl_inplace(op, args, self);
@@ -6988,17 +7760,15 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
         is_numeric_scalar_arg(args[1]) &&
         std::holds_alternative<bool>(args[2].v)) {
       if (op == "rrelu_") {
-        self = rrelu_impl_(self, as_double(args[0]), as_double(args[1]), as_bool(args[2])).to(self.scalar_type());
-        return self;
+        return inplace_result_(self, rrelu_impl_(self, as_double(args[0]), as_double(args[1]), as_bool(args[2])).to(self.scalar_type()));
       }
       return not_impl_inplace(op, args, self);
     }
     if (is_numeric_scalar_arg(args[0]) && is_numeric_scalar_arg(args[1]) && is_numeric_scalar_arg(args[2])) {
       if (op == "elu_") {
-        self = elu_impl_(self, as_double(args[0]), as_double(args[1]), as_double(args[2])).to(self.scalar_type());
-        return self;
+        return inplace_result_(self, elu_impl_(self, as_double(args[0]), as_double(args[1]), as_double(args[2])).to(self.scalar_type()));
       }
-      if (op == "renorm_") { self = renorm_impl(self, as_double(args[0]), as_i64(args[1]), as_double(args[2])).to(self.scalar_type()); return self; }
+      if (op == "renorm_") { return inplace_result_(self, renorm_impl(self, as_double(args[0]), as_i64(args[1]), as_double(args[2])).to(self.scalar_type())); }
       if (op == "nan_to_num_") return ops_internal::nan_to_num_(self, as_double(args[0]), as_double(args[1]), as_double(args[2]));
       return not_impl_inplace(op, args, self);
     }
@@ -7007,8 +7777,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
         is_numeric_scalar_arg(args[2])) {
       if (op == "embedding_renorm_") {
         const auto dim = (self.dim() > 1) ? 1 : 0;
-        self = renorm_impl(self, as_double(args[2]), dim, as_double(args[1])).to(self.scalar_type());
-        return self;
+        return inplace_result_(self, renorm_impl(self, as_double(args[2]), dim, as_double(args[1])).to(self.scalar_type()));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -7016,8 +7785,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
         std::holds_alternative<Arg::IntList>(args[1].v) &&
         is_numeric_scalar_arg(args[2])) {
       if (op == "as_strided_") {
-        self = as_strided_impl(self, as_intlist(args[0]), as_intlist(args[1]), as_i64(args[2]));
-        return self;
+        return inplace_result_(self, as_strided_impl(self, as_intlist(args[0]), as_intlist(args[1]), as_i64(args[2])));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -7032,12 +7800,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       }
       if (op == "scatter_add_") return ops_internal::scatter_add_(self, dim, index, src);
       if (op == "index_copy_") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_copy_: currently implemented for 1D dim=0");
-        return put_dispatch_inplace_(self, index.to(ScalarType::Int64), src.to(self.scalar_type()), /*accumulate=*/false);
+        return assign_inplace_preserve_storage_(self, index_copy_impl_(self, dim, index, as_series(args[2])));
       }
       if (op == "index_add_") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_add_: currently implemented for 1D dim=0");
-        return put_dispatch_inplace_(self, index.to(ScalarType::Int64), src.to(self.scalar_type()), /*accumulate=*/true);
+        return assign_inplace_preserve_storage_(self, index_add_impl_(self, dim, index, as_series(args[2]), 1.0));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -7048,12 +7814,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const Series& index = as_series(args[1]);
       const double value = as_double(args[2]);
       if (op == "index_fill_") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_fill_: currently implemented for 1D dim=0");
-        return put_dispatch_inplace_(
-            self,
-            index.to(ScalarType::Int64),
-            Series::full({index.numel()}, value, self.scalar_type()).to(self.platform()),
-            /*accumulate=*/false);
+        return assign_inplace_preserve_storage_(self, index_fill_impl_(self, dim, index, value));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -7084,8 +7845,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const Series& b = as_series(args[0]);
       const Series& c = as_series(args[1]);
       const double v = as_double(args[2]);
-      if (op == "addcmul_") { self = ops_internal::add(self, mul_scalar(ops_internal::mul(b, c), v)); return self; }
-      if (op == "addcdiv_") { self = ops_internal::add(self, mul_scalar(ops_internal::div(b, c), v)); return self; }
+      if (op == "addcmul_") { return inplace_result_(self, ops_internal::add(self, mul_scalar(ops_internal::mul(b, c), v))); }
+      if (op == "addcdiv_") { return inplace_result_(self, ops_internal::add(self, mul_scalar(ops_internal::div(b, c), v))); }
       return not_impl_inplace(op, args, self);
     }
     return not_impl_inplace(op, args, self);
@@ -7125,9 +7886,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       auto src = as_series(args[2]).to(self.scalar_type());
       const double alpha = as_double(args[3]);
       if (op == "index_add_") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_add_: currently implemented for 1D dim=0");
-        if (alpha != 1.0) src = mul_scalar(src, alpha).to(self.scalar_type());
-        return put_dispatch_inplace_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return assign_inplace_preserve_storage_(self, index_add_impl_(self, dim, index, as_series(args[2]), alpha));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -7140,9 +7899,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       auto src = as_series(args[2]).to(self.scalar_type());
       const auto reduce = as_string(args[3]);
       if (op == "index_reduce_") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_reduce_: currently implemented for 1D dim=0");
-        PLUSS_CHECK(reduce == "sum", "index_reduce_: only 'sum' is implemented");
-        return put_dispatch_inplace_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return assign_inplace_preserve_storage_(
+            self, index_reduce_impl_(self, dim, index, as_series(args[2]), reduce, /*include_self=*/true));
       }
       return not_impl_inplace(op, args, self);
     }
@@ -7167,14 +7925,13 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const Series& c = as_series(args[1]);
       const double beta = as_double(args[2]);
       const double alpha = as_double(args[3]);
-      if (op == "addmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha); return self; }
-      if (op == "addmv_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha); return self; }
-      if (op == "addr_") { self = combine_beta_alpha(self, matmul_dispatch_(b.unsqueeze(1), c.unsqueeze(0)), beta, alpha); return self; }
+      if (op == "addmm_") { return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha)); }
+      if (op == "addmv_") { return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha)); }
+      if (op == "addr_") { return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b.unsqueeze(1), c.unsqueeze(0)), beta, alpha)); }
       if (op == "addbmm_") {
-        self = combine_beta_alpha(self, matmul_dispatch_(b, c).sum(/*dim=*/0, /*keepdim=*/false), beta, alpha);
-        return self;
+        return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b, c).sum(/*dim=*/0, /*keepdim=*/false), beta, alpha));
       }
-      if (op == "baddbmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha); return self; }
+      if (op == "baddbmm_") { return inplace_result_(self, combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha)); }
     }
     return not_impl_inplace(op, args, self);
   }
@@ -7230,17 +7987,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
         return ops_internal::scatter_reduce_(self, dim, index, src, std::string(reduce), include_self);
       }
       if (op == "index_reduce_") {
-        PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_reduce_: currently implemented for 1D dim=0");
-        PLUSS_CHECK(reduce == "sum", "index_reduce_: only 'sum' is implemented");
-        if (!include_self) {
-          auto zeros = Series::zeros({index.numel()}, self.scalar_type()).to(self.platform());
-          put_dispatch_inplace_(self, index.to(ScalarType::Int64), zeros, /*accumulate=*/false);
-        }
-        return put_dispatch_inplace_(
-            self,
-            index.to(ScalarType::Int64),
-            src.to(self.scalar_type()),
-            /*accumulate=*/true);
+        return assign_inplace_preserve_storage_(
+            self, index_reduce_impl_(self, dim, index, src, reduce, include_self));
       }
       return not_impl_inplace(op, args, self);
     }

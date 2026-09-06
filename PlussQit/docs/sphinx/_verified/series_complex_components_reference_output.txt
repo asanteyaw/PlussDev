@@ -1,0 +1,100 @@
+=== cartesian_components ===
+Series(shape=[2,2], strides=[2,1], dtype=complex64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ (3.0000+4.0000j) (-1.0000+0.0000j) ⎤
+⎣ (0.0000+2.0000j)  (0.0000+0.0000j) ⎦
+
+Series(shape=[2,2], strides=[2,1], dtype=float32, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 3.0000 -1.0000 ⎤
+⎣ 0.0000  0.0000 ⎦
+
+Series(shape=[2,2], strides=[2,1], dtype=float32, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 4.0000 0.0000 ⎤
+⎣ 2.0000 0.0000 ⎦
+
+=== cartesian_round_trip ===
+Series(shape=[2,2], strides=[2,1], dtype=complex64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ (3.0000+4.0000j) (-1.0000+0.0000j) ⎤
+⎣ (0.0000+2.0000j)  (0.0000+0.0000j) ⎦
+
+=== components_on_real_input ===
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[-3, 0, 2]
+
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[0, 0, 0]
+
+=== real_reverse ===
+Series(shape=[2,2], strides=[2,1], dtype=complex64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ (1.0000+0.0000j) (1.0000+0.0000j) ⎤
+⎣ (1.0000+0.0000j) (1.0000+0.0000j) ⎦
+
+=== imag_reverse ===
+Series(shape=[2,2], strides=[2,1], dtype=complex64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ (0.0000+1.0000j) (0.0000+1.0000j) ⎤
+⎣ (0.0000+1.0000j) (0.0000+1.0000j) ⎦
+
+=== angle_quadrants ===
+Series(shape=[6], strides=[1], dtype=float32, platform=cpu, numel=6, contiguous=true)
+data=[0.0000, 1.5708, 3.1416, -1.5708, 0.9273, 0.0000]
+
+=== angle_real_input ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.0000, 3.1416, 0.0000]
+
+=== angle_reverse ===
+Series(shape=[2], strides=[1], dtype=complex64, platform=cpu, numel=2, contiguous=true)
+data=[(-0.1600+0.1200j), (0.0000+0.0000j)]
+
+=== conjugation ===
+Series(shape=[2,2], strides=[2,1], dtype=complex64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ (3.0000-4.0000j) (-1.0000-0.0000j) ⎤
+⎣ (0.0000-2.0000j)  (0.0000-0.0000j) ⎦
+
+Series(shape=[2,2], strides=[2,1], dtype=complex64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ (3.0000+4.0000j) (-1.0000+0.0000j) ⎤
+⎣ (0.0000+2.0000j)  (0.0000+0.0000j) ⎦
+
+=== conjugate_product ===
+Series(shape=[2,2], strides=[2,1], dtype=float32, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 25.0000 1.0000 ⎤
+⎣  4.0000 0.0000 ⎦
+
+Series(shape=[2,2], strides=[2,1], dtype=float32, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 25.0000 1.0000 ⎤
+⎣  4.0000 0.0000 ⎦
+
+=== conjugate_reverse ===
+Series(shape=[2,2], strides=[2,1], dtype=complex64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ (0.0000-1.0000j) (0.0000-1.0000j) ⎤
+⎣ (0.0000-1.0000j) (0.0000-1.0000j) ⎦
+
+=== sgn_real ===
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-1.0000, 0.0000, 1.0000]
+
+=== sgn_complex ===
+Series(shape=[2,2], strides=[2,1], dtype=complex64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ (0.6000+0.8000j) (-1.0000+0.0000j) ⎤
+⎣ (0.0000+1.0000j)  (0.0000+0.0000j) ⎦
+
+Series(shape=[2,2], strides=[2,1], dtype=float32, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 1.0000 1.0000 ⎤
+⎣ 1.0000 0.0000 ⎦
+
+=== sgn_reverse ===
+Series(shape=[1], strides=[1], dtype=complex64, platform=cpu, numel=1, contiguous=true)
+data=[(0.1280-0.0960j)]
+

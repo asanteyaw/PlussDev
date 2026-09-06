@@ -98,9 +98,9 @@ ceiling, with exact integers left unchanged.
 - [`Series::trunc`](trunc.md): discards the fractional part toward zero.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cbrt.html">
+  <a class="prev-link" href="cauchy_.html">
     <span class="label">Previous</span>
-    <span class="title">cbrt</span>
+    <span class="title">cauchy_</span>
   </a>
   <a class="next-link" href="clamp_max.html">
     <span class="label">Next</span>

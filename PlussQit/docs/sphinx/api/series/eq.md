@@ -193,12 +193,12 @@ into the next stage of your pipeline.
 - [`Series::ge`](ge.md): inclusive greater-than comparison.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="div.html">
+  <a class="prev-link" href="dtype.html">
     <span class="label">Previous</span>
-    <span class="title">div</span>
+    <span class="title">dtype</span>
   </a>
-  <a class="next-link" href="erf.html">
+  <a class="next-link" href="equal.html">
     <span class="label">Next</span>
-    <span class="title">erf</span>
+    <span class="title">equal</span>
   </a>
 </div>

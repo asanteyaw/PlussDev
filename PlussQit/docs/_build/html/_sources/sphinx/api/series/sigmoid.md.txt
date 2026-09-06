@@ -97,9 +97,9 @@ Use `sigmoid()` when each lane should be mapped smoothly into `(0, 1)`.
   different output range.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="setxor_along.html">
+  <a class="prev-link" href="sgn.html">
     <span class="label">Previous</span>
-    <span class="title">setxor_along</span>
+    <span class="title">sgn</span>
   </a>
   <a class="next-link" href="sign.html">
     <span class="label">Next</span>

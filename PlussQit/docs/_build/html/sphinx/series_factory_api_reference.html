@@ -13,12 +13,12 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../_static/api_nav.js?v=d751f226"></script>
+    <script src="../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="pluss::series::arange" href="api/series_factory/arange.html" />
-    <link rel="prev" title="SeriesLinearAlgAccessor::vdot" href="api/series-linearalg/vdot.html" />
+    <link rel="prev" title="TraverseMatch" href="api/series-traverse/match.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -64,6 +64,7 @@ to navigate.</p>
 <code class="docutils literal notranslate"><span class="pre">bernoulli</span></code>, <code class="docutils literal notranslate"><span class="pre">poisson</span></code>, <code class="docutils literal notranslate"><span class="pre">multinomial</span></code></p></li>
 <li><p>like-factories such as <code class="docutils literal notranslate"><span class="pre">zeros_like</span></code> and <code class="docutils literal notranslate"><span class="pre">randn_like</span></code></p></li>
 <li><p>complex constructors such as <code class="docutils literal notranslate"><span class="pre">complex</span></code> and <code class="docutils literal notranslate"><span class="pre">polar</span></code></p></li>
+<li><p>interop constructors such as <code class="docutils literal notranslate"><span class="pre">from_torch</span></code> (torch-enabled builds)</p></li>
 </ul>
 </section>
 <section id="reading-the-overloads">
@@ -96,6 +97,8 @@ show up immediately after construction:</p>
 <li><p>stochastic constructors: <code class="docutils literal notranslate"><span class="pre">rand</span></code>, <code class="docutils literal notranslate"><span class="pre">randn</span></code>, <code class="docutils literal notranslate"><span class="pre">rand_btw</span></code>, <code class="docutils literal notranslate"><span class="pre">randint</span></code>, <code class="docutils literal notranslate"><span class="pre">normal</span></code>,
 <code class="docutils literal notranslate"><span class="pre">randperm</span></code>, <code class="docutils literal notranslate"><span class="pre">bernoulli</span></code>, <code class="docutils literal notranslate"><span class="pre">poisson</span></code>, <code class="docutils literal notranslate"><span class="pre">multinomial</span></code></p></li>
 <li><p>complex constructors: <code class="docutils literal notranslate"><span class="pre">complex</span></code>, <code class="docutils literal notranslate"><span class="pre">polar</span></code></p></li>
+<li><p>interop constructors: <code class="docutils literal notranslate"><span class="pre">from_torch</span></code> (only in a <code class="docutils literal notranslate"><span class="pre">-DPLUSS_ENABLE_TORCH=ON</span></code> build;
+the reverse trip is the <code class="docutils literal notranslate"><span class="pre">Series::tensor()</span></code> method)</p></li>
 </ul>
 <p>Those pages are split this way on purpose.</p>
 <ul class="simple">
@@ -213,7 +216,7 @@ and quantized constructor stub family.</p>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
-      <li>Previous: <a href="api/series-linearalg/vdot.html" title="previous chapter">SeriesLinearAlgAccessor::vdot</a></li>
+      <li>Previous: <a href="api/series-traverse/match.html" title="previous chapter">TraverseMatch</a></li>
       <li>Next: <a href="api/series_factory/arange.html" title="next chapter">pluss::series::arange</a></li>
   </ul></li>
   </ul></li>

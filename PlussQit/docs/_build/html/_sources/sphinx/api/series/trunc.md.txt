@@ -90,8 +90,8 @@ Use `trunc()` when the fractional part should simply be discarded toward zero.
     <span class="label">Previous</span>
     <span class="title">triu_</span>
   </a>
-  <a class="next-link" href="unfold.html">
+  <a class="next-link" href="unbind.html">
     <span class="label">Next</span>
-    <span class="title">unfold</span>
+    <span class="title">unbind</span>
   </a>
 </div>

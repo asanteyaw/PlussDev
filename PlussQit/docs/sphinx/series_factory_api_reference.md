@@ -31,6 +31,7 @@ Use it for:
   `bernoulli`, `poisson`, `multinomial`
 - like-factories such as `zeros_like` and `randn_like`
 - complex constructors such as `complex` and `polar`
+- interop constructors such as `from_torch` (torch-enabled builds)
 
 ## Reading the Overloads
 
@@ -63,6 +64,8 @@ show up immediately after construction:
 - stochastic constructors: `rand`, `randn`, `rand_btw`, `randint`, `normal`,
   `randperm`, `bernoulli`, `poisson`, `multinomial`
 - complex constructors: `complex`, `polar`
+- interop constructors: `from_torch` (only in a `-DPLUSS_ENABLE_TORCH=ON` build;
+  the reverse trip is the `Series::tensor()` method)
 
 Those pages are split this way on purpose.
 
@@ -112,6 +115,7 @@ api/series_factory/poisson
 api/series_factory/multinomial
 api/series_factory/complex
 api/series_factory/polar
+api/series_factory/from_torch
 ```
 
 <div class="pluss-inline-prev-next">

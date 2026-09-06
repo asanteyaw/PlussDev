@@ -85,7 +85,7 @@ Thread::clip is only valid for Series payload
 ## See Also
 
 - [`Thread::abs`](abs.md): a different sign/magnitude transform, not a range clamp.
-- [`Thread::btw`](btw.md): test membership in a range, rather than clamping into it.
+- [`Thread::between`](between.md): test membership in a range, rather than clamping into it.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="chars.html">

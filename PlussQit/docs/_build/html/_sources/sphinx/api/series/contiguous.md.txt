@@ -157,9 +157,9 @@ Use `contiguous()` when layout is the problem.
   materializes contiguous output when needed.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="comp.html">
+  <a class="prev-link" href="conj.html">
     <span class="label">Previous</span>
-    <span class="title">comp</span>
+    <span class="title">conj</span>
   </a>
   <a class="next-link" href="copy_.html">
     <span class="label">Next</span>

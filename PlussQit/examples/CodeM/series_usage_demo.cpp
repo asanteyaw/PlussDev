@@ -116,8 +116,8 @@ int main() {
   std::cout << "randn(8,6) pretty summarized:\n" << pluss::series::print(big_mat) << "\n";
 
 #ifdef PLUSS_ENABLE_TORCH
-  let torch_b = pluss::series::to_torch(rand_3d);
-  std::cout << "looking at the to_torch conversion\n" << torch_b << "\n";
+  let torch_b = rand_3d.tensor();
+  std::cout << "looking at the Series::tensor() conversion\n" << torch_b << "\n";
 #endif
 
   let type_prom_2d = pluss::make_series ({

@@ -181,9 +181,9 @@ into production."
 - [`Series::sub`](sub.md): additive inverse-side arithmetic.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="diff.html">
+  <a class="prev-link" href="dist.html">
     <span class="label">Previous</span>
-    <span class="title">diff</span>
+    <span class="title">dist</span>
   </a>
   <a class="next-link" href="extract.html">
     <span class="label">Next</span>

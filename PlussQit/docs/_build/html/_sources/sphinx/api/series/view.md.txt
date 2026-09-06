@@ -210,8 +210,8 @@ case.
     <span class="label">Previous</span>
     <span class="title">sizes</span>
   </a>
-  <a class="next-link" href="where.html">
+  <a class="next-link" href="vsplit.html">
     <span class="label">Next</span>
-    <span class="title">where</span>
+    <span class="title">vsplit</span>
   </a>
 </div>

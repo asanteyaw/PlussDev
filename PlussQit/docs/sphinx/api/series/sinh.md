@@ -136,9 +136,9 @@ verified; the current backward route on this public surface is not.
 - [`Series::sin`](sin.md): bounded periodic sine.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sin.html">
+  <a class="prev-link" href="sinc.html">
     <span class="label">Previous</span>
-    <span class="title">sin</span>
+    <span class="title">sinc</span>
   </a>
   <a class="next-link" href="size.html">
     <span class="label">Next</span>

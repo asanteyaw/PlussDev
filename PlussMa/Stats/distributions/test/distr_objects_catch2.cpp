@@ -704,18 +704,19 @@ TEST_CASE("functional and object normal logcdf stay finite in the far left tail"
   const double functional = as_f64_scalar(logcdf(dst::Normal, x, std::initializer_list<double>{}));
   const double object = as_f64_scalar(Normal{}.logcdf(x));
   const double shortcut = as_f64_scalar(x.stat.logcdf());
-  const double naive = as_f64_scalar(cdf(dst::Normal, x, std::initializer_list<double>{}).log());
+  const double from_cdf = as_f64_scalar(cdf(dst::Normal, x, std::initializer_list<double>{}).log());
 
   REQUIRE(std::isfinite(functional));
   REQUIRE(std::isfinite(object));
   REQUIRE(std::isfinite(shortcut));
-  REQUIRE(std::isinf(naive));
+  REQUIRE(std::isfinite(from_cdf));
   REQUIRE(functional < -70.0);
   REQUIRE(std::abs(functional - object) <= 1e-12);
   REQUIRE(std::abs(functional - shortcut) <= 1e-12);
+  REQUIRE(std::abs(functional - from_cdf) <= 1e-9);
 }
 
-TEST_CASE("additional functional logcdf routes and gaussian mixture logcdf avoid naive underflow", "[distr][objects][logcdf][mixture]") {
+TEST_CASE("additional functional logcdf routes and gaussian mixture logcdf retain tail parity", "[distr][objects][logcdf][mixture]") {
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   REQUIRE(std::isfinite(as_f64_scalar(logcdf(dst::Logistic, pluss::make_series(-50.0, f64), {0.0, 1.0}))));
@@ -730,9 +731,10 @@ TEST_CASE("additional functional logcdf routes and gaussian mixture logcdf avoid
   const GaussianMixture gm{weights, means, stddevs};
 
   const double stable = as_f64_scalar(gm.logcdf(x));
-  const double naive = as_f64_scalar(gm.cdf(x).log());
+  const double from_cdf = as_f64_scalar(gm.cdf(x).log());
   REQUIRE(std::isfinite(stable));
-  REQUIRE(std::isinf(naive));
+  REQUIRE(std::isfinite(from_cdf));
+  REQUIRE(std::abs(stable - from_cdf) <= 1e-9);
   REQUIRE(std::abs(stable - as_f64_scalar(logcdf(dst::Normal, x, std::initializer_list<double>{}))) <= 1e-5);
 }
 

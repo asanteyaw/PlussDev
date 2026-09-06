@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::sqrt" href="sqrt.html" />
+    <link rel="next" title="Series::split" href="split.html" />
     <link rel="prev" title="Series::softplus" href="softplus.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -47,7 +47,7 @@
 <span class="n">Series</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">descending</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">descending</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">stable</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">sort_pair</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">descending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span>
-<span class="w">                  </span><span class="kt">bool</span><span class="w"> </span><span class="n">stable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">StackArray</span><span class="o">&lt;</span><span class="n">Series</span><span class="o">&gt;</span>
+<span class="w">                  </span><span class="kt">bool</span><span class="w"> </span><span class="n">stable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">Series</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -58,10 +58,11 @@ within-axis transformation: it never combines values across unrelated lanes.
 By default it orders the final axis ascending. <code class="docutils literal notranslate"><span class="pre">dim</span></code> chooses another axis,
 <code class="docutils literal notranslate"><span class="pre">descending</span></code> changes direction, and <code class="docutils literal notranslate"><span class="pre">stable</span></code> controls the relative order of
 equal values.</p>
-<p><code class="docutils literal notranslate"><span class="pre">sort_pair()</span></code> is the provenance-preserving form. It returns two aligned series:
-element <code class="docutils literal notranslate"><span class="pre">0</span></code> is the sorted values, and element <code class="docutils literal notranslate"><span class="pre">1</span></code> is the local <code class="docutils literal notranslate"><span class="pre">int64</span></code> index
-that each value had before sorting. The pair makes it possible to reorder other
-aligned series consistently without re-running comparison logic.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sort_pair()</span></code> is the provenance-preserving form. It returns a
+<code class="docutils literal notranslate"><span class="pre">std::pair&lt;Series,</span> <span class="pre">Series&gt;</span></code>: <code class="docutils literal notranslate"><span class="pre">.first</span></code> is the sorted values, and <code class="docutils literal notranslate"><span class="pre">.second</span></code> is
+the local <code class="docutils literal notranslate"><span class="pre">int64</span></code> index that each value had before sorting. The pair makes it
+possible to reorder other aligned series consistently without re-running
+comparison logic.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -79,9 +80,13 @@ returns value and index series with the same shape as the source.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p>Sorting changes value positions discontinuously when values cross. Treat it as
-a data-ordering operation, not a smooth differentiable transform for an
-objective.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sort()</span></code> moves values without altering them, so its <strong>value channel is
+differentiable</strong>: in backpropagation each output’s gradient is routed back to
+the position that value held in the input. What is <em>not</em> differentiable is the
+ordering itself — which input position maps to which rank is a discrete
+function of the data, held fixed during the backward pass, so no gradient flows
+through a rank change when two values cross. The <code class="docutils literal notranslate"><span class="pre">int64</span></code> index series from
+<code class="docutils literal notranslate"><span class="pre">sort_pair()</span></code> never carries gradient.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -130,8 +135,8 @@ is a layout detail, not a different value ordering.</p>
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">sort_pair()</span></code> keeps values and their original positions together.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">1L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">2L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">1L</span><span class="n">L</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">ordered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tied</span><span class="p">.</span><span class="n">sort_pair</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;indices=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ordered</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;indices=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ordered</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -157,6 +162,27 @@ sort.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sort: dim out of range
 </pre></div>
 </div>
+<p>Example 6. The value channel is differentiable — a weighted sum of the sorted
+values sends each weight back to the position that supplied that rank.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">});</span>
+<span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">sort</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">weights</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[30.0000, 10.0000, 40.0000, 20.0000, 50.0000]
+</pre></div>
+</div>
+<p>The ascending order is <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5]</span></code>, drawn from input positions
+<code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3,</span> <span class="pre">0,</span> <span class="pre">2,</span> <span class="pre">4]</span></code>, so weight <code class="docutils literal notranslate"><span class="pre">30</span></code> (the third) lands on position <code class="docutils literal notranslate"><span class="pre">0</span></code>, weight
+<code class="docutils literal notranslate"><span class="pre">40</span></code> on position <code class="docutils literal notranslate"><span class="pre">2</span></code>, and so on.</p>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">
@@ -168,6 +194,8 @@ to recreate the order.</p></li>
 <li><p>Sorting non-final axes can produce a non-contiguous result. Call
 <a class="reference internal" href="contiguous.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contiguous()</span></code></span></a> only when a downstream operation requires
 contiguous layout.</p></li>
+<li><p>The value channel is differentiable; the ordering and the <code class="docutils literal notranslate"><span class="pre">sort_pair()</span></code>
+indices are not.</p></li>
 <li><p>Complex-valued inputs are rejected.</p></li>
 </ul>
 </section>
@@ -188,9 +216,9 @@ the source positions must travel with that sequence.</p>
     <span class="label">Previous</span>
     <span class="title">softplus</span>
   </a>
-  <a class="next-link" href="sqrt.html">
+  <a class="next-link" href="split.html">
     <span class="label">Next</span>
-    <span class="title">sqrt</span>
+    <span class="title">split</span>
   </a>
 </div>
 </section>
@@ -285,7 +313,7 @@ the source positions must travel with that sequence.</p>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="softplus.html" title="previous chapter">Series::softplus</a></li>
-      <li>Next: <a href="sqrt.html" title="next chapter">Series::sqrt</a></li>
+      <li>Next: <a href="split.html" title="next chapter">Series::split</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

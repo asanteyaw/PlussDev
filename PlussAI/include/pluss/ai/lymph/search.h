@@ -141,11 +141,11 @@ class search::Search final {
                                  const LabeledBatch& batch,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     const SplitOptions split = default_split_for_(make_model);
-    return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+    return run(make_model, batch, split, train_options, assess_options, objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
@@ -153,7 +153,7 @@ class search::Search final {
                                  const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const;
 
@@ -162,11 +162,11 @@ class search::Search final {
                                  const Series& y,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     const SplitOptions split = default_split_for_(make_model);
-    return run(make_model, x, y, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+    return run(make_model, x, y, split, train_options, assess_options, objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
@@ -175,12 +175,12 @@ class search::Search final {
                                  const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     const auto names = cross_validate_default_feature_names_(x, "Search::run(x,y)");
     const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "Search::run(x,y)");
-    return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+    return run(make_model, batch, split, train_options, assess_options, objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
@@ -188,11 +188,11 @@ class search::Search final {
                                  const pluss::table::Thread& y,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     return run(make_model, x, as_stratify_series(y), train_options, assess_options,
-               objective_metric, objective_policy, fit_options);
+               objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
@@ -201,11 +201,11 @@ class search::Search final {
                                  const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     return run(make_model, x, as_stratify_series(y), split, train_options, assess_options,
-               objective_metric, objective_policy, fit_options);
+               objective, objective_policy, fit_options);
   }
 
   // (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin in
@@ -215,11 +215,11 @@ class search::Search final {
                                  const DataFrameBatchOptions& data_options,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     const SplitOptions split = default_split_for_(make_model);
-    return run(make_model, frame, data_options, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+    return run(make_model, frame, data_options, split, train_options, assess_options, objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
@@ -228,12 +228,12 @@ class search::Search final {
                                  const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options),
                                        "Search::run(frame,data_options).labeled_batch_from_dataframe");
-    return run(make_model, batch, split, train_options, assess_options, objective_metric, objective_policy, fit_options);
+    return run(make_model, batch, split, train_options, assess_options, objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
@@ -241,7 +241,7 @@ class search::Search final {
                                  const workflow::Payload& payload,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     const auto make_designed_model = [&](const GridPoint& point) -> models::Model {
@@ -250,7 +250,7 @@ class search::Search final {
     };
     const SplitOptions split = default_split_for_(make_designed_model);
     return run(make_designed_model, design, payload, split, train_options, assess_options,
-               objective_metric, objective_policy, fit_options);
+               objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const std::function<models::Model(const GridPoint&)>& make_model,
@@ -259,7 +259,7 @@ class search::Search final {
                                  const SplitOptions& split,
                                  const TrainOptions& train_options = {},
                                  const AssessOptions& assess_options = {},
-                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                 Scorer objective = MetricKind::Accuracy,
                                  TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                  FitOptions fit_options = {}) const {
     const auto make_designed_model = [&](const GridPoint& point) -> models::Model {
@@ -270,10 +270,10 @@ class search::Search final {
         detail::workflow_labeled_input_(design, payload, "Search::run(workflow,payload)");
     if (input.frame.has_value()) {
       return run(make_designed_model, *input.frame, input.data_options, split, train_options, assess_options,
-                 objective_metric, objective_policy, fit_options);
+                 objective, objective_policy, fit_options);
     }
     return run(make_designed_model, *input.batch, split, train_options, assess_options,
-               objective_metric, objective_policy, fit_options);
+               objective, objective_policy, fit_options);
   }
 
  private:
@@ -325,7 +325,7 @@ class search::Search final {
                                                 const SplitOptions& split_options,
                                                 const TrainOptions& train_options,
                                                 const AssessOptions& assess_options_in,
-                                                MetricKind objective_metric,
+                                                Scorer objective,
                                                 TuneObjectivePolicy objective_policy,
                                                 FitOptions fit_options) const {
   const std::int64_t total = grid_size(axes_);
@@ -355,15 +355,6 @@ class search::Search final {
   points.reserve(indices.size());
   for (const auto index : indices) points.push_back(grid_point_at(index, axes_));
 
-  AssessOptions assess_options = assess_options_in;
-  if (assess_options.metrics.empty()) {
-    assess_options.metrics = {objective_metric};
-  } else if (std::find(assess_options.metrics.begin(), assess_options.metrics.end(), objective_metric) == assess_options.metrics.end()) {
-    assess_options.metrics.push_back(objective_metric);
-  }
-
-  const bool minimize = minimize_metric_(objective_metric, objective_policy);
-
   // A Search trial's Model doesn't exist until make_model(point) actually
   // runs -- unlike selection::compare_batch_, which reads task_kind() off
   // an already-built candidates.front(). One throwaway probe call here
@@ -371,6 +362,20 @@ class search::Search final {
   // architecture (no .learn() involved) is not the expensive part of any
   // of this.
   const TaskKind task = make_model(points.front()).task_kind();
+
+  AssessOptions assess_options = assess_options_in;
+  if (!objective.is_custom()) {
+    if (assess_options.metrics.empty()) {
+      assess_options.metrics = {*objective.builtin};
+    } else if (std::find(assess_options.metrics.begin(), assess_options.metrics.end(), *objective.builtin) ==
+               assess_options.metrics.end()) {
+      assess_options.metrics.push_back(*objective.builtin);
+    }
+  } else if (assess_options.metrics.empty()) {
+    assess_options.metrics = default_assess_metrics_(task, assess_options);
+  }
+
+  const bool minimize = minimize_objective_(objective, objective_policy);
 
   const SplitPlan plan = detail::workflow_split_plan_(batch, split_options, task, "Search::run");
   const std::vector<metrics::FoldBatchPair> fold_batches = detail::materialize_fold_batches_(batch, plan, "Search::run");
@@ -390,7 +395,12 @@ class search::Search final {
   }
 
   const std::int64_t metric_count = static_cast<std::int64_t>(assess_options.metrics.size());
-  const auto evaluate_cell = [&](const GridCell_& cell) -> FoldAssessResult {
+  const bool objective_is_custom = objective.is_custom();
+  struct FoldCellOutcome_ {
+    FoldAssessResult assess{};
+    double custom = std::numeric_limits<double>::quiet_NaN();
+  };
+  const auto evaluate_cell = [&](const GridCell_& cell) -> FoldCellOutcome_ {
     // Option A (see this file's header comment): every cell rebuilds its
     // own full Model from scratch, unconditionally -- no cleverness, no
     // special-casing any one point.
@@ -398,12 +408,20 @@ class search::Search final {
     const auto& fold = plan.folds[cell.fold_index];
     const metrics::FoldBatchPair& fold_batch = fold_batches[cell.fold_index];
     const models::Model trained = trial_model.learn(fold_batch.train, train_options);
+    double custom = std::numeric_limits<double>::quiet_NaN();
+    if (objective_is_custom) {
+      const Series prediction = trained.infer(fold_batch.test.features);
+      custom = objective.fn(fold_batch.test.y, prediction);
+    }
     const Series fold_metrics =
         trained.assess_series(fold_batch.test, assess_options).to(ScalarType::Float64).reshape({metric_count});
-    return FoldAssessResult{
-        .metrics = fold_metrics,
-        .train_indices = fold.train_indices,
-        .test_indices = fold.test_indices,
+    return FoldCellOutcome_{
+        FoldAssessResult{
+            .metrics = fold_metrics,
+            .train_indices = fold.train_indices,
+            .test_indices = fold.test_indices,
+        },
+        custom,
     };
   };
 
@@ -415,11 +433,13 @@ class search::Search final {
     topts.exec = pluss::tils::transmit_exec::par;
     topts.workers = split_options.max_parallel > 0 ? static_cast<std::size_t>(split_options.max_parallel) : 0;
   }
-  const std::vector<FoldAssessResult> cell_results = pluss::tils::transmit(evaluate_cell, cells, topts);
+  const std::vector<FoldCellOutcome_> cell_results = pluss::tils::transmit(evaluate_cell, cells, topts);
 
   Result result{};
-  result.report.objective_metric = objective_metric;
+  result.report.objective_metric = objective.builtin.value_or(MetricKind::Accuracy);
+  result.report.objective_name = objective.name;
   result.report.objective_policy = objective_policy;
+  result.report.objective_minimize = minimize;
   result.report.trials.reserve(point_n);
 
   std::int64_t best_index = -1;
@@ -428,26 +448,29 @@ class search::Search final {
     CrossAssessReport cross_report{};
     cross_report.metrics = assess_options.metrics;
     cross_report.folds.resize(fold_n);
+    std::vector<double> custom_folds(fold_n, std::numeric_limits<double>::quiet_NaN());
     for (std::size_t fi = 0; fi < fold_n; ++fi) {
-      cross_report.folds[fi] = cell_results[pi * fold_n + fi];
+      cross_report.folds[fi] = cell_results[pi * fold_n + fi].assess;
+      custom_folds[fi] = cell_results[pi * fold_n + fi].custom;
     }
     metrics::CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(cross_report));
-    const double objective = scalar_metric_(cv_report.mean, objective_metric);
+    const double objective_value = objective_is_custom ? mean_finite_(custom_folds)
+                                                       : scalar_metric_(cv_report.mean, *objective.builtin);
     result.report.trials.push_back(Trial{
         .name = points[pi].label(),
-        .objective = objective,
+        .objective = objective_value,
         .cv = std::move(cv_report),
     });
 
     if (best_index < 0) {
       best_index = static_cast<std::int64_t>(pi);
-      best_objective = objective;
+      best_objective = objective_value;
       continue;
     }
-    const bool better = minimize ? (objective < best_objective) : (objective > best_objective);
+    const bool better = minimize ? (objective_value < best_objective) : (objective_value > best_objective);
     if (better) {
       best_index = static_cast<std::int64_t>(pi);
-      best_objective = objective;
+      best_objective = objective_value;
     }
   }
 

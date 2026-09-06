@@ -52,28 +52,28 @@ class Suite final {
                            const DataFrameBatchOptions& data_options,
                            CrossValOptions cv = {},
                            AssessOptions assess_options = {},
-                           MetricKind objective_metric = MetricKind::Accuracy,
+                           Scorer objective = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                            FitOptions fit_options = {}) const {
     return compare(candidates_(), frame, data_options, cv, TrainOptions{},
-                   assess_options, objective_metric, objective_policy, fit_options);
+                   assess_options, objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const LabeledBatch& batch,
                            CrossValOptions cv = {},
                            AssessOptions assess_options = {},
-                           MetricKind objective_metric = MetricKind::Accuracy,
+                           Scorer objective = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                            FitOptions fit_options = {}) const {
     return compare(candidates_(), batch, cv, TrainOptions{},
-                   assess_options, objective_metric, objective_policy, fit_options);
+                   assess_options, objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] Result run(const workflow::Workflow& design,
                            const workflow::Payload& payload,
                            CrossValOptions cv = {},
                            AssessOptions assess_options = {},
-                           MetricKind objective_metric = MetricKind::Accuracy,
+                           Scorer objective = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                            FitOptions fit_options = {}) const {
     validate::detail::require_workflow_time_compatible_(
@@ -83,10 +83,10 @@ class Suite final {
         detail::workflow_labeled_input_(design, payload, "lymph::selection::spotcheck::Suite::run(workflow,payload)");
     if (input.frame.has_value()) {
       return compare(candidates_(design), *input.frame, input.data_options, effective_cv, TrainOptions{},
-                     assess_options, objective_metric, objective_policy, fit_options);
+                     assess_options, objective, objective_policy, fit_options);
     }
     return compare(candidates_(design), *input.batch, effective_cv, TrainOptions{},
-                   assess_options, objective_metric, objective_policy, fit_options);
+                   assess_options, objective, objective_policy, fit_options);
   }
 
  private:

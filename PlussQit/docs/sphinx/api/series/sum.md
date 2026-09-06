@@ -232,8 +232,8 @@ Use `sum()` when you want totals, not averages and not running prefixes:
     <span class="label">Previous</span>
     <span class="title">minimum</span>
   </a>
-  <a class="next-link" href="take.html">
+  <a class="next-link" href="swapaxes.html">
     <span class="label">Next</span>
-    <span class="title">take</span>
+    <span class="title">swapaxes</span>
   </a>
 </div>

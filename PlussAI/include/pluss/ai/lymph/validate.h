@@ -5,7 +5,9 @@
 #include "pluss/ai/lymph/payload.h"
 #include "pluss/ai/lymph/workflow.h"
 
+#include <numeric>
 #include <utility>
+#include <vector>
 
 namespace pluss::ai::lymph::selection::validate {
 
@@ -70,6 +72,94 @@ inline void require_workflow_time_compatible_(const TimeValOptions& options,
     if (metrics[static_cast<std::size_t>(i)] == metric) return i;
   }
   ::pluss::throw_error(std::string(where) + ": requested metric was not present in the validation report.");
+}
+
+[[nodiscard]] inline pluss::tils::transmit_options scorer_transmit_options_(const SplitOptions& split,
+                                                                           std::size_t fold_n) {
+  pluss::tils::transmit_options topts{};
+  topts.grain_size = 1;
+  if (split.max_parallel == 1 || fold_n <= 1) {
+    topts.exec = pluss::tils::transmit_exec::seq;
+  } else {
+    topts.exec = pluss::tils::transmit_exec::par;
+    topts.workers = split.max_parallel > 0 ? static_cast<std::size_t>(split.max_parallel) : 0;
+  }
+  return topts;
+}
+
+[[nodiscard]] inline Series scorer_values_series_(const std::vector<double>& values) {
+  return pluss::make_series(values, {static_cast<std::int64_t>(values.size())},
+                            Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
+}
+
+// Per-fold values of a custom selection::Scorer for one model under `cv`.
+// Mirrors selection::compare_batch_'s inner loop (train the fold, infer, call
+// the scorer on the held-out `(truth, prediction)`) minus the ranking -- the
+// built-in `MetricKind` path still runs through `Plan::run` + fold_metric_values_.
+// One extra `infer` per fold, over the same fold split `Plan::run` would use.
+//
+// Bare-LabeledBatch form: only valid for a model with no appended prep stages
+// (a nameless batch cannot route a ColumnRouter). The frame overload below
+// keeps column names for staged models.
+[[nodiscard]] inline Series custom_scorer_fold_values_(const models::Model& model,
+                                                       const LabeledBatch& batch,
+                                                       const CrossValOptions& cv,
+                                                       const selection::Scorer& objective,
+                                                       TrainOptions train_options,
+                                                       const char* where) {
+  const TaskKind task = model.task_kind();
+  const SplitOptions split = ::pluss::ai::lymph::detail::effective_workflow_split_options_(cv, task);
+  const SplitPlan plan = ::pluss::ai::lymph::detail::workflow_split_plan_(batch, split, task, where);
+  const std::vector<metrics::FoldBatchPair> fold_batches =
+      ::pluss::ai::lymph::detail::materialize_fold_batches_(batch, plan, where);
+  const std::size_t fold_n = fold_batches.size();
+  if (fold_n == 0) {
+    ::pluss::throw_error(std::string(where) + ": split plan produced no folds.");
+  }
+
+  std::vector<std::size_t> fold_indices(fold_n);
+  std::iota(fold_indices.begin(), fold_indices.end(), std::size_t{0});
+  const auto evaluate_fold = [&](std::size_t fi) -> double {
+    const models::Model trained = model.learn(fold_batches[fi].train, train_options);
+    const Series prediction = trained.infer(fold_batches[fi].test.features);
+    return objective.fn(fold_batches[fi].test.y, prediction);
+  };
+  const std::vector<double> values =
+      pluss::tils::transmit(evaluate_fold, fold_indices, scorer_transmit_options_(split, fold_n));
+  return scorer_values_series_(values);
+}
+
+// (frame, DataFrameBatchOptions) form: materializes DataFrame folds so a staged
+// model's prep stages keep the column names they route against.
+[[nodiscard]] inline Series custom_scorer_fold_values_(const models::Model& model,
+                                                       const pluss::table::DataFrame& frame,
+                                                       const DataFrameBatchOptions& data_options,
+                                                       const CrossValOptions& cv,
+                                                       const selection::Scorer& objective,
+                                                       TrainOptions train_options,
+                                                       const char* where) {
+  const LabeledBatch plan_batch = resolve(labeled_batch_from_dataframe(frame, data_options), where);
+  const TaskKind task = model.task_kind();
+  const SplitOptions split = ::pluss::ai::lymph::detail::effective_workflow_split_options_(cv, task);
+  const SplitPlan plan = ::pluss::ai::lymph::detail::workflow_split_plan_(plan_batch, split, task, where);
+  const std::vector<selection::FoldFramePair_> fold_frames = selection::materialize_fold_frames_(frame, plan);
+  const std::size_t fold_n = fold_frames.size();
+  if (fold_n == 0) {
+    ::pluss::throw_error(std::string(where) + ": split plan produced no folds.");
+  }
+
+  std::vector<std::size_t> fold_indices(fold_n);
+  std::iota(fold_indices.begin(), fold_indices.end(), std::size_t{0});
+  const auto evaluate_fold = [&](std::size_t fi) -> double {
+    const models::Model trained = model.learn(fold_frames[fi].train, data_options, train_options);
+    const Series prediction = trained.infer(fold_frames[fi].test, data_options);
+    const Series y_test =
+        resolve(labeled_batch_from_dataframe(fold_frames[fi].test, data_options), where).y;
+    return objective.fn(y_test, prediction);
+  };
+  const std::vector<double> values =
+      pluss::tils::transmit(evaluate_fold, fold_indices, scorer_transmit_options_(split, fold_n));
+  return scorer_values_series_(values);
 }
 
 [[nodiscard]] inline Series fold_metric_values_(const metrics::CrossValidationReport& report,
@@ -265,11 +355,11 @@ class Plan final {
                                              const LabeledBatch& batch,
                                              TrainOptions train_options = {},
                                              AssessOptions assess_options = {},
-                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             selection::Scorer objective = MetricKind::Accuracy,
                                              TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                              selection::FitOptions fit_options = {}) const {
     return builder.benchmark(batch, options_, std::move(train_options), std::move(assess_options),
-                             objective_metric, objective_policy, fit_options);
+                             objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] selection::CompareResult run(const models::Builder& builder,
@@ -277,18 +367,18 @@ class Plan final {
                                              const DataFrameBatchOptions& data_options,
                                              TrainOptions train_options = {},
                                              AssessOptions assess_options = {},
-                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             selection::Scorer objective = MetricKind::Accuracy,
                                              TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                              selection::FitOptions fit_options = {}) const {
     return builder.benchmark(frame, data_options, options_, std::move(train_options), std::move(assess_options),
-                             objective_metric, objective_policy, fit_options);
+                             objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] selection::CompareResult run(const models::Builder& builder,
                                              const workflow::Payload& payload,
                                              TrainOptions train_options = {},
                                              AssessOptions assess_options = {},
-                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             selection::Scorer objective = MetricKind::Accuracy,
                                              TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                              selection::FitOptions fit_options = {}) const {
     detail::require_time_safe_payload_(options_, payload, "validate::Plan::run(builder,payload)");
@@ -299,15 +389,15 @@ class Plan final {
       }
       if (payload.has_label_feature()) {
         return run(builder, payload.frame(), payload.data(), std::move(train_options), std::move(assess_options),
-                   objective_metric, objective_policy, fit_options);
+                   objective, objective_policy, fit_options);
       }
       if (payload.has_label()) {
         return builder.benchmark(payload.frame(), payload.label(), options_, std::move(train_options),
-                                 std::move(assess_options), objective_metric, objective_policy, fit_options);
+                                 std::move(assess_options), objective, objective_policy, fit_options);
       }
     }
     return run(builder, payload.labeled_batch(), std::move(train_options), std::move(assess_options),
-               objective_metric, objective_policy, fit_options);
+               objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] std::vector<prep::TimeSeriesSplit> splits(const pluss::table::DataFrame& frame,
@@ -416,81 +506,119 @@ class Plan final {
     return score(spec, x, as_stratify_series(y), metric, std::move(train_options), std::move(assess_options));
   }
 
+  // `objective` is a selection::Scorer -- implicitly a MetricKind (the fold
+  // values come straight off `run(...)`'s report), or selection::make_scorer(
+  // "name", fn) for a callable scored on each fold's held-out
+  // `(truth, prediction)`. The ModelSpec overloads above stay MetricKind-only
+  // (they run through the NodeJ single-metric cross-validation path).
   [[nodiscard]] Series scores(const models::Model& model,
                               const LabeledBatch& batch,
-                              MetricKind metric,
+                              selection::Scorer objective,
                               TrainOptions train_options = {},
                               AssessOptions assess_options = {}) const {
-    assess_options.metrics = {metric};
+    if (objective.is_custom()) {
+      return detail::custom_scorer_fold_values_(model, batch, options_, objective,
+                                                std::move(train_options), "validate::Plan::scores");
+    }
+    assess_options.metrics = {*objective.builtin};
     return detail::fold_metric_values_(run(model, batch, std::move(train_options), std::move(assess_options)),
-                                       metric, "validate::Plan::scores");
+                                       *objective.builtin, "validate::Plan::scores");
   }
 
   [[nodiscard]] Series scores(const models::Model& model,
                               const pluss::table::DataFrame& frame,
                               const DataFrameBatchOptions& data_options,
-                              MetricKind metric,
+                              selection::Scorer objective,
                               TrainOptions train_options = {},
                               AssessOptions assess_options = {}) const {
-    assess_options.metrics = {metric};
+    if (objective.is_custom()) {
+      return detail::custom_scorer_fold_values_(model, frame, data_options, options_, objective,
+                                                std::move(train_options), "validate::Plan::scores");
+    }
+    assess_options.metrics = {*objective.builtin};
     return detail::fold_metric_values_(run(model, frame, data_options, std::move(train_options), std::move(assess_options)),
-                                       metric, "validate::Plan::scores");
+                                       *objective.builtin, "validate::Plan::scores");
   }
 
   [[nodiscard]] double score(const models::Model& model,
                              const LabeledBatch& batch,
-                             MetricKind metric,
+                             selection::Scorer objective,
                              TrainOptions train_options = {},
                              AssessOptions assess_options = {}) const {
-    const Series values = scores(model, batch, metric, std::move(train_options), std::move(assess_options));
+    const Series values =
+        scores(model, batch, std::move(objective), std::move(train_options), std::move(assess_options));
     return values.mean().item<double>();
   }
 
   [[nodiscard]] double score(const models::Model& model,
                              const pluss::table::DataFrame& frame,
                              const DataFrameBatchOptions& data_options,
-                             MetricKind metric,
+                             selection::Scorer objective,
                              TrainOptions train_options = {},
                              AssessOptions assess_options = {}) const {
-    const Series values = scores(model, frame, data_options, metric, std::move(train_options), std::move(assess_options));
+    const Series values = scores(model, frame, data_options, std::move(objective),
+                                 std::move(train_options), std::move(assess_options));
     return values.mean().item<double>();
   }
 
   [[nodiscard]] Series scores(const models::Model& model,
                               const workflow::Payload& payload,
-                              MetricKind metric,
+                              selection::Scorer objective,
                               TrainOptions train_options = {},
                               AssessOptions assess_options = {}) const {
-    assess_options.metrics = {metric};
+    if (objective.is_custom()) {
+      detail::require_time_safe_payload_(options_, payload, "validate::Plan::scores");
+      if (payload.has_frame() && payload.has_label_feature()) {
+        return detail::custom_scorer_fold_values_(model, payload.frame(), payload.data(), options_, objective,
+                                                  std::move(train_options), "validate::Plan::scores");
+      }
+      return detail::custom_scorer_fold_values_(model, payload.labeled_batch(), options_, objective,
+                                                std::move(train_options), "validate::Plan::scores");
+    }
+    assess_options.metrics = {*objective.builtin};
     return detail::fold_metric_values_(run(model, payload, std::move(train_options), std::move(assess_options)),
-                                       metric, "validate::Plan::scores");
+                                       *objective.builtin, "validate::Plan::scores");
   }
 
   [[nodiscard]] Series scores(const workflow::Workflow& workflow,
                               const workflow::Payload& payload,
-                              MetricKind metric,
+                              selection::Scorer objective,
                               TrainOptions train_options = {},
                               AssessOptions assess_options = {}) const {
-    assess_options.metrics = {metric};
+    if (objective.is_custom()) {
+      detail::require_workflow_time_compatible_(options_, workflow, payload, "validate::Plan::scores");
+      const CrossValOptions eff = detail::effective_time_options_(options_, workflow);
+      const ::pluss::ai::lymph::detail::WorkflowLabeledInput input =
+          ::pluss::ai::lymph::detail::workflow_labeled_input_(workflow, payload, "validate::Plan::scores");
+      if (input.frame.has_value()) {
+        return detail::custom_scorer_fold_values_(workflow.model(), *input.frame, input.data_options, eff, objective,
+                                                  std::move(train_options), "validate::Plan::scores");
+      }
+      return detail::custom_scorer_fold_values_(workflow.model(), *input.batch, eff, objective,
+                                                std::move(train_options), "validate::Plan::scores");
+    }
+    assess_options.metrics = {*objective.builtin};
     return detail::fold_metric_values_(run(workflow, payload, std::move(train_options), std::move(assess_options)),
-                                       metric, "validate::Plan::scores");
+                                       *objective.builtin, "validate::Plan::scores");
   }
 
   [[nodiscard]] double score(const models::Model& model,
                              const workflow::Payload& payload,
-                             MetricKind metric,
+                             selection::Scorer objective,
                              TrainOptions train_options = {},
                              AssessOptions assess_options = {}) const {
-    const Series values = scores(model, payload, metric, std::move(train_options), std::move(assess_options));
+    const Series values =
+        scores(model, payload, std::move(objective), std::move(train_options), std::move(assess_options));
     return values.mean().item<double>();
   }
 
   [[nodiscard]] double score(const workflow::Workflow& workflow,
                              const workflow::Payload& payload,
-                             MetricKind metric,
+                             selection::Scorer objective,
                              TrainOptions train_options = {},
                              AssessOptions assess_options = {}) const {
-    const Series values = scores(workflow, payload, metric, std::move(train_options), std::move(assess_options));
+    const Series values =
+        scores(workflow, payload, std::move(objective), std::move(train_options), std::move(assess_options));
     return values.mean().item<double>();
   }
 

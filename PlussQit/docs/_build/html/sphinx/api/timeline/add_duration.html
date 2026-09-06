@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Timeline::sub_duration" href="sub_duration.html" />
-    <link rel="prev" title="Timeline API Reference" href="../../timeline_api_reference.html" />
+    <link rel="prev" title="Timeline::epoch_nanos" href="epoch_nanos.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -204,10 +204,9 @@ data=true
 </section>
 <section id="broadcasting">
 <h2>Broadcasting<a class="headerlink" href="#broadcasting" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">add_duration</span></code>/<code class="docutils literal notranslate"><span class="pre">operator+</span></code> follow the same broadcasting model as <code class="docutils literal notranslate"><span class="pre">Series</span></code>:
-shapes are aligned the same way <code class="docutils literal notranslate"><span class="pre">SeriesIterator::broadcast_shape</span></code> aligns any
-two <code class="docutils literal notranslate"><span class="pre">Series</span></code> operands, so a scalar operand pairs with every element of an
-N-D operand on the other side.</p>
+<p><code class="docutils literal notranslate"><span class="pre">add_duration</span></code>/<code class="docutils literal notranslate"><span class="pre">operator+</span></code> use standard trailing-axis broadcasting. A scalar
+operand therefore pairs with every element of an N-D operand on the other
+side.</p>
 <p>Example: a scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> plus a 1D <code class="docutils literal notranslate"><span class="pre">Duration</span></code> broadcasts to a 1D result.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">t0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">steps</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -318,9 +317,9 @@ same thing.</p></li>
 <li><p><a class="reference internal" href="add_nanos.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::add_nanos</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../timeline_api_reference.html">
+  <a class="prev-link" href="epoch_nanos.html">
     <span class="label">Previous</span>
-    <span class="title">Timeline API Reference</span>
+    <span class="title">epoch_nanos</span>
   </a>
   <a class="next-link" href="sub_duration.html">
     <span class="label">Next</span>
@@ -418,7 +417,7 @@ same thing.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="../../timeline_api_reference.html" title="previous chapter">Timeline API Reference</a></li>
+      <li>Previous: <a href="epoch_nanos.html" title="previous chapter">Timeline::epoch_nanos</a></li>
       <li>Next: <a href="sub_duration.html" title="next chapter">Timeline::sub_duration</a></li>
   </ul></li>
   </ul></li>

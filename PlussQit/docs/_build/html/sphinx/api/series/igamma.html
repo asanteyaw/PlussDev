@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::igamma &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::igammac" href="igammac.html" />
+    <link rel="prev" title="Series::i0" href="i0.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-igamma">
+<h1>Series::igamma<a class="headerlink" href="#series-igamma" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">igamma</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">igamma</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">igamma_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">igamma_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes the regularized lower incomplete gamma function <code class="docutils literal notranslate"><span class="pre">P(a,</span> <span class="pre">x)</span></code> elementwise.
+<code class="docutils literal notranslate"><span class="pre">self</span></code> supplies the shape parameter <code class="docutils literal notranslate"><span class="pre">a</span></code>; the argument supplies the upper limit
+<code class="docutils literal notranslate"><span class="pre">x</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Gamma</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="p">)</span> <span class="o">*</span> <span class="n">integral_0</span><span class="o">^</span><span class="n">x</span> <span class="n">t</span><span class="o">^</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="n">e</span><span class="o">^</span><span class="p">(</span><span class="o">-</span><span class="n">t</span><span class="p">)</span> <span class="n">dt</span>
+</pre></div>
+</div>
+<p>The regularization by <code class="docutils literal notranslate"><span class="pre">Gamma(a)</span></code> puts the value on <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>, and <code class="docutils literal notranslate"><span class="pre">P(a,</span> <span class="pre">.)</span></code> is
+exactly the cumulative distribution function of a Gamma(<code class="docutils literal notranslate"><span class="pre">a</span></code>, rate <code class="docutils literal notranslate"><span class="pre">1</span></code>) random
+variable. So <code class="docutils literal notranslate"><span class="pre">igamma</span></code> is how you get Gamma, chi-square, and Erlang tail
+probabilities: the chi-square CDF with <code class="docutils literal notranslate"><span class="pre">k</span></code> degrees of freedom is
+<code class="docutils literal notranslate"><span class="pre">P(k/2,</span> <span class="pre">x/2)</span></code>.</p>
+<p>Behaviour:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">P(a,</span> <span class="pre">0)</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">P(a,</span> <span class="pre">x)</span> <span class="pre">-&gt;</span> <span class="pre">1</span></code> as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">-&gt;</span> <span class="pre">inf</span></code>; the function is monotone
+increasing in <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">P(a,</span> <span class="pre">x)</span> <span class="pre">+</span> <span class="pre">Q(a,</span> <span class="pre">x)</span> <span class="pre">=</span> <span class="pre">1</span></code>, where <code class="docutils literal notranslate"><span class="pre">Q</span></code> is <a class="reference internal" href="igammac.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">igammac</span></code></span></a>, the upper
+tail.</p></li>
+<li><p>Defined for <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code>. Outside that the result is <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">double</span></code> overload treats <code class="docutils literal notranslate"><span class="pre">x</span></code> as a constant broadcast against every element
+of <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p>
+<p>The Series overload follows ordinary broadcasting. This matters when a column
+of shape parameters is evaluated at a row of integration limits: the result is
+a table whose rows are distributions and whose columns are evaluation points.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">double</span></code>): the upper limit <code class="docutils literal notranslate"><span class="pre">x</span></code>, broadcast against
+<code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> or <code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code>
+A <code class="docutils literal notranslate"><span class="pre">Series</span></code> broadcast over <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span></code>, each element <code class="docutils literal notranslate"><span class="pre">P(a,</span> <span class="pre">x)</span></code> in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.
+The in-place forms write the broadcast result into <code class="docutils literal notranslate"><span class="pre">self</span></code> and therefore
+require the broadcast shape to equal <code class="docutils literal notranslate"><span class="pre">self.shape()</span></code>.</p>
+<p>Integral inputs are promoted for out-of-place evaluation. In-place evaluation
+requires floating storage.</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">igamma</span></code> is differentiable <strong>with respect to <code class="docutils literal notranslate"><span class="pre">x</span></code></strong> (the <code class="docutils literal notranslate"><span class="pre">other</span></code> argument, when
+it is a <code class="docutils literal notranslate"><span class="pre">Series</span></code>). Differentiating the integral by its upper limit:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">/</span><span class="n">dx</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">x</span><span class="o">^</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="n">e</span><span class="o">^</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">Gamma</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which is the Gamma(<code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>) density at <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<p>There is <strong>no gradient with respect to <code class="docutils literal notranslate"><span class="pre">a</span></code></strong> (the shape parameter): that
+derivative has no elementary closed form and is not wired. If <code class="docutils literal notranslate"><span class="pre">self</span></code> tracks
+slope and <code class="docutils literal notranslate"><span class="pre">x</span></code> does not, an objective built only from <code class="docutils literal notranslate"><span class="pre">igamma</span></code> is disconnected
+from its input, and calling <a class="reference internal" href="reverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reverse()</span></code></span></a> on it raises. The
+<code class="docutils literal notranslate"><span class="pre">igamma(double)</span></code> overload holds <code class="docutils literal notranslate"><span class="pre">x</span></code> constant, so it is non-differentiable in
+the same way.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. With <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">2</span></code> fixed, <code class="docutils literal notranslate"><span class="pre">P</span></code> climbs from <code class="docutils literal notranslate"><span class="pre">0</span></code> toward <code class="docutils literal notranslate"><span class="pre">1</span></code> as <code class="docutils literal notranslate"><span class="pre">x</span></code> grows.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})</span>
+<span class="w">        </span><span class="p">.</span><span class="n">igamma</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))</span>
+<span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.0000, 0.2642, 0.8009, 1.0000]
+</pre></div>
+</div>
+<p>Example 2. The lower and upper tails sum to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">igamma</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">igammac</span><span class="p">(</span><span class="n">x</span><span class="p">)));</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.0000, 1.0000, 1.0000]
+</pre></div>
+</div>
+<p>Example 3. At <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">1</span></code> the incomplete gamma collapses to the exponential CDF,
+<code class="docutils literal notranslate"><span class="pre">P(1,</span> <span class="pre">x)</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">-</span> <span class="pre">e^(-x)</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}).</span><span class="n">igamma</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">neg</span><span class="p">().</span><span class="n">exp</span><span class="p">().</span><span class="n">neg</span><span class="p">().</span><span class="n">add</span><span class="p">(</span><span class="mf">1.0</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.3935, 0.6321, 0.8647]
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.3935, 0.6321, 0.8647]
+</pre></div>
+</div>
+<p>Example 4. The backward pass with respect to <code class="docutils literal notranslate"><span class="pre">x</span></code> is the Gamma density
+<code class="docutils literal notranslate"><span class="pre">x^(a-1)</span> <span class="pre">e^(-x)</span> <span class="pre">/</span> <span class="pre">Gamma(a)</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}).</span><span class="n">igamma</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.3679, 0.1494]
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">2</span></code>, the density is <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">e^(-x)</span></code>: <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">*</span> <span class="pre">e^(-1)</span> <span class="pre">=</span> <span class="pre">0.3679</span></code> and
+<code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">*</span> <span class="pre">e^(-3)</span> <span class="pre">=</span> <span class="pre">0.1494</span></code>.</p>
+<p>Example 5. Broadcasting a <code class="docutils literal notranslate"><span class="pre">[2,1]</span></code> column of shapes against three limits builds
+a <code class="docutils literal notranslate"><span class="pre">[2,3]</span></code> CDF table. The first row has <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">1</span></code>; the second has <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">2</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">shapes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}).</span><span class="n">reshape</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">limits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">shapes</span><span class="p">.</span><span class="n">igamma</span><span class="p">(</span><span class="n">limits</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 0.3935 0.6321 0.8647 ⎤
+⎣ 0.0902 0.2642 0.5940 ⎦
+</pre></div>
+</div>
+<p>Example 6. Exact endpoints pair naturally with the complementary function.
+At <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0</span></code>, all mass is in the upper tail; at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">+inf</span></code>, all mass is in the
+lower tail.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">infinity</span><span class="p">()});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">igamma</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">igammac</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.0000, 0.8009, 1.0000]
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.0000, 0.1991, 0.0000]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Argument order is <code class="docutils literal notranslate"><span class="pre">a.igamma(x)</span></code>: <code class="docutils literal notranslate"><span class="pre">self</span></code> is the shape parameter, the argument
+is the integration limit. Swapping them silently computes a different value.</p></li>
+<li><p>Gradient flows only through <code class="docutils literal notranslate"><span class="pre">x</span></code>, and only when <code class="docutils literal notranslate"><span class="pre">x</span></code> is a <code class="docutils literal notranslate"><span class="pre">Series</span></code>. There is no
+gradient with respect to <code class="docutils literal notranslate"><span class="pre">a</span></code>; an objective that depends on <code class="docutils literal notranslate"><span class="pre">a</span></code> alone through
+<code class="docutils literal notranslate"><span class="pre">igamma</span></code> is disconnected and <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> raises.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> gives <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p></li>
+<li><p>For the upper tail (survival function) use <a class="reference internal" href="igammac.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">igammac</span></code></span></a> rather
+than <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">igamma</span></code>, which loses precision when <code class="docutils literal notranslate"><span class="pre">P</span></code> is close to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>In-place broadcasting cannot enlarge the receiver. If broadcasting <code class="docutils literal notranslate"><span class="pre">a</span></code> and
+<code class="docutils literal notranslate"><span class="pre">x</span></code> would create a larger shape, use <code class="docutils literal notranslate"><span class="pre">igamma()</span></code> and keep the returned series.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">igamma(x)</span></code> is the regularized lower incomplete gamma <code class="docutils literal notranslate"><span class="pre">P(a,</span> <span class="pre">x)</span></code>, with <code class="docutils literal notranslate"><span class="pre">a</span></code> from
+<code class="docutils literal notranslate"><span class="pre">self</span></code>:</p>
+<ul class="simple">
+<li><p>the CDF of a Gamma(<code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>); chi-square CDF is <code class="docutils literal notranslate"><span class="pre">P(k/2,</span> <span class="pre">x/2)</span></code></p></li>
+<li><p>rises from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> in <code class="docutils literal notranslate"><span class="pre">x</span></code>; <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">+</span> <span class="pre">Q</span> <span class="pre">=</span> <span class="pre">1</span></code> with <a class="reference internal" href="igammac.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">igammac</span></code></span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> for <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&lt;</span> <span class="pre">0</span></code></p></li>
+<li><p>differentiable in <code class="docutils literal notranslate"><span class="pre">x</span></code> with backward <code class="docutils literal notranslate"><span class="pre">x^(a-1)</span> <span class="pre">e^(-x)</span> <span class="pre">/</span> <span class="pre">Gamma(a)</span></code>; <strong>not</strong>
+differentiable in <code class="docutils literal notranslate"><span class="pre">a</span></code></p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">double</span></code> overload holds <code class="docutils literal notranslate"><span class="pre">x</span></code> constant and is non-differentiable</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="igammac.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::igammac</span></code></span></a>: the complementary upper tail <code class="docutils literal notranslate"><span class="pre">Q(a,</span> <span class="pre">x)</span></code>.</p></li>
+<li><p><a class="reference internal" href="lgamma.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::lgamma</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Gamma(a)</span></code> normalizer, in log space.</p></li>
+<li><p><a class="reference internal" href="erf.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::erf</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">P(1/2,</span> <span class="pre">x^2)</span></code> is <code class="docutils literal notranslate"><span class="pre">erf(x)</span></code>, a special case.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="i0.html">
+    <span class="label">Previous</span>
+    <span class="title">i0</span>
+  </a>
+  <a class="next-link" href="igammac.html">
+    <span class="label">Next</span>
+    <span class="title">igammac</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="i0.html" title="previous chapter">Series::i0</a></li>
+      <li>Next: <a href="igammac.html" title="next chapter">Series::igammac</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/igamma.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

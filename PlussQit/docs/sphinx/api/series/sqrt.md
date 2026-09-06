@@ -136,9 +136,9 @@ familiar functions still need explicit domain awareness in practical code.
   magnitudes before further transforms.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
+  <a class="prev-link" href="split.html">
     <span class="label">Previous</span>
-    <span class="title">slice</span>
+    <span class="title">split</span>
   </a>
   <a class="next-link" href="square.html">
     <span class="label">Next</span>

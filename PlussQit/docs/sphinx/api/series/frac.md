@@ -141,8 +141,8 @@ floor: dtype not implemented
     <span class="label">Previous</span>
     <span class="title">fmod</span>
   </a>
-  <a class="next-link" href="gather.html">
+  <a class="next-link" href="frexp.html">
     <span class="label">Next</span>
-    <span class="title">gather</span>
+    <span class="title">frexp</span>
   </a>
 </div>

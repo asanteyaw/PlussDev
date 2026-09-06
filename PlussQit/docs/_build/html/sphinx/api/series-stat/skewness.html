@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="SeriesStatAccessor::standardize" href="standardize.html" />
@@ -44,6 +44,8 @@
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatAccessor</span><span class="o">::</span><span class="n">skewness</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatAccessor</span><span class="o">::</span><span class="n">skewness</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatProxy</span><span class="o">::</span><span class="n">skewness</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatProxy</span><span class="o">::</span><span class="n">skewness</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -52,20 +54,51 @@
 <p><code class="docutils literal notranslate"><span class="pre">skewness()</span></code> measures standardized third-moment asymmetry. Positive values
 indicate a longer or heavier right tail, negative values a longer or heavier
 left tail, and zero a symmetric lane. Zero does not mean low variance.</p>
+<p>The statistic is dimensionless: translating a lane or multiplying it by a
+positive scale does not change its skewness. It is a reduction, so global and
+axis-wise calls describe different populations rather than transforming the
+owner.</p>
+</section>
+<section id="parameters-and-returns">
+<h2>Parameters And Returns<a class="headerlink" href="#parameters-and-returns" title="Link to this heading">¶</a></h2>
+<p>Omit <code class="docutils literal notranslate"><span class="pre">dim</span></code> to pool every value. Supply a valid, possibly negative <code class="docutils literal notranslate"><span class="pre">dim</span></code> to
+return one skewness per surviving lane. The global result currently has shape
+<code class="docutils literal notranslate"><span class="pre">[1]</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Symmetric rows have zero third-moment asymmetry.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">symmetric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">lopsided</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">symmetric</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">skewness</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lopsided</span><span class="p">.</span><span class="n">stat</span><span class="p">().</span><span class="n">skewness</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lopsided</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">skewness</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data=[0, 0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0, 0]
+</pre></div>
+</div>
+<p>Example 2. Repeated low values and one high value create positive skewness.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">lopsided</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lopsided</span><span class="p">.</span><span class="n">stat</span><span class="p">().</span><span class="n">skewness</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[0.70710678, 0.70710678]
+</pre></div>
+</div>
+<p>Example 3. Pooling both rows creates a different distribution; global
+skewness is not the average of the row statistics.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lopsided</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">skewness</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
 data=[1.2247449]
 </pre></div>
 </div>
@@ -73,8 +106,8 @@ data=[1.2247449]
 not an average of row skewness. Here it is larger than either row result.</p>
 </section>
 </section>
-<section id="reading-the-statistic">
-<h2>Reading The Statistic<a class="headerlink" href="#reading-the-statistic" title="Link to this heading">¶</a></h2>
+<section id="interpreting-the-statistic">
+<h2>Interpreting The Statistic<a class="headerlink" href="#interpreting-the-statistic" title="Link to this heading">¶</a></h2>
 <p>Skewness is dimensionless because deviations are normalized by standard
 deviation. Multiplying every value by a positive constant therefore changes
 spread but not skewness. Treat estimates from very short lanes cautiously;

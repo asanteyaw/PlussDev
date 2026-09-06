@@ -147,8 +147,8 @@ For `(a = -5, b = 3)` the output is `5`, again `-1`. `b` gets nothing.
     <span class="label">Previous</span>
     <span class="title">copy_</span>
   </a>
-  <a class="next-link" href="count.html">
+  <a class="next-link" href="corrcoef.html">
     <span class="label">Next</span>
-    <span class="title">count</span>
+    <span class="title">corrcoef</span>
   </a>
 </div>

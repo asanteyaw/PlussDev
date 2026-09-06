@@ -175,12 +175,12 @@ Use `histc()` when you want range frequencies rather than exact label counts.
 - [`Series::unique`](unique.md): distinct extraction rather than counting.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="gt.html">
+  <a class="prev-link" href="heaviside.html">
     <span class="label">Previous</span>
-    <span class="title">gt</span>
+    <span class="title">heaviside</span>
   </a>
-  <a class="next-link" href="hypot.html">
+  <a class="next-link" href="histogram.html">
     <span class="label">Next</span>
-    <span class="title">hypot</span>
+    <span class="title">histogram</span>
   </a>
 </div>

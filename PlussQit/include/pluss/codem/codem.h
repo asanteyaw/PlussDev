@@ -3,6 +3,7 @@
 #include "pluss/msharp/msharp.h"
 #include "CodeM/CodeM.h"
 #include "CodeM/core/Printing.h"
+#include "CodeM/core/SeriesTape.h"
 #include "pluss/error.h"
 #include "pluss/slicing.h"
 #include <cstddef>
@@ -380,6 +381,7 @@ namespace pluss {
 
   using Series = codem::Series;
   using Config = codem::Config;
+  using DType = codem::DType;
   using ScalarType = codem::ScalarType;
   using Platform = codem::Platform;
   template <class T>
@@ -389,6 +391,9 @@ namespace pluss {
   inline constexpr Platform pMPS = Platform::MPS;
   using BlobDeleter = codem::BlobDeleter;
   using PrintOptions = codem::PrintOptions;
+  using NoGradGuard = codem::series_tape::NoGradGuard;
+  using AutoGradMode = codem::series_tape::AutoGradMode;
+  using PauseRecording = codem::series_tape::PauseRecording;
 
   using codem::to_string;
   using codem::platform_available;

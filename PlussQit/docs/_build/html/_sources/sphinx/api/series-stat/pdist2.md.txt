@@ -75,8 +75,10 @@ std::cout << distance.square() << "\n";
 ### Output
 
 ```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[[1, 5],
   [1, 3.6055513]]
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[[1, 25],
   [1, 13]]
 ```

@@ -108,6 +108,7 @@ template <class T>
 static inline T init_for_reduce(const std::string& reduce) {
   if (reduce == "sum") return (T)0;
   if (reduce == "mean") return (T)0;
+  if (reduce == "prod") return (T)1;
   if (reduce == "amax") return std::numeric_limits<T>::lowest();
   if (reduce == "amin") return std::numeric_limits<T>::max();
   throw_error("scatter_reduce: bad reduce");
@@ -117,6 +118,7 @@ template <class T>
 static inline T apply_reduce(T cur, T val, const std::string& reduce) {
   if (reduce == "sum") return cur + val;
   if (reduce == "mean") return cur + val;
+  if (reduce == "prod") return cur * val;
   if (reduce == "amax") return std::max(cur, val);
   if (reduce == "amin") return std::min(cur, val);
   throw_error("scatter_reduce: bad reduce");
@@ -225,12 +227,14 @@ static void scatter_reduce_half_contig(Series& a, std::int64_t dim, const Series
   auto apply = [&](float cur, float val)->float{
     if (reduce == "sum") return cur + val;
     if (reduce == "mean") return cur + val;
+    if (reduce == "prod") return cur * val;
     if (reduce == "amax") return std::max(cur, val);
     if (reduce == "amin") return std::min(cur, val);
     throw_error("scatter_reduce: bad reduce");
   };
   auto identity = [&]()->float{
     if (reduce == "sum" || reduce == "mean") return 0.0f;
+    if (reduce == "prod") return 1.0f;
     if (reduce == "amax") return -std::numeric_limits<float>::infinity();
     if (reduce == "amin") return +std::numeric_limits<float>::infinity();
     throw_error("scatter_reduce: bad reduce");

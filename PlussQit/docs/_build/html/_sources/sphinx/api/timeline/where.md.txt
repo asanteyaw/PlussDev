@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::where(const Series& mask, const Timeline& other) -> Timeline
+Timeline Timeline::where(const Series& mask, const Timeline& other) const
 ```
 
 ## What It Does
@@ -18,9 +18,8 @@ Current verified behavior is:
 - where `mask` is `true`, keep `self`
 - where `mask` is `false`, take `other`
 
-That matters because this is easy to assume backwards if you are coming from a
-different mental model. The verified output below is the authoritative behavior
-for the current implementation.
+Read the call as `choose self where true, otherwise choose other`. The verified
+output below makes that branch direction concrete.
 
 ## Parameters
 

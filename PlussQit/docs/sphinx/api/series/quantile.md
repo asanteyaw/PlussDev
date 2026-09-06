@@ -143,8 +143,8 @@ semantics explicit.
     <span class="label">Previous</span>
     <span class="title">put_</span>
   </a>
-  <a class="next-link" href="rad2deg.html">
+  <a class="next-link" href="random_.html">
     <span class="label">Next</span>
-    <span class="title">rad2deg</span>
+    <span class="title">random_</span>
   </a>
 </div>

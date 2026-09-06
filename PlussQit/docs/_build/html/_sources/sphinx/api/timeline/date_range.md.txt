@@ -138,9 +138,9 @@ Timeline(shape=[4], tz=UTC)
 - [`Timeline::searchsorted_left`](searchsorted_left.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_monday.html">
+  <a class="prev-link" href="is_sunday.html">
     <span class="label">Previous</span>
-    <span class="title">is_monday</span>
+    <span class="title">is_sunday</span>
   </a>
   <a class="next-link" href="../../timeline_api_reference.html">
     <span class="label">Next</span>

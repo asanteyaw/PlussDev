@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::any" href="any.html" />
+    <link rel="next" title="Series::aminmax" href="aminmax.html" />
     <link rel="prev" title="Series::amax" href="amax.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -190,6 +190,8 @@ is split across the two tied winners.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">keepdim</span></code> preserves geometry, not values.</p></li>
 <li><p>Tied minima split backward sensitivity evenly.</p></li>
 <li><p>Invalid dims fail directly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> propagates: a single <code class="docutils literal notranslate"><span class="pre">NaN</span></code> in a reduction lane makes that lane’s result
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code>. Filter it out first if you want the minimum of the finite values.</p></li>
 </ul>
 </section>
 <section id="summary">
@@ -216,9 +218,9 @@ pairwise minima.</p></li>
     <span class="label">Previous</span>
     <span class="title">amax</span>
   </a>
-  <a class="next-link" href="any.html">
+  <a class="next-link" href="aminmax.html">
     <span class="label">Next</span>
-    <span class="title">any</span>
+    <span class="title">aminmax</span>
   </a>
 </div>
 </section>
@@ -313,7 +315,7 @@ pairwise minima.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="amax.html" title="previous chapter">Series::amax</a></li>
-      <li>Next: <a href="any.html" title="next chapter">Series::any</a></li>
+      <li>Next: <a href="aminmax.html" title="next chapter">Series::aminmax</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

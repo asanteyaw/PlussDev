@@ -3,12 +3,14 @@
 #include "pluss/ai/lymph/common.h"
 #include "pluss/ai/lymph/model.h"
 #include "pluss/ai/lymph/selection.h"
+#include "pluss/msharp/msharp.h"
 
 #include <initializer_list>
 #include <map>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -67,6 +69,8 @@ namespace models::builder {
 
 class Builder final {
  public:
+  using Entry = std::pair<std::string, Model>;
+
   Builder() = default;
   Builder(Builder&&) noexcept = default;
   Builder& operator=(Builder&&) noexcept = default;
@@ -89,6 +93,56 @@ class Builder final {
     }
     items_.emplace_back(std::move(name), std::move(model));
     return *this;
+  }
+
+  // Registers several named models without requiring a long chain of
+  // single-entry inject calls. Validate the complete batch before changing
+  // the registry, so an invalid later entry cannot leave an earlier entry
+  // partially registered.
+  Builder& inject(pluss::msharp::RangeView::Of<Entry> entries) {
+    std::vector<std::string_view> pending_names{};
+    pending_names.reserve(entries.size());
+
+    for (const auto& [name, model] : entries) {
+      (void)model;
+      if (name.empty()) {
+        ::pluss::throw_error("lymph::Builder::inject: name must not be empty.");
+      }
+      if (has(name)) {
+        ::pluss::throw_error("lymph::Builder::inject: \"" + name + "\" is already registered; eject it first to replace it.");
+      }
+      for (const std::string_view pending : pending_names) {
+        if (pending == name) {
+          ::pluss::throw_error("lymph::Builder::inject: \"" + name + "\" appears more than once in the supplied entries.");
+        }
+      }
+      pending_names.push_back(name);
+    }
+
+    items_.reserve(items_.size() + entries.size());
+    for (const auto& [name, model] : entries) {
+      items_.emplace_back(name, model);
+    }
+    return *this;
+  }
+
+  Builder& inject(std::initializer_list<Entry> entries) {
+    return inject(pluss::msharp::RangeView::Of<Entry>(entries));
+  }
+
+  // Bulk inject from a preassembled name->Model map. The container's keys
+  // are already distinct, so the intra-batch duplicate scan the RangeView
+  // overload runs is unnecessary here; only the empty-name and
+  // already-registered checks apply. The whole map is still validated before
+  // a single entry is added, so a collision on any key leaves the registry
+  // exactly as it was. Models are copied cheaply (copy-on-write handles) and
+  // detach only if one side later mutates.
+  Builder& inject(const std::map<std::string, Model>& entries) {
+    return inject_assoc_(entries);
+  }
+
+  Builder& inject(const std::unordered_map<std::string, Model>& entries) {
+    return inject_assoc_(entries);
   }
 
   // Removes and returns the model registered under `name`; the Builder no
@@ -186,11 +240,11 @@ class Builder final {
                                                     selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
-                                                    MetricKind objective_metric = MetricKind::Accuracy,
+                                                    selection::Scorer objective = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
     return remember_(selection::compare(candidates(), batch, cv, train_options, assess_options,
-                                        objective_metric, objective_policy, fit_options));
+                                        objective, objective_policy, fit_options));
   }
 
   [[nodiscard]] selection::CompareResult benchmark(const pluss::table::DataFrame& x,
@@ -198,11 +252,11 @@ class Builder final {
                                                     selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
-                                                    MetricKind objective_metric = MetricKind::Accuracy,
+                                                    selection::Scorer objective = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
     return remember_(selection::compare(candidates(), x, y, cv, train_options, assess_options,
-                                        objective_metric, objective_policy, fit_options));
+                                        objective, objective_policy, fit_options));
   }
 
   // (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin in
@@ -214,11 +268,11 @@ class Builder final {
                                                     selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
-                                                    MetricKind objective_metric = MetricKind::Accuracy,
+                                                    selection::Scorer objective = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
     return remember_(selection::compare(candidates(), frame, data_options, cv, train_options, assess_options,
-                                        objective_metric, objective_policy, fit_options));
+                                        objective, objective_policy, fit_options));
   }
 
   [[nodiscard]] bool benchmarked() const noexcept {
@@ -234,6 +288,27 @@ class Builder final {
   }
 
  private:
+  // Shared body for the std::map / std::unordered_map inject overloads.
+  // Two passes: validate every entry, then insert every entry, so the
+  // registry is never left half-updated by a mid-batch collision.
+  template <class AssocMap>
+  Builder& inject_assoc_(const AssocMap& entries) {
+    for (const auto& [name, model] : entries) {
+      (void)model;
+      if (name.empty()) {
+        ::pluss::throw_error("lymph::Builder::inject: name must not be empty.");
+      }
+      if (has(name)) {
+        ::pluss::throw_error("lymph::Builder::inject: \"" + name + "\" is already registered; eject it first to replace it.");
+      }
+    }
+    items_.reserve(items_.size() + entries.size());
+    for (const auto& [name, model] : entries) {
+      items_.emplace_back(name, model);
+    }
+    return *this;
+  }
+
   [[nodiscard]] const selection::CompareResult& require_last_result_() const {
     if (!last_result_.has_value()) {
       ::pluss::throw_error("lymph::Builder: benchmark() must be run before best() or worst().");

@@ -392,54 +392,62 @@ second_dL_dx=8
 Examples 5 and 6 are the important toggle pair. The forward objective did not
 change. Only the accumulation policy changed.
 
-Example 7. If nothing was marked for tracking, `reverse()` does not populate a
-stored sensitivity on that leaf.
+Example 7. An objective with no tracked leaf fails fast. If nothing on the path
+to `x.mul(2.0).sum()` was marked for tracking, there is no derivative to
+propagate, and `reverse()` raises rather than silently doing nothing.
 
 ```cpp
 auto x = pluss::make_series({1.0, 2.0, 3.0});
-x.mul(2.0).sum().reverse();
-std::cout << "has_dL_dx=" << (x.has_sensitivity() ? "true" : "false") << "\n";
+
+try {
+  x.mul(2.0).sum().reverse();
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
 ```
 
-`reverse()` still runs on the scalar result. What is missing is not the
-backward pass itself, but a tracked leaf on which to store the propagated
-sensitivity.
+The scalar objective `L = 2x₁ + 2x₂ + 2x₃` is mathematically differentiable,
+but the graph was never connected: `x` did not opt in with
+[`tracks_slope_()`](tracks_slope_.md), so the result carries no source link. A
+reverse pass with nothing to differentiate is a mistake — usually a training
+loop that would otherwise learn nothing — so it is reported.
 
 ### Output
 
 ```text
-has_dL_dx=false
+series_tape::backpropagate: objective does not track slope and has no source link; nothing to differentiate (a constant, or built only from non-differentiable ops)
 ```
 
-Example 8. A scalar expression such as `x * x.cos()` does run the reverse
-pass, but if the input leaf was never marked for tracking then there is
-nowhere to store `dy/dx`, and reading `y.sensitivity()` does not recover it.
+Example 8. The same failure for a path built only from **non-differentiable**
+operations. Here [`argsort()`](argsort.md) returns integer positions, which
+carry no gradient, so even with `x` tracked the objective is disconnected.
 
 ```cpp
-auto x = pluss::make_series(1.7);
-auto y = x * x.cos();
+auto x = pluss::make_series({3.0, 1.0, 2.0});
+x.tracks_slope_(true);
 
-y.reverse();
+auto ranks = x.argsort(0).to(pluss::ScalarType::Float64);
 
-std::cout << "x_has_dy_dx=" << (x.has_sensitivity() ? "true" : "false") << "\n";
-std::cout << "y_has_stored_sensitivity=" << (y.has_sensitivity() ? "true" : "false") << "\n";
-std::cout << "y_sensitivity=" << y.sensitivity().item<double>() << "\n";
+try {
+  ranks.sum().reverse();
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
 ```
 
-This is the current public distinction on the verified surface:
-
-- `reverse()` is the propagation step
-- `tracks_slope_()` is the opt-in storage step for input leaves
-- `x.sensitivity()` is where `dy/dx` is stored after you tracked `x`
-- `y.sensitivity()` is about stored sensitivity on the output object itself,
-  not a shortcut for "please give me the derivative with respect to the input"
+`argsort` (and the index channels of `sort` / `topk`, `argmax`, comparisons,
+integer casts, [`nonzero()`](nonzero.md), ...) deliberately produce no
+gradient. A loss built entirely from them cannot be optimized, and `reverse()`
+says so instead of returning zeros. Route the loss through a differentiable
+quantity — [`sort()`](sort.md)'s *values*, a soft relaxation, and so on — or
+keep a differentiable term in the objective (see the mixed case below).
 
 ### Output
 
 ```text
-x_has_dy_dx=false
-y_has_stored_sensitivity=false
-y_sensitivity=0
+series_tape::backpropagate: objective does not track slope and has no source link; nothing to differentiate (a constant, or built only from non-differentiable ops)
 ```
 
 Example 9. The corrected product-rule usage marks `x` for tracking before the
@@ -648,12 +656,19 @@ data=[0.5403023058681398, 1.3639461402385225, 0.3333333333333333]
 
 ## Gotchas And Failure Modes
 
-- `reverse()` computes sensitivities for tracked leaves. If you never enabled
-  tracking on a leaf, there is nothing to store there afterward.
-- The exact snippet `x = make_series(1.7); y = x * x.cos(); y.reverse();`
-  does not store `dy/dx` on `x` unless you first opt `x` into tracking.
+- `reverse()` requires the objective to be connected to the tape. If no leaf on
+  the path opted in with [`tracks_slope_()`](tracks_slope_.md), or the path is
+  built only from non-differentiable ops, `reverse()` raises
+  `objective does not track slope and has no source link` rather than silently
+  storing nothing.
+- The exact snippet `x = make_series(1.7); y = x * x.cos(); y.reverse();` now
+  raises unless you first opt `x` into tracking; `x = make_series(1.7,
+  pluss::cfg::tracks_slope())` (or `x.tracks_slope_(true)`) fixes it.
 - Reading `y.sensitivity()` is not the same thing as asking for `dy/dx`. Read
   the tracked input leaf you care about, usually `x.sensitivity()`.
+- A loss built purely from non-differentiable results (`argsort`, `sort` /
+  `topk` indices, `argmax`, comparisons, integer casts, `nonzero`) cannot be
+  reversed. Keep at least one differentiable term in the objective.
 - Scalar outputs can use the implicit root seed `1`. Non-scalar outputs must
   receive an explicit seed.
 - `sensitivity_output` changes the mathematics of the result. It is not merely

@@ -254,8 +254,8 @@ expression, `block()` is usually the clearest public surface.
     <span class="label">Previous</span>
     <span class="title">bitwise_xor</span>
   </a>
-  <a class="next-link" href="broadcast_to.html">
+  <a class="next-link" href="bmm.html">
     <span class="label">Next</span>
-    <span class="title">broadcast_to</span>
+    <span class="title">bmm</span>
   </a>
 </div>

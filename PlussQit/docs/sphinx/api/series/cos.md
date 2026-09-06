@@ -147,9 +147,9 @@ floating rounding at special angles.
 - [`Series::acos`](acos.md): inverse cosine.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="count.html">
+  <a class="prev-link" href="count_nonzero.html">
     <span class="label">Previous</span>
-    <span class="title">count</span>
+    <span class="title">count_nonzero</span>
   </a>
   <a class="next-link" href="cosh.html">
     <span class="label">Next</span>

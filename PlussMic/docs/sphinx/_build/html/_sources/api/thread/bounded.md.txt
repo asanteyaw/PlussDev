@@ -151,8 +151,8 @@ window: `15 = mean(10, 20)`, `25 = mean(20, 30)`, and so on.
     <span class="label">Previous</span>
     <span class="title">bottom</span>
   </a>
-  <a class="next-link" href="btw.html">
+  <a class="next-link" href="bucketize.html">
     <span class="label">Next</span>
-    <span class="title">btw</span>
+    <span class="title">bucketize</span>
   </a>
 </div>

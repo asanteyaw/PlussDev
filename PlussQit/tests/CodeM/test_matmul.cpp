@@ -1,6 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+#include <limits>
+#include <vector>
+
 using pluss::codem::Series;
 using pluss::codem::ScalarType;
 
@@ -60,4 +63,37 @@ TEST_CASE("linearalg named products enforce their rank contracts", "[matmul][lin
   REQUIRE_THROWS(vector.linearalg.mv(vector));
   REQUIRE_THROWS(matrix.linearalg.dot(matrix));
   REQUIRE_THROWS(matrix.linearalg.vdot(matrix));
+}
+
+TEST_CASE("fused BLAS names enforce matrix vector and batch ranks", "[matmul][fused-blas]") {
+  const auto matrix = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
+  const auto vector = pluss::make_series({5.0, 6.0});
+  const auto batch = matrix.reshape({1, 2, 2});
+
+  REQUIRE_THROWS(matrix.addmm(vector, vector));
+  REQUIRE_THROWS(vector.addmv(vector, vector));
+  REQUIRE_THROWS(matrix.addr(matrix, vector));
+  REQUIRE_THROWS(matrix.bmm(matrix));
+  REQUIRE_THROWS(batch.bmm(matrix.reshape({2, 1, 2})));
+  REQUIRE_THROWS(batch.baddbmm(matrix, matrix));
+  REQUIRE_THROWS(matrix.outer(vector));
+}
+
+TEST_CASE("fused BLAS scaling and receiver broadcasting are exact", "[matmul][fused-blas]") {
+  const auto lhs = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
+  const auto rhs = pluss::make_series({{5.0, 6.0}, {7.0, 8.0}});
+  const auto row_bias = pluss::make_series({10.0, 20.0});
+
+  REQUIRE(row_bias.addmm(lhs, rhs, 0.5, 2.0).to_vec<double>() ==
+          std::vector<double>{43.0, 54.0, 91.0, 110.0});
+
+  const auto nan_base = pluss::make_series({std::numeric_limits<double>::quiet_NaN()});
+  REQUIRE(nan_base.addmv(pluss::make_series({2.0}).reshape({1, 1}), pluss::make_series({3.0}), 0.0, 1.0)
+              .item<double>() == 6.0);
+
+  const auto wrong_receiver = pluss::make_series({1.0, 2.0, 3.0});
+  REQUIRE_THROWS(wrong_receiver.addmm(lhs, rhs, 0.0, 1.0));
+
+  const auto integer_receiver = pluss::make_series({1, 2}, pluss::ScalarType::Int64);
+  REQUIRE_THROWS(integer_receiver.addmm(lhs, rhs));
 }

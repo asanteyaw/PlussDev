@@ -85,7 +85,7 @@ window — model a forecast lead time. Setter: `Plan::gap`.
 
 **`time` plans only.** Cap on training rows (`0` = expanding window, no cap; a
 positive value makes it a sliding window). Setter: `Plan::lookback`. When run
-through a time-aware [`workflow::Workflow`](../../model/Workflow.md), any unset
+through a time-aware [`workflow::Workflow`](../../workflow/Workflow.md), any unset
 (`0`) `time_*` field is filled from the workflow's `TimeOptions`.
 
 ### `shuffle`

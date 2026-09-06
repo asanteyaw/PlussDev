@@ -49,6 +49,17 @@ public:
                                                    const TrainOptions& learn_options = {},
                                                    const InferOptions& infer_options = {}) = 0;
 
+  // Supervised transforms (target / weight-of-evidence encoding) override these:
+  // the pipeline hands the training target to `learn_supervised` when
+  // `needs_target()` is true, and otherwise falls back to `learn`.
+  [[nodiscard]] virtual bool needs_target() const noexcept { return false; }
+  virtual Status learn_supervised(const FeatureBatch& batch,
+                                  const Series& target,
+                                  const TrainOptions& options = {}) {
+    (void)target;
+    return learn(batch, options);
+  }
+
   [[nodiscard]] virtual StatusOr<std::vector<Series>> dump_state() const {
     return StatusOr<std::vector<Series>>(Status::not_implemented("dump_state() is not implemented for this transformer."));
   }

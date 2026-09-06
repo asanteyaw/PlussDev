@@ -52,7 +52,7 @@ sorted oldest-first.
   `time_max_train_size` are the relevant fields (see
   [`options::CrossVal`](CrossValOptions.md)); the rest come from the plan's
   setters. When the plan is run through a time-aware
-  [`workflow::Workflow`](../../model/Workflow.md), any unset (`0`) window field
+  [`workflow::Workflow`](../../workflow/Workflow.md), any unset (`0`) window field
   is filled from the workflow's own `TimeOptions`.
 
 ## Returns
@@ -257,5 +257,5 @@ chronological folds = 3
   `lookback` setters shape the windows.
 - [`options::CrossVal`](CrossValOptions.md) — the `time_*` fields.
 - [`cross`](cross.md) — plain k-fold, when order does not matter.
-- [`workflow::Workflow`](../../model/Workflow.md) — time-aware workflows fill the
+- [`workflow::Workflow`](../../workflow/Workflow.md) — time-aware workflows fill the
   window fields automatically.

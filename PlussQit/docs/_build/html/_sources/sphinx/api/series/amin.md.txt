@@ -174,6 +174,8 @@ reduce: dim out of range
 - `keepdim` preserves geometry, not values.
 - Tied minima split backward sensitivity evenly.
 - Invalid dims fail directly.
+- `NaN` propagates: a single `NaN` in a reduction lane makes that lane's result
+  `NaN`. Filter it out first if you want the minimum of the finite values.
 
 ## Summary
 
@@ -197,8 +199,8 @@ reduction lane."
     <span class="label">Previous</span>
     <span class="title">amax</span>
   </a>
-  <a class="next-link" href="any.html">
+  <a class="next-link" href="aminmax.html">
     <span class="label">Next</span>
-    <span class="title">any</span>
+    <span class="title">aminmax</span>
   </a>
 </div>

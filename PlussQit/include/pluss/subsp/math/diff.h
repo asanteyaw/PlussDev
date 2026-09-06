@@ -308,7 +308,7 @@ public:
 
   bool is_leaf() const {
     if (!defined()) return true;
-    return value_->is_leaf().item<bool>();
+    return value_->is_leaf();
   }
 
   const Series& value() const {

@@ -257,34 +257,101 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   }
 
   const Series predicted_labels = model.infer(batch.features);
-  const auto class_metrics = metrics::classification(batch.y, predicted_labels);
-  const ConfusionTable raw_cm = class_metrics.confusion_table();
+  const ConfusionTable raw_cm = metrics::classification::confusion_table(batch.y, predicted_labels);
   if (raw_cm.counts.numel() != cm.counts.numel()) {
-    if (err) *err << "metrics::classification(y, pred).confusion_table() should mirror raw confusion_table\n";
+    if (err) *err << "metrics::classification::confusion_table(y, pred) should mirror raw confusion_table\n";
     return false;
   }
-  const MetricReport raw_class_report = class_metrics.report({MetricKind::Accuracy, MetricKind::BalancedAccuracy, MetricKind::F1});
+  const MetricReport raw_class_report =
+      metrics::classification::report(batch.y, predicted_labels,
+                                      {MetricKind::Accuracy, MetricKind::BalancedAccuracy, MetricKind::F1});
   if (raw_class_report.values.numel() != 3 || !raw_class_report.values.isfinite().all().item<bool>()) {
-    if (err) *err << "metrics::classification(y, pred).report(...) should return finite requested metrics\n";
+    if (err) *err << "metrics::classification::report(y, pred, ...) should return finite requested metrics\n";
     return false;
   }
-  const auto threshold_metrics = metrics::threshold(model.infer_scores(batch.features), batch.y);
+
+  // Hard-label MCC / Cohen's kappa flow through report(...) and summary(...).
+  const MetricReport mcc_kappa =
+      metrics::classification::report(batch.y, predicted_labels, {MetricKind::Mcc, MetricKind::CohenKappa});
+  const double summary_mcc = metrics::classification::summary(batch.y, predicted_labels).mcc.item<double>();
+  if (mcc_kappa.values.numel() != 2 || !mcc_kappa.values.isfinite().all().item<bool>() ||
+      std::abs(mcc_kappa.mcc.item<double>()) > 1.0 || std::abs(mcc_kappa.cohen_kappa.item<double>()) > 1.0 ||
+      std::abs(mcc_kappa.mcc.item<double>() - summary_mcc) > 1e-9) {
+    if (err) *err << "metrics::classification MCC / kappa should be in [-1, 1] and agree between report() and summary()\n";
+    return false;
+  }
+
+  // Score-based Gini / AveragePrecision / Brier come through the model-backed reports.
+  const Series score_metrics = model_reports.metric_series(
+      batch, AssessOptions{.metrics = {MetricKind::RocAuc, MetricKind::Gini,
+                                       MetricKind::AveragePrecision, MetricKind::Brier}});
+  if (score_metrics.numel() != 4 || !score_metrics.isfinite().all().item<bool>()) {
+    if (err) *err << "model.reports().metric_series should return finite Gini / AveragePrecision / Brier\n";
+    return false;
+  }
+  const auto sm = score_metrics.to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+  const double roc_auc = sm[0], gini = sm[1], avg_prec = sm[2], brier = sm[3];
+  if (std::abs(gini - (2.0 * roc_auc - 1.0)) > 1e-9) {
+    if (err) *err << "Gini must equal 2 * RocAuc - 1\n";
+    return false;
+  }
+  if (avg_prec < 0.0 || avg_prec > 1.0 || brier < 0.0 || brier > 1.0) {
+    if (err) *err << "AveragePrecision and Brier must lie in [0, 1]\n";
+    return false;
+  }
+
+  // metrics::classification::score_report: the same score metrics straight from
+  // a (probabilities, labels) pair, no model. p = [.9 .8 .7 .6 .5],
+  // y = [1 0 1 1 0] -> RocAuc 2/3, Gini 1/3, AveragePrecision 29/36, Brier 0.23.
+  const Series probs = pluss::make_series(std::vector<double>{0.9, 0.8, 0.7, 0.6, 0.5}, {5}, f64());
+  const Series score_labels = pluss::make_series(std::vector<double>{1.0, 0.0, 1.0, 1.0, 0.0}, {5}, f64());
+  const MetricReport score_report = metrics::classification::score_report(
+      probs, score_labels,
+      {MetricKind::RocAuc, MetricKind::Gini, MetricKind::AveragePrecision, MetricKind::Brier});
+  const auto sr = score_report.values.to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+  if (std::abs(sr[0] - 2.0 / 3.0) > 1e-9 || std::abs(sr[1] - 1.0 / 3.0) > 1e-9 ||
+      std::abs(sr[2] - 29.0 / 36.0) > 1e-9 || std::abs(sr[3] - 0.23) > 1e-9 ||
+      std::abs(score_report.roc_auc.item<double>() - 2.0 / 3.0) > 1e-9 ||
+      std::abs(score_report.brier.item<double>() - 0.23) > 1e-9) {
+    if (err) *err << "metrics::classification::score_report should match the hand-computed score metrics\n";
+    return false;
+  }
+  const MetricReport score_defaults = metrics::classification::score_report(probs, score_labels);
+  if (score_defaults.values.numel() != 4 || !score_defaults.roc_auc.defined() ||
+      !score_defaults.average_precision.defined() || !score_defaults.logloss.defined() ||
+      !score_defaults.brier.defined()) {
+    if (err) *err << "score_report() default set should be {RocAuc, AveragePrecision, LogLoss, Brier}\n";
+    return false;
+  }
+  bool score_report_rejected = false;
+  try {
+    metrics::classification::score_report(probs, score_labels, {MetricKind::Mse});
+  } catch (const std::exception&) {
+    score_report_rejected = true;
+  }
+  if (!score_report_rejected) {
+    if (err) *err << "score_report should reject a regression MetricKind\n";
+    return false;
+  }
+  const auto threshold_metrics =
+      metrics::classification::threshold(model.infer_scores(batch.features), batch.y);
   const ThresholdCurve raw_curve = threshold_metrics.curve();
   if (raw_curve.thresholds.numel() == 0 || raw_curve.precision.numel() != raw_curve.thresholds.numel()) {
-    if (err) *err << "metrics::threshold(scores, y).curve() should return aligned threshold/precision vectors\n";
+    if (err) *err << "metrics::classification::threshold(scores, y).curve() should return aligned vectors\n";
     return false;
   }
   const double raw_threshold = threshold_metrics.best(MetricKind::F1);
   if (!std::isfinite(raw_threshold)) {
-    if (err) *err << "metrics::threshold(scores, y).best() should return a finite threshold\n";
+    if (err) *err << "metrics::classification::threshold(scores, y).best() should return a finite threshold\n";
     return false;
   }
 
   const Series y_reg = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}, f64());
   const Series p_reg = pluss::make_series(std::vector<double>{1.0, 2.5, 2.5, 4.0}, {4}, f64());
-  const MetricReport reg_report = metrics::regression(y_reg, p_reg).report({MetricKind::Mse, MetricKind::Rmse, MetricKind::Mae, MetricKind::R2});
+  const MetricReport reg_report = metrics::regression::report(
+      y_reg, p_reg, {MetricKind::Mse, MetricKind::Rmse, MetricKind::Mae, MetricKind::R2});
   if (reg_report.values.numel() != 4 || !reg_report.values.isfinite().all().item<bool>()) {
-    if (err) *err << "metrics::regression(y, pred).report(...) should return finite requested metrics\n";
+    if (err) *err << "metrics::regression::report(y, pred, ...) should return finite requested metrics\n";
     return false;
   }
 

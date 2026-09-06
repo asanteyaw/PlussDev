@@ -2,100 +2,58 @@
 
 [Back to Timeline API Reference](../../timeline_api_reference)
 
-## Representative Signatures
+## Signature
 
 ```cpp
-Timeline::is_monday() -> Series
-Timeline::is_tuesday() -> Series
-Timeline::is_wednesday() -> Series
-Timeline::is_thursday() -> Series
-Timeline::is_friday() -> Series
-Timeline::is_saturday() -> Series
-Timeline::is_sunday() -> Series
+Series Timeline::is_monday() const
 ```
 
-## What It Does
+Aliases: `mon_is()` and `is_mon()`.
 
-Returns weekday-specific boolean masks.
+## Select Local Mondays
 
-Use this family when your logic cares about one named weekday rather than the
-coarser `is_weekend()` or `is_business_day()` predicates.
+`is_monday()` returns a shape-preserving boolean mask that is `true` exactly
+when the local weekday is Monday. It is the named equivalent of comparing
+`weekday()` with `0`, but communicates scheduling intent directly. `NaT`
+returns `false`.
 
-## Returns
+## Example: The First Day In A Complete Week
 
-`Series`
-    A boolean series for the requested weekday test.
-
-## Examples
-
-Example 1. Identify Monday rows and compare them with the weekend masks.
+```cpp
+const auto week = pluss::timeline::make({
+    "2024-03-04T12:00:00Z", "2024-03-05T12:00:00Z",
+    "2024-03-06T12:00:00Z", "2024-03-07T12:00:00Z",
+    "2024-03-08T12:00:00Z", "2024-03-09T12:00:00Z",
+    "2024-03-10T12:00:00Z", "",
+});
+pluss::series::print(std::cout, week.is_monday());
+```
 
 ### Output
 
-`calendar.is_monday()`:
-
 ```text
 Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[false, false, false, true, false, false, false, true]
+data=[true, false, false, false, false, false, false, false]
 ```
 
-`calendar.is_friday()`:
+Use the mask for Monday-specific workflows such as weekly opening reports. It
+does not establish that observations are weekly, sorted, or unique; it only
+classifies each element independently.
 
-```text
-Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[false, true, false, false, false, false, false, false]
-```
+## Gotchas And Failure Modes
 
-`calendar.is_saturday()`:
-
-```text
-Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[false, false, false, false, false, false, true, false]
-```
-
-`calendar.is_sunday()`:
-
-```text
-Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[false, false, true, false, false, false, false, false]
-```
-
-## Aliases
-
-Representative aliases:
-
-- `is_mon()`, `mon_is()`
-  Alias `is_monday()`.
-- `is_tue()`
-  Alias `is_tuesday()`.
-- `is_wed()`
-  Alias `is_wednesday()`.
-- `is_thu()`
-  Alias `is_thursday()`.
-- `is_fri()`
-  Alias `is_friday()`.
-- `is_sat()`
-  Alias `is_saturday()`.
-- `is_sun()`
-  Alias `is_sunday()`.
-
-## Notes
-
-- These are the specific-day refinement of the broader calendar predicate
-  family.
+- Monday is determined after applying the Timeline timezone.
+- `NaT` and all six other weekdays return `false`.
+- For any Monday-through-Friday date, `is_business_day()` is also `true`.
 
 ## See Also
 
-- [`Timeline::is_leap_year`](is_leap_year.md)
-- [`Timeline::weekday_name`](weekday_name.md)
+- [`weekday`](weekday.md)
+- [`is_business_day`](is_business_day.md)
+- [`is_tuesday`](is_tuesday.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_leap_year.html">
-    <span class="label">Previous</span>
-    <span class="title">is_leap_year</span>
-  </a>
-  <a class="next-link" href="date_range.html">
-    <span class="label">Next</span>
-    <span class="title">date_range</span>
-  </a>
+  <a class="prev-link" href="is_business_day.html"><span class="label">Previous</span><span class="title">is_business_day</span></a>
+  <a class="next-link" href="is_tuesday.html"><span class="label">Next</span><span class="title">is_tuesday</span></a>
 </div>
+<!-- pluss-hand-authored -->

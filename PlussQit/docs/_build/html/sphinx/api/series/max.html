@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::maximum" href="maximum.html" />
@@ -46,6 +46,9 @@
 <span class="n">Series</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keepdim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+
+<span class="n">Series</span><span class="o">::</span><span class="n">max_pair</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keepdim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="w">    </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">Series</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -149,6 +152,20 @@ maximum in the whole <code class="docutils literal notranslate"><span class="pre
 <p>So binary <code class="docutils literal notranslate"><span class="pre">max(other)</span></code> is first-operand-wins at the tie boundary, not
 tie-sharing.</p>
 </section>
+</section>
+<section id="paired-value-and-index-max-pair">
+<h2>Paired Value And Index (<code class="docutils literal notranslate"><span class="pre">max_pair</span></code>)<a class="headerlink" href="#paired-value-and-index-max-pair" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">max_pair(dim</span> <span class="pre">[,</span> <span class="pre">keepdim])</span></code> runs the axis reduction and returns <strong>both</strong>
+channels at once: <code class="docutils literal notranslate"><span class="pre">.first</span></code> is the winning values (identical to <code class="docutils literal notranslate"><span class="pre">max(dim,</span> <span class="pre">keepdim)</span></code>), <code class="docutils literal notranslate"><span class="pre">.second</span></code> is the <code class="docutils literal notranslate"><span class="pre">int64</span></code> position each winner held along <code class="docutils literal notranslate"><span class="pre">dim</span></code>
+(identical to <a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argmax(dim,</span> <span class="pre">keepdim)</span></code></span></a>). The result is a
+<code class="docutils literal notranslate"><span class="pre">std::pair&lt;Series,</span> <span class="pre">Series&gt;</span></code> – <code class="docutils literal notranslate"><span class="pre">result.first</span></code> is the values, <code class="docutils literal notranslate"><span class="pre">result.second</span></code> the indices.</p>
+<p>It is a convenience for the common case where you need the winner and where it
+came from without paying for two separate scans. There is no no-argument
+(whole-series) overload — <code class="docutils literal notranslate"><span class="pre">max_pair</span></code> always reduces a named axis.</p>
+<p>On a tie inside a lane the reported index is the <strong>first</strong> occurrence, matching
+<a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argmax()</span></code></span></a>. The value channel is differentiable exactly as
+<code class="docutils literal notranslate"><span class="pre">max(dim)</span></code> is (sensitivity flows to the winning position; ties inside a lane
+share it); the index channel never carries gradient.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -356,6 +373,53 @@ That is the key backward difference between reduction <code class="docutils lite
 </div>
 <p>This is one of the easiest mistakes to make when working with dynamic ranks, so
 it is worth treating as part of the normal usage story.</p>
+<p>Example 12. <code class="docutils literal notranslate"><span class="pre">max_pair(dim)</span></code> returns the winning values and their positions
+together.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">max_pair</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;indices=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h3>Output<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>values=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[4, 9]
+indices=pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[2, 2]
+</pre></div>
+</div>
+<p>Row <code class="docutils literal notranslate"><span class="pre">0</span></code>’s largest value is <code class="docutils literal notranslate"><span class="pre">4</span></code> at column <code class="docutils literal notranslate"><span class="pre">2</span></code>; row <code class="docutils literal notranslate"><span class="pre">1</span></code>’s is <code class="docutils literal notranslate"><span class="pre">9</span></code>, also at column
+<code class="docutils literal notranslate"><span class="pre">2</span></code>. With <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code> both members come back shaped <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">1]</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">[2]</span></code>.</p>
+<p>Example 13. The value channel of <code class="docutils literal notranslate"><span class="pre">max_pair</span></code> is differentiable; the index
+channel is inert.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">grid</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">grid</span><span class="p">.</span><span class="n">max_pair</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">first</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h3>Output<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 0.0000 0.0000 1.0000 ⎤
+⎣ 0.0000 0.0000 1.0000 ⎦
+</pre></div>
+</div>
+<p>Only the winning position in each row receives sensitivity.</p>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">
@@ -370,6 +434,8 @@ even on the same data.</p></li>
 <li><p>The binary overload follows broadcasting rules, so shape mismatches fail at
 broadcast time rather than reduction time.</p></li>
 <li><p>Out-of-range dims throw instead of being silently clamped.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_pair</span></code> has no whole-series overload — it always takes a <code class="docutils literal notranslate"><span class="pre">dim</span></code>. Its index
+channel reports the first tied position and never carries gradient.</p></li>
 </ul>
 </section>
 <section id="summary">
@@ -394,6 +460,8 @@ and route tie gradients to the left operand.</p>
 <li><p><a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::min</span></code></span></a>: lower-bound counterpart with the same overload map.</p></li>
 <li><p><a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmax</span></code></span></a>: returns winning indices instead of winning
 values.</p></li>
+<li><p><a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::min</span></code></span></a> / <a class="reference internal" href="argmin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmin</span></code></span></a>: the lower-bound
+counterparts, including <code class="docutils literal notranslate"><span class="pre">min_pair</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="masked_select.html">

@@ -766,6 +766,14 @@ private:
         return flow.add_threshold_binarizer(std::get<prep::ThresholdBinarizerOptions>(spec.options), spec.feature_route);
       case TransformKind::PolynomialLift:
         return flow.add_polynomial_lift(std::get<prep::PolynomialLiftOptions>(spec.options), spec.feature_route);
+      case TransformKind::BaseNEncoder:
+        return flow.add_basen_encoder(std::get<prep::BaseNEncoderOptions>(spec.options), spec.feature_route);
+      case TransformKind::HashingEncoder:
+        return flow.add_hashing_encoder(std::get<prep::HashingEncoderOptions>(spec.options), spec.feature_route);
+      case TransformKind::TargetEncoder:
+        return flow.add_target_encoder(std::get<prep::TargetEncoderOptions>(spec.options), spec.feature_route);
+      case TransformKind::WOEEncoder:
+        return flow.add_woe_encoder(std::get<prep::WOEEncoderOptions>(spec.options), spec.feature_route);
     }
     return Status::internal("append_transform_from_spec: unknown transform kind.");
   }
@@ -825,6 +833,11 @@ private:
         case MetricKind::BalanceQuality: report.balance_quality = scalar; break;
         case MetricKind::RocAuc: report.roc_auc = scalar; break;
         case MetricKind::LogLoss: report.logloss = scalar; break;
+        case MetricKind::Mcc: report.mcc = scalar; break;
+        case MetricKind::CohenKappa: report.cohen_kappa = scalar; break;
+        case MetricKind::Gini: report.gini = scalar; break;
+        case MetricKind::AveragePrecision: report.average_precision = scalar; break;
+        case MetricKind::Brier: report.brier = scalar; break;
         case MetricKind::Mse: report.mse = scalar; break;
         case MetricKind::Rmse: report.rmse = scalar; break;
         case MetricKind::Mae: report.mae = scalar; break;
@@ -1265,7 +1278,7 @@ struct FoldFramePair_ {
                                                     const InferOptions& infer_options = {},
                                                     const ConfusionOptions& options = {}) {
   const Series predicted = model.infer(batch.features, infer_options);
-  return ::pluss::ai::lymph::confusion_table(batch.y, predicted, options);
+  return ::pluss::ai::lymph::metrics::classification::confusion_table(batch.y, predicted, options);
 }
 
 [[nodiscard]] inline ClassReport classification_summary(const ModelCore& model,
@@ -1273,7 +1286,7 @@ struct FoldFramePair_ {
                                                         const InferOptions& infer_options = {},
                                                         const ClassReportOptions& options = {}) {
   const Series predicted = model.infer(batch.features, infer_options);
-  return ::pluss::ai::lymph::classification_summary(batch.y, predicted, options);
+  return ::pluss::ai::lymph::metrics::classification::summary(batch.y, predicted, options);
 }
 
 [[nodiscard]] inline Series classification_metric_series(const ModelCore& model,
@@ -1327,7 +1340,7 @@ struct FoldFramePair_ {
               "confusion_table(model,frame,data_options).labeled_batch");
   const Series y = batch.y.reshape({batch.y.numel()});
   const Series predicted = model.infer(frame, data_options, infer_options);
-  return ::pluss::ai::lymph::confusion_table(y, predicted, options);
+  return ::pluss::ai::lymph::metrics::classification::confusion_table(y, predicted, options);
 }
 
 [[nodiscard]] inline ClassReport classification_summary(const ModelCore& model,
@@ -1355,7 +1368,7 @@ struct FoldFramePair_ {
               "classification_summary(model,frame,data_options).labeled_batch");
   const Series y = batch.y.reshape({batch.y.numel()});
   const Series predicted = model.infer(frame, data_options, infer_options);
-  return ::pluss::ai::lymph::classification_summary(y, predicted, options);
+  return ::pluss::ai::lymph::metrics::classification::summary(y, predicted, options);
 }
 
 // infer_scores() isn't documented as uniformly [0,1]-valued across model

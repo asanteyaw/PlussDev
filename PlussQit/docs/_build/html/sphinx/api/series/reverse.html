@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::roll" href="roll.html" />
@@ -369,49 +369,56 @@ second_dL_dx=8
 </div>
 <p>Examples 5 and 6 are the important toggle pair. The forward objective did not
 change. Only the accumulation policy changed.</p>
-<p>Example 7. If nothing was marked for tracking, <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> does not populate a
-stored sensitivity on that leaf.</p>
+<p>Example 7. An objective with no tracked leaf fails fast. If nothing on the path
+to <code class="docutils literal notranslate"><span class="pre">x.mul(2.0).sum()</span></code> was marked for tracking, there is no derivative to
+propagate, and <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> raises rather than silently doing nothing.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
-<span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;has_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> still runs on the scalar result. What is missing is not the
-backward pass itself, but a tracked leaf on which to store the propagated
-sensitivity.</p>
+<p>The scalar objective <code class="docutils literal notranslate"><span class="pre">L</span> <span class="pre">=</span> <span class="pre">2x₁</span> <span class="pre">+</span> <span class="pre">2x₂</span> <span class="pre">+</span> <span class="pre">2x₃</span></code> is mathematically differentiable,
+but the graph was never connected: <code class="docutils literal notranslate"><span class="pre">x</span></code> did not opt in with
+<a class="reference internal" href="tracks_slope_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tracks_slope_()</span></code></span></a>, so the result carries no source link. A
+reverse pass with nothing to differentiate is a mistake — usually a training
+loop that would otherwise learn nothing — so it is reported.</p>
 </section>
 <section id="id6">
 <h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>has_dL_dx=false
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>series_tape::backpropagate: objective does not track slope and has no source link; nothing to differentiate (a constant, or built only from non-differentiable ops)
 </pre></div>
 </div>
-<p>Example 8. A scalar expression such as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">x.cos()</span></code> does run the reverse
-pass, but if the input leaf was never marked for tracking then there is
-nowhere to store <code class="docutils literal notranslate"><span class="pre">dy/dx</span></code>, and reading <code class="docutils literal notranslate"><span class="pre">y.sensitivity()</span></code> does not recover it.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.7</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">cos</span><span class="p">();</span>
+<p>Example 8. The same failure for a path built only from <strong>non-differentiable</strong>
+operations. Here <a class="reference internal" href="argsort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argsort()</span></code></span></a> returns integer positions, which
+carry no gradient, so even with <code class="docutils literal notranslate"><span class="pre">x</span></code> tracked the objective is disconnected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 
-<span class="n">y</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ranks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">argsort</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;x_has_dy_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y_has_stored_sensitivity=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y_sensitivity=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ranks</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-<p>This is the current public distinction on the verified surface:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> is the propagation step</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tracks_slope_()</span></code> is the opt-in storage step for input leaves</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x.sensitivity()</span></code> is where <code class="docutils literal notranslate"><span class="pre">dy/dx</span></code> is stored after you tracked <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">y.sensitivity()</span></code> is about stored sensitivity on the output object itself,
-not a shortcut for “please give me the derivative with respect to the input”</p></li>
-</ul>
+<p><code class="docutils literal notranslate"><span class="pre">argsort</span></code> (and the index channels of <code class="docutils literal notranslate"><span class="pre">sort</span></code> / <code class="docutils literal notranslate"><span class="pre">topk</span></code>, <code class="docutils literal notranslate"><span class="pre">argmax</span></code>, comparisons,
+integer casts, <a class="reference internal" href="nonzero.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nonzero()</span></code></span></a>, …) deliberately produce no
+gradient. A loss built entirely from them cannot be optimized, and <code class="docutils literal notranslate"><span class="pre">reverse()</span></code>
+says so instead of returning zeros. Route the loss through a differentiable
+quantity — <a class="reference internal" href="sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort()</span></code></span></a>’s <em>values</em>, a soft relaxation, and so on — or
+keep a differentiable term in the objective (see the mixed case below).</p>
 </section>
 <section id="id7">
 <h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>x_has_dy_dx=false
-y_has_stored_sensitivity=false
-y_sensitivity=0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>series_tape::backpropagate: objective does not track slope and has no source link; nothing to differentiate (a constant, or built only from non-differentiable ops)
 </pre></div>
 </div>
 <p>Example 9. The corrected product-rule usage marks <code class="docutils literal notranslate"><span class="pre">x</span></code> for tracking before the
@@ -584,12 +591,18 @@ data=[0.5403023058681398, 1.3639461402385225, 0.3333333333333333]
 <section id="gotchas-and-failure-modes">
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> computes sensitivities for tracked leaves. If you never enabled
-tracking on a leaf, there is nothing to store there afterward.</p></li>
-<li><p>The exact snippet <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">make_series(1.7);</span> <span class="pre">y</span> <span class="pre">=</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">x.cos();</span> <span class="pre">y.reverse();</span></code>
-does not store <code class="docutils literal notranslate"><span class="pre">dy/dx</span></code> on <code class="docutils literal notranslate"><span class="pre">x</span></code> unless you first opt <code class="docutils literal notranslate"><span class="pre">x</span></code> into tracking.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> requires the objective to be connected to the tape. If no leaf on
+the path opted in with <a class="reference internal" href="tracks_slope_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tracks_slope_()</span></code></span></a>, or the path is
+built only from non-differentiable ops, <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> raises
+<code class="docutils literal notranslate"><span class="pre">objective</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">track</span> <span class="pre">slope</span> <span class="pre">and</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">source</span> <span class="pre">link</span></code> rather than silently
+storing nothing.</p></li>
+<li><p>The exact snippet <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">make_series(1.7);</span> <span class="pre">y</span> <span class="pre">=</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">x.cos();</span> <span class="pre">y.reverse();</span></code> now
+raises unless you first opt <code class="docutils literal notranslate"><span class="pre">x</span></code> into tracking; <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">make_series(1.7,</span> <span class="pre">pluss::cfg::tracks_slope())</span></code> (or <code class="docutils literal notranslate"><span class="pre">x.tracks_slope_(true)</span></code>) fixes it.</p></li>
 <li><p>Reading <code class="docutils literal notranslate"><span class="pre">y.sensitivity()</span></code> is not the same thing as asking for <code class="docutils literal notranslate"><span class="pre">dy/dx</span></code>. Read
 the tracked input leaf you care about, usually <code class="docutils literal notranslate"><span class="pre">x.sensitivity()</span></code>.</p></li>
+<li><p>A loss built purely from non-differentiable results (<code class="docutils literal notranslate"><span class="pre">argsort</span></code>, <code class="docutils literal notranslate"><span class="pre">sort</span></code> /
+<code class="docutils literal notranslate"><span class="pre">topk</span></code> indices, <code class="docutils literal notranslate"><span class="pre">argmax</span></code>, comparisons, integer casts, <code class="docutils literal notranslate"><span class="pre">nonzero</span></code>) cannot be
+reversed. Keep at least one differentiable term in the objective.</p></li>
 <li><p>Scalar outputs can use the implicit root seed <code class="docutils literal notranslate"><span class="pre">1</span></code>. Non-scalar outputs must
 receive an explicit seed.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sensitivity_output</span></code> changes the mathematics of the result. It is not merely

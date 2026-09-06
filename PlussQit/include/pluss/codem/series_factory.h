@@ -970,8 +970,10 @@ namespace pluss::series {
 
 // interop with other libraries (e.g., Torch)
 #ifdef PLUSS_ENABLE_TORCH
-  inline Series from_torch(const ::torch::Tensor& t) { return codem::from_torch(t); }  // use to create a pluss::Series from a torch::Tensor (cheap copy of data)
-  inline torch::Tensor to_torch(const Series& s) { return codem::to_torch(s); }
+  // Construct a pluss::Series that views a CPU torch::Tensor (zero-copy; the
+  // tensor is kept alive by the Series). The reverse direction is the method
+  // Series::tensor() -- there is deliberately no free to_torch function.
+  inline Series from_torch(const ::torch::Tensor& t) { return codem::from_torch(t); }
 #endif
 
   // --------------------------------------------------------------------------

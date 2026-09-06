@@ -36,6 +36,7 @@ all work unqualified within `selection`.
 
 selection/Introduction
 selection/compare
+selection/Scorer
 selection/CompareReport
 selection/GridAxis
 selection/tune_specs

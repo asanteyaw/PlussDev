@@ -1,5 +1,5 @@
-#include <pluss/lymph.h>
-#include <pluss/mic.h>
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
 
 #include <iostream>
 
@@ -19,7 +19,7 @@ int main() {
   const pluss::Series truth_labels = pluss::make_series({0.0, 1.0});
   const pluss::Series predicted_labels = pluss::make_series({0.0, 1.0});
 
-  const lymph::ConfusionTable confusion = lymph::confusion_table(
+  const lymph::ConfusionTable confusion = lymph::metrics::classification::confusion_table(
       truth_labels,
       predicted_labels,
       ConfusionOptions{
@@ -30,7 +30,7 @@ int main() {
   std::cout << "counts=" << confusion.counts << "\n";
   std::cout << "normalize=" << static_cast<int>(confusion.normalize) << "\n";
 
-  const lymph::ClassReport summary = lymph::classification_summary(
+  const lymph::ClassReport summary = lymph::metrics::classification::summary(
       truth_labels,
       predicted_labels,
       ClassReportOptions{
@@ -54,7 +54,7 @@ int main() {
       {"target", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
-  lymph::DataFrameBatchOptions data_options{};
+  lymph::options::DFBatch data_options{};
   data_options.feature_names = {"income", "balance", "late"};
   data_options.label_feature = "target";
 
@@ -68,12 +68,12 @@ int main() {
   logistic_options.regularization_strength = 1e-3;
   logistic_options.fit_intercept = true;
 
-  const lymph::Model logistic = lymph::model::logistic_regression(logistic_options);
+  const lymph::models::Model logistic = lymph::models::logistic_regression(logistic_options);
   const Series scores =
       logistic.learn(frame, data_options, train_options).infer_scores(frame, data_options);
 
-  const lymph::metrics::Threshold threshold =
-      lymph::metrics::threshold(scores, frame.features("target").as_series());
+  const lymph::metrics::classification::Threshold threshold =
+      lymph::metrics::classification::threshold(scores, frame.features("target").as_series());
   std::cout << "== threshold ==\n";
   std::cout << "best_f1=" << threshold.best(MetricKind::F1) << "\n";
   std::cout << threshold.curve().thresholds.slice(0, 0, 3) << "\n";

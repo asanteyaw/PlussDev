@@ -344,9 +344,9 @@ data=[0.0000, 0.8427, 0.9953]
   activation-style transform.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="eq.html">
+  <a class="prev-link" href="equal.html">
     <span class="label">Previous</span>
-    <span class="title">eq</span>
+    <span class="title">equal</span>
   </a>
   <a class="next-link" href="erfc.html">
     <span class="label">Next</span>

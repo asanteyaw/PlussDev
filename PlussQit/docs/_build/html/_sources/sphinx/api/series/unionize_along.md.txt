@@ -230,8 +230,8 @@ higher-rank slices.
     <span class="label">Previous</span>
     <span class="title">unionize</span>
   </a>
-  <a class="next-link" href="unite.html">
+  <a class="next-link" href="uniform_.html">
     <span class="label">Next</span>
-    <span class="title">unite</span>
+    <span class="title">uniform_</span>
   </a>
 </div>

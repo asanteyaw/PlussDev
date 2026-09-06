@@ -299,9 +299,9 @@ the answer is "preserve it," start with `index()`.
 - [`Series::index_put`](index_put.md): copy-returning write-side counterpart.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="hypot.html">
+  <a class="prev-link" href="imag.html">
     <span class="label">Previous</span>
-    <span class="title">hypot</span>
+    <span class="title">imag</span>
   </a>
   <a class="next-link" href="index_put.html">
     <span class="label">Next</span>

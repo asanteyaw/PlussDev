@@ -43,6 +43,13 @@
 #include "pluss/pluss_type.h"
 #include "pluss/dispense.h"
 
+// Backward-compat RNG seed forwarding.
+// Some existing callsites use `pluss::rng_seed(...)` directly.
 #if __has_include("pluss/tils/aux/rng_seed.h")
 #include "pluss/tils/aux/rng_seed.h"
+namespace pluss {
+using tils::rng_seed;
+using tils::next_rng_seed;
+using tils::seed_or_next;
+} // namespace pluss
 #endif

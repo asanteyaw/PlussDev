@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-// metrics::regression(truth, pred).report({...}) fills the regression slots of
+// metrics::regression::report(truth, pred, {...}) fills the regression slots of
 // a MetricReport -- report.r2, report.mse, report.rmse, report.mae.
 int main() {
   namespace lymph = pluss::ai::lymph;
@@ -22,7 +22,7 @@ int main() {
       lymph::MetricKind::Rmse, lymph::MetricKind::Mae};
 
   const lymph::metrics::MetricReport report =
-      lymph::metrics::regression(truth, predicted).report(want);
+      lymph::metrics::regression::report(truth, predicted, want);
 
   std::cout << "r2   = " << report.r2.item<double>() << "\n";
   std::cout << "mse  = " << report.mse.item<double>() << "\n";

@@ -135,9 +135,9 @@ data=[45.0000, 135.0000]
   [`Series::acos`](acos.md): the radian-producing sources.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="quantile.html">
+  <a class="prev-link" href="random_.html">
     <span class="label">Previous</span>
-    <span class="title">quantile</span>
+    <span class="title">random_</span>
   </a>
   <a class="next-link" href="ravel.html">
     <span class="label">Next</span>

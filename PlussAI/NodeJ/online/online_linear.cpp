@@ -291,6 +291,17 @@ struct BinaryLabelEncoding {
   const Series geometric = recall.mul(specificity).clamp_min(0.0).sqrt();
   const Series balance_quality = geometric.square().mul(recall.sub(specificity).mul(0.1).add(1.0)).clamp_min(0.0);
   const Series logloss = yb.mul(clipped.log()).add(yb.mul(-1.0).add(1.0).mul(clipped.mul(-1.0).add(1.0).log())).mul(-1.0).mean();
+  const Series brier = p.sub(yb).square().mean().reshape({1});
+  const Series mcc_num = tp.mul(tn).sub(fp.mul(fn));
+  const Series mcc_den = tp.add(fp).mul(tp.add(fn)).mul(tn.add(fp)).mul(tn.add(fn)).clamp_min(0.0).sqrt();
+  const Series mcc = mcc_den.gt(0.0).where(mcc_num.div(mcc_den.clamp_min(1.0)), zero).reshape({1});
+  const Series n_total = tp.add(tn).add(fp).add(fn);
+  const Series kappa_pe =
+      tp.add(fp).mul(tp.add(fn)).add(tn.add(fn).mul(tn.add(fp))).div(n_total.mul(n_total).clamp_min(1.0));
+  const Series kappa_den = kappa_pe.mul(-1.0).add(1.0);
+  const Series kappa_den_safe = kappa_den.add(kappa_den.gt(0.0).where(zero, zero.add(1.0)));  // +1 only when den==0
+  const Series cohen_kappa =
+      kappa_den.gt(0.0).where(accuracy.reshape({1}).sub(kappa_pe).div(kappa_den_safe), zero).reshape({1});
 
   std::vector<Series> out{};
   out.reserve(requested.size());
@@ -324,8 +335,19 @@ struct BinaryLabelEncoding {
       case MetricKind::LogLoss:
         out.push_back(logloss.reshape({1}));
         break;
+      case MetricKind::Brier:
+        out.push_back(brier.reshape({1}));
+        break;
+      case MetricKind::Mcc:
+        out.push_back(mcc.reshape({1}));
+        break;
+      case MetricKind::CohenKappa:
+        out.push_back(cohen_kappa.reshape({1}));
+        break;
       default:
-        return StatusOr<Series>(Status::invalid_argument("Unsupported classification metric for online linear classifier."));
+        return StatusOr<Series>(Status::invalid_argument(
+            "Unsupported classification metric for online linear classifier "
+            "(Gini / AveragePrecision need the batch classifier's score sweep)."));
     }
   }
   if (out.empty()) return StatusOr<Series>(pluss::make_series(std::vector<double>{}, {0}, f64_on(y.platform())));

@@ -489,8 +489,47 @@ div.highlight:hover .pluss-copy-code,
     display: none;
   }
 
+  body.has-method-sidebar div.document {
+    display: flex;
+    flex-direction: column;
+  }
+
   body.has-method-sidebar #pluss-method-sidebar {
+    border-bottom: 1px solid var(--pluss-border);
+    border-right: 0;
+    display: block;
+    max-width: 100%;
+    order: -1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.35rem 0.7rem;
+    position: sticky;
+    top: var(--pluss-topbar-height);
+    width: 100%;
+    z-index: 900;
+  }
+
+  body.has-method-sidebar #pluss-method-sidebar .sidebar-title,
+  body.has-method-sidebar #pluss-method-sidebar .method-group {
     display: none;
+  }
+
+  body.has-method-sidebar #pluss-method-sidebar .method-nav {
+    display: flex;
+    gap: 0.2rem;
+    min-width: max-content;
+  }
+
+  body.has-method-sidebar #pluss-method-sidebar .method-nav a {
+    border-bottom: 3px solid transparent;
+    border-left: 0;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0.45rem 0.65rem;
+  }
+
+  body.has-method-sidebar #pluss-method-sidebar .method-nav a.active {
+    border-bottom-color: var(--pluss-accent);
   }
 
   div.documentwrapper {

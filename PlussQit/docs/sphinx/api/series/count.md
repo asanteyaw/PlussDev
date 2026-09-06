@@ -142,12 +142,12 @@ Use `count()` when you need cardinality in `Series` form:
 - [`Series::nonzero`](nonzero.md): explicit positions instead of counts.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="copysign.html">
+  <a class="prev-link" href="corrcoef.html">
     <span class="label">Previous</span>
-    <span class="title">copysign</span>
+    <span class="title">corrcoef</span>
   </a>
-  <a class="next-link" href="cos.html">
+  <a class="next-link" href="count_nonzero.html">
     <span class="label">Next</span>
-    <span class="title">cos</span>
+    <span class="title">count_nonzero</span>
   </a>
 </div>

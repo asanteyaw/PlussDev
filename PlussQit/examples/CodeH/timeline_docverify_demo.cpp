@@ -106,19 +106,13 @@ int main() {
   show_timeline("sub_duration_base_15m",
                 base.sub_duration(pluss::duration::minutes(15)));
   show_note("diff_scalar_note_iso",
-            pluss::codeh::_compat::invoke<pluss::Note>("to_note_iso",
-                                                       scalar_later.diff(scalar)));
+            scalar_later.diff(scalar).to_note_iso());
   show_series("diff_scalar_total_seconds",
-              pluss::codeh::_compat::invoke<pluss::Series>("total",
-                                                           scalar_later.diff(scalar),
-                                                           {"s"}));
+              scalar_later.diff(scalar).total().seconds());
   show_note("diff_vector_note_iso",
-            pluss::codeh::_compat::invoke<pluss::Note>("to_note_iso",
-                                                       base.diff(other)));
+            base.diff(other).to_note_iso());
   show_series("diff_vector_total_seconds",
-              pluss::codeh::_compat::invoke<pluss::Series>("total",
-                                                           base.diff(other),
-                                                           {"s"}));
+              base.diff(other).total().seconds());
 
   show_series("eq", base.eq(other));
   show_series("ne", base.ne(other));

@@ -155,9 +155,9 @@ Each element was replicated into two rows, so each accumulates a gradient of
   array.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="block.html">
+  <a class="prev-link" href="bmm.html">
     <span class="label">Previous</span>
-    <span class="title">block</span>
+    <span class="title">bmm</span>
   </a>
   <a class="next-link" href="cartprod.html">
     <span class="label">Next</span>

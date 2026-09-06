@@ -1257,6 +1257,92 @@ Thread reduce_bool_(
   return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
 }
 
+bool has_any_numeric_feature_(const detail::DataFrameImpl& src) {
+  for (const auto& col : src.columns_) {
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::vector<std::size_t> resolve_temporal_reduce_indices_(const detail::DataFrameImpl& src) {
+  std::vector<std::size_t> indices;
+  indices.reserve(src.columns_.size());
+  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+    const auto kind = src.columns_[i].kind();
+    if (kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) {
+      indices.push_back(i);
+    }
+  }
+  return indices;
+}
+
+pluss::Timeline reduce_rebuild_timeline_like_(
+    const pluss::Timeline& reference,
+    const std::vector<std::int64_t>& ticks) {
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(ticks.size())};
+  auto out = pluss::codeh::ops_internal::timeline_from_epoch_nanos(
+      std::span<const std::int64_t>(ticks.data(), ticks.size()),
+      std::span<const std::int64_t>(shape.data(), shape.size()));
+  out.unsafe_tz_name() = std::string(reference.tz());
+  return out;
+}
+
+// Per-feature min/max across Timeline/TimeIndex columns (Axis::Case only -- each
+// feature reduces to one timestamp, mirroring Thread::min()/max() on a single
+// temporal column). All included columns must share the same temporal
+// representation (all Timeline, or all TimeIndex); a column with no valid rows
+// -- or any null when skipnull is false -- contributes a NULL entry instead.
+Thread reduce_temporal_minmax_(
+    const detail::DataFrameImpl& src,
+    std::span<const std::size_t> indices,
+    bool want_max,
+    bool skipnull,
+    std::string_view where) {
+  const bool as_timeindex = src.columns_[indices.front()].kind() == ThreadKind::TimeIndex;
+  for (const auto idx : indices) {
+    PLUSS_CHECK((src.columns_[idx].kind() == ThreadKind::TimeIndex) == as_timeindex,
+                std::string(where) + ": cannot mix Timeline and TimeIndex features in one reduction");
+  }
+
+  const auto reference_timeline = as_timeindex
+                                       ? src.columns_[indices.front()].as_timeindex().timeline()
+                                       : src.columns_[indices.front()].as_timeline();
+
+  std::vector<std::int64_t> ticks(indices.size(), 0);
+  std::vector<bool> valid(indices.size(), false);
+
+  for (std::size_t k = 0; k < indices.size(); ++k) {
+    const auto& col = src.columns_[indices[k]];
+    const pluss::Timeline timeline = as_timeindex ? col.as_timeindex().timeline() : col.as_timeline();
+    const auto all_ticks = timeline.to_epoch_nanos_vector();
+
+    bool any_invalid = false;
+    std::vector<std::int64_t> observed;
+    observed.reserve(all_ticks.size());
+    for (std::int64_t i = 0; i < col.size(); ++i) {
+      if (detail::valid_at(col, i)) {
+        observed.push_back(all_ticks[static_cast<std::size_t>(i)]);
+      } else {
+        any_invalid = true;
+      }
+    }
+    if (observed.empty() || (!skipnull && any_invalid)) {
+      continue; // ticks[k] stays 0, valid[k] stays false -> NULL entry
+    }
+    ticks[k] = want_max ? *std::max_element(observed.begin(), observed.end())
+                        : *std::min_element(observed.begin(), observed.end());
+    valid[k] = true;
+  }
+
+  auto out_timeline = reduce_rebuild_timeline_like_(reference_timeline, ticks);
+  auto validity = bool_series_from_keep(valid);
+  Thread values = as_timeindex ? Thread(out_timeline.to_timeindex(false), validity)
+                               : Thread(out_timeline, validity);
+  return with_reduce_labels_(values, src, reduce_names_(src, indices), /*axis=*/0);
+}
+
 } // namespace
 
 Thread DataFrame::sum(Axis axis, bool skipnull) const {
@@ -1277,12 +1363,26 @@ Thread DataFrame::median(Axis axis, bool skipnull) const {
 
 Thread DataFrame::min(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::min");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Min, "DataFrame::min");
+  const auto& src = impl_ref_();
+  if (normalized_axis == 0 && !has_any_numeric_feature_(src)) {
+    const auto temporal_indices = resolve_temporal_reduce_indices_(src);
+    if (!temporal_indices.empty()) {
+      return reduce_temporal_minmax_(src, temporal_indices, /*want_max=*/false, skipnull, "DataFrame::min");
+    }
+  }
+  return reduce_numeric_(src, normalized_axis, skipnull, NumericAxisOp_::Min, "DataFrame::min");
 }
 
 Thread DataFrame::max(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::max");
-  return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Max, "DataFrame::max");
+  const auto& src = impl_ref_();
+  if (normalized_axis == 0 && !has_any_numeric_feature_(src)) {
+    const auto temporal_indices = resolve_temporal_reduce_indices_(src);
+    if (!temporal_indices.empty()) {
+      return reduce_temporal_minmax_(src, temporal_indices, /*want_max=*/true, skipnull, "DataFrame::max");
+    }
+  }
+  return reduce_numeric_(src, normalized_axis, skipnull, NumericAxisOp_::Max, "DataFrame::max");
 }
 
 Thread DataFrame::std(Axis axis, bool skipnull) const {

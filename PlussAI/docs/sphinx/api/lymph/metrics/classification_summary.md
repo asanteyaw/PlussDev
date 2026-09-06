@@ -1,208 +1,216 @@
-# `lymph::classification_summary`
+<!-- pluss-hand-authored -->
 
-## Summary
+# `lymph::metrics::classification::summary`
 
-`classification_summary(...)` returns per-class and aggregate classification
-metrics from hard-label predictions.
+[Back to `metrics`](../metrics.md)
 
-Use it when you want precision/recall/F1-style diagnostics in one structured
-report.
-
-## What It Gives You
-
-`classification_summary(...)` is the richer sibling of a confusion table.
-
-Instead of only raw class-by-class counts, it produces structured diagnostic
-metrics such as:
-
-- precision
-- recall
-- F1
-- support
-- aggregate views where available
-
-That makes it the right surface when you want not just to see that a model is wrong,
-but how it is wrong from a precision/recall perspective.
-
-## Why It Matters
-
-Classification quality is rarely one-dimensional.
-
-For example:
-
-- a fraud model may need high recall
-- a churn intervention model may care about precision
-- a medical triage model may need a very specific sensitivity profile
-
-`classification_summary(...)` makes those tradeoffs inspectable in one place.
-
-## Typical Use
-
-Use it after:
-
-- validation runs
-- final test predictions
-- threshold adjustments
-
-It pairs especially well with:
-
-- `confusion_table(...)` for raw class confusion
-- `Threshold` for operating-point selection
+`metrics::classification::summary(truth, prediction)` computes a
+[`ClassReport`](ClassReport.md) from two label `Series` — per-class
+precision / recall / f1 / support plus the accuracy and the average rows. There is one
+spelling — the old bare `lymph::classification_summary` name has been removed.
 
 ## Signature
 
 ```cpp
-lymph::ClassReport lymph::classification_summary(
+lymph::ClassReport lymph::metrics::classification::summary(
     const pluss::Series& truth_labels,
     const pluss::Series& predicted_labels,
-    lymph::ClassReportOptions options = {});
-lymph::ClassReport lymph::reports::classification_summary(...);
+    const lymph::ClassReportOptions& options = {});
+
+lymph::ClassReport lymph::metrics::classification::summary(
+    const pluss::Series& truth_labels,
+    const pluss::Series& predicted_labels,
+    std::initializer_list<double> label_order,
+    double zero_division = 0.0);
 ```
 
-## Option Surface
+## What It Does
 
-The lower-level summary options are carried through `ClassReportOptions`:
+Discovers the class labels, then computes precision, recall, f1, specificity,
+geometric mean and balance quality per class, the overall accuracy, and the
+micro / macro / weighted average rows (see [`ClassReport`](ClassReport.md) for
+the field shapes). `zero_division` is the value precision or recall takes when
+its denominator is empty — e.g. a class the model never predicts.
 
-```cpp
-lymph::ClassReportOptions{
-    .label_order = Series::undefined(),
-    .zero_division = 0.0,
-    .sample_weights = Series::undefined(),
-    .balance_quality_alpha = 0.1,
-    .square_balance_quality = true,
-};
-```
+## Parameters
 
-### `label_order`
+`truth_labels`
+: Ground-truth class labels.
 
-Controls the explicit class presentation order.
+`predicted_labels`
+: Predicted class labels, same length.
 
-Use it when reports need stable ordering across several runs or subsets.
+`options` — `lymph::ClassReportOptions`
+: `label_order` (a `Series` fixing the class order), `zero_division` (default
+  `0.0`), `sample_weights`, and `balance_quality_alpha` /
+  `square_balance_quality` (the balance-quality shape knobs).
 
-### `zero_division`
+`label_order` / `zero_division` *(initializer-list overload)*
+: The class order as a `{…}` list, and the empty-denominator fallback, without
+  building a `ClassReportOptions`.
 
-Sets the fallback value when a precision or recall denominator is zero.
+## Returns
 
-This is a very important review knob because different fallback conventions can
-change how degenerate class situations are communicated.
+A `lymph::ClassReport` (umbrella alias `reports::Class`).
 
-Use a value in `[0, 1]` to keep the report behavior reference-style and easy to
-interpret.
+## Errors
 
-### `sample_weights`
+- Length mismatch between the two `Series` raises.
 
-Allows the class report to respect weighted evaluation.
+## Practical Examples
 
-When your scoring contract is weighted, the diagnostic summary should usually be
-weighted too.
+<!-- these examples establish: a binary summary, the zero_division fallback, and a multiclass weighted average. -->
 
-### `balance_quality_alpha`
+### Example 1
 
-Controls the sensitivity of the balance-quality term inside the richer balance
-reporting view.
-
-Use smaller or larger values only when you intentionally want to reshape how harshly
-imbalance penalties are expressed.
-
-### `square_balance_quality`
-
-Controls whether the balance-quality formulation uses the squared variant.
-
-This is an interpretation toggle rather than a cosmetic one. It changes how sharply
-class-imbalance effects are emphasized in the balance-quality summary.
-
-## Practical Example
-
-Like the confusion-table example, this one is intentionally complete.
-
-It shows:
-
-- where the truth labels come from
-- where the predicted labels come from
-- how the report is printed
+A binary summary — per-class rows plus accuracy and the macro average.
 
 ```cpp
-#include <pluss/lymph.h>
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
 
 #include <iostream>
 
 int main() {
   namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
 
-  const pluss::Series truth_labels = pluss::make_series({0.0, 1.0});
-  const pluss::Series predicted_labels = pluss::make_series({0.0, 1.0});
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series truth =
+      pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
+  const pluss::Series predicted =
+      pluss::make_series({0, 0, 0, 1, 0, 1, 1, 0, 1, 1}, {10}, f64);
 
   const lymph::ClassReport report =
-      lymph::classification_summary(
-          truth_labels,
-          predicted_labels,
-          lymph::ClassReportOptions{
-              .zero_division = 0.0,
-          });
+      lymph::metrics::classification::summary(truth, predicted);
 
-  std::cout << "== classification_summary ==\n";
-  std::cout << "labels=" << report.labels << "\n";
-  std::cout << "precision=" << report.precision << "\n";
-  std::cout << "recall=" << report.recall << "\n";
-  std::cout << "f1=" << report.f1 << "\n";
-  std::cout << "accuracy=" << report.accuracy << "\n";
-  std::cout << "macro_average=" << report.macro_average << "\n";
+  std::cout << "labels    = " << report.labels << "\n";
+  std::cout << "support   = " << report.support << "\n";
+  std::cout << "precision = " << report.precision << "\n";
+  std::cout << "recall    = " << report.recall << "\n";
+  std::cout << "f1        = " << report.f1 << "\n";
+  std::cout << "accuracy  = " << report.accuracy.item<double>() << "\n";
+  std::cout << "macro_average (p,r,f1) = " << report.macro_average << "\n";
+
+  return 0;
 }
 ```
 
-### Output
+Output
 
 ```text
-== classification_summary ==
-labels=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+labels    = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[0, 1]
-precision=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[1, 1]
-recall=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[1, 1]
-f1=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[1, 1]
-accuracy=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=[1]
-macro_average=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[1, 1, 1]
+support   = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[5, 5]
+precision = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.8, 0.8]
+recall    = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.8, 0.8]
+f1        = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.8, 0.8]
+accuracy  = 0.8
+macro_average (p,r,f1) = pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.8, 0.8, 0.8]
 ```
 
-This output is copied from a real verifier run.
+### Example 2
 
-The concrete lesson is that `ClassReport` gives you both:
-
-- per-class series surfaces such as `precision`, `recall`, and `f1`
-- aggregate series surfaces such as `accuracy` and `macro_average`
-
-If you are already on a fitted-model path, the reporting surface can construct the
-same object for you:
+`zero_division` decides the value of an undefined precision / recall.
 
 ```cpp
-lymph::ClassReport report =
-    lymph::reports(model).classification_summary(batch);
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series truth =
+      pluss::make_series({0, 0, 0, 0, 0, 0, 1, 1, 1, 1}, {10}, f64);
+  const pluss::Series predicted =
+      pluss::make_series({0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {10}, f64);
+
+  const lymph::ClassReport zero =
+      lymph::metrics::classification::summary(truth, predicted,
+                                    lymph::ClassReportOptions{.zero_division = 0.0});
+  const lymph::ClassReport one =
+      lymph::metrics::classification::summary(truth, predicted,
+                                    lymph::ClassReportOptions{.zero_division = 1.0});
+
+  std::cout << "zero_division=0.0  precision = " << zero.precision << "\n";
+  std::cout << "zero_division=1.0  precision = " << one.precision << "\n";
+
+  return 0;
+}
 ```
 
-The report is what you use when a stakeholder asks:
+Output
 
-"show me how this classifier behaves per class, not just its overall score."
+```text
+zero_division=0.0  precision = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.6, 0]
+zero_division=1.0  precision = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.6, 1]
+```
 
-### Explicit label order and zero-division policy
+### Example 3
+
+Multiclass — three labels, with the support-weighted average.
 
 ```cpp
-lymph::ClassReport report =
-    lymph::classification_summary(
-        truth_labels,
-        predicted_labels,
-        {
-            .zero_division = 0.0,
-        });
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series truth =
+      pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2}, {12}, f64);
+  const pluss::Series predicted =
+      pluss::make_series({0, 0, 0, 1, 0, 1, 2, 1, 2, 2, 2, 0}, {12}, f64);
+
+  const lymph::ClassReport report =
+      lymph::metrics::classification::summary(truth, predicted);
+
+  std::cout << "labels           = " << report.labels << "\n";
+  std::cout << "support          = " << report.support << "\n";
+  std::cout << "f1 per class     = " << report.f1 << "\n";
+  std::cout << "weighted_average = " << report.weighted_average << "\n";
+
+  return 0;
+}
 ```
 
-This is the style to prefer when the presentation contract itself matters.
+Output
 
-## Related Pages
+```text
+labels           = pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 1, 2]
+support          = pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[5, 3, 4]
+f1 per class     = pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.8, 0.66666667, 0.75]
+weighted_average = pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.75, 0.75, 0.75]
+```
 
-- [confusion_table](confusion_table.md)
-- [CrossValidationReport](CrossValidationReport.md)
-- [Threshold](Threshold.md)
+## See Also
+
+- [`ClassReport`](ClassReport.md) — the return type's field reference.
+- [`confusion_table`](confusion_table.md) — raw counts instead of rates.
+- [`classification`](classification.md) — the `metrics::classification` group.
+- [`reports`](../reports.md) — the `(model, data)` overload.

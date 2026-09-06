@@ -182,10 +182,9 @@ data=true
 
 ## Broadcasting
 
-`add_duration`/`operator+` follow the same broadcasting model as `Series`:
-shapes are aligned the same way `SeriesIterator::broadcast_shape` aligns any
-two `Series` operands, so a scalar operand pairs with every element of an
-N-D operand on the other side.
+`add_duration`/`operator+` use standard trailing-axis broadcasting. A scalar
+operand therefore pairs with every element of an N-D operand on the other
+side.
 
 Example: a scalar `Timeline` plus a 1D `Duration` broadcasts to a 1D result.
 
@@ -302,9 +301,9 @@ reflects the timezone label.
 - [`Timeline::add_nanos`](add_nanos.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../timeline_api_reference.html">
+  <a class="prev-link" href="epoch_nanos.html">
     <span class="label">Previous</span>
-    <span class="title">Timeline API Reference</span>
+    <span class="title">epoch_nanos</span>
   </a>
   <a class="next-link" href="sub_duration.html">
     <span class="label">Next</span>

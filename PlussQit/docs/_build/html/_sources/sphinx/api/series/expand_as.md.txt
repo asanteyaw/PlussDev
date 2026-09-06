@@ -119,8 +119,8 @@ data=[[4],
     <span class="label">Previous</span>
     <span class="title">expand</span>
   </a>
-  <a class="next-link" href="expm1.html">
+  <a class="next-link" href="exponential_.html">
     <span class="label">Next</span>
-    <span class="title">expm1</span>
+    <span class="title">exponential_</span>
   </a>
 </div>

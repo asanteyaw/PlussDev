@@ -97,27 +97,32 @@ after_reverse=true
 after_clear=false
 ```
 
-Example 2. If nothing was marked for tracking, reverse-mode does not create a
-stored sensitivity on that leaf.
+Example 2. `has_sensitivity()` is only ever `true` after a reverse pass over a
+tracked leaf. Reverse-mode over an objective with no tracked leaf does not fall
+through to an empty result — it raises.
 
 ```cpp
 auto silent_x = pluss::make_series({1.0, 2.0, 3.0});
-silent_x.mul(2.0).sum().reverse();
+
+try {
+  silent_x.mul(2.0).sum().reverse();
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+
 std::cout << "has_dL_dx=" << (silent_x.has_sensitivity() ? "true" : "false") << "\n";
 ```
 
-The scalar objective here is
-
-```text
-L = 2x1 + 2x2 + 2x3
-```
-
-so the mathematical sensitivity exists, but this particular `Series` was never
-configured as a tracked leaf, so no public stored sensitivity is kept on it.
+The scalar objective `L = 2x₁ + 2x₂ + 2x₃` is mathematically differentiable,
+but `silent_x` was never configured as a tracked leaf, so the graph is
+disconnected and [`reverse()`](reverse.md) reports it. `has_sensitivity()` is
+still `false` afterward — nothing was stored.
 
 ### Output
 
 ```text
+series_tape::backpropagate: objective does not track slope and has no source link; nothing to differentiate (a constant, or built only from non-differentiable ops)
 has_dL_dx=false
 ```
 
@@ -202,8 +207,8 @@ not a derivative-value question.
     <span class="label">Previous</span>
     <span class="title">hardshrink</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="heaviside.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">heaviside</span>
   </a>
 </div>

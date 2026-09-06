@@ -186,12 +186,12 @@ never read, so it receives `0`.
   gathering.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="frac.html">
+  <a class="prev-link" href="frexp.html">
     <span class="label">Previous</span>
-    <span class="title">frac</span>
+    <span class="title">frexp</span>
   </a>
-  <a class="next-link" href="index_select.html">
+  <a class="next-link" href="gcd.html">
     <span class="label">Next</span>
-    <span class="title">index_select</span>
+    <span class="title">gcd</span>
   </a>
 </div>

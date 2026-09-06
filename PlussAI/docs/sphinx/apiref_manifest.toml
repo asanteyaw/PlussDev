@@ -85,11 +85,18 @@ maxdepth = 2
 children = ["reports/Introduction", "reports/Model", "reports/classification_summary", "reports/threshold_curve"]
 
 [[family]]
+path = "lymph/options"
+page = "api/lymph/options.md"
+title = "options"
+maxdepth = 2
+children = []
+
+[[family]]
 path = "lymph/selection"
 page = "api/lymph/selection.md"
 title = "selection"
 maxdepth = 3
-children = ["selection/Introduction", "selection/compare", "selection/CompareReport", "selection/GridAxis", "selection/tune_specs", "selection/validate", "selection/search", "selection/spotcheck"]
+children = ["selection/Introduction", "selection/compare", "selection/Scorer", "selection/CompareReport", "selection/GridAxis", "selection/tune_specs", "selection/validate", "selection/search", "selection/spotcheck"]
 
 [[family]]
 path = "lymph/selection/validate"
@@ -117,7 +124,7 @@ path = "lymph/workflow"
 page = "api/lymph/workflow.md"
 title = "workflow"
 maxdepth = 2
-children = ["model/Workflow", "model/Payload", "model/Policy"]
+children = ["workflow/Introduction", "workflow/Workflow", "workflow/Payload", "workflow/Policy", "workflow/TimeOptions", "workflow/make"]
 
 [[symbol]]
 qualname = "lymph::load"
@@ -180,52 +187,52 @@ since = "0.1"
 methods = []
 
 [[symbol]]
-qualname = "lymph::metrics::Threshold"
+qualname = "lymph::metrics::classification::Threshold"
 kind = "class"
 family = "lymph/metrics"
 page = "api/lymph/metrics/Threshold.md"
-summary = "`Threshold` is the operating-point accessor from `metrics::threshold(scores, labels)` — `curve()` and `best(objective)`."
+summary = "`Threshold` is the operating-point accessor from `metrics::classification::threshold(scores, labels)` — `curve()` and `best(objective)`."
 since = "0.1"
 methods = []
 
 [[symbol]]
-qualname = "lymph::metrics::classification"
+qualname = "lymph::metrics::classification::report"
 kind = "function"
 family = "lymph/metrics"
 page = "api/lymph/metrics/classification.md"
-summary = "`classification(truth, prediction)` returns a `Classification` accessor over `confusion_table` / `summary` / `values` / `report`."
+summary = "`metrics::classification::report(truth, pred, {kinds})` (hard-label) and `score_report(scores, labels, {kinds})` (RocAuc / Gini / AveragePrecision / LogLoss / Brier) → a `MetricReport`; the group also holds `confusion_table`, `summary`, `threshold`."
 since = "0.1"
 overloads = 1
 
 [[symbol]]
-qualname = "lymph::metrics::regression"
+qualname = "lymph::metrics::regression::report"
 kind = "function"
 family = "lymph/metrics"
 page = "api/lymph/metrics/regression.md"
-summary = "`regression(truth, prediction)` returns a `Regression` accessor over `values` / `report`; `regression_metric_series` is the free form."
+summary = "`metrics::regression::report(truth, pred, {kinds})` → a `MetricReport`; `report(...).values` is the raw Series."
 since = "0.1"
 overloads = 1
 
 [[symbol]]
-qualname = "lymph::classification_summary"
+qualname = "lymph::metrics::classification::summary"
 kind = "function"
 family = "lymph/metrics"
 page = "api/lymph/metrics/classification_summary.md"
-summary = "`classification_summary(truth, prediction, ...)` computes a `ClassReport` from label Series (3 overloads)."
+summary = "`metrics::classification::summary(truth, prediction, ...)` computes a `ClassReport` from label Series (3 overloads)."
 since = "0.1"
 overloads = 2
 
 [[symbol]]
-qualname = "lymph::confusion_table"
+qualname = "lymph::metrics::classification::confusion_table"
 kind = "function"
 family = "lymph/metrics"
 page = "api/lymph/metrics/confusion_table.md"
-summary = "`confusion_table(truth, prediction, ...)` computes a `ConfusionTable` from label Series (3 overloads)."
+summary = "`metrics::classification::confusion_table(truth, prediction, ...)` computes a `ConfusionTable` from label Series (3 overloads)."
 since = "0.1"
 overloads = 1
 
 [[symbol]]
-qualname = "lymph::metrics::calibrate"
+qualname = "lymph::calibrate_with_platt"
 kind = "function"
 family = "lymph/metrics"
 page = "api/lymph/metrics/calibrate.md"
@@ -264,22 +271,45 @@ overloads = 1
 qualname = "lymph::workflow::Workflow"
 kind = "class"
 family = "lymph/workflow"
-page = "api/lymph/model/Workflow.md"
+page = "api/lymph/workflow/Workflow.md"
+summary = "`Workflow` is Model + Policy + an optional branch/route DSL -- the deployable, sklearn-Pipeline-shaped composition object."
 since = "0.1"
+methods = ["on", "learn", "map", "infer", "assess", "save", "with"]
 
 [[symbol]]
 qualname = "lymph::workflow::Payload"
 kind = "class"
 family = "lymph/workflow"
-page = "api/lymph/model/Payload.md"
+page = "api/lymph/workflow/Payload.md"
+summary = "`Payload` is the typed input carrier -- a frame/batch plus attached roles (label, weights, groups, time) that every Workflow verb accepts."
 since = "0.1"
+methods = []
 
 [[symbol]]
 qualname = "lymph::workflow::Policy"
 kind = "class"
 family = "lymph/workflow"
-page = "api/lymph/model/Policy.md"
+page = "api/lymph/workflow/Policy.md"
+summary = "`Policy` is the raw-frame admission contract Workflow applies before any prep stage sees data -- drop/require/forbid columns, reject missing rows."
 since = "0.1"
+methods = []
+
+[[symbol]]
+qualname = "lymph::workflow::TimeOptions"
+kind = "options"
+family = "lymph/workflow"
+page = "api/lymph/workflow/TimeOptions.md"
+summary = "`TimeOptions` names the time role -- index, horizon, gap, lookback -- that a time-aware Workflow or Payload carries."
+since = "0.1"
+
+[[symbol]]
+qualname = "lymph::workflow::make"
+kind = "function"
+family = "lymph/workflow"
+page = "api/lymph/workflow/make.md"
+summary = "`make(...)` builds a Workflow from a Policy / Model / branch-spec DSL; `restore` / `load` rebuild one from a saved FlowBundle + policy sidecar."
+since = "0.1"
+overloads = 7
 
 [[symbol]]
 qualname = "lymph::models::Model"
@@ -803,6 +833,15 @@ kind = "class"
 family = "lymph/selection"
 page = "api/lymph/selection/CompareReport.md"
 summary = "`CompareReport` is the ranked-trial report returned by `selection::compare`, `Search`, and `spotcheck::Suite`."
+since = "0.1"
+methods = []
+
+[[symbol]]
+qualname = "lymph::selection::Scorer"
+kind = "class"
+family = "lymph/selection"
+page = "api/lymph/selection/Scorer.md"
+summary = "`Scorer` is the ranking objective for `compare` / `Search` / `spotcheck` — a built-in `MetricKind` or a `make_scorer(...)` callable on each fold's `(truth, prediction)`."
 since = "0.1"
 methods = []
 

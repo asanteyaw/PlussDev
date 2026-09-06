@@ -5,7 +5,12 @@
 #include "pluss/ai/lymph/model.h"
 #include "pluss/tils/aux/transmit.h"
 
+#include <cmath>
+#include <functional>
+#include <limits>
+#include <optional>
 #include <random>
+#include <string>
 
 namespace pluss::ai::lymph {
 
@@ -49,7 +54,14 @@ struct CompareReport {
   std::int64_t best_index = -1;
   std::string best_name{};
   MetricKind objective_metric = MetricKind::Accuracy;
+  // Human-readable objective label -- the metric name for a built-in objective,
+  // or the make_scorer() name for a custom one.
+  std::string objective_name = "accuracy";
   TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto;
+  // Effective ranking direction, resolved once from the objective + policy so
+  // ranking does not have to re-derive it (and so a custom objective's
+  // direction survives into the report).
+  bool objective_minimize = false;
   std::vector<std::int64_t> objective_rank{};
   std::vector<std::int64_t> ranked_indices{};
 
@@ -220,6 +232,7 @@ struct SpecTuneResult {
   if (policy == TuneObjectivePolicy::Maximize) return false;
   switch (metric) {
     case MetricKind::LogLoss:
+    case MetricKind::Brier:
     case MetricKind::Mse:
     case MetricKind::Rmse:
     case MetricKind::Mae:
@@ -228,6 +241,75 @@ struct SpecTuneResult {
     default:
       return false;
   }
+}
+
+// A selection / tuning objective: either a built-in `MetricKind` (scored by the
+// NodeJ kernels through the normal assess path) or a user callable evaluated on
+// each fold's `(truth, prediction)` pair. Implicitly constructible from
+// `MetricKind`, so every existing `objective = MetricKind::X` argument and
+// default keeps compiling unchanged.
+//
+// The callable runs once per (candidate, fold) cell, on the worker thread that
+// trained that fold, inside the same parallel pass -- it must be safe to invoke
+// concurrently when `CrossValOptions::max_parallel != 1`.
+struct Scorer {
+  std::string name = "objective";
+  // Direction for a custom objective (ignored for a built-in, which carries its
+  // own natural direction). An explicit `TuneObjectivePolicy::Minimize` /
+  // `Maximize` on the call still overrides this.
+  bool greater_is_better = true;
+  std::optional<MetricKind> builtin{};
+  std::function<double(const Series& truth, const Series& prediction)> fn{};
+
+  Scorer() = default;
+  Scorer(MetricKind kind)  // NOLINT(google-explicit-constructor) -- implicit on purpose
+      : name(::pluss::ai::lymph::metric_kind_name_(kind)),
+        greater_is_better(!minimize_metric_(kind, TuneObjectivePolicy::Auto)),
+        builtin(kind) {}
+
+  [[nodiscard]] bool is_custom() const noexcept { return !builtin.has_value(); }
+};
+
+// make_scorer("cost_weighted", [](const Series& y, const Series& pred) { ... }, /*greater_is_better=*/true)
+[[nodiscard]] inline Scorer make_scorer(std::string name,
+                                        std::function<double(const Series& truth, const Series& prediction)> fn,
+                                        bool greater_is_better = true) {
+  if (name.empty()) {
+    ::pluss::throw_error("selection::make_scorer: name must not be empty.");
+  }
+  if (!fn) {
+    ::pluss::throw_error("selection::make_scorer: fn must be a callable target.");
+  }
+  Scorer scorer{};
+  scorer.name = std::move(name);
+  scorer.greater_is_better = greater_is_better;
+  scorer.fn = std::move(fn);
+  return scorer;
+}
+
+// Effective "lower is better?" for an objective: an explicit policy always
+// wins; `Auto` defers to the built-in metric's natural direction, or to the
+// custom scorer's `greater_is_better` flag.
+[[nodiscard]] inline bool minimize_objective_(const Scorer& objective, TuneObjectivePolicy policy) {
+  if (policy == TuneObjectivePolicy::Minimize) return true;
+  if (policy == TuneObjectivePolicy::Maximize) return false;
+  return objective.builtin ? minimize_metric_(*objective.builtin, TuneObjectivePolicy::Auto)
+                           : !objective.greater_is_better;
+}
+
+// Mean of the finite entries of `values` (the per-fold custom-objective
+// scalars). NaN when none are finite -- ranking then drops the candidate, the
+// same way a non-finite built-in objective is dropped.
+[[nodiscard]] inline double mean_finite_(const std::vector<double>& values) {
+  double sum = 0.0;
+  std::int64_t count = 0;
+  for (const double v : values) {
+    if (std::isfinite(v)) {
+      sum += v;
+      ++count;
+    }
+  }
+  return count > 0 ? sum / static_cast<double>(count) : std::numeric_limits<double>::quiet_NaN();
 }
 
 [[nodiscard]] inline double scalar_metric_(const MetricReport& report, MetricKind metric) {
@@ -240,7 +322,7 @@ struct SpecTuneResult {
 }
 
 inline void assign_objective_ranks_(CompareReport& report) {
-  const bool minimize = minimize_metric_(report.objective_metric, report.objective_policy);
+  const bool minimize = report.objective_minimize;
   report.objective_rank.assign(report.trials.size(), 0);
   report.ranked_indices.clear();
   report.ranked_indices.reserve(report.trials.size());
@@ -291,7 +373,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
                                                    CrossValOptions cv,
                                                    TrainOptions train_options,
                                                    AssessOptions assess_options,
-                                                   MetricKind objective_metric,
+                                                   const Scorer& objective,
                                                    TuneObjectivePolicy objective_policy,
                                                    FitOptions fit_options) {
   if (candidates.empty()) {
@@ -303,16 +385,13 @@ inline void assign_objective_ranks_(CompareReport& report) {
   if (fit_options.fit_bottom < 0) {
     ::pluss::throw_error("selection::compare: FitOptions.fit_bottom must be non-negative.");
   }
-  if (assess_options.metrics.empty()) {
-    assess_options.metrics = {objective_metric};
-  } else if (std::find(assess_options.metrics.begin(), assess_options.metrics.end(), objective_metric) == assess_options.metrics.end()) {
-    assess_options.metrics.push_back(objective_metric);
-  }
 
-  const bool minimize = minimize_metric_(objective_metric, objective_policy);
+  const bool minimize = minimize_objective_(objective, objective_policy);
   CompareResult result{};
-  result.report.objective_metric = objective_metric;
+  result.report.objective_metric = objective.builtin.value_or(MetricKind::Accuracy);
+  result.report.objective_name = objective.name;
   result.report.objective_policy = objective_policy;
+  result.report.objective_minimize = minimize;
   result.report.trials.reserve(candidates.size());
 
   const TaskKind task = candidates.front().model.task_kind();
@@ -321,6 +400,22 @@ inline void assign_objective_ranks_(CompareReport& report) {
       ::pluss::throw_error("selection::compare: all candidates must have the same task kind.");
     }
   }
+
+  // A built-in objective must be present in the assessed metric set (that is
+  // where its per-candidate value is read from). A custom objective is scored
+  // separately from `(truth, prediction)`, so the assessed set only needs a
+  // sensible companion column for the board -- the task default.
+  if (!objective.is_custom()) {
+    if (assess_options.metrics.empty()) {
+      assess_options.metrics = {*objective.builtin};
+    } else if (std::find(assess_options.metrics.begin(), assess_options.metrics.end(), *objective.builtin) ==
+               assess_options.metrics.end()) {
+      assess_options.metrics.push_back(*objective.builtin);
+    }
+  } else if (assess_options.metrics.empty()) {
+    assess_options.metrics = default_assess_metrics_(task, assess_options);
+  }
+
   const SplitOptions split = detail::effective_workflow_split_options_(cv, task);
   const SplitPlan plan = detail::workflow_split_plan_(batch, split, task, "selection::compare");
   const std::vector<metrics::FoldBatchPair> fold_batches = detail::materialize_fold_batches_(batch, plan, "selection::compare");
@@ -328,7 +423,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
   std::int64_t best_index = -1;
   double best_objective = std::numeric_limits<double>::quiet_NaN();
 
-  // Flatten every (candidate, fold) pair into one pluss::aux::transmit(...,
+  // Flatten every (candidate, fold) pair into one pluss::tils::transmit(...,
   // par) dispatch instead of nesting "parallel folds, sequential
   // candidates" (cross_validate_batches_'s own shape, used one candidate at
   // a time by the loop this replaced): on an 8+ core machine tuning 5
@@ -350,55 +445,74 @@ inline void assign_objective_ranks_(CompareReport& report) {
   }
 
   const std::int64_t metric_count = static_cast<std::int64_t>(assess_options.metrics.size());
-  const auto evaluate_cell = [&](const GridCell_& cell) -> FoldAssessResult {
+  const bool objective_is_custom = objective.is_custom();
+  // Per (candidate, fold) outcome: the built-in metric row plus, for a custom
+  // objective, that fold's callable value. `custom` stays NaN on the built-in
+  // path so its branch is dead there.
+  struct FoldCellOutcome_ {
+    FoldAssessResult assess{};
+    double custom = std::numeric_limits<double>::quiet_NaN();
+  };
+  const auto evaluate_cell = [&](const GridCell_& cell) -> FoldCellOutcome_ {
     const Candidate& candidate = candidates[cell.candidate_index];
     const auto& fold = plan.folds[cell.fold_index];
     const metrics::FoldBatchPair& fold_batch = fold_batches[cell.fold_index];
     const models::Model trained = candidate.model.learn(
         fold_batch.train, candidate.train_options.value_or(train_options));
+    double custom = std::numeric_limits<double>::quiet_NaN();
+    if (objective_is_custom) {
+      const Series prediction = trained.infer(fold_batch.test.features);
+      custom = objective.fn(fold_batch.test.y, prediction);
+    }
     const Series fold_metrics =
         trained.assess_series(fold_batch.test, assess_options).to(ScalarType::Float64).reshape({metric_count});
-    return FoldAssessResult{
-        .metrics = fold_metrics,
-        .train_indices = fold.train_indices,
-        .test_indices = fold.test_indices,
+    return FoldCellOutcome_{
+        FoldAssessResult{
+            .metrics = fold_metrics,
+            .train_indices = fold.train_indices,
+            .test_indices = fold.test_indices,
+        },
+        custom,
     };
   };
 
-  pluss::aux::transmit_options topts{};
+  pluss::tils::transmit_options topts{};
   topts.grain_size = 1;
   if (split.max_parallel == 1 || cells.size() <= 1) {
-    topts.exec = pluss::aux::transmit_exec::seq;
+    topts.exec = pluss::tils::transmit_exec::seq;
   } else {
-    topts.exec = pluss::aux::transmit_exec::par;
+    topts.exec = pluss::tils::transmit_exec::par;
     topts.workers = split.max_parallel > 0 ? static_cast<std::size_t>(split.max_parallel) : 0;
   }
-  const std::vector<FoldAssessResult> cell_results = pluss::aux::transmit(evaluate_cell, cells, topts);
+  const std::vector<FoldCellOutcome_> cell_results = pluss::tils::transmit(evaluate_cell, cells, topts);
 
   for (std::size_t ci = 0; ci < candidate_n; ++ci) {
     CrossAssessReport report{};
     report.metrics = assess_options.metrics;
     report.folds.resize(fold_n);
+    std::vector<double> custom_folds(fold_n, std::numeric_limits<double>::quiet_NaN());
     for (std::size_t fi = 0; fi < fold_n; ++fi) {
-      report.folds[fi] = cell_results[ci * fold_n + fi];
+      report.folds[fi] = cell_results[ci * fold_n + fi].assess;
+      custom_folds[fi] = cell_results[ci * fold_n + fi].custom;
     }
     metrics::CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(report));
-    const double objective = scalar_metric_(cv_report.mean, objective_metric);
+    const double objective_value = objective_is_custom ? mean_finite_(custom_folds)
+                                                       : scalar_metric_(cv_report.mean, *objective.builtin);
     result.report.trials.push_back(Trial{
         .name = candidates[ci].name,
-        .objective = objective,
+        .objective = objective_value,
         .cv = std::move(cv_report),
     });
 
     if (best_index < 0) {
       best_index = static_cast<std::int64_t>(ci);
-      best_objective = objective;
+      best_objective = objective_value;
       continue;
     }
-    const bool better = minimize ? (objective < best_objective) : (objective > best_objective);
+    const bool better = minimize ? (objective_value < best_objective) : (objective_value > best_objective);
     if (better) {
       best_index = static_cast<std::int64_t>(ci);
-      best_objective = objective;
+      best_objective = objective_value;
     }
   }
 
@@ -486,7 +600,7 @@ struct FoldFramePair_ {
                                                    CrossValOptions cv,
                                                    TrainOptions train_options,
                                                    AssessOptions assess_options,
-                                                   MetricKind objective_metric,
+                                                   const Scorer& objective,
                                                    TuneObjectivePolicy objective_policy,
                                                    FitOptions fit_options) {
   if (candidates.empty()) {
@@ -498,16 +612,13 @@ struct FoldFramePair_ {
   if (fit_options.fit_bottom < 0) {
     ::pluss::throw_error("selection::compare: FitOptions.fit_bottom must be non-negative.");
   }
-  if (assess_options.metrics.empty()) {
-    assess_options.metrics = {objective_metric};
-  } else if (std::find(assess_options.metrics.begin(), assess_options.metrics.end(), objective_metric) == assess_options.metrics.end()) {
-    assess_options.metrics.push_back(objective_metric);
-  }
 
-  const bool minimize = minimize_metric_(objective_metric, objective_policy);
+  const bool minimize = minimize_objective_(objective, objective_policy);
   CompareResult result{};
-  result.report.objective_metric = objective_metric;
+  result.report.objective_metric = objective.builtin.value_or(MetricKind::Accuracy);
+  result.report.objective_name = objective.name;
   result.report.objective_policy = objective_policy;
+  result.report.objective_minimize = minimize;
   result.report.trials.reserve(candidates.size());
 
   const TaskKind task = candidates.front().model.task_kind();
@@ -515,6 +626,17 @@ struct FoldFramePair_ {
     if (candidates[i].model.task_kind() != task) {
       ::pluss::throw_error("selection::compare: all candidates must have the same task kind.");
     }
+  }
+
+  if (!objective.is_custom()) {
+    if (assess_options.metrics.empty()) {
+      assess_options.metrics = {*objective.builtin};
+    } else if (std::find(assess_options.metrics.begin(), assess_options.metrics.end(), *objective.builtin) ==
+               assess_options.metrics.end()) {
+      assess_options.metrics.push_back(*objective.builtin);
+    }
+  } else if (assess_options.metrics.empty()) {
+    assess_options.metrics = default_assess_metrics_(task, assess_options);
   }
 
   const LabeledBatch plan_batch = resolve(labeled_batch_from_dataframe(frame, data_options),
@@ -541,55 +663,74 @@ struct FoldFramePair_ {
   }
 
   const std::int64_t metric_count = static_cast<std::int64_t>(assess_options.metrics.size());
-  const auto evaluate_cell = [&](const GridCell_& cell) -> FoldAssessResult {
+  const bool objective_is_custom = objective.is_custom();
+  struct FoldCellOutcome_ {
+    FoldAssessResult assess{};
+    double custom = std::numeric_limits<double>::quiet_NaN();
+  };
+  const auto evaluate_cell = [&](const GridCell_& cell) -> FoldCellOutcome_ {
     const Candidate& candidate = candidates[cell.candidate_index];
     const auto& fold = plan.folds[cell.fold_index];
     const FoldFramePair_& fold_frame = fold_frames[cell.fold_index];
     const models::Model trained = candidate.model.learn(
         fold_frame.train, data_options, candidate.train_options.value_or(train_options));
+    double custom = std::numeric_limits<double>::quiet_NaN();
+    if (objective_is_custom) {
+      const Series prediction = trained.infer(fold_frame.test, data_options);
+      const Series y_test = resolve(labeled_batch_from_dataframe(fold_frame.test, data_options),
+                                    "selection::compare(frame,data_options).fold_truth")
+                                .y;
+      custom = objective.fn(y_test, prediction);
+    }
     const Series fold_metrics =
         trained.assess_series(fold_frame.test, data_options, assess_options).to(ScalarType::Float64).reshape({metric_count});
-    return FoldAssessResult{
-        .metrics = fold_metrics,
-        .train_indices = fold.train_indices,
-        .test_indices = fold.test_indices,
+    return FoldCellOutcome_{
+        FoldAssessResult{
+            .metrics = fold_metrics,
+            .train_indices = fold.train_indices,
+            .test_indices = fold.test_indices,
+        },
+        custom,
     };
   };
 
-  pluss::aux::transmit_options topts{};
+  pluss::tils::transmit_options topts{};
   topts.grain_size = 1;
   if (split.max_parallel == 1 || cells.size() <= 1) {
-    topts.exec = pluss::aux::transmit_exec::seq;
+    topts.exec = pluss::tils::transmit_exec::seq;
   } else {
-    topts.exec = pluss::aux::transmit_exec::par;
+    topts.exec = pluss::tils::transmit_exec::par;
     topts.workers = split.max_parallel > 0 ? static_cast<std::size_t>(split.max_parallel) : 0;
   }
-  const std::vector<FoldAssessResult> cell_results = pluss::aux::transmit(evaluate_cell, cells, topts);
+  const std::vector<FoldCellOutcome_> cell_results = pluss::tils::transmit(evaluate_cell, cells, topts);
 
   for (std::size_t ci = 0; ci < candidate_n; ++ci) {
     CrossAssessReport report{};
     report.metrics = assess_options.metrics;
     report.folds.resize(fold_n);
+    std::vector<double> custom_folds(fold_n, std::numeric_limits<double>::quiet_NaN());
     for (std::size_t fi = 0; fi < fold_n; ++fi) {
-      report.folds[fi] = cell_results[ci * fold_n + fi];
+      report.folds[fi] = cell_results[ci * fold_n + fi].assess;
+      custom_folds[fi] = cell_results[ci * fold_n + fi].custom;
     }
     metrics::CrossValidationReport cv_report = detail::cross_validation_report_from_folds_(std::move(report));
-    const double objective = scalar_metric_(cv_report.mean, objective_metric);
+    const double objective_value = objective_is_custom ? mean_finite_(custom_folds)
+                                                       : scalar_metric_(cv_report.mean, *objective.builtin);
     result.report.trials.push_back(Trial{
         .name = candidates[ci].name,
-        .objective = objective,
+        .objective = objective_value,
         .cv = std::move(cv_report),
     });
 
     if (best_index < 0) {
       best_index = static_cast<std::int64_t>(ci);
-      best_objective = objective;
+      best_objective = objective_value;
       continue;
     }
-    const bool better = minimize ? (objective < best_objective) : (objective > best_objective);
+    const bool better = minimize ? (objective_value < best_objective) : (objective_value > best_objective);
     if (better) {
       best_index = static_cast<std::int64_t>(ci);
-      best_objective = objective;
+      best_objective = objective_value;
     }
   }
 
@@ -660,11 +801,11 @@ struct FoldFramePair_ {
                                            CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
-                                           MetricKind objective_metric = MetricKind::Accuracy,
+                                           Scorer objective = MetricKind::Accuracy,
                                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                            FitOptions fit_options = {}) {
   return compare_batch_(std::move(candidates), batch, cv, train_options, assess_options,
-                        objective_metric, objective_policy, fit_options);
+                        objective, objective_policy, fit_options);
 }
 
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
@@ -673,13 +814,13 @@ struct FoldFramePair_ {
                                            CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
-                                           MetricKind objective_metric = MetricKind::Accuracy,
+                                           Scorer objective = MetricKind::Accuracy,
                                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                            FitOptions fit_options = {}) {
   const auto feature_names = cross_validate_default_feature_names_(x, "selection::compare");
   const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, feature_names, "selection::compare");
   return compare_batch_(std::move(candidates), batch, cv, train_options, assess_options,
-                        objective_metric, objective_policy, fit_options);
+                        objective, objective_policy, fit_options);
 }
 
 // (frame, DataFrameBatchOptions) sibling of the (x, y) overload above -- see
@@ -695,11 +836,11 @@ struct FoldFramePair_ {
                                            CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
-                                           MetricKind objective_metric = MetricKind::Accuracy,
+                                           Scorer objective = MetricKind::Accuracy,
                                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                            FitOptions fit_options = {}) {
   return compare_frame_(std::move(candidates), frame, data_options, cv, train_options, assess_options,
-                        objective_metric, objective_policy, fit_options);
+                        objective, objective_policy, fit_options);
 }
 
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
@@ -708,7 +849,7 @@ struct FoldFramePair_ {
                                            CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
-                                           MetricKind objective_metric = MetricKind::Accuracy,
+                                           Scorer objective = MetricKind::Accuracy,
                                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                            FitOptions fit_options = {}) {
   return compare(std::move(candidates),
@@ -717,7 +858,7 @@ struct FoldFramePair_ {
               cv,
               train_options,
               assess_options,
-              objective_metric,
+              std::move(objective),
               objective_policy,
               fit_options);
 }

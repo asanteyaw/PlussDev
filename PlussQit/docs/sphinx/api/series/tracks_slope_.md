@@ -89,35 +89,35 @@ after_enable_default=true
 after_disable=false
 ```
 
-Example 2. The tracking flag determines whether reverse-mode stores
-sensitivity on the leaf.
+Example 2. The tracking flag decides whether a reverse pass is even possible.
+The same objective, reversed once without a tracked leaf and once with one:
 
 ```cpp
 auto untracked = pluss::make_series({1.0, 2.0, 3.0});
 auto tracked = pluss::make_series({1.0, 2.0, 3.0});
 tracked.tracks_slope_(true);
 
-untracked.mul(2.0).sum().reverse();
-tracked.mul(2.0).sum().reverse();
+try {
+  untracked.mul(2.0).sum().reverse();
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << "untracked: " << msg.substr(0, msg.find('\n')) << "\n";
+}
 
-std::cout << "untracked_has_dL_dx=" << (untracked.has_sensitivity() ? "true" : "false") << "\n";
+tracked.mul(2.0).sum().reverse();
 std::cout << "tracked_has_dL_dx=" << (tracked.has_sensitivity() ? "true" : "false") << "\n";
 std::cout << "tracked_dL_dx=" << tracked.sensitivity() << "\n";
 ```
 
-Both forward computations are the same scalar objective:
-
-```text
-L = 2x1 + 2x2 + 2x3
-```
-
+Both forward computations are the same scalar objective `L = 2x₁ + 2x₂ + 2x₃`.
 The mathematical sensitivity exists in either case, but only the tracked leaf
-keeps a stored public result after `reverse()`.
+produces a connected graph; reversing the untracked one raises instead of
+storing nothing.
 
 ### Output
 
 ```text
-untracked_has_dL_dx=false
+untracked: series_tape::backpropagate: objective does not track slope and has no source link; nothing to differentiate (a constant, or built only from non-differentiable ops)
 tracked_has_dL_dx=true
 tracked_dL_dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2, 2, 2]

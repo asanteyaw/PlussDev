@@ -344,6 +344,23 @@ void backpropagate(const Series& loss,
   {
     std::scoped_lock lk(g_mu);
     auto* root_state = find_locked_(loss);
+
+    // Torch-consistent entry guard: a reverse pass needs the objective to be
+    // connected to the tape. A Series that neither tracks slope nor carries a
+    // source link has no derivative to propagate -- it is a constant, or the
+    // result of only non-differentiable ops (argsort, sort/topk indices,
+    // argmax/argmin, comparisons, integer casts, nonzero, ...). Silently
+    // returning a zero sensitivity buffer hides a training loop that learns
+    // nothing, so raise instead. (Mirrors libtorch's "element 0 of tensors
+    // does not require grad and does not have a grad_fn".)
+    if (root_state == nullptr ||
+        (!root_state->tracks_slope && !root_state->source_link)) {
+      throw_error(
+          "series_tape::backpropagate: objective does not track slope and has "
+          "no source link; nothing to differentiate (a constant, or built only "
+          "from non-differentiable ops)");
+    }
+
     if (root_state && !root_state->source_link && root_state->source_link_released) {
       std::ostringstream oss;
       oss << "series_tape::backpropagate: graph links for this objective were released by a prior one-shot reverse pass";

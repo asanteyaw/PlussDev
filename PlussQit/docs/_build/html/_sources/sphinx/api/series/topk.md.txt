@@ -13,7 +13,7 @@ Series::topk(std::int64_t k, std::int64_t dim, bool largest) const -> Series
 Series::topk(std::int64_t k, std::int64_t dim, bool largest, bool sorted) const -> Series
 Series::topk_pair(std::int64_t k, std::int64_t dim = -1,
                   bool largest = true, bool sorted = true) const
-    -> pluss::StackArray<Series>
+    -> std::pair<Series, Series>
 ```
 
 ## What It Does
@@ -43,13 +43,18 @@ presentation guarantees, not which values are selected.
 
 ## Returns
 
-`topk()` returns selected values. `topk_pair()` returns values at element `0`
-and aligned local `int64` positions at element `1`.
+`topk()` returns selected values. `topk_pair()` returns a `std::pair` of `.first` (values) and `.second`
+(aligned local `int64` positions).
 
 ## Gradient
 
-`topk()` is a discrete selection boundary. Do not rely on a smooth derivative
-when scores exchange rank or when a tie occurs at the selection boundary.
+`topk()` passes the selected values through unchanged, so its **value channel
+is differentiable**: the backward routes each output's gradient to the input
+position that value came from, and every position outside the selected set
+receives `0`. The selection boundary itself is discrete — which positions make
+the cut is held fixed during the backward pass, so no gradient flows through a
+rank exchange or a tie at the cutoff. The `int64` index series from
+`topk_pair()` never carries gradient.
 
 ## Examples
 
@@ -115,8 +120,8 @@ Example 5. The paired form preserves each winner's source position.
 
 ```cpp
 auto winners = scores.topk_pair(3, 0, true, true);
-std::cout << "values=" << winners[0] << "\n";
-std::cout << "indices=" << winners[1];
+std::cout << "values=" << winners.first << "\n";
+std::cout << "indices=" << winners.second;
 ```
 
 ### Output
@@ -154,12 +159,37 @@ catch (const std::exception& error) { std::cout << error.what(); }
 topk: k must be <= size(dim)
 ```
 
+Example 8. The value channel is differentiable; unselected positions get `0`.
+
+```cpp
+auto x = pluss::make_series({3.0, 1.0, 4.0, 1.0, 5.0});
+x.tracks_slope_(true);
+
+auto weights = pluss::make_series({100.0, 10.0, 1.0});
+(x.topk(3, 0, true, true) * weights).sum().reverse();
+
+pluss::series::print(std::cout, x.sensitivity());
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[1.0000, 0.0000, 10.0000, 0.0000, 100.0000]
+```
+
+The three winners `[5, 4, 3]` came from positions `[4, 2, 0]`, so they collect
+weights `100`, `10`, `1`; the two unselected `1`s at positions `1` and `3` get
+nothing.
+
 ## Gotchas And Failure Modes
 
 - `topk()` is not a full sort; only the selected subset is guaranteed to be
   present.
 - `sorted=false` does not mean random and does not imply stable ordering.
 - Ties at the cutoff have no stable winner contract.
+- The value channel is differentiable; the selection boundary and the
+  `topk_pair()` indices are not.
 - Complex-valued inputs are rejected.
 
 ## Summary

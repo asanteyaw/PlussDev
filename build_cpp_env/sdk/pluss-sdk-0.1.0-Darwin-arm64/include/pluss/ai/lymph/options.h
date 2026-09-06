@@ -38,8 +38,12 @@ using Neighbor = NeighborFamilyOptions;
 using Transform = TransformOptions;
 using Tree = TreeFamilyOptions;
 
+using BaseNEncoder = prep::BaseNEncoderOptions;
 using CategoryIndexer = prep::CategoryIndexerOptions;
 using FrequencyEncoder = prep::FrequencyEncoderOptions;
+using HashingEncoder = prep::HashingEncoderOptions;
+using TargetEncoder = prep::TargetEncoderOptions;
+using WeightOfEvidence = prep::WOEEncoderOptions;
 using FunctionTransformer = prep::FunctionTransformerOptions;
 using IterativeImputer = prep::IterativeImputerOptions;
 using LabelEncoder = prep::LabelEncoderOptions;

@@ -121,5 +121,5 @@ the endpoints as singular boundaries in both forward and reverse computations.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="atan2.html"><span class="label">Previous</span><span class="title">atan2</span></a>
-  <a class="next-link" href="bincount.html"><span class="label">Next</span><span class="title">bincount</span></a>
+  <a class="next-link" href="baddbmm.html"><span class="label">Next</span><span class="title">baddbmm</span></a>
 </div>

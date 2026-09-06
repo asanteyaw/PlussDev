@@ -10,6 +10,9 @@
 Series SeriesStatAccessor::logpdf() const
 Series SeriesStatAccessor::logpdf(double sigma) const
 Series SeriesStatAccessor::logpdf(double mu, double sigma) const
+Series SeriesStatProxy::logpdf() const
+Series SeriesStatProxy::logpdf(double sigma) const
+Series SeriesStatProxy::logpdf(double mu, double sigma) const
 ```
 
 ## What It Does
@@ -27,6 +30,13 @@ The overloads choose `(mu,sigma)` exactly as `pdf()` does: default `(0,1)`,
 one argument as `(0,sigma)`, or two arguments explicitly. Shape is preserved,
 output is `float64`, and `sigma` must be positive.
 
+## Parameters And Returns
+
+`mu` translates the center of the model. `sigma` is its strictly positive
+standard deviation; it affects both the normalization constant and the
+squared-distance penalty. The result is a shape-preserving `float64` `Series`.
+No parameters are estimated from the owner.
+
 ## Gradient
 
 The derivative is particularly simple:
@@ -39,6 +49,8 @@ It points toward the distribution mean and avoids multiplying by a tiny tail
 density.
 
 ## Examples
+
+Example 1. Ordinary density ordering becomes additive log-density ordering.
 
 ```cpp
 auto x = pluss::make_series({-1.0, 0.0, 1.0});

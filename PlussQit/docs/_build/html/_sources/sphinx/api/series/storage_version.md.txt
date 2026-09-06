@@ -107,8 +107,8 @@ mutated in place since I last checked?"
     <span class="label">Previous</span>
     <span class="title">stat</span>
   </a>
-  <a class="next-link" href="sub.html">
+  <a class="next-link" href="stride.html">
     <span class="label">Next</span>
-    <span class="title">sub</span>
+    <span class="title">stride</span>
   </a>
 </div>

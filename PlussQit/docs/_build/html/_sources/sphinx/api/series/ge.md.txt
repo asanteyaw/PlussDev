@@ -177,12 +177,12 @@ the boundary that [`Series::gt`](gt.md) leaves open.
 - [`Series::eq`](eq.md): equality-only check.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="gather.html">
+  <a class="prev-link" href="gcd.html">
     <span class="label">Previous</span>
-    <span class="title">gather</span>
+    <span class="title">gcd</span>
   </a>
-  <a class="next-link" href="gelu.html">
+  <a class="next-link" href="geometric_.html">
     <span class="label">Next</span>
-    <span class="title">gelu</span>
+    <span class="title">geometric_</span>
   </a>
 </div>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pluss/tils/aux/let.h"
+#include "pluss/tils/suppose.h"
 #include "pluss/tils/aux/data_loader.h"
 #include "pluss/tils/aux/output.h"
 #include "pluss/tils/aux/pathing.h"
@@ -10,7 +10,7 @@
 #include "pluss/tils/aux/translate.h"
 
 // Convenience unqualified aliases for end users.
-using pluss::tils::let;
+// NOTE: `let` is intentionally NOT here -- it is opt-in via <pluss/tils/let.h>.
 using pluss::tils::suppose;
 using pluss::f32_t;
 using pluss::f64_t;

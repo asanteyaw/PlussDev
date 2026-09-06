@@ -95,9 +95,9 @@ materialized, differentiable result.
 - [`Series::expand`](expand.md): zero-copy broadcast.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tanh.html">
+  <a class="prev-link" href="tensor_split.html">
     <span class="label">Previous</span>
-    <span class="title">tanh</span>
+    <span class="title">tensor_split</span>
   </a>
   <a class="next-link" href="to.html">
     <span class="label">Next</span>

@@ -199,6 +199,45 @@ set(NODEJ_LYMPH_DEMOS
   lymph_selection_comparereport_example_1
   lymph_selection_comparereport_example_2
   lymph_selection_comparereport_example_3
+  lymph_selection_scorer_example_1
+  lymph_selection_scorer_example_2
+  lymph_workflow_workflow_on_example_1
+  lymph_workflow_workflow_on_example_2
+  lymph_workflow_workflow_on_example_3
+  lymph_workflow_payload_example_1
+  lymph_workflow_payload_example_2
+  lymph_workflow_policy_example_1
+  lymph_workflow_policy_example_2
+  lymph_workflow_timeoptions_example_1
+  lymph_workflow_workflow_learn_example_1
+  lymph_workflow_workflow_learn_example_2
+  lymph_workflow_workflow_learn_example_3
+  lymph_workflow_workflow_map_example_1
+  lymph_workflow_workflow_map_example_2
+  lymph_workflow_workflow_map_example_3
+  lymph_workflow_workflow_infer_example_1
+  lymph_workflow_workflow_infer_example_2
+  lymph_workflow_workflow_infer_example_3
+  lymph_workflow_workflow_assess_example_1
+  lymph_workflow_workflow_assess_example_2
+  lymph_workflow_workflow_assess_example_3
+  lymph_workflow_workflow_save_example_1
+  lymph_workflow_workflow_save_example_2
+  lymph_workflow_workflow_save_example_3
+  lymph_workflow_workflow_with_example_1
+  lymph_workflow_workflow_with_example_2
+  lymph_workflow_workflow_with_example_3
+  lymph_workflow_make_example_1
+  lymph_workflow_make_example_2
+  lymph_workflow_make_example_3
+  lymph_workflow_make_example_4
+  lymph_workflow_make_example_5
+  lymph_workflow_make_example_6
+  lymph_workflow_make_example_7
+  lymph_workflow_vs_sklearn_columntransformer_example_1
+  lymph_workflow_vs_sklearn_flat_pipeline_example_1
+  lymph_workflow_vs_sklearn_custom_transformer_example_1
+  lymph_workflow_vs_sklearn_columntransformer_example_2
   lymph_selection_gridaxis_example_1
   lymph_selection_gridaxis_example_2
   lymph_selection_gridaxis_example_3
@@ -208,12 +247,35 @@ set(NODEJ_LYMPH_DEMOS
   lymph_metrics_metric_report_example_1
   lymph_metrics_metric_report_example_2
   lymph_metrics_metric_report_example_3
+  lymph_metrics_metric_report_example_4
+  lymph_metrics_score_report_example_1
   lymph_metrics_crossval_report_example_1
   lymph_metrics_crossval_report_example_2
   lymph_metrics_crossval_report_example_3
   lymph_metrics_series_compare_example_1
   lymph_metrics_series_compare_example_2
   lymph_metrics_series_compare_example_3
+  lymph_metrics_classification_example_1
+  lymph_metrics_classification_example_2
+  lymph_metrics_classification_example_3
+  lymph_metrics_regression_example_1
+  lymph_metrics_regression_example_2
+  lymph_metrics_regression_example_3
+  lymph_metrics_class_report_example_1
+  lymph_metrics_class_report_example_2
+  lymph_metrics_class_report_example_3
+  lymph_metrics_confusion_table_example_1
+  lymph_metrics_confusion_table_example_2
+  lymph_metrics_confusion_table_example_3
+  lymph_metrics_classification_summary_example_1
+  lymph_metrics_classification_summary_example_2
+  lymph_metrics_classification_summary_example_3
+  lymph_metrics_threshold_example_1
+  lymph_metrics_threshold_example_2
+  lymph_metrics_threshold_example_3
+  lymph_metrics_calibrate_example_1
+  lymph_metrics_calibrate_example_2
+  lymph_metrics_calibrate_example_3
   lymph_models_model_feature_transformer_example_1
   lymph_models_model_feature_transformer_example_2
   lymph_models_model_feature_transformer_example_3
@@ -264,9 +326,7 @@ set(NODEJ_LYMPH_DEMOS
   lymph_models_builder_eject_examples
   lymph_models_builder_get_examples
   lymph_models_builder_methods_docverify_demo
-  lymph_policy_docverify_demo
   lymph_tune_docverify_demo
-  lymph_workflow_payload_docverify_demo
   lymph_prep_docverify_demo
   lymph_prep_column_router_docverify_demo
   lymph_prep_standard_scaler_docverify_demo

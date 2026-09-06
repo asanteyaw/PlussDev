@@ -112,9 +112,9 @@ Each entry is `0.43429448 / x`, since `1 / ln 10 = 0.43429448`.
 - [`Series::exp`](exp.md): to go the other way, since `10^x = exp(x * ln 10)`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="log.html">
+  <a class="prev-link" href="log_softmax.html">
     <span class="label">Previous</span>
-    <span class="title">log</span>
+    <span class="title">log_softmax</span>
   </a>
   <a class="next-link" href="log1p.html">
     <span class="label">Next</span>

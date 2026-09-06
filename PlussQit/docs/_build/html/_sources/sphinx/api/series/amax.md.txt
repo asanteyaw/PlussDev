@@ -194,6 +194,8 @@ reduce: dim out of range
 - `keepdim` changes shape only.
 - The tie rule matters in reverse-mode: equal winners share sensitivity.
 - Invalid dims fail; they do not clamp to the nearest valid axis.
+- `NaN` propagates: a single `NaN` in a reduction lane makes that lane's result
+  `NaN`. Filter it out first if you want the maximum of the finite values.
 
 ## Summary
 
@@ -213,9 +215,9 @@ else.
 - [`Series::argmax`](argmax.md): positions of maxima instead of maximum values.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="all.html">
+  <a class="prev-link" href="allclose.html">
     <span class="label">Previous</span>
-    <span class="title">all</span>
+    <span class="title">allclose</span>
   </a>
   <a class="next-link" href="amin.html">
     <span class="label">Next</span>

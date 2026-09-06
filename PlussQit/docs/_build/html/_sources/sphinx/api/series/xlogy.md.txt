@@ -159,8 +159,8 @@ data=[0.5, 0.6]
     <span class="label">Previous</span>
     <span class="title">where_</span>
   </a>
-  <a class="next-link" href="../../series_api_reference.html">
+  <a class="next-link" href="zeta.html">
     <span class="label">Next</span>
-    <span class="title">Series API Reference</span>
+    <span class="title">zeta</span>
   </a>
 </div>

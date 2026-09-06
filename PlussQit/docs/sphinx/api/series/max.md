@@ -11,6 +11,9 @@ Series::max() const -> Series
 Series::max(std::int64_t dim) const -> Series
 Series::max(std::int64_t dim, bool keepdim) const -> Series
 Series::max(const Series& other) const -> Series
+
+Series::max_pair(std::int64_t dim, bool keepdim = false) const
+    -> std::pair<Series, Series>
 ```
 
 ## What It Does
@@ -125,6 +128,23 @@ For `max(other)`:
 
 So binary `max(other)` is first-operand-wins at the tie boundary, not
 tie-sharing.
+
+## Paired Value And Index (`max_pair`)
+
+`max_pair(dim [, keepdim])` runs the axis reduction and returns **both**
+channels at once: `.first` is the winning values (identical to `max(dim,
+keepdim)`), `.second` is the `int64` position each winner held along `dim`
+(identical to [`argmax(dim, keepdim)`](argmax.md)). The result is a
+`std::pair<Series, Series>` -- `result.first` is the values, `result.second` the indices.
+
+It is a convenience for the common case where you need the winner and where it
+came from without paying for two separate scans. There is no no-argument
+(whole-series) overload — `max_pair` always reduces a named axis.
+
+On a tie inside a lane the reported index is the **first** occurrence, matching
+[`argmax()`](argmax.md). The value channel is differentiable exactly as
+`max(dim)` is (sensitivity flows to the winning position; ties inside a lane
+share it); the index channel never carries gradient.
 
 ## Examples
 
@@ -367,6 +387,59 @@ reduce: dim out of range
 This is one of the easiest mistakes to make when working with dynamic ranks, so
 it is worth treating as part of the normal usage story.
 
+Example 12. `max_pair(dim)` returns the winning values and their positions
+together.
+
+```cpp
+auto grid = pluss::make_series({
+    {3.0, 1.0, 4.0},
+    {1.0, 5.0, 9.0},
+});
+
+auto result = grid.max_pair(1);
+std::cout << "values=" << result.first << "\n";
+std::cout << "indices=" << result.second;
+```
+
+### Output
+
+```text
+values=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[4, 9]
+indices=pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[2, 2]
+```
+
+Row `0`'s largest value is `4` at column `2`; row `1`'s is `9`, also at column
+`2`. With `keepdim=true` both members come back shaped `[2, 1]` instead of
+`[2]`.
+
+Example 13. The value channel of `max_pair` is differentiable; the index
+channel is inert.
+
+```cpp
+auto grid = pluss::make_series({
+    {3.0, 1.0, 4.0},
+    {1.0, 5.0, 9.0},
+});
+grid.tracks_slope_(true);
+
+grid.max_pair(1).first.sum().reverse();
+
+pluss::series::print(std::cout, grid.sensitivity());
+```
+
+### Output
+
+```text
+Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 0.0000 0.0000 1.0000 ⎤
+⎣ 0.0000 0.0000 1.0000 ⎦
+```
+
+Only the winning position in each row receives sensitivity.
+
 ## Gotchas And Failure Modes
 
 - `max()` and `max(other)` are not the same kind of operation. One reduces,
@@ -378,6 +451,8 @@ it is worth treating as part of the normal usage story.
 - The binary overload follows broadcasting rules, so shape mismatches fail at
   broadcast time rather than reduction time.
 - Out-of-range dims throw instead of being silently clamped.
+- `max_pair` has no whole-series overload — it always takes a `dim`. Its index
+  channel reports the first tied position and never carries gradient.
 
 ## Summary
 
@@ -400,6 +475,8 @@ and route tie gradients to the left operand.
 - [`Series::min`](min.md): lower-bound counterpart with the same overload map.
 - [`Series::argmax`](argmax.md): returns winning indices instead of winning
   values.
+- [`Series::min`](min.md) / [`Series::argmin`](argmin.md): the lower-bound
+  counterparts, including `min_pair`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="masked_select.html">

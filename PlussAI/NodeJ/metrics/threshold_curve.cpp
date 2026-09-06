@@ -121,4 +121,27 @@ StatusOr<double> best_threshold(const Series& scores, const Series& labels, Metr
   return StatusOr<double>(best_value.to(pluss::pCPU, ScalarType::Float64).item<double>());
 }
 
+StatusOr<double> average_precision(const Series& scores, const Series& labels) {
+  StatusOr<ThresholdCurve> curve_or = threshold_curve(scores, labels);
+  if (!curve_or.ok()) return StatusOr<double>(curve_or.status());
+  const ThresholdCurve curve = curve_or.move_value();
+
+  const std::int64_t m = curve.recall.numel();
+  if (m == 0) {
+    return StatusOr<double>(Status::invalid_argument("average_precision: empty score/label input."));
+  }
+  const Platform platform = scores.platform();
+  const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
+
+  // recall along the descending-threshold sweep is non-decreasing; prepend a
+  // leading 0 so the first term contributes (R_1 - 0) * P_1. When there are no
+  // positives threshold_curve returns an all-zero recall, so AP falls out as 0.
+  const Series recall_prev =
+      (m > 1) ? pluss::series::zeros({1}, f64_on(platform))
+                    .unite({curve.recall.index_select(0, pluss::series::arange(0, m - 1, i64_cfg))}, 0)
+              : pluss::series::zeros({1}, f64_on(platform));
+  const Series ap = curve.recall.sub(recall_prev).mul(curve.precision).sum().clamp(0.0, 1.0).reshape({1});
+  return StatusOr<double>(ap.to(pluss::pCPU, ScalarType::Float64).item<double>());
+}
+
 } // namespace pluss::ai::nodej

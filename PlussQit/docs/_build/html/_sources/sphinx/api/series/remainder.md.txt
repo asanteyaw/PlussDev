@@ -48,8 +48,17 @@ against the receiver.
 
 ## Gradient
 
-`remainder()` is not differentiable. A `Series` produced by it does not carry
-reverse tracking.
+`remainder()` is differentiable. `remainder(a, b) = a - floor(a / b) * b`, and
+`floor` is locally constant, so between the jumps:
+
+```
+d/da remainder(a, b) = 1
+d/db remainder(a, b) = -floor(a / b)
+```
+
+The backward passes the upstream sensitivity straight through to the dividend
+and routes `-floor(a / b)` to the divisor. Gradient does not flow through the
+discrete step where `floor(a / b)` changes.
 
 ## Examples
 
@@ -124,12 +133,40 @@ Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=
 data=[nan]
 ```
 
+Example 5. The backward passes gradient straight through to the dividend and
+routes `-floor(a / b)` to the divisor.
+
+```cpp
+auto a = pluss::make_series({-5.0, 5.5, 7.0});
+auto b = pluss::make_series({3.0, 2.0, 4.0});
+a.tracks_slope_(true);
+b.tracks_slope_(true);
+
+a.remainder(b).sum().reverse();
+
+std::cout << "da=" << a.sensitivity();
+std::cout << "db=" << b.sensitivity();
+```
+
+### Output
+
+```text
+da=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 1, 1]
+db=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2, -2, -1]
+```
+
+Each `db` entry is `-floor(a / b)`: `-floor(-5/3) = 2`, `-floor(5.5/2) = -2`,
+`-floor(7/4) = -1`.
+
 ## Gotchas And Failure Modes
 
 - `remainder()` follows the sign of `b`; [`fmod()`](fmod.md) follows the sign of
   `a`. Pick by which range you want the result in.
 - Division by `0` gives `NaN`; it does not throw.
-- Not differentiable.
+- The gradient through the dividend is `1`; no gradient flows through the
+  discrete step where `floor(a / b)` changes.
 - `NaN` in either input propagates.
 
 ## Summary
@@ -138,7 +175,8 @@ data=[nan]
 
 - `a - floor(a / b) * b`; result lies between `0` and `b`
 - broadcasts like `add()`; preserves integer dtype
-- `NaN` on divide-by-zero; not differentiable
+- `NaN` on divide-by-zero
+- differentiable: `d/da = 1`, `d/db = -floor(a / b)`, no flow through the jumps
 
 ## See Also
 
@@ -151,8 +189,8 @@ data=[nan]
     <span class="label">Previous</span>
     <span class="title">relu</span>
   </a>
-  <a class="next-link" href="repeat.html">
+  <a class="next-link" href="renorm.html">
     <span class="label">Next</span>
-    <span class="title">repeat</span>
+    <span class="title">renorm</span>
   </a>
 </div>

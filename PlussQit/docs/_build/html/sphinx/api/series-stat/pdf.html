@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="SeriesStatAccessor::pdist2" href="pdist2.html" />
@@ -45,6 +45,9 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatAccessor</span><span class="o">::</span><span class="n">pdf</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatAccessor</span><span class="o">::</span><span class="n">pdf</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatAccessor</span><span class="o">::</span><span class="n">pdf</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">mu</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatProxy</span><span class="o">::</span><span class="n">pdf</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatProxy</span><span class="o">::</span><span class="n">pdf</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatProxy</span><span class="o">::</span><span class="n">pdf</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">mu</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -69,6 +72,14 @@ threshold.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">pdf(mu,sigma)</span></code> uses the supplied center and positive scale.</p></li>
 </ul>
 <p>All forms preserve shape and return <code class="docutils literal notranslate"><span class="pre">float64</span></code>. <code class="docutils literal notranslate"><span class="pre">sigma&lt;=0</span></code> is rejected.</p>
+</section>
+<section id="parameters-and-returns">
+<h2>Parameters And Returns<a class="headerlink" href="#parameters-and-returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mu</span></code> is the distribution mean: moving it translates the density peak without
+changing its shape. <code class="docutils literal notranslate"><span class="pre">sigma</span></code> is the strictly positive standard deviation:
+increasing it spreads the same total probability over a wider interval and
+therefore lowers the peak. The returned <code class="docutils literal notranslate"><span class="pre">float64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> has exactly the
+owner’s shape; this is elementwise model evaluation, not a reduction.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
@@ -123,6 +134,8 @@ data=[0.24197072, -0, -0.24197072]
 <li><p><code class="docutils literal notranslate"><span class="pre">pdf()</span></code> evaluates a supplied normal model; it does not fit <code class="docutils literal notranslate"><span class="pre">mu</span></code> or <code class="docutils literal notranslate"><span class="pre">sigma</span></code>.</p></li>
 <li><p>Density values are not cumulative probabilities.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code> is a standard deviation and must be strictly positive.</p></li>
+<li><p>A wider distribution may assign greater density in a far tail while still
+having a lower peak; density comparisons depend on the evaluation point.</p></li>
 </ul>
 </section>
 <section id="see-also">

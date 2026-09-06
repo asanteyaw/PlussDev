@@ -360,12 +360,12 @@ auto gt_zero = thread.compare(0.0, pluss::table::ThreadBinaryCompareOp::Gt);
 auto le_other = thread.compare(other, pluss::table::ThreadBinaryCompareOp::Le);
 ```
 
-Use `btw` for interval checks:
+Use `between` for interval checks:
 
 ```cpp
-auto inclusive = thread.btw(10.0, 20.0, true);
-auto half_open = thread.btw(10.0, 20.0, true, false);
-auto text_band = text.btw("a", "m", true);
+auto inclusive = thread.between(10.0, 20.0, true);
+auto half_open = thread.between(10.0, 20.0, true, false);
+auto text_band = text.between("a", "m", true);
 ```
 
 For DataFrame workflows, `df.query("age between 10 and 20")` is often more
@@ -465,7 +465,7 @@ Thread labels = pluss::make_note({"10", "20", "bad", "40"});
 Thread words = pluss::make_note({"North-East", "South", "north-west", "Central"});
 
 std::cout << "values + 3:\n" << (values + 3.0).to_string() << '\n';
-std::cout << "between 2 and 8 inclusive:\n" << values.btw(2.0, 8.0, true).to_string() << '\n';
+std::cout << "between 2 and 8 inclusive:\n" << values.between(2.0, 8.0, true).to_string() << '\n';
 std::cout << "rolling mean window 3 min 2:\n"
           << values.window(3, pluss::table::ThreadWindowOp::RollingMean, 2).to_string() << '\n';
 std::cout << "returns:\n" << values.ts().returns(1).to_string() << '\n';
@@ -528,7 +528,7 @@ words contains north:
 ptype: Series
 ```
 
-`values + 3` performs elementwise numeric addition. `btw(2.0, 8.0, true)` marks
+`values + 3` performs elementwise numeric addition. `between(2.0, 8.0, true)` marks
 the values `2`, `4`, and `8` as true because the interval is inclusive.
 
 The rolling mean uses a trailing window of three rows and requires at least two

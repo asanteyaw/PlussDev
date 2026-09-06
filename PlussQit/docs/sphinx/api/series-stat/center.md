@@ -29,22 +29,54 @@ are features. `center(1)` removes each row mean and is useful when each row is
 an independently offset signal. Global `center()` treats every element as one
 population; it is not interchangeable with either axis-wise form.
 
+## Parameters And Returns
+
+`dim` selects the lanes whose means are removed and accepts negative indexing.
+There is no `keepdim` option because centering broadcasts the means back and
+always returns the owner's original shape. The operation is out-of-place.
+
 ## Examples
+
+Example 1. Global centering subtracts the single mean `3.5` everywhere.
 
 ```cpp
 auto x = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
 std::cout << x.stat.center() << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[-2.5, -1.5, -0.5],
+  [0.5, 1.5, 2.5]]
+```
+
+Example 2. Column centering subtracts means `2.5`, `3.5`, and `4.5`.
+
+```cpp
 std::cout << x.stat.center(0) << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[-1.5, -1.5, -1.5],
+  [1.5, 1.5, 1.5]]
+```
+
+Example 3. Row centering subtracts `2` from the first row and `5` from the
+second. The explicit proxy reaches the same transform.
+
+```cpp
 std::cout << x.stat().center(1) << "\n";
 ```
 
 ### Output
 
 ```text
-data=[[-2.5, -1.5, -0.5],
-  [0.5, 1.5, 2.5]]
-data=[[-1.5, -1.5, -1.5],
-  [1.5, 1.5, 1.5]]
+pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
 data=[[-1, 0, 1],
   [-1, 0, 1]]
 ```

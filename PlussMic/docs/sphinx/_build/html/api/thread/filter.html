@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=29deb36a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=66af7a1c"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,13 +37,14 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: a5a354513084 -->
+<!-- pluss-signature-hash: 48ffbebb61f8 -->
 <section id="thread-filter">
 <h1>Thread::filter<a class="headerlink" href="#thread-filter" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">filter</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">bool_mask</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">filter</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">bool_mask</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
@@ -52,13 +53,27 @@
 <p>Keeps only the entries where <code class="docutils literal notranslate"><span class="pre">bool_mask</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>, dropping the rest — the classic
 boolean-mask row filter, built on top of <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a> (<code class="docutils literal notranslate"><span class="pre">filter()</span></code> converts
 the mask to the list of <code class="docutils literal notranslate"><span class="pre">true</span></code> positions, then takes them in order). <code class="docutils literal notranslate"><span class="pre">bool_mask</span></code>
-must be a 1D, <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-scalar-typed <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code> with exactly <code class="docutils literal notranslate"><span class="pre">size()</span></code> elements.</p>
+must be 1D, <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-scalar-typed, and exactly <code class="docutils literal notranslate"><span class="pre">size()</span></code> elements long.</p>
+<p>Two overloads, same behaviour:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">filter(const</span> <span class="pre">pluss::Series&amp;)</span></code></strong> takes a raw <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">filter(const</span> <span class="pre">Thread&amp;)</span></code></strong> takes a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-kind <code class="docutils literal notranslate"><span class="pre">Thread</span></code> directly — the shape the
+comparison methods (<a class="reference internal" href="gt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">gt()</span></code></span></a>, <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a>, …) and predicates
+(<a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>, <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a>, <a class="reference internal" href="between.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">between()</span></code></span></a>,
+…) already return, so you no longer need a trailing <code class="docutils literal notranslate"><span class="pre">.as_series()</span></code> to feed one
+back in. It simply unwraps the thread’s payload and forwards to the <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+overload; a non-<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::filter:</span> <span class="pre">bool</span> <span class="pre">mask</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">a</span> <span class="pre">Bool-typed</span> <span class="pre">Series</span> <span class="pre">thread&quot;</span></code>.</p></li>
+</ul>
+<p>This mirrors <a class="reference internal" href="put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::put</span></code></span></a>, <a class="reference internal" href="../dataframe/filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::filter</span></code></span></a>,
+and <code class="docutils literal notranslate"><span class="pre">ThreadGrouped::filter</span></code>, which all already accept a bare <code class="docutils literal notranslate"><span class="pre">Thread</span></code> mask.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>bool_mask</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span></code>)
-A <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed, 1D <code class="docutils literal notranslate"><span class="pre">Series</span></code> the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>. Each <code class="docutils literal notranslate"><span class="pre">true</span></code> position is
-kept, in original order; every <code class="docutils literal notranslate"><span class="pre">false</span></code> position is dropped.</p>
+<p><strong>bool_mask</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)
+A <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed, 1D mask the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>. Each <code class="docutils literal notranslate"><span class="pre">true</span></code> position is
+kept, in original order; every <code class="docutils literal notranslate"><span class="pre">false</span></code> position is dropped. The <code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+overload additionally requires the thread’s payload kind to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -68,13 +83,11 @@ original relative order.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Keep only the entries above a threshold, via a mask built from
-<a class="reference internal" href="gt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">gt()</span></code></span></a>.</p>
+<p>Example 1. Pass a comparison result straight in — no <code class="docutils literal notranslate"><span class="pre">.as_series()</span></code> needed.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">25.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="mf">20.0</span><span class="p">).</span><span class="n">as_series</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">scores</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="mf">20.0</span><span class="p">));</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -86,22 +99,55 @@ original relative order.</p>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. A hand-built mask works the same way.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">mask2</span><span class="p">);</span>
+<p>Example 2. The <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload is still there for a mask you already hold as a
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> (here via an explicit <code class="docutils literal notranslate"><span class="pre">.as_series()</span></code>).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="mf">20.0</span><span class="p">).</span><span class="n">as_series</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  25
+1  30
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 3. A hand-built mask works the same way.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">mask3</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
 1  30
 
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. A length-mismatched mask throws.</p>
+<p>Example 4. Drop duplicate case-label rows by feeding <a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a>
+straight in — the <code class="docutils literal notranslate"><span class="pre">value_counts()</span></code>-style pattern.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">freq</span><span class="p">();</span><span class="w">                       </span><span class="c1">// case labels: a, b, c</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">repeats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">counts</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">counts</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="mf">1.0</span><span class="p">));</span><span class="w">   </span><span class="c1">// keep counts &gt; 1</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">repeats</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>a  2
+b  2
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 5. A length-mismatched mask throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">bad_mask</span><span class="p">);</span>
@@ -111,8 +157,8 @@ ptype: Series
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::filter: bool mask length mismatch
 </pre></div>
 </div>
@@ -125,6 +171,9 @@ ptype: Series
 call throws (<code class="docutils literal notranslate"><span class="pre">&quot;Thread::filter:</span> <span class="pre">bool</span> <span class="pre">mask</span> <span class="pre">length</span> <span class="pre">mismatch&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;...bool</span> <span class="pre">mask</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">1D&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;...bool</span> <span class="pre">mask</span> <span class="pre">dtype</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Bool&quot;</span></code>, depending on
 which check fails).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload additionally requires <code class="docutils literal notranslate"><span class="pre">kind()</span> <span class="pre">==</span> <span class="pre">ThreadKind::Series</span></code>;
+a <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind thread throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::filter:</span> <span class="pre">bool</span> <span class="pre">mask</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">a</span> <span class="pre">Bool-typed</span> <span class="pre">Series</span> <span class="pre">thread&quot;</span></code>.</p></li>
 <li><p>Built on <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a> — the true-position indices are gathered and passed
 straight through.</p></li>
 <li><p>Preserves relative order of the kept entries.</p></li>

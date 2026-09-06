@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 190c0c605fe6 -->
+<!-- pluss-signature-hash: 7dcfcb64e15c -->
 
 # `lymph::selection::search::Search::run`
 
@@ -21,7 +21,7 @@ search::Result run(const MakeModel& make_model,
                    const DataFrameBatchOptions& data_options,
                    const TrainOptions& train_options = {},
                    const AssessOptions& assess_options = {},
-                   MetricKind objective_metric = MetricKind::Accuracy,
+                   selection::Scorer objective = MetricKind::Accuracy,
                    TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                    FitOptions fit_options = {}) const;
 
@@ -53,7 +53,7 @@ point:
 2. cross-validates it under the split policy (stored, or the `split` override)
 3. records a trial: the point's `label()`, its objective value, its fold report
 
-Trials are ranked by `objective_metric` (`objective_policy` decides higher- or
+Trials are ranked by `objective` (`objective_policy` decides higher- or
 lower-is-better; `Auto` picks the convention for the metric). The winner is
 re-fitted on the whole dataset. If `fit_options.fit_top > k`, the top *k* are
 each re-fitted so [`Result::top(k)`](../Result.md) can hand them back.
@@ -77,10 +77,13 @@ whole model, prep included, per fold — the same cost
 
 `train_options` / `assess_options`
 : Passed through to every per-fold fit and assessment. An empty
-  `assess_options.metrics` is filled with `objective_metric`.
+  `assess_options.metrics` is filled with the `objective` metric (or the task
+  default when `objective` is a custom scorer).
 
-`objective_metric` — `lymph::MetricKind`
-: What trials are ranked on. Default `Accuracy`.
+`objective` — `lymph::selection::Scorer`
+: What trials are ranked on -- implicitly a `MetricKind` (default `Accuracy`), or
+  `selection::make_scorer("name", fn)` for a custom callable. See
+  [`Scorer`](../../Scorer.md).
 
 `objective_policy` — `lymph::TuneObjectivePolicy`
 : `Auto` (metric's own convention), `Maximize`, or `Minimize`.
@@ -352,6 +355,8 @@ top(2):
 ## See Also
 
 - [`Result`](../Result.md) — what `run` returns.
+- [`Scorer`](../../Scorer.md) — the `objective` type; `make_scorer` for a
+  custom ranking metric.
 - [`grid` / `random` / `build`](../grid.md) — the factories that build a
   `Search`.
 - [`Plan::run`](../../validate/Plan/run.md) — the fixed-model cross-validation

@@ -4,9 +4,10 @@
 
 [Back to `metrics`](../metrics.md)
 
-`MetricReport` is the **per-metric value bag** every `metrics` accessor returns
-from `.report(...)`. It is a plain value: a `values` `Series` in the order you
-asked for, plus a named 1-element `Series` for each metric that was computed.
+`MetricReport` is the **per-metric value bag** that
+`metrics::classification::report(...)` and `metrics::regression::report(...)`
+return. It is a plain value: a `values` `Series` in the order you asked for,
+plus a named 1-element `Series` for each metric that was computed.
 
 ## Scope And Alias
 
@@ -26,7 +27,8 @@ type; use `reports::Metric` in cross-family code.
 
 `Series accuracy` · `balanced_accuracy` · `precision` · `recall` ·
 `sensitivity` · `f1` · `specificity` · `geometric_mean` · `balance_quality` ·
-`roc_auc` · `logloss`
+`roc_auc` · `logloss` · `mcc` · `cohen_kappa` · `gini` · `average_precision` ·
+`brier`
 : Classification slots. Each is a **1-element `Series`** slice of `values` when
   that metric was requested, and `Series::undefined()` otherwise.
 
@@ -35,6 +37,15 @@ type; use `reports::Metric` in cross-family code.
 
 A slot you did not request is left undefined — check `field.defined()` before
 reading, or just read `values` by index.
+
+`mcc` (Matthews correlation) and `cohen_kappa` are computed from hard labels, so
+they come through any path. `roc_auc`, `logloss`, `gini` (`2·roc_auc − 1`),
+`average_precision` (area under the precision-recall curve), and `brier` (a
+loss) need scores / probabilities: get them from
+[`metrics::classification::score_report(scores, labels, {…})`](classification.md)
+when you hold a probability `Series`, or from a model-backed
+[`reports`](../reports.md) call that runs inference first. They are **not**
+filled by the label-only `metrics::classification::report`.
 
 ## Reading a `MetricReport`
 
@@ -65,7 +76,7 @@ int main() {
       lymph::MetricKind::Recall, lymph::MetricKind::F1};
 
   const lymph::metrics::MetricReport report =
-      lymph::metrics::classification(truth, predicted).report(want);
+      lymph::metrics::classification::report(truth, predicted, want);
 
   const std::vector<double> values = report.values.to_vec<double>();
   std::cout << "requested x values:\n";
@@ -91,9 +102,9 @@ report.accuracy = 0.8
 report.f1       = 0.791667
 ```
 
-### From a regression accessor
+### From `metrics::regression::report`
 
-`metrics::regression(truth, pred).report(...)` fills the regression slots
+`metrics::regression::report(truth, pred, ...)` fills the regression slots
 instead.
 
 ```cpp
@@ -119,7 +130,7 @@ int main() {
       lymph::MetricKind::Rmse, lymph::MetricKind::Mae};
 
   const lymph::metrics::MetricReport report =
-      lymph::metrics::regression(truth, predicted).report(want);
+      lymph::metrics::regression::report(truth, predicted, want);
 
   std::cout << "r2   = " << report.r2.item<double>() << "\n";
   std::cout << "mse  = " << report.mse.item<double>() << "\n";
@@ -141,7 +152,7 @@ mae  = 0.375
 
 ### The default metric set
 
-Call `.report()` with no argument and the accessor picks the task's default
+Call `report(truth, pred)` with no metric list and it picks the task's default
 metrics. `requested` tells you which ones you got.
 
 ```cpp
@@ -163,7 +174,7 @@ int main() {
       pluss::make_series({0, 0, 0, 1, 1, 1, 1, 1, 0, 1}, {10}, f64);
 
   const lymph::metrics::MetricReport report =
-      lymph::metrics::classification(truth, predicted).report();
+      lymph::metrics::classification::report(truth, predicted);
 
   const std::vector<double> values = report.values.to_vec<double>();
   std::cout << "default classification metrics (" << report.requested.size() << "):\n";
@@ -192,6 +203,58 @@ default classification metrics (5):
 balanced_accuracy defined? true
 roc_auc defined? false (not in the default set)
 ```
+
+### MCC and Cohen's kappa from labels
+
+`mcc` (Matthews correlation) and `cohen_kappa` are confusion-matrix metrics, so
+they come straight off a truth / prediction label pair — no scores needed. (For
+a 2×2 with TP = 3, FN = 1, TN = 2, FP = 2: MCC = 4 / √240 ≈ 0.2582,
+κ = 0.125 / 0.5 = 0.25.)
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series truth =
+      pluss::make_series({1, 1, 1, 1, 0, 0, 0, 0}, {8}, f64);
+  const pluss::Series predicted =
+      pluss::make_series({1, 1, 1, 0, 0, 0, 1, 1}, {8}, f64);
+
+  const lymph::metrics::MetricReport report =
+      lymph::metrics::classification::report(
+          truth, predicted, {lymph::MetricKind::Mcc, lymph::MetricKind::CohenKappa});
+
+  std::cout << "mcc         = " << report.mcc.item<double>() << "\n";
+  std::cout << "cohen_kappa = " << report.cohen_kappa.item<double>() << "\n";
+  std::cout << "values      = " << report.values << "\n";
+
+  return 0;
+}
+```
+
+Output
+
+```text
+mcc         = 0.258199
+cohen_kappa = 0.25
+values      = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.25819889, 0.25]
+```
+
+`gini`, `average_precision`, and `brier` are not reachable through the label-only
+`report` — they need scores. From a probability `Series` you already hold, call
+[`metrics::classification::score_report(scores, labels, {…})`](classification.md);
+from a model, `model.reports().metric_series(batch, {MetricKind::Gini, …})` runs
+inference and then does the same.
 
 ## Methods
 

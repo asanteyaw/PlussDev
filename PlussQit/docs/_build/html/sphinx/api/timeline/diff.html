@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Timeline::eq" href="eq.html" />
@@ -41,7 +41,7 @@
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">diff</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Duration</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Duration</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">diff</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -66,8 +66,8 @@ timestamps?” but instead:</p>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong></p>
 <p>The timeline to subtract from <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
-<p>The method follows the same elementwise/broadcasting mental model as the rest
-of the temporal arithmetic family. In the common case, you either compare:</p>
+<p>The method follows the same elementwise broadcasting rules as the rest of the
+temporal arithmetic family. In the common case, you either compare:</p>
 <ul class="simple">
 <li><p>one scalar to one scalar</p></li>
 <li><p>one aligned 1D timeline to another aligned 1D timeline</p></li>
@@ -81,11 +81,11 @@ A duration payload describing the signed temporal differences.</p>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Compute the distance between two scalar instants.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scalar_later</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">scalar</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">codeh</span><span class="o">::</span><span class="n">_compat</span><span class="o">::</span><span class="n">invoke</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;to_note_iso&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">dt</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">codeh</span><span class="o">::</span><span class="n">_compat</span><span class="o">::</span><span class="n">invoke</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">dt</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;s&quot;</span><span class="p">}))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-11-01T09:00:00Z&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">scalar_later</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-11-01T10:30:00Z&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scalar_later</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">scalar</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">dt</span><span class="p">.</span><span class="n">to_note_iso</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">dt</span><span class="p">.</span><span class="n">total</span><span class="p">().</span><span class="n">seconds</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -101,11 +101,21 @@ data=5400.0000
 </pre></div>
 </div>
 <p>Example 2. Compute elementwise signed distances across a vector.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">codeh</span><span class="o">::</span><span class="n">_compat</span><span class="o">::</span><span class="n">invoke</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;to_note_iso&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">dt</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">codeh</span><span class="o">::</span><span class="n">_compat</span><span class="o">::</span><span class="n">invoke</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">dt</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;s&quot;</span><span class="p">}))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-11-01T09:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-11-01T10:15:30Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-12-31T23:59:59Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-11-01T09:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-11-01T10:30:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-12-31T20:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">dt</span><span class="p">.</span><span class="n">to_note_iso</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">dt</span><span class="p">.</span><span class="n">total</span><span class="p">().</span><span class="n">seconds</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -145,10 +155,9 @@ Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
 data=true
 </pre></div>
 </div>
-<p>Same broadcasting rules as <a class="reference internal" href="add_duration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add_duration</span></code></span></a> apply here too
-(see that page’s “Broadcasting” section): <code class="docutils literal notranslate"><span class="pre">diff</span></code>/<code class="docutils literal notranslate"><span class="pre">operator-</span></code> align shapes via
-the same <code class="docutils literal notranslate"><span class="pre">SeriesIterator::broadcast_shape</span></code> model any two <code class="docutils literal notranslate"><span class="pre">Series</span></code> operands
-use, so a scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> can be diffed against an N-D one. There is no
+<p>The same broadcasting rules as <a class="reference internal" href="add_duration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add_duration</span></code></span></a> apply here
+too (see that page’s “Broadcasting” section): <code class="docutils literal notranslate"><span class="pre">diff</span></code>/<code class="docutils literal notranslate"><span class="pre">operator-</span></code> align trailing
+axes, so a scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> can be diffed against an N-D one. There is no
 <code class="docutils literal notranslate"><span class="pre">Duration</span> <span class="pre">-</span> <span class="pre">Timeline</span></code> form and no compound assignment – <code class="docutils literal notranslate"><span class="pre">diff</span></code> always
 produces a fresh <code class="docutils literal notranslate"><span class="pre">Duration</span></code>.</p>
 </section>

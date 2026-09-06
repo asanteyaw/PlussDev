@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::is_leap_year" href="is_leap_year.html" />
+    <link rel="next" title="Timeline::month" href="month.html" />
     <link rel="prev" title="Timeline::searchsorted_left" href="searchsorted_left.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -39,184 +39,76 @@
   <section id="timeline-year">
 <h1>Timeline::year<a class="headerlink" href="#timeline-year" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
-<section id="representative-signatures">
-<h2>Representative Signatures<a class="headerlink" href="#representative-signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">year</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">month</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">day</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">hour</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">minute</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">second</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">nanosecond</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">microsecond</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">millisecond</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">weekday</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">dayofyear</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">quarter</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">week</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">year</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
+<p>Aliases: <code class="docutils literal notranslate"><span class="pre">y()</span></code>, <code class="docutils literal notranslate"><span class="pre">yr()</span></code>, <code class="docutils literal notranslate"><span class="pre">years()</span></code>, and <code class="docutils literal notranslate"><span class="pre">year_()</span></code>.</p>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This page is the canonical reference for the calendar component extractor
-family.</p>
-<p>These methods project each timestamp into one numeric calendar field.</p>
+<section id="read-the-civil-year">
+<h2>Read The Civil Year<a class="headerlink" href="#read-the-civil-year" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">year()</span></code> replaces every timestamp with the four-digit year shown by the
+timeline’s current timezone. It is an elementwise projection: rank, shape, and
+element order are unchanged, while the result dtype is <code class="docutils literal notranslate"><span class="pre">int32</span></code>.</p>
+<p>The word <em>civil</em> matters near a New Year boundary. <code class="docutils literal notranslate"><span class="pre">year()</span></code> answers which year
+the local date belongs to. It does not return the ISO week-numbering year; a
+date such as 1 January 2021 can therefore have <code class="docutils literal notranslate"><span class="pre">year()</span> <span class="pre">==</span> <span class="pre">2021</span></code> and
+<code class="docutils literal notranslate"><span class="pre">week()</span> <span class="pre">==</span> <span class="pre">53</span></code> at the same time.</p>
+<p>Missing timestamps become <code class="docutils literal notranslate"><span class="pre">-1</span></code>. Treat that value as a missing-field sentinel,
+not as a historical year. Use <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> when the distinction matters.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A numeric series for the requested calendar component.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Extract coarse calendar components.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">year</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">months</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">month</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">day</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">years</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">months</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">days</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="example-years-boundaries-and-missing-values">
+<h2>Example: Years, Boundaries, And Missing Values<a class="headerlink" href="#example-years-boundaries-and-missing-values" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2020-12-31T23:59:59.123456789Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2021-01-01T00:00:00.987654321Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-02-29T06:07:08.009010011Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">year</span><span class="p">());</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">base.year()</span></code>:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[2024, 2024, 2024, 2025]
+data=[2020, 2021, 2024, -1]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">base.month()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[11, 11, 12, 1]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">base.day()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[1, 1, 31, 1]
-</pre></div>
-</div>
-<p>Example 2. Extract time-of-day components.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">hours</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">hour</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">minutes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">minute</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">second</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">hours</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">base.hour()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[9, 10, 23, 0]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">base.minute()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[0, 15, 59, 0]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">base.second()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[0, 30, 59, 0]
-</pre></div>
-</div>
-<p>Example 3. Extract finer and calendar-indexing components.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">nanos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">nanosecond</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">weekdays</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">weekday</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">yeardays</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">dayofyear</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">quarters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">quarter</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">weeks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">week</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">nanos</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">weekdays</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">yeardays</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">quarters</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">weeks</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">base.nanosecond()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
-data=[0, 0, 0, 0]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">base.weekday()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[4, 4, 1, 2]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">base.dayofyear()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[306, 306, 366, 1]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">base.quarter()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[4, 4, 4, 1]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">base.week()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[44, 44, 1, 1]
-</pre></div>
-</div>
+<p>The first two values deliberately straddle midnight. The extraction is
+elementwise, so neither ordering nor adjacency changes the answer.</p>
 </section>
 </section>
-<section id="aliases">
-<h2>Aliases<a class="headerlink" href="#aliases" title="Link to this heading">¶</a></h2>
-<p>Many short aliases route to the same implementations. Representative examples:</p>
+<section id="timezone-changes-the-calendar-view">
+<h2>Timezone Changes The Calendar View<a class="headerlink" href="#timezone-changes-the-calendar-view" title="Link to this heading">¶</a></h2>
+<p>The stored instant and its displayed calendar year are different concepts.
+<code class="docutils literal notranslate"><span class="pre">tz_convert()</span></code> preserves the instant but changes the local calendar used by
+all field extractors. Near midnight, converting timezones can therefore change
+the year. Convert first, extract second when grouping by a local reporting
+calendar.</p>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">yr</span></code>, <code class="docutils literal notranslate"><span class="pre">years</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">year()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mon</span></code>, <code class="docutils literal notranslate"><span class="pre">mo</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">month()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">d</span></code>, <code class="docutils literal notranslate"><span class="pre">dom</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">day()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">h</span></code>, <code class="docutils literal notranslate"><span class="pre">hr</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">hour()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">m</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">minute()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sec</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">second()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dow</span></code>, <code class="docutils literal notranslate"><span class="pre">dayofweek</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">weekday()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">doy</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">dayofyear()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">q</span></code>, <code class="docutils literal notranslate"><span class="pre">qtr</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">quarter()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">weekofyear</span></code>, <code class="docutils literal notranslate"><span class="pre">woy</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">week()</span></code>.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>All these methods read calendar fields in the timeline’s current timezone.</p></li>
-<li><p>When you only need text labels instead of numeric fields, use
-<a class="reference internal" href="weekday_name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weekday_name</span></code></span></a>, <a class="reference internal" href="month_name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">month_name</span></code></span></a>, or the
-<code class="docutils literal notranslate"><span class="pre">to_note_*</span></code> helpers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">year()</span></code> does not mutate the timeline and does not return timestamps.</p></li>
+<li><p>A result of <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the source element was <code class="docutils literal notranslate"><span class="pre">NaT</span></code>; it is not a valid year.</p></li>
+<li><p>Do not combine <code class="docutils literal notranslate"><span class="pre">year()</span></code> and <code class="docutils literal notranslate"><span class="pre">week()</span></code> as an ISO year-week key at New Year.</p></li>
+<li><p>The aliases are exact synonyms; they do not use different calendars.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="is_leap_year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::is_leap_year</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="is_monday.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::is_monday</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="month.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">month</span></code></span></a>: extract the month within the civil year.</p></li>
+<li><p><a class="reference internal" href="week.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">week</span></code></span></a>: extract the ISO week number.</p></li>
+<li><p><a class="reference internal" href="is_leap_year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_leap_year</span></code></span></a>: classify each local calendar year.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="searchsorted_left.html">
-    <span class="label">Previous</span>
-    <span class="title">searchsorted_left</span>
-  </a>
-  <a class="next-link" href="is_leap_year.html">
-    <span class="label">Next</span>
-    <span class="title">is_leap_year</span>
-  </a>
+  <a class="prev-link" href="searchsorted_left.html"><span class="label">Previous</span><span class="title">searchsorted_left</span></a>
+  <a class="next-link" href="month.html"><span class="label">Next</span><span class="title">month</span></a>
 </div>
+<!-- pluss-hand-authored -->
 </section>
 </section>
 
@@ -309,7 +201,7 @@ Alias <code class="docutils literal notranslate"><span class="pre">week()</span>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
       <li>Previous: <a href="searchsorted_left.html" title="previous chapter">Timeline::searchsorted_left</a></li>
-      <li>Next: <a href="is_leap_year.html" title="next chapter">Timeline::is_leap_year</a></li>
+      <li>Next: <a href="month.html" title="next chapter">Timeline::month</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

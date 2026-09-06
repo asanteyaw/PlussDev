@@ -1,4 +1,5 @@
 #pragma once
+#include <complex>
 #include <cstdint>
 #include <initializer_list>
 #include <type_traits>
@@ -6,6 +7,11 @@
 #include "pluss/codem/codem.h"
 
 namespace pluss::detail {
+
+template <class T>
+inline constexpr bool is_std_complex_v = false;
+template <class F>
+inline constexpr bool is_std_complex_v<std::complex<F>> = true;
 
 // Leaf type of nested initializer_list
 template <class T>
@@ -68,6 +74,11 @@ constexpr pluss::codem::ScalarType dtype_from_init_list() {
   using Leaf = leaf_type_t<InitList>;
   static_assert(depth<InitList>::value <= 7, "pluss::value: supports up to 7D nested initializer_list");
   if constexpr (std::is_same_v<std::remove_cv_t<Leaf>, bool>) return pluss::codem::ScalarType::Bool;
+  if constexpr (is_std_complex_v<std::remove_cv_t<Leaf>>) {
+    return std::is_same_v<std::remove_cv_t<Leaf>, std::complex<double>>
+               ? pluss::codem::ScalarType::Complex128
+               : pluss::codem::ScalarType::Complex64;
+  }
   if constexpr (std::is_floating_point_v<Leaf>) {
     return std::is_same_v<std::remove_cv_t<Leaf>, double> ? pluss::codem::ScalarType::Float64 : pluss::codem::ScalarType::Float32;
   }

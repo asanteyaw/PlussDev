@@ -244,8 +244,8 @@ explicit `alpha` you supply.
     <span class="label">Previous</span>
     <span class="title">acosh</span>
   </a>
-  <a class="next-link" href="all.html">
+  <a class="next-link" href="addcdiv.html">
     <span class="label">Next</span>
-    <span class="title">all</span>
+    <span class="title">addcdiv</span>
   </a>
 </div>

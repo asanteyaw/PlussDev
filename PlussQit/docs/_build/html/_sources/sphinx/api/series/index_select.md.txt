@@ -229,8 +229,8 @@ Row `0` was selected twice, so every element in that row receives gradient `2`.
     <span class="label">Previous</span>
     <span class="title">gather</span>
   </a>
-  <a class="next-link" href="maximum.html">
+  <a class="next-link" href="inner.html">
     <span class="label">Next</span>
-    <span class="title">maximum</span>
+    <span class="title">inner</span>
   </a>
 </div>

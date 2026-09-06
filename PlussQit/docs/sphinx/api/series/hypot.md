@@ -211,12 +211,12 @@ overflow:
 - [`Series::add`](add.md): the broadcasting rules `hypot()` follows.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="histc.html">
+  <a class="prev-link" href="hsplit.html">
     <span class="label">Previous</span>
-    <span class="title">histc</span>
+    <span class="title">hsplit</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="i0.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">i0</span>
   </a>
 </div>

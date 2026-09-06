@@ -178,9 +178,9 @@ data=[1, 1, 1, 1, 1, 1]
   operation.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="trunc.html">
+  <a class="prev-link" href="unbind.html">
     <span class="label">Previous</span>
-    <span class="title">trunc</span>
+    <span class="title">unbind</span>
   </a>
   <a class="next-link" href="union1d.html">
     <span class="label">Next</span>

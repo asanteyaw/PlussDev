@@ -1,11 +1,13 @@
 #include "pluss/ai/nodej/inspection.h"
 
 #include "pluss/codem/series_factory.h"
+#include "pluss/tils/aux/transmit.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <random>
 #include <string>
@@ -78,6 +80,75 @@ struct DenseRows {
 
 } // namespace
 
+namespace {
+
+// One (feature, all repeats) unit of work: copy the eval matrix once for this
+// feature, then repeatedly reshuffle-in-place and re-score, matching
+// scikit-learn's _calculate_permutation_scores (a single copy per column, one
+// evolving shuffle across repeats -- not a fresh copy per repeat).
+struct PermuteFeatureResult {
+  std::vector<double> drops{};  // one entry per repeat; empty on error
+  bool ok = true;
+  Status status = Status::success();
+};
+
+[[nodiscard]] PermuteFeatureResult permute_one_feature(const EstimatorBase& model,
+                                                        const DenseRows& dense_eval,
+                                                        const LabeledBatch& eval,
+                                                        const AssessOptions& assess_opts,
+                                                        double baseline,
+                                                        bool prefers_max,
+                                                        std::int64_t repeats,
+                                                        std::uint64_t seed,
+                                                        std::int64_t f) {
+  const std::int64_t samples = dense_eval.samples;
+  const std::int64_t features = dense_eval.features;
+  std::vector<double> permuted = dense_eval.x;  // one full copy for this feature
+  std::vector<double> column(static_cast<std::size_t>(samples));
+  std::vector<std::int64_t> order(static_cast<std::size_t>(samples));
+  std::mt19937_64 rng(seed);  // same seed per feature, mirrors sklearn's per-column reuse
+
+  PermuteFeatureResult out{};
+  out.drops.resize(static_cast<std::size_t>(repeats));
+  for (std::int64_t r = 0; r < repeats; ++r) {
+    // Snapshot the column's current values before overwriting (they may
+    // already be shuffled from a previous repeat) -- matches numpy fancy
+    // assignment's read-then-write semantics, and keeps this a valid uniform
+    // permutation of the original column on every repeat.
+    for (std::int64_t i = 0; i < samples; ++i) {
+      column[static_cast<std::size_t>(i)] = permuted[static_cast<std::size_t>(i * features + f)];
+    }
+    std::iota(order.begin(), order.end(), std::int64_t{0});
+    std::shuffle(order.begin(), order.end(), rng);
+    for (std::int64_t i = 0; i < samples; ++i) {
+      permuted[static_cast<std::size_t>(i * features + f)] = column[static_cast<std::size_t>(order[static_cast<std::size_t>(i)])];
+    }
+
+    const LabeledBatch probe{
+        .features = rows_to_batch(permuted, samples, features, eval.features.x.platform()),
+        .y = eval.y,
+        .sample_weights = eval.sample_weights,
+    };
+    StatusOr<Series> m_or = model.assess(probe, assess_opts);
+    if (!m_or.ok()) {
+      out.ok = false;
+      out.status = m_or.status();
+      return out;
+    }
+    StatusOr<double> v_or = single_metric(m_or.value(), "permutation_impact repeat");
+    if (!v_or.ok()) {
+      out.ok = false;
+      out.status = v_or.status();
+      return out;
+    }
+    const double permuted_score = v_or.move_value();
+    out.drops[static_cast<std::size_t>(r)] = prefers_max ? (baseline - permuted_score) : (permuted_score - baseline);
+  }
+  return out;
+}
+
+} // namespace
+
 StatusOr<PermuteImpactReport> permutation_impact(const ModelSpec& spec,
                                                  const LabeledBatch& train,
                                                  const LabeledBatch& eval,
@@ -97,128 +168,75 @@ StatusOr<PermuteImpactReport> permutation_impact(const ModelSpec& spec,
 
   StatusOr<DenseRows> dense_eval_or = to_dense_rows_cpu(eval.features, "permutation_impact");
   if (!dense_eval_or.ok()) return StatusOr<PermuteImpactReport>(dense_eval_or.status());
-  DenseRows dense_eval = dense_eval_or.move_value();
+  const DenseRows dense_eval = dense_eval_or.move_value();
 
   const AssessOptions assess_opts{
       .metrics = {metric},
   };
 
-  double baseline = std::numeric_limits<double>::quiet_NaN();
+  // One estimator, held by its EstimatorBase interface, so the classification
+  // and regression paths below share the same fit-once/probe-many-times loop
+  // instead of carrying two copies of it.
+  std::unique_ptr<EstimatorBase> model;
   if (spec.task == TaskKind::Classification) {
     StatusOr<std::unique_ptr<ClassifierBase>> model_or = make_classifier(spec);
     if (!model_or.ok()) return StatusOr<PermuteImpactReport>(model_or.status());
-    std::unique_ptr<ClassifierBase> model = model_or.move_value();
-    Status fit = model->learn(train);
-    if (!fit.ok()) return StatusOr<PermuteImpactReport>(std::move(fit));
-    StatusOr<Series> metric_or = model->assess(eval, assess_opts);
-    if (!metric_or.ok()) return StatusOr<PermuteImpactReport>(metric_or.status());
-    StatusOr<double> base_or = single_metric(metric_or.value(), "permutation_impact baseline");
-    if (!base_or.ok()) return StatusOr<PermuteImpactReport>(base_or.status());
-    baseline = base_or.move_value();
-
-    const std::uint64_t seed = random.deterministic ? random.seed : splitmix64(random.seed ^ 0x8f9f0bdeULL);
-    std::mt19937_64 rng(seed);
-    std::vector<double> raw(static_cast<std::size_t>(repeats * dense_eval.features), 0.0);
-    for (std::int64_t r = 0; r < repeats; ++r) {
-      for (std::int64_t f = 0; f < dense_eval.features; ++f) {
-        std::vector<double> permuted = dense_eval.x;
-        std::vector<std::int64_t> order(static_cast<std::size_t>(dense_eval.samples), 0);
-        std::iota(order.begin(), order.end(), static_cast<std::int64_t>(0));
-        std::shuffle(order.begin(), order.end(), rng);
-        for (std::int64_t i = 0; i < dense_eval.samples; ++i) {
-          permuted[static_cast<std::size_t>(i * dense_eval.features + f)] =
-              dense_eval.x[static_cast<std::size_t>(order[static_cast<std::size_t>(i)] * dense_eval.features + f)];
-        }
-        const LabeledBatch probe{
-            .features = rows_to_batch(permuted, dense_eval.samples, dense_eval.features, eval.features.x.platform()),
-            .y = eval.y,
-            .sample_weights = eval.sample_weights,
-        };
-        StatusOr<Series> m_or = model->assess(probe, assess_opts);
-        if (!m_or.ok()) return StatusOr<PermuteImpactReport>(m_or.status());
-        StatusOr<double> v_or = single_metric(m_or.value(), "permutation_impact classification repeat");
-        if (!v_or.ok()) return StatusOr<PermuteImpactReport>(v_or.status());
-        raw[static_cast<std::size_t>(r * dense_eval.features + f)] = baseline - v_or.move_value();
-      }
-    }
-
-    std::vector<double> mean(static_cast<std::size_t>(dense_eval.features), 0.0);
-    std::vector<double> stdev(static_cast<std::size_t>(dense_eval.features), 0.0);
-    for (std::int64_t f = 0; f < dense_eval.features; ++f) {
-      for (std::int64_t r = 0; r < repeats; ++r) {
-        mean[static_cast<std::size_t>(f)] += raw[static_cast<std::size_t>(r * dense_eval.features + f)];
-      }
-      mean[static_cast<std::size_t>(f)] /= static_cast<double>(repeats);
-      for (std::int64_t r = 0; r < repeats; ++r) {
-        const double d = raw[static_cast<std::size_t>(r * dense_eval.features + f)] - mean[static_cast<std::size_t>(f)];
-        stdev[static_cast<std::size_t>(f)] += d * d;
-      }
-      stdev[static_cast<std::size_t>(f)] = std::sqrt(stdev[static_cast<std::size_t>(f)] / static_cast<double>(repeats));
-    }
-
-    return StatusOr<PermuteImpactReport>(PermuteImpactReport{
-        .mean_drop = pluss::make_series(mean, {dense_eval.features}, f64_cpu()),
-        .std_drop = pluss::make_series(stdev, {dense_eval.features}, f64_cpu()),
-        .per_repeat_drops = pluss::make_series(raw, {repeats, dense_eval.features}, f64_cpu()),
-        .metric = metric,
-    });
+    model = model_or.move_value();
+  } else {
+    StatusOr<std::unique_ptr<RegressorBase>> model_or = make_regressor(spec);
+    if (!model_or.ok()) return StatusOr<PermuteImpactReport>(model_or.status());
+    model = model_or.move_value();
   }
-
-  StatusOr<std::unique_ptr<RegressorBase>> model_or = make_regressor(spec);
-  if (!model_or.ok()) return StatusOr<PermuteImpactReport>(model_or.status());
-  std::unique_ptr<RegressorBase> model = model_or.move_value();
   Status fit = model->learn(train);
   if (!fit.ok()) return StatusOr<PermuteImpactReport>(std::move(fit));
-  StatusOr<Series> metric_or = model->assess(eval, assess_opts);
-  if (!metric_or.ok()) return StatusOr<PermuteImpactReport>(metric_or.status());
-  StatusOr<double> base_or = single_metric(metric_or.value(), "permutation_impact baseline");
-  if (!base_or.ok()) return StatusOr<PermuteImpactReport>(base_or.status());
-  baseline = base_or.move_value();
 
+  StatusOr<Series> baseline_or_series = model->assess(eval, assess_opts);
+  if (!baseline_or_series.ok()) return StatusOr<PermuteImpactReport>(baseline_or_series.status());
+  StatusOr<double> baseline_or = single_metric(baseline_or_series.value(), "permutation_impact baseline");
+  if (!baseline_or.ok()) return StatusOr<PermuteImpactReport>(baseline_or.status());
+  const double baseline = baseline_or.move_value();
+  const bool prefers_max = metric_prefers_max(metric);
   const std::uint64_t seed = random.deterministic ? random.seed : splitmix64(random.seed ^ 0x8f9f0bdeULL);
-  std::mt19937_64 rng(seed);
-  std::vector<double> raw(static_cast<std::size_t>(repeats * dense_eval.features), 0.0);
-  for (std::int64_t r = 0; r < repeats; ++r) {
-    for (std::int64_t f = 0; f < dense_eval.features; ++f) {
-      std::vector<double> permuted = dense_eval.x;
-      std::vector<std::int64_t> order(static_cast<std::size_t>(dense_eval.samples), 0);
-      std::iota(order.begin(), order.end(), static_cast<std::int64_t>(0));
-      std::shuffle(order.begin(), order.end(), rng);
-      for (std::int64_t i = 0; i < dense_eval.samples; ++i) {
-        permuted[static_cast<std::size_t>(i * dense_eval.features + f)] =
-            dense_eval.x[static_cast<std::size_t>(order[static_cast<std::size_t>(i)] * dense_eval.features + f)];
-      }
-      const LabeledBatch probe{
-          .features = rows_to_batch(permuted, dense_eval.samples, dense_eval.features, eval.features.x.platform()),
-          .y = eval.y,
-          .sample_weights = eval.sample_weights,
-      };
-      StatusOr<Series> m_or = model->assess(probe, assess_opts);
-      if (!m_or.ok()) return StatusOr<PermuteImpactReport>(m_or.status());
-      StatusOr<double> v_or = single_metric(m_or.value(), "permutation_impact regression repeat");
-      if (!v_or.ok()) return StatusOr<PermuteImpactReport>(v_or.status());
-      raw[static_cast<std::size_t>(r * dense_eval.features + f)] = v_or.move_value() - baseline;
-    }
-  }
 
-  std::vector<double> mean(static_cast<std::size_t>(dense_eval.features), 0.0);
-  std::vector<double> stdev(static_cast<std::size_t>(dense_eval.features), 0.0);
-  for (std::int64_t f = 0; f < dense_eval.features; ++f) {
+  const std::int64_t features = dense_eval.features;
+  std::vector<std::int64_t> feature_indices(static_cast<std::size_t>(features));
+  std::iota(feature_indices.begin(), feature_indices.end(), std::int64_t{0});
+
+  // Every feature's work is independent given the one already-fitted model
+  // (assess() is const, read-only inference) -- run them across
+  // hardware_concurrency() workers instead of one feature at a time.
+  const auto compute_feature = [&](std::int64_t f) -> PermuteFeatureResult {
+    return permute_one_feature(*model, dense_eval, eval, assess_opts, baseline, prefers_max, repeats, seed, f);
+  };
+  pluss::tils::transmit_options topts{};
+  topts.grain_size = 1;
+  topts.exec = features > 1 ? pluss::tils::transmit_exec::par : pluss::tils::transmit_exec::seq;
+  const std::vector<PermuteFeatureResult> results = pluss::tils::transmit(compute_feature, feature_indices, topts);
+
+  std::vector<double> raw(static_cast<std::size_t>(repeats * features), 0.0);
+  std::vector<double> mean(static_cast<std::size_t>(features), 0.0);
+  std::vector<double> stdev(static_cast<std::size_t>(features), 0.0);
+  for (std::int64_t f = 0; f < features; ++f) {
+    const PermuteFeatureResult& fr = results[static_cast<std::size_t>(f)];
+    if (!fr.ok) return StatusOr<PermuteImpactReport>(fr.status);
+    double sum = 0.0;
     for (std::int64_t r = 0; r < repeats; ++r) {
-      mean[static_cast<std::size_t>(f)] += raw[static_cast<std::size_t>(r * dense_eval.features + f)];
+      raw[static_cast<std::size_t>(r * features + f)] = fr.drops[static_cast<std::size_t>(r)];
+      sum += fr.drops[static_cast<std::size_t>(r)];
     }
-    mean[static_cast<std::size_t>(f)] /= static_cast<double>(repeats);
+    mean[static_cast<std::size_t>(f)] = sum / static_cast<double>(repeats);
+    double var = 0.0;
     for (std::int64_t r = 0; r < repeats; ++r) {
-      const double d = raw[static_cast<std::size_t>(r * dense_eval.features + f)] - mean[static_cast<std::size_t>(f)];
-      stdev[static_cast<std::size_t>(f)] += d * d;
+      const double d = fr.drops[static_cast<std::size_t>(r)] - mean[static_cast<std::size_t>(f)];
+      var += d * d;
     }
-    stdev[static_cast<std::size_t>(f)] = std::sqrt(stdev[static_cast<std::size_t>(f)] / static_cast<double>(repeats));
+    stdev[static_cast<std::size_t>(f)] = std::sqrt(var / static_cast<double>(repeats));
   }
 
   return StatusOr<PermuteImpactReport>(PermuteImpactReport{
-      .mean_drop = pluss::make_series(mean, {dense_eval.features}, f64_cpu()),
-      .std_drop = pluss::make_series(stdev, {dense_eval.features}, f64_cpu()),
-      .per_repeat_drops = pluss::make_series(raw, {repeats, dense_eval.features}, f64_cpu()),
+      .mean_drop = pluss::make_series(mean, {features}, f64_cpu()),
+      .std_drop = pluss::make_series(stdev, {features}, f64_cpu()),
+      .per_repeat_drops = pluss::make_series(raw, {repeats, features}, f64_cpu()),
       .metric = metric,
   });
 }

@@ -19,7 +19,7 @@ int main() {
       pluss::make_series({0, 0, 0, 1, 1, 1, 1, 1, 0, 1}, {10}, f64);
 
   const lymph::metrics::MetricReport report =
-      lymph::metrics::classification(truth, predicted).report();
+      lymph::metrics::classification::report(truth, predicted);
 
   const std::vector<double> values = report.values.to_vec<double>();
   std::cout << "default classification metrics (" << report.requested.size() << "):\n";

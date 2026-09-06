@@ -63,12 +63,12 @@ window.APIREF_NAV = {
         },
         {
           "type": "function",
-          "label": "classification",
+          "label": "report",
           "page": "api/lymph/metrics/classification.html"
         },
         {
           "type": "function",
-          "label": "regression",
+          "label": "report",
           "page": "api/lymph/metrics/regression.html"
         },
         {
@@ -78,12 +78,12 @@ window.APIREF_NAV = {
         },
         {
           "type": "function",
-          "label": "classification_summary",
+          "label": "summary",
           "page": "api/lymph/metrics/classification_summary.html"
         },
         {
           "type": "function",
-          "label": "calibrate",
+          "label": "calibrate_with_platt",
           "page": "api/lymph/metrics/calibrate.html"
         }
       ]
@@ -604,6 +604,12 @@ window.APIREF_NAV = {
     },
     {
       "type": "family",
+      "label": "options",
+      "page": "api/lymph/options.html",
+      "children": []
+    },
+    {
+      "type": "family",
       "label": "selection",
       "page": "api/lymph/selection.html",
       "children": [
@@ -616,6 +622,11 @@ window.APIREF_NAV = {
           "type": "function",
           "label": "compare",
           "page": "api/lymph/selection/compare.html"
+        },
+        {
+          "type": "class",
+          "label": "Scorer",
+          "page": "api/lymph/selection/Scorer.html"
         },
         {
           "type": "class",
@@ -784,19 +795,76 @@ window.APIREF_NAV = {
       "page": "api/lymph/workflow.html",
       "children": [
         {
+          "type": "page",
+          "label": "Introduction",
+          "page": "api/lymph/workflow/Introduction.html"
+        },
+        {
           "type": "class",
           "label": "Workflow",
-          "page": "api/lymph/model/Workflow.html"
+          "page": "api/lymph/workflow/Workflow.html",
+          "children": [
+            {
+              "type": "page",
+              "label": "Introduction",
+              "page": "api/lymph/workflow/Workflow/Introduction.html"
+            },
+            {
+              "type": "method",
+              "label": "assess",
+              "page": "api/lymph/workflow/Workflow/assess.html"
+            },
+            {
+              "type": "method",
+              "label": "infer",
+              "page": "api/lymph/workflow/Workflow/infer.html"
+            },
+            {
+              "type": "method",
+              "label": "learn",
+              "page": "api/lymph/workflow/Workflow/learn.html"
+            },
+            {
+              "type": "method",
+              "label": "map",
+              "page": "api/lymph/workflow/Workflow/map.html"
+            },
+            {
+              "type": "method",
+              "label": "on",
+              "page": "api/lymph/workflow/Workflow/on.html"
+            },
+            {
+              "type": "method",
+              "label": "save",
+              "page": "api/lymph/workflow/Workflow/save.html"
+            },
+            {
+              "type": "method",
+              "label": "with",
+              "page": "api/lymph/workflow/Workflow/with.html"
+            }
+          ]
         },
         {
           "type": "class",
           "label": "Payload",
-          "page": "api/lymph/model/Payload.html"
+          "page": "api/lymph/workflow/Payload.html"
         },
         {
           "type": "class",
           "label": "Policy",
-          "page": "api/lymph/model/Policy.html"
+          "page": "api/lymph/workflow/Policy.html"
+        },
+        {
+          "type": "options",
+          "label": "TimeOptions",
+          "page": "api/lymph/workflow/TimeOptions.html"
+        },
+        {
+          "type": "function",
+          "label": "make",
+          "page": "api/lymph/workflow/make.html"
         }
       ]
     }

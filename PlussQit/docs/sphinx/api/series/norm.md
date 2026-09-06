@@ -281,8 +281,8 @@ Use `norm()` when the question is "how large is this lane by a chosen norm?"
     <span class="label">Previous</span>
     <span class="title">nonzero</span>
   </a>
-  <a class="next-link" href="permute.html">
+  <a class="next-link" href="normal_.html">
     <span class="label">Next</span>
-    <span class="title">permute</span>
+    <span class="title">normal_</span>
   </a>
 </div>

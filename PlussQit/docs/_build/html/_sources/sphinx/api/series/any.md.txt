@@ -185,9 +185,9 @@ Use `any()` when one truthy value is enough.
   build with `any()`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="amin.html">
+  <a class="prev-link" href="angle.html">
     <span class="label">Previous</span>
-    <span class="title">amin</span>
+    <span class="title">angle</span>
   </a>
   <a class="next-link" href="argmax.html">
     <span class="label">Next</span>

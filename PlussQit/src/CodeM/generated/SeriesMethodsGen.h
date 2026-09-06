@@ -130,6 +130,8 @@
   // Typed wrappers for `add_` (staged migration off variadic surface).
   Series& add_(const Series& rhs) const { return pluss::codem::_compat::invoke_("add_", *this, {rhs, 1.0}); }
 
+  // `add_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `addbmm` (staged migration off variadic surface).
   Series addbmm(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const { return pluss::codem::_compat::invoke("addbmm", *this, {batch1, batch2, beta, alpha}); }
 
@@ -186,12 +188,7 @@
 
   Series all(std::int64_t dim) const { return pluss::codem::_compat::invoke("all", *this, {dim, false}); }
 
-  // Typed wrappers for `allclose` (staged migration off variadic surface).
-  Series allclose(const Series& rhs) const { return pluss::codem::_compat::invoke("allclose", *this, {rhs}); }
-
-  Series allclose(const Series& rhs, double rtol, double atol) const { return pluss::codem::_compat::invoke("allclose", *this, {rhs, rtol, atol}); }
-
-  Series allclose(const Series& rhs, double rtol, double atol, bool equal_nan) const { return pluss::codem::_compat::invoke("allclose", *this, {rhs, rtol, atol, equal_nan}); }
+  // `allclose` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `amax` (staged migration off variadic surface).
   Series amax() const { return pluss::codem::_compat::invoke("amax", *this); }
@@ -203,8 +200,7 @@
 
   Series amin(std::int64_t dim) const { return pluss::codem::_compat::invoke("amin", *this, {dim, false}); }
 
-  // Typed wrappers for `aminmax` (staged migration off variadic surface).
-  Series aminmax() const { return pluss::codem::_compat::invoke("aminmax", *this); }
+  // `aminmax` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `angle` (staged migration off variadic surface).
   Series angle() const { return pluss::codem::_compat::invoke("angle", *this); }
@@ -439,8 +435,7 @@
   // Typed wrappers for `chalf` (staged migration off variadic surface).
   Series chalf() const { return pluss::codem::_compat::invoke("chalf", *this); }
 
-  // Typed wrappers for `chunk` (staged migration off variadic surface).
-  Series chunk(std::int64_t chunks, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("chunk", *this, {chunks, dim}); }
+  // `chunk` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `clamp` (staged migration off variadic surface).
   Series clamp(double min_v, double max_v) const { return pluss::codem::_compat::invoke("clamp", *this, {min_v, max_v}); }
@@ -496,8 +491,12 @@
   // Typed wrappers for `count_nonzero` (staged migration off variadic surface).
   Series count_nonzero() const { return pluss::codem::_compat::invoke("count_nonzero", *this); }
 
+  Series count_nonzero(std::int64_t dim) const { return pluss::codem::_compat::invoke("count_nonzero", *this, {dim}); }
+
   // Typed wrappers for `cov` (staged migration off variadic surface).
   Series cov() const { return pluss::codem::_compat::invoke("cov", *this); }
+
+  Series cov(std::int64_t correction) const { return pluss::codem::_compat::invoke("cov", *this, {correction}); }
 
   // Typed wrappers for `cplxpair` (staged migration off variadic surface).
   Series cplxpair() const { return pluss::codem::_compat::invoke("cplxpair", *this); }
@@ -602,6 +601,8 @@
   // Typed wrappers for `dist` (staged migration off variadic surface).
   Series dist(const Series& rhs) const { return pluss::codem::_compat::invoke("dist", *this, {rhs}); }
 
+  Series dist(const Series& rhs, double p) const { return pluss::codem::_compat::invoke("dist", *this, {rhs, p}); }
+
   // Typed wrappers for `div` (staged migration off variadic surface).
   Series div(const Series& rhs) const { return pluss::codem::_compat::invoke("div", *this, {rhs}); }
 
@@ -609,6 +610,8 @@
   Series& div_(const Series& rhs) const { return pluss::codem::_compat::invoke_("div_", *this, {rhs}); }
 
   Series& div_(double rhs) const { return pluss::codem::_compat::invoke_("div_", *this, {rhs}); }
+
+  // `div_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `divide` (staged migration off variadic surface).
   Series divide(const Series& rhs) const { return pluss::codem::_compat::invoke("divide", *this, {rhs}); }
@@ -619,10 +622,7 @@
   // Typed wrappers for `dot` (staged migration off variadic surface).
   Series dot(const Series& rhs) const { return pluss::codem::_compat::invoke("dot", *this, {rhs}); }
 
-  // Typed wrappers for `dsplit` (staged migration off variadic surface).
-  Series dsplit(std::int64_t sections) const { return pluss::codem::_compat::invoke("dsplit", *this, {sections}); }
-
-  Series dsplit(pluss::msharp::RangeView::Int boundaries) const { return pluss::codem::_compat::invoke("dsplit", *this, {boundaries}); }
+  // `dsplit` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `dst` (staged migration off variadic surface).
   Series dst() const { return pluss::codem::_compat::invoke("dst", *this); }
@@ -638,8 +638,7 @@
   // Typed wrappers for `eq_` (staged migration off variadic surface).
   Series& eq_(const Series& rhs) const { return pluss::codem::_compat::invoke_("eq_", *this, {rhs}); }
 
-  // Typed wrappers for `equal` (staged migration off variadic surface).
-  Series equal(const Series& rhs) const { return pluss::codem::_compat::invoke("equal", *this, {rhs}); }
+  // `equal` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `erf` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -676,6 +675,9 @@
 
   // Typed wrappers for `expand_as` (staged migration off variadic surface).
   Series expand_as(const Series& rhs) const { return pluss::codem::_compat::invoke("expand_as", *this, {rhs}); }
+
+  // Typed wrappers for `expand_like` (staged migration off variadic surface).
+  Series expand_like(const Series& like) const { return pluss::codem::_compat::invoke("expand_like", *this, {like}); }
 
   // `expm1` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -725,6 +727,8 @@
   // Typed wrappers for `float_power` (staged migration off variadic surface).
   Series float_power(const Series& rhs) const { return pluss::codem::_compat::invoke("float_power", *this, {rhs}); }
 
+  Series float_power(double rhs) const { return pluss::codem::_compat::invoke("float_power", *this, {rhs}); }
+
   // Typed wrappers for `float_power_` (staged migration off variadic surface).
   Series& float_power_(const Series& rhs) const { return pluss::codem::_compat::invoke_("float_power_", *this, {rhs}); }
 
@@ -751,8 +755,12 @@
   // Typed wrappers for `fmod` (staged migration off variadic surface).
   Series fmod(const Series& rhs) const { return pluss::codem::_compat::invoke("fmod", *this, {rhs}); }
 
+  Series fmod(double rhs) const { return pluss::codem::_compat::invoke("fmod", *this, {rhs}); }
+
   // Typed wrappers for `fmod_` (staged migration off variadic surface).
   Series& fmod_(const Series& rhs) const { return pluss::codem::_compat::invoke_("fmod_", *this, {rhs}); }
+
+  Series& fmod_(double rhs) const { return pluss::codem::_compat::invoke_("fmod_", *this, {rhs}); }
 
   // Typed wrappers for `frac` (staged migration off variadic surface).
   Series frac() const { return pluss::codem::_compat::invoke("frac", *this); }
@@ -760,8 +768,7 @@
   // Typed wrappers for `frac_` (staged migration off variadic surface).
   Series& frac_() const { return pluss::codem::_compat::invoke_("frac_", *this); }
 
-  // Typed wrappers for `frexp` (staged migration off variadic surface).
-  Series frexp() const { return pluss::codem::_compat::invoke("frexp", *this); }
+  // `frexp` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `gather` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -846,15 +853,9 @@
 
   Series histcounts(std::int64_t bins, double min_v, double max_v) const { return pluss::codem::_compat::invoke("histcounts", *this, {bins, min_v, max_v}); }
 
-  // Typed wrappers for `histogram` (staged migration off variadic surface).
-  Series histogram() const { return pluss::codem::_compat::invoke("histogram", *this); }
+  // `histogram` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  Series histogram(std::int64_t bins) const { return pluss::codem::_compat::invoke("histogram", *this, {bins}); }
-
-  // Typed wrappers for `hsplit` (staged migration off variadic surface).
-  Series hsplit(std::int64_t sections) const { return pluss::codem::_compat::invoke("hsplit", *this, {sections}); }
-
-  Series hsplit(pluss::msharp::RangeView::Int boundaries) const { return pluss::codem::_compat::invoke("hsplit", *this, {boundaries}); }
+  // `hsplit` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `hypot` (staged migration off variadic surface).
   Series hypot(const Series& rhs) const { return pluss::codem::_compat::invoke("hypot", *this, {rhs}); }
@@ -958,44 +959,37 @@
   // Typed wrappers for `int_repr` (staged migration off variadic surface).
   Series int_repr() const { return pluss::codem::_compat::invoke("int_repr", *this); }
 
-  // Typed wrappers for `is_coalesced` (staged migration off variadic surface).
-  Series is_coalesced() const { return pluss::codem::_compat::invoke("is_coalesced", *this); }
+  // `intersect1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_complex` (staged migration off variadic surface).
-  Series is_complex() const { return pluss::codem::_compat::invoke("is_complex", *this); }
+  // `invalid` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_conj` (staged migration off variadic surface).
-  Series is_conj() const { return pluss::codem::_compat::invoke("is_conj", *this); }
+  // `invalid_index` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_distributed` (staged migration off variadic surface).
-  Series is_distributed() const { return pluss::codem::_compat::invoke("is_distributed", *this); }
+  // `is_coalesced` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_floating_point` (staged migration off variadic surface).
-  Series is_floating_point() const { return pluss::codem::_compat::invoke("is_floating_point", *this); }
+  // `is_complex` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_inference` (staged migration off variadic surface).
-  Series is_inference() const { return pluss::codem::_compat::invoke("is_inference", *this); }
+  // `is_conj` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_leaf` (staged migration off variadic surface).
-  Series is_leaf() const { return pluss::codem::_compat::invoke("is_leaf", *this); }
+  // `is_distributed` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_neg` (staged migration off variadic surface).
-  Series is_neg() const { return pluss::codem::_compat::invoke("is_neg", *this); }
+  // `is_floating_point` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_nonzero` (staged migration off variadic surface).
-  Series is_nonzero() const { return pluss::codem::_compat::invoke("is_nonzero", *this); }
+  // `is_inference` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_pinned` (staged migration off variadic surface).
-  Series is_pinned() const { return pluss::codem::_compat::invoke("is_pinned", *this); }
+  // `is_leaf` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_same_size` (staged migration off variadic surface).
-  Series is_same_size(const Series& rhs) const { return pluss::codem::_compat::invoke("is_same_size", *this, {rhs}); }
+  // `is_neg` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_set_to` (staged migration off variadic surface).
-  Series is_set_to() const { return pluss::codem::_compat::invoke("is_set_to", *this); }
+  // `is_nonzero` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `is_signed` (staged migration off variadic surface).
-  Series is_signed() const { return pluss::codem::_compat::invoke("is_signed", *this); }
+  // `is_pinned` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `is_same_size` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `is_set_to` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `is_signed` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `isclose` (staged migration off variadic surface).
   Series isclose(const Series& rhs) const { return pluss::codem::_compat::invoke("isclose", *this, {rhs}); }
@@ -1007,6 +1001,8 @@
   // `isfinite` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `isfinite_` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `isin` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `isinf` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -1050,6 +1046,8 @@
 
   // Typed wrappers for `ldexp` (staged migration off variadic surface).
   Series ldexp(const Series& rhs) const { return pluss::codem::_compat::invoke("ldexp", *this, {rhs}); }
+
+  Series ldexp(double rhs) const { return pluss::codem::_compat::invoke("ldexp", *this, {rhs}); }
 
   // Typed wrappers for `ldexp_` (staged migration off variadic surface).
   Series& ldexp_(const Series& rhs) const { return pluss::codem::_compat::invoke_("ldexp_", *this, {rhs}); }
@@ -1244,6 +1242,8 @@
   // Typed wrappers for `mm` (staged migration off variadic surface).
   Series mm(const Series& rhs) const { return pluss::codem::_compat::invoke("mm", *this, {rhs}); }
 
+  // `mod_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `mode` (staged migration off variadic surface).
   Series mode() const { return pluss::codem::_compat::invoke("mode", *this); }
 
@@ -1277,6 +1277,8 @@
   Series& mul_(const Series& rhs) const { return pluss::codem::_compat::invoke_("mul_", *this, {rhs}); }
 
   Series& mul_(double rhs) const { return pluss::codem::_compat::invoke_("mul_", *this, {rhs}); }
+
+  // `mul_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `multinomial` (staged migration off variadic surface).
   Series multinomial() const { return pluss::codem::_compat::invoke("multinomial", *this); }
@@ -1519,9 +1521,9 @@
   // Typed wrappers for `random_` (staged migration off variadic surface).
   Series& random_() const { return pluss::codem::_compat::invoke_("random_", *this); }
 
-  Series& random_(double from) const { return pluss::codem::_compat::invoke_("random_", *this, {from}); }
+  Series& random_(std::int64_t to) const { return pluss::codem::_compat::invoke_("random_", *this, {to}); }
 
-  Series& random_(double from, double to) const { return pluss::codem::_compat::invoke_("random_", *this, {from, to}); }
+  Series& random_(std::int64_t from, std::int64_t to) const { return pluss::codem::_compat::invoke_("random_", *this, {from, to}); }
 
   // Typed wrappers for `ravel` (staged migration off variadic surface).
   Series ravel() const { return pluss::codem::_compat::invoke("ravel", *this); }
@@ -1574,6 +1576,9 @@
   Series repeat_interleave(std::int64_t repeats) const { return pluss::codem::_compat::invoke("repeat_interleave", *this, {repeats}); }
 
   Series repeat_interleave(std::int64_t repeats, std::int64_t dim) const { return pluss::codem::_compat::invoke("repeat_interleave", *this, {repeats, dim}); }
+
+  // Typed wrappers for `repeat_like` (staged migration off variadic surface).
+  Series repeat_like(const Series& like) const { return pluss::codem::_compat::invoke("repeat_like", *this, {like}); }
 
   // `reshape` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -1677,6 +1682,14 @@
   // Typed wrappers for `set_data` (staged migration off variadic surface).
   Series set_data(const Series& other) const { return pluss::codem::_compat::invoke("set_data", *this, {other}); }
 
+  // `set_intersection` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `set_union` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `setdiff1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `setxor1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `sgn` (staged migration off variadic surface).
   Series sgn() const { return pluss::codem::_compat::invoke("sgn", *this); }
 
@@ -1773,13 +1786,9 @@
   // Typed wrappers for `sparse_resize_and_clear_` (staged migration off variadic surface).
   Series& sparse_resize_and_clear_() const { return pluss::codem::_compat::invoke_("sparse_resize_and_clear_", *this); }
 
-  // Typed wrappers for `split` (staged migration off variadic surface).
-  Series split(std::int64_t split_size, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("split", *this, {split_size, dim}); }
+  // `split` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  Series split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("split", *this, {split_sizes, dim}); }
-
-  // Typed wrappers for `split_with_sizes` (staged migration off variadic surface).
-  Series split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("split_with_sizes", *this, {split_sizes, dim}); }
+  // `split_with_sizes` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `sqrt` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -1809,8 +1818,7 @@
   // Typed wrappers for `stft` (staged migration off variadic surface).
   Series stft() const { return pluss::codem::_compat::invoke("stft", *this); }
 
-  // Typed wrappers for `stride` (staged migration off variadic surface).
-  Series stride() const { return pluss::codem::_compat::invoke("stride", *this); }
+  // `stride` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `sub` (staged migration off variadic surface).
   Series sub(const Series& rhs) const { return pluss::codem::_compat::invoke("sub", *this, {rhs, 1.0}); }
@@ -1821,6 +1829,8 @@
 
   // Typed wrappers for `sub_` (staged migration off variadic surface).
   Series& sub_(const Series& rhs) const { return pluss::codem::_compat::invoke_("sub_", *this, {rhs, 1.0}); }
+
+  // `sub_i64` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `subtract` (staged migration off variadic surface).
   Series subtract(const Series& rhs) const { return pluss::codem::_compat::invoke("subtract", *this, {rhs}); }
@@ -1877,10 +1887,7 @@
 
   // `tanh_` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `tensor_split` (staged migration off variadic surface).
-  Series tensor_split(std::int64_t sections, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("tensor_split", *this, {sections, dim}); }
-
-  Series tensor_split(pluss::msharp::RangeView::Int indices_or_sections, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("tensor_split", *this, {indices_or_sections, dim}); }
+  // `tensor_split` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `tile` (staged migration off variadic surface).
   Series tile(pluss::msharp::RangeView::Int dims) const { return pluss::codem::_compat::invoke("tile", *this, {dims}); }
@@ -1968,10 +1975,7 @@
   // Typed wrappers for `type_as` (staged migration off variadic surface).
   Series type_as(const Series& other) const { return pluss::codem::_compat::invoke("type_as", *this, {other}); }
 
-  // Typed wrappers for `unbind` (staged migration off variadic surface).
-  Series unbind() const { return pluss::codem::_compat::invoke("unbind", *this); }
-
-  Series unbind(std::int64_t dim) const { return pluss::codem::_compat::invoke("unbind", *this, {dim}); }
+  // `unbind` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `unflatten` (staged migration off variadic surface).
   Series unflatten(std::int64_t dim, pluss::msharp::RangeView::Int sizes) const { return pluss::codem::_compat::invoke("unflatten", *this, {dim, sizes}); }
@@ -1984,6 +1988,8 @@
 
   Series& uniform_(double from, double to) const { return pluss::codem::_compat::invoke_("uniform_", *this, {from, to}); }
 
+  // `union1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `unique` (staged migration off variadic surface).
   Series unique() const { return pluss::codem::_compat::invoke("unique", *this, {true}); }
 
@@ -1991,16 +1997,11 @@
 
   Series unique(std::int64_t dim, bool sorted) const { return pluss::codem::_compat::invoke("unique", *this, {dim, sorted}); }
 
-  // Typed wrappers for `unsafe_chunk` (staged migration off variadic surface).
-  Series unsafe_chunk(std::int64_t chunks, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("unsafe_chunk", *this, {chunks, dim}); }
+  // `unsafe_chunk` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `unsafe_split` (staged migration off variadic surface).
-  Series unsafe_split(std::int64_t split_size, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("unsafe_split", *this, {split_size, dim}); }
+  // `unsafe_split` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  Series unsafe_split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("unsafe_split", *this, {split_sizes, dim}); }
-
-  // Typed wrappers for `unsafe_split_with_sizes` (staged migration off variadic surface).
-  Series unsafe_split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("unsafe_split_with_sizes", *this, {split_sizes, dim}); }
+  // `unsafe_split_with_sizes` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `unsqueeze` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -2028,8 +2029,7 @@
   // Typed wrappers for `view_as` (staged migration off variadic surface).
   Series view_as(const Series& other) const { return pluss::codem::_compat::invoke("view_as", *this, {other}); }
 
-  // Typed wrappers for `vsplit` (staged migration off variadic surface).
-  Series vsplit(std::int64_t sections) const { return pluss::codem::_compat::invoke("vsplit", *this, {sections}); }
+  // `vsplit` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `where` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 

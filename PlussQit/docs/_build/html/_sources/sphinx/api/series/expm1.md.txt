@@ -93,9 +93,9 @@ one" and you want that intent stated directly at the call site.
 - [`Series::log1p`](log1p.md): the common logarithmic counterpart.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="expand_as.html">
+  <a class="prev-link" href="exponential_.html">
     <span class="label">Previous</span>
-    <span class="title">expand_as</span>
+    <span class="title">exponential_</span>
   </a>
   <a class="next-link" href="extract.html">
     <span class="label">Next</span>

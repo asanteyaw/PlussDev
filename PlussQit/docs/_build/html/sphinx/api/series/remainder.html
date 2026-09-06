@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::repeat" href="repeat.html" />
+    <link rel="next" title="Series::renorm" href="renorm.html" />
     <link rel="prev" title="Series::relu" href="relu.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -81,8 +81,15 @@ writes the result back into the receiver.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">remainder()</span></code> is not differentiable. A <code class="docutils literal notranslate"><span class="pre">Series</span></code> produced by it does not carry
-reverse tracking.</p>
+<p><code class="docutils literal notranslate"><span class="pre">remainder()</span></code> is differentiable. <code class="docutils literal notranslate"><span class="pre">remainder(a,</span> <span class="pre">b)</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">-</span> <span class="pre">floor(a</span> <span class="pre">/</span> <span class="pre">b)</span> <span class="pre">*</span> <span class="pre">b</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">floor</span></code> is locally constant, so between the jumps:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">/</span><span class="n">da</span> <span class="n">remainder</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">d</span><span class="o">/</span><span class="n">db</span> <span class="n">remainder</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span><span class="n">floor</span><span class="p">(</span><span class="n">a</span> <span class="o">/</span> <span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The backward passes the upstream sensitivity straight through to the dividend
+and routes <code class="docutils literal notranslate"><span class="pre">-floor(a</span> <span class="pre">/</span> <span class="pre">b)</span></code> to the divisor. Gradient does not flow through the
+discrete step where <code class="docutils literal notranslate"><span class="pre">floor(a</span> <span class="pre">/</span> <span class="pre">b)</span></code> changes.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -146,6 +153,30 @@ data=[1, -1]
 data=[nan]
 </pre></div>
 </div>
+<p>Example 5. The backward passes gradient straight through to the dividend and
+routes <code class="docutils literal notranslate"><span class="pre">-floor(a</span> <span class="pre">/</span> <span class="pre">b)</span></code> to the divisor.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">a</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">b</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">a</span><span class="p">.</span><span class="n">remainder</span><span class="p">(</span><span class="n">b</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;da=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;db=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>da=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 1, 1]
+db=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2, -2, -1]
+</pre></div>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">db</span></code> entry is <code class="docutils literal notranslate"><span class="pre">-floor(a</span> <span class="pre">/</span> <span class="pre">b)</span></code>: <code class="docutils literal notranslate"><span class="pre">-floor(-5/3)</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">-floor(5.5/2)</span> <span class="pre">=</span> <span class="pre">-2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">-floor(7/4)</span> <span class="pre">=</span> <span class="pre">-1</span></code>.</p>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">
@@ -154,7 +185,8 @@ data=[nan]
 <li><p><code class="docutils literal notranslate"><span class="pre">remainder()</span></code> follows the sign of <code class="docutils literal notranslate"><span class="pre">b</span></code>; <a class="reference internal" href="fmod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fmod()</span></code></span></a> follows the sign of
 <code class="docutils literal notranslate"><span class="pre">a</span></code>. Pick by which range you want the result in.</p></li>
 <li><p>Division by <code class="docutils literal notranslate"><span class="pre">0</span></code> gives <code class="docutils literal notranslate"><span class="pre">NaN</span></code>; it does not throw.</p></li>
-<li><p>Not differentiable.</p></li>
+<li><p>The gradient through the dividend is <code class="docutils literal notranslate"><span class="pre">1</span></code>; no gradient flows through the
+discrete step where <code class="docutils literal notranslate"><span class="pre">floor(a</span> <span class="pre">/</span> <span class="pre">b)</span></code> changes.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> in either input propagates.</p></li>
 </ul>
 </section>
@@ -164,7 +196,8 @@ data=[nan]
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-</span> <span class="pre">floor(a</span> <span class="pre">/</span> <span class="pre">b)</span> <span class="pre">*</span> <span class="pre">b</span></code>; result lies between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code></p></li>
 <li><p>broadcasts like <code class="docutils literal notranslate"><span class="pre">add()</span></code>; preserves integer dtype</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> on divide-by-zero; not differentiable</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> on divide-by-zero</p></li>
+<li><p>differentiable: <code class="docutils literal notranslate"><span class="pre">d/da</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">d/db</span> <span class="pre">=</span> <span class="pre">-floor(a</span> <span class="pre">/</span> <span class="pre">b)</span></code>, no flow through the jumps</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -179,9 +212,9 @@ data=[nan]
     <span class="label">Previous</span>
     <span class="title">relu</span>
   </a>
-  <a class="next-link" href="repeat.html">
+  <a class="next-link" href="renorm.html">
     <span class="label">Next</span>
-    <span class="title">repeat</span>
+    <span class="title">renorm</span>
   </a>
 </div>
 </section>
@@ -276,7 +309,7 @@ data=[nan]
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="relu.html" title="previous chapter">Series::relu</a></li>
-      <li>Next: <a href="repeat.html" title="next chapter">Series::repeat</a></li>
+      <li>Next: <a href="renorm.html" title="next chapter">Series::renorm</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

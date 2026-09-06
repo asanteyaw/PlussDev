@@ -168,8 +168,8 @@ polar: abs and angle must have the same shape
     <span class="label">Previous</span>
     <span class="title">complex</span>
   </a>
-  <a class="next-link" href="../../series_factory_api_reference.html">
+  <a class="next-link" href="from_torch.html">
     <span class="label">Next</span>
-    <span class="title">Series Factory API Reference</span>
+    <span class="title">from_torch</span>
   </a>
 </div>

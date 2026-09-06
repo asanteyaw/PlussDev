@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::is_monday" href="is_monday.html" />
-    <link rel="prev" title="Timeline::year" href="year.html" />
+    <link rel="next" title="Timeline::is_month_start" href="is_month_start.html" />
+    <link rel="prev" title="Timeline::week" href="week.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -39,119 +39,64 @@
   <section id="timeline-is-leap-year">
 <h1>Timeline::is_leap_year<a class="headerlink" href="#timeline-is-leap-year" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
-<section id="representative-signatures">
-<h2>Representative Signatures<a class="headerlink" href="#representative-signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_leap_year</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">is_month_start</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">is_month_end</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">is_quarter_start</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">is_quarter_end</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">is_year_start</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">is_year_end</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">is_weekend</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">is_business_day</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_leap_year</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
+<p>Aliases: <code class="docutils literal notranslate"><span class="pre">leap_year()</span></code>, <code class="docutils literal notranslate"><span class="pre">isleapyear()</span></code>, and <code class="docutils literal notranslate"><span class="pre">is_leap()</span></code>.</p>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This page documents the calendar predicate family: methods that answer yes/no
-questions about each timestamp’s calendar position.</p>
+<section id="classify-the-local-calendar-year">
+<h2>Classify The Local Calendar Year<a class="headerlink" href="#classify-the-local-calendar-year" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is_leap_year()</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for every timestamp whose local civil year has
+366 days. The Gregorian rule is applied in full: a year divisible by 4 is a
+leap year, except a century year must also be divisible by 400. The method
+tests year membership, not whether the timestamp itself is 29 February.</p>
+<p>The result is a shape-preserving boolean Series. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> becomes <code class="docutils literal notranslate"><span class="pre">false</span></code>; combine
+with <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> if missing and non-leap must remain distinguishable.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A boolean series marking which entries satisfy the predicate.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Check leap-year membership and calendar boundaries.</p>
+<section id="example-membership-across-boundaries">
+<h2>Example: Membership Across Boundaries<a class="headerlink" href="#example-membership-across-boundaries" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2019-12-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-01-01T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2020-02-29T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-03-31T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2020-04-01T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-12-31T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2021-01-01T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-29T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">calendar</span><span class="p">.</span><span class="n">is_leap_year</span><span class="p">());</span>
+</pre></div>
+</div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">calendar.is_leap_year()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[true, true, true, true, true, false, true, true]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[false, true, true, true, true, true, false, true, false]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">calendar.is_month_start()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[false, true, false, true, false, true, false, false]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">calendar.is_month_end()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[true, false, true, false, true, false, false, false]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">calendar.is_year_end()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[false, false, false, false, true, false, false, false]
-</pre></div>
-</div>
-<p>Example 2. Check business-day versus weekend classification.</p>
-</section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">calendar.is_weekend()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[false, false, true, false, false, false, true, false]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">calendar.is_business_day()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
-data=[true, true, false, true, true, true, false, true]
-</pre></div>
-</div>
+<p>Every 2020 timestamp is <code class="docutils literal notranslate"><span class="pre">true</span></code>, not only leap day. The final <code class="docutils literal notranslate"><span class="pre">false</span></code> belongs to
+<code class="docutils literal notranslate"><span class="pre">NaT</span></code>, not to a known common year.</p>
 </section>
 </section>
-<section id="aliases">
-<h2>Aliases<a class="headerlink" href="#aliases" title="Link to this heading">¶</a></h2>
-<p>Representative alias groups include:</p>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">leap_year()</span></code>, <code class="docutils literal notranslate"><span class="pre">is_leap()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_leap_year()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_month_begin()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_month_start()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_month_finish()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_month_end()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_qs()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_quarter_start()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_qe()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_quarter_end()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_year_begin()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_year_start()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_year_finish()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_year_end()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">weekend()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_weekend()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_bday()</span></code>, <code class="docutils literal notranslate"><span class="pre">business_day()</span></code>
-Alias <code class="docutils literal notranslate"><span class="pre">is_business_day()</span></code>.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>These predicates read calendar structure in the timeline’s current timezone.</p></li>
-<li><p>They are especially useful before <code class="docutils literal notranslate"><span class="pre">where(...)</span></code>, filtering, or time-aware
-aggregation.</p></li>
+<li><p>This is an elementwise classifier, not one scalar property of the Timeline.</p></li>
+<li><p>Timezone conversion can change the local year near New Year.</p></li>
+<li><p>Do not infer validity from <code class="docutils literal notranslate"><span class="pre">false</span></code>; use <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code>.</p></li>
+<li><p>For leap-day itself, combine <code class="docutils literal notranslate"><span class="pre">month()</span> <span class="pre">==</span> <span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">day()</span> <span class="pre">==</span> <span class="pre">29</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::year</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="is_monday.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::is_monday</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">year</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="dayofyear.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dayofyear</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="is_month_start.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_month_start</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="year.html">
-    <span class="label">Previous</span>
-    <span class="title">year</span>
-  </a>
-  <a class="next-link" href="is_monday.html">
-    <span class="label">Next</span>
-    <span class="title">is_monday</span>
-  </a>
+  <a class="prev-link" href="week.html"><span class="label">Previous</span><span class="title">week</span></a>
+  <a class="next-link" href="is_month_start.html"><span class="label">Next</span><span class="title">is_month_start</span></a>
 </div>
+<!-- pluss-hand-authored -->
 </section>
 </section>
 
@@ -243,8 +188,8 @@ aggregation.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="year.html" title="previous chapter">Timeline::year</a></li>
-      <li>Next: <a href="is_monday.html" title="next chapter">Timeline::is_monday</a></li>
+      <li>Previous: <a href="week.html" title="previous chapter">Timeline::week</a></li>
+      <li>Next: <a href="is_month_start.html" title="next chapter">Timeline::is_month_start</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="SeriesStatAccessor::cdist" href="cdist.html" />
@@ -45,6 +45,9 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatAccessor</span><span class="o">::</span><span class="n">cdf</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatAccessor</span><span class="o">::</span><span class="n">cdf</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatAccessor</span><span class="o">::</span><span class="n">cdf</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">mu</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatProxy</span><span class="o">::</span><span class="n">cdf</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatProxy</span><span class="o">::</span><span class="n">cdf</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesStatProxy</span><span class="o">::</span><span class="n">cdf</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">mu</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -61,6 +64,13 @@ Moving right increases accumulated mass; moving left decreases it. Differences
 of two CDF values give probability over an interval.</p>
 <p>The overloads use <code class="docutils literal notranslate"><span class="pre">(mu,sigma)=(0,1)</span></code>, <code class="docutils literal notranslate"><span class="pre">(0,sigma)</span></code>, or explicit values. Shape is
 preserved and <code class="docutils literal notranslate"><span class="pre">sigma</span></code> must be positive.</p>
+</section>
+<section id="parameters-and-returns">
+<h2>Parameters And Returns<a class="headerlink" href="#parameters-and-returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mu</span></code> is the threshold at which accumulated probability is one half. <code class="docutils literal notranslate"><span class="pre">sigma</span></code>
+is the strictly positive scale controlling how quickly the curve transitions
+from zero toward one. Evaluation is elementwise, preserves the owner’s shape,
+and returns <code class="docutils literal notranslate"><span class="pre">float64</span></code>; it does not reduce the data or infer a distribution.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
@@ -82,7 +92,24 @@ preserved and <code class="docutils literal notranslate"><span class="pre">sigma
 data=[0.15865525, 0.5, 0.84134475]
 </pre></div>
 </div>
-<p>Example 2. Reverse mode recovers the density values.</p>
+<p>The first and third probabilities add to one because <code class="docutils literal notranslate"><span class="pre">-1</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> are equally
+far from the standard-normal mean on opposite sides.</p>
+<p>Example 2. Translating and widening the model changes how raw inputs become
+standardized thresholds.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">cdf</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.15865525, 0.5, 0.84134475]
+</pre></div>
+</div>
+<p>Subtracting <code class="docutils literal notranslate"><span class="pre">mu=1</span></code> and dividing by <code class="docutils literal notranslate"><span class="pre">sigma=2</span></code> maps these inputs back to
+<code class="docutils literal notranslate"><span class="pre">[-1,0,1]</span></code>, explaining why the probabilities match Example 1.</p>
+<p>Example 3. Reverse mode recovers the density values.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
 <span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 <span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">cdf</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
@@ -90,8 +117,8 @@ data=[0.15865525, 0.5, 0.84134475]
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[0.24197072, 0.39894228, 0.24197072]
 </pre></div>
@@ -105,6 +132,8 @@ data=[0.24197072, 0.39894228, 0.24197072]
 <li><p>Far-tail probabilities can round to exactly zero or one; use <code class="docutils literal notranslate"><span class="pre">logcdf()</span></code> when
 the lower tail must remain distinguishable.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sigma&lt;=0</span></code> is rejected.</p></li>
+<li><p>Interval probability is <code class="docutils literal notranslate"><span class="pre">cdf(high)-cdf(low)</span></code> for <code class="docutils literal notranslate"><span class="pre">low&lt;=high</span></code>; individual CDF
+values are probabilities from negative infinity through one threshold.</p></li>
 </ul>
 </section>
 <section id="see-also">

@@ -133,3 +133,14 @@ and empty reductions are explicit errors.
 - [`Series::median`](median.md)
 - [`Series::unique`](unique.md)
 - [`Series::bincount`](bincount.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="minimum.html">
+    <span class="label">Previous</span>
+    <span class="title">minimum</span>
+  </a>
+  <a class="next-link" href="moveaxis.html">
+    <span class="label">Next</span>
+    <span class="title">moveaxis</span>
+  </a>
+</div>

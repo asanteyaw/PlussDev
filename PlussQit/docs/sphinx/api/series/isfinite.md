@@ -78,9 +78,9 @@ ordinary finite numbers?"
   detect them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_prime.html">
+  <a class="prev-link" href="isclose.html">
     <span class="label">Previous</span>
-    <span class="title">is_prime</span>
+    <span class="title">isclose</span>
   </a>
   <a class="next-link" href="isin.html">
     <span class="label">Next</span>

@@ -69,18 +69,17 @@ TEST_CASE("sign_list supports temporary and lvalue usage", "[methods][list]") {
 TEST_CASE("pair reductions return values and indices in one call", "[methods][list]") {
   auto x = pluss::make_series({1.0, 5.0, 2.0, 3.0, 4.0, 6.0}).reshape({2, 3});
   auto out = x.max_pair(1, false);
-  REQUIRE(out.size() == 2);
-  REQUIRE(out[0].to_vec<double>() == std::vector<double>{5.0, 6.0});
-  REQUIRE(out[1].to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2});
+  REQUIRE(out.first.to_vec<double>() == std::vector<double>{5.0, 6.0});
+  REQUIRE(out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2});
 
-  auto idx = x.argmax_pair(1, false)[1];
+  auto idx = x.argmax(1);
   REQUIRE(idx.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2});
 
   auto min_out = x.min_pair(1, false);
-  REQUIRE(min_out[0].to_vec<double>() == std::vector<double>{1.0, 3.0});
-  REQUIRE(min_out[1].to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 0});
+  REQUIRE(min_out.first.to_vec<double>() == std::vector<double>{1.0, 3.0});
+  REQUIRE(min_out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 0});
 
-  auto min_idx = x.argmin_pair(1, false)[1];
+  auto min_idx = x.argmin(1);
   REQUIRE(min_idx.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 0});
 }
 
@@ -88,12 +87,10 @@ TEST_CASE("sort_pair and topk_pair return values+indices", "[methods][list]") {
   auto x = pluss::make_series({1.0, 5.0, 2.0, 3.0, 4.0, 6.0}).reshape({2, 3});
 
   auto sort_out = x.sort_pair(1, /*descending=*/true, /*stable=*/false);
-  REQUIRE(sort_out.size() == 2);
-  REQUIRE(sort_out[0].to_vec<double>() == std::vector<double>{5.0, 2.0, 1.0, 6.0, 4.0, 3.0});
-  REQUIRE(sort_out[1].to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2, 0, 2, 1, 0});
+  REQUIRE(sort_out.first.to_vec<double>() == std::vector<double>{5.0, 2.0, 1.0, 6.0, 4.0, 3.0});
+  REQUIRE(sort_out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2, 0, 2, 1, 0});
 
   auto topk_out = x.topk_pair(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
-  REQUIRE(topk_out.size() == 2);
-  REQUIRE(topk_out[0].to_vec<double>() == std::vector<double>{5.0, 2.0, 6.0, 4.0});
-  REQUIRE(topk_out[1].to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2, 2, 1});
+  REQUIRE(topk_out.first.to_vec<double>() == std::vector<double>{5.0, 2.0, 6.0, 4.0});
+  REQUIRE(topk_out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2, 2, 1});
 }

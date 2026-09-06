@@ -1,6 +1,8 @@
 #include <pluss/ai/lymph.h>
 #include <pluss/mic.h>
 
+#include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -126,6 +128,69 @@ bool run_search_checks(std::ostream* err) {
   if (random_tuned.report.trials.size() != 1 || !random_tuned.best().trained()) {
     if (err) *err << "search::build(axes, TuneOptions) should preserve random trial count and stored split policy\n";
     return false;
+  }
+
+  // Custom objective via selection::make_scorer: a user callable evaluated on
+  // each fold's (truth, prediction). Here it is plain accuracy, so the ranking
+  // must agree with the built-in MetricKind::Accuracy objective.
+  const auto accuracy_fn = [](const Series& truth, const Series& prediction) -> double {
+    return truth.reshape({truth.numel()})
+        .eq(prediction.reshape({prediction.numel()}))
+        .to(ScalarType::Float64)
+        .mean()
+        .item<double>();
+  };
+  const selection::Scorer custom_accuracy =
+      selection::make_scorer("fold_accuracy", accuracy_fn, /*greater_is_better=*/true);
+
+  selection::search::Result custom_tuned =
+      selection::grid(axes, cv).run(make_model, batch, train_options, AssessOptions{},
+                                    custom_accuracy, TuneObjectivePolicy::Auto,
+                                    selection::FitOptions{.fit_top = 1});
+  if (custom_tuned.report.trials.size() != 2 || !custom_tuned.best().trained() ||
+      custom_tuned.report.objective_name != "fold_accuracy") {
+    if (err) *err << "Search::run with a custom Scorer should run every trial and carry the scorer name\n";
+    return false;
+  }
+  for (const auto& trial : custom_tuned.report.trials) {
+    if (!std::isfinite(trial.objective) || trial.objective < 0.0 || trial.objective > 1.0) {
+      if (err) *err << "custom Scorer objective values should be finite accuracies in [0, 1]\n";
+      return false;
+    }
+  }
+  {
+    // Same grid, built-in accuracy objective -> identical winner and identical
+    // per-trial objective values (the callable computes the same number).
+    selection::search::Result builtin_tuned =
+        selection::grid(axes, cv).run(make_model, batch, train_options, AssessOptions{},
+                                      MetricKind::Accuracy, TuneObjectivePolicy::Maximize,
+                                      selection::FitOptions{.fit_top = 1});
+    if (builtin_tuned.report.best_name != custom_tuned.report.best_name) {
+      if (err) *err << "custom accuracy Scorer should pick the same winner as MetricKind::Accuracy\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < builtin_tuned.report.trials.size(); ++i) {
+      if (std::abs(builtin_tuned.report.trials[i].objective - custom_tuned.report.trials[i].objective) > 1e-9) {
+        if (err) *err << "custom accuracy Scorer objective should match the built-in accuracy per trial\n";
+        return false;
+      }
+    }
+  }
+  {
+    // Same accuracy values, but greater_is_better = false ("minimize accuracy")
+    // must flip the winner to the trial the accuracy scorer ranked last --
+    // unless the two trials tie, in which case the stable sort keeps the first.
+    selection::search::Result min_tuned =
+        selection::grid(axes, cv).run(make_model, batch, train_options, AssessOptions{},
+                                      selection::make_scorer("min_accuracy", accuracy_fn, /*greater_is_better=*/false),
+                                      TuneObjectivePolicy::Auto, selection::FitOptions{.fit_top = 1});
+    const bool tie = custom_tuned.report.trials.front().objective == custom_tuned.report.trials.back().objective;
+    const std::int64_t acc_worst = custom_tuned.report.ranked_indices.back();
+    const std::int64_t expected_min_best = tie ? custom_tuned.report.best_index : acc_worst;
+    if (min_tuned.report.best_index != expected_min_best) {
+      if (err) *err << "a greater_is_better=false Scorer should invert the ranking\n";
+      return false;
+    }
   }
 
   const DataFrame raw({

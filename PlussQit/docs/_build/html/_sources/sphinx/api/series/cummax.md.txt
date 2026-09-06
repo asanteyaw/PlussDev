@@ -203,9 +203,9 @@ record through outputs `0`, `1`, and `2`.
 - [`Series::cumsum`](cumsum.md): the additive prefix scan.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cosh.html">
+  <a class="prev-link" href="cross.html">
     <span class="label">Previous</span>
-    <span class="title">cosh</span>
+    <span class="title">cross</span>
   </a>
   <a class="next-link" href="cummin.html">
     <span class="label">Next</span>

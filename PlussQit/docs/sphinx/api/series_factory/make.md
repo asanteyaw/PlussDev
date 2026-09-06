@@ -209,6 +209,26 @@ data=[[1, 2],
   [3, 4]]
 ```
 
+Example 11. `std::complex` values build a complex series directly — the leaf
+type picks `Complex64` (from `std::complex<float>`) or `Complex128` (from
+`std::complex<double>`).
+
+```cpp
+std::cout << pluss::series::make(
+    {std::complex<float>{1, 2}, {3, -4}, {0, 1}});
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=complex64, platform=cpu, numel=3, contiguous=true)
+data=[(1+2j), (3-4j), (0+1j)]
+```
+
+For a complex series assembled from two separate real series, use
+[`pluss::series::complex`](complex.md) (real + imaginary) or
+[`pluss::series::polar`](polar.md) (magnitude + angle).
+
 ## Notes
 
 - `make()` is the most flexible value-first constructor on the public Series
@@ -223,6 +243,8 @@ data=[[1, 2],
 - [`pluss::series::full`](full.md): shape-first constant construction.
 - [`pluss::series::arange`](arange.md): generated ranges instead of user-supplied
   values.
+- [`pluss::series::complex`](complex.md) / [`pluss::series::polar`](polar.md):
+  build a complex series from separate real parts.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="linspace.html">

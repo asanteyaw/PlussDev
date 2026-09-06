@@ -240,11 +240,11 @@ class Builder final {
                                                     selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
-                                                    MetricKind objective_metric = MetricKind::Accuracy,
+                                                    selection::Scorer objective = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
     return remember_(selection::compare(candidates(), batch, cv, train_options, assess_options,
-                                        objective_metric, objective_policy, fit_options));
+                                        objective, objective_policy, fit_options));
   }
 
   [[nodiscard]] selection::CompareResult benchmark(const pluss::table::DataFrame& x,
@@ -252,11 +252,11 @@ class Builder final {
                                                     selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
-                                                    MetricKind objective_metric = MetricKind::Accuracy,
+                                                    selection::Scorer objective = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
     return remember_(selection::compare(candidates(), x, y, cv, train_options, assess_options,
-                                        objective_metric, objective_policy, fit_options));
+                                        objective, objective_policy, fit_options));
   }
 
   // (frame, DataFrameBatchOptions) sibling -- see confusion_table's twin in
@@ -268,11 +268,11 @@ class Builder final {
                                                     selection::CrossValOptions cv = {},
                                                     TrainOptions train_options = {},
                                                     AssessOptions assess_options = {},
-                                                    MetricKind objective_metric = MetricKind::Accuracy,
+                                                    selection::Scorer objective = MetricKind::Accuracy,
                                                     TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                                     selection::FitOptions fit_options = {}) const {
     return remember_(selection::compare(candidates(), frame, data_options, cv, train_options, assess_options,
-                                        objective_metric, objective_policy, fit_options));
+                                        objective, objective_policy, fit_options));
   }
 
   [[nodiscard]] bool benchmarked() const noexcept {

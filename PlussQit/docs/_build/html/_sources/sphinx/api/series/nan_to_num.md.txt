@@ -116,9 +116,9 @@ explicit finite policy values before the next stage of computation.
 - [`Series::isfinite`](isfinite.md): broad finite/non-finite detector.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="mul.html">
+  <a class="prev-link" href="mvlgamma.html">
     <span class="label">Previous</span>
-    <span class="title">mul</span>
+    <span class="title">mvlgamma</span>
   </a>
   <a class="next-link" href="nanmean.html">
     <span class="label">Next</span>

@@ -124,29 +124,8 @@ namespace {
   return {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
 }
 
-[[nodiscard]] bool metric_prefers_max(MetricKind metric) {
-  switch (metric) {
-    case MetricKind::Accuracy:
-    case MetricKind::BalancedAccuracy:
-    case MetricKind::Precision:
-    case MetricKind::Recall:
-    case MetricKind::Sensitivity:
-    case MetricKind::F1:
-    case MetricKind::RocAuc:
-    case MetricKind::Specificity:
-    case MetricKind::GeometricMean:
-    case MetricKind::BalanceQuality:
-    case MetricKind::R2:
-      return true;
-    case MetricKind::LogLoss:
-    case MetricKind::Mse:
-    case MetricKind::Rmse:
-    case MetricKind::Mae:
-    case MetricKind::QuantileLoss:
-      return false;
-  }
-  return true;
-}
+// metric_prefers_max lives in nodej/options.h now (shared with tune.cpp and
+// inspection.cpp instead of a third private copy).
 
 [[nodiscard]] bool maximize_sparse_objective(SparseObjectivePolicy policy, MetricKind metric) {
   if (policy == SparseObjectivePolicy::Maximize) return true;
@@ -490,6 +469,7 @@ StatusOr<Series> SparseLinearBinaryClassifier::assess(const SparseCsrMatrix& csr
 
   std::int64_t tp = 0, tn = 0, fp = 0, fn = 0;
   double logloss = 0.0;
+  double brier_sum = 0.0;
   std::vector<double> probs(scores.size(), 0.0);
   for (std::size_t i = 0; i < scores.size(); ++i) {
     const double p = sigmoid(scores[i]);
@@ -497,6 +477,7 @@ StatusOr<Series> SparseLinearBinaryClassifier::assess(const SparseCsrMatrix& csr
     const double y01 = truth[i];
     const bool pred1 = p >= options.positive_threshold;
     logloss += -(y01 * std::log(std::max(p, 1e-12)) + (1.0 - y01) * std::log(std::max(1.0 - p, 1e-12)));
+    brier_sum += (p - y01) * (p - y01);
     if (pred1 && y01 > 0.5) ++tp;
     else if (pred1 && y01 <= 0.5) ++fp;
     else if (!pred1 && y01 > 0.5) ++fn;
@@ -513,6 +494,14 @@ StatusOr<Series> SparseLinearBinaryClassifier::assess(const SparseCsrMatrix& csr
   const double bacc = 0.5 * (tpr + tnr);
   const double geom = std::sqrt(std::max(0.0, tpr * tnr));
   const double bquality = std::max(0.0, geom * geom * (1.0 + 0.1 * (tpr - tnr)));
+  const double brier = brier_sum / std::max(1.0, n);
+  const double dtp = static_cast<double>(tp), dtn = static_cast<double>(tn);
+  const double dfp = static_cast<double>(fp), dfn = static_cast<double>(fn);
+  const double mcc_den = std::sqrt((dtp + dfp) * (dtp + dfn) * (dtn + dfp) * (dtn + dfn));
+  const double mcc = mcc_den > 0.0 ? (dtp * dtn - dfp * dfn) / mcc_den : 0.0;
+  const double kappa_pe =
+      n > 0.0 ? ((dtp + dfp) * (dtp + dfn) + (dtn + dfn) * (dtn + dfp)) / (n * n) : 0.0;
+  const double cohen_kappa = (1.0 - kappa_pe) != 0.0 ? (acc - kappa_pe) / (1.0 - kappa_pe) : 0.0;
 
   std::vector<double> out{};
   out.reserve(metrics.size());
@@ -528,9 +517,13 @@ StatusOr<Series> SparseLinearBinaryClassifier::assess(const SparseCsrMatrix& csr
       case MetricKind::GeometricMean: out.push_back(geom); break;
       case MetricKind::BalanceQuality: out.push_back(bquality); break;
       case MetricKind::LogLoss: out.push_back(logloss); break;
+      case MetricKind::Brier: out.push_back(brier); break;
+      case MetricKind::Mcc: out.push_back(mcc); break;
+      case MetricKind::CohenKappa: out.push_back(cohen_kappa); break;
       default:
         return StatusOr<Series>(Status::not_implemented(
-            "SparseLinearBinaryClassifier::assess currently supports binary classification metrics and LogLoss."));
+            "SparseLinearBinaryClassifier::assess supports hard-label / LogLoss / Brier / Mcc / "
+            "CohenKappa metrics (Gini / AveragePrecision need a dense classifier's score sweep)."));
     }
   }
   return StatusOr<Series>(pluss::make_series(std::move(out), {static_cast<std::int64_t>(metrics.size())}, f64_cpu()));
@@ -886,6 +879,7 @@ StatusOr<Series> SparseLinearMultiClassifier::assess(const SparseCsrMatrix& csr,
   std::vector<double> class_specificity(static_cast<std::size_t>(cls_count), 0.0);
   std::vector<double> class_geometric(static_cast<std::size_t>(cls_count), 0.0);
   std::vector<double> class_balance_quality(static_cast<std::size_t>(cls_count), 0.0);
+  double correct_sum = 0.0, pk_tk_sum = 0.0, pk_pk_sum = 0.0, tk_tk_sum = 0.0;
   for (std::int64_t ci = 0; ci < cls_count; ++ci) {
     double tp = 0.0, fp = 0.0, fn = 0.0, tn = 0.0;
     for (std::int64_t r = 0; r < csr.rows; ++r) {
@@ -908,6 +902,12 @@ StatusOr<Series> SparseLinearMultiClassifier::assess(const SparseCsrMatrix& csr,
     class_specificity[static_cast<std::size_t>(ci)] = spec;
     class_geometric[static_cast<std::size_t>(ci)] = geom;
     class_balance_quality[static_cast<std::size_t>(ci)] = bquality;
+    const double pk = tp + fp;  // predicted count for this class
+    const double tk = tp + fn;  // true count for this class
+    correct_sum += tp;
+    pk_tk_sum += pk * tk;
+    pk_pk_sum += pk * pk;
+    tk_tk_sum += tk * tk;
   }
   double macro_precision = 0.0;
   double macro_recall = 0.0;
@@ -930,6 +930,12 @@ StatusOr<Series> SparseLinearMultiClassifier::assess(const SparseCsrMatrix& csr,
   macro_geometric /= static_cast<double>(cls_count);
   macro_balance_quality /= static_cast<double>(cls_count);
 
+  const double s_sq = n * n;
+  const double mcc_den = std::sqrt(std::max(0.0, (s_sq - pk_pk_sum) * (s_sq - tk_tk_sum)));
+  const double mcc = mcc_den > 0.0 ? (correct_sum * n - pk_tk_sum) / mcc_den : 0.0;
+  const double kappa_pe = s_sq > 0.0 ? pk_tk_sum / s_sq : 0.0;
+  const double cohen_kappa = (1.0 - kappa_pe) != 0.0 ? (accuracy - kappa_pe) / (1.0 - kappa_pe) : 0.0;
+
   std::vector<double> out{};
   out.reserve(metrics.size());
   for (MetricKind m : metrics) {
@@ -943,9 +949,12 @@ StatusOr<Series> SparseLinearMultiClassifier::assess(const SparseCsrMatrix& csr,
       case MetricKind::Specificity: out.push_back(macro_specificity); break;
       case MetricKind::GeometricMean: out.push_back(macro_geometric); break;
       case MetricKind::BalanceQuality: out.push_back(macro_balance_quality); break;
+      case MetricKind::Mcc: out.push_back(mcc); break;
+      case MetricKind::CohenKappa: out.push_back(cohen_kappa); break;
       default:
         return StatusOr<Series>(Status::not_implemented(
-            "SparseLinearMultiClassifier::assess currently supports hard-label multiclass classification metrics."));
+            "SparseLinearMultiClassifier::assess supports hard-label / Mcc / CohenKappa multiclass "
+            "classification metrics (Gini / AveragePrecision / Brier need a dense classifier)."));
     }
   }
   return StatusOr<Series>(pluss::make_series(std::move(out), {static_cast<std::int64_t>(metrics.size())}, f64_cpu()));

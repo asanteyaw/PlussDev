@@ -122,8 +122,8 @@ data=[3.0000]
     <span class="label">Previous</span>
     <span class="title">neg</span>
   </a>
-  <a class="next-link" href="nonzero.html">
+  <a class="next-link" href="no_grad.html">
     <span class="label">Next</span>
-    <span class="title">nonzero</span>
+    <span class="title">no_grad</span>
   </a>
 </div>

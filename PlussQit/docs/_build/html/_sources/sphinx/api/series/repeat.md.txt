@@ -142,9 +142,9 @@ data=[4, 4]
 - [`Series::expand`](expand.md): a zero-copy broadcast instead of a copy.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="remainder.html">
+  <a class="prev-link" href="renorm.html">
     <span class="label">Previous</span>
-    <span class="title">remainder</span>
+    <span class="title">renorm</span>
   </a>
   <a class="next-link" href="repeat_interleave.html">
     <span class="label">Next</span>

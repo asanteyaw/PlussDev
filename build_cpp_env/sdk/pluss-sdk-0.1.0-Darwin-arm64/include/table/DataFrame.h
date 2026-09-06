@@ -250,6 +250,7 @@ public:
     const std::string& at(std::string_view feature) const;
     const std::string& operator[](std::string_view feature) const;
     const std::vector<Entry>& entries() const noexcept;
+    std::vector<std::string> payloads() const;
     const_iterator begin() const noexcept;
     const_iterator end() const noexcept;
 
@@ -916,7 +917,6 @@ public:
   DataFrame top(std::string_view feature, std::int64_t n) const;
   DataFrame bottom(std::string_view feature, std::int64_t n) const;
   DataFrameView observe(std::int64_t row, bool render = false) const;
-  DataFrameView observe(std::int64_t start, std::int64_t stop, bool render = false) const;
   FrameMatch match(const DataFrame& other,
                    const FrameMatchOptions& options = {}) const;
   DataFrame align(const AlignSpec& spec) const;

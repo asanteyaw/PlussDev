@@ -18,10 +18,15 @@ lymph::selection::CompareResult lymph::selection::compare(
     lymph::selection::CrossValOptions cv = {},
     lymph::TrainOptions train_options = {},
     lymph::AssessOptions assess_options = {},
-    lymph::MetricKind objective_metric = lymph::MetricKind::Accuracy,
+    lymph::selection::Scorer objective = lymph::MetricKind::Accuracy,
     lymph::TuneObjectivePolicy objective_policy = lymph::TuneObjectivePolicy::Auto,
     lymph::selection::FitOptions fit_options = {});
 ```
+
+`objective` is a [`Scorer`](Scorer.md) — implicitly a `MetricKind`
+(`objective = MetricKind::F1`), or `selection::make_scorer("name", fn)` for a
+custom callable ranked on each fold's `(truth, prediction)`. See
+[`Scorer`](Scorer.md).
 
 The `/* data */` slot is one of:
 
@@ -35,7 +40,7 @@ The `/* data */` slot is one of:
 ## What It Does
 
 Every candidate is cross-validated under the one `cv` policy, its objective
-value (the `objective_metric` fold mean) recorded, and the candidates ranked.
+value (the `objective` fold mean) recorded, and the candidates ranked.
 The winner is re-fitted on the whole dataset; `fit_options.fit_top` /
 `fit_bottom` re-fit that many ranked leaders and laggards so
 [`CompareResult::top(k)`](CompareReport.md) / `bottom(k)` can return them.
@@ -77,11 +82,18 @@ argument. `name` is what shows up in the ranked board.
   `train_options` ignores this.
 
 `assess_options` — `lymph::options::Assess`
-: Metrics for the board. An empty set is filled from `objective_metric`.
+: Metrics for the board. An empty set is filled from the `objective` metric, or
+  from the task default when `objective` is a custom [`Scorer`](Scorer.md).
 
-`objective_metric` / `objective_policy`
-: The metric candidates are ranked on, and whether higher or lower wins
-  (`Auto` uses the metric's own convention).
+`objective` — `lymph::selection::Scorer`
+: What candidates are ranked on. Implicitly a `MetricKind`; or
+  `selection::make_scorer("name", fn, greater_is_better)` for a callable scored
+  on each fold's `(truth, prediction)`. See [`Scorer`](Scorer.md).
+
+`objective_policy` — `lymph::TuneObjectivePolicy`
+: `Auto` (the metric's own convention, or the custom scorer's
+  `greater_is_better`), `Maximize`, or `Minimize` — the last two override the
+  objective's direction.
 
 `fit_options` — `lymph::selection::FitOptions`
 : `fit_top` / `fit_bottom` — how many ranked leaders / laggards to re-fit on the
@@ -395,6 +407,8 @@ worst trained = true
 
 - [`CompareReport`](CompareReport.md) — the report / `CompareResult` types this
   returns.
+- [`Scorer`](Scorer.md) — the `objective` type; `make_scorer` for a custom
+  ranking metric.
 - [`selection::spotcheck`](spotcheck.md) — builds the candidate list for you
   from a `models::Builder` × strategy grid.
 - [`selection::search`](search.md) — a parameter grid instead of a fixed list.

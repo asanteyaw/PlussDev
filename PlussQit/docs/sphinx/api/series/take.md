@@ -245,9 +245,9 @@ surface.
   named axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sum.html">
+  <a class="prev-link" href="t.html">
     <span class="label">Previous</span>
-    <span class="title">sum</span>
+    <span class="title">t</span>
   </a>
   <a class="next-link" href="take_along_dim.html">
     <span class="label">Next</span>

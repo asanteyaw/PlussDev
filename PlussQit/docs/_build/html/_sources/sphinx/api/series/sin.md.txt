@@ -155,8 +155,8 @@ special angles.
     <span class="label">Previous</span>
     <span class="title">silu</span>
   </a>
-  <a class="next-link" href="sinh.html">
+  <a class="next-link" href="sinc.html">
     <span class="label">Next</span>
-    <span class="title">sinh</span>
+    <span class="title">sinc</span>
   </a>
 </div>

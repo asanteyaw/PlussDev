@@ -4318,7 +4318,7 @@ Series sample_like(dst::Kind kind,
   const Config cfg = Config{}
                          .with_dtype(like.scalar_type())
                          .with_platform(like.platform())
-                         .with_pinned(like.is_pinned().item<bool>());
+                         .with_pinned(like.is_pinned());
   return sample(kind, params, like.sizes(), cfg, seed, method);
 }
 

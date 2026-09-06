@@ -68,7 +68,7 @@ inline Config config_like(const Series& like) {
   return Config{}
       .with_dtype(like.scalar_type())
       .with_platform(like.platform())
-      .with_pinned(like.is_pinned().item<bool>());
+      .with_pinned(like.is_pinned());
 }
 
 inline Series zero_series_like(const Series& x) {

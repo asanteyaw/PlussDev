@@ -70,8 +70,10 @@ std::cout << direct << "\n" << bound << "\n";
 ### Output
 
 ```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[[1, 5],
   [1, 3.6055513]]
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[[1, 5],
   [1, 3.6055513]]
 ```
@@ -92,8 +94,10 @@ std::cout << right.sensitivity() << "\n";
 ### Output
 
 ```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[[-1.6, -0.8],
   [-0.5547002, 0.16794971]]
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[[1, -1],
   [1.1547002, 1.6320503]]
 ```
@@ -116,7 +120,9 @@ std::cout << a.sensitivity() << "\n" << b.sensitivity() << "\n";
 ### Output
 
 ```text
+pluss::Series(shape=[1,2], strides=[2,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[[0, 0]]
+pluss::Series(shape=[1,2], strides=[2,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[[-0, -0]]
 ```
 

@@ -158,9 +158,9 @@ Use `intersect1d()` when you want the overlap between two value collections.
   output set.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index_select.html">
+  <a class="prev-link" href="inner.html">
     <span class="label">Previous</span>
-    <span class="title">index_select</span>
+    <span class="title">inner</span>
   </a>
   <a class="next-link" href="intersection.html">
     <span class="label">Next</span>

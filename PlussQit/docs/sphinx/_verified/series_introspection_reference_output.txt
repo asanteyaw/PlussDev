@@ -1,0 +1,54 @@
+=== rank_count_and_stride ===
+scalar: dim=0, numel=1
+matrix: dim=2, numel=6, stride(0)=3, stride(-1)=1
+matrix strides=[3,1]
+
+=== logical_layout ===
+matrix contiguous: true
+transposed sizes=[3,2]
+transposed strides=[1,3]
+transposed contiguous: false
+
+=== dtype_queries ===
+real dtype=float32, bytes=4, floating=true, signed=true
+integer dtype=uint32, signed=false
+complex dtype=complex64, complex=true, signed=true
+
+=== state_queries ===
+cpu=true, gpu=false, cuda=false, mps=false, leaf=true, result leaf=false
+zero nonzero=false, three nonzero=true
+
+=== size_storage_and_value_identity ===
+same size as transpose: false
+set to alias: true
+set to transpose: false
+set to clone: false
+equal to clone: true
+
+=== exact_equality ===
+same values, different dtype: true
+broadcastable but different shape: false
+two empty [0] Series: true
+
+=== asymmetric_tolerance ===
+9 close to 10: true
+10 close to 9: false
+
+=== broadcast_isclose ===
+Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  true false false ⎤
+⎣ false  true false ⎦
+=== nan_and_infinity ===
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, false, false, true]
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, false, true, true]
+all close (NaNs unequal): false
+all close (NaNs equal): false
+
+=== contract_failures ===
+Series::stride: dim out of range
+is_nonzero: expected a Series with exactly one element
+isclose: receiver and other must have the same dtype
+isclose: rtol must be greater than or equal to zero

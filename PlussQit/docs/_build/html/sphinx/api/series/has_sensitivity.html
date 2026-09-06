@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::histc" href="histc.html" />
+    <link rel="next" title="Series::heaviside" href="heaviside.html" />
     <link rel="prev" title="Series::hardshrink" href="hardshrink.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -123,23 +123,30 @@ after_reverse=true
 after_clear=false
 </pre></div>
 </div>
-<p>Example 2. If nothing was marked for tracking, reverse-mode does not create a
-stored sensitivity on that leaf.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> is only ever <code class="docutils literal notranslate"><span class="pre">true</span></code> after a reverse pass over a
+tracked leaf. Reverse-mode over an objective with no tracked leaf does not fall
+through to an empty result — it raises.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">silent_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
-<span class="n">silent_x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">silent_x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;has_dL_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">silent_x</span><span class="p">.</span><span class="n">has_sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>The scalar objective here is</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L = 2x1 + 2x2 + 2x3
-</pre></div>
-</div>
-<p>so the mathematical sensitivity exists, but this particular <code class="docutils literal notranslate"><span class="pre">Series</span></code> was never
-configured as a tracked leaf, so no public stored sensitivity is kept on it.</p>
+<p>The scalar objective <code class="docutils literal notranslate"><span class="pre">L</span> <span class="pre">=</span> <span class="pre">2x₁</span> <span class="pre">+</span> <span class="pre">2x₂</span> <span class="pre">+</span> <span class="pre">2x₃</span></code> is mathematically differentiable,
+but <code class="docutils literal notranslate"><span class="pre">silent_x</span></code> was never configured as a tracked leaf, so the graph is
+disconnected and <a class="reference internal" href="reverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reverse()</span></code></span></a> reports it. <code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> is
+still <code class="docutils literal notranslate"><span class="pre">false</span></code> afterward — nothing was stored.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>has_dL_dx=false
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>series_tape::backpropagate: objective does not track slope and has no source link; nothing to differentiate (a constant, or built only from non-differentiable ops)
+has_dL_dx=false
 </pre></div>
 </div>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code> is the way to distinguish “no stored
@@ -220,9 +227,9 @@ sensitivity.</p></li>
     <span class="label">Previous</span>
     <span class="title">hardshrink</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="heaviside.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">heaviside</span>
   </a>
 </div>
 </section>
@@ -317,7 +324,7 @@ sensitivity.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="hardshrink.html" title="previous chapter">Series::hardshrink</a></li>
-      <li>Next: <a href="histc.html" title="next chapter">Series::histc</a></li>
+      <li>Next: <a href="heaviside.html" title="next chapter">Series::heaviside</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

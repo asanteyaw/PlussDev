@@ -318,7 +318,8 @@ flat global positions or local axis positions.
 
 ## See Also
 
-- [`Series::min`](min.md): returns winning values instead of indices.
+- [`Series::min`](min.md): returns winning values instead of indices; also hosts
+  `min_pair`, which returns the winning value and its index together.
 - [`Series::argmax`](argmax.md): upper-winner index counterpart.
 
 <div class="pluss-inline-prev-next">

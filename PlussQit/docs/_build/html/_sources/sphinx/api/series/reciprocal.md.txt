@@ -91,9 +91,9 @@ intent should stay explicit in the code.
 - [`Series::pow`](pow.md): reciprocal can be viewed as `x^{-1}`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ravel.html">
+  <a class="prev-link" href="real.html">
     <span class="label">Previous</span>
-    <span class="title">ravel</span>
+    <span class="title">real</span>
   </a>
   <a class="next-link" href="relu.html">
     <span class="label">Next</span>

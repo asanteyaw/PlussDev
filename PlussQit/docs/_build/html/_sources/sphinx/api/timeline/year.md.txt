@@ -2,202 +2,74 @@
 
 [Back to Timeline API Reference](../../timeline_api_reference)
 
-## Representative Signatures
+## Signature
 
 ```cpp
-Timeline::year() -> Series
-Timeline::month() -> Series
-Timeline::day() -> Series
-Timeline::hour() -> Series
-Timeline::minute() -> Series
-Timeline::second() -> Series
-Timeline::nanosecond() -> Series
-Timeline::microsecond() -> Series
-Timeline::millisecond() -> Series
-Timeline::weekday() -> Series
-Timeline::dayofyear() -> Series
-Timeline::quarter() -> Series
-Timeline::week() -> Series
+Series Timeline::year() const
 ```
 
-## What It Does
+Aliases: `y()`, `yr()`, `years()`, and `year_()`.
 
-This page is the canonical reference for the calendar component extractor
-family.
+## Read The Civil Year
 
-These methods project each timestamp into one numeric calendar field.
+`year()` replaces every timestamp with the four-digit year shown by the
+timeline's current timezone. It is an elementwise projection: rank, shape, and
+element order are unchanged, while the result dtype is `int32`.
 
-## Returns
+The word *civil* matters near a New Year boundary. `year()` answers which year
+the local date belongs to. It does not return the ISO week-numbering year; a
+date such as 1 January 2021 can therefore have `year() == 2021` and
+`week() == 53` at the same time.
 
-`Series`
-    A numeric series for the requested calendar component.
+Missing timestamps become `-1`. Treat that value as a missing-field sentinel,
+not as a historical year. Use `isvalid()` when the distinction matters.
 
-## Examples
-
-Example 1. Extract coarse calendar components.
+## Example: Years, Boundaries, And Missing Values
 
 ```cpp
-auto years = base.year();
-auto months = base.month();
-auto days = base.day();
-std::cout << pluss::series::print(years) << "\n";
-std::cout << pluss::series::print(months) << "\n";
-std::cout << pluss::series::print(days) << "\n";
+const auto events = pluss::timeline::make({
+    "2020-12-31T23:59:59.123456789Z",
+    "2021-01-01T00:00:00.987654321Z",
+    "2024-02-29T06:07:08.009010011Z",
+    "",
+});
+
+pluss::series::print(std::cout, events.year());
 ```
 
 ### Output
 
-`base.year()`:
-
 ```text
 Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[2024, 2024, 2024, 2025]
+data=[2020, 2021, 2024, -1]
 ```
 
-`base.month()`:
+The first two values deliberately straddle midnight. The extraction is
+elementwise, so neither ordering nor adjacency changes the answer.
 
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[11, 11, 12, 1]
-```
+## Timezone Changes The Calendar View
 
-`base.day()`:
+The stored instant and its displayed calendar year are different concepts.
+`tz_convert()` preserves the instant but changes the local calendar used by
+all field extractors. Near midnight, converting timezones can therefore change
+the year. Convert first, extract second when grouping by a local reporting
+calendar.
 
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[1, 1, 31, 1]
-```
+## Gotchas And Failure Modes
 
-Example 2. Extract time-of-day components.
-
-```cpp
-auto hours = base.hour();
-auto minutes = base.minute();
-auto seconds = base.second();
-std::cout << pluss::series::print(hours) << "\n";
-std::cout << pluss::series::print(minutes) << "\n";
-std::cout << pluss::series::print(seconds) << "\n";
-```
-
-### Output
-
-`base.hour()`:
-
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[9, 10, 23, 0]
-```
-
-`base.minute()`:
-
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[0, 15, 59, 0]
-```
-
-`base.second()`:
-
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[0, 30, 59, 0]
-```
-
-Example 3. Extract finer and calendar-indexing components.
-
-```cpp
-auto nanos = base.nanosecond();
-auto weekdays = base.weekday();
-auto yeardays = base.dayofyear();
-auto quarters = base.quarter();
-auto weeks = base.week();
-std::cout << pluss::series::print(nanos) << "\n";
-std::cout << pluss::series::print(weekdays) << "\n";
-std::cout << pluss::series::print(yeardays) << "\n";
-std::cout << pluss::series::print(quarters) << "\n";
-std::cout << pluss::series::print(weeks) << "\n";
-```
-
-### Output
-
-`base.nanosecond()`:
-
-```text
-Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
-data=[0, 0, 0, 0]
-```
-
-`base.weekday()`:
-
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[4, 4, 1, 2]
-```
-
-`base.dayofyear()`:
-
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[306, 306, 366, 1]
-```
-
-`base.quarter()`:
-
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[4, 4, 4, 1]
-```
-
-`base.week()`:
-
-```text
-Series(shape=[4], strides=[1], dtype=int32, platform=cpu, numel=4, contiguous=true)
-data=[44, 44, 1, 1]
-```
-
-## Aliases
-
-Many short aliases route to the same implementations. Representative examples:
-
-- `y`, `yr`, `years`
-  Alias `year()`.
-- `mon`, `mo`
-  Alias `month()`.
-- `d`, `dom`
-  Alias `day()`.
-- `h`, `hr`
-  Alias `hour()`.
-- `m`
-  Alias `minute()`.
-- `sec`, `s`
-  Alias `second()`.
-- `dow`, `dayofweek`
-  Alias `weekday()`.
-- `doy`
-  Alias `dayofyear()`.
-- `q`, `qtr`
-  Alias `quarter()`.
-- `weekofyear`, `woy`
-  Alias `week()`.
-
-## Notes
-
-- All these methods read calendar fields in the timeline’s current timezone.
-- When you only need text labels instead of numeric fields, use
-  [`weekday_name`](weekday_name.md), [`month_name`](month_name.md), or the
-  `to_note_*` helpers.
+- `year()` does not mutate the timeline and does not return timestamps.
+- A result of `-1` means the source element was `NaT`; it is not a valid year.
+- Do not combine `year()` and `week()` as an ISO year-week key at New Year.
+- The aliases are exact synonyms; they do not use different calendars.
 
 ## See Also
 
-- [`Timeline::is_leap_year`](is_leap_year.md)
-- [`Timeline::is_monday`](is_monday.md)
+- [`month`](month.md): extract the month within the civil year.
+- [`week`](week.md): extract the ISO week number.
+- [`is_leap_year`](is_leap_year.md): classify each local calendar year.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="searchsorted_left.html">
-    <span class="label">Previous</span>
-    <span class="title">searchsorted_left</span>
-  </a>
-  <a class="next-link" href="is_leap_year.html">
-    <span class="label">Next</span>
-    <span class="title">is_leap_year</span>
-  </a>
+  <a class="prev-link" href="searchsorted_left.html"><span class="label">Previous</span><span class="title">searchsorted_left</span></a>
+  <a class="next-link" href="month.html"><span class="label">Next</span><span class="title">month</span></a>
 </div>
+<!-- pluss-hand-authored -->

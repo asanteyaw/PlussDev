@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="pluss::series::polar" href="polar.html" />
@@ -173,6 +173,12 @@ data=[(1+4j), (2+5j), (3+6j)]
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">complex()</span></code> is elementwise pairing, not broadcasting composition.</p></li>
 <li><p>Destination dtype controls complex precision, not shape.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">complex()</span></code> when the real and imaginary parts already exist as separate
+series. To build a complex series from literals instead, pass <code class="docutils literal notranslate"><span class="pre">std::complex</span></code>
+values straight to <a class="reference internal" href="make.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">make</span></code></span></a> /
+<a class="reference internal" href="make.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::make_series</span></code></span></a> (e.g.
+<code class="docutils literal notranslate"><span class="pre">pluss::make_series({std::complex&lt;float&gt;{1,</span> <span class="pre">2},</span> <span class="pre">{3,</span> <span class="pre">4}})</span></code>), and
+<a class="reference internal" href="polar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">polar</span></code></span></a> builds one from magnitude and angle.</p></li>
 </ul>
 </section>
 <section id="see-also">

@@ -113,4 +113,4 @@ saving only the inner model may be too weak a representation of reality.
 
 - [load](load.md)
 - [persistence](persistence.md)
-- [Workflow](../model/Workflow.md)
+- [Workflow](../workflow/Workflow.md)

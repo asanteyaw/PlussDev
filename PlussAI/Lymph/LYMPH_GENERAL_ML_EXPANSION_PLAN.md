@@ -54,27 +54,36 @@ Implemented in this phase:
   - `model.reports().metric_series(...)`
   - `model.reports().threshold_curve(...)`
   - `model.reports().best_threshold(...)`
-- Added raw prediction metric views:
-  - `metrics::classification(y, prediction).confusion_table()`
-  - `metrics::classification(y, prediction).summary()`
-  - `metrics::classification(y, prediction).values(...)`
-  - `metrics::classification(y, prediction).report(...)`
-  - `metrics::regression(y, prediction).values(...)`
-  - `metrics::regression(y, prediction).report(...)`
-  - `metrics::threshold(scores, y).curve()`
-  - `metrics::threshold(scores, y).best(...)`
-- Kept existing free functions as compatibility and implementation substrate,
-  but Phase 2 establishes accessors as the cleaner public consumption style for
-  metrics/reporting work.
+- Raw-prediction metric helpers, grouped by task under
+  `metrics::classification::` and `metrics::regression::` (a later revision
+  replaced the first-pass `Classification` / `Regression` accessor classes with
+  plain free functions — one spelling each, no `*_metric_series` alias):
+  - `metrics::classification::confusion_table(y, prediction, ...)`
+  - `metrics::classification::summary(y, prediction, ...)`
+  - `metrics::classification::report(y, prediction, {kinds}, ...)` → a
+    `MetricReport` of hard-label metrics; `report(...).values` is the raw Series
+  - `metrics::classification::score_report(scores, y, {kinds})` → a
+    `MetricReport` of the score metrics (RocAuc / Gini / AveragePrecision /
+    LogLoss / Brier), from a probability Series and no model -- the data-level
+    twin of `model.reports().metric_series(...)`; backed by the new
+    `nodej::score_metrics` kernel (binary + macro-OvR multiclass, reusing the
+    classifier assess() math)
+  - `metrics::regression::report(y, prediction, {kinds})`
+  - `metrics::classification::threshold(scores, y).curve()`
+  - `metrics::classification::threshold(scores, y).best(...)`
+- The bare `lymph::confusion_table` / `lymph::classification_summary` spellings
+  were removed; `classification_metric_series` / `regression_metric_series`
+  survive only as internal plumbing behind `report(...)` and the model-backed
+  `reports::` overloads.
 
 Design notes:
 
-- Accessors are allowed when they improve family semantics, like `Series`
-  namespace accessors. They should remain narrow and family-owned, not become a
-  path for putting unrelated operations onto `Model`.
-- Classification hard-label metrics stay on `metrics::classification(...)`;
+- Task-scoped function groups (`metrics::classification::`,
+  `metrics::regression::`) are the public surface. They stay narrow and
+  family-owned, not a path for putting unrelated operations onto `Model`.
+- Classification hard-label metrics stay on `metrics::classification::`;
   model-backed probability/threshold reports stay on `model.reports()` or
-  `metrics::threshold(scores, y)`.
+  `metrics::classification::threshold(scores, y)`.
 - Metric math remains delegated to NodeJ kernels and Series operations. Lymph
   only coordinates names, options, and report shape.
 
@@ -436,8 +445,17 @@ Implemented families:
 - `metrics`: classification/regression scalar metrics, cross-validation helpers,
   holdout split.
 - `balance`: class-mix and imbalance growth targets.
-- `feature`: score/rank/pick feature selection surface.
-- `inspection`: partial dependence and permutation impact.
+- `feature` (`lymph::features`): score/rank/pick univariate filter selection
+  (`f_score_rank` / `f_regression_rank` / `variance_prune`), plus model-agnostic
+  `permutation_importance(model, eval, Scorer, ...)` and `rfe(model, batch,
+  Scorer, RFEOptions)` (recursive feature elimination, ranked by permutation
+  importance rather than a per-family coef_ / feature_importances_ accessor).
+  Not yet wired into the sphinx docs manifest/sidebar.
+- `inspection`: partial dependence and permutation impact
+  (`nodej::permutation_impact` -- ModelSpec-level, retrains internally;
+  `lymph::features::permutation_importance` is the model-level twin, taking an
+  already-trained `models::Model`). Not yet wired into the sphinx docs
+  manifest/sidebar.
 - `transform`: target transforms for regression-style model work.
 - `sparse`: sparse linear training/evaluation surface.
 - `shape`: feature distribution profile and transform-plan surface.
@@ -759,12 +777,27 @@ Current coverage:
 - `search`: grid/random axes.
 - `spotcheck`: model x strategy comparison.
 - `selection`: substrate.
+- Custom ranking objective: `selection::Scorer` / `selection::make_scorer(name,
+  fn, greater_is_better)` -- a built-in `MetricKind` **or** a
+  `double(const Series& truth, const Series& prediction)` callable scored on
+  every fold's `(truth, prediction)`. Accepted by `compare`, `Search::run`,
+  `spotcheck::Suite::run`, `Builder::benchmark`,
+  `validate::Plan::run(builder, …)`, and `validate::Plan::score` /
+  `Plan::scores` (the `models::Model` / `workflow::Workflow` overloads --
+  `detail::custom_scorer_fold_values_` runs a lymph fold loop, batch or
+  DataFrame folds so staged models keep their column names). The callable runs
+  once per fold inside the existing parallel pass (one extra `infer`, no extra
+  training). The `ModelSpec` `Plan::score` overloads and `tune_specs` /
+  `probe_specs` stay `MetricKind`-only (NodeJ single-metric CV path, no host
+  callback).
 
 Pending expansions:
 
 - Successive-halving style search.
 - Bayesian/adaptive search later, if a generic optimizer family is available.
 - Multi-metric selection policy.
+- Score/probability-based custom `Scorer` (`needs_proba`); custom `Scorer` on
+  the `ModelSpec` `Plan::score` overloads + `tune_specs`.
 - Refitting policy: best, top-k, custom tie-break.
 - Early-stop hooks.
 - Search over preprocessing stages and column-router alternatives.
@@ -791,15 +824,24 @@ Current coverage:
 - Classification summary.
 - Confusion table.
 - Threshold curve and best threshold.
-- Several scalar classification/regression metrics.
+- Scalar classification metrics: accuracy, balanced accuracy, precision, recall,
+  sensitivity, specificity, F1, geometric mean, balance quality, ROC-AUC, log
+  loss, **Matthews correlation (`Mcc`), Cohen's kappa (`CohenKappa`), Gini,
+  average precision / PR-AUC (`AveragePrecision`), Brier**. MCC and kappa flow
+  through the hard-label path (`metrics::classification::report`); Gini /
+  AveragePrecision / Brier / ROC-AUC / log loss need scores and come from
+  `metrics::classification::score_report(scores, labels, {kinds})` (direct, no
+  model) or a model-backed assess / `reports` call. `nodej::average_precision`
+  and `nodej::score_metrics` are reusable kernels next to `threshold_curve` /
+  `classification_metrics`.
+- Scalar regression metrics: MSE, RMSE, MAE, R2, quantile loss.
 
 Pending expansions:
 
 - Regression reports: residual summary, prediction error table, quantile/pinball,
   Poisson/Gamma/Tweedie deviance, explained variance, max error, MAPE, MSLE.
 - Classification reports: multilabel/multioutput, top-k, PR/ROC displays,
-  DET curve, calibration curve, Brier score, Cohen kappa, Matthews correlation,
-  Jaccard, Hamming, zero-one loss.
+  DET curve, calibration curve, Jaccard, Hamming, zero-one loss.
 - Clustering reports: silhouette, adjusted rand, mutual information, v-measure,
   pair confusion.
 - Ranking reports: DCG/NDCG, label ranking losses.
@@ -813,8 +855,9 @@ NodeJ requirements:
 Lymph requirements:
 
 - Keep report construction under `reports`.
-- Add `score` only if scorer objects become reusable family values for search and
-  validation. Otherwise keep metrics as options and reports.
+- Scorer objects landed as `selection::Scorer` (see §8) rather than a separate
+  `score` family -- they are a selection concern (ranking objective), not a
+  report type. A `score` family is still not warranted.
 
 ### 10. `inspect` Family
 
@@ -882,6 +925,63 @@ Current coverage:
 - `Workflow` = `Policy + Model`, with snapshot save/load and policy sidecar.
 - `Model::append(Stage, ColumnRouter)`.
 - `workflow_dsl` for branch/feature transformers.
+- **Docs: `lymph::workflow` fully documented (2026-09-04)** — hand-authored
+  family landing + `Introduction`, hub `Workflow` + `Introduction`, all 7
+  method pages (`on`, `learn`, `map`, `infer`, `assess`, `save`, `with`),
+  self-contained `Payload`/`Policy`/`TimeOptions`, and `make` (covering
+  `workflow::make`'s 5 distinct overload shapes + `branch`/`restore`/`load`).
+  37 new verified example programs under
+  `PlussAI/examples/NodeJ/lymph/lymph_workflow_*`. wire/nav/sighash/lint (0
+  in family)/sphinx-build/forbidden-terms all clean.
+  Also fixed a real bug surfaced while writing `map`/`learn_map`'s docs:
+  `ModelCore::learn_map` never resolved stages still pending from
+  `append()`/the branch DSL (only `learn_` did), so a `Workflow` calling
+  `learn_map` before any `learn_` silently mapped raw, unscaled features
+  instead of fitting and applying the routed stage. Fixed in
+  `detail/model_core.h` — `learn_map(frame, data_options, ...)` now calls
+  `materialize_pending_stages_(...)` first, matching `learn_`; the bare
+  `FeatureBatch` overloads of both `map` and `learn_map` now throw a clear
+  "N stage(s) still pending" error via a new shared
+  `require_no_pending_stages_()` guard instead of silently skipping the
+  stage (`map` already had no way to fit anything, so it fails loudly
+  rather than fabricate a plausible-looking wrong answer). New regression
+  coverage in `lymph_workflow_test.cpp` (§5b); full `lymph_*_test` suite
+  green.
+  Also added `lymph::workflow::options` sidebar visibility fix: a family
+  needs a `[[family]]` manifest entry with a `path` containing exactly one
+  `/` to appear as a sidebar root (`apiref.py`'s `build_nav`) — there is no
+  separate hand-edited nav JS step.
+  **Follow-up revision (same day)**, from user review of the rendered site:
+  (1) fixed a genuine, pre-existing, site-wide double prev/next footer bug —
+  `_static/layout.js`'s legacy `buildApiTreeSidebar()`/`buildMethodSidebar()`
+  fallback (keyed on a `window.PLUSS_API_TREE` global nothing sets any more)
+  always ran alongside the current `apiref.py`-authored static
+  `.pluss-inline-prev-next` footer, because it also has its own second
+  fallback reading Sphinx's `<link rel="prev"/"next">` tags unconditionally;
+  fixed by making `buildPrevNext()` bail out immediately whenever the static
+  footer is already present (affects every hand-authored page site-wide, not
+  just `workflow`). (2) Replaced `TimeOptions.md`'s literal `struct { ... }`
+  code dump with a plain field table — public reference pages should not
+  read as a pasted header. (3) `Payload.md`/`Policy.md` gained per-setter
+  "Effect" lines quoting real verified before/after state (a new
+  `lymph_workflow_payload_example_2`/`lymph_workflow_policy_example_2`
+  exercise every method the first example didn't: weights by name/by Series,
+  groups, `time(TimeOptions)`, `feature_batch`/`labeled_batch`; `forbid`,
+  `reject`, `allow`, `reject_any_missing`, `empty()`). (4) Added a
+  substantial, honest "Compared To A Pipeline And ColumnTransformer" section
+  to `Workflow/Introduction.md` (linked from `on.md`) answering: branches as
+  sub-pipelines (yes, but flat `Stage` lists, not nested reusable
+  `Workflow`/`Model` values); a flat single-chain-over-everything pipeline
+  (yes, via `route::remaining_of({})`, no dedicated literal-list
+  constructor); custom transformers (`prep::stage::custom(name, fn,
+  contract)`, yes — but whole-workflow only, not routed to one branch, and
+  it makes the `Workflow` non-cloneable so only `learn_` works with it, not
+  the value-returning `learn`, confirmed by a real thrown
+  `Flow::clone`/opaque-transform error). 3 new verified
+  `lymph_workflow_vs_sklearn_*_example_1` programs back every claim in that
+  section. wire/nav/sighash/lint (0 in family)/sphinx-build (0
+  warnings)/forbidden-terms all re-verified clean; `lymph_*_test` suite
+  still green.
 
 Pending expansions:
 

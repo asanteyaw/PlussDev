@@ -81,6 +81,32 @@ bool run_validate_checks(std::ostream* err) {
     if (err) *err << "validate::Plan::scores should return one score per fold\n";
     return false;
   }
+
+  // Custom selection::Scorer through Plan::scores / Plan::score: a plain
+  // accuracy callable must match the built-in MetricKind::Accuracy per fold.
+  const auto accuracy_fn = [](const Series& truth, const Series& prediction) -> double {
+    return truth.reshape({truth.numel()})
+        .eq(prediction.reshape({prediction.numel()}))
+        .to(ScalarType::Float64)
+        .mean()
+        .item<double>();
+  };
+  const Series custom_scores = plan.scores(
+      staged_logistic(), frame, data_options,
+      selection::make_scorer("fold_accuracy", accuracy_fn), quick_train);
+  const auto cs = custom_scores.to(pluss::pCPU, ScalarType::Float64).reshape({custom_scores.numel()}).to_vec<double>();
+  const auto bs = scores.to(pluss::pCPU, ScalarType::Float64).reshape({scores.numel()}).to_vec<double>();
+  if (cs.size() != 2 || std::abs(cs[0] - bs[0]) > 1e-9 || std::abs(cs[1] - bs[1]) > 1e-9) {
+    if (err) *err << "validate::Plan::scores with a custom Scorer should match the built-in accuracy per fold\n";
+    return false;
+  }
+  const double custom_mean = plan.score(
+      staged_logistic(), frame, data_options,
+      selection::make_scorer("fold_accuracy", accuracy_fn), quick_train);
+  if (std::abs(custom_mean - (cs[0] + cs[1]) / 2.0) > 1e-9) {
+    if (err) *err << "validate::Plan::score with a custom Scorer should be the fold mean\n";
+    return false;
+  }
   const prep::HoldoutSplit split = selection::holdout().test_size(0.25).stratify("y").seed(11).split(frame);
   if (!split.has_frame() || split.has_batch()
       || split.train_set.ncases() + split.test_set.ncases() != frame.ncases()
@@ -90,6 +116,18 @@ bool run_validate_checks(std::ostream* err) {
   }
 
   const LabeledBatch batch = resolve(labeled_batch_from_dataframe(frame, data_options), "test.labeled_batch_from_dataframe");
+
+  // The bare-LabeledBatch overload needs a stage-free model (appended prep
+  // stages have no column names to route against on a nameless batch -- same
+  // constraint as Plan::run(model, batch)).
+  const Series batch_custom_scores = plan.scores(
+      models::decision_tree_classifier({.max_depth = 3}), batch,
+      selection::make_scorer("fold_accuracy", accuracy_fn), quick_train);
+  if (batch_custom_scores.numel() != 2 || !batch_custom_scores.isfinite().all().item<bool>()) {
+    if (err) *err << "validate::Plan::scores(model, batch, custom Scorer) should return finite per-fold values\n";
+    return false;
+  }
+
   const prep::HoldoutSplit batch_split = selection::holdout().test_size(0.25).stratify(batch.y).seed(11).split(batch);
   if (batch_split.has_frame() || !batch_split.has_batch()
       || batch_split.train_batch.features.sample_count() + batch_split.test_batch.features.sample_count()

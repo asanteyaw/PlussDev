@@ -10,6 +10,9 @@
 Series SeriesStatAccessor::logcdf() const
 Series SeriesStatAccessor::logcdf(double sigma) const
 Series SeriesStatAccessor::logcdf(double mu, double sigma) const
+Series SeriesStatProxy::logcdf() const
+Series SeriesStatProxy::logcdf(double sigma) const
+Series SeriesStatProxy::logcdf(double mu, double sigma) const
 ```
 
 ## What It Does
@@ -26,6 +29,13 @@ very unlikely event remains a large finite negative number rather than `-inf`.
 
 Overloads choose standard normal, zero-mean custom `sigma`, or explicit
 `mu,sigma`. `sigma` must be positive.
+
+## Parameters And Returns
+
+`mu` locates the model and `sigma` is its strictly positive standard
+deviation. The method standardizes each owner value using those parameters and
+returns a shape-preserving `float64` `Series`. It performs no reduction and
+does not infer either parameter from the data.
 
 ## Gradient
 

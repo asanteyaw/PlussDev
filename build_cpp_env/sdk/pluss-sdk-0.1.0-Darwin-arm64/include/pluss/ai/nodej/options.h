@@ -49,6 +49,11 @@ enum class MetricKind : std::uint8_t {
   Specificity = 13,
   GeometricMean = 14,
   BalanceQuality = 15,
+  Mcc = 16,               // Matthews correlation coefficient (from confusion matrix)
+  CohenKappa = 17,        // unweighted Cohen's kappa (from confusion matrix)
+  Gini = 18,              // 2 * RocAuc - 1 (needs scores)
+  AveragePrecision = 19,  // area under the precision-recall curve (needs scores)
+  Brier = 20,             // mean squared error of predicted probabilities (loss; needs probabilities)
 };
 
 enum class CVPlanKind : std::uint8_t {

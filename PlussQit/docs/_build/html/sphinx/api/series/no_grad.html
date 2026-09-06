@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::NoGradGuard &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::nonzero" href="nonzero.html" />
+    <link rel="prev" title="Series::nextafter" href="nextafter.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="pluss-nogradguard">
+<h1>pluss::NoGradGuard<a class="headerlink" href="#pluss-nogradguard" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="public-types">
+<h2>Public Types<a class="headerlink" href="#public-types" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">NoGradGuard</span><span class="w"> </span><span class="n">guard</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">AutoGradMode</span><span class="w"> </span><span class="nf">mode</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">enabled</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">PauseRecording</span><span class="w"> </span><span class="n">pause</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Include <code class="docutils literal notranslate"><span class="pre">&lt;pluss/pluss.h&gt;</span></code>.</p>
+<p>These are scope guards. Construct one at the beginning of a block; its effect
+lasts until control leaves that block, including when an exception unwinds the
+stack.</p>
+</section>
+<section id="what-nogradguard-does">
+<h2>What NoGradGuard Does<a class="headerlink" href="#what-nogradguard-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::NoGradGuard</span></code> temporarily stops new <code class="docutils literal notranslate"><span class="pre">Series</span></code> operations from joining the
+reverse graph. It is intended for work whose derivatives will never be needed:
+evaluation, reporting, validation metrics, data-dependent masks, and constants
+computed from tracked values.</p>
+<p>The distinction is about <strong>operations</strong>, not about changing the input:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">Series</span></code> that already tracks slope continues to do so.</p></li>
+<li><p>A result computed from it while the guard is active does not track slope.</p></li>
+<li><p>Once the guard leaves scope, later operations on the original <code class="docutils literal notranslate"><span class="pre">Series</span></code> are
+recorded normally again.</p></li>
+</ul>
+<p>That makes the guard different from <a class="reference internal" href="detach.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">detach()</span></code></span></a>. <code class="docutils literal notranslate"><span class="pre">detach()</span></code> returns
+one graph-independent view. <code class="docutils literal notranslate"><span class="pre">NoGradGuard</span></code> establishes a temporary policy for
+every operation in a lexical scope.</p>
+</section>
+<section id="choosing-a-guard">
+<h2>Choosing A Guard<a class="headerlink" href="#choosing-a-guard" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::NoGradGuard</span></code><a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>Use this for the ordinary case: recording should be off for an entire block.
+It is concise, nestable, and restores the previous state automatically.</p>
+</section>
+<section id="pluss-autogradmode">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::AutoGradMode</span></code><a class="headerlink" href="#pluss-autogradmode" title="Link to this heading">¶</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">pluss::AutoGradMode(false)</span></code> when code needs to choose the mode from a
+runtime condition. Use <code class="docutils literal notranslate"><span class="pre">pluss::AutoGradMode(true)</span></code> for a smaller nested block
+that must record even though an enclosing <code class="docutils literal notranslate"><span class="pre">NoGradGuard</span></code> disabled recording.
+On destruction, it restores the mode that was active before construction.</p>
+</section>
+<section id="pluss-pauserecording">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::PauseRecording</span></code><a class="headerlink" href="#pluss-pauserecording" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::PauseRecording</span></code> also prevents new graph links, but it represents a
+temporary suspension rather than a mode choice. It is useful in reusable
+library code that must avoid recording its own bookkeeping without deciding
+whether the caller is generally in training or evaluation mode. Pauses are
+nestable and recording resumes only after the outermost pause ends.</p>
+<p>For application code, prefer <code class="docutils literal notranslate"><span class="pre">NoGradGuard</span></code>. Reach for <code class="docutils literal notranslate"><span class="pre">PauseRecording</span></code> when
+writing infrastructure that may itself run inside another recording policy.</p>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="evaluation-without-building-a-reverse-graph">
+<h3>Evaluation Without Building A Reverse Graph<a class="headerlink" href="#evaluation-without-building-a-reverse-graph" title="Link to this heading">¶</a></h3>
+<p>The input remains a tracked leaf, but the value produced inside the guarded
+scope is independent of the reverse graph.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">weights</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">prediction</span><span class="p">;</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">NoGradGuard</span><span class="w"> </span><span class="n">guard</span><span class="p">;</span>
+<span class="w">  </span><span class="n">prediction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weights</span><span class="p">.</span><span class="n">square</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;weights track: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">weights</span><span class="p">.</span><span class="n">tracks_slope</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;prediction tracks: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">prediction</span><span class="p">.</span><span class="n">tracks_slope</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">prediction</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h4>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>weights track: 1
+prediction tracks: 0
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[4.0000, 9.0000, 16.0000]
+</pre></div>
+</div>
+<p>The numerical calculation still occurs. Only graph construction is disabled.</p>
+</section>
+</section>
+<section id="recording-resumes-after-the-scope">
+<h3>Recording Resumes After The Scope<a class="headerlink" href="#recording-resumes-after-the-scope" title="Link to this heading">¶</a></h3>
+<p>The same leaf can produce an untracked result inside the block and a tracked
+result immediately afterward.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">report</span><span class="p">;</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">NoGradGuard</span><span class="w"> </span><span class="n">guard</span><span class="p">;</span>
+<span class="w">  </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">10.0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">();</span>
+<span class="n">objective</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;report tracks: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="n">tracks_slope</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h4>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>report tracks: 0
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2.0000, 4.0000, 6.0000]
+</pre></div>
+</div>
+<p>The report did not join the graph. The later objective did, so its reverse pass
+still produces <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">x</span></code>.</p>
+</section>
+</section>
+<section id="enabling-a-deliberate-inner-calculation">
+<h3>Enabling A Deliberate Inner Calculation<a class="headerlink" href="#enabling-a-deliberate-inner-calculation" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">AutoGradMode(true)</span></code> can restore recording for a carefully chosen inner block.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">outside_graph</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">inside_graph</span><span class="p">;</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">NoGradGuard</span><span class="w"> </span><span class="n">guard</span><span class="p">;</span>
+<span class="w">  </span><span class="n">outside_graph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="mf">1.0</span><span class="p">);</span>
+
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">AutoGradMode</span><span class="w"> </span><span class="nf">enable</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="w">    </span><span class="n">inside_graph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">square</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;outer result tracks: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">outside_graph</span><span class="p">.</span><span class="n">tracks_slope</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;inner result tracks: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">inside_graph</span><span class="p">.</span><span class="n">tracks_slope</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h4>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>outer result tracks: 0
+inner result tracks: 1
+</pre></div>
+</div>
+<p>Keep such overrides narrow. A broad re-enable inside evaluation code can retain
+an unexpectedly large graph.</p>
+</section>
+</section>
+<section id="suspending-bookkeeping-work">
+<h3>Suspending Bookkeeping Work<a class="headerlink" href="#suspending-bookkeeping-work" title="Link to this heading">¶</a></h3>
+<p>The pause guard is appropriate when a helper computes a diagnostic from a
+tracked value but must not alter the caller’s surrounding mode.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">positive_mask</span><span class="p">;</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">PauseRecording</span><span class="w"> </span><span class="n">pause</span><span class="p">;</span>
+<span class="w">  </span><span class="n">positive_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">gt</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">();</span>
+<span class="n">loss</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;mask tracks: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">positive_mask</span><span class="p">.</span><span class="n">tracks_slope</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">positive_mask</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h4>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mask tracks: 0
+Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[false, true, true]
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-4.0000, 2.0000, 8.0000]
+</pre></div>
+</div>
+<p>The diagnostic mask remains usable as data. It simply has no reverse history.</p>
+</section>
+</section>
+</section>
+<section id="scope-and-thread-rules">
+<h2>Scope And Thread Rules<a class="headerlink" href="#scope-and-thread-rules" title="Link to this heading">¶</a></h2>
+<p>The guards are thread-local: disabling recording in one thread does not change
+another thread’s work. They are also nestable. Destruction restores the prior
+state rather than blindly enabling recording, so a helper can safely create a
+guard when its caller has already disabled recording.</p>
+<p>Store these guards as local variables, not as long-lived global state. Their
+lexical lifetime is what makes restoration predictable and exception-safe.</p>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>A guard does not erase an existing graph. Values built before the scope keep
+their reverse history.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tracks_slope_(true)</span></code> inside a guarded block marks a leaf for later work, but
+operations performed before the guard ends are still not recorded.</p></li>
+<li><p>An untracked result cannot later recover the operations that produced it.
+Recompute outside the guard if derivatives become necessary.</p></li>
+<li><p>In-place mutation still mutates data. Disabling recording is not a rollback,
+copy, or immutability mechanism.</p></li>
+<li><p>Keep <code class="docutils literal notranslate"><span class="pre">AutoGradMode(true)</span></code> blocks small so evaluation code does not retain a
+graph accidentally.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">pluss::NoGradGuard</span></code> to perform real <code class="docutils literal notranslate"><span class="pre">Series</span></code> computations without building
+new reverse links. Use <code class="docutils literal notranslate"><span class="pre">pluss::AutoGradMode</span></code> when the mode is selected
+explicitly, and <code class="docutils literal notranslate"><span class="pre">pluss::PauseRecording</span></code> for nestable infrastructure-level
+suspension. All three restore prior state automatically at scope exit.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="detach.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::detach</span></code></span></a>: return one graph-independent view.</p></li>
+<li><p><a class="reference internal" href="reverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::reverse</span></code></span></a>: propagate sensitivities through recorded
+operations.</p></li>
+<li><p><a class="reference internal" href="tracks_slope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tracks_slope</span></code></span></a>: inspect whether a value is marked
+for reverse tracking.</p></li>
+<li><p><a class="reference internal" href="tracks_slope_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tracks_slope_</span></code></span></a>: enable or disable tracking on a
+leaf.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="nextafter.html">
+    <span class="label">Previous</span>
+    <span class="title">nextafter</span>
+  </a>
+  <a class="next-link" href="nonzero.html">
+    <span class="label">Next</span>
+    <span class="title">nonzero</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="nextafter.html" title="previous chapter">Series::nextafter</a></li>
+      <li>Next: <a href="nonzero.html" title="next chapter">Series::nonzero</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/no_grad.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

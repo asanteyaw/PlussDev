@@ -6,10 +6,24 @@
 #include "CodeM/native/cpu/Reductions.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <cstring>
 
 namespace pluss::codem::native::cpu {
+
+// argmax/argmin on floating-point data must PROPAGATE NaN: the first NaN in the
+// scan wins and holds (matching the value channel and the NumPy / PyTorch
+// convention). A plain `v > best` / `v < best` comparison is always false for a
+// NaN `v`, so a NaN would otherwise be skipped entirely.
+template <class T>
+static inline bool arg_better_max(T v, T best) {
+  return std::isnan(v) ? !std::isnan(best) : (v > best);
+}
+template <class T>
+static inline bool arg_better_min(T v, T best) {
+  return std::isnan(v) ? !std::isnan(best) : (v < best);
+}
 
 // Implemented in ReduceAndIndex.cpp.
 Series sum(const Series& a, std::int64_t dim, bool keepdim);
@@ -112,27 +126,27 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
   Series out = Series::empty(out_sizes, ScalarType::Int64);
   switch (aa.scalar_type()) {
     case ScalarType::Float64:
-      arg_reduce_dim_impl_<double,double>(aa, dim, out, [](double x){ return x; }, [](double v, double best){ return v > best; }, [](){ return -std::numeric_limits<double>::infinity(); });
+      arg_reduce_dim_impl_<double,double>(aa, dim, out, [](double x){ return x; }, arg_better_max<double>, [](){ return -std::numeric_limits<double>::infinity(); });
       return out;
     case ScalarType::Float32:
-      arg_reduce_dim_impl_<float,float>(aa, dim, out, [](float x){ return x; }, [](float v, float best){ return v > best; }, [](){ return -std::numeric_limits<float>::infinity(); });
+      arg_reduce_dim_impl_<float,float>(aa, dim, out, [](float x){ return x; }, arg_better_max<float>, [](){ return -std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::Float16:
-      arg_reduce_dim_impl_<float,Float16>(aa, dim, out, load_f16_, [](float v, float best){ return v > best; }, [](){ return -std::numeric_limits<float>::infinity(); });
+      arg_reduce_dim_impl_<float,Float16>(aa, dim, out, load_f16_, arg_better_max<float>, [](){ return -std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::BFloat16:
-      arg_reduce_dim_impl_<float,BFloat16>(aa, dim, out, load_bf16_, [](float v, float best){ return v > best; }, [](){ return -std::numeric_limits<float>::infinity(); });
+      arg_reduce_dim_impl_<float,BFloat16>(aa, dim, out, load_bf16_, arg_better_max<float>, [](){ return -std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::Float8E4M3FN:
       arg_reduce_dim_impl_<float,Float8E4M3FN>(
           aa, dim, out, load_f8e4m3fn_,
-          [](float v, float best){ return v > best; },
+          arg_better_max<float>,
           [](){ return -std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::Float8E5M2:
       arg_reduce_dim_impl_<float,Float8E5M2>(
           aa, dim, out, load_f8e5m2_,
-          [](float v, float best){ return v > best; },
+          arg_better_max<float>,
           [](){ return -std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::Bool:
@@ -207,27 +221,27 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
   Series out = Series::empty(out_sizes, ScalarType::Int64);
   switch (aa.scalar_type()) {
     case ScalarType::Float64:
-      arg_reduce_dim_impl_<double,double>(aa, dim, out, [](double x){ return x; }, [](double v, double best){ return v < best; }, [](){ return std::numeric_limits<double>::infinity(); });
+      arg_reduce_dim_impl_<double,double>(aa, dim, out, [](double x){ return x; }, arg_better_min<double>, [](){ return std::numeric_limits<double>::infinity(); });
       return out;
     case ScalarType::Float32:
-      arg_reduce_dim_impl_<float,float>(aa, dim, out, [](float x){ return x; }, [](float v, float best){ return v < best; }, [](){ return std::numeric_limits<float>::infinity(); });
+      arg_reduce_dim_impl_<float,float>(aa, dim, out, [](float x){ return x; }, arg_better_min<float>, [](){ return std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::Float16:
-      arg_reduce_dim_impl_<float,Float16>(aa, dim, out, load_f16_, [](float v, float best){ return v < best; }, [](){ return std::numeric_limits<float>::infinity(); });
+      arg_reduce_dim_impl_<float,Float16>(aa, dim, out, load_f16_, arg_better_min<float>, [](){ return std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::BFloat16:
-      arg_reduce_dim_impl_<float,BFloat16>(aa, dim, out, load_bf16_, [](float v, float best){ return v < best; }, [](){ return std::numeric_limits<float>::infinity(); });
+      arg_reduce_dim_impl_<float,BFloat16>(aa, dim, out, load_bf16_, arg_better_min<float>, [](){ return std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::Float8E4M3FN:
       arg_reduce_dim_impl_<float,Float8E4M3FN>(
           aa, dim, out, load_f8e4m3fn_,
-          [](float v, float best){ return v < best; },
+          arg_better_min<float>,
           [](){ return std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::Float8E5M2:
       arg_reduce_dim_impl_<float,Float8E5M2>(
           aa, dim, out, load_f8e5m2_,
-          [](float v, float best){ return v < best; },
+          arg_better_min<float>,
           [](){ return std::numeric_limits<float>::infinity(); });
       return out;
     case ScalarType::Bool:

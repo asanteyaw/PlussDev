@@ -274,9 +274,9 @@ Use `where()` for binary branch selection on an existing `Series`.
 - [`Series::any`](any.md): test whether at least one value in a lane is truthy.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="view.html">
+  <a class="prev-link" href="vsplit.html">
     <span class="label">Previous</span>
-    <span class="title">view</span>
+    <span class="title">vsplit</span>
   </a>
   <a class="next-link" href="where_.html">
     <span class="label">Next</span>

@@ -1,0 +1,21 @@
+=== no_grad_evaluation ===
+weights track: 1
+prediction tracks: 0
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[4.0000, 9.0000, 16.0000]
+
+=== recording_resumes ===
+report tracks: 0
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2.0000, 4.0000, 6.0000]
+
+=== nested_enable ===
+outer result tracks: 0
+inner result tracks: 1
+
+=== pause_recording ===
+mask tracks: 0
+Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[false, true, true]
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-4.0000, 2.0000, 8.0000]

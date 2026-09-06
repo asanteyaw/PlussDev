@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="pluss::series::print" href="print.html" />
@@ -221,6 +221,23 @@ data=[[1, 2],
   [3, 4]]
 </pre></div>
 </div>
+<p>Example 11. <code class="docutils literal notranslate"><span class="pre">std::complex</span></code> values build a complex series directly — the leaf
+type picks <code class="docutils literal notranslate"><span class="pre">Complex64</span></code> (from <code class="docutils literal notranslate"><span class="pre">std::complex&lt;float&gt;</span></code>) or <code class="docutils literal notranslate"><span class="pre">Complex128</span></code> (from
+<code class="docutils literal notranslate"><span class="pre">std::complex&lt;double&gt;</span></code>).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">make</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">-4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}});</span>
+</pre></div>
+</div>
+</section>
+<section id="id10">
+<h3>Output<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=complex64, platform=cpu, numel=3, contiguous=true)
+data=[(1+2j), (3-4j), (0+1j)]
+</pre></div>
+</div>
+<p>For a complex series assembled from two separate real series, use
+<a class="reference internal" href="complex.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::complex</span></code></span></a> (real + imaginary) or
+<a class="reference internal" href="polar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::polar</span></code></span></a> (magnitude + angle).</p>
 </section>
 </section>
 <section id="notes">
@@ -240,6 +257,8 @@ stream even though this first page focuses on the core construction cases.</p></
 <li><p><a class="reference internal" href="full.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::full</span></code></span></a>: shape-first constant construction.</p></li>
 <li><p><a class="reference internal" href="arange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::arange</span></code></span></a>: generated ranges instead of user-supplied
 values.</p></li>
+<li><p><a class="reference internal" href="complex.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::complex</span></code></span></a> / <a class="reference internal" href="polar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::polar</span></code></span></a>:
+build a complex series from separate real parts.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="linspace.html">

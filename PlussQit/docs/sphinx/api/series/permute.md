@@ -154,9 +154,9 @@ integers.
   need to align rank first.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="norm.html">
+  <a class="prev-link" href="outer.html">
     <span class="label">Previous</span>
-    <span class="title">norm</span>
+    <span class="title">outer</span>
   </a>
   <a class="next-link" href="pile.html">
     <span class="label">Next</span>

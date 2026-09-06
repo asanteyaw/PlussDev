@@ -3570,6 +3570,38 @@ struct LinearPenalty {
   const Series roc_auc_raw = fpr_u.sub(fpr_prev).mul(tpr_u.add(tpr_prev)).mul(0.5).sum().clamp(0.0, 1.0).reshape({1});
   const Series roc_auc = roc_auc_raw.mul(has_both).add(one.mul(0.5).mul(one.sub(has_both)));
 
+  // Brier score: mean squared error of the positive-class probability.
+  const Series brier = p.sub(yb).square().mean().reshape({1});
+  // Gini coefficient: 2 * AUC - 1.
+  const Series gini = roc_auc.mul(2.0).sub(1.0).reshape({1});
+  // Average precision via the shared threshold_curve step-sum.
+  bool wants_ap = false;
+  for (MetricKind metric : requested) {
+    if (metric == MetricKind::AveragePrecision) wants_ap = true;
+  }
+  Series avg_precision = pluss::series::zeros({1}, f64_on(platform));
+  if (wants_ap) {
+    StatusOr<double> ap_or = average_precision(p, yb);
+    if (!ap_or.ok()) return StatusOr<Series>(ap_or.status());
+    avg_precision = pluss::make_series(std::vector<double>{ap_or.value()}, {1}, f64_on(platform));
+  }
+  // Matthews correlation coefficient from the 2x2 counts; 0 when the denominator vanishes.
+  const Series mcc_num = tp.mul(tn).sub(fp.mul(fn));
+  const Series mcc_den = tp.add(fp).mul(tp.add(fn)).mul(tn.add(fp)).mul(tn.add(fn)).clamp_min(0.0).sqrt();
+  const Series mcc_mask = mcc_den.gt(0.0).to(ScalarType::Float64);
+  const Series mcc = mcc_num.div(mcc_den.clamp_min(1.0)).mul(mcc_mask).reshape({1});
+  // Unweighted Cohen's kappa; 0 when 1 - p_e vanishes.
+  const Series n_total = tp.add(tn).add(fp).add(fn);
+  const Series kappa_pe =
+      tp.add(fp).mul(tp.add(fn)).add(tn.add(fn).mul(tn.add(fp))).div(n_total.mul(n_total).clamp_min(1.0));
+  const Series kappa_den = kappa_pe.mul(-1.0).add(1.0);
+  const Series kappa_mask = kappa_den.gt(0.0).to(ScalarType::Float64);
+  const Series cohen_kappa = accuracy.reshape({1})
+                                 .sub(kappa_pe)
+                                 .div(kappa_den.add(kappa_mask.mul(-1.0).add(1.0)))
+                                 .mul(kappa_mask)
+                                 .reshape({1});
+
   std::vector<Series> out{};
   out.reserve(requested.size());
   for (MetricKind metric : requested) {
@@ -3604,6 +3636,21 @@ struct LinearPenalty {
         break;
       case MetricKind::LogLoss:
         out.push_back(logloss.reshape({1}));
+        break;
+      case MetricKind::Mcc:
+        out.push_back(mcc.reshape({1}));
+        break;
+      case MetricKind::CohenKappa:
+        out.push_back(cohen_kappa.reshape({1}));
+        break;
+      case MetricKind::Gini:
+        out.push_back(gini.reshape({1}));
+        break;
+      case MetricKind::AveragePrecision:
+        out.push_back(avg_precision.reshape({1}));
+        break;
+      case MetricKind::Brier:
+        out.push_back(brier.reshape({1}));
         break;
       default:
         return StatusOr<Series>(Status::invalid_argument("Unsupported classification metric in assess()."));
@@ -3662,6 +3709,24 @@ struct LinearPenalty {
   return StatusOr<Series>(auc.reshape({1}));
 }
 
+// One-vs-rest average precision for a binary 0/1 truth vector and its
+// positive-class scores -- delegates to the shared nodej::average_precision
+// (NodeJ/metrics/threshold_curve.cpp), wrapping the scalar into a [1] Series to
+// match ovr_auc_binary01's shape.
+[[nodiscard]] StatusOr<Series> ovr_average_precision_binary01(const Series& truth01,
+                                                             const Series& positive_scores,
+                                                             const char* where) {
+  const Series yb = truth01.to(ScalarType::Float64).reshape({truth01.numel()});
+  const Series p = positive_scores.to(ScalarType::Float64).reshape({positive_scores.numel()});
+  if (yb.numel() == 0 || yb.numel() != p.numel()) {
+    return StatusOr<Series>(Status::shape_mismatch(std::string(where) + " requires equal non-empty vectors."));
+  }
+  StatusOr<double> ap_or = average_precision(p, yb);
+  if (!ap_or.ok()) return StatusOr<Series>(ap_or.status());
+  return StatusOr<Series>(
+      pluss::make_series(std::vector<double>{ap_or.value()}, {1}, f64_on(p.platform())));
+}
+
 [[nodiscard]] StatusOr<Series> classification_metrics_multiclass(const Series& truth_labels,
                                                                  const Series& pred_labels,
                                                                  const Series& score_matrix,
@@ -3690,6 +3755,13 @@ struct LinearPenalty {
   Series specificity_sum = pluss::series::zeros({1}, f64_on(platform));
   Series geometric_sum = pluss::series::zeros({1}, f64_on(platform));
   Series balance_quality_sum = pluss::series::zeros({1}, f64_on(platform));
+  // Marginal-sum accumulators for MCC / Cohen's kappa: c (total correct),
+  // Sum p_k*t_k, Sum p_k^2, Sum t_k^2, where p_k = predicted count for class k,
+  // t_k = true count for class k.
+  Series correct_sum = pluss::series::zeros({1}, f64_on(platform));
+  Series pk_tk_sum = pluss::series::zeros({1}, f64_on(platform));
+  Series pk_pk_sum = pluss::series::zeros({1}, f64_on(platform));
+  Series tk_tk_sum = pluss::series::zeros({1}, f64_on(platform));
   const Series n_scalar = pluss::series::ones({1}, f64_on(platform)).mul(static_cast<double>(n));
 
   for (std::int64_t ci = 0; ci < k; ++ci) {
@@ -3721,6 +3793,12 @@ struct LinearPenalty {
     specificity_sum = specificity_sum.add(specificity.reshape({1}));
     geometric_sum = geometric_sum.add(geometric.reshape({1}));
     balance_quality_sum = balance_quality_sum.add(balance_quality.reshape({1}));
+    const Series pk = tp.add(fp).reshape({1});  // predicted count for this class
+    const Series tk = tp.add(fn).reshape({1});  // true count for this class
+    correct_sum = correct_sum.add(tp.reshape({1}));
+    pk_tk_sum = pk_tk_sum.add(pk.mul(tk));
+    pk_pk_sum = pk_pk_sum.add(pk.mul(pk));
+    tk_tk_sum = tk_tk_sum.add(tk.mul(tk));
   }
 
   const Series accuracy = y.eq(yh).to(ScalarType::Float64).mean().reshape({1});
@@ -3743,27 +3821,58 @@ struct LinearPenalty {
   }
   const Series logloss = probs.mul(one_hot).sum(1, false).clamp(eps, 1.0).log().mul(-1.0).mean().reshape({1});
 
-  bool needs_roc_auc = false;
+  // Multiclass Brier: mean over samples of Sum_k (p_ik - y_ik)^2.
+  const Series brier = probs.sub(one_hot).square().sum(1, false).mean().reshape({1});
+
+  // MCC and unweighted Cohen's kappa from the class marginal sums accumulated
+  // above. c = correct_sum, s = n, p.t = pk_tk_sum, p.p = pk_pk_sum,
+  // t.t = tk_tk_sum.
+  const Series s_sq = n_scalar.mul(n_scalar).reshape({1});
+  const Series mcc_num = correct_sum.mul(n_scalar).sub(pk_tk_sum).reshape({1});
+  const Series mcc_den = s_sq.sub(pk_pk_sum).mul(s_sq.sub(tk_tk_sum)).clamp_min(0.0).sqrt().reshape({1});
+  const Series mcc_mask = mcc_den.gt(0.0).to(ScalarType::Float64);
+  const Series mcc = mcc_num.div(mcc_den.add(mcc_mask.mul(-1.0).add(1.0))).mul(mcc_mask).reshape({1});
+  const Series kappa_pe = pk_tk_sum.div(s_sq.clamp_min(1.0)).reshape({1});
+  const Series kappa_den = kappa_pe.mul(-1.0).add(1.0);
+  const Series kappa_mask = kappa_den.gt(0.0).to(ScalarType::Float64);
+  const Series cohen_kappa = accuracy.sub(kappa_pe)
+                                 .div(kappa_den.add(kappa_mask.mul(-1.0).add(1.0)))
+                                 .mul(kappa_mask)
+                                 .reshape({1});
+
+  bool needs_ovr_auc = false;
+  bool needs_ovr_ap = false;
   for (MetricKind metric : requested) {
-    if (metric == MetricKind::RocAuc) {
-      needs_roc_auc = true;
-      break;
-    }
+    if (metric == MetricKind::RocAuc || metric == MetricKind::Gini) needs_ovr_auc = true;
+    if (metric == MetricKind::AveragePrecision) needs_ovr_ap = true;
   }
   Series macro_roc_auc = Series::undefined();
-  if (needs_roc_auc) {
+  Series macro_average_precision = Series::undefined();
+  if (needs_ovr_auc || needs_ovr_ap) {
     Series auc_sum = pluss::series::zeros({1}, f64_on(platform));
+    Series ap_sum = pluss::series::zeros({1}, f64_on(platform));
     for (std::int64_t ci = 0; ci < k; ++ci) {
       const Series idx = pluss::series::arange(ci, ci + 1, i64_cfg);
       const Series cls_value = cls.index_select(0, idx).reshape({1});
       const Series y01 = y.eq(cls_value).to(ScalarType::Float64).reshape({n});
       const Series score_col = probs.index_select(1, idx).reshape({n});
-      StatusOr<Series> auc_or = ovr_auc_binary01(y01, score_col, "classification_metrics_multiclass");
-      if (!auc_or.ok()) return StatusOr<Series>(auc_or.status());
-      auc_sum = auc_sum.add(auc_or.value().reshape({1}));
+      if (needs_ovr_auc) {
+        StatusOr<Series> auc_or = ovr_auc_binary01(y01, score_col, "classification_metrics_multiclass");
+        if (!auc_or.ok()) return StatusOr<Series>(auc_or.status());
+        auc_sum = auc_sum.add(auc_or.value().reshape({1}));
+      }
+      if (needs_ovr_ap) {
+        StatusOr<Series> ap_or =
+            ovr_average_precision_binary01(y01, score_col, "classification_metrics_multiclass");
+        if (!ap_or.ok()) return StatusOr<Series>(ap_or.status());
+        ap_sum = ap_sum.add(ap_or.value().reshape({1}));
+      }
     }
-    macro_roc_auc = auc_sum.div(k_scalar).reshape({1});
+    if (needs_ovr_auc) macro_roc_auc = auc_sum.div(k_scalar).reshape({1});
+    if (needs_ovr_ap) macro_average_precision = ap_sum.div(k_scalar).reshape({1});
   }
+  const Series gini =
+      needs_ovr_auc ? macro_roc_auc.mul(2.0).sub(1.0).reshape({1}) : Series::undefined();
 
   std::vector<Series> out{};
   out.reserve(requested.size());
@@ -3799,6 +3908,21 @@ struct LinearPenalty {
         break;
       case MetricKind::RocAuc:
         out.push_back(macro_roc_auc);
+        break;
+      case MetricKind::Mcc:
+        out.push_back(mcc);
+        break;
+      case MetricKind::CohenKappa:
+        out.push_back(cohen_kappa);
+        break;
+      case MetricKind::Gini:
+        out.push_back(gini);
+        break;
+      case MetricKind::AveragePrecision:
+        out.push_back(macro_average_precision);
+        break;
+      case MetricKind::Brier:
+        out.push_back(brier);
         break;
       default:
         return StatusOr<Series>(Status::invalid_argument("Unsupported classification metric in multiclass assess()."));
@@ -4571,6 +4695,44 @@ private:
 };
 
 } // namespace
+
+StatusOr<Series> score_metrics(const Series& scores,
+                               const Series& labels,
+                               const std::vector<MetricKind>& requested) {
+  for (MetricKind metric : requested) {
+    if (metric == MetricKind::Mse || metric == MetricKind::Rmse || metric == MetricKind::Mae ||
+        metric == MetricKind::R2 || metric == MetricKind::QuantileLoss) {
+      return StatusOr<Series>(Status::invalid_argument(
+          "score_metrics: regression metric requested on a classification score/label pair."));
+    }
+  }
+
+  const Platform platform = scores.platform();
+  const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
+  const bool multiclass = scores.dim() == 2 && scores.sizes()[1] >= 2;
+
+  if (!multiclass) {
+    const std::int64_t n = labels.numel();
+    const Series p = scores.to(platform, ScalarType::Float64).reshape({n});
+    const Series y01 = labels.to(platform, ScalarType::Float64).reshape({n});
+    // Hard-label metrics (F1, Mcc, ...) score a 0.5-threshold prediction -- the
+    // same cutoff the model-backed reports path applies by default.
+    const Series pred01 = p.ge(0.5).to(ScalarType::Float64);
+    return classification_metrics(y01, pred01, p, requested);
+  }
+
+  const std::int64_t n = scores.sizes()[0];
+  const std::int64_t k = scores.sizes()[1];
+  const Series probs = scores.to(platform, ScalarType::Float64).reshape({n, k});
+  const Series y = labels.to(platform, ScalarType::Float64).reshape({n});
+  const Series pred = probs.argmax(1, false).to(platform, ScalarType::Float64).reshape({n});
+  const Series classes = pluss::series::arange(0, k, i64_cfg).to(platform, ScalarType::Float64);
+  // classification_metrics_multiclass runs softmax over its score matrix; hand
+  // it log-probabilities so softmax(log(p)) == p and Brier / LogLoss see the
+  // caller's actual probabilities rather than a re-normalized copy.
+  const Series log_probs = probs.clamp_min(1e-12).log();
+  return classification_metrics_multiclass(y, pred, log_probs, classes, requested);
+}
 
 StatusOr<std::unique_ptr<ClassifierBase>> make_classifier(const ModelSpec& spec) {
   if (spec.task != TaskKind::Classification) {

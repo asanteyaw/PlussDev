@@ -150,7 +150,7 @@ trained = true
 ### Example 2
 
 The same transformer needs no model — drive it directly on a `FeatureBatch`
-built from a [`workflow::Payload`](../../model/Payload.md).
+built from a [`workflow::Payload`](../../workflow/Payload.md).
 
 ```cpp
 #include <pluss/pluss.h>

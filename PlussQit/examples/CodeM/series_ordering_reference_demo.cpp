@@ -39,8 +39,8 @@ int main() {
   auto stable_input = pluss::make_series({2LL, 1LL, 2LL, 1LL});
   heading("sort_stable_pair");
   const auto sort_pair = stable_input.sort_pair(0, false, true);
-  std::cout << "values=" << sort_pair[0] << "\n";
-  std::cout << "indices=" << sort_pair[1] << "\n\n";
+  std::cout << "values=" << sort_pair.first << "\n";
+  std::cout << "indices=" << sort_pair.second << "\n\n";
 
   heading("sort_bad_dim_error");
   try {
@@ -92,8 +92,8 @@ int main() {
 
   heading("topk_pair");
   const auto topk_pair = scores.topk_pair(3, 0, true, true);
-  std::cout << "values=" << topk_pair[0] << "\n";
-  std::cout << "indices=" << topk_pair[1] << "\n\n";
+  std::cout << "values=" << topk_pair.first << "\n";
+  std::cout << "indices=" << topk_pair.second << "\n\n";
 
   heading("topk_zero");
   std::cout << scores.topk(0) << "\n\n";

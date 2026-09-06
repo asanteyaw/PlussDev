@@ -23,7 +23,7 @@ frame)` is exactly:
 
 ```cpp
 const pluss::Series y_pred = model.infer(frame_features);
-lymph::metrics::classification_summary(y_true, y_pred);
+lymph::metrics::classification::summary(y_true, y_pred);
 ```
 
 with the first line folded in. The value is convenience and correctness — the

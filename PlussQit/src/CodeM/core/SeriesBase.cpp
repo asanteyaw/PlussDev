@@ -28,6 +28,13 @@ pluss::msharp::RangeView::Int SeriesBase::strides() const {
   if (!defined()) throw_error("SeriesBase: undefined");
   return pluss::msharp::RangeView::Int{impl_->strides()};
 }
+std::int64_t SeriesBase::stride(std::int64_t dim) const {
+  if (!defined()) throw_error("SeriesBase: undefined");
+  const auto nd = this->dim();
+  if (dim < 0) dim += nd;
+  if (dim < 0 || dim >= nd) throw_error("Series::stride: dim out of range");
+  return strides()[static_cast<std::size_t>(dim)];
+}
 std::int64_t SeriesBase::dim() const { return static_cast<std::int64_t>(sizes().size()); }
 std::int64_t SeriesBase::numel() const {
   if (!defined()) throw_error("SeriesBase: undefined");
@@ -36,6 +43,26 @@ std::int64_t SeriesBase::numel() const {
 bool SeriesBase::is_contiguous() const {
   if (!defined()) throw_error("SeriesBase: undefined");
   return impl_->is_contiguous();
+}
+bool SeriesBase::is_signed() const {
+  const auto st = scalar_type();
+  switch (st) {
+    case ScalarType::Int8:
+    case ScalarType::Int16:
+    case ScalarType::Int32:
+    case ScalarType::Int64:
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+    case ScalarType::Float32:
+    case ScalarType::Float64:
+    case ScalarType::Float8E4M3FN:
+    case ScalarType::Float8E5M2:
+    case ScalarType::Complex64:
+    case ScalarType::Complex128:
+      return true;
+    default:
+      return false;
+  }
 }
 Series SeriesBase::pos(std::int64_t index) const {
   if (!defined()) throw_error("Series::pos: undefined");

@@ -139,8 +139,8 @@ shape, but admissible values: positive inputs are ordinary, zero becomes
     <span class="label">Previous</span>
     <span class="title">linearalg</span>
   </a>
-  <a class="next-link" href="log10.html">
+  <a class="next-link" href="log_softmax.html">
     <span class="label">Next</span>
-    <span class="title">log10</span>
+    <span class="title">log_softmax</span>
   </a>
 </div>

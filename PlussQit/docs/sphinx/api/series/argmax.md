@@ -323,7 +323,8 @@ working in: flat global position or local axis position.
 
 ## See Also
 
-- [`Series::max`](max.md): returns winning values instead of indices.
+- [`Series::max`](max.md): returns winning values instead of indices; also hosts
+  `max_pair`, which returns the winning value and its index together.
 - [`Series::argmin`](argmin.md): lower-winner index counterpart.
 
 <div class="pluss-inline-prev-next">

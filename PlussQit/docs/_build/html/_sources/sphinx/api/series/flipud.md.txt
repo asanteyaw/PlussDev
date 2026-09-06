@@ -77,3 +77,14 @@ Use `flipud()` when the intended operation is always outer-axis reversal. Use
 
 - [`Series::flip`](flip.md)
 - [`Series::fliplr`](fliplr.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fliplr.html">
+    <span class="label">Previous</span>
+    <span class="title">fliplr</span>
+  </a>
+  <a class="next-link" href="float_power.html">
+    <span class="label">Next</span>
+    <span class="title">float_power</span>
+  </a>
+</div>

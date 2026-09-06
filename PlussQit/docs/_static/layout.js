@@ -514,6 +514,12 @@
   }
 
   function buildPrevNext(methodNav) {
+    // Hand-authored method pages already define their family-aware neighbors.
+    // Never layer Sphinx's relation links or section navigation on top of them.
+    if (document.querySelector(".pluss-inline-prev-next")) {
+      return;
+    }
+
     if (methodNav && methodNav.items && methodNav.items.length) {
       const bodywrapper = document.querySelector(".bodywrapper");
       if (!bodywrapper) {

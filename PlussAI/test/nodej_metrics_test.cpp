@@ -1,4 +1,5 @@
 #include <pluss/ai/ml.h>
+#include <sstream>
 
 #include <cmath>
 #include <cstdint>
@@ -153,6 +154,17 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
       if (err) *err << "classification_summary micro average and accuracy should agree for single-label multiclass\n";
       return false;
     }
+
+    // Confusion matrix C = [[2,0,0],[0,0,1],[1,0,2]] -> p_k = [3,0,3], t_k = [2,1,3],
+    // c = 4, s = 6. MCC = (4*6 - 15) / sqrt((36-18)(36-14)) = 9 / sqrt(396) = 3*sqrt(11)/22.
+    // kappa: p_o = 2/3, p_e = 15/36 = 5/12 -> (2/3 - 5/12)/(1 - 5/12) = (3/12)/(7/12) = 3/7.
+    const auto mcc = as_f64(report.mcc);
+    const auto cohen_kappa = as_f64(report.cohen_kappa);
+    if (mcc.size() != 1 || !approx(mcc[0], 3.0 * std::sqrt(11.0) / 22.0, 1e-9) || cohen_kappa.size() != 1 ||
+        !approx(cohen_kappa[0], 3.0 / 7.0, 1e-9)) {
+      if (err) *err << "classification_summary MCC / Cohen's kappa should match the hand-computed reference\n";
+      return false;
+    }
     if (specificity.size() != 3 || !approx(specificity[0], 0.75) || !approx(specificity[1], 1.0)
         || !approx(specificity[2], 2.0 / 3.0)) {
       if (err) *err << "classification_summary specificity should match one-vs-rest reference values\n";
@@ -191,17 +203,28 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
          MetricKind::F1,
          MetricKind::Specificity,
          MetricKind::GeometricMean,
-         MetricKind::BalanceQuality},
+         MetricKind::BalanceQuality,
+         MetricKind::Mcc,
+         MetricKind::CohenKappa},
         ClassReportOptions{.zero_division = 0.0});
     if (!metric_vec_or.ok()) {
       if (err) *err << "classification_metrics should succeed on valid hard labels\n";
       return false;
     }
     const auto metrics = as_f64(metric_vec_or.value());
-    if (metrics.size() != 9 || !approx(metrics[0], 2.0 / 3.0) || !approx(metrics[1], 5.0 / 9.0)
+    if (metrics.size() != 11 || !approx(metrics[0], 2.0 / 3.0) || !approx(metrics[1], 5.0 / 9.0)
         || !approx(metrics[2], 4.0 / 9.0) || !approx(metrics[3], 5.0 / 9.0)
-        || !approx(metrics[4], 5.0 / 9.0) || !approx(metrics[6], 29.0 / 36.0)) {
-      if (err) *err << "classification_metrics should return stable aggregate metric values\n";
+        || !approx(metrics[4], 5.0 / 9.0) || !approx(metrics[6], 29.0 / 36.0)
+        || !approx(metrics[9], 3.0 * std::sqrt(11.0) / 22.0, 1e-9) || !approx(metrics[10], 3.0 / 7.0, 1e-9)) {
+      if (err) *err << "classification_metrics should return stable aggregate metric values (incl. MCC / kappa)\n";
+      return false;
+    }
+
+    // Score-only metrics must be rejected on the hard-label path, not silently wrong.
+    if (classification_metrics(truth, pred, {MetricKind::Gini}, ClassReportOptions{.zero_division = 0.0}).ok() ||
+        classification_metrics(truth, pred, {MetricKind::AveragePrecision}, ClassReportOptions{.zero_division = 0.0}).ok() ||
+        classification_metrics(truth, pred, {MetricKind::Brier}, ClassReportOptions{.zero_division = 0.0}).ok()) {
+      if (err) *err << "classification_metrics from hard labels should reject Gini / AveragePrecision / Brier\n";
       return false;
     }
 
@@ -288,6 +311,32 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
   }
 
   {
+    // Binary MCC / Cohen's kappa against a hand-computed 2x2: TP=3, FN=1, TN=2, FP=2.
+    const Series bt = pluss::make_series(std::vector<double>{1, 1, 1, 1, 0, 0, 0, 0}, {8}, f64());
+    const Series bp = pluss::make_series(std::vector<double>{1, 1, 1, 0, 0, 0, 1, 1}, {8}, f64());
+    auto br_or = classification_summary(bt, bp, {0.0, 1.0}, 0.0);
+    if (!br_or.ok()) {
+      if (err) *err << "classification_summary should succeed on binary labels\n";
+      return false;
+    }
+    // MCC = (3*2 - 2*1) / sqrt((3+2)(3+1)(2+2)(2+1)) = 4 / sqrt(240).
+    // kappa: p_o = 5/8, p_e = (5*4 + 3*4)/64 = 0.5 -> (0.625 - 0.5)/0.5 = 0.25.
+    if (!approx(as_f64(br_or.value().mcc)[0], 4.0 / std::sqrt(240.0), 1e-9) ||
+        !approx(as_f64(br_or.value().cohen_kappa)[0], 0.25, 1e-9)) {
+      if (err) *err << "binary classification_summary MCC / kappa should match the hand-computed reference\n";
+      return false;
+    }
+    // Degenerate: predict a single class -> the MCC and kappa denominators vanish, both return 0.
+    const Series bp0 = pluss::make_series(std::vector<double>{0, 0, 0, 0, 0, 0, 0, 0}, {8}, f64());
+    auto d_or = classification_summary(bt, bp0, {0.0, 1.0}, 0.0);
+    if (!d_or.ok() || !approx(as_f64(d_or.value().mcc)[0], 0.0) ||
+        !approx(as_f64(d_or.value().cohen_kappa)[0], 0.0)) {
+      if (err) *err << "single-class predictions should give MCC = 0 and kappa = 0, not NaN\n";
+      return false;
+    }
+  }
+
+  {
     // Hand-computed reference: 5 samples, distinct scores, 3 positives.
     // tp/fp accumulate one at a time walking the sorted list, so every
     // point below was checked by hand against tp/(tp+fp) and tp/positives.
@@ -332,6 +381,21 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
       return false;
     }
 
+    // Average precision = Sum (R_n - R_{n-1}) * P_n over the boundary points above:
+    // (1/3)(1) + 0 + (1/3)(2/3) + (1/3)(0.75) + 0 = 1/3 + 2/9 + 1/4 = 29/36.
+    auto ap_or = average_precision(scores, labels);
+    if (!ap_or.ok() || !approx(ap_or.value(), 29.0 / 36.0, 1e-9)) {
+      if (err) *err << "average_precision should equal the hand-computed PR step-sum (29/36)\n";
+      return false;
+    }
+    const Series first_three = scores.slice(0, 0, 3);
+    const Series no_positives = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0}, {3}, f64());
+    auto ap_neg_or = average_precision(first_three, no_positives);
+    if (!ap_neg_or.ok() || !approx(ap_neg_or.value(), 0.0)) {
+      if (err) *err << "average_precision with no positive labels should be 0\n";
+      return false;
+    }
+
     // Ties collapse onto their last (lowest-recall) position: two samples
     // sharing score 0.5 must report one threshold point, not two.
     const Series tied_scores = pluss::make_series(std::vector<double>{0.9, 0.5, 0.5, 0.1}, {4}, f64());
@@ -343,6 +407,58 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
     }
   }
 
+  {
+    // score_metrics from a raw (probabilities, labels) pair -- no model.
+    // Binary fixture: p = [.9 .8 .7 .6 .5], y = [1 0 1 1 0].
+    //   ROC-AUC = 4 concordant of 6 pos/neg pairs      = 2/3
+    //   Gini    = 2*AUC - 1                             = 1/3
+    //   AP      = (1/3)(1) + (1/3)(2/3) + (1/3)(3/4)    = 29/36
+    //   Brier   = mean (p - y)^2 = 1.15 / 5             = 0.23
+    //   LogLoss = -mean[ y ln p + (1-y) ln(1-p) ]       ~ 0.65508924
+    //   F1      @ 0.5 threshold: all 5 predicted +, TP=3 FP=2 -> 2*.6*1/1.6 = 0.75
+    const Series p = pluss::make_series(std::vector<double>{0.9, 0.8, 0.7, 0.6, 0.5}, {5}, f64());
+    const Series y = pluss::make_series(std::vector<double>{1.0, 0.0, 1.0, 1.0, 0.0}, {5}, f64());
+    const std::vector<MetricKind> want{MetricKind::RocAuc, MetricKind::Gini, MetricKind::AveragePrecision,
+                                       MetricKind::Brier, MetricKind::LogLoss, MetricKind::F1};
+    auto sm_or = score_metrics(p, y, want);
+    if (!sm_or.ok()) {
+      if (err) *err << "score_metrics should succeed on a valid binary probability/label pair\n";
+      return false;
+    }
+    const auto sm = as_f64(sm_or.value());
+    // LogLoss = 3.275446176356595 / 5 = 0.655089235271319.
+    if (sm.size() != 6 || !approx(sm[0], 2.0 / 3.0, 1e-9) || !approx(sm[1], 1.0 / 3.0, 1e-9) ||
+        !approx(sm[2], 29.0 / 36.0, 1e-9) || !approx(sm[3], 0.23, 1e-9) ||
+        !approx(sm[4], 0.655089235271319, 1e-9) || !approx(sm[5], 0.75, 1e-9)) {
+      if (err) *err << "score_metrics binary values should match the hand-computed reference\n";
+      return false;
+    }
+
+    // Regression MetricKinds are rejected on a classification score/label pair.
+    auto sm_reg_or = score_metrics(p, y, {MetricKind::Mse});
+    if (sm_reg_or.ok()) {
+      if (err) *err << "score_metrics should reject a regression MetricKind\n";
+      return false;
+    }
+
+    // Multiclass: 3-class probability matrix, argmax picks the right class on
+    // every row so accuracy is 1 and macro one-vs-rest AUC is 1.
+    const Series probs3 = pluss::make_series(
+        std::vector<double>{0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 0.7, 0.2, 0.1, 0.2, 0.7, 0.1, 0.1, 0.2, 0.7},
+        {6, 3}, f64());
+    const Series y3 = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 0.0, 1.0, 2.0}, {6}, f64());
+    auto mc_or = score_metrics(probs3, y3, {MetricKind::Accuracy, MetricKind::RocAuc});
+    if (!mc_or.ok()) {
+      if (err) *err << "score_metrics should succeed on a valid multiclass probability matrix\n";
+      return false;
+    }
+    const auto mc = as_f64(mc_or.value());
+    if (mc.size() != 2 || !approx(mc[0], 1.0, 1e-9) || !approx(mc[1], 1.0, 1e-9)) {
+      if (err) *err << "score_metrics multiclass accuracy / macro-OvR AUC should both be 1 here\n";
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -350,8 +466,9 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
 
 #ifdef PLUSS_AI_HAS_CATCH2
 TEST_CASE("nodej metrics suite", "[nodej][metrics]") {
-  if (!run_nodej_metrics_checks()) {
-    FAIL("nodej metrics checks failed");
+  std::ostringstream diag;
+  if (!run_nodej_metrics_checks(&diag)) {
+    FAIL("nodej metrics checks failed: " << diag.str());
   }
 }
 #else

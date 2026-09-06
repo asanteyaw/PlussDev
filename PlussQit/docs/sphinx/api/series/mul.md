@@ -185,12 +185,12 @@ eye.
 - [`Series::pow`](pow.md): repeated multiplication with exponent semantics.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="minimum.html">
+  <a class="prev-link" href="movedim.html">
     <span class="label">Previous</span>
-    <span class="title">minimum</span>
+    <span class="title">movedim</span>
   </a>
-  <a class="next-link" href="nan_to_num.html">
+  <a class="next-link" href="multinomial.html">
     <span class="label">Next</span>
-    <span class="title">nan_to_num</span>
+    <span class="title">multinomial</span>
   </a>
 </div>

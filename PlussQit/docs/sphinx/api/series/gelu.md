@@ -142,9 +142,9 @@ that keeps the unit trainable where `relu()` would give exactly `0`.
 - [`Series::erf`](erf.md): the primitive behind the exact form.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ge.html">
+  <a class="prev-link" href="ger.html">
     <span class="label">Previous</span>
-    <span class="title">ge</span>
+    <span class="title">ger</span>
   </a>
   <a class="next-link" href="grouped_count.html">
     <span class="label">Next</span>

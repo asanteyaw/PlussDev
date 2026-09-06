@@ -31,6 +31,8 @@ inline torch::ScalarType to_torch_dtype(ScalarType st) {
     case ScalarType::BFloat16: return torch::kBFloat16;
     case ScalarType::Float32: return torch::kFloat32;
     case ScalarType::Float64: return torch::kFloat64;
+    case ScalarType::Complex64: return torch::kComplexFloat;
+    case ScalarType::Complex128: return torch::kComplexDouble;
     default: break;
   }
   ::pluss::throw_error("to_torch_dtype: unsupported dtype");
@@ -51,6 +53,8 @@ inline ScalarType from_torch_dtype(torch::ScalarType st) {
     case torch::kBFloat16: return ScalarType::BFloat16;
     case torch::kFloat32: return ScalarType::Float32;
     case torch::kFloat64: return ScalarType::Float64;
+    case torch::kComplexFloat: return ScalarType::Complex64;
+    case torch::kComplexDouble: return ScalarType::Complex128;
     default: break;
   }
   ::pluss::throw_error("from_torch_dtype: unsupported dtype");
@@ -84,15 +88,20 @@ inline Series from_torch(const torch::Tensor& t) {
   });
 
   Storage storage(ptr, nbytes, /*alignment*/1);
-  // SeriesImpl(storage, offset, sizes, strides, dtype)
-  return Series::from_storage(storage, (std::int64_t)t.storage_offset(), sizes, strides, st);
+  // data_ptr() already points at the view's first logical element. Starting the
+  // adopted Storage there means applying storage_offset() again would skip it twice.
+  return Series::from_storage(storage, /*storage_offset=*/0, sizes, strides, st);
 }
 
 // Convert Series -> torch::Tensor view (zero-copy) when possible.
 // If Series is overlapping/unsupported strides, you can call s.contiguous() first.
+//
+// This is an INTERNAL helper. The public Series -> torch direction is the
+// method Series::tensor(), which forwards here; there is no public free
+// to_torch function.
 namespace detail { inline torch::Tensor to_torch(const Series& s) {
   if (!s.defined()) ::pluss::throw_error("to_torch: undefined");
-  // We expose CPU tensors only.
+  if (s.platform() != Platform::CPU) ::pluss::throw_error("to_torch: CPU only");
   const auto dtype = to_torch_dtype(s.scalar_type());
 
   std::vector<int64_t> sizes(s.sizes().begin(), s.sizes().end());
@@ -105,8 +114,9 @@ namespace detail { inline torch::Tensor to_torch(const Series& s) {
   // capture Storage handle to keep memory alive
   auto handle = s.storage().handle();
   auto base_ptr = const_cast<void*>(reinterpret_cast<const void*>(s.storage().data()));
-  // point to the correct offset
-  base_ptr = static_cast<void*>(reinterpret_cast<std::byte*>(base_ptr) + (std::ptrdiff_t)s.storage_offset() * (std::ptrdiff_t)s.dtype().itemsize);
+  // Series::storage_offset() is already a BYTE offset (every other consumer in
+  // the codebase divides it by itemsize to get elements) -- add it directly.
+  base_ptr = static_cast<void*>(reinterpret_cast<std::byte*>(base_ptr) + (std::ptrdiff_t)s.storage_offset());
 
   auto options = torch::TensorOptions().dtype(dtype).device(torch::kCPU);
   auto deleter = [handle](void*) mutable { handle.reset(); };
@@ -116,10 +126,6 @@ namespace detail { inline torch::Tensor to_torch(const Series& s) {
 }
 
 } // namespace detail
-
-inline torch::Tensor to_torch(const Series& s) {
-  return detail::to_torch(s);
-}
 
 } // namespace pluss::codem
 

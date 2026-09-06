@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::frac" href="frac.html" />
-    <link rel="prev" title="Series::floor" href="floor.html" />
+    <link rel="prev" title="Series::fmin" href="fmin.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -43,7 +43,9 @@
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">fmod</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<span class="n">Series</span><span class="o">::</span><span class="n">fmod</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">fmod_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">fmod_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -66,8 +68,9 @@ sign of the divisor (a true modulo), use <a class="reference internal" href="rem
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code>)</p>
-<p>The divisor <code class="docutils literal notranslate"><span class="pre">b</span></code>. Broadcasts against the receiver.</p>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Series&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">double</span></code>)</p>
+<p>The divisor <code class="docutils literal notranslate"><span class="pre">b</span></code>. A <code class="docutils literal notranslate"><span class="pre">Series</span></code> broadcasts against the receiver; a <code class="docutils literal notranslate"><span class="pre">double</span></code> applies
+the same divisor to every element.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -78,11 +81,15 @@ result back into the receiver.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">fmod()</span></code> is not differentiable. A <code class="docutils literal notranslate"><span class="pre">Series</span></code> produced by it does not carry
-reverse tracking.</p>
-<p>(Where a subgradient is wanted, <code class="docutils literal notranslate"><span class="pre">fmod(a,</span> <span class="pre">b)</span></code> changes one-for-one with <code class="docutils literal notranslate"><span class="pre">a</span></code>
-between the jumps, and steps by <code class="docutils literal notranslate"><span class="pre">b</span></code> at each jump; it is not wired into
-autograd.)</p>
+<p><code class="docutils literal notranslate"><span class="pre">fmod()</span></code> is differentiable. <code class="docutils literal notranslate"><span class="pre">fmod(a,</span> <span class="pre">b)</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">-</span> <span class="pre">trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span> <span class="pre">*</span> <span class="pre">b</span></code>, and <code class="docutils literal notranslate"><span class="pre">trunc</span></code>
+rounds to a locally constant integer, so between the jumps:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">/</span><span class="n">da</span> <span class="n">fmod</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">d</span><span class="o">/</span><span class="n">db</span> <span class="n">fmod</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span><span class="n">trunc</span><span class="p">(</span><span class="n">a</span> <span class="o">/</span> <span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The backward passes the upstream sensitivity straight through to the dividend
+and routes <code class="docutils literal notranslate"><span class="pre">-trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span></code> to the divisor. Gradient does not flow through the
+discrete step where <code class="docutils literal notranslate"><span class="pre">trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span></code> changes.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -145,6 +152,43 @@ data=[1, -1]
 data=[nan]
 </pre></div>
 </div>
+<p>Example 5. A scalar divisor applies the same <code class="docutils literal notranslate"><span class="pre">b</span></code> to every element.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">fmod</span><span class="p">(</span><span class="mf">3.0</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.0000, -1.0000, 1.0000]
+</pre></div>
+</div>
+<p>Example 6. The backward passes gradient straight through to the dividend and
+routes <code class="docutils literal notranslate"><span class="pre">-trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span></code> to the divisor.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">a</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">b</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">a</span><span class="p">.</span><span class="n">fmod</span><span class="p">(</span><span class="n">b</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;da=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;db=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>da=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 1, 1]
+db=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, -2, -1]
+</pre></div>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">da</span></code> entry is <code class="docutils literal notranslate"><span class="pre">1</span></code>. Each <code class="docutils literal notranslate"><span class="pre">db</span></code> entry is <code class="docutils literal notranslate"><span class="pre">-trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span></code>:
+<code class="docutils literal notranslate"><span class="pre">-trunc(-5/3)</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">-trunc(5.5/2)</span> <span class="pre">=</span> <span class="pre">-2</span></code>, <code class="docutils literal notranslate"><span class="pre">-trunc(7/4)</span> <span class="pre">=</span> <span class="pre">-1</span></code>.</p>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">
@@ -153,7 +197,8 @@ data=[nan]
 <li><p><code class="docutils literal notranslate"><span class="pre">fmod()</span></code> follows the sign of <code class="docutils literal notranslate"><span class="pre">a</span></code>; <a class="reference internal" href="remainder.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">remainder()</span></code></span></a> follows the
 sign of <code class="docutils literal notranslate"><span class="pre">b</span></code>. They agree only when <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> already share a sign.</p></li>
 <li><p>Division by <code class="docutils literal notranslate"><span class="pre">0</span></code> gives <code class="docutils literal notranslate"><span class="pre">NaN</span></code> on floating-point inputs; it does not throw.</p></li>
-<li><p>Not differentiable.</p></li>
+<li><p>The gradient through the dividend is <code class="docutils literal notranslate"><span class="pre">1</span></code>; no gradient flows through the
+discrete step where <code class="docutils literal notranslate"><span class="pre">trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span></code> changes.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> in either input propagates.</p></li>
 </ul>
 </section>
@@ -161,9 +206,10 @@ sign of <code class="docutils literal notranslate"><span class="pre">b</span></c
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">fmod(a,</span> <span class="pre">b)</span></code> is the truncated-division remainder, signed like <code class="docutils literal notranslate"><span class="pre">a</span></code>:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-</span> <span class="pre">trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span> <span class="pre">*</span> <span class="pre">b</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-</span> <span class="pre">trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span> <span class="pre">*</span> <span class="pre">b</span></code>; <code class="docutils literal notranslate"><span class="pre">b</span></code> may be a <code class="docutils literal notranslate"><span class="pre">Series</span></code> or a scalar</p></li>
 <li><p>broadcasts like <code class="docutils literal notranslate"><span class="pre">add()</span></code>; preserves integer dtype</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> on divide-by-zero; not differentiable</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaN</span></code> on divide-by-zero</p></li>
+<li><p>differentiable: <code class="docutils literal notranslate"><span class="pre">d/da</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">d/db</span> <span class="pre">=</span> <span class="pre">-trunc(a</span> <span class="pre">/</span> <span class="pre">b)</span></code>, no flow through the jumps</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -175,9 +221,9 @@ the divisor.</p></li>
 <li><p><a class="reference internal" href="trunc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::trunc</span></code></span></a>: the rounding rule <code class="docutils literal notranslate"><span class="pre">fmod()</span></code> uses internally.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="floor.html">
+  <a class="prev-link" href="fmin.html">
     <span class="label">Previous</span>
-    <span class="title">floor</span>
+    <span class="title">fmin</span>
   </a>
   <a class="next-link" href="frac.html">
     <span class="label">Next</span>
@@ -275,7 +321,7 @@ the divisor.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
-      <li>Previous: <a href="floor.html" title="previous chapter">Series::floor</a></li>
+      <li>Previous: <a href="fmin.html" title="previous chapter">Series::fmin</a></li>
       <li>Next: <a href="frac.html" title="next chapter">Series::frac</a></li>
   </ul></li>
   </ul></li>

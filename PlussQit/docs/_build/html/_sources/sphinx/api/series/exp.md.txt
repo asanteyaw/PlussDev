@@ -136,9 +136,9 @@ forward pass and the backward pass.
 - [`Series::abs`](abs.md): non-exponential unary value transform.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="erfc.html">
+  <a class="prev-link" href="erfinv.html">
     <span class="label">Previous</span>
-    <span class="title">erfc</span>
+    <span class="title">erfinv</span>
   </a>
   <a class="next-link" href="exp2.html">
     <span class="label">Next</span>

@@ -189,12 +189,12 @@ Use `all()` when every value in a lane must pass.
   selection.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="add.html">
+  <a class="prev-link" href="adjoint.html">
     <span class="label">Previous</span>
-    <span class="title">add</span>
+    <span class="title">adjoint</span>
   </a>
-  <a class="next-link" href="amax.html">
+  <a class="next-link" href="allclose.html">
     <span class="label">Next</span>
-    <span class="title">amax</span>
+    <span class="title">allclose</span>
   </a>
 </div>

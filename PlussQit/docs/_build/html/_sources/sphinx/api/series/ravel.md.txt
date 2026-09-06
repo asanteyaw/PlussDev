@@ -122,8 +122,8 @@ data=
     <span class="label">Previous</span>
     <span class="title">rad2deg</span>
   </a>
-  <a class="next-link" href="reciprocal.html">
+  <a class="next-link" href="real.html">
     <span class="label">Next</span>
-    <span class="title">reciprocal</span>
+    <span class="title">real</span>
   </a>
 </div>

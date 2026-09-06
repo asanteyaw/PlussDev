@@ -145,8 +145,8 @@ output and verified reverse-mode behavior on the current surface.
     <span class="label">Previous</span>
     <span class="title">tan</span>
   </a>
-  <a class="next-link" href="tile.html">
+  <a class="next-link" href="tensor.html">
     <span class="label">Next</span>
-    <span class="title">tile</span>
+    <span class="title">tensor</span>
   </a>
 </div>

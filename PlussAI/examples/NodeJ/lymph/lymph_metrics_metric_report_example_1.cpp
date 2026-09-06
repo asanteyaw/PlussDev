@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-// metrics::classification(truth, pred).report({...}) returns a MetricReport:
+// metrics::classification::report(truth, pred, {...}) returns a MetricReport:
 // a `values` Series aligned to `requested`, plus a named 1-element Series per
 // requested metric (report.accuracy, report.f1, ...).
 int main() {
@@ -23,7 +23,7 @@ int main() {
       lymph::MetricKind::Recall, lymph::MetricKind::F1};
 
   const lymph::metrics::MetricReport report =
-      lymph::metrics::classification(truth, predicted).report(want);
+      lymph::metrics::classification::report(truth, predicted, want);
 
   const std::vector<double> values = report.values.to_vec<double>();
   std::cout << "requested x values:\n";

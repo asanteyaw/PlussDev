@@ -181,7 +181,7 @@ helpers through `<pluss/pluss.h>` / `<pluss/core.h>`:
 
 ```cpp
 auto pluss_series = pluss::series::from_torch(tensor);
-auto torch_tensor = pluss::series::to_torch(pluss_series);
+auto torch_tensor = pluss_series.tensor();
 ```
 
 Use a Torch-enabled SDK and keep Torch visible to your downstream CMake project

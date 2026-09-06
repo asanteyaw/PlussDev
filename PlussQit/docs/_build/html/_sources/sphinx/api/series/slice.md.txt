@@ -201,7 +201,27 @@ data=[[10, 12],
 
 For a rank-2 `Series`, `-1` means the last axis, so this is column slicing.
 
-Example 7. Negative-step reversal is intentionally rejected here.
+Example 7. Out-of-range bounds saturate to the axis rather than raising — the
+same forgiving behavior as a Python list slice. Here `end = 99` simply stops at
+the real axis length.
+
+```cpp
+std::cout << grid.slice(1, 2, 99);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,2], strides=[4,1], dtype=float64, platform=cpu, numel=6, contiguous=false)
+data=[[12, 13],
+  [22, 23],
+  [32, 33]]
+```
+
+When you want an out-of-range request to be an error instead, use the
+materializing [`narrow_copy()`](narrow_copy.md).
+
+Example 8. Negative-step reversal is intentionally rejected here.
 
 ```cpp
 try {
@@ -221,7 +241,7 @@ Series::slice: negative-step slices are not supported by this cheap view helper
 This is not an accident. Reverse traversal belongs on a richer indexing
 surface.
 
-Example 8. Zero step is also illegal.
+Example 9. Zero step is also illegal.
 
 ```cpp
 try {
@@ -238,7 +258,7 @@ try {
 Series::slice: step must be non-zero
 ```
 
-Example 9. Backpropagation marks exactly the positions that were sliced.
+Example 10. Backpropagation marks exactly the positions that were sliced.
 
 ```cpp
 auto tracked_grid = pluss::make_series({
@@ -301,8 +321,8 @@ the right surface.
     <span class="label">Previous</span>
     <span class="title">pile</span>
   </a>
-  <a class="next-link" href="softplus.html">
+  <a class="next-link" href="softmax.html">
     <span class="label">Next</span>
-    <span class="title">softplus</span>
+    <span class="title">softmax</span>
   </a>
 </div>

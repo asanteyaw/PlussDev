@@ -147,6 +147,12 @@ complex: dtype must be Complex64 or Complex128
 
 - `complex()` is elementwise pairing, not broadcasting composition.
 - Destination dtype controls complex precision, not shape.
+- Use `complex()` when the real and imaginary parts already exist as separate
+  series. To build a complex series from literals instead, pass `std::complex`
+  values straight to [`make`](make.md) /
+  [`pluss::make_series`](make.md) (e.g.
+  `pluss::make_series({std::complex<float>{1, 2}, {3, 4}})`), and
+  [`polar`](polar.md) builds one from magnitude and angle.
 
 ## See Also
 

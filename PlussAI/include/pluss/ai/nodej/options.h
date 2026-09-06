@@ -49,7 +49,46 @@ enum class MetricKind : std::uint8_t {
   Specificity = 13,
   GeometricMean = 14,
   BalanceQuality = 15,
+  Mcc = 16,               // Matthews correlation coefficient (from confusion matrix)
+  CohenKappa = 17,        // unweighted Cohen's kappa (from confusion matrix)
+  Gini = 18,              // 2 * RocAuc - 1 (needs scores)
+  AveragePrecision = 19,  // area under the precision-recall curve (needs scores)
+  Brier = 20,             // mean squared error of predicted probabilities (loss; needs probabilities)
 };
+
+// Exhaustive (no default) so a new MetricKind fails to compile here until its
+// direction is decided -- the single shared answer to "does a larger value
+// mean better?" Several call sites (tune.cpp, selection::minimize_metric_,
+// sparse_runtime.cpp) currently carry their own private copy of this same
+// switch; new code should call this one instead of adding a fourth.
+[[nodiscard]] inline bool metric_prefers_max(MetricKind metric) {
+  switch (metric) {
+    case MetricKind::Accuracy:
+    case MetricKind::BalancedAccuracy:
+    case MetricKind::Precision:
+    case MetricKind::Recall:
+    case MetricKind::Sensitivity:
+    case MetricKind::F1:
+    case MetricKind::RocAuc:
+    case MetricKind::Specificity:
+    case MetricKind::GeometricMean:
+    case MetricKind::BalanceQuality:
+    case MetricKind::R2:
+    case MetricKind::Mcc:
+    case MetricKind::CohenKappa:
+    case MetricKind::Gini:
+    case MetricKind::AveragePrecision:
+      return true;
+    case MetricKind::LogLoss:
+    case MetricKind::Mse:
+    case MetricKind::Rmse:
+    case MetricKind::Mae:
+    case MetricKind::QuantileLoss:
+    case MetricKind::Brier:
+      return false;
+  }
+  return true;
+}
 
 enum class CVPlanKind : std::uint8_t {
   Holdout = 0,

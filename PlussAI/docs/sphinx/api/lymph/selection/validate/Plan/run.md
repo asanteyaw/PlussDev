@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: f574f05d3e12 -->
+<!-- pluss-signature-hash: c72c6caf8294 -->
 
 # `lymph::selection::validate::Plan::run`
 
@@ -36,7 +36,7 @@ reports::CrossVal run(const workflow::Workflow& workflow,
 // Rank a Builder's candidates under this plan.
 selection::CompareResult run(const models::Builder& builder, /* same data shapes */,
                              TrainOptions = {}, AssessOptions = {},
-                             MetricKind objective_metric = MetricKind::Accuracy,
+                             selection::Scorer objective = MetricKind::Accuracy,
                              TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                              selection::FitOptions fit_options = {}) const;
 ```
@@ -44,7 +44,7 @@ selection::CompareResult run(const models::Builder& builder, /* same data shapes
 The first argument is a `models::Model`, a `ModelSpec`, a `workflow::Workflow`,
 or a `models::Builder`. The data is `(frame, data_options)`, an `(x, y)` pair
 with `y` a `Series` or `Thread`, a `LabeledBatch`, or a
-[`workflow::Payload`](../../../model/Payload.md). For a `time` plan the `Payload`
+[`workflow::Payload`](../../../workflow/Payload.md). For a `time` plan the `Payload`
 overload also carries the timeline role.
 
 ## What It Does
@@ -80,8 +80,9 @@ winner when `fit_options.fit_top > 0`).
 `assess_options` — `lymph::options::Assess`
 : Which metrics to compute. Defaults to the model's task-appropriate set.
 
-`objective_metric` / `objective_policy` / `fit_options` *(builder overload only)*
-: The metric candidates are ranked on, whether higher or lower wins, and how
+`objective` / `objective_policy` / `fit_options` *(builder overload only)*
+: The [`Scorer`](../../Scorer.md) candidates are ranked on (a `MetricKind`, or
+  `selection::make_scorer("name", fn)`), whether higher or lower wins, and how
   many top candidates to re-fit on the full data.
 
 ## Returns

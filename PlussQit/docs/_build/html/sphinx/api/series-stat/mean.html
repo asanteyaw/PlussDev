@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="SeriesStatAccessor::movmax" href="movmax.html" />
@@ -55,6 +55,26 @@
 axis it summarizes the entire owner. With <code class="docutils literal notranslate"><span class="pre">dim</span></code>, it independently averages
 each lane along that axis. <code class="docutils literal notranslate"><span class="pre">x.stat.mean(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">x.stat().mean(...)</span></code> are
 equivalent; the latter merely creates a proxy before invoking the operation.</p>
+<p>This is a reduction, not a shape-preserving transform. The values belonging to
+each selected lane are replaced by one floating-point result. Use
+<a class="reference internal" href="center.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">center</span></code></span></a> when the goal is instead to subtract those means and keep
+every input position.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>dim</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+Selects the axis whose lanes are averaged. On shape <code class="docutils literal notranslate"><span class="pre">[2,3]</span></code>, <code class="docutils literal notranslate"><span class="pre">dim=0</span></code>
+groups the two values in each column; <code class="docutils literal notranslate"><span class="pre">dim=1</span></code> groups the three values in
+each row. Negative dimensions count from the back, so <code class="docutils literal notranslate"><span class="pre">-1</span></code> selects the
+final axis.</p>
+<p><strong>keepdim</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)
+If <code class="docutils literal notranslate"><span class="pre">false</span></code>, the reduced axis disappears. If <code class="docutils literal notranslate"><span class="pre">true</span></code>, it remains with size
+one. This changes only geometry, not the calculated means.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p>A floating-point <code class="docutils literal notranslate"><span class="pre">Series</span></code>. Global reduction has shape <code class="docutils literal notranslate"><span class="pre">[]</span></code>; dimensional
+reduction removes <code class="docutils literal notranslate"><span class="pre">dim</span></code> unless <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code>.</p>
 </section>
 <section id="reduction-geometry">
 <h2>Reduction Geometry<a class="headerlink" href="#reduction-geometry" title="Link to this heading">¶</a></h2>
@@ -71,22 +91,43 @@ grow merely because a batch or sequence has more elements.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A global mean treats the entire table as one population.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">mean</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">().</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data=3.5
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=3.5
+</pre></div>
+</div>
+<p>Example 2. Reducing <code class="docutils literal notranslate"><span class="pre">dim=0</span></code> computes one mean for each column.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2.5, 3.5, 4.5]
+</pre></div>
+</div>
+<p>Example 3. Reducing rows while retaining the axis produces shape <code class="docutils literal notranslate"><span class="pre">[2,1]</span></code>,
+which can broadcast back across the three columns.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">stat</span><span class="p">().</span><span class="n">mean</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,1], strides=[1,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[[2],
   [5]]
 </pre></div>
 </div>
-<p>The three results answer different questions: one average for the full table,
-one per column, and one per row while preserving broadcast alignment.</p>
+<p>The proxy spelling in Example 3 changes only how the operation is reached.
+<code class="docutils literal notranslate"><span class="pre">x.stat.mean(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">x.stat().mean(...)</span></code> share the same owner and semantics.</p>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">

@@ -48,6 +48,25 @@ static void unary_half_loop(const Series& a, Series& out, Fn&& fn, ToF32&& to, F
   });
 }
 
+// round / floor / ceil / trunc are the identity on integral dtypes -- a whole
+// number rounds to itself. The math kernels above only cover floats, so integer
+// Series land here (out has the same dtype as the input). Returns true when it
+// handled the copy.
+static bool unary_integral_identity_(const Series& a, Series& out) {
+  switch (a.scalar_type()) {
+    case ScalarType::Bool: [[fallthrough]];
+    case ScalarType::UInt8:  unary_loop<std::uint8_t>(a,out,[](std::uint8_t x){ return x; }); return true;
+    case ScalarType::UInt16: unary_loop<std::uint16_t>(a,out,[](std::uint16_t x){ return x; }); return true;
+    case ScalarType::UInt32: unary_loop<std::uint32_t>(a,out,[](std::uint32_t x){ return x; }); return true;
+    case ScalarType::UInt64: unary_loop<std::uint64_t>(a,out,[](std::uint64_t x){ return x; }); return true;
+    case ScalarType::Int8:   unary_loop<std::int8_t>(a,out,[](std::int8_t x){ return x; }); return true;
+    case ScalarType::Int16:  unary_loop<std::int16_t>(a,out,[](std::int16_t x){ return x; }); return true;
+    case ScalarType::Int32:  unary_loop<std::int32_t>(a,out,[](std::int32_t x){ return x; }); return true;
+    case ScalarType::Int64:  unary_loop<std::int64_t>(a,out,[](std::int64_t x){ return x; }); return true;
+    default: return false;
+  }
+}
+
 void sqrt(const Series& a, Series& out) {
   switch (a.scalar_type()) {
     case ScalarType::Float64: unary_loop<double>(a,out,[](double x){ return std::sqrt(x); }); return;
@@ -67,6 +86,7 @@ void floor(const Series& a, Series& out) {
     case ScalarType::BFloat16: unary_half_loop<BFloat16>(a,out,[](float x){ return std::floor(x); }, bfloat16_to_float, bfloat16_from_float); return;
     default: break;
   }
+  if (unary_integral_identity_(a, out)) return;
   throw_error("floor: dtype not implemented");
 }
 
@@ -78,6 +98,7 @@ void ceil(const Series& a, Series& out) {
     case ScalarType::BFloat16: unary_half_loop<BFloat16>(a,out,[](float x){ return std::ceil(x); }, bfloat16_to_float, bfloat16_from_float); return;
     default: break;
   }
+  if (unary_integral_identity_(a, out)) return;
   throw_error("ceil: dtype not implemented");
 }
 
@@ -89,6 +110,7 @@ void round(const Series& a, Series& out) {
     case ScalarType::BFloat16: unary_half_loop<BFloat16>(a,out,[](float x){ return std::nearbyint(x); }, bfloat16_to_float, bfloat16_from_float); return;
     default: break;
   }
+  if (unary_integral_identity_(a, out)) return;
   throw_error("round: dtype not implemented");
 }
 
@@ -100,6 +122,7 @@ void trunc(const Series& a, Series& out) {
     case ScalarType::BFloat16: unary_half_loop<BFloat16>(a,out,[](float x){ return std::trunc(x); }, bfloat16_to_float, bfloat16_from_float); return;
     default: break;
   }
+  if (unary_integral_identity_(a, out)) return;
   throw_error("trunc: dtype not implemented");
 }
 

@@ -8,7 +8,9 @@
 
 ```cpp
 Series::fmod(const Series& other) const -> Series
+Series::fmod(double other) const -> Series
 Series& Series::fmod_(const Series& other)
+Series& Series::fmod_(double other)
 ```
 
 ## What It Does
@@ -32,9 +34,10 @@ sign of the divisor (a true modulo), use [`remainder()`](remainder.md).
 
 ## Parameters
 
-**other** (`const Series&`)
+**other** (`const Series&` or `double`)
 
-The divisor `b`. Broadcasts against the receiver.
+The divisor `b`. A `Series` broadcasts against the receiver; a `double` applies
+the same divisor to every element.
 
 ## Returns
 
@@ -45,12 +48,17 @@ The divisor `b`. Broadcasts against the receiver.
 
 ## Gradient
 
-`fmod()` is not differentiable. A `Series` produced by it does not carry
-reverse tracking.
+`fmod()` is differentiable. `fmod(a, b) = a - trunc(a / b) * b`, and `trunc`
+rounds to a locally constant integer, so between the jumps:
 
-(Where a subgradient is wanted, `fmod(a, b)` changes one-for-one with `a`
-between the jumps, and steps by `b` at each jump; it is not wired into
-autograd.)
+```
+d/da fmod(a, b) = 1
+d/db fmod(a, b) = -trunc(a / b)
+```
+
+The backward passes the upstream sensitivity straight through to the dividend
+and routes `-trunc(a / b)` to the divisor. Gradient does not flow through the
+discrete step where `trunc(a / b)` changes.
 
 ## Examples
 
@@ -123,21 +131,65 @@ Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=
 data=[nan]
 ```
 
+Example 5. A scalar divisor applies the same `b` to every element.
+
+```cpp
+auto a = pluss::make_series({7.0, -7.0, 10.0});
+
+pluss::series::print(std::cout, a.fmod(3.0));
+```
+
+### Output
+
+```text
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.0000, -1.0000, 1.0000]
+```
+
+Example 6. The backward passes gradient straight through to the dividend and
+routes `-trunc(a / b)` to the divisor.
+
+```cpp
+auto a = pluss::make_series({-5.0, 5.5, 7.0});
+auto b = pluss::make_series({3.0, 2.0, 4.0});
+a.tracks_slope_(true);
+b.tracks_slope_(true);
+
+a.fmod(b).sum().reverse();
+
+std::cout << "da=" << a.sensitivity();
+std::cout << "db=" << b.sensitivity();
+```
+
+### Output
+
+```text
+da=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 1, 1]
+db=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, -2, -1]
+```
+
+Each `da` entry is `1`. Each `db` entry is `-trunc(a / b)`:
+`-trunc(-5/3) = 1`, `-trunc(5.5/2) = -2`, `-trunc(7/4) = -1`.
+
 ## Gotchas And Failure Modes
 
 - `fmod()` follows the sign of `a`; [`remainder()`](remainder.md) follows the
   sign of `b`. They agree only when `a` and `b` already share a sign.
 - Division by `0` gives `NaN` on floating-point inputs; it does not throw.
-- Not differentiable.
+- The gradient through the dividend is `1`; no gradient flows through the
+  discrete step where `trunc(a / b)` changes.
 - `NaN` in either input propagates.
 
 ## Summary
 
 `fmod(a, b)` is the truncated-division remainder, signed like `a`:
 
-- `a - trunc(a / b) * b`
+- `a - trunc(a / b) * b`; `b` may be a `Series` or a scalar
 - broadcasts like `add()`; preserves integer dtype
-- `NaN` on divide-by-zero; not differentiable
+- `NaN` on divide-by-zero
+- differentiable: `d/da = 1`, `d/db = -trunc(a / b)`, no flow through the jumps
 
 ## See Also
 
@@ -147,9 +199,9 @@ data=[nan]
 - [`Series::trunc`](trunc.md): the rounding rule `fmod()` uses internally.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="floor.html">
+  <a class="prev-link" href="fmin.html">
     <span class="label">Previous</span>
-    <span class="title">floor</span>
+    <span class="title">fmin</span>
   </a>
   <a class="next-link" href="frac.html">
     <span class="label">Next</span>

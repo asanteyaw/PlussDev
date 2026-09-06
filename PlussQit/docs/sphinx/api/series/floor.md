@@ -94,12 +94,12 @@ not merely shortened toward zero.
 - [`Series::trunc`](trunc.md): fractional-part removal toward zero.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="flatten.html">
+  <a class="prev-link" href="float_power.html">
     <span class="label">Previous</span>
-    <span class="title">flatten</span>
+    <span class="title">float_power</span>
   </a>
-  <a class="next-link" href="fmod.html">
+  <a class="next-link" href="floor_divide.html">
     <span class="label">Next</span>
-    <span class="title">fmod</span>
+    <span class="title">floor_divide</span>
   </a>
 </div>

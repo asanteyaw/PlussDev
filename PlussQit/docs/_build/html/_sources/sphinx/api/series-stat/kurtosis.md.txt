@@ -9,6 +9,8 @@
 ```cpp
 Series SeriesStatAccessor::kurtosis() const
 Series SeriesStatAccessor::kurtosis(std::int64_t dim) const
+Series SeriesStatProxy::kurtosis() const
+Series SeriesStatProxy::kurtosis(std::int64_t dim) const
 ```
 
 ## What It Does
@@ -18,21 +20,57 @@ The normal-distribution reference is therefore `0`, not Pearson kurtosis `3`.
 Positive values indicate heavier-tail or sharper-peak behavior relative to that
 reference; negative values indicate flatter or lighter-tail behavior.
 
+This is a reduction and a shape descriptor, not a spread measurement. Two
+lanes can have different scales or asymmetries and still share the same
+kurtosis.
+
+## Parameters And Returns
+
+Omitting `dim` pools the complete owner. Supplying `dim`, including a negative
+dimension, computes one value per surviving lane. The global result currently
+has shape `[1]`.
+
 ## Examples
+
+Example 1. Symmetric three-point rows produce negative excess kurtosis.
 
 ```cpp
 auto symmetric = pluss::make_series({1, 2, 3, 4, 5, 6}, {2, 3});
-auto lopsided = pluss::make_series({1, 1, 4, 2, 2, 8}, {2, 3});
 std::cout << symmetric.stat.kurtosis(1) << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[-1.5, -1.5]
+```
+
+Example 2. These lopsided rows have the same fourth-moment summary despite
+their nonzero skewness.
+
+```cpp
+auto lopsided = pluss::make_series({1, 1, 4, 2, 2, 8}, {2, 3});
 std::cout << lopsided.stat().kurtosis(1) << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[-1.5, -1.5]
+```
+
+Example 3. Pooling changes the population and therefore the fourth moment.
+
+```cpp
 std::cout << lopsided.stat.kurtosis() << "\n";
 ```
 
 ### Output
 
 ```text
-data=[-1.5, -1.5]
-data=[-1.5, -1.5]
+pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
 data=[0.055555556]
 ```
 

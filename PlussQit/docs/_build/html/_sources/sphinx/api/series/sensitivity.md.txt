@@ -650,8 +650,9 @@ data=[2, 40, 600]
 - `y.sensitivity()` is not a synonym for "the derivative of `y` with respect to
   the inputs." It is the sensitivity stored on `y` itself.
 - The exact snippet `x = make_series(1.7); y = x * x.cos(); y.reverse();`
-  leaves `x` without stored sensitivity because `x` was never marked for
-  tracking.
+  raises because `x` was never marked for tracking, so `y` has no connected
+  graph. Opt `x` in first (`x.tracks_slope_(true)` or
+  `pluss::cfg::tracks_slope()`).
 - A zero-valued readback can therefore mean either "the derivative is actually
   zero" or "no stored sensitivity exists yet." Use
   [`has_sensitivity()`](has_sensitivity.md) to distinguish those states.

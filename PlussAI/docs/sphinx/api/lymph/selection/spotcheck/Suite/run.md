@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 293927ddf7ff -->
+<!-- pluss-signature-hash: f4c119e2b58d -->
 
 # `lymph::selection::spotcheck::Suite::run`
 
@@ -19,7 +19,7 @@ Result run(const pluss::table::DataFrame& frame,
            const DataFrameBatchOptions& data_options,
            CrossValOptions cv = {},
            AssessOptions assess_options = {},
-           MetricKind objective_metric = MetricKind::Accuracy,
+           selection::Scorer objective = MetricKind::Accuracy,
            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
            FitOptions fit_options = {}) const;
 
@@ -42,7 +42,7 @@ For every `strategy` registered on the suite and every model in the
 `models::Builder` it was built from, `run` makes a `Candidate` named
 `"<strategy>__<model>"`, carrying that model and the strategy's `TrainOptions`.
 The full candidate list goes to `selection::compare`, which cross-validates each
-under `cv`, ranks them by `objective_metric`, and re-fits the leaders
+under `cv`, ranks them by `objective`, and re-fits the leaders
 (`fit_options.fit_top`) and laggards (`fit_options.fit_bottom`) on the whole
 set.
 
@@ -60,11 +60,16 @@ the strategy list.
   labels stay scorable.
 
 `assess_options` — `lymph::options::Assess`
-: Metrics to compute. An empty set is filled from `objective_metric`.
+: Metrics to compute. An empty set is filled from the `objective` metric (or
+  the task default when `objective` is a custom scorer).
 
-`objective_metric` / `objective_policy`
-: The metric candidates are ranked on, and whether higher or lower wins
-  (`Auto` uses the metric's own convention).
+`objective` — `lymph::selection::Scorer`
+: What candidates are ranked on -- implicitly a `MetricKind` (default
+  `Accuracy`), or `selection::make_scorer("name", fn)` for a custom callable.
+  See [`Scorer`](../../Scorer.md).
+
+`objective_policy` — `lymph::TuneObjectivePolicy`
+: Whether higher or lower wins; `Auto` uses the objective's own convention.
 
 `fit_options` — `lymph::selection::FitOptions`
 : `fit_top` / `fit_bottom` — how many ranked leaders and laggards to re-fit on
@@ -294,6 +299,8 @@ trials = 2, best = plain__tree, best trained = true
 
 - [`strategy`](strategy.md) — register the training strategies `run` crosses
   with the models.
+- [`Scorer`](../../Scorer.md) — the `objective` type; `make_scorer` for a
+  custom ranking metric.
 - [`CompareReport`](../../CompareReport.md) — the report type inside the
   result.
 - [`Builder::benchmark`](../../../models/builder/Builder/benchmark.md) — the

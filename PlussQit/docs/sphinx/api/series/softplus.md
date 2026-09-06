@@ -155,9 +155,9 @@ Those are `sigmoid([-3, -1, 0, 1, 3])`.
 - [`Series::logaddexp`](logaddexp.md): `softplus(x)` is `logaddexp(x, 0)`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
+  <a class="prev-link" href="softmax.html">
     <span class="label">Previous</span>
-    <span class="title">slice</span>
+    <span class="title">softmax</span>
   </a>
   <a class="next-link" href="sort.html">
     <span class="label">Next</span>

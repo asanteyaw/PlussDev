@@ -897,7 +897,8 @@ public:
   Series slice(std::int64_t dim, std::int64_t start, std::int64_t end, std::int64_t step) const;
   Series gather(std::int64_t dim, const Series& index) const;
   Series take(const Series& index) const;
-  Series factorial(std::int64_t n) const;
+  // `factorial()` (no-arg, elementwise integer factorial) is provided by the
+  // generated method surface and routed through the compat op table.
   Series scatter(std::int64_t dim, const Series& index, const Series& src) const;
   Series& scatter_(std::int64_t dim, const Series& index, const Series& src);
   Series scatter_add(std::int64_t dim, const Series& index, const Series& src) const;
@@ -1267,16 +1268,37 @@ public:
   Series var() const { return var(true); }
   Series std() const { return std(true); }
 
-  // Norm overloads used throughout the codebase.
-  ::pluss::StackArray<Series> max_pair(std::int64_t dim, bool keepdim=false) const;
-  ::pluss::StackArray<Series> min_pair(std::int64_t dim, bool keepdim=false) const;
-  ::pluss::StackArray<Series> argmax_pair(std::int64_t dim, bool keepdim=false) const;
-  ::pluss::StackArray<Series> argmin_pair(std::int64_t dim, bool keepdim=false) const;
-  ::pluss::StackArray<Series> sort_pair(std::int64_t dim=-1, bool descending=false, bool stable=false) const;
-  ::pluss::StackArray<Series> topk_pair(std::int64_t k,
-                                        std::int64_t dim=-1,
-                                        bool largest=true,
-                                        bool sorted=true) const;
+  // Value/index reductions. Returned as std::pair<values, indices> -- a fixed
+  // arity of 2, so a pair rather than a variable-length container.
+  std::pair<Series, Series> max_pair(std::int64_t dim, bool keepdim=false) const;
+  std::pair<Series, Series> min_pair(std::int64_t dim, bool keepdim=false) const;
+  std::pair<Series, Series> sort_pair(std::int64_t dim=-1, bool descending=false, bool stable=false) const;
+  std::pair<Series, Series> topk_pair(std::int64_t k,
+                                      std::int64_t dim=-1,
+                                      bool largest=true,
+                                      bool sorted=true) const;
+
+  // Split family: partition one axis into a variable-length list of pieces
+  // (each a view). Returns std::vector<Series> because the piece count is a
+  // runtime value -- the same choice torch makes for chunk/split/unbind.
+  std::vector<Series> chunk(std::int64_t chunks, std::int64_t dim=0) const;
+  std::vector<Series> split(std::int64_t split_size, std::int64_t dim=0) const;
+  std::vector<Series> split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const;
+  std::vector<Series> split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const;
+  std::vector<Series> unbind(std::int64_t dim=0) const;
+  std::vector<Series> tensor_split(std::int64_t sections, std::int64_t dim=0) const;
+  std::vector<Series> tensor_split(pluss::msharp::RangeView::Int indices, std::int64_t dim=0) const;
+  std::vector<Series> hsplit(std::int64_t sections) const;
+  std::vector<Series> hsplit(pluss::msharp::RangeView::Int indices) const;
+  std::vector<Series> vsplit(std::int64_t sections) const;
+  std::vector<Series> vsplit(pluss::msharp::RangeView::Int indices) const;
+  std::vector<Series> dsplit(std::int64_t sections) const;
+  std::vector<Series> dsplit(pluss::msharp::RangeView::Int indices) const;
+  // `unsafe_*` are the same operation here (every piece is already a view).
+  std::vector<Series> unsafe_chunk(std::int64_t chunks, std::int64_t dim=0) const;
+  std::vector<Series> unsafe_split(std::int64_t split_size, std::int64_t dim=0) const;
+  std::vector<Series> unsafe_split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const;
+  std::vector<Series> unsafe_split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const;
 
   // Pluss autodiff entrypoint. This is a named wrapper over `_backward(...)`
   // so the public surface stays Pluss-native.

@@ -20,19 +20,42 @@ feature vectors whose direction matters but raw magnitude should not.
 For a vector, there is only one lane, so `normc()` and `normr()` both normalize
 the whole vector. Their distinction becomes meaningful at rank two and above.
 
+## Returns And Call Styles
+
+The output is floating-point, out-of-place, and shape-preserving. The direct
+`x.stat.normc()` and explicit proxy `x.stat().normc()` calls select the same
+operation.
+
 ## Examples
+
+Example 1. Columns are normalized independently.
 
 ```cpp
 auto x = pluss::make_series({{3.0, 4.0}, {0.0, 5.0}});
 std::cout << x.stat.normc() << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 0.62469505],
+  [0, 0.78086881]]
+```
+
+Column zero divides by `3`, while column one divides by `sqrt(41)`. This is
+why the same matrix produces different numbers under `normr()`.
+
+Example 2. Summing squared components down `dim=0` verifies unit column norms.
+
+```cpp
 std::cout << x.stat.normc().square().sum(0) << "\n";
 ```
 
 ### Output
 
 ```text
-data=[[1, 0.62469505],
-  [0, 0.78086881]]
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[1, 1]
 ```
 

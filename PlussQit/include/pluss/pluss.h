@@ -9,7 +9,8 @@
 // - pluss::zeros/ones/full/rand/... factories
 // - pluss::series::print(...)
 // - pluss::distr::{sample,sample_like,pdf,logpdf,cdf,mixture_normal} when PlussMa is available
-// - pluss::series::from_torch(...) / pluss::series::to_torch(...) (when PLUSS_ENABLE_TORCH=ON)
+// - pluss::series::from_torch(...) to build a Series from a torch::Tensor, and
+//   the Series::tensor() method for the reverse (when PLUSS_ENABLE_TORCH=ON)
 //
 // For CodeN (text API), this exports:
 // - pluss::Note

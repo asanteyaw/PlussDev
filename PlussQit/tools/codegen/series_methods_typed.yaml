@@ -570,14 +570,6 @@ methods:
     signature: "Series imag() const"
     forward: ""
 
-  - name: is_coalesced
-    signature: "Series is_coalesced() const"
-    forward: ""
-
-  - name: is_nonzero
-    signature: "Series is_nonzero() const"
-    forward: ""
-
   - name: matrix_exp
     signature: "Series matrix_exp() const"
     forward: ""
@@ -679,6 +671,10 @@ methods:
     signature: "Series float_power(const Series& rhs) const"
     forward: "rhs"
 
+  - name: float_power
+    signature: "Series float_power(double rhs) const"
+    forward: "rhs"
+
   - name: float_power_
     signature: "Series& float_power_(const Series& rhs) const"
     forward: "rhs"
@@ -687,8 +683,16 @@ methods:
     signature: "Series fmod(const Series& rhs) const"
     forward: "rhs"
 
+  - name: fmod
+    signature: "Series fmod(double rhs) const"
+    forward: "rhs"
+
   - name: fmod_
     signature: "Series& fmod_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: fmod_
+    signature: "Series& fmod_(double rhs) const"
     forward: "rhs"
 
   - name: gcd
@@ -725,6 +729,10 @@ methods:
 
   - name: ldexp
     signature: "Series ldexp(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: ldexp
+    signature: "Series ldexp(double rhs) const"
     forward: "rhs"
 
   - name: ldexp_
@@ -872,6 +880,10 @@ methods:
     signature: "Series dist(const Series& rhs) const"
     forward: "rhs"
 
+  - name: dist
+    signature: "Series dist(const Series& rhs, double p) const"
+    forward: "rhs, p"
+
   - name: expand_as
     signature: "Series expand_as(const Series& rhs) const"
     forward: "rhs"
@@ -906,10 +918,6 @@ methods:
 
   - name: inner
     signature: "Series inner(const Series& rhs) const"
-    forward: "rhs"
-
-  - name: is_same_size
-    signature: "Series is_same_size(const Series& rhs) const"
     forward: "rhs"
 
   - name: kron
@@ -976,14 +984,6 @@ methods:
     signature: "Series& bitwise_xor_(const Series& rhs) const"
     forward: "rhs"
 
-  - name: equal
-    signature: "Series equal(const Series& rhs) const"
-    forward: "rhs"
-
-  - name: is_set_to
-    signature: "Series is_set_to() const"
-    forward: ""
-
   - name: isclose
     signature: "Series isclose(const Series& rhs) const"
     forward: "rhs"
@@ -994,18 +994,6 @@ methods:
 
   - name: isclose
     signature: "Series isclose(const Series& rhs, double rtol, double atol, bool equal_nan) const"
-    forward: "rhs, rtol, atol, equal_nan"
-
-  - name: allclose
-    signature: "Series allclose(const Series& rhs) const"
-    forward: "rhs"
-
-  - name: allclose
-    signature: "Series allclose(const Series& rhs, double rtol, double atol) const"
-    forward: "rhs, rtol, atol"
-
-  - name: allclose
-    signature: "Series allclose(const Series& rhs, double rtol, double atol, bool equal_nan) const"
     forward: "rhs, rtol, atol, equal_nan"
 
   # Tranche 4/12: metadata/introspection/quantization no-arg family (large tranche).
@@ -1049,6 +1037,10 @@ methods:
     signature: "Series count_nonzero() const"
     forward: ""
 
+  - name: count_nonzero
+    signature: "Series count_nonzero(std::int64_t dim) const"
+    forward: "dim"
+
   - name: crow_indices
     signature: "Series crow_indices() const"
     forward: ""
@@ -1063,42 +1055,6 @@ methods:
 
   - name: int_repr
     signature: "Series int_repr() const"
-    forward: ""
-
-  - name: is_complex
-    signature: "Series is_complex() const"
-    forward: ""
-
-  - name: is_conj
-    signature: "Series is_conj() const"
-    forward: ""
-
-  - name: is_distributed
-    signature: "Series is_distributed() const"
-    forward: ""
-
-  - name: is_floating_point
-    signature: "Series is_floating_point() const"
-    forward: ""
-
-  - name: is_inference
-    signature: "Series is_inference() const"
-    forward: ""
-
-  - name: is_leaf
-    signature: "Series is_leaf() const"
-    forward: ""
-
-  - name: is_neg
-    signature: "Series is_neg() const"
-    forward: ""
-
-  - name: is_pinned
-    signature: "Series is_pinned() const"
-    forward: ""
-
-  - name: is_signed
-    signature: "Series is_signed() const"
     forward: ""
 
   - name: isneginf
@@ -1270,9 +1226,9 @@ methods:
     signature: "Series ediff1d() const"
     forward: ""
 
-  - name: frexp
-    signature: "Series frexp() const"
-    forward: ""
+  # frexp is hand-declared in Series.h returning std::pair<Series, Series>
+  # (mantissa, exponent) -- a fixed-arity decomposition, not a single Series.
+  # Kept out of the generated surface so the typed wrapper does not shadow it.
 
   - name: size
     signature: "Series size() const"
@@ -1284,10 +1240,6 @@ methods:
 
   - name: sspaddmm
     signature: "Series sspaddmm() const"
-    forward: ""
-
-  - name: stride
-    signature: "Series stride() const"
     forward: ""
 
   - name: to_dense
@@ -1516,37 +1468,8 @@ methods:
     signature: "Series as_strided_scatter(const Series& src, pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides, std::int64_t storage_offset) const"
     forward: "src, sizes, strides, storage_offset"
 
-  - name: split
-    signature: "Series split(std::int64_t split_size, std::int64_t dim=0) const"
-    forward: "split_size, dim"
-
-  - name: split
-    signature: "Series split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const"
-    forward: "split_sizes, dim"
-
-  - name: unsafe_split
-    signature: "Series unsafe_split(std::int64_t split_size, std::int64_t dim=0) const"
-    forward: "split_size, dim"
-
-  - name: unsafe_split
-    signature: "Series unsafe_split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const"
-    forward: "split_sizes, dim"
-
-  - name: split_with_sizes
-    signature: "Series split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const"
-    forward: "split_sizes, dim"
-
-  - name: unsafe_split_with_sizes
-    signature: "Series unsafe_split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const"
-    forward: "split_sizes, dim"
-
-  - name: tensor_split
-    signature: "Series tensor_split(std::int64_t sections, std::int64_t dim=0) const"
-    forward: "sections, dim"
-
-  - name: tensor_split
-    signature: "Series tensor_split(pluss::msharp::RangeView::Int indices_or_sections, std::int64_t dim=0) const"
-    forward: "indices_or_sections, dim"
+  # split / unsafe_split / split_with_sizes / tensor_split: hand-declared in
+  # Series.h returning std::vector<Series>. See skip_methods.
 
   - name: flip
     signature: "Series flip(std::int64_t dim) const"
@@ -1625,9 +1548,9 @@ methods:
     signature: "Series _fw_primal() const"
     forward: ""
 
-  - name: aminmax
-    signature: "Series aminmax() const"
-    forward: ""
+  # aminmax is hand-declared in Series.h returning std::pair<Series, Series>
+  # (min, max) -- a fixed-arity decomposition, not a single stacked Series.
+  # See skip_methods.
 
   - name: corrcoef
     signature: "Series corrcoef() const"
@@ -1636,6 +1559,10 @@ methods:
   - name: cov
     signature: "Series cov() const"
     forward: ""
+
+  - name: cov
+    signature: "Series cov(std::int64_t correction) const"
+    forward: "correction"
 
   - name: gelu_
     signature: "Series& gelu_() const"
@@ -1725,13 +1652,9 @@ methods:
     signature: "Series log_softmax(std::int64_t dim) const"
     forward: "dim"
 
-  - name: histogram
-    signature: "Series histogram() const"
-    forward: ""
-
-  - name: histogram
-    signature: "Series histogram(std::int64_t bins) const"
-    forward: "bins"
+  # histogram is hand-declared in Series.h returning std::pair<Series, Series>
+  # (hist, bin_edges). The generated single-Series wrappers dropped the edges
+  # entirely. See skip_methods.
 
   - name: histcounts
     signature: "Series histcounts() const"
@@ -1919,33 +1842,8 @@ methods:
     signature: "Series vdot(const Series& other) const"
     forward: "other"
 
-  - name: vsplit
-    signature: "Series vsplit(std::int64_t sections) const"
-    forward: "sections"
-
-  - name: chunk
-    signature: "Series chunk(std::int64_t chunks, std::int64_t dim=0) const"
-    forward: "chunks, dim"
-
-  - name: unsafe_chunk
-    signature: "Series unsafe_chunk(std::int64_t chunks, std::int64_t dim=0) const"
-    forward: "chunks, dim"
-
-  - name: dsplit
-    signature: "Series dsplit(std::int64_t sections) const"
-    forward: "sections"
-
-  - name: dsplit
-    signature: "Series dsplit(pluss::msharp::RangeView::Int boundaries) const"
-    forward: "boundaries"
-
-  - name: hsplit
-    signature: "Series hsplit(std::int64_t sections) const"
-    forward: "sections"
-
-  - name: hsplit
-    signature: "Series hsplit(pluss::msharp::RangeView::Int boundaries) const"
-    forward: "boundaries"
+  # chunk / unsafe_chunk / hsplit / vsplit / dsplit: hand-declared in Series.h
+  # returning std::vector<Series>. See skip_methods.
 
   - name: repeat_interleave
     signature: "Series repeat_interleave(std::int64_t repeats) const"
@@ -2353,11 +2251,11 @@ methods:
     forward: ""
 
   - name: random_
-    signature: "Series& random_(double from) const"
-    forward: "from"
+    signature: "Series& random_(std::int64_t to) const"
+    forward: "to"
 
   - name: random_
-    signature: "Series& random_(double from, double to) const"
+    signature: "Series& random_(std::int64_t from, std::int64_t to) const"
     forward: "from, to"
 
   - name: rename_
@@ -2472,13 +2370,8 @@ methods:
     signature: "Series& tracks_slope_(bool enabled) const"
     forward: "enabled"
 
-  - name: unbind
-    signature: "Series unbind() const"
-    forward: ""
-
-  - name: unbind
-    signature: "Series unbind(std::int64_t dim) const"
-    forward: "dim"
+  # unbind: hand-declared in Series.h returning std::vector<Series>.
+  # See skip_methods.
 
   - name: uniform_
     signature: "Series& uniform_() const"
@@ -2646,6 +2539,47 @@ methods:
 skip_methods:
   - _backward
   - _coalesced_
+  # Introspection methods are hand-declared because metadata queries and
+  # whole-Series comparisons return native C++ values rather than Series.
+  - stride
+  - equal
+  - allclose
+  - is_coalesced
+  - is_complex
+  - is_conj
+  - is_distributed
+  - is_floating_point
+  - is_inference
+  - is_leaf
+  - is_neg
+  - is_nonzero
+  - is_pinned
+  - is_same_size
+  - is_set_to
+  - is_signed
+  # Split family: hand-declared in Series.h returning std::vector<Series>
+  # (a list of pieces). The generated single-Series wrappers only returned the
+  # first piece.
+  - chunk
+  - unsafe_chunk
+  - split
+  - unsafe_split
+  - split_with_sizes
+  - unsafe_split_with_sizes
+  - tensor_split
+  - unbind
+  - hsplit
+  - vsplit
+  - dsplit
+  # frexp: hand-declared in Series.h returning std::pair<Series, Series>
+  # (mantissa, exponent). The generated single-Series wrapper dropped the
+  # exponent entirely.
+  - frexp
+  # aminmax / histogram: hand-declared in Series.h returning
+  # std::pair<Series, Series> -- (min, max) and (hist, bin_edges). The
+  # generated single-Series wrappers lost half the result.
+  - aminmax
+  - histogram
   - pdf
   - logpdf
   - logcdf

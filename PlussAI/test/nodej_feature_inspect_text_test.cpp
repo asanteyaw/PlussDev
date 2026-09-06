@@ -535,6 +535,83 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
     }
   }
 
+  {
+    // Feature 0 is a clean linear signal for y; feature 1 is pure noise
+    // (independent of y). A correct permutation importance must rank
+    // feature 0 well above feature 1 -- and must do so consistently whether
+    // the requested metric is a score (Accuracy, higher-is-better) or a loss
+    // (LogLoss, lower-is-better): shuffling the informative feature should
+    // always look like a *cost*, never a benefit, regardless of which
+    // direction the metric itself points.
+    const Series x_train = pluss::make_series(std::vector<double>{
+                                                  -4.0, 0.3, -3.5, -0.2, -3.0, 0.1, -2.5, -0.4, -2.0, 0.2,
+                                                  -1.5, -0.1, -1.0, 0.4, -0.5, -0.3, 2.0, 0.0, 2.5, -0.2,
+                                                   3.0, 0.3, 3.5, -0.1, 4.0, 0.2, 1.5, 0.1, 1.0, 0.0,
+                                                   0.5, -0.2, 5.0, 0.4, 5.5, -0.3, 6.0, 0.1, 6.5, -0.4},
+                                              {20, 2},
+                                              f64());
+    const Series y_train = pluss::make_series(std::vector<double>{
+                                                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                                  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
+                                              {20},
+                                              f64());
+    const LabeledBatch train{
+        .features = FeatureBatch{.x = x_train, .layout = ObservationLayout::Rows},
+        .y = y_train,
+    };
+    const ModelSpec cls_spec{
+        .task = TaskKind::Classification,
+        .family = ModelFamily::Linear,
+        .options = LinearFamilyOptions{.objective = LinearObjective::Logistic},
+    };
+
+    auto acc_or = pluss::ai::nodej::permutation_impact(cls_spec, train, train, MetricKind::Accuracy, 8,
+                                                        pluss::ai::nodej::RandomState{.seed = 42, .deterministic = true});
+    if (!acc_or.ok()) {
+      if (err) *err << "permutation_impact(Accuracy) should succeed on the signal/noise fixture\n";
+      return false;
+    }
+    const auto acc_mean = acc_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (acc_mean.size() != 2 || !(acc_mean[0] > acc_mean[1])) {
+      if (err) *err << "permutation_impact(Accuracy) should rank the informative feature above the noise feature\n";
+      return false;
+    }
+
+    // Same fixture, a loss metric this time -- exercises the metric-direction
+    // fix. Before the fix, classification always computed baseline - permuted
+    // regardless of metric, which is backwards for a loss: shuffling the
+    // informative feature would have looked like a NEGATIVE (beneficial)
+    // change instead of a cost.
+    auto loss_or = pluss::ai::nodej::permutation_impact(cls_spec, train, train, MetricKind::LogLoss, 8,
+                                                         pluss::ai::nodej::RandomState{.seed = 42, .deterministic = true});
+    if (!loss_or.ok()) {
+      if (err) *err << "permutation_impact(LogLoss) should succeed on the signal/noise fixture\n";
+      return false;
+    }
+    const auto loss_mean = loss_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (loss_mean.size() != 2 || !(loss_mean[0] > 0.0) || !(loss_mean[0] > loss_mean[1])) {
+      if (err) *err << "permutation_impact(LogLoss) should show a positive, dominant cost for the informative feature\n";
+      return false;
+    }
+
+    // Deterministic seeding must be reproducible across independent calls
+    // (the parallel-over-features restructuring must not introduce
+    // run-to-run nondeterminism).
+    auto acc_again_or = pluss::ai::nodej::permutation_impact(cls_spec, train, train, MetricKind::Accuracy, 8,
+                                                              pluss::ai::nodej::RandomState{.seed = 42, .deterministic = true});
+    if (!acc_again_or.ok()) {
+      if (err) *err << "permutation_impact(Accuracy) repeat call should succeed\n";
+      return false;
+    }
+    const auto acc_mean_again = acc_again_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    for (std::size_t i = 0; i < acc_mean.size(); ++i) {
+      if (std::abs(acc_mean[i] - acc_mean_again[i]) > 1e-12) {
+        if (err) *err << "permutation_impact with a deterministic seed should be reproducible across calls\n";
+        return false;
+      }
+    }
+  }
+
   return true;
 }
 

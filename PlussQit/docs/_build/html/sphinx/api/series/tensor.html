@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::tensor &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::tensor_split" href="tensor_split.html" />
+    <link rel="prev" title="Series::tanh" href="tanh.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-tensor">
+<h1>Series::tensor<a class="headerlink" href="#series-tensor" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">tensor</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+<p><strong>Availability.</strong> This method exists only when the library is built with
+<code class="docutils literal notranslate"><span class="pre">-DPLUSS_ENABLE_TORCH=ON</span></code>. In a build without LibTorch the method is not
+compiled and <code class="docutils literal notranslate"><span class="pre">&lt;torch/torch.h&gt;</span></code> is not required.</p>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Exposes the series to LibTorch as a <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code> <strong>view</strong> — no data is
+copied. The returned tensor shares storage with the series: it sees the same
+bytes, keeps that storage alive for as long as it is referenced, and reflects
+writes made through either handle.</p>
+<p>It is the reverse of <a class="reference internal" href="../series_factory/from_torch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::from_torch</span></code></span></a>.
+There is no free <code class="docutils literal notranslate"><span class="pre">to_torch</span></code> function — construction from a tensor is a factory
+call, and the trip back is this method.</p>
+<p>The view carries the series’ <code class="docutils literal notranslate"><span class="pre">dtype</span></code>, shape, <strong>and strides</strong>, so a
+non-contiguous or offset series exports as a strided tensor rather than being
+made contiguous first. If a downstream call needs contiguous input, call
+<code class="docutils literal notranslate"><span class="pre">.contiguous()</span></code> on the <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code> (or on the <code class="docutils literal notranslate"><span class="pre">Series</span></code> beforehand).</p>
+<p>Only CPU series are supported. The dtype mapping is the natural one
+(<code class="docutils literal notranslate"><span class="pre">Float64</span> <span class="pre">&lt;-&gt;</span> <span class="pre">kFloat64</span></code>, <code class="docutils literal notranslate"><span class="pre">Int64</span> <span class="pre">&lt;-&gt;</span> <span class="pre">kInt64</span></code>, <code class="docutils literal notranslate"><span class="pre">Complex64</span> <span class="pre">&lt;-&gt;</span> <span class="pre">kComplexFloat</span></code>, and
+so on).</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>None.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code>
+A CPU tensor viewing the series’ storage, with matching dtype, shape, and
+strides.</p>
+<p>Raises if the series is undefined, if its dtype has no torch equivalent, or if
+its layout is overlapping (call <code class="docutils literal notranslate"><span class="pre">.contiguous()</span></code> first).</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tensor()</span></code> is a storage bridge, not a differentiable op. The returned
+<code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code> is a fresh LibTorch leaf with <code class="docutils literal notranslate"><span class="pre">requires_grad</span> <span class="pre">==</span> <span class="pre">false</span></code>; pluss
+sensitivities do not flow across the boundary in either direction.</p>
+<p>That does <strong>not</strong> prevent training. Training data normally does not require a
+gradient: model parameters receive gradients when the exported tensor is used
+as an input. If the series’ values are themselves the parameters to optimize,
+enable gradients on the returned floating-point or complex tensor with
+<code class="docutils literal notranslate"><span class="pre">requires_grad_(true)</span></code>.</p>
+</section>
+<section id="handing-a-series-to-a-training-pipeline">
+<h2>Handing A Series To A Training Pipeline<a class="headerlink" href="#handing-a-series-to-a-training-pipeline" title="Link to this heading">¶</a></h2>
+<p>The zero-copy CPU view is already a usable LibTorch tensor. This is the direct
+handoff when the model runs on the CPU:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prepared_features</span><span class="p">.</span><span class="n">tensor</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prepared_targets</span><span class="p">.</span><span class="n">tensor</span><span class="p">();</span>
+
+<span class="n">optimizer</span><span class="p">.</span><span class="n">zero_grad</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">prediction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="o">-&gt;</span><span class="n">forward</span><span class="p">(</span><span class="n">features</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span><span class="w"> </span><span class="n">targets</span><span class="p">);</span>
+<span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">();</span>
+<span class="n">optimizer</span><span class="p">.</span><span class="n">step</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Neither <code class="docutils literal notranslate"><span class="pre">features</span></code> nor <code class="docutils literal notranslate"><span class="pre">targets</span></code> needs <code class="docutils literal notranslate"><span class="pre">requires_grad</span></code>. Backward computes
+gradients for the model’s registered parameters.</p>
+<p>For accelerator training, cross the storage boundary explicitly:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">torch</span><span class="o">::</span><span class="n">Device</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="n">torch</span><span class="o">::</span><span class="n">kCUDA</span><span class="p">);</span>
+<span class="n">model</span><span class="o">-&gt;</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prepared_features</span><span class="p">.</span><span class="n">tensor</span><span class="p">().</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prepared_targets</span><span class="p">.</span><span class="n">tensor</span><span class="p">().</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
+
+<span class="n">optimizer</span><span class="p">.</span><span class="n">zero_grad</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">prediction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="o">-&gt;</span><span class="n">forward</span><span class="p">(</span><span class="n">features</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span><span class="w"> </span><span class="n">targets</span><span class="p">);</span>
+<span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">();</span>
+<span class="n">optimizer</span><span class="p">.</span><span class="n">step</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tensor()</span></code> itself is CPU-only and zero-copy. The subsequent <code class="docutils literal notranslate"><span class="pre">.to(device)</span></code> is a
+LibTorch transfer that allocates device-owned storage. The device tensor no
+longer depends on the series’ buffer and can outlive every pluss handle.</p>
+<p>If the values, rather than a model, are what you intend to optimize, make that
+choice explicit:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">parameter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">initial_values</span><span class="p">.</span><span class="n">tensor</span><span class="p">().</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">).</span><span class="n">detach</span><span class="p">();</span>
+<span class="n">parameter</span><span class="p">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parameter</span><span class="p">.</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">();</span>
+<span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parameter</span><span class="p">.</span><span class="n">grad</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The call to <code class="docutils literal notranslate"><span class="pre">detach()</span></code> documents that this is the beginning of a new training
+graph. On the CPU, omitting <code class="docutils literal notranslate"><span class="pre">.to(device)</span></code> preserves aliasing with the series;
+optimizer writes will then change the shared buffer. Use <code class="docutils literal notranslate"><span class="pre">.clone()</span></code> first when
+training should not mutate data still owned conceptually by pluss.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<blockquote>
+<div><p>These examples require a <code class="docutils literal notranslate"><span class="pre">-DPLUSS_ENABLE_TORCH=ON</span></code> build.</p>
+</div></blockquote>
+<p>Example 1. Export a series as a tensor view.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}});</span>
+<span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">tensor</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span> 1  2
+ 3  4
+[ CPUDoubleType{2,2} ]
+</pre></div>
+</div>
+<p>Example 2. The view is live: a write through the tensor is visible in the
+series.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}});</span>
+<span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">tensor</span><span class="p">();</span>
+<span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">42.0</span><span class="p">;</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 1.0000 42.0000 ⎤
+⎣ 3.0000  4.0000 ⎦
+</pre></div>
+</div>
+<p>Example 3. An offset view (here a row slice) exports its real data, not the
+whole backing buffer.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">big</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">).</span><span class="n">reshape</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">big</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">).</span><span class="n">tensor</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  4   5   6   7
+  8   9  10  11
+[ CPULongType{2,4} ]
+</pre></div>
+</div>
+<p>Example 4. A round trip aliases the same buffer.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">ones</span><span class="p">({</span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">torch</span><span class="o">::</span><span class="n">kFloat32</span><span class="p">);</span>
+<span class="n">torch</span><span class="o">::</span><span class="n">Tensor</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">from_torch</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">tensor</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;same data_ptr: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">data_ptr</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">data_ptr</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>same data_ptr: yes
+</pre></div>
+</div>
+<p>Example 5. An undefined series raises.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">u</span><span class="p">;</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">u</span><span class="p">.</span><span class="n">tensor</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>to_torch: undefined
+</pre></div>
+</div>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The tensor is a <strong>view</strong>. If a later pluss operation replaces the series’
+storage (many in-place ops allocate fresh storage rather than mutating), a
+tensor captured earlier keeps pointing at the old buffer. Re-export after
+such an operation.</p></li>
+<li><p>No autograd crosses the boundary. A <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code> from <code class="docutils literal notranslate"><span class="pre">tensor()</span></code> does not
+carry pluss sensitivities, and <code class="docutils literal notranslate"><span class="pre">requires_grad</span></code> on the torch side does not
+reach back.</p></li>
+<li><p>Direct export is CPU-only. Transfer the returned tensor with <code class="docutils literal notranslate"><span class="pre">.to(device)</span></code>
+for accelerator training; that transfer intentionally creates new storage.</p></li>
+<li><p>Overlapping layouts (e.g. a stride-0 broadcast) are rejected; materialize
+with <code class="docutils literal notranslate"><span class="pre">.contiguous()</span></code> first.</p></li>
+<li><p>The method is absent entirely in a non-torch build — guard call sites with
+<code class="docutils literal notranslate"><span class="pre">#ifdef</span> <span class="pre">PLUSS_ENABLE_TORCH</span></code> if your code must compile both ways.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tensor()</span></code> bridges a series into LibTorch:</p>
+<ul class="simple">
+<li><p>zero-copy <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code> view sharing storage, dtype, shape, and strides</p></li>
+<li><p>immediately usable as CPU training input, or transferable to an accelerator</p></li>
+<li><p>requires a <code class="docutils literal notranslate"><span class="pre">-DPLUSS_ENABLE_TORCH=ON</span></code> build</p></li>
+<li><p>the reverse of <a class="reference internal" href="../series_factory/from_torch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::from_torch</span></code></span></a>;
+there is no free <code class="docutils literal notranslate"><span class="pre">to_torch</span></code></p></li>
+<li><p>not an autograd boundary — grad is managed separately on each side</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../series_factory/from_torch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::from_torch</span></code></span></a>: the other
+direction — build a series from a <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code>.</p></li>
+<li><p><a class="reference internal" href="contiguous.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::contiguous</span></code></span></a>: force a dense layout before export if a
+consumer needs one.</p></li>
+<li><p><a class="reference internal" href="to.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::to</span></code></span></a>: change dtype before crossing the boundary.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="tanh.html">
+    <span class="label">Previous</span>
+    <span class="title">tanh</span>
+  </a>
+  <a class="next-link" href="tensor_split.html">
+    <span class="label">Next</span>
+    <span class="title">tensor_split</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="tanh.html" title="previous chapter">Series::tanh</a></li>
+      <li>Next: <a href="tensor_split.html" title="next chapter">Series::tensor_split</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/tensor.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

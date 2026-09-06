@@ -11,7 +11,7 @@ namespace {
 using Catch::Approx;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::full;
+using pluss::series::full;
 using pluss::make_series;
 using pluss::subsp::math::optim::ConstrainedProblem;
 using pluss::subsp::math::optim::DualTrace;

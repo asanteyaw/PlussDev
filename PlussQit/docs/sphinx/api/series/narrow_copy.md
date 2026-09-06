@@ -19,32 +19,36 @@ same selection a slice would make, but copied rather than viewed.
 For a `2 x 4` matrix, `narrow_copy(1, 2, 2)` keeps columns `2` and `3` of every
 row. Every other axis is kept in full.
 
-`start` may be negative, counting from the end of the axis. If `start +
-length` runs past the axis, the result is truncated to what remains rather than
-raising.
+`start` may be negative, counting from the end of the axis. The requested run
+must lie fully inside the axis: `start` out of range, a negative `length`, or
+`start + length` past the end are all rejected. If you want a lenient selection
+that simply stops at the axis end, use the view-returning
+[`slice()`](slice.md) instead.
 
-Use `narrow_copy()` (over the view-returning [`slice()`](slice.md)) when you
-want the result to own its storage — for example to hand it to code that
-mutates in place, or to detach it from a large parent buffer.
+Use `narrow_copy()` (over [`slice()`](slice.md)) when you want the result to own
+its storage — for example to hand it to code that mutates in place, or to
+detach it from a large parent buffer.
 
 ## Parameters
 
 **dim** (`std::int64_t`)
 
-The axis to narrow.
+The axis to narrow. Negative values count from the back.
 
 **start** (`std::int64_t`)
 
-The first index to keep. Negative values count from the end.
+The first index to keep. Negative values count from the end of the axis. After
+that adjustment it must satisfy `0 <= start <= size(dim)`.
 
 **length** (`std::int64_t`)
 
-How many consecutive indices to keep, clamped to the axis end.
+How many consecutive indices to keep. Must be `>= 0`, and `start + length` must
+not exceed `size(dim)`.
 
 ## Returns
 
 `Series`
-    A fresh contiguous array with axis `dim` reduced to the selected run and
+    A fresh contiguous array with axis `dim` reduced to exactly `length` and
     every other axis intact.
 
 ## Gradient
@@ -102,7 +106,73 @@ pluss::Series(shape=[1,4], strides=[4,1], dtype=float64, platform=cpu, numel=4, 
 data=[[1, 2, 3, 4]]
 ```
 
-Example 4. The backward fills only the kept slice.
+Example 4. A zero `length` at the boundary is allowed and gives an empty axis.
+
+```cpp
+auto m = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
+
+std::cout << m.narrow_copy(1, 3, 0);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,0], strides=[0,1], dtype=float64, platform=cpu, numel=0, contiguous=true)
+[]
+```
+
+Example 5. A `start` past the axis is rejected.
+
+```cpp
+try {
+  pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}).narrow_copy(1, 5, 1);
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+narrow_copy: start 5 is out of range for axis 1 of size 3
+```
+
+Example 6. So is a run that starts in range but extends past the end.
+
+```cpp
+try {
+  pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}).narrow_copy(1, 2, 2);
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+narrow_copy: start + length (2 + 2) exceeds axis 1 size 3
+```
+
+Example 7. A negative `length` is rejected.
+
+```cpp
+try {
+  pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}).narrow_copy(1, 0, -1);
+} catch (const std::exception& e) {
+  std::string msg = e.what();
+  std::cout << msg.substr(0, msg.find('\n'));
+}
+```
+
+### Output
+
+```text
+narrow_copy: length must be non-negative, got -1
+```
+
+Example 8. The backward fills only the kept slice.
 
 ```cpp
 auto m = pluss::make_series({{1.0, 2.0, 3.0, 4.0}, {5.0, 6.0, 7.0, 8.0}});
@@ -116,7 +186,7 @@ pluss::series::print(std::cout, m.sensitivity());
 ### Output
 
 ```text
-Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
 data=
 ⎡ 0.0000 1.0000 1.0000 0.0000 ⎤
 ⎣ 0.0000 1.0000 1.0000 0.0000 ⎦
@@ -129,22 +199,24 @@ get `0`.
 
 - `narrow_copy()` copies. For a zero-copy view of the same range use
   [`slice()`](slice.md).
-- `start + length` past the axis end is clamped, not rejected — the result may
-  be shorter than `length`.
+- The requested run must fit: an out-of-range `start`, a negative `length`, or
+  `start + length` past the axis end all raise. [`slice()`](slice.md) is the
+  lenient alternative — it stops at the axis end instead.
 - Only one axis is narrowed per call.
 
 ## Summary
 
 `narrow_copy(dim, start, length)` is a materialized contiguous slice:
 
-- keeps `[start, start + length)` along `dim`, clamped; negative `start` counts
-  from the end
+- keeps exactly `[start, start + length)` along `dim`; negative `start` counts
+  from the end; the run must lie inside the axis or it raises
 - always contiguous, owns its storage
 - differentiable, backward fills only the kept run
 
 ## See Also
 
-- [`Series::slice`](slice.md): the same selection as a zero-copy view.
+- [`Series::slice`](slice.md): the same selection as a zero-copy view, with
+  lenient bounds.
 - [`Series::unfold`](unfold.md): every sliding window rather than one run.
 - [`Series::clone`](clone.md): copy without narrowing.
 

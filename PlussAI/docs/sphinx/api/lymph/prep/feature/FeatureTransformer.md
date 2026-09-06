@@ -78,7 +78,7 @@ Status learn(const FeatureBatch& batch, const TrainOptions& options = {});
 
 Fit every branch's pipeline from `batch`. Wrap the returned `Status` with
 `lymph::resolve(...)`. A `FeatureBatch` comes from a
-[`workflow::Payload`](../../model/Payload.md) (`payload::make(frame).features({...}).feature_batch()`)
+[`workflow::Payload`](../../workflow/Payload.md) (`payload::make(frame).features({...}).feature_batch()`)
 or from the model that owns the transformer.
 
 ### `map`

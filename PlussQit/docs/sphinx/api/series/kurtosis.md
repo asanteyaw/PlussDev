@@ -183,5 +183,5 @@ spread:
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="skewness.html"><span class="label">Previous</span><span class="title">skewness</span></a>
-  <a class="next-link" href="../../series_api_reference.html"><span class="label">Next</span><span class="title">Series API Reference</span></a>
+  <a class="next-link" href="lcm.html"><span class="label">Next</span><span class="title">lcm</span></a>
 </div>

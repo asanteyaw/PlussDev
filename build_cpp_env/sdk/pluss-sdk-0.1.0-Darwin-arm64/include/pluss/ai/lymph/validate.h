@@ -265,11 +265,11 @@ class Plan final {
                                              const LabeledBatch& batch,
                                              TrainOptions train_options = {},
                                              AssessOptions assess_options = {},
-                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             selection::Scorer objective = MetricKind::Accuracy,
                                              TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                              selection::FitOptions fit_options = {}) const {
     return builder.benchmark(batch, options_, std::move(train_options), std::move(assess_options),
-                             objective_metric, objective_policy, fit_options);
+                             objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] selection::CompareResult run(const models::Builder& builder,
@@ -277,18 +277,18 @@ class Plan final {
                                              const DataFrameBatchOptions& data_options,
                                              TrainOptions train_options = {},
                                              AssessOptions assess_options = {},
-                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             selection::Scorer objective = MetricKind::Accuracy,
                                              TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                              selection::FitOptions fit_options = {}) const {
     return builder.benchmark(frame, data_options, options_, std::move(train_options), std::move(assess_options),
-                             objective_metric, objective_policy, fit_options);
+                             objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] selection::CompareResult run(const models::Builder& builder,
                                              const workflow::Payload& payload,
                                              TrainOptions train_options = {},
                                              AssessOptions assess_options = {},
-                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             selection::Scorer objective = MetricKind::Accuracy,
                                              TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                                              selection::FitOptions fit_options = {}) const {
     detail::require_time_safe_payload_(options_, payload, "validate::Plan::run(builder,payload)");
@@ -299,15 +299,15 @@ class Plan final {
       }
       if (payload.has_label_feature()) {
         return run(builder, payload.frame(), payload.data(), std::move(train_options), std::move(assess_options),
-                   objective_metric, objective_policy, fit_options);
+                   objective, objective_policy, fit_options);
       }
       if (payload.has_label()) {
         return builder.benchmark(payload.frame(), payload.label(), options_, std::move(train_options),
-                                 std::move(assess_options), objective_metric, objective_policy, fit_options);
+                                 std::move(assess_options), objective, objective_policy, fit_options);
       }
     }
     return run(builder, payload.labeled_batch(), std::move(train_options), std::move(assess_options),
-               objective_metric, objective_policy, fit_options);
+               objective, objective_policy, fit_options);
   }
 
   [[nodiscard]] std::vector<prep::TimeSeriesSplit> splits(const pluss::table::DataFrame& frame,

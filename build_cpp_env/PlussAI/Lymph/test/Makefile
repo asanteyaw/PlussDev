@@ -263,6 +263,20 @@ lymph_expansion_surface_test/fast:
 .PHONY : lymph_expansion_surface_test/fast
 
 # Convenience name for target.
+PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/rule
+.PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/rule
+
+# Convenience name for target.
+lymph_feature_select_test: PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/rule
+.PHONY : lymph_feature_select_test
+
+# fast build rule for target.
+lymph_feature_select_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/build
+.PHONY : lymph_feature_select_test/fast
+
+# Convenience name for target.
 PlussAI/Lymph/test/CMakeFiles/lymph_metrics_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/Lymph/test/CMakeFiles/lymph_metrics_test.dir/rule
 .PHONY : PlussAI/Lymph/test/CMakeFiles/lymph_metrics_test.dir/rule
@@ -535,6 +549,30 @@ lymph_expansion_surface_test.s: lymph_expansion_surface_test.cpp.s
 lymph_expansion_surface_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_expansion_surface_test.dir/lymph_expansion_surface_test.cpp.s
 .PHONY : lymph_expansion_surface_test.cpp.s
+
+lymph_feature_select_test.o: lymph_feature_select_test.cpp.o
+.PHONY : lymph_feature_select_test.o
+
+# target to build an object file
+lymph_feature_select_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/lymph_feature_select_test.cpp.o
+.PHONY : lymph_feature_select_test.cpp.o
+
+lymph_feature_select_test.i: lymph_feature_select_test.cpp.i
+.PHONY : lymph_feature_select_test.i
+
+# target to preprocess a source file
+lymph_feature_select_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/lymph_feature_select_test.cpp.i
+.PHONY : lymph_feature_select_test.cpp.i
+
+lymph_feature_select_test.s: lymph_feature_select_test.cpp.s
+.PHONY : lymph_feature_select_test.s
+
+# target to generate assembly for a file
+lymph_feature_select_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/build.make PlussAI/Lymph/test/CMakeFiles/lymph_feature_select_test.dir/lymph_feature_select_test.cpp.s
+.PHONY : lymph_feature_select_test.cpp.s
 
 lymph_metrics_test.o: lymph_metrics_test.cpp.o
 .PHONY : lymph_metrics_test.o
@@ -820,6 +858,7 @@ help:
 	@echo "... lymph_column_router_test"
 	@echo "... lymph_detect_test"
 	@echo "... lymph_expansion_surface_test"
+	@echo "... lymph_feature_select_test"
 	@echo "... lymph_metrics_test"
 	@echo "... lymph_model_append_test"
 	@echo "... lymph_namespace_surface_test"
@@ -846,6 +885,9 @@ help:
 	@echo "... lymph_expansion_surface_test.o"
 	@echo "... lymph_expansion_surface_test.i"
 	@echo "... lymph_expansion_surface_test.s"
+	@echo "... lymph_feature_select_test.o"
+	@echo "... lymph_feature_select_test.i"
+	@echo "... lymph_feature_select_test.s"
 	@echo "... lymph_metrics_test.o"
 	@echo "... lymph_metrics_test.i"
 	@echo "... lymph_metrics_test.s"

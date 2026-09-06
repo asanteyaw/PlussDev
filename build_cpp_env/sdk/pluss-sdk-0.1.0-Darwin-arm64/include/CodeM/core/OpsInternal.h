@@ -84,6 +84,7 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series trunc(const Series& a);
   Series isnan(const Series& a);
   Series isinf(const Series& a);
+  Series signbit(const Series& a);
   Series invalid(const Series& a);
   Series invalid_index(const Series& a);
   // In-place arithmetic (scalar and elementwise)
@@ -113,6 +114,7 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series erf(const Series& a);
   Series erfc(const Series& a);
   Series lgamma(const Series& a);
+  Series digamma(const Series& a);
   Series asinh(const Series& a);
   Series acosh(const Series& a);
   Series atanh(const Series& a);
@@ -209,6 +211,10 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series fmod(const Series& a, const Series& b);
   Series remainder(const Series& a, const Series& b);
   Series atan2(const Series& a, const Series& b);
+  Series hypot(const Series& a, const Series& b);
+  Series logaddexp(const Series& a, const Series& b);
+  Series logaddexp2(const Series& a, const Series& b);
+  Series xlogy(const Series& a, const Series& b);
   Series clamp_min(const Series& a, double lo);
   Series& clamp_min_(Series& a, double lo);
   Series clamp_max(const Series& a, double hi);

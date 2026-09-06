@@ -1,189 +1,217 @@
-# `lymph::confusion_table`
+<!-- pluss-hand-authored -->
 
-## Summary
+# `lymph::metrics::classification::confusion_table`
 
-`confusion_table(...)` returns a class-by-class count table for hard-label
-classification results.
+[Back to `metrics`](../metrics.md)
 
-Use it when you want a compact diagnostic of where a classifier is confusing one
-class for another.
-
-## Why It Matters
-
-A single scalar metric can hide important failure modes.
-
-Two models can have similar accuracy while making very different mistakes.
-
-`confusion_table(...)` answers the more concrete question:
-
-"when the truth is class A, what does the model actually predict?"
-
-That makes it one of the fastest ways to inspect class-specific error behavior.
-
-## What It Shows
-
-The table organizes counts by:
-
-- true class
-- predicted class
-
-From that, you can immediately see:
-
-- which classes are being confused
-- whether one class is being over-predicted
-- whether some class is barely being recognized at all
-
-## Option Surface
-
-The lower-level options are carried through `ConfusionOptions`:
-
-```cpp
-lymph::ConfusionOptions{
-    .normalize = lymph::ConfusionNormalize::None,
-    .label_order = Series::undefined(),
-    .sample_weights = Series::undefined(),
-};
-```
-
-### `normalize`
-
-Controls whether raw counts are returned or the table is normalized.
-
-Common modes include:
-
-- `None`
-- `ByTruth`
-- `ByPrediction`
-- `Global`
-
-Use:
-
-- `None` when you want raw event counts
-- `ByTruth` when you want row-wise class recall style interpretation
-- `ByPrediction` when you want column-wise precision style interpretation
-- `Global` when you want one globally normalized mass view
-
-### `label_order`
-
-Pins the class ordering explicitly.
-
-Use it when:
-
-- you want a stable presentation order
-- some classes may be absent in one evaluation slice but should still be ordered
-  consistently
-
-### `sample_weights`
-
-Lets the confusion table reflect weighted observations rather than plain unit
-counts.
-
-Use this when the evaluation contract itself is weighted and the diagnostic should
-match that contract honestly.
-
-## When To Use It
-
-Use confusion tables:
-
-- after a promising validation result
-- during model comparison for imbalanced classification
-- before choosing a production threshold
-- whenever business error types matter more than a single scalar summary
+`metrics::classification::confusion_table(truth, prediction)` builds a
+[`ConfusionTable`](ClassReport.md) from two label `Series` — the truth ×
+prediction count matrix, optionally normalized.
 
 ## Signature
 
 ```cpp
-lymph::ConfusionTable lymph::confusion_table(
+lymph::ConfusionTable lymph::metrics::classification::confusion_table(
     const pluss::Series& truth_labels,
     const pluss::Series& predicted_labels,
-    lymph::ConfusionOptions options = {});
-lymph::ConfusionTable lymph::reports::confusion_table(...) ;
+    const lymph::ConfusionOptions& options = {});
+
+lymph::ConfusionTable lymph::metrics::classification::confusion_table(
+    const pluss::Series& truth_labels,
+    const pluss::Series& predicted_labels,
+    std::initializer_list<double> label_order,
+    lymph::ConfusionNormalize normalize = lymph::ConfusionNormalize::None);
 ```
 
-## Practical Example
+`lymph::metrics::classification::confusion_table` is the only spelling — the
+old bare `lymph::confusion_table` name has been removed.
 
-This example is fully specified on purpose:
+## What It Does
 
-- it creates the truth labels
-- it creates the predicted labels
-- it prints the resulting object explicitly with `std::cout`
+Discovers the class labels present in either `Series` (or takes them from
+`label_order`), then tallies one cell per `(truth, prediction)` pair into a
+row-major matrix stored in `ConfusionTable::counts` — element `r*n + c` is
+"truth = `labels[r]`, prediction = `labels[c]`". With `normalize` set, the cells
+are rates instead of counts:
 
-That way there is no hidden state for you to guess about.
+- `ByTruth` — each row sums to 1; the diagonal is per-class **recall**.
+- `ByPrediction` — each column sums to 1; the diagonal is per-class
+  **precision**.
+- `Global` — the whole matrix sums to 1.
+
+## Parameters
+
+`truth_labels`
+: Ground-truth class labels.
+
+`predicted_labels`
+: Predicted class labels, same length.
+
+`options` — `lymph::ConfusionOptions`
+: `normalize` (default `None`), `label_order` (a `Series` fixing row/column
+  order), and `sample_weights`.
+
+`label_order` *(initializer-list overload)*
+: The exact row/column order as a `{…}` list — pins classes that may be absent
+  from one `Series`.
+
+`normalize` *(initializer-list overload)*
+: The `ConfusionNormalize` mode, same meaning as `options.normalize`.
+
+## Returns
+
+A `lymph::ConfusionTable`: `labels`, `counts` (row-major), and the `normalize`
+mode it was built with.
+
+## Errors
+
+- Length mismatch between the two `Series` raises.
+- A value in `label_order` that appears in neither `Series` still gets a row and
+  column (all zero).
+
+## Practical Examples
+
+<!-- these examples establish: raw counts, ByTruth normalization, and a pinned label order. -->
+
+### Example 1
+
+Raw counts.
 
 ```cpp
-#include <pluss/lymph.h>
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
 
 #include <iostream>
 
 int main() {
   namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
 
-  const pluss::Series truth_labels = pluss::make_series({0.0, 1.0});
-  const pluss::Series predicted_labels = pluss::make_series({0.0, 1.0});
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series truth =
+      pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
+  const pluss::Series predicted =
+      pluss::make_series({0, 0, 0, 1, 0, 1, 1, 0, 1, 1}, {10}, f64);
 
   const lymph::ConfusionTable table =
-      lymph::confusion_table(
-          truth_labels,
-          predicted_labels,
-          lymph::ConfusionOptions{
-              .normalize = lymph::ConfusionNormalize::ByTruth,
-          });
+      lymph::metrics::classification::confusion_table(truth, predicted);
 
-  std::cout << "== confusion_table ==\n";
-  std::cout << "labels=" << table.labels << "\n";
-  std::cout << "counts=" << table.counts << "\n";
-  std::cout << "normalize=" << static_cast<int>(table.normalize) << "\n";
+  std::cout << "labels = " << table.labels << "\n";
+  std::cout << "counts (row-major, truth x pred) = " << table.counts << "\n";
+  std::cout << "normalize = " << static_cast<int>(table.normalize) << "\n";
+
+  return 0;
 }
 ```
 
-### Output
+Output
 
 ```text
-== confusion_table ==
-labels=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+labels = pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[0, 1]
-counts=pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[[1, 0],
-  [0, 1]]
-normalize=1
+counts (row-major, truth x pred) = pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[4, 1],
+  [1, 4]]
+normalize = 0
 ```
 
-This is the real terminal output from a verifier example. Read it closely.
+### Example 2
 
-`ConfusionTable` is not a decorative pretty-printer. It is a real object with:
-
-- `labels` for explicit class order
-- `counts` as a matrix-shaped `Series`
-- `normalize` telling you how to interpret the matrix numerically
-
-If you already have a fitted model, the same diagnostic can be obtained from the
-reporting surface instead of from raw label vectors:
+`ByTruth` normalization turns the rows into per-true-class rates.
 
 ```cpp
-lymph::ConfusionTable table =
-    lymph::reports(model).confusion_table(batch);
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series truth =
+      pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
+  const pluss::Series predicted =
+      pluss::make_series({0, 0, 0, 1, 0, 1, 1, 0, 1, 1}, {10}, f64);
+
+  const lymph::ConfusionTable raw = lymph::metrics::classification::confusion_table(truth, predicted);
+  const lymph::ConfusionTable rates = lymph::metrics::classification::confusion_table(
+      truth, predicted,
+      lymph::ConfusionOptions{.normalize = lymph::ConfusionNormalize::ByTruth});
+
+  std::cout << "raw counts   = " << raw.counts << "\n";
+  std::cout << "row-normed   = " << rates.counts << "\n";
+  std::cout << "normalize mode = " << static_cast<int>(rates.normalize) << "\n";
+
+  return 0;
+}
 ```
 
-That second path is convenient later in a workflow, but the direct form above is
-the one to learn first because it makes the data contract obvious.
+Output
 
-### Truth-normalized view
+```text
+raw counts   = pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[4, 1],
+  [1, 4]]
+row-normed   = pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[0.8, 0.2],
+  [0.2, 0.8]]
+normalize mode = 1
+```
+
+### Example 3
+
+A pinned label order via the `{…}` overload.
 
 ```cpp
-lymph::ConfusionTable normalized =
-    lymph::confusion_table(
-        truth_labels,
-        predicted_labels,
-        {
-            .normalize = lymph::ConfusionNormalize::ByTruth,
-        });
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series truth =
+      pluss::make_series({2, 2, 0, 0, 1, 1, 2, 0, 1, 2}, {10}, f64);
+  const pluss::Series predicted =
+      pluss::make_series({2, 0, 0, 0, 1, 2, 2, 1, 1, 2}, {10}, f64);
+
+  const lymph::ConfusionTable table =
+      lymph::metrics::classification::confusion_table(truth, predicted, {2.0, 1.0, 0.0});
+
+  std::cout << "labels (pinned order) = " << table.labels << "\n";
+  std::cout << "counts                = " << table.counts << "\n";
+
+  return 0;
+}
 ```
 
-This is especially useful when class frequencies differ a lot and raw counts alone
-would be misleading.
+Output
 
-## Related Pages
+```text
+labels (pinned order) = pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2, 1, 0]
+counts                = pluss::Series(shape=[3,3], strides=[3,1], dtype=float64, platform=cpu, numel=9, contiguous=true)
+data=[[3, 0, 1],
+  [1, 2, 0],
+  [0, 1, 2]]
+```
 
-- [classification_summary](classification_summary.md)
-- [CrossValidationReport](CrossValidationReport.md)
-- [Threshold](Threshold.md)
+## See Also
+
+- [`ClassReport`](ClassReport.md) — the `ConfusionTable` field reference, and
+  the per-class rates as a report.
+- [`classification_summary`](classification_summary.md) — precision / recall /
+  f1 rather than raw counts.
+- [`classification`](classification.md) — the `metrics::classification` group.
+- [`reports`](../reports.md) — the `(model, data)` overload.

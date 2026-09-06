@@ -82,6 +82,8 @@ struct ClassReport {
   Series geometric_mean = Series::undefined();
   Series balance_quality = Series::undefined();
   Series accuracy = Series::undefined();         // shape [1]
+  Series mcc = Series::undefined();              // shape [1] -- Matthews correlation coefficient
+  Series cohen_kappa = Series::undefined();      // shape [1] -- unweighted Cohen's kappa
   Series micro_average = Series::undefined();    // shape [3] -> [precision, recall, f1]
   Series macro_average = Series::undefined();    // shape [3] -> [precision, recall, f1]
   Series weighted_average = Series::undefined(); // shape [3] -> [precision, recall, f1]
@@ -194,5 +196,27 @@ StatusOr<ThresholdCurve> threshold_curve(const Series& scores, const Series& lab
 StatusOr<double> best_threshold(const Series& scores,
                                 const Series& labels,
                                 MetricKind objective = MetricKind::F1);
+
+// Uninterpolated average precision (area under the precision-recall curve) for
+// a binary 0/1 label vector and its positive-class scores:
+// AP = Sum (R_n - R_{n-1}) * P_n over the distinct-threshold boundary points,
+// the same step-sum sklearn's average_precision_score uses. 0.0 when there are
+// no positives. Built on the shared binary_score_curve sort + cumulative sums.
+StatusOr<double> average_precision(const Series& scores, const Series& labels);
+
+// Score/probability-based classification metrics from a prediction Series the
+// caller already holds -- no model, no inference. `scores` is either a [n]
+// vector of positive-class probabilities (binary) or a [n, k] row-stochastic
+// probability matrix (multiclass); `labels` is [n], holding 0/1 (binary) or
+// class indices 0..k-1 (multiclass). Returns one value per entry of
+// `requested`, in order. RocAuc / Gini / AveragePrecision / Brier / LogLoss
+// are computed straight from `scores`; any hard-label MetricKind (F1, Mcc, ...)
+// is scored against a 0.5-threshold (binary) or argmax (multiclass) prediction,
+// matching the model-backed reports path. Regression MetricKinds are rejected.
+// Multiclass math is the macro one-vs-rest average, mirroring
+// classifier assess().
+StatusOr<Series> score_metrics(const Series& scores,
+                               const Series& labels,
+                               const std::vector<MetricKind>& requested);
 
 } // namespace pluss::ai::nodej

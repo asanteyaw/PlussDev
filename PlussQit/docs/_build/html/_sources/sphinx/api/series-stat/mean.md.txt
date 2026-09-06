@@ -20,6 +20,28 @@ axis it summarizes the entire owner. With `dim`, it independently averages
 each lane along that axis. `x.stat.mean(...)` and `x.stat().mean(...)` are
 equivalent; the latter merely creates a proxy before invoking the operation.
 
+This is a reduction, not a shape-preserving transform. The values belonging to
+each selected lane are replaced by one floating-point result. Use
+[`center`](center.md) when the goal is instead to subtract those means and keep
+every input position.
+
+## Parameters
+
+**dim** (`std::int64_t`)
+    Selects the axis whose lanes are averaged. On shape `[2,3]`, `dim=0`
+    groups the two values in each column; `dim=1` groups the three values in
+    each row. Negative dimensions count from the back, so `-1` selects the
+    final axis.
+
+**keepdim** (`bool`, default `false`)
+    If `false`, the reduced axis disappears. If `true`, it remains with size
+    one. This changes only geometry, not the calculated means.
+
+## Returns
+
+A floating-point `Series`. Global reduction has shape `[]`; dimensional
+reduction removes `dim` unless `keepdim=true`.
+
 ## Reduction Geometry
 
 For shape `[2,3]`, `dim=0` averages the two rows and returns three column means;
@@ -35,24 +57,50 @@ grow merely because a batch or sequence has more elements.
 
 ## Examples
 
+Example 1. A global mean treats the entire table as one population.
+
 ```cpp
 auto x = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
 std::cout << x.stat.mean() << "\n";
-std::cout << x.stat.mean(0) << "\n";
-std::cout << x.stat().mean(1, true) << "\n";
 ```
 
 ### Output
 
 ```text
+pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
 data=3.5
+```
+
+Example 2. Reducing `dim=0` computes one mean for each column.
+
+```cpp
+std::cout << x.stat.mean(0) << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2.5, 3.5, 4.5]
+```
+
+Example 3. Reducing rows while retaining the axis produces shape `[2,1]`,
+which can broadcast back across the three columns.
+
+```cpp
+std::cout << x.stat().mean(-1, true) << "\n";
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,1], strides=[1,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[[2],
   [5]]
 ```
 
-The three results answer different questions: one average for the full table,
-one per column, and one per row while preserving broadcast alignment.
+The proxy spelling in Example 3 changes only how the operation is reached.
+`x.stat.mean(...)` and `x.stat().mean(...)` share the same owner and semantics.
 
 ## Gotchas And Failure Modes
 

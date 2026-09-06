@@ -19,8 +19,13 @@ who placed where, on what objective, with which per-metric means.
 `std::int64_t best_index` / `std::string best_name`
 : The winning trial's position in `trials`, and its name.
 
-`MetricKind objective_metric` / `TuneObjectivePolicy objective_policy`
-: What the ranking was computed on, and whether higher or lower won.
+`MetricKind objective_metric` / `std::string objective_name` /
+`TuneObjectivePolicy objective_policy` / `bool objective_minimize`
+: What the ranking was computed on. `objective_metric` is the built-in metric
+  (or `Accuracy` as a placeholder when the objective was a custom
+  [`Scorer`](Scorer.md)); `objective_name` is the human-readable label
+  (`"f1"`, or the `make_scorer` name); `objective_minimize` is the resolved
+  direction the ranking used.
 
 `std::vector<std::int64_t> objective_rank`
 : Per-trial rank (`1` = best), aligned with `trials`. Ties share a rank.
@@ -40,7 +45,7 @@ struct Trial {
 ```
 
 One trial is one candidate's outcome: its `name`, its `objective` (the
-`objective_metric` fold mean), and the full `cv` report behind that number —
+objective fold mean), and the full `cv` report behind that number —
 `trial.cv.report.folds`, `trial.cv.board()`, and the rest of
 [`reports::CrossVal`](../metrics/CrossValidationReport.md).
 
@@ -300,7 +305,7 @@ predictions = 16
 ## Changelog
 
 - **0.1** — `CompareReport` (`trials` / `best_index` / `best_name` /
-  `objective_metric` / `objective_policy` / `objective_rank` / `ranked_indices`
+  `objective_metric` / `objective_name` / `objective_policy` / `objective_rank`
   / `board()`), the `Trial` value type, and the `CompareResult` wrapper
   (`best` / `worst` / `top` / `bottom`).
 

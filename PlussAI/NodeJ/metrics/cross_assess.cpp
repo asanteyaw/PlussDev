@@ -175,6 +175,19 @@ using pluss::ScalarType;
   return numer_f.div(denom_f.clamp_min(1.0)).mul(mask).add(fallback.mul(mask.mul(-1.0).add(1.0)));
 }
 
+// Like safe_ratio but for real-valued (possibly fractional, possibly negative)
+// numerators/denominators: returns numer/denom where denom != 0, and 0.0 where
+// denom == 0. Used for MCC and Cohen's kappa, whose denominators are variances
+// / (1 - p_e) rather than integer counts, so safe_ratio's clamp_min(1.0) would
+// corrupt them.
+[[nodiscard]] Series guarded_ratio(const Series& numer, const Series& denom) {
+  const Series denom_f = denom.to(ScalarType::Float64);
+  const Series numer_f = numer.to(ScalarType::Float64);
+  const Series nonzero = denom_f.gt(0.0).to(ScalarType::Float64);      // 1 where denom > 0, else 0
+  const Series safe_den = denom_f.add(nonzero.mul(-1.0).add(1.0));     // denom where > 0, else 1
+  return numer_f.div(safe_den).mul(nonzero);
+}
+
 [[nodiscard]] Series balance_quality_score(const Series& sensitivity,
                                            const Series& specificity,
                                            double alpha,
@@ -239,6 +252,20 @@ using pluss::ScalarType;
                                                 options.square_balance_quality).reshape({1});
 
   const Series accuracy = safe_ratio(tp_sum, total, options.zero_division).reshape({1});
+
+  // Matthews correlation coefficient and unweighted Cohen's kappa, both from
+  // the confusion matrix. p_k = pred_support (times class k predicted),
+  // t_k = support (times class k truly occurred), s = total, c = tp_sum.
+  const Series s_sq = total.mul(total).reshape({1});
+  const Series dot_pt = pred_support.mul(support).sum().reshape({1});   // Sum_k p_k * t_k
+  const Series dot_pp = pred_support.mul(pred_support).sum().reshape({1});
+  const Series dot_tt = support.mul(support).sum().reshape({1});
+  const Series mcc_num = tp_sum.mul(total).sub(dot_pt).reshape({1});
+  const Series mcc_den = s_sq.sub(dot_pp).mul(s_sq.sub(dot_tt)).clamp_min(0.0).sqrt().reshape({1});
+  const Series mcc = guarded_ratio(mcc_num, mcc_den).reshape({1});     // 0 when the variance product is 0
+  const Series p_e = guarded_ratio(dot_pt, s_sq).reshape({1});         // expected agreement by chance
+  const Series kappa = guarded_ratio(accuracy.sub(p_e), p_e.mul(-1.0).add(1.0)).reshape({1});  // (p_o - p_e)/(1 - p_e)
+
   const Series macro_p = precision.mean().reshape({1});
   const Series macro_r = recall.mean().reshape({1});
   const Series macro_f1 = f1.mean().reshape({1});
@@ -264,6 +291,8 @@ using pluss::ScalarType;
   out.geometric_mean = geometric_mean.to(platform, ScalarType::Float64).reshape({k});
   out.balance_quality = balance_quality.to(platform, ScalarType::Float64).reshape({k});
   out.accuracy = accuracy.to(platform, ScalarType::Float64).reshape({1});
+  out.mcc = mcc.to(platform, ScalarType::Float64).reshape({1});
+  out.cohen_kappa = kappa.to(platform, ScalarType::Float64).reshape({1});
   out.micro_average = micro_p.unite({micro_r, micro_f1}, 0).reshape({3});
   out.macro_average = macro_p.unite({macro_r, macro_f1}, 0).reshape({3});
   out.weighted_average = weighted_p.unite({weighted_r, weighted_f1}, 0).reshape({3});
@@ -661,10 +690,17 @@ StatusOr<Series> classification_metrics(const Series& truth_labels,
       case MetricKind::BalanceQuality:
         out.push_back(report.macro_balance.index_select(0, idx2).reshape({1}));
         break;
+      case MetricKind::Mcc:
+        out.push_back(report.mcc.reshape({1}));
+        break;
+      case MetricKind::CohenKappa:
+        out.push_back(report.cohen_kappa.reshape({1}));
+        break;
       default:
         return StatusOr<Series>(Status::invalid_argument(
             "classification_metrics from hard labels supports hard-label classification metrics only. "
-            "Use classifier.assess(...) for probability-driven metrics."));
+            "Use classifier.assess(...) for probability-driven metrics (RocAuc, LogLoss, Gini, "
+            "AveragePrecision, Brier)."));
     }
   }
   if (out.empty()) {

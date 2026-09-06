@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::zeta &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="SeriesStatAccessor API Reference" href="../../series_stat_accessor_api_reference.html" />
+    <link rel="prev" title="Series::xlogy" href="xlogy.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-zeta">
+<h1>Series::zeta<a class="headerlink" href="#series-zeta" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">zeta</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes the Hurwitz zeta function elementwise. <code class="docutils literal notranslate"><span class="pre">self</span></code> supplies the exponent
+<code class="docutils literal notranslate"><span class="pre">x</span></code>; the argument supplies the offset <code class="docutils literal notranslate"><span class="pre">q</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">sum_</span><span class="p">{</span><span class="n">k</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">}</span> <span class="p">(</span><span class="n">q</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span><span class="o">^</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">q</span> <span class="pre">=</span> <span class="pre">1</span></code> this is the Riemann zeta function, <code class="docutils literal notranslate"><span class="pre">zeta(x)</span> <span class="pre">=</span> <span class="pre">sum_{n&gt;=1}</span> <span class="pre">n^(-x)</span></code>.
+The Hurwitz form generalizes the sum to start from <code class="docutils literal notranslate"><span class="pre">q</span></code> instead of <code class="docutils literal notranslate"><span class="pre">1</span></code>, and it
+is the piece the polygamma functions are built from:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>polygamma(n, q) = (-1)^(n+1) * n! * zeta(n + 1, q)      for n &gt;= 1
+</pre></div>
+</div>
+<p>So <a class="reference internal" href="polygamma.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">polygamma</span></code></span></a> — and therefore the gradient of
+<a class="reference internal" href="digamma.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">digamma</span></code></span></a> — routes through this function.</p>
+<p>The forward pass uses Euler-Maclaurin acceleration: a short direct sum takes
+the offset past <code class="docutils literal notranslate"><span class="pre">~9</span></code>, then an asymptotic correction with Bernoulli
+coefficients converges to full <code class="docutils literal notranslate"><span class="pre">float64</span></code> precision in a handful of terms.</p>
+<p>Domain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">1</span></code> is the harmonic pole; <code class="docutils literal notranslate"><span class="pre">zeta(1,</span> <span class="pre">q)</span></code> returns <code class="docutils literal notranslate"><span class="pre">+inf</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> returns <code class="docutils literal notranslate"><span class="pre">NaN</span></code>; this method does not provide analytic continuation
+in the exponent.</p></li>
+<li><p>Positive <code class="docutils literal notranslate"><span class="pre">q</span></code> is the ordinary Hurwitz-zeta domain.</p></li>
+<li><p>A non-positive integer <code class="docutils literal notranslate"><span class="pre">q</span></code> places one term of the series on a pole and
+returns <code class="docutils literal notranslate"><span class="pre">+inf</span></code>.</p></li>
+<li><p>A negative, non-integral <code class="docutils literal notranslate"><span class="pre">q</span></code> is supported when <code class="docutils literal notranslate"><span class="pre">x</span></code> is an integer. For a
+non-integral exponent, raising the negative leading terms to <code class="docutils literal notranslate"><span class="pre">-x</span></code> would
+leave the real number system, so the real-valued method returns <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): the offset <code class="docutils literal notranslate"><span class="pre">q</span></code>, a scalar constant applied to every
+element of <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
+A <code class="docutils literal notranslate"><span class="pre">Series</span></code> with the same shape as <code class="docutils literal notranslate"><span class="pre">self</span></code>, each element <code class="docutils literal notranslate"><span class="pre">zeta(x,</span> <span class="pre">q)</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">+inf</span></code> / <code class="docutils literal notranslate"><span class="pre">NaN</span></code> on the domain boundary.</p>
+<p>An integral input is promoted to <code class="docutils literal notranslate"><span class="pre">float64</span></code>.</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p>The method form is <strong>not differentiable</strong>. <code class="docutils literal notranslate"><span class="pre">self</span></code> is the exponent <code class="docutils literal notranslate"><span class="pre">x</span></code>, whose
+derivative — <code class="docutils literal notranslate"><span class="pre">sum_k</span> <span class="pre">-ln(q</span> <span class="pre">+</span> <span class="pre">k)</span> <span class="pre">(q</span> <span class="pre">+</span> <span class="pre">k)^(-x)</span></code> — has no routing here and matches
+the <code class="docutils literal notranslate"><span class="pre">not_implemented</span></code> status the exponent slot has elsewhere. <code class="docutils literal notranslate"><span class="pre">q</span></code> arrives as a
+plain <code class="docutils literal notranslate"><span class="pre">double</span></code>, so it is a constant.</p>
+<p>An objective that reaches its input only through <code class="docutils literal notranslate"><span class="pre">zeta</span></code> is therefore
+disconnected: if <code class="docutils literal notranslate"><span class="pre">self</span></code> tracks slope, calling <a class="reference internal" href="reverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reverse()</span></code></span></a> on it
+raises (Example 5). The offset derivative that <em>does</em> have a closed form,
+<code class="docutils literal notranslate"><span class="pre">d/dq</span> <span class="pre">zeta(x,</span> <span class="pre">q)</span> <span class="pre">=</span> <span class="pre">-x</span> <span class="pre">*</span> <span class="pre">zeta(x</span> <span class="pre">+</span> <span class="pre">1,</span> <span class="pre">q)</span></code>, applies only when <code class="docutils literal notranslate"><span class="pre">q</span></code> is supplied as a
+differentiable series through the lower-level routing layer, not through this
+method.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. With <code class="docutils literal notranslate"><span class="pre">q</span> <span class="pre">=</span> <span class="pre">1</span></code> this is the Riemann zeta. <code class="docutils literal notranslate"><span class="pre">zeta(2)</span> <span class="pre">=</span> <span class="pre">pi^2/6</span></code>,
+<code class="docutils literal notranslate"><span class="pre">zeta(4)</span> <span class="pre">=</span> <span class="pre">pi^4/90</span></code>, <code class="docutils literal notranslate"><span class="pre">zeta(6)</span> <span class="pre">=</span> <span class="pre">pi^6/945</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}).</span><span class="n">zeta</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.6449, 1.0823, 1.0173]
+</pre></div>
+</div>
+<p>Example 2. The Hurwitz offset. <code class="docutils literal notranslate"><span class="pre">zeta(2,</span> <span class="pre">1)</span></code>, <code class="docutils literal notranslate"><span class="pre">zeta(2,</span> <span class="pre">2)</span></code>, <code class="docutils literal notranslate"><span class="pre">zeta(2,</span> <span class="pre">3)</span></code> each
+drop the leading terms of the Riemann sum.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}).</span><span class="n">zeta</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">}).</span><span class="n">zeta</span><span class="p">(</span><span class="mf">2.0</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">}).</span><span class="n">zeta</span><span class="p">(</span><span class="mf">3.0</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.6449, 1.6449, 1.6449]
+Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.6449]
+Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.3949]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">zeta(2,</span> <span class="pre">2)</span> <span class="pre">=</span> <span class="pre">zeta(2)</span> <span class="pre">-</span> <span class="pre">1</span> <span class="pre">=</span> <span class="pre">0.6449341</span></code>, and <code class="docutils literal notranslate"><span class="pre">zeta(2,</span> <span class="pre">3)</span> <span class="pre">=</span> <span class="pre">zeta(2)</span> <span class="pre">-</span> <span class="pre">1</span> <span class="pre">-</span> <span class="pre">1/4</span> <span class="pre">=</span> <span class="pre">0.3949341</span></code>.</p>
+<p>Example 3. The recurrence <code class="docutils literal notranslate"><span class="pre">zeta(x,</span> <span class="pre">q)</span> <span class="pre">-</span> <span class="pre">zeta(x,</span> <span class="pre">q</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">=</span> <span class="pre">q^(-x)</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">exponents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dropped_term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exponents</span><span class="p">.</span><span class="n">zeta</span><span class="p">(</span><span class="mf">1.0</span><span class="p">).</span><span class="n">sub</span><span class="p">(</span><span class="n">exponents</span><span class="p">.</span><span class="n">zeta</span><span class="p">(</span><span class="mf">2.0</span><span class="p">));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">dropped_term</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1.0000, 1.0000]
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">q</span> <span class="pre">=</span> <span class="pre">1</span></code>, so the removed leading term is <code class="docutils literal notranslate"><span class="pre">1^(-x)</span> <span class="pre">=</span> <span class="pre">1</span></code> for both
+exponents. This recurrence is useful when shifting an awkward offset into a
+more convenient range.</p>
+<p>Example 4. A negative fractional offset distinguishes three cases. Integral
+exponents remain real, a fractional exponent does not, and a non-positive
+integer offset is a pole.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">}).</span><span class="n">zeta</span><span class="p">(</span><span class="mf">-0.5</span><span class="p">)</span>
+<span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">}).</span><span class="n">zeta</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[8.9348, 0.4144, nan]
+Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[inf]
+</pre></div>
+</div>
+<p>Example 5. The method form is non-differentiable. Tracking the exponent does
+not make the result track slope because this public overload has no exponent
+backward rule.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">s</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">zeta</span><span class="p">(</span><span class="mf">1.0</span><span class="p">).</span><span class="n">sum</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;exponent tracks: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">tracks_slope</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;objective tracks: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">obj</span><span class="p">.</span><span class="n">tracks_slope</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>exponent tracks: 1
+objective tracks: 0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Argument order: <code class="docutils literal notranslate"><span class="pre">self</span></code> is the exponent <code class="docutils literal notranslate"><span class="pre">x</span></code>, the argument is the offset <code class="docutils literal notranslate"><span class="pre">q</span></code>.
+<code class="docutils literal notranslate"><span class="pre">x.zeta(1.0)</span></code> is the ordinary Riemann zeta of <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> must be strictly greater than <code class="docutils literal notranslate"><span class="pre">1</span></code>. <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">1</span></code> returns <code class="docutils literal notranslate"><span class="pre">+inf</span></code>; <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>
+returns <code class="docutils literal notranslate"><span class="pre">NaN</span></code>. This routine does not do analytic continuation into the
+critical strip.</p></li>
+<li><p>Negative fractional <code class="docutils literal notranslate"><span class="pre">q</span></code> is real only for integral <code class="docutils literal notranslate"><span class="pre">x</span></code>. A non-positive
+integer <code class="docutils literal notranslate"><span class="pre">q</span></code> is a pole and returns <code class="docutils literal notranslate"><span class="pre">+inf</span></code>.</p></li>
+<li><p>The method form carries no gradient. Do not place a tracked series in the
+exponent and expect a sensitivity — <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> will raise.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">zeta(q)</span></code> is the Hurwitz zeta <code class="docutils literal notranslate"><span class="pre">sum_{k&gt;=0}</span> <span class="pre">(q</span> <span class="pre">+</span> <span class="pre">k)^(-x)</span></code>, with the exponent <code class="docutils literal notranslate"><span class="pre">x</span></code>
+from <code class="docutils literal notranslate"><span class="pre">self</span></code> and the offset <code class="docutils literal notranslate"><span class="pre">q</span></code> from the argument:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">zeta(1.0)</span></code> is the Riemann zeta; <code class="docutils literal notranslate"><span class="pre">zeta(2)</span> <span class="pre">=</span> <span class="pre">pi^2/6</span></code></p></li>
+<li><p>the closed form behind <a class="reference internal" href="polygamma.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">polygamma</span></code></span></a> for <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">&gt;=</span> <span class="pre">1</span></code></p></li>
+<li><p>requires <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>; positive <code class="docutils literal notranslate"><span class="pre">q</span></code> is the ordinary domain, while negative <code class="docutils literal notranslate"><span class="pre">q</span></code>
+follows the real-valued integral-exponent rules described above</p></li>
+<li><p>the method form is non-differentiable</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="polygamma.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::polygamma</span></code></span></a>: built from <code class="docutils literal notranslate"><span class="pre">zeta(n</span> <span class="pre">+</span> <span class="pre">1,</span> <span class="pre">x)</span></code>.</p></li>
+<li><p><a class="reference internal" href="digamma.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::digamma</span></code></span></a>: its gradient routes through this function.</p></li>
+<li><p><a class="reference internal" href="lgamma.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::lgamma</span></code></span></a>: the other core gamma-family special function.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="xlogy.html">
+    <span class="label">Previous</span>
+    <span class="title">xlogy</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="xlogy.html" title="previous chapter">Series::xlogy</a></li>
+      <li>Next: <a href="../../series_stat_accessor_api_reference.html" title="next chapter">SeriesStatAccessor API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/zeta.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -64,6 +64,20 @@ static BFloat16 store_bf16(float x){ return bfloat16_from_float(x); }
 static Float8E4M3FN store_f8e4m3fn(float x){ return float8e4m3fn_from_float(x); }
 static Float8E5M2 store_f8e5m2(float x){ return float8e5m2_from_float(x); }
 
+// amax/amin on floating-point data must PROPAGATE NaN (NumPy / PyTorch
+// convention): once any NaN is seen the reduction is NaN. std::max/std::min
+// silently drop a NaN second argument, so wrap them. Once `acc` is NaN,
+// std::max(NaN, x) / std::min(NaN, x) already keep it NaN, so only the
+// NaN-second-argument case needs the guard.
+template <class T>
+static inline T nan_propagating_max(T acc, T x) {
+  return std::isnan(x) ? x : std::max(acc, x);
+}
+template <class T>
+static inline T nan_propagating_min(T acc, T x) {
+  return std::isnan(x) ? x : std::min(acc, x);
+}
+
 template <class T>
 static double sum_real_fast_(const T* ap, std::int64_t n) {
   if (n <= 0) return 0.0;
@@ -282,10 +296,10 @@ void amax_dim(const Series& a, std::int64_t dim, Series& out) {
       reduce_dim_impl<std::uint8_t,std::uint8_t,std::uint8_t>(a,dim,out,[](std::uint8_t x){return x;},[](std::uint8_t acc, std::int64_t){return acc;},[](){return (std::uint8_t)0;},[](std::uint8_t acc,std::uint8_t x){return (std::uint8_t)std::max(acc,x);});
       return;
     case ScalarType::Float64:
-      reduce_dim_impl<double,double,double>(a,dim,out,[](double x){return x;},[](double acc, std::int64_t){return acc;},[](){return -std::numeric_limits<double>::infinity();},[](double acc,double x){return std::max(acc,x);});
+      reduce_dim_impl<double,double,double>(a,dim,out,[](double x){return x;},[](double acc, std::int64_t){return acc;},[](){return -std::numeric_limits<double>::infinity();},nan_propagating_max<double>);
       return;
     case ScalarType::Float32:
-      reduce_dim_impl<float,float,float>(a,dim,out,[](float x){return x;},[](float acc, std::int64_t){return acc;},[](){return -std::numeric_limits<float>::infinity();},[](float acc,float x){return std::max(acc,x);});
+      reduce_dim_impl<float,float,float>(a,dim,out,[](float x){return x;},[](float acc, std::int64_t){return acc;},[](){return -std::numeric_limits<float>::infinity();},nan_propagating_max<float>);
       return;
     case ScalarType::Int64:
       reduce_dim_impl<std::int64_t,std::int64_t,std::int64_t>(a,dim,out,[](std::int64_t x){return x;},[](std::int64_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int64_t>::min();},[](std::int64_t acc,std::int64_t x){return std::max(acc,x);});
@@ -295,24 +309,24 @@ void amax_dim(const Series& a, std::int64_t dim, Series& out) {
       return;
 
     case ScalarType::Float16:
-      reduce_dim_impl<float,Float16,Float16>(a,dim,out,load_f16,[](float acc, std::int64_t){return store_f16(acc);},[](){return -std::numeric_limits<float>::infinity();},[](float acc,float x){return std::max(acc,x);});
+      reduce_dim_impl<float,Float16,Float16>(a,dim,out,load_f16,[](float acc, std::int64_t){return store_f16(acc);},[](){return -std::numeric_limits<float>::infinity();},nan_propagating_max<float>);
       return;
     case ScalarType::BFloat16:
-      reduce_dim_impl<float,BFloat16,BFloat16>(a,dim,out,load_bf16,[](float acc, std::int64_t){return store_bf16(acc);},[](){return -std::numeric_limits<float>::infinity();},[](float acc,float x){return std::max(acc,x);});
+      reduce_dim_impl<float,BFloat16,BFloat16>(a,dim,out,load_bf16,[](float acc, std::int64_t){return store_bf16(acc);},[](){return -std::numeric_limits<float>::infinity();},nan_propagating_max<float>);
       return;
     case ScalarType::Float8E4M3FN:
       reduce_dim_impl<float,Float8E4M3FN,Float8E4M3FN>(
           a, dim, out, load_f8e4m3fn,
           [](float acc, std::int64_t){ return store_f8e4m3fn(acc); },
           [](){ return -std::numeric_limits<float>::infinity(); },
-          [](float acc, float x){ return std::max(acc, x); });
+          nan_propagating_max<float>);
       return;
     case ScalarType::Float8E5M2:
       reduce_dim_impl<float,Float8E5M2,Float8E5M2>(
           a, dim, out, load_f8e5m2,
           [](float acc, std::int64_t){ return store_f8e5m2(acc); },
           [](){ return -std::numeric_limits<float>::infinity(); },
-          [](float acc, float x){ return std::max(acc, x); });
+          nan_propagating_max<float>);
       return;
     case ScalarType::Int32:
       reduce_dim_impl<std::int32_t,std::int32_t,std::int32_t>(a,dim,out,[](std::int32_t x){return x;},[](std::int32_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int32_t>::min();},[](std::int32_t acc,std::int32_t x){return std::max(acc,x);});
@@ -344,10 +358,10 @@ void amin_dim(const Series& a, std::int64_t dim, Series& out) {
       reduce_dim_impl<std::uint8_t,std::uint8_t,std::uint8_t>(a,dim,out,[](std::uint8_t x){return x;},[](std::uint8_t acc, std::int64_t){return acc;},[](){return (std::uint8_t)1;},[](std::uint8_t acc,std::uint8_t x){return (std::uint8_t)std::min(acc,x);});
       return;
     case ScalarType::Float64:
-      reduce_dim_impl<double,double,double>(a,dim,out,[](double x){return x;},[](double acc, std::int64_t){return acc;},[](){return std::numeric_limits<double>::infinity();},[](double acc,double x){return std::min(acc,x);});
+      reduce_dim_impl<double,double,double>(a,dim,out,[](double x){return x;},[](double acc, std::int64_t){return acc;},[](){return std::numeric_limits<double>::infinity();},nan_propagating_min<double>);
       return;
     case ScalarType::Float32:
-      reduce_dim_impl<float,float,float>(a,dim,out,[](float x){return x;},[](float acc, std::int64_t){return acc;},[](){return std::numeric_limits<float>::infinity();},[](float acc,float x){return std::min(acc,x);});
+      reduce_dim_impl<float,float,float>(a,dim,out,[](float x){return x;},[](float acc, std::int64_t){return acc;},[](){return std::numeric_limits<float>::infinity();},nan_propagating_min<float>);
       return;
     case ScalarType::Int64:
       reduce_dim_impl<std::int64_t,std::int64_t,std::int64_t>(a,dim,out,[](std::int64_t x){return x;},[](std::int64_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int64_t>::max();},[](std::int64_t acc,std::int64_t x){return std::min(acc,x);});
@@ -357,24 +371,24 @@ void amin_dim(const Series& a, std::int64_t dim, Series& out) {
       return;
 
     case ScalarType::Float16:
-      reduce_dim_impl<float,Float16,Float16>(a,dim,out,load_f16,[](float acc, std::int64_t){return store_f16(acc);},[](){return std::numeric_limits<float>::infinity();},[](float acc,float x){return std::min(acc,x);});
+      reduce_dim_impl<float,Float16,Float16>(a,dim,out,load_f16,[](float acc, std::int64_t){return store_f16(acc);},[](){return std::numeric_limits<float>::infinity();},nan_propagating_min<float>);
       return;
     case ScalarType::BFloat16:
-      reduce_dim_impl<float,BFloat16,BFloat16>(a,dim,out,load_bf16,[](float acc, std::int64_t){return store_bf16(acc);},[](){return std::numeric_limits<float>::infinity();},[](float acc,float x){return std::min(acc,x);});
+      reduce_dim_impl<float,BFloat16,BFloat16>(a,dim,out,load_bf16,[](float acc, std::int64_t){return store_bf16(acc);},[](){return std::numeric_limits<float>::infinity();},nan_propagating_min<float>);
       return;
     case ScalarType::Float8E4M3FN:
       reduce_dim_impl<float,Float8E4M3FN,Float8E4M3FN>(
           a, dim, out, load_f8e4m3fn,
           [](float acc, std::int64_t){ return store_f8e4m3fn(acc); },
           [](){ return std::numeric_limits<float>::infinity(); },
-          [](float acc, float x){ return std::min(acc, x); });
+          nan_propagating_min<float>);
       return;
     case ScalarType::Float8E5M2:
       reduce_dim_impl<float,Float8E5M2,Float8E5M2>(
           a, dim, out, load_f8e5m2,
           [](float acc, std::int64_t){ return store_f8e5m2(acc); },
           [](){ return std::numeric_limits<float>::infinity(); },
-          [](float acc, float x){ return std::min(acc, x); });
+          nan_propagating_min<float>);
       return;
     case ScalarType::Int32:
       reduce_dim_impl<std::int32_t,std::int32_t,std::int32_t>(a,dim,out,[](std::int32_t x){return x;},[](std::int32_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int32_t>::max();},[](std::int32_t acc,std::int32_t x){return std::min(acc,x);});

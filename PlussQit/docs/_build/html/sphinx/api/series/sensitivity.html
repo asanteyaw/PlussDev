@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=60cd4e3d"></script>
-    <script src="../../../_static/layout.js?v=c27f9f8b"></script>
+    <script src="../../../_static/api_nav.js?v=d751f226"></script>
+    <script src="../../../_static/layout.js?v=33e21169"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::setdiff1d" href="setdiff1d.html" />
-    <link rel="prev" title="Series::select" href="select.html" />
+    <link rel="prev" title="Series::select_scatter" href="select_scatter.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -583,8 +583,9 @@ objective that <code class="docutils literal notranslate"><span class="pre">reve
 <li><p><code class="docutils literal notranslate"><span class="pre">y.sensitivity()</span></code> is not a synonym for “the derivative of <code class="docutils literal notranslate"><span class="pre">y</span></code> with respect to
 the inputs.” It is the sensitivity stored on <code class="docutils literal notranslate"><span class="pre">y</span></code> itself.</p></li>
 <li><p>The exact snippet <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">make_series(1.7);</span> <span class="pre">y</span> <span class="pre">=</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">x.cos();</span> <span class="pre">y.reverse();</span></code>
-leaves <code class="docutils literal notranslate"><span class="pre">x</span></code> without stored sensitivity because <code class="docutils literal notranslate"><span class="pre">x</span></code> was never marked for
-tracking.</p></li>
+raises because <code class="docutils literal notranslate"><span class="pre">x</span></code> was never marked for tracking, so <code class="docutils literal notranslate"><span class="pre">y</span></code> has no connected
+graph. Opt <code class="docutils literal notranslate"><span class="pre">x</span></code> in first (<code class="docutils literal notranslate"><span class="pre">x.tracks_slope_(true)</span></code> or
+<code class="docutils literal notranslate"><span class="pre">pluss::cfg::tracks_slope()</span></code>).</p></li>
 <li><p>A zero-valued readback can therefore mean either “the derivative is actually
 zero” or “no stored sensitivity exists yet.” Use
 <a class="reference internal" href="has_sensitivity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has_sensitivity()</span></code></span></a> to distinguish those states.</p></li>
@@ -707,7 +708,7 @@ tracked leaves such as <code class="docutils literal notranslate"><span class="p
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
-      <li>Previous: <a href="select.html" title="previous chapter">Series::select</a></li>
+      <li>Previous: <a href="select_scatter.html" title="previous chapter">Series::select_scatter</a></li>
       <li>Next: <a href="setdiff1d.html" title="next chapter">Series::setdiff1d</a></li>
   </ul></li>
   </ul></li>

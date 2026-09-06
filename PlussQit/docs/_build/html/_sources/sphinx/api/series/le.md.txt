@@ -177,9 +177,9 @@ this is the closed-boundary counterpart to the open-boundary behavior of
 - [`Series::eq`](eq.md): equality-only boundary check.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index_select.html">
+  <a class="prev-link" href="ldexp.html">
     <span class="label">Previous</span>
-    <span class="title">index_select</span>
+    <span class="title">ldexp</span>
   </a>
   <a class="next-link" href="leaky_relu.html">
     <span class="label">Next</span>

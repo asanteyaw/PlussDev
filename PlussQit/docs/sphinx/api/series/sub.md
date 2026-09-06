@@ -214,9 +214,9 @@ and the gradient signs all become predictable.
 - [`Series::div`](div.md): elementwise division.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="storage_version.html">
+  <a class="prev-link" href="stride.html">
     <span class="label">Previous</span>
-    <span class="title">storage_version</span>
+    <span class="title">stride</span>
   </a>
   <a class="next-link" href="sum.html">
     <span class="label">Next</span>

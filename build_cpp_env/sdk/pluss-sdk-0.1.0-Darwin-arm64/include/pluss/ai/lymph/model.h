@@ -207,6 +207,35 @@ class Model final {
     return *this;
   }
 
+  // Bulk append: attach several (stage, route) steps in one call, in the given
+  // order, instead of chaining append(). Copy-on-write detachment happens once
+  // for the whole batch rather than once per step.
+  using AppendStep = std::pair<prep::Stage, prep::Route>;
+
+  Model& append(std::initializer_list<AppendStep> steps) {
+    detail::ModelCore& core = mut_core_();
+    for (const AppendStep& step : steps) {
+      core.append(step.first, step.second);
+    }
+    return *this;
+  }
+
+  Model& append(const std::vector<AppendStep>& steps) {
+    detail::ModelCore& core = mut_core_();
+    for (const AppendStep& step : steps) {
+      core.append(step.first, step.second);
+    }
+    return *this;
+  }
+
+  Model& append(std::vector<AppendStep>&& steps) {
+    detail::ModelCore& core = mut_core_();
+    for (AppendStep& step : steps) {
+      core.append(std::move(step.first), std::move(step.second));
+    }
+    return *this;
+  }
+
   [[nodiscard]] ModelPrep prepare() noexcept;
 
   Model& learn_(const LabeledBatch& batch, const TrainOptions& options = {}) {

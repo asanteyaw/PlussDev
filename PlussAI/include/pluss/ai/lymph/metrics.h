@@ -22,6 +22,11 @@ struct MetricReport {
   Series balance_quality = Series::undefined();
   Series roc_auc = Series::undefined();
   Series logloss = Series::undefined();
+  Series mcc = Series::undefined();
+  Series cohen_kappa = Series::undefined();
+  Series gini = Series::undefined();
+  Series average_precision = Series::undefined();
+  Series brier = Series::undefined();
   Series mse = Series::undefined();
   Series rmse = Series::undefined();
   Series mae = Series::undefined();
@@ -198,54 +203,10 @@ namespace metrics::detail {
   return resolve(::pluss::ai::nodej::balance_rows(batch, target, random), "balance_rows");
 }
 
-[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
-                                                    const Series& predicted_labels,
-                                                    const ConfusionOptions& options = {}) {
-  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, options), "confusion_table");
-}
-
-[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
-                                                    const Series& predicted_labels,
-                                                    pluss::msharp::RangeView::Of<double> label_order,
-                                                    ConfusionNormalize normalize = ConfusionNormalize::None) {
-  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, label_order, normalize),
-                 "confusion_table");
-}
-
-[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
-                                                    const Series& predicted_labels,
-                                                    std::initializer_list<double> label_order,
-                                                    ConfusionNormalize normalize = ConfusionNormalize::None) {
-  return ::pluss::ai::lymph::confusion_table(truth_labels,
-                                             predicted_labels,
-                                             pluss::msharp::RangeView::Of<double>(label_order),
-                                             normalize);
-}
-
-[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
-                                                        const Series& predicted_labels,
-                                                        const ClassReportOptions& options = {}) {
-  return resolve(::pluss::ai::nodej::classification_summary(truth_labels, predicted_labels, options),
-                 "classification_summary");
-}
-
-[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
-                                                        const Series& predicted_labels,
-                                                        pluss::msharp::RangeView::Of<double> label_order,
-                                                        double zero_division = 0.0) {
-  return resolve(::pluss::ai::nodej::classification_summary(truth_labels, predicted_labels, label_order, zero_division),
-                 "classification_summary");
-}
-
-[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
-                                                        const Series& predicted_labels,
-                                                        std::initializer_list<double> label_order,
-                                                        double zero_division = 0.0) {
-  return ::pluss::ai::lymph::classification_summary(truth_labels,
-                                                    predicted_labels,
-                                                    pluss::msharp::RangeView::Of<double>(label_order),
-                                                    zero_division);
-}
+// confusion_table(...) and classification_summary(...) -> summary(...) moved
+// to `namespace metrics::classification` below (single canonical spelling
+// `lymph::metrics::classification::confusion_table` /
+// `lymph::metrics::classification::summary`).
 
 [[nodiscard]] inline Series classification_metric_series(const Series& truth_labels,
                                                          const Series& predicted_labels,
@@ -336,6 +297,11 @@ namespace metrics::detail {
       case MetricKind::BalanceQuality: report.balance_quality = scalar; break;
       case MetricKind::RocAuc: report.roc_auc = scalar; break;
       case MetricKind::LogLoss: report.logloss = scalar; break;
+      case MetricKind::Mcc: report.mcc = scalar; break;
+      case MetricKind::CohenKappa: report.cohen_kappa = scalar; break;
+      case MetricKind::Gini: report.gini = scalar; break;
+      case MetricKind::AveragePrecision: report.average_precision = scalar; break;
+      case MetricKind::Brier: report.brier = scalar; break;
       case MetricKind::Mse: report.mse = scalar; break;
       case MetricKind::Rmse: report.rmse = scalar; break;
       case MetricKind::Mae: report.mae = scalar; break;
@@ -356,71 +322,102 @@ namespace metrics {
   return {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
 }
 
-class Classification final {
- public:
-  Classification(Series truth_labels, Series predicted_labels, ClassReportOptions options = {})
-      : truth_(std::move(truth_labels)),
-        predicted_(std::move(predicted_labels)),
-        options_(std::move(options)) {}
+[[nodiscard]] inline std::vector<MetricKind> default_score_metrics_() {
+  return {MetricKind::RocAuc, MetricKind::AveragePrecision, MetricKind::LogLoss, MetricKind::Brier};
+}
 
-  [[nodiscard]] const Series& truth() const noexcept { return truth_; }
-  [[nodiscard]] const Series& prediction() const noexcept { return predicted_; }
-  [[nodiscard]] const ClassReportOptions& options() const noexcept { return options_; }
+// Task-scoped metric helpers. Every entry point takes a truth `Series` and a
+// prediction (or score) `Series` you already hold -- nothing here trains or
+// runs a model. Raw values come off `report(...).values`; there is no separate
+// `*_metric_series` spelling.
+namespace classification {
 
-  [[nodiscard]] ConfusionTable confusion_table(ConfusionOptions options = {}) const {
-    if (!options.label_order.defined()) options.label_order = options_.label_order;
-    if (!options.sample_weights.defined()) options.sample_weights = options_.sample_weights;
-    return ::pluss::ai::lymph::confusion_table(truth_, predicted_, options);
-  }
+// Confusion matrix over hard labels, optionally row/column normalized. The
+// one canonical spelling -- `lymph::metrics::classification::confusion_table`.
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    const ConfusionOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, options),
+                 "metrics::classification::confusion_table");
+}
 
-  [[nodiscard]] ClassReport summary() const {
-    return ::pluss::ai::lymph::classification_summary(truth_, predicted_, options_);
-  }
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    pluss::msharp::RangeView::Of<double> label_order,
+                                                    ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, label_order, normalize),
+                 "metrics::classification::confusion_table");
+}
 
-  [[nodiscard]] ClassReport summary(ClassReportOptions options) const {
-    return ::pluss::ai::lymph::classification_summary(truth_, predicted_, std::move(options));
-  }
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    std::initializer_list<double> label_order,
+                                                    ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return classification::confusion_table(truth_labels,
+                                         predicted_labels,
+                                         pluss::msharp::RangeView::Of<double>(label_order),
+                                         normalize);
+}
 
-  [[nodiscard]] Series values(std::vector<MetricKind> requested = {}) const {
-    if (requested.empty()) requested = default_classification_metrics_();
-    return ::pluss::ai::lymph::classification_metric_series(truth_, predicted_, requested, options_);
-  }
+// Per-class precision / recall / f1 / support plus the aggregate rollups.
+[[nodiscard]] inline ClassReport summary(const Series& truth_labels,
+                                         const Series& predicted_labels,
+                                         const ClassReportOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::classification_summary(truth_labels, predicted_labels, options),
+                 "metrics::classification::summary");
+}
 
-  [[nodiscard]] MetricReport report(std::vector<MetricKind> requested = {}) const {
-    if (requested.empty()) requested = default_classification_metrics_();
-    return ::pluss::ai::lymph::metric_report_from_series_(values(requested), requested);
-  }
+[[nodiscard]] inline ClassReport summary(const Series& truth_labels,
+                                         const Series& predicted_labels,
+                                         pluss::msharp::RangeView::Of<double> label_order,
+                                         double zero_division = 0.0) {
+  return resolve(::pluss::ai::nodej::classification_summary(truth_labels, predicted_labels, label_order, zero_division),
+                 "metrics::classification::summary");
+}
 
- private:
-  Series truth_ = Series::undefined();
-  Series predicted_ = Series::undefined();
-  ClassReportOptions options_{};
-};
+[[nodiscard]] inline ClassReport summary(const Series& truth_labels,
+                                         const Series& predicted_labels,
+                                         std::initializer_list<double> label_order,
+                                         double zero_division = 0.0) {
+  return classification::summary(truth_labels,
+                                 predicted_labels,
+                                 pluss::msharp::RangeView::Of<double>(label_order),
+                                 zero_division);
+}
 
-class Regression final {
- public:
-  Regression(Series truth, Series prediction)
-      : truth_(std::move(truth)),
-        prediction_(std::move(prediction)) {}
+// Requested scalar metrics as a MetricReport. `requested` empty -> the task
+// default set. Read `report.values` for the raw Series, or a named slot
+// (`report.f1`, `report.mcc`, ...) with `.item<double>()`.
+[[nodiscard]] inline MetricReport report(const Series& truth_labels,
+                                         const Series& predicted_labels,
+                                         std::vector<MetricKind> requested = {},
+                                         const ClassReportOptions& options = {}) {
+  if (requested.empty()) requested = default_classification_metrics_();
+  return ::pluss::ai::lymph::metric_report_from_series_(
+      ::pluss::ai::lymph::classification_metric_series(truth_labels, predicted_labels, requested, options),
+      requested);
+}
 
-  [[nodiscard]] const Series& truth() const noexcept { return truth_; }
-  [[nodiscard]] const Series& prediction() const noexcept { return prediction_; }
+// Score-based scalar metrics from a probability `Series` you already hold, with
+// no model in the loop -- the score-side twin of `report`. `scores` is a [n]
+// vector of positive-class probabilities (binary) or a [n, k] row-stochastic
+// probability matrix (multiclass); `labels` is [n] (0/1, or class indices).
+// `requested` empty -> {RocAuc, AveragePrecision, LogLoss, Brier}. Hard-label
+// kinds (F1, Mcc, ...) are also accepted and scored at a 0.5 threshold /
+// argmax, matching `model.reports().metric_series(...)`.
+[[nodiscard]] inline MetricReport score_report(const Series& scores,
+                                               const Series& labels,
+                                               std::vector<MetricKind> requested = {}) {
+  if (requested.empty()) requested = default_score_metrics_();
+  return ::pluss::ai::lymph::metric_report_from_series_(
+      resolve(::pluss::ai::nodej::score_metrics(scores, labels, requested),
+              "metrics::classification::score_report"),
+      requested);
+}
 
-  [[nodiscard]] Series values(std::vector<MetricKind> requested = {}) const {
-    if (requested.empty()) requested = default_regression_metrics_();
-    return ::pluss::ai::lymph::regression_metric_series(truth_, prediction_, requested);
-  }
-
-  [[nodiscard]] MetricReport report(std::vector<MetricKind> requested = {}) const {
-    if (requested.empty()) requested = default_regression_metrics_();
-    return ::pluss::ai::lymph::metric_report_from_series_(values(requested), requested);
-  }
-
- private:
-  Series truth_ = Series::undefined();
-  Series prediction_ = Series::undefined();
-};
-
+// Operating-point accessor over a score / label pair: the full
+// precision-recall-threshold `curve()`, or the single `best()` threshold for
+// an objective.
 class Threshold final {
  public:
   Threshold(Series scores, Series labels)
@@ -431,11 +428,13 @@ class Threshold final {
   [[nodiscard]] const Series& labels() const noexcept { return labels_; }
 
   [[nodiscard]] ThresholdCurve curve() const {
-    return resolve(::pluss::ai::nodej::threshold_curve(scores_, labels_), "metrics::Threshold::curve");
+    return resolve(::pluss::ai::nodej::threshold_curve(scores_, labels_),
+                   "metrics::classification::Threshold::curve");
   }
 
   [[nodiscard]] double best(MetricKind objective = MetricKind::F1) const {
-    return resolve(::pluss::ai::nodej::best_threshold(scores_, labels_, objective), "metrics::Threshold::best");
+    return resolve(::pluss::ai::nodej::best_threshold(scores_, labels_, objective),
+                   "metrics::classification::Threshold::best");
   }
 
  private:
@@ -443,19 +442,26 @@ class Threshold final {
   Series labels_ = Series::undefined();
 };
 
-[[nodiscard]] inline Classification classification(Series truth_labels,
-                                                   Series predicted_labels,
-                                                   ClassReportOptions options = {}) {
-  return Classification(std::move(truth_labels), std::move(predicted_labels), std::move(options));
-}
-
-[[nodiscard]] inline Regression regression(Series truth, Series prediction) {
-  return Regression(std::move(truth), std::move(prediction));
-}
-
 [[nodiscard]] inline Threshold threshold(Series scores, Series labels) {
   return Threshold(std::move(scores), std::move(labels));
 }
+
+} // namespace classification
+
+namespace regression {
+
+// Requested scalar regression metrics as a MetricReport. `requested` empty ->
+// the task default set. Read `report.values` for the raw Series.
+[[nodiscard]] inline MetricReport report(const Series& truth,
+                                         const Series& prediction,
+                                         std::vector<MetricKind> requested = {}) {
+  if (requested.empty()) requested = default_regression_metrics_();
+  return ::pluss::ai::lymph::metric_report_from_series_(
+      ::pluss::ai::lymph::regression_metric_series(truth, prediction, requested),
+      requested);
+}
+
+} // namespace regression
 
 } // namespace metrics
 
@@ -472,6 +478,11 @@ class Threshold final {
     case MetricKind::BalanceQuality: return "balance_quality";
     case MetricKind::RocAuc: return "roc_auc";
     case MetricKind::LogLoss: return "logloss";
+    case MetricKind::Mcc: return "mcc";
+    case MetricKind::CohenKappa: return "cohen_kappa";
+    case MetricKind::Gini: return "gini";
+    case MetricKind::AveragePrecision: return "average_precision";
+    case MetricKind::Brier: return "brier";
     case MetricKind::Mse: return "mse";
     case MetricKind::Rmse: return "rmse";
     case MetricKind::Mae: return "mae";

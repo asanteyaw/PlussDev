@@ -9,7 +9,7 @@ Two jobs:
    [`workflow::Workflow`](workflow.md)) plus a dataset, and get the same
    evidence [`metrics`](metrics.md) computes from raw `Series` — with the
    inference done for you. `model.reports().classification_summary(frame)`
-   instead of `metrics::classification_summary(y_true, model.infer(x))`.
+   instead of `metrics::classification::summary(y_true, model.infer(x))`.
 2. **Umbrella aliases** — one canonical short name for each report type,
    regardless of which family defines it.
 
