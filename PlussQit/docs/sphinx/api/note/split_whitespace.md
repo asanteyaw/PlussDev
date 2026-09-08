@@ -1,154 +1,137 @@
+<!-- pluss-hand-authored -->
 # Note::split_whitespace
 
 [Back to Note API Reference](../../note_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-Note::split_whitespace() const -> TokenBatch
-Note::split_whitespace(std::int64_t limit) const -> TokenBatch
+TokenBatch Note::split_whitespace() const
+TokenBatch Note::split_whitespace(std::int64_t limit) const
 ```
 
-## What It Does
+## Split Each Cell On Whitespace Runs
 
-Splits each text cell on whitespace and returns the resulting tokens as a
-`TokenBatch`.
+`split_whitespace()` breaks each text cell into tokens separated by
+whitespace and returns them as a `TokenBatch`. It is usually the first
+tokenization step for prose: fast, structural, and free of empty tokens.
 
-This is one of the most practical first tokenization steps in the `Note`
-surface. It is appropriate when you want a fast structural token split without
-full NLP parsing.
+Whitespace is the ASCII set space, `\t`, `\n`, `\r`, `\f`, `\v`. **Any run**
+of one or more whitespace bytes is a single separator, and leading and
+trailing whitespace are ignored, so consecutive spaces never produce empty
+tokens and a padded cell does not gain blank ends. This is the key
+difference from [`split(" ")`](split.md), which is a literal single-space
+field splitter and *does* keep empty fields.
 
-The method groups all returned tokens into one flat token stream and uses
-`offsets()` to preserve which pieces came from which original cell.
+A cell that is empty or all whitespace yields **no tokens** — an empty range
+in the batch, not a single empty token.
 
-## Parameters
+### `limit`
 
-**limit**
+`limit` caps the number of splits: after `limit` splits the remainder of the
+cell (including any interior whitespace) is emitted as one final token.
+`split_whitespace(1)` on `"one two three"` gives `"one"`, `"two three"`. A
+negative `limit` (the default) means unlimited.
 
-Optional control over how many splits are attempted inside each cell.
+### The `TokenBatch` result
 
-- `split_whitespace()`
-  Uses every whitespace boundary and returns the ordinary token stream.
-- `split_whitespace(limit)`
-  Consumes only the requested number of whitespace cuts within each cell and
-  keeps the remainder grouped together.
+All tokens from all cells are concatenated into one flat rank-`1` token
+`Note` (`batch.tokens()`); `batch.offsets()` (length `numel + 1`) marks each
+cell's run: cell `r` is `tokens()[offsets()[r] .. offsets()[r+1])`.
 
-When `limit` is used, the remainder of each cell stays grouped together after
-the requested number of splits has been consumed.
-
-## Returns
-
-`TokenBatch`
-    A flat token stream plus `offsets()` describing the token span that came
-    from each original `Note` element.
-
-## Examples
-
-Example 1. Tokenize a two-row note into whitespace-separated terms.
+## Example 1: Runs Collapse; No Empty Tokens
 
 ```cpp
-auto note = pluss::make_note({
-    "alpha   beta\tgamma",
-    "delta epsilon zeta",
-});
+const auto batch =
+    pluss::make_note({"alpha   beta\tgamma", "delta epsilon"}).split_whitespace();
 
-auto words = note.split_whitespace();
-std::cout << "split_whitespace tokens:";
-for (std::int64_t i = 0; i < words.tokens().numel(); ++i) {
-  std::cout << " [" << words.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "split_whitespace offsets:";
-for (std::int64_t off : words.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-split_whitespace tokens: [alpha] [beta] [gamma] [delta] [epsilon] [zeta]
-split_whitespace offsets: 0 3 6
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["alpha", "beta", "gamma", "delta", "epsilon"]
+offsets: [0, 3, 5]
 ```
 
-Example 2. Use the `limit` overload when you want only the first whitespace
-cut per cell and want the remainder to stay grouped.
+The triple space and the tab are each one separator.
+
+## Example 2: Leading And Trailing Whitespace Is Ignored
 
 ```cpp
-auto note = pluss::make_note({
-    "alpha beta gamma",
-    "delta epsilon",
-});
-auto words = note.split_whitespace(1);
-std::cout << "split_whitespace_limit1 tokens:";
-for (std::int64_t i = 0; i < words.tokens().numel(); ++i) {
-  std::cout << " [" << words.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "split_whitespace_limit1 offsets:";
-for (std::int64_t off : words.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch =
+    pluss::make_note({"  Ada Lovelace  ", "\tGrace Hopper\t"}).split_whitespace();
+std::cout << pluss::note::print(batch.tokens()) << "\n";
 ```
 
 ### Output
 
 ```text
-split_whitespace_limit1 tokens: [alpha] [beta gamma] [delta] [epsilon]
-split_whitespace_limit1 offsets: 0 2 4
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["Ada", "Lovelace", "Grace", "Hopper"]
 ```
 
-Example 3. Clean the boundaries first when leading and trailing padding should
-not leak into the token stream.
+No empty token at either end — unlike `split(" ")`.
+
+## Example 3: Capping The Number Of Splits
 
 ```cpp
-auto note = pluss::make_note({"  Ada Lovelace  ", "\tGrace Hopper\t"});
-auto cleaned = note.strip();
-auto words = cleaned.split_whitespace();
-std::cout << "split_whitespace_strip tokens:";
-for (std::int64_t i = 0; i < words.tokens().numel(); ++i) {
-  std::cout << " [" << words.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "split_whitespace_strip offsets:";
-for (std::int64_t off : words.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch =
+    pluss::make_note({"one two three four"}).split_whitespace(1);
+std::cout << pluss::note::print(batch.tokens()) << "\n";
 ```
 
 ### Output
 
 ```text
-split_whitespace_strip tokens: [Ada] [Lovelace] [Grace] [Hopper]
-split_whitespace_strip offsets: 0 2 4
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["one", "two three four"]
 ```
 
-## Notes
+## Example 4: All-Whitespace And Empty Cells Yield Nothing
 
-- `offsets()` mark the token boundaries per input cell.
-- In the example above, the first row contributes tokens `[0, 3)` and the
-  second row contributes `[3, 6)`.
-- This method is a structural splitter, not a linguistic parser. If you need
-  richer downstream semantics, it can serve as the first pass before more
-  specialized NLP methods.
+```cpp
+const auto batch = pluss::make_note({"   ", ""}).split_whitespace();
+
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets: [0, 0, 0]
+```
+
+Both input cells map to empty ranges.
 
 ## See Also
 
-- [`Note::split_lines`](split_lines.md): preserve line structure instead of
-  tokenizing by whitespace.
-- [`Note::regex_findall`](regex_findall.md): extract only the pieces that match
-  a regex rather than every whitespace-separated token.
+- [`pluss::note::from_words`](../note_factory/from_words.md): the factory
+  that splits a **single** string into a 1-D `Note`.
+- [`Note::split`](split.md): literal single-delimiter field splitting that
+  keeps empty fields.
+- [`Note::tokenize_words`](tokenize_words.md): word tokens that also drop
+  punctuation, not just whitespace.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="split_lines.html">
     <span class="label">Previous</span>
     <span class="title">split_lines</span>
   </a>
-  <a class="next-link" href="strip.html">
+  <a class="next-link" href="starts_with.html">
     <span class="label">Next</span>
-    <span class="title">strip</span>
+    <span class="title">starts_with</span>
   </a>
 </div>

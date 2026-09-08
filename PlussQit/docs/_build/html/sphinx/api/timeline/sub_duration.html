@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::diff" href="diff.html" />
-    <link rel="prev" title="Timeline::add_duration" href="add_duration.html" />
+    <link rel="next" title="Timeline::ticks" href="ticks.html" />
+    <link rel="prev" title="Timeline::strftime" href="strftime.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -41,7 +41,7 @@
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">sub_duration</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Timeline</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">sub_duration</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">duration</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -97,14 +97,14 @@ A timeline shifted backward with the same shape as the input.</p>
 </div>
 </section>
 </section>
-<section id="operator-sugar-broadcasting-missing-values-timezone">
-<h2>Operator Sugar, Broadcasting, Missing Values, Timezone<a class="headerlink" href="#operator-sugar-broadcasting-missing-values-timezone" title="Link to this heading">¶</a></h2>
+<section id="operator-sugar-broadcasting-nat-and-timezone">
+<h2>Operator Sugar, Broadcasting, NaT, And Timezone<a class="headerlink" href="#operator-sugar-broadcasting-nat-and-timezone" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">sub_duration</span></code> shares its full arithmetic model with
 <a class="reference internal" href="add_duration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add_duration</span></code></span></a> – same unit factories, same broadcasting
 rules, same <code class="docutils literal notranslate"><span class="pre">NaT</span></code>-from-either-side propagation, same left-operand-only
 timezone preservation. See that page’s “Full Scope” and “Broadcasting”
 sections for the complete unit-factory sweep and the
-broadcasting/missing-value/timezone examples; this page just confirms
+broadcasting/<code class="docutils literal notranslate"><span class="pre">NaT</span></code>/timezone examples; this page just confirms
 <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">-</span> <span class="pre">d</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">t.sub_duration(d)</span></code>, not an approximation of it:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">t0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;1999-04-17T21:15:23Z&quot;</span><span class="p">);</span>
 <span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">via_operator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
@@ -142,8 +142,9 @@ data=true
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Missing timestamps propagate through the subtraction, from either operand.</p></li>
+<li><p>Absent instants propagate through the subtraction, from either operand.</p></li>
 <li><p>Shape is preserved, subject to the same broadcasting rules as <code class="docutils literal notranslate"><span class="pre">add_duration</span></code>.</p></li>
+<li><p>A result outside the representable nanosecond epoch range throws.</p></li>
 <li><p>Operator sugar also exists: <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">-</span> <span class="pre">d</span></code>, identical to <code class="docutils literal notranslate"><span class="pre">sub_duration</span></code>; <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">-=</span> <span class="pre">d</span></code>
 is its compound-assignment form.</p></li>
 </ul>
@@ -205,6 +206,7 @@ is its compound-assignment form.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -255,8 +257,8 @@ is its compound-assignment form.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="add_duration.html" title="previous chapter">Timeline::add_duration</a></li>
-      <li>Next: <a href="diff.html" title="next chapter">Timeline::diff</a></li>
+      <li>Previous: <a href="strftime.html" title="previous chapter">Timeline::strftime</a></li>
+      <li>Next: <a href="ticks.html" title="next chapter">Timeline::ticks</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

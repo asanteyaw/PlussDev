@@ -90,10 +90,10 @@ std::int64_t find_int_label(const Thread& labels, std::int64_t key) {
 
 std::vector<std::int64_t> timeline_ticks(const Thread& labels) {
   if (labels.kind() == ThreadKind::Timeline) {
-    return labels.as_timeline().to_epoch_nanos_vector();
+    return labels.as_timeline().ticks();
   }
   if (labels.kind() == ThreadKind::TimeIndex) {
-    return labels.as_timeindex().timeline().to_epoch_nanos_vector();
+    return labels.as_timeindex().timeline().ticks();
   }
   PLUSS_FAIL("Atlas::loc(Timeline): axis0 labels must be Timeline or TimeIndex");
 }
@@ -101,7 +101,7 @@ std::vector<std::int64_t> timeline_ticks(const Thread& labels) {
 std::int64_t find_timeline_label(const Thread& labels, const pluss::Timeline& key) {
   PLUSS_CHECK(key.defined(), "Atlas::loc(Timeline): key is undefined");
   PLUSS_CHECK(key.numel() == 1, "Atlas::loc(Timeline): key must be scalar Timeline");
-  const auto key_ticks = key.to_epoch_nanos_vector();
+  const auto key_ticks = key.ticks();
   const auto all_ticks = timeline_ticks(labels);
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (all_ticks[static_cast<std::size_t>(i)] == key_ticks[0]) {
@@ -127,9 +127,9 @@ std::string label_string_at(const Thread& labels, std::int64_t i) {
     case ThreadKind::Note:
       return std::string(labels.as_note().at(i));
     case ThreadKind::Timeline:
-      return std::to_string(labels.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(i)]);
+      return std::to_string(labels.as_timeline().ticks()[static_cast<std::size_t>(i)]);
     case ThreadKind::TimeIndex:
-      return std::to_string(labels.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(i)]);
+      return std::to_string(labels.as_timeindex().timeline().ticks()[static_cast<std::size_t>(i)]);
     default:
       return std::to_string(i);
   }

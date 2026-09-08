@@ -102,22 +102,19 @@ Timeline call_timeline(std::string_view op, const Timeline& self, const Args& ar
   }
   if (op == "tz_convert") return deets::impl_tz_convert(self, arg_sv(args, 0));
   if (op == "tz_localize") return deets::impl_tz_localize(self, arg_sv(args, 0), (int)arg_i64(args, 1), arg_sv(args, 2));
-  if (op == "to_utc") return deets::impl_tz_convert(self, "UTC");
 
   // Rounding/normalization (Timeline-level convenience)
   if (op == "floor") return deets::impl_dt_round(self, "floor", arg_sv(args, 0));
   if (op == "ceil") return deets::impl_dt_round(self, "ceil", arg_sv(args, 0));
   if (op == "round") return deets::impl_dt_round(self, "round", arg_sv(args, 0));
-  if (op == "normalize") return deets::impl_dt_round(self, "floor", "D");
   if (op == "date") return deets::impl_dt_round(self, "floor", "D");
   if (op == "time") return deets::impl_time_of_day(self);
   if (op == "time_of_day") return deets::impl_time_of_day(self);
 
-  if (op == "min") return deets::impl_min(self);
-  if (op == "max") return deets::impl_max(self);
+  if (op == "min") return deets::impl_min(self, arg_bool(args, 0));
+  if (op == "max") return deets::impl_max(self, arg_bool(args, 0));
   if (op == "sort") return deets::impl_sort(self);
   if (op == "unique") return deets::impl_unique(self);
-  if (op == "drop_duplicates") return deets::impl_unique(self);
 
   if (op == "fill_nat") return deets::impl_fill_nat(self, arg_as<Timeline>(args, 0));
   if (op == "where") return deets::impl_where(self, arg_as<pluss::codem::Series>(args, 0), arg_as<Timeline>(args, 1));
@@ -226,8 +223,7 @@ bool call_bool_timeline(std::string_view op, const Timeline& self, const Args&) 
   CODEM_FAIL("CodeH invoke: unknown Timeline->bool op");
 }
 
-std::vector<std::int64_t> call_i64vec_timeline(std::string_view op, const Timeline& self, const Args&) {
-  if (op == "to_epoch_nanos_flat") return ::pluss::codeh::detail::impl_to_epoch_nanos_flat(self);
+std::vector<std::int64_t> call_i64vec_timeline(std::string_view, const Timeline&, const Args&) {
   CODEM_FAIL("CodeH invoke: unknown Timeline->vector<int64> op");
 }
 

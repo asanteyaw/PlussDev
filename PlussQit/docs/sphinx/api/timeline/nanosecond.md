@@ -8,7 +8,7 @@
 Series Timeline::nanosecond() const
 ```
 
-Aliases: `ns()`, `nsec()`, `nano()`, and `nanoseconds()`.
+`nanosecond()` is the sole public spelling.
 
 ## Read The Fractional Second Exactly
 
@@ -56,7 +56,7 @@ round. Keep the nanosecond value if later work may need the lost precision.
 ## Gotchas And Failure Modes
 
 - Do not confuse fractional nanoseconds with `epoch_nanos()`.
-- `-1` is the missing sentinel; valid fractions are never negative.
+- `-1` is the absent-field sentinel; valid fractions are never negative.
 - Timezone conversion changes calendar fields but not this fractional-second
   component, because it preserves the instant.
 
@@ -67,7 +67,7 @@ round. Keep the nanosecond value if later work may need the lost precision.
 - [`epoch_nanos`](epoch_nanos.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="second.html"><span class="label">Previous</span><span class="title">second</span></a>
+  <a class="prev-link" href="months_between.html"><span class="label">Previous</span><span class="title">months_between</span></a>
   <a class="next-link" href="microsecond.html"><span class="label">Next</span><span class="title">microsecond</span></a>
 </div>
 <!-- pluss-hand-authored -->

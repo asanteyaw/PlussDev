@@ -93,5 +93,5 @@ and `numel()` for total cardinality.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sizes.html"><span class="label">Previous</span><span class="title">sizes</span></a>
-  <a class="next-link" href="numel.html"><span class="label">Next</span><span class="title">numel</span></a>
+  <a class="next-link" href="empty_like.html"><span class="label">Next</span><span class="title">empty_like</span></a>
 </div>

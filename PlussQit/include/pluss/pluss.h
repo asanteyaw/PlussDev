@@ -22,8 +22,9 @@
 // - pluss::timeline::make(...) / from_epoch(...) / date_range(...) / print(...)
 // - pluss::duration::{nanos,seconds,...,make,range,print}(...)
 // - pluss::timeindex::make(...) / date_range(...) / print(...)
-// - pluss::make_timeline(...) / from_epoch_nanos(...) / make_timeindex(...)
-//   (deprecated flat aliases, kept for existing callers)
+// - pluss::make_timeline(...) as the permanent flat shortcut for
+//   pluss::timeline::make(...)
+// - pluss::make_timeindex(...) for TimeIndex construction
 //
 // Unified serialization (core types + supported STL containers):
 // - pluss::io::save(...) / pluss::io::load<...>(...)

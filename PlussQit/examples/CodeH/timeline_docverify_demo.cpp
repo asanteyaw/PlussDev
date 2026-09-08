@@ -140,7 +140,6 @@ int main() {
   show_timeline("floor_D", base.floor("D"));
   show_timeline("ceil_H", base.ceil("H"));
   show_timeline("round_H", base.round("H"));
-  show_timeline("normalize", base.normalize());
   show_timeline("date", base.date());
   show_timeline("time", base.time());
 
@@ -151,13 +150,11 @@ int main() {
   const auto ny = local_wall.tz_localize("America/New_York");
   show_timeline("tz_localize_new_york", ny);
   show_timeline("tz_convert_utc", ny.tz_convert("UTC"));
-  show_timeline("to_utc", ny.to_utc());
 
   show_timeline("min", duplicated.min());
   show_timeline("max", duplicated.max());
   show_timeline("sort", duplicated.sort());
   show_timeline("unique", duplicated.unique());
-  show_timeline("drop_duplicates", duplicated.drop_duplicates());
   show_timeline("fill_nat_scalar", with_nat.fill_nat(pluss::timeline::make("2024-11-15T00:00:00Z")));
   show_timeline("where_isnat_floorD", with_nat.where(with_nat.isnat(), with_nat.floor("D")));
   show_timeline("add_nanos_1s", base.add_nanos(1'000'000'000LL));
@@ -174,7 +171,7 @@ int main() {
                   "2024-11-01T09:00:00Z",
                   "2024-11-01T11:00:00Z",
               })));
-  show_i64s("to_epoch_nanos_flat", base.to_epoch_nanos_flat());
+  show_i64s("ticks", base.ticks());
 
   show_series("year", base.year());
   show_series("month", base.month());
@@ -225,10 +222,10 @@ int main() {
             pluss::codeh::_compat::invoke<pluss::Note>("month_name",
                                                        calendar));
 
-  show_note("to_note_date", base.to_note_date());
-  show_note("to_note_time", base.to_note_time());
-  show_note("to_note_datetime", base.to_note_datetime());
-  show_note("to_note_rfc3339", base.to_note_rfc3339());
+  show_note("to_note_date", base.strftime("%Y-%m-%d"));
+  show_note("to_note_time", base.strftime("%H:%M:%S"));
+  show_note("to_note_datetime", base.strftime("%Y-%m-%d %H:%M:%S"));
+  show_note("to_note_rfc3339", base.strftime("%Y-%m-%dT%H:%M:%S%z"));
 
   show_timeline("date_range_daily",
                 pluss::timeline::date_range(pluss::timeline::make("2026-03-14T00:00:00Z"),

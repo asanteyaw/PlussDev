@@ -5,115 +5,92 @@
 ## Signature
 
 ```cpp
-Timeline::eq(const Timeline& other) -> Series
+Series Timeline::eq(const Timeline& other) const
+Series Timeline::operator==(const Timeline& other) const
 ```
 
-## What It Does
+## Exact Instant Equality
 
-Performs elementwise temporal equality and returns a boolean `Series`.
+`eq()` compares paired UTC instants and returns one boolean per broadcasted
+position. Timezone labels do not alter the answer: differently displayed local
+times compare equal when they identify the same instant on the epoch axis.
 
-This page is also the canonical reference for the sibling comparison methods:
-
-- `ne`
-- `lt`
-- `le`
-- `gt`
-- `ge`
-
-All six methods share the same shape and broadcast contract. The only thing
-that changes is the comparison relation.
-
-## Parameters
-
-**other**
-
-The timeline to compare against.
-
-This may be the same shape as `self`, or a scalar/broadcastable timeline when
-the comparison is conceptually "compare every element to one timestamp".
-
-Missing timestamps participate conservatively: a missing time does not compare
-as less-than or greater-than any real timestamp.
-
-## Returns
-
-`Series`
-    A boolean series describing the comparison result element by element.
-
-## Examples
-
-Example 1. Equality keeps only rows where the timestamps match exactly.
+The result is a boolean `Series`, not one `bool`:
 
 ```cpp
-auto out = base.eq(other);
-std::cout << pluss::series::print(out) << "\n";
+const auto times = pluss::timeline::make({
+    "2024-01-01T00:00:00Z", "2024-01-01T02:00:00Z"});
+const auto boundary = pluss::timeline::make("2024-01-01T02:00:00Z");
+
+std::cout << pluss::series::print(times.eq(boundary)) << '\n';
+std::cout << pluss::series::print(times == boundary) << '\n';
+```
+
+### Output
+
+Both expressions produce:
+
+```text
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+```
+
+The scalar has shape `[]`; broadcasting pairs it with both elements and leaves
+the result shape `[2]`. Higher-rank operands follow the same trailing-axis
+rules. Shapes that cannot broadcast are rejected rather than truncated or
+flattened.
+
+## Equality Is About The Instant
+
+```cpp
+const auto utc = pluss::timeline::make("2024-07-01T18:00:00Z");
+const auto local = utc.tz_convert("America/Edmonton");
+std::cout << std::boolalpha << (utc == local).item<bool>() << '\n';
 ```
 
 ### Output
 
 ```text
-Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
-data=[true, false, false, false]
+true
 ```
 
-Example 2. Less-than and greater-than comparisons answer true temporal ordering
-questions.
+`tz_convert()` changes local calendar presentation, not the represented
+instant. Compare `tz()` separately if timezone metadata is part of an
+application invariant.
+
+## `NaT` And Aggregate Decisions
+
+An absent instant is not equal to anything, including another `NaT`:
 
 ```cpp
-auto earlier = base.lt(other);
-auto later_or_equal = base.ge(other);
-std::cout << pluss::series::print(earlier) << "\n";
-std::cout << pluss::series::print(later_or_equal) << "\n";
+const auto values = pluss::timeline::make({"", "2024-01-01T00:00:00Z"});
+std::cout << pluss::series::print(values == values) << '\n';
 ```
 
 ### Output
 
-`base.lt(other)`:
-
 ```text
-Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
-data=[false, true, false, true]
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
 ```
 
-`base.ge(other)`:
+Use `(a == b).all().item<bool>()` for one whole-array decision. If absent
+positions require special equivalence, inspect `isnat()` and encode that policy
+in the mask before reducing.
 
-```text
-Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
-data=[true, false, true, false]
-```
+## Failure Modes
 
-## Related Methods
-
-- `ne(other)`
-  True where timestamps differ.
-- `lt(other)`
-  True where `self < other`.
-- `le(other)`
-  True where `self <= other`.
-- `gt(other)`
-  True where `self > other`.
-- `ge(other)`
-  True where `self >= other`.
-
-## Notes
-
-- Comparison methods are usually the front door into mask-based temporal logic.
-- Pair them with [`where`](where.md) when you want a temporal branch.
-- Pair them with `DataFrame` or `Thread` filtering when the timeline lives in a
-  table column.
+- Both operands must be defined Timeline values.
+- Their shapes must be broadcast-compatible.
+- Equality does not parse text; construct a Timeline first.
 
 ## See Also
 
-- [`Timeline::where`](where.md)
+- [`Timeline operators`](operators.md)
+- [`Timeline::ne`](ne.md)
 - [`Timeline::isnat`](isnat.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="diff.html">
-    <span class="label">Previous</span>
-    <span class="title">diff</span>
-  </a>
-  <a class="next-link" href="isnat.html">
-    <span class="label">Next</span>
-    <span class="title">isnat</span>
-  </a>
+  <a class="prev-link" href="diff.html"><span class="label">Previous</span><span class="title">diff</span></a>
+  <a class="next-link" href="fill_like.html"><span class="label">Next</span><span class="title">fill_like</span></a>
 </div>

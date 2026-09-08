@@ -51,15 +51,15 @@ Timeline(shape=[4], tz=UTC)
 
 - [`Timeline::floor`](floor.md)
 - [`Timeline::ceil`](ceil.md)
-- [`Timeline::normalize`](normalize.md)
+- [`Timeline::date`](date.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ceil.html">
+  <a class="prev-link" href="repeat.html">
     <span class="label">Previous</span>
-    <span class="title">ceil</span>
+    <span class="title">repeat</span>
   </a>
-  <a class="next-link" href="normalize.html">
+  <a class="next-link" href="date.html">
     <span class="label">Next</span>
-    <span class="title">normalize</span>
+    <span class="title">date</span>
   </a>
 </div>

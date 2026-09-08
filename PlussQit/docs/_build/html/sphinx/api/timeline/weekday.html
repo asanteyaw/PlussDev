@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=151dd15e"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::dayofyear" href="dayofyear.html" />
-    <link rel="prev" title="Timeline::millisecond" href="millisecond.html" />
+    <link rel="next" title="Timeline::weekday_name" href="weekday_name.html" />
+    <link rel="prev" title="Timeline::week_scalar" href="week_scalar.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,7 +44,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">weekday</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">dayofweek()</span></code>, <code class="docutils literal notranslate"><span class="pre">dow()</span></code>, and <code class="docutils literal notranslate"><span class="pre">weekday_()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">weekday()</span></code> is the sole public spelling.</p>
 </section>
 <section id="number-the-days-from-monday">
 <h2>Number The Days From Monday<a class="headerlink" href="#number-the-days-from-monday" title="Link to this heading">¶</a></h2>
@@ -79,7 +79,7 @@
 </tr>
 </tbody>
 </table>
-<p>The method is elementwise and shape-preserving. A missing timestamp maps to
+<p>The method is elementwise and shape-preserving. An absent instant maps to
 <code class="docutils literal notranslate"><span class="pre">-1</span></code>, which is outside the valid weekday range.</p>
 </section>
 <section id="example-verify-the-numbering-convention">
@@ -130,7 +130,7 @@ than embedding numeric codes throughout application logic.</p></li>
 <li><p><a class="reference internal" href="day.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">day</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="millisecond.html"><span class="label">Previous</span><span class="title">millisecond</span></a>
+  <a class="prev-link" href="week_scalar.html"><span class="label">Previous</span><span class="title">week_scalar</span></a>
   <a class="next-link" href="dayofyear.html"><span class="label">Next</span><span class="title">dayofyear</span></a>
 </div>
 <!-- pluss-hand-authored -->
@@ -175,6 +175,7 @@ than embedding numeric codes throughout application logic.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -225,8 +226,8 @@ than embedding numeric codes throughout application logic.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="millisecond.html" title="previous chapter">Timeline::millisecond</a></li>
-      <li>Next: <a href="dayofyear.html" title="next chapter">Timeline::dayofyear</a></li>
+      <li>Previous: <a href="week_scalar.html" title="previous chapter">Timeline::week_scalar</a></li>
+      <li>Next: <a href="weekday_name.html" title="next chapter">Timeline::weekday_name</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

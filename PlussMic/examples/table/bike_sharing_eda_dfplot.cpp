@@ -195,7 +195,7 @@ std::vector<double> thread_as_numeric(const pluss::table::Thread& thread) {
     case pluss::table::ThreadKind::Series:
       return thread.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
     case pluss::table::ThreadKind::Timeline: {
-      const auto ticks = thread.as_timeline().to_epoch_nanos_vector();
+      const auto ticks = thread.as_timeline().ticks();
       std::vector<double> values;
       values.reserve(ticks.size());
       for (const auto tick : ticks) {
@@ -204,7 +204,7 @@ std::vector<double> thread_as_numeric(const pluss::table::Thread& thread) {
       return values;
     }
     case pluss::table::ThreadKind::TimeIndex: {
-      const auto ticks = thread.as_timeindex().timeline().to_epoch_nanos_vector();
+      const auto ticks = thread.as_timeindex().timeline().ticks();
       std::vector<double> values;
       values.reserve(ticks.size());
       for (const auto tick : ticks) {

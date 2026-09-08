@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <initializer_list>
 #include <iterator>
+#include <limits>
 #include <random>
 #include <ranges>
 #include <span>
@@ -28,6 +29,28 @@
 #include "CodeH/compat/Invoke.h"
 
 namespace pluss::timeline {
+
+struct FormatOptions {
+  std::string pattern{"%Y-%m-%dT%H:%M:%S.%f%z"};
+  std::string timezone{};
+  std::string nat{"NaT"};
+  int fractional_digits{9};
+  bool trim_fractional_zeros{false};
+};
+
+inline pluss::Note format(const pluss::Timeline& value,
+                          const FormatOptions& options = {}) {
+  return pluss::codeh::detail::impl_format(
+      value, options.pattern, options.timezone, options.nat,
+      options.fractional_digits, options.trim_fractional_zeros);
+}
+
+inline pluss::Note format(const pluss::Timeline& value,
+                          std::string_view pattern) {
+  auto options = FormatOptions{};
+  options.pattern = pattern;
+  return format(value, options);
+}
 
 // ---- Public factories (preferred construction path) ----
 //
@@ -109,12 +132,22 @@ inline pluss::Timeline from_epoch(pluss::msharp::RangeView::Of<std::int64_t> fla
 // file, see epoch() above) to attach the requested tz label.
 inline pluss::Timeline from_epoch(pluss::codeh::detail::Int64FlatReader data, std::string_view tz_name) {
   pluss::Timeline t = pluss::codeh::ops_internal::timeline_from_epoch_nanos(data.flat(), data.sizes());
-  return pluss::codeh::ops_internal::timeline_from_series(t.unsafe_ticks(), std::string(tz_name));
+  return pluss::codeh::detail::impl_tz_convert(t, tz_name);
 }
 inline pluss::Timeline from_epoch(pluss::msharp::RangeView::Of<std::int64_t> flat,
                                   pluss::msharp::RangeView::Of<std::int64_t> sizes,
                                   std::string_view tz_name) {
   return from_epoch(pluss::codeh::detail::Int64FlatReader(flat, sizes), tz_name);
+}
+
+inline pluss::Timeline from_epoch(const pluss::Series& values,
+                                  std::string_view tz_name = "UTC") {
+  CODEM_CHECK(values.defined(), "pluss::timeline::from_epoch: undefined Series");
+  CODEM_CHECK(values.scalar_type() == pluss::ScalarType::Int64,
+              "pluss::timeline::from_epoch: Series must have int64 dtype");
+  const auto flat = values.to_vec<std::int64_t>();
+  const std::vector<std::int64_t> shape(values.sizes().begin(), values.sizes().end());
+  return from_epoch(flat, shape, tz_name);
 }
 
 inline pluss::Timeline date_range(const pluss::Timeline& start,
@@ -125,20 +158,35 @@ inline pluss::Timeline date_range(const pluss::Timeline& start,
 }
 
 // pluss::timeline::unite(values) -- joins N Timelines into one, in the order
-// given. Unlike pluss::series::unite/pluss::unite (a real dim-aware N-D
-// join, since Series has genuine per-dimension pile/unite methods), this
-// wraps Timeline::concat, which always flattens every operand to 1D first --
-// there is no Timeline::pile (no way to stack into a higher-rank result),
-// and unite here does not take a `dim` the way Series' does, since Timeline
-// has no dim-aware join to call. If N-D-preserving pile/unite for Timeline
-// (or Duration/Note/TimeIndex) is needed later, that's new engine work, not
-// a rename of this.
+// given. This factory deliberately flattens each operand before assembly;
+// Timeline::concat is the separate rank-preserving axis-0 method.
 inline pluss::Timeline unite(pluss::msharp::RangeView::Of<pluss::Timeline> values) {
   CODEM_CHECK(!values.empty(), "pluss::timeline::unite: at least one Timeline is required");
   if (values.size() == 1) {
     return values.front();
   }
-  return values.front().concat(values.drop_front().vec());
+
+  const auto timezone = std::string(values.front().tz());
+  std::size_t total = 0;
+  for (const auto& value : values) {
+    CODEM_CHECK(value.tz() == timezone,
+                "pluss::timeline::unite: timezone mismatch");
+    const auto n = static_cast<std::size_t>(value.numel());
+    CODEM_CHECK(n <= std::numeric_limits<std::size_t>::max() - total,
+                "pluss::timeline::unite: element count overflows size_t");
+    total += n;
+  }
+  CODEM_CHECK(total <= static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max()),
+              "pluss::timeline::unite: result length overflows int64");
+
+  std::vector<std::int64_t> flat;
+  flat.reserve(total);
+  for (const auto& value : values) {
+    value.copy_ticks(std::back_inserter(flat));
+  }
+  const std::array<std::int64_t, 1> shape{
+      static_cast<std::int64_t>(flat.size())};
+  return from_epoch(flat, shape, timezone);
 }
 inline pluss::Timeline unite(std::initializer_list<pluss::Timeline> values) {
   return unite(pluss::msharp::RangeView::Of<pluss::Timeline>(values));
@@ -167,6 +215,8 @@ inline std::ostream& print(std::ostream& os, const pluss::Timeline& t,
 // Routed through Series::zeros' own memset-based factory (wrapped, not
 // copied, by ops_internal::timeline_from_series).
 inline pluss::Timeline epoch(pluss::msharp::RangeView::Int sizes = {}) {
+  (void)pluss::codeh::factory_detail::checked_numel(
+      sizes, "pluss::timeline::epoch");
   return pluss::codeh::ops_internal::timeline_from_series(
       pluss::series::zeros(sizes, pluss::codem::ScalarType::Int64));
 }
@@ -180,11 +230,12 @@ inline pluss::Timeline epoch(std::initializer_list<std::int64_t> sizes) {
 // already uses, rather than Series::full's double-typed fill_value.
 inline pluss::Timeline full(pluss::msharp::RangeView::Int sizes, const pluss::Timeline& fill_value) {
   CODEM_CHECK(fill_value.dim() == 0, "pluss::timeline::full: fill_value must be a scalar Timeline");
-  std::int64_t n = 1;
-  for (const auto s : sizes) n *= s;
-  const std::int64_t ticks = pluss::codeh::detail::impl_to_epoch_nanos_flat(fill_value)[0];
+  const auto n = pluss::codeh::factory_detail::checked_numel(sizes, "pluss::timeline::full");
+  const std::int64_t ticks = fill_value.ticks()[0];
   const std::vector<std::int64_t> flat(static_cast<std::size_t>(n), ticks);
-  return pluss::codeh::ops_internal::timeline_from_epoch_nanos(flat, sizes);
+  auto out = pluss::codeh::ops_internal::timeline_from_epoch_nanos(flat, sizes);
+  return pluss::codeh::ops_internal::timeline_from_series(
+      out.unsafe_ticks().clone(), std::string(fill_value.tz()));
 }
 inline pluss::Timeline full(std::initializer_list<std::int64_t> sizes, const pluss::Timeline& fill_value) {
   return full(pluss::msharp::RangeView::Int(sizes), fill_value);
@@ -193,26 +244,6 @@ inline pluss::Timeline full(std::initializer_list<std::int64_t> sizes, const plu
 // pluss::timeline::full_like(like, fill_value) -> same shape as `like`, filled with fill_value.
 inline pluss::Timeline full_like(const pluss::Timeline& like, const pluss::Timeline& fill_value) {
   return full(like.sizes(), fill_value);
-}
-
-inline pluss::Timeline rep(const pluss::Timeline& fill_value, pluss::msharp::RangeView::Int sizes) {
-  return full(sizes, fill_value);
-}
-inline pluss::Timeline rep(const pluss::Timeline& fill_value, std::initializer_list<std::int64_t> sizes) {
-  return rep(fill_value, pluss::msharp::RangeView::Int(sizes));
-}
-inline pluss::Timeline rep(std::string_view value, pluss::msharp::RangeView::Int sizes) {
-  const auto kind = pluss::codeh::factory_detail::classify_text(value);
-  if (kind == pluss::codeh::factory_detail::TimelineTextKind::DateOnly) {
-    return rep(date(value), sizes);
-  }
-  if (kind == pluss::codeh::factory_detail::TimelineTextKind::TimeOnly) {
-    return rep(time(value), sizes);
-  }
-  return rep(make(value), sizes);
-}
-inline pluss::Timeline rep(std::string_view value, std::initializer_list<std::int64_t> sizes) {
-  return rep(value, pluss::msharp::RangeView::Int(sizes));
 }
 
 // pluss::timeline::random(sizes, lo, hi, seed) -> uniform-random instants in
@@ -228,16 +259,19 @@ inline pluss::Timeline random(pluss::msharp::RangeView::Int sizes,
                               const pluss::Timeline& hi,
                               std::uint64_t seed = 0) {
   CODEM_CHECK(lo.dim() == 0 && hi.dim() == 0, "pluss::timeline::random: lo/hi must be scalar Timelines");
-  const std::int64_t lo_ns = pluss::codeh::detail::impl_to_epoch_nanos_flat(lo)[0];
-  const std::int64_t hi_ns = pluss::codeh::detail::impl_to_epoch_nanos_flat(hi)[0];
+  const std::int64_t lo_ns = lo.ticks()[0];
+  const std::int64_t hi_ns = hi.ticks()[0];
+  CODEM_CHECK(lo_ns != pluss::Timeline::kNaT && hi_ns != pluss::Timeline::kNaT,
+              "pluss::timeline::random: NaT bounds are unsupported");
   CODEM_CHECK(hi_ns > lo_ns, "pluss::timeline::random: expected hi > lo");
-  std::int64_t n = 1;
-  for (const auto s : sizes) n *= s;
+  const auto n = pluss::codeh::factory_detail::checked_numel(sizes, "pluss::timeline::random");
   auto rng = pluss::detail::FactoryCore::make_rng(seed);
   std::uniform_int_distribution<std::int64_t> dist(lo_ns, hi_ns - 1);
   std::vector<std::int64_t> flat(static_cast<std::size_t>(n));
   for (auto& v : flat) v = dist(rng);
-  return pluss::codeh::ops_internal::timeline_from_epoch_nanos(flat, sizes);
+  auto out = pluss::codeh::ops_internal::timeline_from_epoch_nanos(flat, sizes);
+  return pluss::codeh::ops_internal::timeline_from_series(
+      out.unsafe_ticks().clone(), std::string(lo.tz()));
 }
 inline pluss::Timeline random(std::initializer_list<std::int64_t> sizes,
                               const pluss::Timeline& lo,
@@ -286,21 +320,31 @@ inline pluss::Timeline arange(const pluss::Timeline& start,
                               bool inclusive = true) {
   CODEM_CHECK(start.dim() == 0 && end.dim() == 0 && step.dim() == 0,
               "pluss::timeline::arange: start, end, and step must be scalar");
-  const auto s = pluss::codeh::detail::impl_to_epoch_nanos_flat(start)[0];
-  const auto e = pluss::codeh::detail::impl_to_epoch_nanos_flat(end)[0];
+  const auto s = start.ticks()[0];
+  const auto e = end.ticks()[0];
   const auto delta = pluss::codeh::detail::impl_to_nanos_flat(step)[0];
+  CODEM_CHECK(delta != pluss::Duration::kNaT,
+              "pluss::timeline::arange: step cannot be NaT");
   CODEM_CHECK(delta != 0, "pluss::timeline::arange: step cannot be 0");
   CODEM_CHECK(s != pluss::Timeline::kNaT && e != pluss::Timeline::kNaT,
               "pluss::timeline::arange: NaT endpoints are unsupported");
 
   std::vector<std::int64_t> out;
   if (delta > 0) {
-    for (std::int64_t v = s; inclusive ? (v <= e) : (v < e); v += delta) {
+    for (std::int64_t v = s; inclusive ? (v <= e) : (v < e);) {
       out.push_back(v);
+      if (v > std::numeric_limits<std::int64_t>::max() - delta) break;
+      const auto next = v + delta;
+      if (inclusive ? (next > e) : (next >= e)) break;
+      v = next;
     }
   } else {
-    for (std::int64_t v = s; inclusive ? (v >= e) : (v > e); v += delta) {
+    for (std::int64_t v = s; inclusive ? (v >= e) : (v > e);) {
       out.push_back(v);
+      if (v < std::numeric_limits<std::int64_t>::min() - delta) break;
+      const auto next = v + delta;
+      if (inclusive ? (next < e) : (next <= e)) break;
+      v = next;
     }
   }
 

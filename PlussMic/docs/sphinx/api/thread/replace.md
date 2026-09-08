@@ -265,8 +265,8 @@ fill-nulls-only (`from = null`, equivalent to [`fillnull()`](fillnull.md)).
 ```cpp
 auto readings = Thread(pluss::make_series({-1.0, 12.5, -1.0, 30.0}));
 
-auto nullified = readings.replace(-1.0, pluss::null);
-auto filled = nullified.replace(pluss::null, 0.0);
+auto nullified = readings.replace(-1.0, pluss::series::null);
+auto filled = nullified.replace(pluss::series::null, 0.0);
 std::cout << nullified;
 std::cout << filled;
 ```

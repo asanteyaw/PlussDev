@@ -8,14 +8,14 @@
 Series Timeline::week() const
 ```
 
-Aliases: `weekofyear()`, `woy()`, and `week_()`.
+`week()` is the sole public spelling.
 
 ## Read The ISO Week Number
 
 `week()` returns the ISO week number of each local date as shape-preserving
 `int32`. ISO weeks begin on Monday and are numbered `1` through `53`. Week 1 is
 the week containing the year's first Thursday, so the week-number boundary
-does not always coincide with 1 January. Missing timestamps return `-1`.
+does not always coincide with 1 January. Absent instants return `-1`.
 
 This convention explains an initially surprising but correct result: Friday,
 1 January 2021 belongs to ISO week 53 of the preceding ISO week-year.
@@ -76,6 +76,6 @@ ignore, and never pair the number blindly with the civil year.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="quarter.html"><span class="label">Previous</span><span class="title">quarter</span></a>
-  <a class="next-link" href="is_leap_year.html"><span class="label">Next</span><span class="title">is_leap_year</span></a>
+  <a class="next-link" href="week_scalar.html"><span class="label">Next</span><span class="title">week_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->

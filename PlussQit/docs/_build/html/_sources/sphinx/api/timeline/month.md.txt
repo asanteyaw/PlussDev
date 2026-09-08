@@ -8,7 +8,7 @@
 Series Timeline::month() const
 ```
 
-Aliases: `mon()`, `mo()`, `months()`, and `month_()`.
+`month()` is the sole public spelling.
 
 ## Read The Month Number
 
@@ -66,7 +66,7 @@ which that instant is interpreted, so the month changed at the boundary.
 ## Gotchas And Failure Modes
 
 - The valid range is `1` through `12`; `0` is never January.
-- `-1` identifies a missing timestamp.
+- `-1` identifies an absent instant.
 - For a readable label such as `February`, use `month_name()`.
 - For three-month buckets use `quarter()` rather than hand-written thresholds.
 
@@ -78,7 +78,7 @@ which that instant is interpreted, so the month changed at the boundary.
 - [`quarter`](quarter.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="year.html"><span class="label">Previous</span><span class="title">year</span></a>
+  <a class="prev-link" href="minutes_between.html"><span class="label">Previous</span><span class="title">minutes_between</span></a>
   <a class="next-link" href="day.html"><span class="label">Next</span><span class="title">day</span></a>
 </div>
 <!-- pluss-hand-authored -->

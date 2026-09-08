@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Timeline::sort &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Timeline::span" href="span.html" />
+    <link rel="prev" title="Timeline::sizes" href="sizes.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="timeline-sort">
+<h1>Timeline::sort<a class="headerlink" href="#timeline-sort" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">sort</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="order-instants-chronologically">
+<h2>Order Instants Chronologically<a class="headerlink" href="#order-instants-chronologically" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">sort()</span></code> returns a new one-dimensional Timeline in ascending temporal order.
+It compares stored instants at nanosecond precision, preserves the receiver’s
+timezone, and leaves the receiver unchanged.</p>
+<p>Sorting is stable. When two entries represent the same instant, their relative
+input order is retained. All valid instants precede <code class="docutils literal notranslate"><span class="pre">NaT</span></code>; multiple absent
+entries remain at the end in their original order. This makes the result a
+valid receiver for the two <code class="docutils literal notranslate"><span class="pre">searchsorted</span></code> methods.</p>
+</section>
+<section id="example-1-sort-repeated-and-absent-instants">
+<h2>Example 1: Sort Repeated And Absent Instants<a class="headerlink" href="#example-1-sort-repeated-and-absent-instants" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-03-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-03-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-06-01T12:00:00.123456789Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">sort</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[6], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-06-01 12:00:00, 2025-03-01 00:00:00, 2025-03-01 00:00:00, NaT, NaT ]
+</pre></div>
+</div>
+<p>The default printer shows whole seconds, but the June timestamp still carries
+its <code class="docutils literal notranslate"><span class="pre">.123456789</span></code> fractional component internally. Ordering does not round it.</p>
+</section>
+</section>
+<section id="example-2-confirm-that-sorting-is-out-of-place">
+<h2>Example 2: Confirm That Sorting Is Out Of Place<a class="headerlink" href="#example-2-confirm-that-sorting-is-out-of-place" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">sort</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">input</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">sorted</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[6], tz=UTC)
+[ 2025-03-01 00:00:00, NaT, 2024-01-01 00:00:00, 2025-03-01 00:00:00, NaT, 2024-06-01 12:00:00 ]
+Timeline(shape=[6], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-06-01 12:00:00, 2025-03-01 00:00:00, 2025-03-01 00:00:00, NaT, NaT ]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="choosing-between-ordering-operations">
+<h2>Choosing Between Ordering Operations<a class="headerlink" href="#choosing-between-ordering-operations" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sort()</span></code> returns all entries reordered, including duplicates and <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argsort()</span></code> returns the positions that describe that reorder.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unique()</span></code> removes repeated values while preserving first-seen order; it does
+not sort.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min()</span></code> and <code class="docutils literal notranslate"><span class="pre">max()</span></code> reduce the entire Timeline to one scalar instant.</p></li>
+</ul>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Only a 1-D Timeline is accepted.</p></li>
+<li><p>There is no descending overload on this Timeline surface.</p></li>
+<li><p>The timezone affects rendering, not the chronological comparison.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">sort()</span></code> is a stable, ascending, out-of-place temporal sort with <code class="docutils literal notranslate"><span class="pre">NaT</span></code> last and
+timezone and nanosecond identity preserved.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="argsort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argsort</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="unique.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">unique</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="searchsorted_left.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">searchsorted_left</span></code></span></a></p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="max.html"><span class="label">Previous</span><span class="title">max</span></a>
+  <a class="next-link" href="span.html"><span class="label">Next</span><span class="title">span</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
+      <li>Previous: <a href="sizes.html" title="previous chapter">Timeline::sizes</a></li>
+      <li>Next: <a href="span.html" title="next chapter">Timeline::span</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/timeline/sort.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

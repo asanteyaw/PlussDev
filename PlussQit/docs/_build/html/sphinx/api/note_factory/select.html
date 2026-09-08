@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::note::select &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Timeline API Reference" href="../../timeline_api_reference.html" />
+    <link rel="prev" title="pluss::note::rep" href="rep.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="pluss-note-select">
+<h1>pluss::note::select<a class="headerlink" href="#pluss-note-select" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../note_factory_api_reference.html"><span class="doc std std-doc">Back to Note Factory API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">series_range</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span><span class="w"> </span><span class="n">note_range</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
+<span class="w">                         </span><span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
+<span class="w">                         </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Note</span><span class="o">&gt;</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
+<span class="w">                         </span><span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">condition</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">choice</span><span class="p">,</span>
+<span class="w">                         </span><span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">series_range</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span><span class="w"> </span><span class="n">note_range</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
+<span class="w">                         </span><span class="n">string_view</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
+<span class="w">                         </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Note</span><span class="o">&gt;</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
+<span class="w">                         </span><span class="n">string_view</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">condition</span><span class="p">,</span><span class="w"> </span><span class="n">string_view</span><span class="w"> </span><span class="n">choice</span><span class="p">,</span>
+<span class="w">                         </span><span class="n">string_view</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The single-<code class="docutils literal notranslate"><span class="pre">condition</span></code> forms are one-branch shorthands. Any <code class="docutils literal notranslate"><span class="pre">string_view</span></code>
+choice or default is a scalar text cell — sugar for
+<code class="docutils literal notranslate"><span class="pre">pluss::note::make(text)</span></code>.</p>
+</section>
+<section id="build-a-note-by-ordered-boolean-conditions">
+<h2>Build A <code class="docutils literal notranslate"><span class="pre">Note</span></code> By Ordered Boolean Conditions<a class="headerlink" href="#build-a-note-by-ordered-boolean-conditions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">select()</span></code> assembles one <code class="docutils literal notranslate"><span class="pre">Note</span></code> from a list of boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> conditions
+and a matching list of text choices. At every output cell it walks the
+conditions <strong>first to last</strong> and takes the choice paired with the first one
+that is true there; if none is true, <code class="docutils literal notranslate"><span class="pre">default_value</span></code> supplies the cell.</p>
+<p>This is the text counterpart of <code class="docutils literal notranslate"><span class="pre">pluss::series::select</span></code> and NumPy’s
+<code class="docutils literal notranslate"><span class="pre">select</span></code> — an <em>n</em>-way, priority-ordered generalisation of “where”. It is the
+tool for turning several overlapping masks into a single labelled column:
+bucket names from numeric thresholds, status strings from a set of flags, a
+category per row from a cascade of predicates.</p>
+<section id="ordering-matters">
+<h3>Ordering matters<a class="headerlink" href="#ordering-matters" title="Link to this heading">¶</a></h3>
+<p>Conditions are a priority list, not a set. Where two conditions are true at
+the same cell, the <strong>earlier</strong> one wins — later branches are fallbacks, not
+overrides. Put the most specific or highest-priority condition first.</p>
+</section>
+<section id="shapes-and-scalar-broadcasting">
+<h3>Shapes and scalar broadcasting<a class="headerlink" href="#shapes-and-scalar-broadcasting" title="Link to this heading">¶</a></h3>
+<p>An operand (condition, choice, or default) is <em>scalar-like</em> when it holds
+exactly one element; such an operand applies to every output cell. Every
+operand that is <strong>not</strong> scalar-like must have the same shape, and that shape
+is the output shape. So you can:</p>
+<ul class="simple">
+<li><p>pair full-shaped conditions with full-shaped choices, or</p></li>
+<li><p>pair full-shaped conditions with a single scalar choice that fills wherever
+that condition wins, or</p></li>
+<li><p>give a scalar-like condition (a one-element <code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code>) that turns its
+whole branch on or off.</p></li>
+</ul>
+</section>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>At least one condition, and <code class="docutils literal notranslate"><span class="pre">conditions.size()</span> <span class="pre">==</span> <span class="pre">choices.size()</span></code>.</p></li>
+<li><p>Every condition must be a <strong>defined <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-dtype <code class="docutils literal notranslate"><span class="pre">Series</span></code></strong>. Numeric
+“truthiness” is not accepted — convert with a comparison first.</p></li>
+<li><p>Every choice and the default must be defined.</p></li>
+<li><p>The result is <strong>UTF-8 mode</strong>. All branches are read and shape-checked
+before assembly, so a malformed branch is an error even where its
+condition is false everywhere.</p></li>
+</ul>
+</section>
+</section>
+<section id="example-1-single-condition-text-shorthand">
+<h2>Example 1: Single Condition, Text Shorthand<a class="headerlink" href="#example-1-single-condition-text-shorthand" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">flags</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;YES&quot;, &quot;no&quot;, &quot;YES&quot;]
+</pre></div>
+</div>
+<p>The scalar choice <code class="docutils literal notranslate"><span class="pre">&quot;YES&quot;</span></code> and default <code class="docutils literal notranslate"><span class="pre">&quot;no&quot;</span></code> broadcast across the
+condition’s three cells.</p>
+</section>
+</section>
+<section id="example-2-single-condition-with-explicit-note-operands">
+<h2>Example 2: Single Condition With Explicit <code class="docutils literal notranslate"><span class="pre">Note</span></code> Operands<a class="headerlink" href="#example-2-single-condition-with-explicit-note-operands" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span>
+<span class="w">    </span><span class="n">flags</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;HIT&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;miss&quot;</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;HIT&quot;, &quot;miss&quot;, &quot;HIT&quot;]
+</pre></div>
+</div>
+<p>Identical behavior to the shorthand — use this form when the choice is
+already a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (for instance a full-shaped column).</p>
+</section>
+</section>
+<section id="example-3-two-ordered-conditions-first-true-wins">
+<h2>Example 3: Two Ordered Conditions, First True Wins<a class="headerlink" href="#example-3-two-ordered-conditions-first-true-wins" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">early</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">late</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">});</span>
+
+<span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="n">early</span><span class="p">,</span><span class="w"> </span><span class="n">late</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;early&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;late&quot;</span><span class="p">)},</span>
+<span class="w">    </span><span class="s">&quot;none&quot;</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[4], dim=1, numel=4, encoding=utf8)
+[&quot;early&quot;, &quot;early&quot;, &quot;late&quot;, &quot;none&quot;]
+</pre></div>
+</div>
+<p>At cell 1 both conditions are true and the earlier branch supplies
+<code class="docutils literal notranslate"><span class="pre">&quot;early&quot;</span></code>. Cell 3 satisfies neither, so it takes the default.</p>
+</section>
+</section>
+<section id="example-4-a-scalar-choice-broadcast-under-a-2-d-condition">
+<h2>Example 4: A Scalar Choice Broadcast Under A 2-D Condition<a class="headerlink" href="#example-4-a-scalar-choice-broadcast-under-a-2-d-condition" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;X&quot;, &quot;.&quot;], 
+  [&quot;.&quot;, &quot;X&quot;]
+]
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">2×2</span></code> condition sets the output shape; the scalar choice fills wherever
+the mask is true and the scalar default fills the rest.</p>
+</section>
+</section>
+<section id="example-5-a-non-boolean-condition-is-rejected">
+<h2>Example 5: A Non-Boolean Condition Is Rejected<a class="headerlink" href="#example-5-a-non-boolean-condition-is-rejected" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}),</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;n&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::note::select: conditions must use Bool dtype
+</pre></div>
+</div>
+<p>Pass a real boolean mask — <code class="docutils literal notranslate"><span class="pre">series</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">series</span> <span class="pre">==</span> <span class="pre">value</span></code>, and so on.</p>
+</section>
+</section>
+<section id="example-6-condition-and-choice-counts-must-match">
+<h2>Example 6: Condition And Choice Counts Must Match<a class="headerlink" href="#example-6-condition-and-choice-counts-must-match" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">});</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">select</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)},</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::note::select: condition/choice count mismatch
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="make.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::make</span></code></span></a>: build the choice and default columns.</p></li>
+<li><p><a class="reference internal" href="full.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::full</span></code></span></a> / <a class="reference internal" href="rep.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::rep</span></code></span></a>: quick
+same-shaped choice or default columns.</p></li>
+<li><p><a class="reference internal" href="format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::format</span></code></span></a>: assemble a single string rather than
+choosing among prepared ones.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rep.html">
+    <span class="label">Previous</span>
+    <span class="title">rep</span>
+  </a>
+  <a class="next-link" href="../../note_factory_api_reference.html">
+    <span class="label">Next</span>
+    <span class="title">Note Factory API Reference</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../note_factory_api_reference.html">Note Factory API Reference</a><ul>
+      <li>Previous: <a href="rep.html" title="previous chapter">pluss::note::rep</a></li>
+      <li>Next: <a href="../../timeline_api_reference.html" title="next chapter">Timeline API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/note_factory/select.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -8,7 +8,7 @@
 Series Timeline::is_year_start() const
 ```
 
-Aliases: `is_year_begin()` and `is_yearstart()`.
+`is_year_start()` is the sole public spelling.
 
 ## Recognize January 1 In Local Time
 

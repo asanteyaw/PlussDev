@@ -131,11 +131,11 @@ dim=1, is_scalar=false, host scalar=true
 
 ## See Also
 
-- [`Timeline::to_epoch_nanos_vector`](to_epoch_nanos_vector.md)
+- [`Timeline::ticks`](ticks.md)
 - [`Timeline::epoch_nanos`](epoch_nanos.md)
 - [`Timeline::is_scalar`](is_scalar.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tz.html"><span class="label">Previous</span><span class="title">tz</span></a>
-  <a class="next-link" href="to_epoch_nanos_vector.html"><span class="label">Next</span><span class="title">to_epoch_nanos_vector</span></a>
+  <a class="next-link" href="from_buffer.html"><span class="label">Next</span><span class="title">from_buffer</span></a>
 </div>

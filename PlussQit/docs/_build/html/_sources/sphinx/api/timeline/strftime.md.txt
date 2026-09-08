@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::strftime(std::string_view fmt) -> Note
+Note Timeline::strftime(std::string_view format) const
 ```
 
 ## What It Does
@@ -36,6 +36,10 @@ Common directives include:
   Zero-padded minute.
 - `%S`
   Zero-padded second.
+- `%F`
+  ISO date, equivalent to `%Y-%m-%d`.
+- `%T`
+  Whole-second clock time, equivalent to `%H:%M:%S`.
 - `%f`
   Fractional seconds.
 - `%z`
@@ -92,6 +96,16 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
   shorter and more explicit.
 - The output lives in `Note`, so it naturally composes with the text-processing
   surfaces in PlussQit and PlussAI.
+- `Note::vector()` contains non-owning `string_view` values. Keep the formatted
+  `Note` alive while using that vector:
+
+  ```cpp
+  const auto formatted = timeline.strftime("%F");
+  const auto dates = formatted.vector(); // views remain valid with formatted alive
+  ```
+
+  Do not store the result of `timeline.strftime("%F").vector()`; the temporary
+  owning `Note` is destroyed at the end of that statement.
 
 ## See Also
 
@@ -100,9 +114,9 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 - [`Timeline::month_name`](month_name.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isoformat.html">
+  <a class="prev-link" href="span.html">
     <span class="label">Previous</span>
-    <span class="title">isoformat</span>
+    <span class="title">span</span>
   </a>
   <a class="next-link" href="to_note_iso.html">
     <span class="label">Next</span>

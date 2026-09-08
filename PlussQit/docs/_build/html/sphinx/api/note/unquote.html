@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Note::unquote &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Note::upper" href="upper.html" />
+    <link rel="prev" title="Note::tokenize_words" href="tokenize_words.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="note-unquote">
+<h1>Note::unquote<a class="headerlink" href="#note-unquote" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">unquote</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="strip-one-matching-pair-of-surrounding-quotes">
+<h2>Strip One Matching Pair Of Surrounding Quotes<a class="headerlink" href="#strip-one-matching-pair-of-surrounding-quotes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">unquote()</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with one matching
+pair of surrounding quote characters removed from each cell. It is the
+inverse of <a class="reference internal" href="quote.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">quote</span></code></span></a> and the cleanup step for values that arrive
+pre-quoted — a CSV field, a shell argument, a config string.</p>
+<p>A cell is unquoted only when <strong>both</strong> its first and last characters are the
+same quote character — either <code class="docutils literal notranslate"><span class="pre">&quot;...&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">'...'</span></code>. Then exactly those two
+characters are removed and nothing else: no unescaping, no interior
+processing, no repeated stripping. If the ends do not match (only one side
+quoted, or the two ends are different quote characters, or the cell is
+unquoted already), the cell is returned unchanged.</p>
+<p>Because neither <code class="docutils literal notranslate"><span class="pre">quote()</span></code> nor <code class="docutils literal notranslate"><span class="pre">unquote()</span></code> escapes, <code class="docutils literal notranslate"><span class="pre">quote().unquote()</span></code>
+round-trips exactly, and <code class="docutils literal notranslate"><span class="pre">unquote()</span></code> on a cell whose content itself contains
+quotes strips only the outermost pair — see Example 2.</p>
+<p>The operation is shape-preserving, cell-independent, and returns a fresh
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> (two quote characters) unquotes to the empty string.</p>
+</section>
+<section id="example-1-double-and-single-quotes">
+<h2>Example 1: Double And Single Quotes<a class="headerlink" href="#example-1-double-and-single-quotes" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">double</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&#39;single&#39;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bare&quot;</span><span class="p">}).</span><span class="n">unquote</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;double&quot;, &quot;single&quot;, &quot;bare&quot;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;bare&quot;</span></code> has no surrounding quotes and is unchanged.</p>
+</section>
+</section>
+<section id="example-2-only-a-matching-pair-is-removed">
+<h2>Example 2: Only A Matching Pair Is Removed<a class="headerlink" href="#example-2-only-a-matching-pair-is-removed" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">unbalanced&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;trailing</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\&quot;\&quot;</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">a</span><span class="se">\&quot;</span><span class="s">b</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">}).</span><span class="n">unquote</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[4], dim=1, numel=4, encoding=utf8)
+[&quot;\&quot;unbalanced&quot;, &quot;trailing\&quot;&quot;, &quot;&quot;, &quot;a\&quot;b&quot;]
+</pre></div>
+</div>
+<p>Cells 0 and 1 are quoted on one side only and are left as-is. <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> unquotes
+to empty. <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;b&quot;</span></code> has matching <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> at both ends, so those two are removed,
+leaving the interior <code class="docutils literal notranslate"><span class="pre">a&quot;b</span></code>.</p>
+</section>
+</section>
+<section id="example-3-round-trip-with-quote">
+<h2>Example 3: Round-Trip With <code class="docutils literal notranslate"><span class="pre">quote</span></code><a class="headerlink" href="#example-3-round-trip-with-quote" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;payload&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;  spaced  &quot;</span><span class="p">}).</span><span class="n">quote</span><span class="p">().</span><span class="n">unquote</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;payload&quot;, &quot;  spaced  &quot;]
+</pre></div>
+</div>
+<p>The boundary spaces survive because <code class="docutils literal notranslate"><span class="pre">quote</span></code>/<code class="docutils literal notranslate"><span class="pre">unquote</span></code> touch only the outermost
+characters.</p>
+</section>
+</section>
+<section id="example-4-a-scalar">
+<h2>Example 4: A Scalar<a class="headerlink" href="#example-4-a-scalar" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">solo</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">).</span><span class="n">unquote</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;solo&quot;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="quote.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::quote</span></code></span></a>: the inverse — wrap each cell in <code class="docutils literal notranslate"><span class="pre">&quot;...&quot;</span></code>.</p></li>
+<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::strip</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">strip(&quot;\&quot;'&quot;)</span></code> removes <strong>runs</strong> of quote
+characters from both ends, not just one matching pair.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::remove_prefix</span></code> / <code class="docutils literal notranslate"><span class="pre">remove_suffix</span></code>: remove a specific
+known delimiter from one end.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="tokenize_words.html">
+    <span class="label">Previous</span>
+    <span class="title">tokenize_words</span>
+  </a>
+  <a class="next-link" href="upper.html">
+    <span class="label">Next</span>
+    <span class="title">upper</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
+      <li>Previous: <a href="tokenize_words.html" title="previous chapter">Note::tokenize_words</a></li>
+      <li>Next: <a href="upper.html" title="next chapter">Note::upper</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/note/unquote.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

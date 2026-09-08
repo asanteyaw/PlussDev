@@ -17,7 +17,6 @@ Timeline max() const { return ::pluss::codeh::_compat::invoke<Timeline>("max", *
 // ---- Reordering / uniqueness ----
 TimeIndex sort() const { return ::pluss::codeh::_compat::invoke<TimeIndex>("sort", *this); }
 TimeIndex unique() const { return ::pluss::codeh::_compat::invoke<TimeIndex>("unique", *this); }
-TimeIndex drop_duplicates() const { return unique(); }
 pluss::codem::Series argsort() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("argsort", *this); }
 
 // ---- Indexing helpers ----

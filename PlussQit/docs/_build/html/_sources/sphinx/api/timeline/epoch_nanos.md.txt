@@ -17,7 +17,7 @@ Series Timeline::epoch_nanos() const
 numeric operations: masks, reshaping, serialization utilities, exact
 differences, and custom computations that naturally operate on `Series`.
 
-Unlike [`to_epoch_nanos_vector()`](to_epoch_nanos_vector.md), this method does
+Unlike [`ticks()`](ticks.md), this method does
 not flatten a matrix or 3-D temporal array into a C++ vector. Unlike
 [`host()`](host.md), it returns one stable result type regardless of rank and
 cardinality.
@@ -33,7 +33,7 @@ the source timeline.
 ## Returns
 
 An `Int64` `Series` with the same shape and number of positions as the source
-timeline. Missing timestamps appear as `Timeline::kNaT`.
+timeline. Absent instants appear as `Timeline::kNaT`.
 
 ## Examples
 
@@ -62,7 +62,7 @@ Example 2. Compare shape-preserving and flattening exports.
 ```cpp
 auto matrix = pluss::timeline::epoch({2, 3});
 auto series = matrix.epoch_nanos();
-auto vector = matrix.to_epoch_nanos_vector();
+auto vector = matrix.ticks();
 
 std::cout << "series dim=" << series.dim()
           << ", series numel=" << series.numel()
@@ -94,7 +94,7 @@ Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=tru
 data=[true, false, true]
 ```
 
-For ordinary missing-time work, [`isvalid()`](isvalid.md) communicates this
+For ordinary validity work, [`isvalid()`](isvalid.md) communicates this
 intent more directly. The numeric form is useful when a larger numeric
 pipeline already operates on epoch ticks.
 
@@ -103,7 +103,7 @@ pipeline already operates on epoch ticks.
 - The returned `Series` contains no timezone metadata. Save `tz()` separately
   for a presentation-preserving round trip.
 - Arithmetic on raw epoch values is integer arithmetic. Prefer Timeline and
-  Duration methods when calendar or missing-time semantics matter.
+  Duration methods when calendar or absent-instant semantics matter.
 - Never treat `Timeline::kNaT` as an ordinary timestamp; filter or mask it
   before ordering or arithmetic in a generic numeric pipeline.
 - This method preserves shape; call `flatten()` explicitly if a flat `Series`
@@ -119,12 +119,12 @@ the desired integration format.
 
 ## See Also
 
-- [`Timeline::to_epoch_nanos_vector`](to_epoch_nanos_vector.md)
+- [`Timeline::ticks`](ticks.md)
 - [`Timeline::host`](host.md)
 - [`Timeline::isvalid`](isvalid.md)
 - [`Timeline::tz`](tz.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_epoch_nanos_flat.html"><span class="label">Previous</span><span class="title">to_epoch_nanos_flat</span></a>
-  <a class="next-link" href="add_duration.html"><span class="label">Next</span><span class="title">add_duration</span></a>
+  <a class="prev-link" href="copy_ticks.html"><span class="label">Previous</span><span class="title">copy_ticks</span></a>
+  <a class="next-link" href="epoch_micros.html"><span class="label">Next</span><span class="title">epoch_micros</span></a>
 </div>

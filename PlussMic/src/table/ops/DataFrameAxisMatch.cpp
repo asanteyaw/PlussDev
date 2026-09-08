@@ -547,7 +547,7 @@ Thread null_thread_like(const Thread& reference, const std::int64_t size) {
             {size},
             pluss::codem::ScalarType::Int64,
             reference.as_timeline().epoch_nanos().platform());
-        values = Thread(pluss::Timeline::fromSeries(ticks));
+        values = Thread(pluss::timeline::from_epoch(ticks));
         break;
       }
       case ThreadKind::TimeIndex: {
@@ -556,7 +556,7 @@ Thread null_thread_like(const Thread& reference, const std::int64_t size) {
             pluss::codem::ScalarType::Int64,
             reference.as_timeindex().timeline().epoch_nanos().platform());
         values = Thread(
-            pluss::Timeline::fromSeries(ticks).to_timeindex(false));
+            pluss::timeline::from_epoch(ticks).to_timeindex(false));
         break;
       }
     }

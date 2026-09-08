@@ -715,7 +715,7 @@ void bind_thread_value(sqlite3_stmt* stmt, const int index, const Thread& thread
       PLUSS_CHECK(sqlite3_bind_int64(
                       stmt,
                       index,
-                      static_cast<sqlite3_int64>(thread.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]))
+                      static_cast<sqlite3_int64>(thread.as_timeline().ticks()[static_cast<std::size_t>(row)]))
                       == SQLITE_OK,
                   "DataFrame::sql().execute: sqlite bind timeline failed");
       return;
@@ -724,7 +724,7 @@ void bind_thread_value(sqlite3_stmt* stmt, const int index, const Thread& thread
                       stmt,
                       index,
                       static_cast<sqlite3_int64>(
-                          thread.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]))
+                          thread.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]))
                       == SQLITE_OK,
                   "DataFrame::sql().execute: sqlite bind timeindex failed");
       return;
@@ -971,11 +971,11 @@ void load_source(sqlite3* db,
           case_text = std::string(labels.as_note().at(row));
           break;
         case ThreadKind::Timeline:
-          case_text = fmt::format("{}", labels.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+          case_text = fmt::format("{}", labels.as_timeline().ticks()[static_cast<std::size_t>(row)]);
           break;
         case ThreadKind::TimeIndex:
           case_text = fmt::format("{}",
-                                  labels.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+                                  labels.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
           break;
         default:
           break;

@@ -8,8 +8,6 @@
 Series Timeline::year() const
 ```
 
-Aliases: `y()`, `yr()`, `years()`, and `year_()`.
-
 ## Read The Civil Year
 
 `year()` replaces every timestamp with the four-digit year shown by the
@@ -21,10 +19,10 @@ the local date belongs to. It does not return the ISO week-numbering year; a
 date such as 1 January 2021 can therefore have `year() == 2021` and
 `week() == 53` at the same time.
 
-Missing timestamps become `-1`. Treat that value as a missing-field sentinel,
+Absent instants become `-1`. Treat that value as an absent-field sentinel,
 not as a historical year. Use `isvalid()` when the distinction matters.
 
-## Example: Years, Boundaries, And Missing Values
+## Example: Years, Boundaries, And Absent Instants
 
 ```cpp
 const auto events = pluss::timeline::make({
@@ -60,7 +58,7 @@ calendar.
 - `year()` does not mutate the timeline and does not return timestamps.
 - A result of `-1` means the source element was `NaT`; it is not a valid year.
 - Do not combine `year()` and `week()` as an ISO year-week key at New Year.
-- The aliases are exact synonyms; they do not use different calendars.
+- `year()` is the sole public spelling for this field.
 
 ## See Also
 
@@ -70,6 +68,6 @@ calendar.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="searchsorted_left.html"><span class="label">Previous</span><span class="title">searchsorted_left</span></a>
-  <a class="next-link" href="month.html"><span class="label">Next</span><span class="title">month</span></a>
+  <a class="next-link" href="year_scalar.html"><span class="label">Next</span><span class="title">year_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->

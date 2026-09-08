@@ -126,10 +126,10 @@ std::string nexus_label_string_at(const pluss::table::Thread& labels, std::int64
     case pluss::table::ThreadKind::Note:
       return std::string(labels.as_note().at(i));
     case pluss::table::ThreadKind::Timeline:
-      return std::to_string(labels.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(i)]);
+      return std::to_string(labels.as_timeline().ticks()[static_cast<std::size_t>(i)]);
     case pluss::table::ThreadKind::TimeIndex:
       return std::to_string(
-          labels.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(i)]);
+          labels.as_timeindex().timeline().ticks()[static_cast<std::size_t>(i)]);
   }
   return std::string("table_") + std::to_string(i);
 }

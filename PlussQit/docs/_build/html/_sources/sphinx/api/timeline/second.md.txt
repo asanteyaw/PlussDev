@@ -8,7 +8,7 @@
 Series Timeline::second() const
 ```
 
-Aliases: `sec()`, `s()`, `seconds()`, and `second_()`.
+`second()` is the sole public spelling.
 
 ## Read The Whole-Second Component
 
@@ -40,7 +40,7 @@ data=[59, 0, 8, -1]
 
 To reconstruct the within-minute numeric offset at nanosecond precision, pair
 the field with `nanosecond()`: conceptually
-`second * 1'000'000'000 + nanosecond`. Guard `NaT` first, because both missing
+`second * 1'000'000'000 + nanosecond`. Guard `NaT` first, because both absent
 sentinels are `-1` and are not valid temporal components.
 
 ## Gotchas And Failure Modes
@@ -55,10 +55,10 @@ sentinels are `-1` and are not valid temporal components.
 
 - [`nanosecond`](nanosecond.md)
 - [`epoch_nanos`](epoch_nanos.md)
-- [`to_epoch_nanos_flat`](to_epoch_nanos_flat.md)
+- [`ticks`](ticks.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="minute.html"><span class="label">Previous</span><span class="title">minute</span></a>
-  <a class="next-link" href="nanosecond.html"><span class="label">Next</span><span class="title">nanosecond</span></a>
+  <a class="next-link" href="second_scalar.html"><span class="label">Next</span><span class="title">second_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->

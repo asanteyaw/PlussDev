@@ -8,7 +8,7 @@
 Series Timeline::day() const
 ```
 
-Aliases: `d()`, `dom()`, `days()`, and `day_()`.
+`day()` is the sole public spelling.
 
 ## Read The Day Of Month
 
@@ -18,7 +18,7 @@ on month and year. Leap-day timestamps correctly produce `29` in February.
 
 The method preserves the Timeline's shape and returns `int32`. It is not the
 same as `weekday()` (position in the week) or `dayofyear()` (position in the
-year). A missing timestamp produces `-1`.
+year). An absent instant produces `-1`.
 
 ## Example: Month Boundaries And Leap Day
 
@@ -65,6 +65,6 @@ temporal representation.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month.html"><span class="label">Previous</span><span class="title">month</span></a>
-  <a class="next-link" href="hour.html"><span class="label">Next</span><span class="title">hour</span></a>
+  <a class="next-link" href="day_scalar.html"><span class="label">Next</span><span class="title">day_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->

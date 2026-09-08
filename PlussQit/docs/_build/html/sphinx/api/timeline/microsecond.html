@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Timeline::millisecond" href="millisecond.html" />
-    <link rel="prev" title="Timeline::nanosecond" href="nanosecond.html" />
+    <link rel="prev" title="Timeline::max" href="max.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,13 +44,13 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">microsecond</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">us()</span></code>, <code class="docutils literal notranslate"><span class="pre">usec()</span></code>, <code class="docutils literal notranslate"><span class="pre">micro()</span></code>, and <code class="docutils literal notranslate"><span class="pre">microseconds()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">microsecond()</span></code> is the sole public spelling.</p>
 </section>
 <section id="read-the-fraction-at-microsecond-resolution">
 <h2>Read The Fraction At Microsecond Resolution<a class="headerlink" href="#read-the-fraction-at-microsecond-resolution" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">microsecond()</span></code> returns the fractional second measured in whole microseconds.
 Its valid range is <code class="docutils literal notranslate"><span class="pre">0</span></code> through <code class="docutils literal notranslate"><span class="pre">999'999</span></code>, its dtype is <code class="docutils literal notranslate"><span class="pre">int32</span></code>, and its shape
-matches the Timeline. Missing timestamps produce <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
+matches the Timeline. Absent instants produce <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
 <p>The conversion is truncation, not rounding:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>microsecond = nanosecond / 1,000
 </pre></div>
@@ -147,6 +147,7 @@ the original timestamp exactly.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -197,7 +198,7 @@ the original timestamp exactly.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="nanosecond.html" title="previous chapter">Timeline::nanosecond</a></li>
+      <li>Previous: <a href="max.html" title="previous chapter">Timeline::max</a></li>
       <li>Next: <a href="millisecond.html" title="next chapter">Timeline::millisecond</a></li>
   </ul></li>
   </ul></li>

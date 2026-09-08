@@ -55,8 +55,4 @@ int main() {
   });
   show("quarter_preserves_shape", matrix.quarter());
 
-  std::cout << "\n=== aliases ===\n" << std::boolalpha
-            << "year aliases=" << matrix.year().equal(matrix.y()) << '\n'
-            << "weekday aliases=" << matrix.weekday().equal(matrix.dayofweek()) << '\n'
-            << "week aliases=" << matrix.week().equal(matrix.weekofyear()) << '\n';
 }

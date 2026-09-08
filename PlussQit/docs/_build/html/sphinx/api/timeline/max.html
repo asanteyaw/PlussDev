@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Timeline::max &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Timeline::microsecond" href="microsecond.html" />
+    <link rel="prev" title="Timeline::lt" href="lt.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="timeline-max">
+<h1>Timeline::max<a class="headerlink" href="#timeline-max" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">skipna</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="find-the-latest-valid-instant">
+<h2>Find The Latest Valid Instant<a class="headerlink" href="#find-the-latest-valid-instant" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">max()</span></code> searches the entire Timeline and returns the latest valid timestamp as
+a scalar Timeline. All dimensions participate in one reduction, so the result
+has <code class="docutils literal notranslate"><span class="pre">shape=[]</span></code> regardless of receiver rank. The method has no axis-wise or
+shape-retaining overload.</p>
+<p><code class="docutils literal notranslate"><span class="pre">skipna</span></code> controls <code class="docutils literal notranslate"><span class="pre">NaT</span></code> propagation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code> (the default) excludes <code class="docutils literal notranslate"><span class="pre">NaT</span></code> and returns the latest valid instant.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> returns scalar <code class="docutils literal notranslate"><span class="pre">NaT</span></code> if any input element is <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
+</ul>
+<p>Chronology is determined from absolute epoch nanoseconds. Input order,
+formatted timezone offsets, and duplicates do not affect which instant is
+greatest. <code class="docutils literal notranslate"><span class="pre">max()</span></code> does not reorder or mutate the receiver.</p>
+</section>
+<section id="absent-instant-rule">
+<h2>Absent-Instant Rule<a class="headerlink" href="#absent-instant-rule" title="Link to this heading">¶</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">skipna=true</span></code>, <code class="docutils literal notranslate"><span class="pre">NaT</span></code> positions are ignored whenever at least one valid instant exists.
+An empty or all-<code class="docutils literal notranslate"><span class="pre">NaT</span></code> receiver returns scalar <code class="docutils literal notranslate"><span class="pre">NaT</span></code>. Use <code class="docutils literal notranslate"><span class="pre">isnat_scalar()</span></code> when
+an absent maximum must trigger fallback or validation logic.</p>
+</section>
+<section id="example-1-reduce-every-matrix-element">
+<h2>Example 1: Reduce Every Matrix Element<a class="headerlink" href="#example-1-reduce-every-matrix-element" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">observations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2025-06-15T08:30:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-02T18:45:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2026-09-30T03:15:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">observations</span><span class="p">.</span><span class="n">max</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
+2026-09-30 03:15:00
+</pre></div>
+</div>
+<p>The result is one scalar, not one maximum per row or column. The receiver
+remains <code class="docutils literal notranslate"><span class="pre">[2,2]</span></code> after the call.</p>
+</section>
+</section>
+<section id="example-2-duplicates-do-not-change-the-value">
+<h2>Example 2: Duplicates Do Not Change The Value<a class="headerlink" href="#example-2-duplicates-do-not-change-the-value" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">duplicated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-06-15T08:30:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-01-02T18:45:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2026-09-30T03:15:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2026-09-30T03:15:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">max</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
+2026-09-30 03:15:00
+</pre></div>
+</div>
+<p>Both latest entries represent the same value. Because <code class="docutils literal notranslate"><span class="pre">max()</span></code> returns the
+timestamp rather than its position, tie order is intentionally irrelevant.</p>
+</section>
+</section>
+<section id="example-3-empty-and-all-nat-inputs">
+<h2>Example 3: Empty And All-NaT Inputs<a class="headerlink" href="#example-3-empty-and-all-nat-inputs" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">absent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">absent</span><span class="p">.</span><span class="n">max</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">empty</span><span class="p">.</span><span class="n">max</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
+NaT
+Timeline(shape=[], tz=UTC)
+NaT
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-4-preserve-the-receiver-timezone">
+<h2>Example 4: Preserve The Receiver Timezone<a class="headerlink" href="#example-4-preserve-the-receiver-timezone" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-06-15T08:30:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-01-02T18:45:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2026-09-30T03:15:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">max</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=America/New_York)
+2026-09-29 23:15:00
+</pre></div>
+</div>
+<p>The local date is September 29 even though the UTC rendering is September 30.
+Both identify the same latest instant; timezone retention changes presentation
+and local calendar fields, not ordering.</p>
+</section>
+</section>
+<section id="example-5-propagate-any-nat">
+<h2>Example 5: Propagate Any NaT<a class="headerlink" href="#example-5-propagate-any-nat" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">observations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-06-15T08:30:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2026-09-30T03:15:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">observations</span><span class="p">.</span><span class="n">max</span><span class="p">(</span><span class="nb">false</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
+NaT
+</pre></div>
+</div>
+<p>This mode is useful when “latest” is meaningful only for a complete set of
+observations.</p>
+</section>
+</section>
+<section id="choosing-the-right-operation">
+<h2>Choosing The Right Operation<a class="headerlink" href="#choosing-the-right-operation" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">max()</span></code> for the latest valid timestamp value.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">argsort()</span></code> when the winning position matters.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">sort()</span></code> when later work needs the complete chronological sequence.</p></li>
+<li><p>Do not confuse the maximum with the last stored element in unsorted data.</p></li>
+</ul>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Reduction is global; no dimension argument is accepted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> is skipped by default and propagated when <code class="docutils literal notranslate"><span class="pre">skipna=false</span></code>.</p></li>
+<li><p>The returned timezone matches the receiver.</p></li>
+<li><p>The scalar result remains a Timeline, so calendar extraction, formatting,
+and timezone conversion remain available.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">max()</span></code> means “latest valid instant over all elements.” It returns a scalar,
+retains timezone and nanosecond identity, ignores <code class="docutils literal notranslate"><span class="pre">NaT</span></code> positions by default,
+can propagate them on request, and leaves the source Timeline unchanged.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">min</span></code></span></a>: return the earliest valid instant.</p></li>
+<li><p><a class="reference internal" href="argsort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argsort</span></code></span></a>: obtain chronological positions.</p></li>
+<li><p><a class="reference internal" href="isnat_scalar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat_scalar</span></code></span></a>: detect an absent maximum.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="min.html"><span class="label">Previous</span><span class="title">min</span></a>
+  <a class="next-link" href="sort.html"><span class="label">Next</span><span class="title">sort</span></a>
+</div>
+<!-- pluss-hand-authored -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
+      <li>Previous: <a href="lt.html" title="previous chapter">Timeline::lt</a></li>
+      <li>Next: <a href="microsecond.html" title="next chapter">Timeline::microsecond</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/timeline/max.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,76 @@
+
+=== shift_year ===
+Timeline(shape=[], tz=UTC)
+2025-02-28 08:15:30
+
+=== shift_month ===
+Timeline(shape=[], tz=UTC)
+2024-03-29 08:15:30
+
+=== shift_day ===
+Timeline(shape=[], tz=UTC)
+2024-03-01 08:15:30
+
+=== shift_hour ===
+Timeline(shape=[], tz=UTC)
+2024-02-29 09:15:30
+
+=== shift_minute ===
+Timeline(shape=[], tz=UTC)
+2024-02-29 08:16:30
+
+=== shift_second ===
+Timeline(shape=[], tz=UTC)
+2024-02-29 08:15:31
+
+=== shift_negative_case_insensitive ===
+Timeline(shape=[], tz=UTC)
+2024-02-28 08:15:30
+
+=== shift_zero ===
+Timeline(shape=[], tz=UTC)
+2024-02-29 08:15:30
+
+=== shift_civil_day ===
+Timeline(shape=[], tz=America/Edmonton)
+2024-03-10 03:30:00
+
+=== shift_elapsed_hours ===
+Timeline(shape=[], tz=America/Edmonton)
+2024-03-10 04:30:00
+
+=== shift_matrix_absent ===
+Timeline(shape=[2, 2], tz=America/Edmonton)
+[ 2023-12-31 19:00:00                 NaT ]
+[ 2024-01-02 19:00:00 2024-01-03 19:00:00 ]
+
+=== shift_alias ===
+rejected
+
+=== shift_whitespace ===
+rejected
+
+=== timeindex_sorted_duplicates ===
+size=3 increasing=true unique=false
+
+=== timeindex_empty ===
+size=0 increasing=true
+
+=== timeindex_unsorted_default ===
+rejected
+
+=== timeindex_unsorted_allowed ===
+increasing=false
+
+=== timeindex_strided_round_trip ===
+Timeline(shape=[3], tz=America/Edmonton)
+[ 2023-12-31 17:00:00, 2024-01-01 17:00:00, 2024-01-02 17:00:00 ]
+
+=== timeindex_nat ===
+rejected
+
+=== timeindex_scalar ===
+rejected
+
+=== timeindex_matrix ===
+rejected

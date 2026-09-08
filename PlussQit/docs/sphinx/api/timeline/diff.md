@@ -145,6 +145,8 @@ produces a fresh `Duration`.
   `other`.
 - `NaT` in either operand propagates to `Duration::kNaT` in the result, the
   same as `add_duration`/`sub_duration`.
+- A distance outside the representable signed nanosecond range throws instead
+  of wrapping.
 - If what you actually want is to move timestamps forward or backward, use
   [`add_duration`](add_duration.md) or [`sub_duration`](sub_duration.md)
   instead.

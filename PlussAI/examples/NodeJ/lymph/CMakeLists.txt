@@ -238,6 +238,46 @@ set(NODEJ_LYMPH_DEMOS
   lymph_workflow_vs_sklearn_flat_pipeline_example_1
   lymph_workflow_vs_sklearn_custom_transformer_example_1
   lymph_workflow_vs_sklearn_columntransformer_example_2
+  lymph_workflow_payload_label_example_1
+  lymph_workflow_payload_label_example_2
+  lymph_workflow_payload_label_example_3
+  lymph_workflow_payload_weights_example_1
+  lymph_workflow_payload_weights_example_2
+  lymph_workflow_payload_weights_example_3
+  lymph_workflow_payload_time_example_1
+  lymph_workflow_payload_time_example_2
+  lymph_workflow_payload_time_example_3
+  lymph_workflow_payload_roles_example_1
+  lymph_workflow_payload_roles_example_2
+  lymph_workflow_payload_roles_example_3
+  lymph_workflow_payload_batch_example_1
+  lymph_workflow_payload_batch_example_2
+  lymph_workflow_payload_batch_example_3
+  lymph_workflow_policy_columns_example_1
+  lymph_workflow_policy_columns_example_2
+  lymph_workflow_policy_columns_example_3
+  lymph_workflow_policy_rows_example_1
+  lymph_workflow_policy_rows_example_2
+  lymph_workflow_policy_rows_example_3
+  lymph_workflow_policy_apply_example_1
+  lymph_workflow_policy_apply_example_2
+  lymph_workflow_policy_apply_example_3
+  lymph_io_save_example_1
+  lymph_io_save_example_2
+  lymph_io_save_example_3
+  lymph_io_load_example_1
+  lymph_io_load_example_2
+  lymph_io_load_example_3
+  lymph_io_persistence_example_1
+  lymph_io_persistence_example_2
+  lymph_io_persistence_example_3
+  lymph_reports_classification_summary_example_1
+  lymph_reports_classification_summary_example_2
+  lymph_reports_classification_summary_example_3
+  lymph_reports_threshold_curve_example_1
+  lymph_reports_threshold_curve_example_2
+  lymph_reports_threshold_curve_example_3
+  lymph_reports_model_example_1
   lymph_selection_gridaxis_example_1
   lymph_selection_gridaxis_example_2
   lymph_selection_gridaxis_example_3

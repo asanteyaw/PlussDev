@@ -1,3 +1,35 @@
+#include <cstdint>
+
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+#include <unigbrk.h>
+// Some libunistring packages expose fixed-width C types as macros; keep them
+// from rewriting std::uint*_t through the rest of this translation unit.
+#ifdef int8_t
+#undef int8_t
+#endif
+#ifdef uint8_t
+#undef uint8_t
+#endif
+#ifdef int16_t
+#undef int16_t
+#endif
+#ifdef uint16_t
+#undef uint16_t
+#endif
+#ifdef int32_t
+#undef int32_t
+#endif
+#ifdef uint32_t
+#undef uint32_t
+#endif
+#ifdef int64_t
+#undef int64_t
+#endif
+#ifdef uint64_t
+#undef uint64_t
+#endif
+#endif
+
 #include "CodeN/compat/Dispatch.h"
 
 #include <array>
@@ -29,9 +61,10 @@ namespace pluss::coden::_compat {
 }
 
 [[noreturn]] static void rethrow_dispatch_error_(::std::string_view lane, ::std::string_view op, const ::std::exception& e) {
-  ::pluss::codem::throw_error(
-      ::std::string("CodeN ") + ::std::string(lane) + " dispatch failed for '" + ::std::string(op) +
-      "': " + e.what());
+  // Present a public-facing message: `<op>: <underlying error>`. The `lane`
+  // (adapter routing label) is internal and is not surfaced to callers.
+  (void)lane;
+  ::pluss::codem::throw_error(::std::string(op) + ": " + e.what());
 }
 
 template <class DeclArray>
@@ -207,6 +240,26 @@ static ::std::int64_t count_utf8_codepoints(::std::string_view s) {
   return n;
 }
 
+// Count extended grapheme clusters (UAX #29) when a Unicode backend is
+// available, so a base letter plus its combining marks counts as one. Falls
+// back to the code-point count otherwise. (libunistring's iterator does not
+// join ZWJ emoji sequences, so those still count per code point.)
+static ::std::int64_t count_utf8_graphemes(::std::string_view s) {
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  if (s.empty()) return 0;
+  const auto* begin = reinterpret_cast<const unsigned char*>(s.data());
+  const auto* end = begin + s.size();
+  ::std::int64_t n = 0;
+  for (const unsigned char* cur = begin; cur != nullptr && cur < end;) {
+    cur = ::u8_grapheme_next(cur, end);
+    ++n;
+  }
+  return n;
+#else
+  return count_utf8_codepoints(s);
+#endif
+}
+
 static bool default_bool_chord(::std::string_view op, const ::pluss::coden::Chord& self, const CodenValues& args) {
   if (!self.defined()) return false;
   const auto s = self.utf8();
@@ -271,7 +324,8 @@ static ::std::vector<::std::int64_t> default_i64list_note(::std::string_view op,
   for (::std::int64_t i = 0; i < self.numel(); ++i) {
     const auto s = self.at(i);
     if (op == "lengths_bytes") out[static_cast<::std::size_t>(i)] = static_cast<::std::int64_t>(s.size());
-    else if (op == "lengths_chars" || op == "lengths_graphemes") out[static_cast<::std::size_t>(i)] = count_utf8_codepoints(s);
+    else if (op == "lengths_chars") out[static_cast<::std::size_t>(i)] = count_utf8_codepoints(s);
+    else if (op == "lengths_graphemes") out[static_cast<::std::size_t>(i)] = count_utf8_graphemes(s);
     else if (has_sub) {
       if (needle.empty()) {
         out[static_cast<::std::size_t>(i)] = 0;

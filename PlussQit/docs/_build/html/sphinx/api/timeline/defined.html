@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::sizes" href="sizes.html" />
-    <link rel="prev" title="Timeline API Reference" href="../../timeline_api_reference.html" />
+    <link rel="next" title="Timeline::diff" href="diff.html" />
+    <link rel="prev" title="Timeline::days_between" href="days_between.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -49,10 +49,10 @@
 <section id="what-it-tells-you">
 <h2>What It Tells You<a class="headerlink" href="#what-it-tells-you" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">defined()</span></code> answers whether the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> owns a valid temporal payload. It
-is a state query, not an emptiness test and not a missing-value test.</p>
+is a state query, not an emptiness test and not an absent-instant test.</p>
 <p>A defined timeline may be scalar, empty, or contain <code class="docutils literal notranslate"><span class="pre">NaT</span></code>. Those are all valid
 payload states. Use <a class="reference internal" href="numel.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">numel()</span></code></span></a> to ask how many positions exist and
-<a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat()</span></code></span></a> to identify positions whose timestamp is missing.</p>
+<a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat()</span></code></span></a> to identify positions whose instant is absent.</p>
 <p>Public factories return defined timelines or throw when construction fails, so
 ordinary application code rarely needs to poll this method after every
 factory call. It remains useful at API boundaries and in generic code that may
@@ -113,7 +113,7 @@ data=[false, true]
 <ul class="simple">
 <li><p>Do not use <code class="docutils literal notranslate"><span class="pre">defined()</span></code> to detect an empty timeline. A defined shape <code class="docutils literal notranslate"><span class="pre">[0]</span></code>
 has <code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">0</span></code>.</p></li>
-<li><p>Do not use it to detect <code class="docutils literal notranslate"><span class="pre">NaT</span></code>. Missing timestamps are valid stored values.</p></li>
+<li><p>Do not use it to detect <code class="docutils literal notranslate"><span class="pre">NaT</span></code>. Absent instants are valid stored values.</p></li>
 <li><p>A parse or shape error throws during construction; it does not normally
 return a public undefined sentinel for later inspection.</p></li>
 </ul>
@@ -132,7 +132,7 @@ separate.</p>
 <li><p><a class="reference internal" href="isvalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::isvalid</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../timeline_api_reference.html"><span class="label">Previous</span><span class="title">Timeline API Reference</span></a>
+  <a class="prev-link" href="days_between.html"><span class="label">Previous</span><span class="title">days_between</span></a>
   <a class="next-link" href="sizes.html"><span class="label">Next</span><span class="title">sizes</span></a>
 </div>
 </section>
@@ -176,6 +176,7 @@ separate.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -226,8 +227,8 @@ separate.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="../../timeline_api_reference.html" title="previous chapter">Timeline API Reference</a></li>
-      <li>Next: <a href="sizes.html" title="next chapter">Timeline::sizes</a></li>
+      <li>Previous: <a href="days_between.html" title="previous chapter">Timeline::days_between</a></li>
+      <li>Next: <a href="diff.html" title="next chapter">Timeline::diff</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

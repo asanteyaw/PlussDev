@@ -869,8 +869,8 @@ void test_catalog_sort_group_missing() {
 
   const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
   const auto ts_filled = mixed_missing.keys({"ts_col"}).fillnull(ts_fill);
-  const auto ts_ticks = ts_filled.keys("ts_col").as_timeline().to_epoch_nanos_vector();
-  const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];
+  const auto ts_ticks = ts_filled.keys("ts_col").as_timeline().ticks();
+  const auto ts_fill_tick = ts_fill.ticks()[0];
   expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
          "Catalog::fillnull(Timeline, keys) should replace null Timeline values");
   expect(!pluss::kindle::detail::has_validity_mask(ts_filled.keys("ts_col")),
@@ -881,14 +881,14 @@ void test_catalog_sort_group_missing() {
 
   const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
   const auto ti_filled = mixed_missing.keys({"ti_col"}).fillnull(ti_fill);
-  const auto ti_ticks = ti_filled.keys("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
-  const auto ti_fill_tick = ti_fill.timeline().to_epoch_nanos_vector()[0];
+  const auto ti_ticks = ti_filled.keys("ti_col").as_timeindex().timeline().ticks();
+  const auto ti_fill_tick = ti_fill.timeline().ticks()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
          "Catalog::fillnull(TimeIndex, keys) should replace null TimeIndex values");
   expect(!pluss::kindle::detail::has_validity_mask(ti_filled.keys("ti_col")),
          "Catalog::fillnull(TimeIndex, keys) should clear TimeIndex mask when fully resolved");
   const auto ti_filled_by_timeline = mixed_missing.keys({"ti_col"}).fillnull(ts_fill);
-  const auto ti_from_timeline_ticks = ti_filled_by_timeline.keys("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
+  const auto ti_from_timeline_ticks = ti_filled_by_timeline.keys("ti_col").as_timeindex().timeline().ticks();
   expect(ti_from_timeline_ticks[1] == ts_fill_tick && ti_from_timeline_ticks[3] == ts_fill_tick,
          "Catalog::fillnull(Timeline, keys) should also fill TimeIndex streams");
 

@@ -484,7 +484,7 @@ pluss::kindle::Stream Slot::kindelize() const {
     std::optional<std::string> tz_name;
     for (const auto& v : values()) {
       const auto& t = std::get<pluss::Timeline>(v);
-      ticks.push_back(t.to_epoch_nanos_vector()[0]);
+      ticks.push_back(t.ticks()[0]);
       std::string value_tz(t.tz());
       if (!tz_name.has_value()) {
         tz_name = std::move(value_tz);
@@ -516,7 +516,7 @@ pluss::kindle::Stream Slot::kindelize() const {
     std::optional<std::string> tz_name;
     for (const auto& v : values()) {
       const auto& tl = std::get<pluss::TimeIndex>(v).timeline();
-      ticks.push_back(tl.to_epoch_nanos_vector()[0]);
+      ticks.push_back(tl.ticks()[0]);
       std::string value_tz(tl.tz());
       if (!tz_name.has_value()) {
         tz_name = std::move(value_tz);

@@ -76,6 +76,4 @@ TEST_CASE("Timeline predicates use local dates and preserve shape",
   });
   REQUIRE(matrix.is_weekend().sizes().vec() == std::vector<std::int64_t>{2, 2});
   REQUIRE(bools(matrix.is_weekend()) == std::vector<bool>{false, true, false, true});
-  REQUIRE(matrix.is_month_start().equal(matrix.is_month_begin()));
-  REQUIRE(matrix.is_monday().equal(matrix.is_mon()));
 }

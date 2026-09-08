@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::tex_escape" href="tex_escape.html" />
-    <link rel="prev" title="Note::split_whitespace" href="split_whitespace.html" />
+    <link rel="next" title="Note::swapcase" href="swapcase.html" />
+    <link rel="prev" title="Note::starts_with" href="starts_with.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,126 +36,158 @@
 
           <div class="body" role="main">
             
-  <section id="note-strip">
+  <!-- pluss-hand-authored -->
+<section id="note-strip">
 <h1>Note::strip<a class="headerlink" href="#note-strip" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
-<span class="n">Note</span><span class="o">::</span><span class="n">strip</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">chars</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">strip</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">chars</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Removes boundary characters from each text cell.</p>
-<p>This method has two common modes:</p>
-<ul class="simple">
-<li><p>plain whitespace trimming</p></li>
-<li><p>explicit trimming of a chosen set of boundary characters</p></li>
-</ul>
-<p>That makes it one of the core cleanup primitives in the <code class="docutils literal notranslate"><span class="pre">Note</span></code> surface.</p>
-<p>The method is intentionally conservative: it only trims the left and right
-edges of each cell. Interior characters are left untouched.</p>
+<section id="trim-characters-from-both-ends-of-every-cell">
+<h2>Trim Characters From Both Ends Of Every Cell<a class="headerlink" href="#trim-characters-from-both-ends-of-every-cell" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">strip()</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with leading and
+trailing whitespace removed from each cell. <code class="docutils literal notranslate"><span class="pre">strip(chars)</span></code> instead removes
+any character that appears in the <code class="docutils literal notranslate"><span class="pre">chars</span></code> set. Use it to clean boundary noise
+before comparison, tokenization, measurement, or display — padded fields,
+wrapping markers (<code class="docutils literal notranslate"><span class="pre">##title##</span></code>), stray delimiters at the ends of a
+concatenation.</p>
+<section id="strip-whitespace">
+<h3><code class="docutils literal notranslate"><span class="pre">strip()</span></code> — whitespace<a class="headerlink" href="#strip-whitespace" title="Link to this heading">¶</a></h3>
+<p>The no-argument form removes the ASCII whitespace bytes space, <code class="docutils literal notranslate"><span class="pre">\t</span></code>, <code class="docutils literal notranslate"><span class="pre">\n</span></code>,
+<code class="docutils literal notranslate"><span class="pre">\r</span></code>, <code class="docutils literal notranslate"><span class="pre">\f</span></code>, <code class="docutils literal notranslate"><span class="pre">\v</span></code> from both ends. Whitespace <strong>inside</strong> the cell is left
+exactly as-is — <code class="docutils literal notranslate"><span class="pre">strip()</span></code> is a boundary trim, not a normalizer. Combine with
+<a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace</span></code></span></a> or a tokenizer if interior spacing also needs work.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>chars</strong></p>
-<p>Optional set of characters to trim from both ends of each cell.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">strip()</span></code>
-Uses the default whitespace-trimming behavior. This is the overload you want
-for ordinary cleanup of copied text, identifiers with padding, and cells that
-arrived from CSV or spreadsheet imports with accidental leading or trailing
-spaces or tabs.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">strip(chars)</span></code>
-Uses an explicit boundary character set instead of default whitespace. Every
-character present in <code class="docutils literal notranslate"><span class="pre">chars</span></code> is eligible for removal from the left boundary,
-the right boundary, or both, until a non-matching boundary character is
-reached.</p></li>
-</ul>
-<p>This is boundary trimming only. Interior occurrences are untouched.</p>
+<section id="strip-chars-a-character-set">
+<h3><code class="docutils literal notranslate"><span class="pre">strip(chars)</span></code> — a character set<a class="headerlink" href="#strip-chars-a-character-set" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">chars</span></code> is treated as a <strong>set of bytes</strong>: every position at either end whose
+byte is in the set is removed, and trimming stops at the first byte that is
+not. Order and repetition in <code class="docutils literal notranslate"><span class="pre">chars</span></code> do not matter. So <code class="docutils literal notranslate"><span class="pre">strip(&quot;#&quot;)</span></code> removes
+runs of <code class="docutils literal notranslate"><span class="pre">#</span></code> from the ends only (<code class="docutils literal notranslate"><span class="pre">&quot;##a#b##&quot;</span></code> → <code class="docutils literal notranslate"><span class="pre">&quot;a#b&quot;</span></code>), and <code class="docutils literal notranslate"><span class="pre">strip(&quot;xy-&quot;)</span></code>
+removes any mix of <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code> from the ends (<code class="docutils literal notranslate"><span class="pre">&quot;xy-payload-yx&quot;</span></code> →
+<code class="docutils literal notranslate"><span class="pre">&quot;payload&quot;</span></code>). Because the set is byte-based, pass only ASCII characters in
+<code class="docutils literal notranslate"><span class="pre">chars</span></code>; a multi-byte character there would match its individual bytes.</p>
+<p>A cell made entirely of strippable characters becomes empty. The operation
+is shape-preserving, cell-independent, and returns a fresh <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code> with the same shape as the input and trimmed boundaries.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Remove leading and trailing whitespace.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Ada Lovelace  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\t</span><span class="s">GRACE HOPPER</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Linus&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">strip</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;strip:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="example-1-trim-whitespace">
+<h2>Example 1: Trim Whitespace<a class="headerlink" href="#example-1-trim-whitespace" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Ada Lovelace  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\t</span><span class="s">GRACE HOPPER</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Linus&quot;</span><span class="p">}).</span><span class="n">strip</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>strip:
-  [0] Ada Lovelace
-  [1] GRACE HOPPER
-  [2] Linus
-</pre></div>
-</div>
-<p>Example 2. Trim a custom boundary character set instead of whitespace.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;##alpha##&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#beta&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;gamma##&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;strip_hash_space:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;Ada Lovelace&quot;, &quot;GRACE HOPPER&quot;, &quot;Linus&quot;]
 </pre></div>
 </div>
 </section>
+</section>
+<section id="example-2-interior-whitespace-is-kept">
+<h2>Example 2: Interior Whitespace Is Kept<a class="headerlink" href="#example-2-interior-whitespace-is-kept" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a</span><span class="se">\t</span><span class="s">b  c&quot;</span><span class="p">}).</span><span class="n">strip</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>strip_hash_space:
-  [0] alpha
-  [1] beta
-  [2] gamma
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;a\tb  c&quot;]
 </pre></div>
 </div>
-<p>Example 3. Interior matches are preserved because <code class="docutils literal notranslate"><span class="pre">strip()</span></code> is a boundary
-operation, not a global deletion operation.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;#alpha#beta#&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;##gamma##&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">trimmed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">);</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">tils</span><span class="o">::</span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-<span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;strip_boundary_only:&quot;</span><span class="p">);</span>
-<span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">trimmed</span><span class="p">);</span>
-</pre></div>
-</div>
+<p>There is no leading or trailing whitespace, so the cell is unchanged; the
+tab and double space between the letters stay.</p>
 </section>
+</section>
+<section id="example-3-strip-a-character-set">
+<h2>Example 3: Strip A Character Set<a class="headerlink" href="#example-3-strip-a-character-set" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;##alpha##&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#beta&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;gamma##&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#a#b#&quot;</span><span class="p">}).</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>strip_boundary_only:
-  [0] alpha#beta
-  [1] gamma
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[4], dim=1, numel=4, encoding=utf8)
+[&quot;alpha&quot;, &quot;beta&quot;, &quot;gamma&quot;, &quot;a#b&quot;]
+</pre></div>
+</div>
+<p>Only the <code class="docutils literal notranslate"><span class="pre">#</span></code> runs at the ends go; the <code class="docutils literal notranslate"><span class="pre">#</span></code> between <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> stays.</p>
+</section>
+</section>
+<section id="example-4-a-set-of-several-characters">
+<h2>Example 4: A Set Of Several Characters<a class="headerlink" href="#example-4-a-set-of-several-characters" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;xy-payload-yx&quot;</span><span class="p">}).</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;xy-&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;payload&quot;]
+</pre></div>
+</div>
+<p>Any mix of <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code> is trimmed from both ends until a different byte is
+reached.</p>
+</section>
+</section>
+<section id="example-5-fully-strippable-cells-become-empty">
+<h2>Example 5: Fully Strippable Cells Become Empty<a class="headerlink" href="#example-5-fully-strippable-cells-become-empty" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;   &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;###&quot;</span><span class="p">}).</span><span class="n">strip</span><span class="p">().</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;&quot;, &quot;&quot;]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">strip()</span></code> preserves shape.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">strip(chars)</span></code> does not touch interior matches. It only trims the outer
-boundary runs.</p></li>
-<li><p>This method is frequently paired with <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower</span></code></span></a> for standardized
-text normalization.</p></li>
-</ul>
+<section id="example-6-shape-is-preserved">
+<h2>Example 6: Shape Is Preserved<a class="headerlink" href="#example-6-shape-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({{</span><span class="s">&quot;  a  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;  b  &quot;</span><span class="p">}}).</span><span class="n">strip</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
+[
+  [&quot;a&quot;, &quot;b&quot;]
+]
+</pre></div>
+</div>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::lower</span></code></span></a>: normalize case after trimming.</p></li>
-<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a>: rewrite interior substrings rather than
-trimming boundaries.</p></li>
+<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::lower</span></code></span></a>: case-fold; commonly chained with <code class="docutils literal notranslate"><span class="pre">strip</span></code> for
+full normalization.</p></li>
+<li><p><a class="reference internal" href="remove_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::remove_all</span></code></span></a>: delete a substring <strong>anywhere</strong>, not
+just at the boundaries.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::lstrip</span></code> / <code class="docutils literal notranslate"><span class="pre">rstrip</span></code>: trim one end only.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="split_whitespace.html">
+  <a class="prev-link" href="starts_with.html">
     <span class="label">Previous</span>
-    <span class="title">split_whitespace</span>
+    <span class="title">starts_with</span>
   </a>
-  <a class="next-link" href="tex_escape.html">
+  <a class="next-link" href="swapcase.html">
     <span class="label">Next</span>
-    <span class="title">tex_escape</span>
+    <span class="title">swapcase</span>
   </a>
 </div>
 </section>
@@ -199,6 +231,7 @@ trimming boundaries.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -249,8 +282,8 @@ trimming boundaries.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="split_whitespace.html" title="previous chapter">Note::split_whitespace</a></li>
-      <li>Next: <a href="tex_escape.html" title="next chapter">Note::tex_escape</a></li>
+      <li>Previous: <a href="starts_with.html" title="previous chapter">Note::starts_with</a></li>
+      <li>Next: <a href="swapcase.html" title="next chapter">Note::swapcase</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

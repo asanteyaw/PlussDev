@@ -178,21 +178,21 @@ std::vector<std::string> catalog_temporal_thread_to_plot_labels(
   const auto rendered = [&]() -> pluss::Note {
     switch (catalog_infer_temporal_label_kind(timeline)) {
       case CatalogTemporalLabelKind::Date:
-        return timeline.to_note_date();
+        return timeline.strftime("%Y-%m-%d");
       case CatalogTemporalLabelKind::Time:
-        return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.to_note_time();
+        return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.strftime("%H:%M:%S");
       case CatalogTemporalLabelKind::DateTime:
         switch (datetime_label_view) {
           case pluss::table::DateTimeLabelView::Date:
-            return timeline.to_note_date();
+            return timeline.strftime("%Y-%m-%d");
           case pluss::table::DateTimeLabelView::Time:
-            return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.to_note_time();
+            return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.strftime("%H:%M:%S");
           case pluss::table::DateTimeLabelView::Full:
           default:
-            return has_subsecond ? timeline.to_note_datetime_nano() : timeline.to_note_datetime();
+            return has_subsecond ? timeline.strftime("%Y-%m-%d %H:%M:%S.%f") : timeline.strftime("%Y-%m-%d %H:%M:%S");
         }
     }
-    return timeline.to_note_datetime();
+    return timeline.strftime("%Y-%m-%d %H:%M:%S");
   }();
 
   std::vector<std::string> out;

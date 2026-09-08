@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::timeline::today &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="pluss::timeline::unite" href="unite.html" />
+    <link rel="prev" title="pluss::timeline::time" href="time.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="pluss-timeline-today">
+<h1>pluss::timeline::today<a class="headerlink" href="#pluss-timeline-today" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../timeline_factory_api_reference.html"><span class="doc std std-doc">Back to Timeline Factory API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">today</span><span class="p">(</span>
+<span class="w">    </span><span class="n">MomentClock</span><span class="w"> </span><span class="n">clock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MomentClock</span><span class="o">::</span><span class="n">UTC</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="capture-the-current-calendar-boundary">
+<h2>Capture The Current Calendar Boundary<a class="headerlink" href="#capture-the-current-calendar-boundary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">today()</span></code> returns a rank-zero, one-element Timeline at the beginning of the
+calendar date that is current when the function is called. The result is a
+captured instant. It does not retain a live “today” rule and does not change at
+the next midnight.</p>
+<p>This differs from <code class="docutils literal notranslate"><span class="pre">now()</span></code>, which captures the current clock instant without
+rounding to a date boundary. It is equivalent to resolving the <code class="docutils literal notranslate"><span class="pre">today</span></code>
+expression with <code class="docutils literal notranslate"><span class="pre">moment()</span></code>, but avoids expression text when no offset or other
+calendar word is needed.</p>
+</section>
+<section id="choosing-the-calendar-clock">
+<h2>Choosing The Calendar Clock<a class="headerlink" href="#choosing-the-calendar-clock" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MomentClock::UTC</span></code> is the default. It obtains the current UTC date and returns
+UTC midnight at its start. This is deterministic with respect to the process
+timezone and is usually the right boundary for globally coordinated storage,
+partitions, and protocols.</p>
+<p><code class="docutils literal notranslate"><span class="pre">MomentClock::Local</span></code> obtains the process-local calendar date and resolves
+midnight in the process-local timezone. The resulting epoch nanoseconds include
+the local UTC offset and any daylight-saving rule in effect at that midnight.
+It does not merely take the local date and attach UTC midnight.</p>
+<p>Timeline stores an absolute instant plus an explicit display-zone label. A
+process-local clock does not necessarily expose a portable named-zone identifier,
+so the returned local-boundary Timeline retains UTC display metadata. Project it
+to a known named zone with <code class="docutils literal notranslate"><span class="pre">tz_convert()</span></code> when local wall-clock presentation is
+required. The stored instant already denotes the correct process-local midnight.</p>
+</section>
+<section id="example-1-verify-utc-midnight-without-inventing-today-s-date">
+<h2>Example 1: Verify UTC Midnight Without Inventing Today’s Date<a class="headerlink" href="#example-1-verify-utc-midnight-without-inventing-today-s-date" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">today</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">tick</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">day</span><span class="p">.</span><span class="n">epoch_nanos</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">day</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">day</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">day</span><span class="p">.</span><span class="n">tz</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;UTC&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">tick</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="p">(</span><span class="mf">86&#39;400L</span><span class="n">L</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+true
+</pre></div>
+</div>
+<p>The invariant remains valid whenever the example runs; a hard-coded date would
+not.</p>
+</section>
+</section>
+<section id="example-2-verify-process-local-midnight-as-an-instant">
+<h2>Example 2: Verify Process-Local Midnight As An Instant<a class="headerlink" href="#example-2-verify-process-local-midnight-as-an-instant" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local_day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">today</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">MomentClock</span><span class="o">::</span><span class="n">Local</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">time_t</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="n">local_day</span><span class="p">.</span><span class="n">epoch_nanos</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">tm</span><span class="w"> </span><span class="n">local_fields</span><span class="p">{};</span>
+<span class="cp">#if defined(_WIN32)</span>
+<span class="n">localtime_s</span><span class="p">(</span><span class="o">&amp;</span><span class="n">local_fields</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">seconds</span><span class="p">);</span>
+<span class="cp">#else</span>
+<span class="n">localtime_r</span><span class="p">(</span><span class="o">&amp;</span><span class="n">seconds</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">local_fields</span><span class="p">);</span>
+<span class="cp">#endif</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">local_fields</span><span class="p">.</span><span class="n">tm_hour</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">              </span><span class="n">local_fields</span><span class="p">.</span><span class="n">tm_min</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">              </span><span class="n">local_fields</span><span class="p">.</span><span class="n">tm_sec</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+<p>Converting the stored instant through the process-local clock is the meaningful
+test. Requiring its UTC hour to be zero would incorrectly test UTC midnight.</p>
+</section>
+</section>
+<section id="example-3-capture-once-for-a-consistent-window">
+<h2>Example 3: Capture Once For A Consistent Window<a class="headerlink" href="#example-3-capture-once-for-a-consistent-window" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">anchor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">today</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">anchor</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">6</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span>
+<span class="w">    </span><span class="n">first</span><span class="p">,</span><span class="w"> </span><span class="n">anchor</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">days</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">days</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">7</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">days</span><span class="p">.</span><span class="n">ticks</span><span class="p">().</span><span class="n">back</span><span class="p">()</span><span class="w"> </span><span class="o">==</span>
+<span class="w">              </span><span class="n">anchor</span><span class="p">.</span><span class="n">epoch_nanos</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+true
+</pre></div>
+</div>
+<p>Capturing <code class="docutils literal notranslate"><span class="pre">anchor</span></code> once ensures every derived boundary refers to the same day,
+even if later work crosses midnight. Fixed 24-hour durations are appropriate
+for this UTC example. For named-zone calendar stepping across daylight-saving
+transitions, use the calendar-aware <code class="docutils literal notranslate"><span class="pre">date_range()</span></code> day frequency.</p>
+</section>
+</section>
+<section id="operational-limits">
+<h2>Operational Limits<a class="headerlink" href="#operational-limits" title="Link to this heading">¶</a></h2>
+<p>The result depends on the host wall clock. Local mode additionally depends on
+the process timezone and host timezone rules. A clock adjustment during the
+call can affect which date is observed near midnight, just as it can for any
+wall-clock API. Use UTC when host-local policy is not part of the requirement.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="now.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">now</span></code></span></a>: capture the current instant.</p></li>
+<li><p><a class="reference internal" href="moment.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">moment</span></code></span></a>: resolve today, adjacent days, month boundaries, or offsets.</p></li>
+<li><p><a class="reference internal" href="date_range.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">date_range</span></code></span></a>: advance through calendar days in a named timezone.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../timeline_factory_api_reference.html">Timeline Factory API Reference</a><ul>
+      <li>Previous: <a href="time.html" title="previous chapter">pluss::timeline::time</a></li>
+      <li>Next: <a href="unite.html" title="next chapter">pluss::timeline::unite</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/timeline_factory/today.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

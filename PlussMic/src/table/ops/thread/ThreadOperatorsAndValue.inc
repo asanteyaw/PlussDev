@@ -705,7 +705,7 @@ const pluss::TimeIndex& Thread::as_timeindex() const {
 namespace {
 
 std::string scalar_time_iso(std::int64_t epoch_nanos) {
-  return pluss::timeline::from_epoch(epoch_nanos).toISOString();
+  return pluss::timeline::from_epoch(epoch_nanos).isoformat();
 }
 
 ThreadValue::HostAny scalar_series_host(const pluss::Series& series) {
@@ -734,7 +734,7 @@ std::int64_t scalar_timeline_nanos(const pluss::Timeline& timeline,
                                    std::string_view where) {
   PLUSS_CHECK(timeline.numel() == 1,
               std::string(where) + ": Timeline payload must contain exactly one value");
-  const auto values = timeline.to_epoch_nanos_vector();
+  const auto values = timeline.ticks();
   PLUSS_CHECK(values.size() == 1,
               std::string(where) + ": Timeline payload host export returned unexpected size");
   return values.front();

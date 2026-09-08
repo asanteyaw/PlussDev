@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Timeline::add_months &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Timeline::add_nanos" href="add_nanos.html" />
+    <link rel="prev" title="Timeline::add_minutes" href="add_minutes.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="timeline-add-months">
+<h1>Timeline::add_months<a class="headerlink" href="#timeline-add-months" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">add_months</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">months</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="shift-on-the-calendar-month-axis">
+<h2>Shift On The Calendar Month Axis<a class="headerlink" href="#shift-on-the-calendar-month-axis" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">add_months()</span></code> moves each defined instant by a signed number of calendar
+months. It is the direct expression of rules such as <em>one month after billing
+date</em> or <em>the corresponding date in the previous quarter</em>. Month lengths are
+not interchangeable elapsed durations, so this method does not approximate a
+month as 30 days.</p>
+<p>The implementation converts each instant to local calendar fields in <code class="docutils literal notranslate"><span class="pre">tz()</span></code>,
+adds <code class="docutils literal notranslate"><span class="pre">months</span></code> to the year/month pair, clamps the day when necessary, and then
+resolves the preserved clock fields back to an instant. Hours, minutes,
+seconds, and all nine fractional digits survive the operation.</p>
+</section>
+<section id="destination-day-clamping">
+<h2>Destination-Day Clamping<a class="headerlink" href="#destination-day-clamping" title="Link to this heading">¶</a></h2>
+<p>When the original day number does not exist in the destination month, the day
+is clamped to that month’s final day. January 31 plus one month therefore
+becomes February 28 or 29; March 31 plus one month becomes April 30. This rule
+is applied per element because different source dates can land in different
+destination months.</p>
+<p>Example 1. Positive month movement demonstrates ordinary preservation,
+February clamping, a 30-day destination, and a year boundary in one 2-D call.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-02-29T08:15:30.123456789Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2023-01-31T23:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-03-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-12-31T23:59:59.999999999Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">calendar</span><span class="p">.</span><span class="n">add_months</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;2024-03-29T08:15:30.123456789+00:00&quot;, &quot;2023-02-28T23:00:00.000000000+00:00&quot;], 
+  [&quot;2024-04-30T12:00:00.000000000+00:00&quot;, &quot;2025-01-31T23:59:59.999999999+00:00&quot;]
+]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="signed-counts-and-large-month-steps">
+<h2>Signed Counts And Large Month Steps<a class="headerlink" href="#signed-counts-and-large-month-steps" title="Link to this heading">¶</a></h2>
+<p>Positive counts move forward, negative counts move backward, and zero returns
+the same instants in a new value. Counts larger than twelve are valid: the
+year and month are normalized together rather than processing one month at a
+time.</p>
+<p>Example 2. A negative month traverses both a leap-year February and a year
+boundary.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">calendar</span><span class="p">.</span><span class="n">add_months</span><span class="p">(</span><span class="mi">-1</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;2024-01-29T08:15:30.123456789+00:00&quot;, &quot;2022-12-31T23:00:00.000000000+00:00&quot;], 
+  [&quot;2024-02-29T12:00:00.000000000+00:00&quot;, &quot;2024-11-30T23:59:59.999999999+00:00&quot;]
+]
+</pre></div>
+</div>
+<p>Example 3. Fifteen months is one normalized calculation, and clamping is based
+on the final destination month.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-11-30T06:00:00Z&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">source</span><span class="p">.</span><span class="n">add_months</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2026-02-28T06:00:00.000000000+00:00&quot;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="local-time-resolution">
+<h2>Local-Time Resolution<a class="headerlink" href="#local-time-resolution" title="Link to this heading">¶</a></h2>
+<p>For a timezone-bearing timeline, month arithmetic preserves the displayed
+local clock, not a fixed UTC offset. The destination’s timezone rules determine
+the resulting instant and displayed offset. If the preserved clock fields land
+inside a daylight-saving gap, the method rejects the operation rather than
+silently choosing a different wall time. An ambiguous repeated clock is
+resolved using the first occurrence.</p>
+<p>Example 4. The local clock remains <code class="docutils literal notranslate"><span class="pre">03:30</span></code> even when the destination month uses
+a different UTC offset.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-02-10T10:30:00Z&quot;</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">local</span><span class="p">.</span><span class="n">add_months</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2024-03-10T03:30:00.000000000-06:00&quot;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="shape-absence-and-ownership">
+<h2>Shape, Absence, And Ownership<a class="headerlink" href="#shape-absence-and-ownership" title="Link to this heading">¶</a></h2>
+<p>The single count applies elementwise to scalars and every array rank. Shape and
+timezone metadata are retained. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> propagates without calendar resolution;
+empty shapes remain empty. The result owns its output storage and the receiver
+is unchanged. Logical strides are honored when the receiver borrows a
+non-contiguous buffer.</p>
+<p>Example 5. Defined and absent elements follow separate paths without changing
+the vector shape.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1&#39;704&#39;067&#39;200&#39;123&#39;456&#39;789L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">::</span><span class="n">kNaT</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;UTC&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">values</span><span class="p">.</span><span class="n">add_months</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;2024-02-01T00:00:00.123456789+00:00&quot;, &quot;NaT&quot;]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="failure-conditions">
+<h2>Failure Conditions<a class="headerlink" href="#failure-conditions" title="Link to this heading">¶</a></h2>
+<p>The normalized destination year must stay in the supported calendar and the
+resolved instant must fit signed 64-bit epoch nanoseconds. A nonexistent local
+destination is also invalid. Validation is fail-fast: no partial result is
+returned.</p>
+<p>Example 6. A destination inside the spring clock gap is rejected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-02-10T09:30:00Z&quot;</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">local</span><span class="p">.</span><span class="n">add_months</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;rejected</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rejected
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="add_years.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::add_years</span></code></span></a>: express annual calendar movement directly.</p></li>
+<li><p><a class="reference internal" href="add_days.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::add_days</span></code></span></a>: move by local civil days.</p></li>
+<li><p><a class="reference internal" href="add_duration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::add_duration</span></code></span></a>: add fixed elapsed time.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
+      <li>Previous: <a href="add_minutes.html" title="previous chapter">Timeline::add_minutes</a></li>
+      <li>Next: <a href="add_nanos.html" title="next chapter">Timeline::add_nanos</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/timeline/add_months.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

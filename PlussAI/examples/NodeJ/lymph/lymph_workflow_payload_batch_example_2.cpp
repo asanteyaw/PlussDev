@@ -1,0 +1,38 @@
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+// labeled_batch(): materialize a validated LabeledBatch -- features + label
+// + any weights, carried through. Throws if the Payload has no label role.
+// This is the exact object every Workflow verb builds internally from a
+// Payload.
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  namespace workflow = lymph::workflow;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const DataFrame raw({
+      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"balance", Thread(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
+      {"w", Thread(pluss::make_series({1.0, 1.0, 1.0, 2.0, 2.0, 2.0}, {6}, f64))},
+      {"default", Thread(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
+  });
+
+  const workflow::Payload payload = workflow::payload::make(raw)
+                                        .features({"income", "balance"})
+                                        .label("default")
+                                        .weights("w");
+
+  const lymph::LabeledBatch lb = payload.labeled_batch();
+  std::cout << "labeled_batch: rows=" << lb.features.sample_count()
+            << " features=" << lb.features.feature_count()
+            << " has_weights=" << std::boolalpha << lb.has_weights() << "\n";
+
+  return 0;
+}

@@ -8,7 +8,7 @@
 Series Timeline::is_month_end() const
 ```
 
-Aliases: `is_month_finish()` and `is_monthend()`.
+`is_month_end()` is the sole public spelling.
 
 ## Recognize Each Month's Actual Last Date
 
@@ -50,7 +50,7 @@ on March 31 is marked even if several such events occur.
 
 - Time-of-day does not need to be the last instant of the date.
 - This is calendar month end, not business month end.
-- `NaT` is `false`; use `isvalid()` to separate missing values.
+- `NaT` is `false`; use `isvalid()` to separate absent instants.
 
 ## See Also
 

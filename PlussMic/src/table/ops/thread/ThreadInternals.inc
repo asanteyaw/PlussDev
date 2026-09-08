@@ -345,7 +345,7 @@ std::vector<std::string> note_take_strings(const pluss::Note& note, std::span<co
 }
 
 pluss::Timeline timeline_take(const pluss::Timeline& t, std::span<const std::int64_t> indices, std::int64_t size) {
-  const auto ticks = t.to_epoch_nanos_vector();
+  const auto ticks = t.ticks();
   std::vector<std::int64_t> out;
   out.reserve(indices.size());
   for (const auto raw_idx : indices) {
@@ -730,9 +730,9 @@ std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
     case ThreadKind::Note:
       return std::string(t.as_note().at(row));
     case ThreadKind::Timeline:
-      return std::to_string(t.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+      return std::to_string(t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case ThreadKind::TimeIndex:
-      return std::to_string(t.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+      return std::to_string(t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
     default:
       return "";
   }
@@ -963,7 +963,7 @@ Thread forward_fill_thread(const Thread& t, std::int64_t limit = -1) {
       return Thread(out, bool_series_from_bools(valid));
     }
     case ThreadKind::Timeline: {
-      auto ticks = t.as_timeline().to_epoch_nanos_vector();
+      auto ticks = t.as_timeline().ticks();
       std::int64_t filled_run = 0;
       for (std::int64_t i = 1; i < t.size(); ++i) {
         if (valid[static_cast<std::size_t>(i)]) {
@@ -1058,7 +1058,7 @@ Thread backward_fill_thread(const Thread& t, std::int64_t limit = -1) {
       return Thread(out, bool_series_from_bools(valid));
     }
     case ThreadKind::Timeline: {
-      auto ticks = t.as_timeline().to_epoch_nanos_vector();
+      auto ticks = t.as_timeline().ticks();
       std::int64_t filled_run = 0;
       for (std::int64_t i = t.size() - 2; i >= 0; --i) {
         if (valid[static_cast<std::size_t>(i)]) {

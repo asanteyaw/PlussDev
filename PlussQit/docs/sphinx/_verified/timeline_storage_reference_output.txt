@@ -1,0 +1,47 @@
+
+=== instants ===
+Timeline(shape=[2, 2], tz=UTC)
+[ 1969-12-31 23:59:59 1970-01-01 00:00:00 ]
+[ 1970-01-01 00:00:01                 NaT ]
+
+=== epoch_nanos ===
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡          -1                    0 ⎤
+⎣  1999999999 -9223372036854775808 ⎦
+
+=== epoch_micros ===
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡       -1                    0 ⎤
+⎣  1999999 -9223372036854775808 ⎦
+
+=== epoch_millis ===
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡    -1                    0 ⎤
+⎣  1999 -9223372036854775808 ⎦
+
+=== epoch_seconds ===
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ -1                    0 ⎤
+⎣  1 -9223372036854775808 ⎦
+
+=== epoch_days ===
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ -1                    0 ⎤
+⎣  0 -9223372036854775808 ⎦
+
+=== copy_ticks ===
+[-1, 0, 1999999999, -9223372036854775808]
+
+=== strided_buffer ===
+Timeline(shape=[2], tz=UTC)
+[ 1970-01-01 00:00:00, 1970-01-01 00:00:02 ]
+released while Timeline lives: false
+released after Timeline dies: true
+
+=== to_timeindex ===
+size=2, increasing=true

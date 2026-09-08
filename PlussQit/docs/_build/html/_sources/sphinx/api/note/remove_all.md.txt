@@ -1,3 +1,4 @@
+<!-- pluss-hand-authored -->
 # Note::remove_all
 
 [Back to Note API Reference](../../note_api_reference)
@@ -5,121 +6,112 @@
 ## Signature
 
 ```cpp
-Note::remove_all(std::string_view needle) const -> Note
+Note Note::remove_all(std::string_view needle) const
 ```
 
-## What It Does
+## Delete Every Occurrence Of A Literal Substring
 
-Removes every literal occurrence of a substring from each text cell.
+`remove_all(needle)` returns a new `Note`, same shape as the input, with
+every occurrence of the literal string `needle` deleted from each cell. It is
+[`replace`](replace.md) with an empty replacement, given its own name because
+"strip this marker out entirely" is a common enough intent to be worth
+spelling directly: separators, bracket noise, a repeated tag, a prefix that
+leaked into the data.
 
-This differs from [`replace`](replace.md) in one practical way: you are not
-rewriting the match into something else, you are deleting it entirely.
+The match is **literal** — `needle` is compared byte for byte, with no
+regex metacharacters and no case folding. Occurrences are removed
+**left to right and non-overlapping**: after one match is cut, scanning
+resumes at the following byte, so `remove_all("aa")` on `"aaaaa"` removes two
+pairs and leaves one `a`. Bytes around the deletions are **not** otherwise
+touched — no whitespace collapsing, no trimming — so removing a mid-string
+token can leave a double space; chain [`strip`](strip.md) or
+[`replace`](replace.md) if that matters.
 
-That makes `remove_all()` useful for:
+The operation is shape-preserving, cell-independent, and returns a fresh
+`Note`. A cell that does not contain `needle` is copied through unchanged.
 
-- marker cleanup
-- substring erasure before tokenization
-- deleting repeated labels or prefixes without involving regex
-
-The key behavioral point is that `remove_all()` is global within each cell:
-every matching substring is removed, not just the first occurrence and not just
-boundary occurrences.
-
-## Parameters
-
-**needle**
-
-The literal substring to remove everywhere it appears in each cell.
-
-Interior occurrences are removed too, not just boundary occurrences. If you
-only want to trim a boundary run, use [`strip`](strip.md) instead.
-
-`needle` is treated literally. Characters such as `.` or `*` have no regex
-meaning here.
-
-## Returns
-
-`Note`
-    A shape-preserving `Note` with all literal occurrences removed.
-
-## Examples
-
-Example 1. Remove every `beta` substring from each cell.
+## Example 1: Remove A Repeated Word
 
 ```cpp
-auto note = pluss::make_note({"alpha beta beta", "beta only"});
-auto cleaned = note.remove_all("beta");
-std::cout << "remove_all:\n" << cleaned << "\n";
+std::cout << pluss::note::print(
+    pluss::make_note({"alpha beta beta", "beta only", "none"}).remove_all("beta"))
+    << "\n";
 ```
 
 ### Output
 
 ```text
-remove_all:
-  [0] alpha  
-  [1]  only
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["alpha  ", " only", "none"]
 ```
 
-Example 2. Normalize the result afterward when deletion leaves boundary noise.
+Both `beta`s go from the first cell (leaving two spaces where they were), the
+leading `beta` goes from the second, and the third is unchanged.
+
+## Example 2: Matches Do Not Overlap
 
 ```cpp
-auto note = pluss::make_note({"##alpha##", "##beta"});
-auto cleaned = note.remove_all("#");
-auto normalized = cleaned.strip();
-std::cout << "remove_all_strip:\n" << pluss::note::print(normalized) << "\n";
+const pluss::Note n = pluss::make_note({"aaaaa"}).remove_all("aa");
+std::cout << n << "\n";
 ```
 
 ### Output
 
 ```text
-remove_all_strip:
-  [0] alpha
-  [1] beta
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["a"]
 ```
 
-Example 3. Remove a repeated marker substring literally. A trailing bare `id`
-remains because the pattern here is `id-`, not `id`.
+`aa` is removed at positions 0 and 2; the trailing `a` has no pair.
+
+## Example 3: A Needle That Is Not Present
 
 ```cpp
-auto note = pluss::make_note({"id-001-id", "id-204"});
-auto cleaned = note.remove_all("id-");
-pluss::tils::OutputEngine out;
-out.writeln("remove_all_marker:");
-out.writeln(cleaned);
+pluss::note::print(std::cout,
+                   pluss::make_note({"keep me"}).remove_all("zzz"))
+    << "\n";
 ```
 
 ### Output
 
 ```text
-remove_all_marker:
-  [0] 001-id
-  [1] 204
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["keep me"]
 ```
 
-## Notes
+## Example 4: Shape Is Preserved
 
-- `remove_all()` is literal substring erasure, not regex erasure.
-- The first example intentionally leaves doubled spaces behind. Deletion and
-  whitespace normalization are separate concerns.
-- The third example is intentionally exact: `id-` is removed, but the trailing
-  bare `id` in `001-id` remains because it is not the same literal substring.
-- If you want the result normalized afterward, pair this with
-  [`strip`](strip.md) or another whitespace cleanup pass.
-- This is often the cleanest intermediate step before retokenizing text.
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({{"a-b-c", "d-e"}}).remove_all("-"))
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
+[
+  ["abc", "de"]
+]
+```
 
 ## See Also
 
-- [`Note::replace`](replace.md): rewrite a substring instead of deleting it.
-- [`Note::strip`](strip.md): clean up boundary whitespace or marker runs after
-  removal.
+- [`Note::replace`](replace.md): the general form — substitute a
+  replacement instead of deleting.
+- `pluss::coden::Note::remove`: delete only the **first** occurrence.
+- [`Note::strip`](strip.md): remove characters only at the cell boundaries.
+- [`Note::nlp_remove_urls`](nlp_remove_urls.md): pattern-based removal (URLs)
+  with whitespace cleanup.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tex_to_text.html">
+  <a class="prev-link" href="regex_findall.html">
     <span class="label">Previous</span>
-    <span class="title">tex_to_text</span>
+    <span class="title">regex_findall</span>
   </a>
-  <a class="next-link" href="quote.html">
+  <a class="next-link" href="replace.html">
     <span class="label">Next</span>
-    <span class="title">quote</span>
+    <span class="title">replace</span>
   </a>
 </div>

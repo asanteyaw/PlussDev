@@ -144,7 +144,7 @@ void test_comma_fixture_load_and_cases() {
   show_opts.mode = pluss::table::display::DisplayMode::Compact;
   show_opts.terminal_width = 120;
   const auto date_only = df.features({"Updated Date"}).head(3, false).to_string(show_opts);
-  const auto first_date = std::string(df.features("Updated Date").as_timeline().to_note_date().at(0));
+  const auto first_date = std::string(df.features("Updated Date").as_timeline().strftime("%Y-%m-%d").at(0));
   expect(date_only.find(first_date) != std::string::npos,
          "timeline display should include plain date for date-only values");
   expect(date_only.find("T00:00:00") == std::string::npos,
@@ -2880,7 +2880,7 @@ void test_versatile_dataframe_families() {
 
   const auto nulled_job = put_inplace.features({"job"}).put(
       put_inplace.features("age") == static_cast<double>(put_ages[1]),
-      pluss::null);
+      pluss::series::null);
   expect(nulled_job.features("job").isnull().as_series().to_vec<bool>()[1],
          "put(feature, mask, null) should nullify masked rows");
 
@@ -3103,8 +3103,8 @@ void test_versatile_dataframe_families() {
 
   const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
   const auto mixed_ts_filled = mixed_missing.fillnull(ts_fill, {"ts"});
-  const auto ts_ticks = mixed_ts_filled.features("ts").as_timeline().to_epoch_nanos_vector();
-  const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];
+  const auto ts_ticks = mixed_ts_filled.features("ts").as_timeline().ticks();
+  const auto ts_fill_tick = ts_fill.ticks()[0];
   expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
          "fillnull(Timeline, features) should replace null Timeline values");
   expect(!pluss::table::detail::has_validity_mask(mixed_ts_filled.features("ts")),
@@ -3114,8 +3114,8 @@ void test_versatile_dataframe_families() {
 
   const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
   const auto mixed_ti_filled = mixed_missing.fillnull(ti_fill, {"ti"});
-  const auto ti_ticks = mixed_ti_filled.features("ti").as_timeindex().timeline().to_epoch_nanos_vector();
-  const auto ti_fill_tick = ti_fill.timeline().to_epoch_nanos_vector()[0];
+  const auto ti_ticks = mixed_ti_filled.features("ti").as_timeindex().timeline().ticks();
+  const auto ti_fill_tick = ti_fill.timeline().ticks()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
          "fillnull(TimeIndex, features) should replace null TimeIndex values");
   expect(!pluss::table::detail::has_validity_mask(mixed_ti_filled.features("ti")),
@@ -3513,12 +3513,12 @@ void test_replace_exact_and_null_overloads() {
   expect(numeric_put.as_series().to_vec<double>() == std::vector<double>({9.0, 0.0, 9.0, 4.0}),
          "Thread::put(mask, double) should assign into masked numeric rows");
 
-  const auto numeric_nulled = numeric.replace(0.0, pluss::null);
+  const auto numeric_nulled = numeric.replace(0.0, pluss::series::null);
   expect(pluss::table::detail::has_validity_mask(numeric_nulled), "Thread::replace(double, null) should create a validity mask");
   expect(pluss::table::detail::validity_mask(numeric_nulled)->to_vec<bool>() == std::vector<bool>({true, false, true, true}),
          "Thread::replace(double, null) should null-mark exact numeric matches");
 
-  const auto numeric_refilled = numeric_nulled.replace(pluss::null, 9.0);
+  const auto numeric_refilled = numeric_nulled.replace(pluss::series::null, 9.0);
   expect(!pluss::table::detail::has_validity_mask(numeric_refilled), "Thread::replace(null, double) should resolve null mask when fully filled");
   expect(numeric_refilled.as_series().to_vec<double>() == std::vector<double>({2.0, 9.0, 2.0, 4.0}),
          "Thread::replace(null, double) should fill numeric null rows");
@@ -3553,10 +3553,10 @@ void test_replace_exact_and_null_overloads() {
       }),
       ts_valid);
   const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
-  const auto timeline_refilled = timeline_thread.replace(pluss::null, ts_fill);
+  const auto timeline_refilled = timeline_thread.replace(pluss::series::null, ts_fill);
   expect(!pluss::table::detail::has_validity_mask(timeline_refilled),
          "Thread::replace(null, Timeline) should resolve timeline null rows");
-  expect(timeline_refilled.as_timeline().to_epoch_nanos_vector()[1] == ts_fill.to_epoch_nanos_vector()[0],
+  expect(timeline_refilled.as_timeline().ticks()[1] == ts_fill.ticks()[0],
          "Thread::replace(null, Timeline) should fill timeline null rows");
 
   const auto gradebook = DataFrame({
@@ -3584,7 +3584,7 @@ void test_replace_exact_and_null_overloads() {
   expect(std::string(mid_replaced.features("Name").as_note().at(0)) == "Laurel",
          "DataFrame::replace(double, double, features) should not mutate unselected Note features");
 
-  const auto mid_nulled = gradebook.replace(0.0, pluss::null, {"Midterm 1", "Midterm 2"});
+  const auto mid_nulled = gradebook.replace(0.0, pluss::series::null, {"Midterm 1", "Midterm 2"});
   expect(pluss::table::detail::validity_mask(mid_nulled.features("Midterm 1"))->to_vec<bool>() == std::vector<bool>({true, false, true}),
          "DataFrame::replace(double, null, features) should null-mark exact matches in selected numeric features");
   expect(pluss::table::detail::validity_mask(mid_nulled.features("Midterm 2"))->to_vec<bool>() == std::vector<bool>({false, true, false}),
@@ -3611,11 +3611,11 @@ void test_replace_exact_and_null_overloads() {
   expect(std::string(typed_name.features("Name").as_note().at(2)) == "Kofi",
          "DataFrame::replace(Note, Note) should delegate exact Note replacement");
 
-  const auto name_nulled = gradebook.replace(pluss::make_note("Kojo"), pluss::null, {"Name"});
+  const auto name_nulled = gradebook.replace(pluss::make_note("Kojo"), pluss::series::null, {"Name"});
   expect(pluss::table::detail::has_validity_mask(name_nulled.features("Name"))
              && !pluss::table::detail::validity_mask(name_nulled.features("Name"))->to_vec<bool>(2),
          "DataFrame::replace(Note, null) should delegate Note nullification");
-  const auto name_refilled = name_nulled.replace(pluss::null, pluss::make_note("Ama"), {"Name"});
+  const auto name_refilled = name_nulled.replace(pluss::series::null, pluss::make_note("Ama"), {"Name"});
   expect(!pluss::table::detail::has_validity_mask(name_refilled.features("Name"))
              && std::string(name_refilled.features("Name").as_note().at(2)) == "Ama",
          "DataFrame::replace(null, Note) should delegate Note filling");
@@ -3640,10 +3640,10 @@ void test_replace_exact_and_null_overloads() {
   const auto old_time = pluss::make_timeline("2024-01-02T00:00:00Z");
   const auto new_time = pluss::make_timeline("2024-01-09T00:00:00Z");
   const auto temporal_replaced = temporal.replace(old_time, new_time);
-  const auto expected_tick = new_time.to_epoch_nanos_vector()[0];
-  expect(temporal_replaced.features("event").as_timeline().to_epoch_nanos_vector()[1] == expected_tick,
+  const auto expected_tick = new_time.ticks()[0];
+  expect(temporal_replaced.features("event").as_timeline().ticks()[1] == expected_tick,
          "DataFrame::replace(Timeline, Timeline) should update Timeline columns");
-  expect(temporal_replaced.features("indexed").as_timeindex().timeline().to_epoch_nanos_vector()[1]
+  expect(temporal_replaced.features("indexed").as_timeindex().timeline().ticks()[1]
              == expected_tick,
          "DataFrame::replace(Timeline, Timeline) should update TimeIndex columns");
   expect(temporal_replaced.features("event").kind() == ThreadKind::Timeline
@@ -3652,7 +3652,7 @@ void test_replace_exact_and_null_overloads() {
   expect(temporal_replaced.title() == "temporal",
          "DataFrame temporal replacement should preserve the DataFrame title");
 
-  const auto temporal_nulled = temporal.replace(old_time, pluss::null);
+  const auto temporal_nulled = temporal.replace(old_time, pluss::series::null);
   expect(!pluss::table::detail::validity_mask(temporal_nulled.features("event"))->to_vec<bool>(1)
              && !pluss::table::detail::validity_mask(temporal_nulled.features("indexed"))->to_vec<bool>(1),
          "DataFrame::replace(Timeline, null) should nullify matching temporal values");
@@ -3660,11 +3660,11 @@ void test_replace_exact_and_null_overloads() {
   const auto old_index = pluss::make_timeindex("2024-01-01T00:00:00Z");
   const auto new_index = pluss::make_timeindex("2024-01-08T00:00:00Z");
   const auto index_replaced = temporal.replace(old_index, new_index);
-  expect(index_replaced.features("indexed").as_timeindex().timeline().to_epoch_nanos_vector()[0]
-             == new_index.timeline().to_epoch_nanos_vector()[0],
+  expect(index_replaced.features("indexed").as_timeindex().timeline().ticks()[0]
+             == new_index.timeline().ticks()[0],
          "DataFrame::replace(TimeIndex, TimeIndex) should update TimeIndex columns");
-  expect(index_replaced.features("event").as_timeline().to_epoch_nanos_vector()
-             == temporal.features("event").as_timeline().to_epoch_nanos_vector(),
+  expect(index_replaced.features("event").as_timeline().ticks()
+             == temporal.features("event").as_timeline().ticks(),
          "DataFrame::replace(TimeIndex, TimeIndex) should preserve Timeline columns");
 
   expect_throw([&]() { (void)gradebook.replace(1.0, 2.0, {"missing"}); },
@@ -3699,7 +3699,7 @@ void test_select_and_place_helpers() {
   const auto letter_selected = Thread::select(
       {Thread(cond0), Thread(cond1), Thread(cond2)},
       {pluss::make_note({"A+"}), pluss::make_note({"B"}), pluss::make_note({"C"})},
-      pluss::null);
+      pluss::series::null);
   expect(letter_selected.kind() == ThreadKind::Note,
          "Thread::select should accept explicit length-1 Note choices");
   expect(letter_selected.as_note().vector() == std::vector<std::string_view>({"A+", "B", "C", ""}),
@@ -3710,7 +3710,7 @@ void test_select_and_place_helpers() {
   const auto thread_selected_null = Thread::select(
       {Thread(cond0), Thread(cond1), Thread(cond2)},
       {Thread(pick0), Thread(pick1), Thread(pick2)},
-      pluss::null);
+      pluss::series::null);
   expect(pluss::table::detail::has_validity_mask(thread_selected_null),
          "Thread::select(null) should mark unmatched rows as null");
   const auto thread_selected_null_valid = pluss::table::detail::validity_mask(thread_selected_null)->to_vec<bool>();
@@ -3983,7 +3983,7 @@ void test_timeline_sort_nat_ordering() {
           20'000'000'000LL,
       },
       {5});
-  const auto t = Timeline::fromSeries(ticks);
+  const auto t = pluss::timeline::from_epoch(ticks);
 
   expect(t.argsort().to_vec<std::int64_t>() == std::vector<std::int64_t>({2, 4, 0, 1, 3}),
          "Timeline::argsort should keep NaT values at the end while preserving NaT order");
@@ -4677,10 +4677,10 @@ void test_nexus_pull_surface() {
              built.features("median_spend").as_series().to_vec<double>(1) == 4.0 &&
              built.features("min_spend").as_series().to_vec<double>(0) == 5.0 &&
              built.features("max_spend").as_series().to_vec<double>(1) == 8.0 &&
-             built.features("first_event_at").as_timeline().to_epoch_nanos_vector()[0] ==
-                 events.features("occurred_at").as_timeline().to_epoch_nanos_vector()[0] &&
-             built.features("last_event_at").as_timeline().to_epoch_nanos_vector()[1] ==
-                 events.features("occurred_at").as_timeline().to_epoch_nanos_vector()[4] &&
+             built.features("first_event_at").as_timeline().ticks()[0] ==
+                 events.features("occurred_at").as_timeline().ticks()[0] &&
+             built.features("last_event_at").as_timeline().ticks()[1] ==
+                 events.features("occurred_at").as_timeline().ticks()[4] &&
              built.features("std_spend").as_series().to_vec<double>(0) > 0.0 &&
              built.features("var_spend").as_series().to_vec<double>(1) > 0.0 &&
              built.features("recent_spend").as_series().to_vec<double>(1) == 12.0 &&

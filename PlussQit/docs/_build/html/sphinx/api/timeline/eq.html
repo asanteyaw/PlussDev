@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::isnat" href="isnat.html" />
-    <link rel="prev" title="Timeline::diff" href="diff.html" />
+    <link rel="next" title="Timeline::fill_like" href="fill_like.html" />
+    <link rel="prev" title="Timeline::epoch_seconds" href="epoch_seconds.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -41,113 +41,91 @@
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">eq</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Performs elementwise temporal equality and returns a boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
-<p>This page is also the canonical reference for the sibling comparison methods:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ne</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lt</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">le</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">gt</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ge</span></code></p></li>
-</ul>
-<p>All six methods share the same shape and broadcast contract. The only thing
-that changes is the comparison relation.</p>
-</section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong></p>
-<p>The timeline to compare against.</p>
-<p>This may be the same shape as <code class="docutils literal notranslate"><span class="pre">self</span></code>, or a scalar/broadcastable timeline when
-the comparison is conceptually “compare every element to one timestamp”.</p>
-<p>Missing timestamps participate conservatively: a missing time does not compare
-as less-than or greater-than any real timestamp.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A boolean series describing the comparison result element by element.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Equality keeps only rows where the timestamps match exactly.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="exact-instant-equality">
+<h2>Exact Instant Equality<a class="headerlink" href="#exact-instant-equality" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">eq()</span></code> compares paired UTC instants and returns one boolean per broadcasted
+position. Timezone labels do not alter the answer: differently displayed local
+times compare equal when they identify the same instant on the epoch axis.</p>
+<p>The result is a boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not one <code class="docutils literal notranslate"><span class="pre">bool</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">boundary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">boundary</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">boundary</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
-data=[true, false, false, false]
+<p>Both expressions produce:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
 </pre></div>
 </div>
-<p>Example 2. Less-than and greater-than comparisons answer true temporal ordering
-questions.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">earlier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">lt</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">later_or_equal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">ge</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">earlier</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">later_or_equal</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>The scalar has shape <code class="docutils literal notranslate"><span class="pre">[]</span></code>; broadcasting pairs it with both elements and leaves
+the result shape <code class="docutils literal notranslate"><span class="pre">[2]</span></code>. Higher-rank operands follow the same trailing-axis
+rules. Shapes that cannot broadcast are rejected rather than truncated or
+flattened.</p>
 </section>
+</section>
+<section id="equality-is-about-the-instant">
+<h2>Equality Is About The Instant<a class="headerlink" href="#equality-is-about-the-instant" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-07-01T18:00:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">utc</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">local</span><span class="p">).</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">base.lt(other)</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
-data=[false, true, false, true]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">base.ge(other)</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
-data=[true, false, true, false]
+<p><code class="docutils literal notranslate"><span class="pre">tz_convert()</span></code> changes local calendar presentation, not the represented
+instant. Compare <code class="docutils literal notranslate"><span class="pre">tz()</span></code> separately if timezone metadata is part of an
+application invariant.</p>
+</section>
+</section>
+<section id="nat-and-aggregate-decisions">
+<h2><code class="docutils literal notranslate"><span class="pre">NaT</span></code> And Aggregate Decisions<a class="headerlink" href="#nat-and-aggregate-decisions" title="Link to this heading">¶</a></h2>
+<p>An absent instant is not equal to anything, including another <code class="docutils literal notranslate"><span class="pre">NaT</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">values</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">(a</span> <span class="pre">==</span> <span class="pre">b).all().item&lt;bool&gt;()</span></code> for one whole-array decision. If absent
+positions require special equivalence, inspect <code class="docutils literal notranslate"><span class="pre">isnat()</span></code> and encode that policy
+in the mask before reducing.</p>
 </section>
 </section>
-<section id="related-methods">
-<h2>Related Methods<a class="headerlink" href="#related-methods" title="Link to this heading">¶</a></h2>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ne(other)</span></code>
-True where timestamps differ.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lt(other)</span></code>
-True where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&lt;</span> <span class="pre">other</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">le(other)</span></code>
-True where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&lt;=</span> <span class="pre">other</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">gt(other)</span></code>
-True where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&gt;</span> <span class="pre">other</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ge(other)</span></code>
-True where <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&gt;=</span> <span class="pre">other</span></code>.</p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Comparison methods are usually the front door into mask-based temporal logic.</p></li>
-<li><p>Pair them with <a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">where</span></code></span></a> when you want a temporal branch.</p></li>
-<li><p>Pair them with <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Thread</span></code> filtering when the timeline lives in a
-table column.</p></li>
+<li><p>Both operands must be defined Timeline values.</p></li>
+<li><p>Their shapes must be broadcast-compatible.</p></li>
+<li><p>Equality does not parse text; construct a Timeline first.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::where</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="operators.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline</span> <span class="pre">operators</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="ne.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::ne</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::isnat</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="diff.html">
-    <span class="label">Previous</span>
-    <span class="title">diff</span>
-  </a>
-  <a class="next-link" href="isnat.html">
-    <span class="label">Next</span>
-    <span class="title">isnat</span>
-  </a>
+  <a class="prev-link" href="diff.html"><span class="label">Previous</span><span class="title">diff</span></a>
+  <a class="next-link" href="fill_like.html"><span class="label">Next</span><span class="title">fill_like</span></a>
 </div>
 </section>
 </section>
@@ -190,6 +168,7 @@ table column.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -240,8 +219,8 @@ table column.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="diff.html" title="previous chapter">Timeline::diff</a></li>
-      <li>Next: <a href="isnat.html" title="next chapter">Timeline::isnat</a></li>
+      <li>Previous: <a href="epoch_seconds.html" title="previous chapter">Timeline::epoch_seconds</a></li>
+      <li>Next: <a href="fill_like.html" title="next chapter">Timeline::fill_like</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::nlp_mask_pii" href="nlp_mask_pii.html" />
-    <link rel="prev" title="Note::split" href="split.html" />
+    <link rel="next" title="Note::unquote" href="unquote.html" />
+    <link rel="prev" title="Note::title" href="title.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,147 +36,150 @@
 
           <div class="body" role="main">
             
-  <section id="note-tokenize-words">
+  <!-- pluss-hand-authored -->
+<section id="note-tokenize-words">
 <h1>Note::tokenize_words<a class="headerlink" href="#note-tokenize-words" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">tokenize_words</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">TokenBatch</span>
-<span class="n">Note</span><span class="o">::</span><span class="n">tokenize_words</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">flags</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">TokenBatch</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TokenBatch</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">tokenize_words</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">TokenBatch</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">tokenize_words</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">flags</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Tokenizes each text cell into word-like units.</p>
-<p>This sits one step above raw delimiter splitting: instead of splitting on a
-single literal character or on whitespace only, <code class="docutils literal notranslate"><span class="pre">tokenize_words()</span></code> applies the
-library’s word tokenization behavior and returns a flattened token stream with
-case offsets.</p>
-<p>Use this when punctuation and spacing are not enough to describe the token
-boundaries you want. It is the bridge between very light structural splitting
-and fuller NLP surfaces.</p>
-</section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>flags</strong></p>
-<p>Optional tokenizer-behavior flags.</p>
+<section id="tokenize-each-cell-into-word-like-units">
+<h2>Tokenize Each Cell Into Word-Like Units<a class="headerlink" href="#tokenize-each-cell-into-word-like-units" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tokenize_words()</span></code> splits each text cell into word tokens and returns them as
+a <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>. It sits one step above <a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code></span></a>:
+instead of “everything between spaces,” it recognizes word shapes and drops
+the punctuation between them, so <code class="docutils literal notranslate"><span class="pre">&quot;One.\nTwo!&quot;</span></code> tokenizes to <code class="docutils literal notranslate"><span class="pre">One</span></code>, <code class="docutils literal notranslate"><span class="pre">Two</span></code> —
+no trailing <code class="docutils literal notranslate"><span class="pre">.</span></code> or <code class="docutils literal notranslate"><span class="pre">!</span></code>.</p>
+<section id="what-counts-as-a-word">
+<h3>What counts as a word<a class="headerlink" href="#what-counts-as-a-word" title="Link to this heading">¶</a></h3>
+<p>The tokenizer is <strong>ASCII-oriented</strong>. A word is a run of ASCII letters and
+digits, with a few extensions:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tokenize_words()</span></code>
-Uses the library’s default word-tokenization policy.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tokenize_words(flags)</span></code>
-Uses an explicit flag bitmask. Reach for this overload only when you already
-know the library-defined flag contract you want to opt into.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_</span></code> is part of a word (<code class="docutils literal notranslate"><span class="pre">snake_case</span></code> is one token).</p></li>
+<li><p>A single <code class="docutils literal notranslate"><span class="pre">-</span></code> or <code class="docutils literal notranslate"><span class="pre">'</span></code> <strong>between</strong> two alphanumeric characters stays inside
+the word (<code class="docutils literal notranslate"><span class="pre">state-of-the-art</span></code>, <code class="docutils literal notranslate"><span class="pre">don't</span></code>).</p></li>
+<li><p>Trailing <code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">#</span></code> after a letter is kept (<code class="docutils literal notranslate"><span class="pre">C++</span></code>, <code class="docutils literal notranslate"><span class="pre">C#</span></code>).</p></li>
+<li><p>URLs, email addresses, and common dotted abbreviations are recognized and
+kept whole rather than shattered on their <code class="docutils literal notranslate"><span class="pre">.</span></code> and <code class="docutils literal notranslate"><span class="pre">/</span></code>.</p></li>
 </ul>
-<p>This page does not invent semantics for unnamed flag bits. When a future pass
-documents a specific flag family, it should do so with explicit flag names and
-verified examples rather than hand-waving about possible behaviors.</p>
+<p>Everything else — spaces, standalone punctuation, and <strong>every byte outside
+ASCII</strong> — is a separator. That last point matters: a non-ASCII letter breaks
+the word around it, so <code class="docutils literal notranslate"><span class="pre">&quot;café2&quot;</span></code> tokenizes to <code class="docutils literal notranslate"><span class="pre">caf</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;über-cool&quot;</span></code> to
+<code class="docutils literal notranslate"><span class="pre">ber-cool</span></code>. For Unicode-aware segmentation, use <code class="docutils literal notranslate"><span class="pre">regex_split</span></code> /
+<a class="reference internal" href="regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex_findall</span></code></span></a> with an explicit pattern, or normalize
+the text first.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>
-A flat word-token stream plus <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> describing which tokens belong to
-each input cell.</p>
+<section id="flags">
+<h3><code class="docutils literal notranslate"><span class="pre">flags</span></code><a class="headerlink" href="#flags" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">flags</span></code> is a bitmask; <code class="docutils literal notranslate"><span class="pre">flags</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code> (the default) leaves tokens as they appear
+in the source. Bit <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;&lt;</span> <span class="pre">0</span></code> (value <code class="docutils literal notranslate"><span class="pre">1</span></code>) case-folds every emitted token
+(ASCII lowercase) without changing the token boundaries — convenient for
+building a bag-of-words key in one call instead of chaining
+<a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower</span></code></span></a>.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Tokenize mixed punctuation and newline text into words.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;One.</span><span class="se">\n</span><span class="s">Two!&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A,b;c&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">tokenize_words</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tokenize_words tokens:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tokenize_words offsets:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">off</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">offsets</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">off</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="the-tokenbatch-result">
+<h3>The <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> result<a class="headerlink" href="#the-tokenbatch-result" title="Link to this heading">¶</a></h3>
+<p>Tokens from all cells are concatenated into one flat rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> token <code class="docutils literal notranslate"><span class="pre">Note</span></code>
+(<code class="docutils literal notranslate"><span class="pre">batch.tokens()</span></code>); <code class="docutils literal notranslate"><span class="pre">batch.offsets()</span></code> (length <code class="docutils literal notranslate"><span class="pre">numel</span> <span class="pre">+</span> <span class="pre">1</span></code>) marks each cell’s
+run: cell <code class="docutils literal notranslate"><span class="pre">r</span></code> is <code class="docutils literal notranslate"><span class="pre">tokens()[offsets()[r]</span> <span class="pre">..</span> <span class="pre">offsets()[r+1])</span></code>. A cell with no
+word contributes an empty range.</p>
+</section>
+</section>
+<section id="example-1-punctuation-is-dropped">
+<h2>Example 1: Punctuation Is Dropped<a class="headerlink" href="#example-1-punctuation-is-dropped" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;One.</span><span class="se">\n</span><span class="s">Two!&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price=12.50, paid!&quot;</span><span class="p">}).</span><span class="n">tokenize_words</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tokenize_words tokens: [One] [Two] [A] [b] [c]
-tokenize_words offsets: 0 2 5
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[6], dim=1, numel=6, encoding=utf8)
+[&quot;One&quot;, &quot;Two&quot;, &quot;price&quot;, &quot;12&quot;, &quot;50&quot;, &quot;paid&quot;]
+offsets: [0, 2, 6]
 </pre></div>
 </div>
-<p>Example 2. Normalize case first when you want lowercase word tokens directly.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada LOVELACE&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Grace Hopper&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">lower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">lower</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lower</span><span class="p">.</span><span class="n">tokenize_words</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tokenize_words_lower tokens:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tokenize_words_lower offsets:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">off</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">offsets</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">off</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">.</span></code>, <code class="docutils literal notranslate"><span class="pre">!</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code>, and <code class="docutils literal notranslate"><span class="pre">,</span></code> are all separators; <code class="docutils literal notranslate"><span class="pre">12.50</span></code> splits at the <code class="docutils literal notranslate"><span class="pre">.</span></code>.</p>
 </section>
+</section>
+<section id="example-2-the-case-fold-flag">
+<h2>Example 2: The Case-Fold Flag<a class="headerlink" href="#example-2-the-case-fold-flag" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada LOVELACE&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Grace Hopper&quot;</span><span class="p">}).</span><span class="n">tokenize_words</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tokenize_words_lower tokens: [ada] [lovelace] [grace] [hopper]
-tokenize_words_lower offsets: 0 2 4
-</pre></div>
-</div>
-<p>Example 3. Compare it mentally with <code class="docutils literal notranslate"><span class="pre">split_whitespace()</span></code> when you want a more
-word-like split but still need to see what the default tokenizer keeps intact.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;price=12.50, paid!&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ref:A-17&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">tokenize_words</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tokenize_words_punct tokens:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tokenize_words_punct offsets:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">off</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">offsets</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">off</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[4], dim=1, numel=4, encoding=utf8)
+[&quot;ada&quot;, &quot;lovelace&quot;, &quot;grace&quot;, &quot;hopper&quot;]
 </pre></div>
 </div>
 </section>
+</section>
+<section id="example-3-without-the-flag">
+<h2>Example 3: Without The Flag<a class="headerlink" href="#example-3-without-the-flag" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada LOVELACE&quot;</span><span class="p">}).</span><span class="n">tokenize_words</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tokenize_words_punct tokens: [price] [12] [50] [paid] [ref] [A-17]
-tokenize_words_punct offsets: 0 4 6
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;Ada&quot;, &quot;LOVELACE&quot;]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>The current default behavior often strips obvious punctuation boundaries, but
-some compound fragments can remain intact, as <code class="docutils literal notranslate"><span class="pre">A-17</span></code> does in the third
-example.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">offsets()</span></code> show that the first input cell contributed two words and the
-second contributed three.</p></li>
-<li><p>If your use case is pure whitespace structure without word-token logic,
-<a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code></span></a> is the more direct primitive.</p></li>
-</ul>
+<section id="example-4-per-cell-runs">
+<h2>Example 4: Per-Cell Runs<a class="headerlink" href="#example-4-per-cell-runs" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({{</span><span class="s">&quot;a b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c d e&quot;</span><span class="p">}}).</span><span class="n">tokenize_words</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[5], dim=1, numel=5, encoding=utf8)
+[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;, &quot;e&quot;]
+offsets: [0, 2, 5]
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">1×2</span></code> input flattens row-major: cell <code class="docutils literal notranslate"><span class="pre">0</span></code> → <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">2)</span></code>, cell <code class="docutils literal notranslate"><span class="pre">1</span></code> →
+<code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">5)</span></code>.</p>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::split_whitespace</span></code></span></a>: simpler structural token
-splitting.</p></li>
-<li><p><a class="reference internal" href="regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::regex_findall</span></code></span></a>: extract only tokens that match a
-pattern.</p></li>
+<li><p><a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::split_whitespace</span></code></span></a>: faster, purely
+whitespace-delimited, keeps punctuation attached.</p></li>
+<li><p><a class="reference internal" href="regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::regex_findall</span></code></span></a> / <code class="docutils literal notranslate"><span class="pre">regex_split</span></code>: define your own
+token pattern, including Unicode ranges.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::tokenize_sentences</span></code> / <code class="docutils literal notranslate"><span class="pre">tokenize_punct</span></code>: sibling
+tokenizers for other units.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="split.html">
+  <a class="prev-link" href="title.html">
     <span class="label">Previous</span>
-    <span class="title">split</span>
+    <span class="title">title</span>
   </a>
-  <a class="next-link" href="nlp_mask_pii.html">
+  <a class="next-link" href="unquote.html">
     <span class="label">Next</span>
-    <span class="title">nlp_mask_pii</span>
+    <span class="title">unquote</span>
   </a>
 </div>
 </section>
@@ -220,6 +223,7 @@ pattern.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -270,8 +274,8 @@ pattern.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="split.html" title="previous chapter">Note::split</a></li>
-      <li>Next: <a href="nlp_mask_pii.html" title="next chapter">Note::nlp_mask_pii</a></li>
+      <li>Previous: <a href="title.html" title="previous chapter">Note::title</a></li>
+      <li>Next: <a href="unquote.html" title="next chapter">Note::unquote</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

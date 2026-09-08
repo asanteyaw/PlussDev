@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>API Documentation Authoring Standard &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=15722e59" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=d26de54a"></script>
+    <script src="_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Philosophy" href="API_Philosophy.html" />
+    <link rel="prev" title="TimeIndex::align_union" href="sphinx/api/timeindex/align_union.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- internal authoring standard for handwritten API references -->
+<section id="api-documentation-authoring-standard">
+<h1>API Documentation Authoring Standard<a class="headerlink" href="#api-documentation-authoring-standard" title="Link to this heading">¶</a></h1>
+<p>This is the standing quality bar for handwritten PlussQit API references. It
+applies to free functions, instance methods, static methods, operators, and
+accessor methods.</p>
+<section id="prose-must-teach-the-complete-contract">
+<h2>Prose Must Teach The Complete Contract<a class="headerlink" href="#prose-must-teach-the-complete-contract" title="Link to this heading">¶</a></h2>
+<p>A page is not complete when it merely paraphrases the function name. Its prose
+must give a reader enough understanding to choose the operation correctly and
+predict its behavior without reading the implementation.</p>
+<p>For every operation, determine and explain:</p>
+<ul class="simple">
+<li><p>why the operation exists and the problem it solves</p></li>
+<li><p>when it is the right choice, and when a neighboring operation is more precise</p></li>
+<li><p>every public call form and what is different about each overload</p></li>
+<li><p>the meaning, default, and interaction of every parameter</p></li>
+<li><p>input rank, shape, broadcasting, axis, dtype, timezone, and precision rules</p></li>
+<li><p>output type, rank, shape, ordering, ownership, and metadata</p></li>
+<li><p>mutation or allocation behavior</p></li>
+<li><p>absent-value, boundary, tie, overflow, and empty-input behavior</p></li>
+<li><p>error conditions and whether validation occurs before producing a result</p></li>
+<li><p>performance characteristics that affect how callers should use it</p></li>
+</ul>
+<p>Do not turn implementation defects into usage advice. Verify the behavior first;
+if it violates the intended contract or authoritative semantics, fix it before
+documenting it.</p>
+</section>
+<section id="examples-are-a-behavioral-inventory">
+<h2>Examples Are A Behavioral Inventory<a class="headerlink" href="#examples-are-a-behavioral-inventory" title="Link to this heading">¶</a></h2>
+<p>Example count is determined by the surface area, not by a fixed quota. Every
+materially distinct way to use an operation needs an illustrative example.</p>
+<p>The example inventory should include every applicable dimension:</p>
+<ul class="simple">
+<li><p>each overload and accepted call-site spelling</p></li>
+<li><p>scalar, one-dimensional, and higher-rank input</p></li>
+<li><p>shape preservation, flattening, reduction, or broadcasting</p></li>
+<li><p>default arguments and each behavior-changing option</p></li>
+<li><p>positive, negative, zero, inclusive, and exclusive boundaries</p></li>
+<li><p>timezone and daylight-saving behavior for temporal operations</p></li>
+<li><p>full precision when a compact printer hides meaningful digits</p></li>
+<li><p>absent values and empty shapes</p></li>
+<li><p>mutation versus out-of-place behavior</p></li>
+<li><p>deterministic or seeded behavior for random operations</p></li>
+<li><p>representative failures, including invalid rank, shape, dtype, domain, or
+parameter combinations</p></li>
+</ul>
+<p>A simple query may need three examples. A function with several overloads and
+behavioral branches may need ten or more. The page is complete only when the
+examples collectively cover the public contract.</p>
+</section>
+<section id="output-integrity">
+<h2>Output Integrity<a class="headerlink" href="#output-integrity" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Compile and run every public example that claims output.</p></li>
+<li><p>Place output immediately below the code that produced it.</p></li>
+<li><p>Copy the exact output; never substitute a hand-simplified representation.</p></li>
+<li><p>If the ordinary printer hides the behavior being taught, use a projection or
+formatter that exposes it.</p></li>
+<li><p>Do not invent fixed output for wall-clock or nondeterministic operations. Use
+seeded inputs or verify stated invariants instead.</p></li>
+<li><p>Keep a permanent reference executable for substantial documentation families.</p></li>
+</ul>
+</section>
+<section id="authoritative-behavioral-checks">
+<h2>Authoritative Behavioral Checks<a class="headerlink" href="#authoritative-behavioral-checks" title="Link to this heading">¶</a></h2>
+<p>For datetime semantics, consult the current official <code class="docutils literal notranslate"><span class="pre">pandas.Timestamp</span></code> and
+datetime-array documentation and source as an external correctness reference.
+Use it to check replacement, offsets, timezone transitions, precision,
+comparisons, and absent-instant behavior. The public PlussQit prose should teach
+PlussQit directly rather than advertise or compare external APIs.</p>
+<p>An external reference is evidence, not an excuse to copy names that do not fit
+the native PlussQit surface. Resolve intentional differences explicitly in the
+implementation review.</p>
+<p>If you find an (or what appears to be an) implementation bug or even a heavily non-performant implementation, fix it first of correctness, then performance. For performance, ensure full vectorization, batching, caching or anything that will materially improve the performance of the function or method, including the usage of native kernels/ops.</p>
+</section>
+<section id="public-presentation">
+<h2>Public Presentation<a class="headerlink" href="#public-presentation" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use canonical public names; never leak internal namespace or adapter names.</p></li>
+<li><p>Keep public callable names to at most three underscore-separated semantic
+components. Prefer short domain terms such as <code class="docutils literal notranslate"><span class="pre">ticks()</span></code> over implementation-
+shaped names such as <code class="docutils literal notranslate"><span class="pre">ticks()</span></code>. Descriptive internal kernel
+names are exempt. Rename directly rather than retaining a compatibility alias.</p></li>
+<li><p>Put the return type first in C++ signatures.</p></li>
+<li><p>Present option/configuration structures as tables with at least field,
+meaning, and default columns. Add an applicability column when fields affect
+only some modes. Do not use an aggregate-initializer block as a substitute
+for explaining an option contract; reserve construction syntax for runnable
+examples that configure an actual call.</p></li>
+<li><p>Keep one canonical page and sidebar entry per public operation.</p></li>
+<li><p>Avoid duplicate aliases and compatibility spellings in the teaching surface.</p></li>
+<li><p>Give each accessor or factory family its own landing page and per-operation
+pages.</p></li>
+<li><p>Order operation pages A-Z in the landing toctree, browser sidebar, and
+family-aware previous/next chain.</p></li>
+<li><p>Wire every page into its landing toctree, <code class="docutils literal notranslate"><span class="pre">api_nav.js</span></code>, and one family-aware
+previous/next chain.</p></li>
+<li><p>Do not name comparison libraries in public method prose or examples.</p></li>
+</ul>
+</section>
+<section id="completion-checklist">
+<h2>Completion Checklist<a class="headerlink" href="#completion-checklist" title="Link to this heading">¶</a></h2>
+<p>Before declaring a page or family complete:</p>
+<ol class="arabic simple">
+<li><p>Audit declarations, dispatch, kernels, tests, and neighboring operations.</p></li>
+<li><p>Correct implementation defects and inconsistent overload behavior.</p></li>
+<li><p>Add a permanent verifier that exercises every documented branch.</p></li>
+<li><p>Run the verifier and copy exact outputs into the matching examples.</p></li>
+<li><p>Build the HTML documentation and check landing links, sidebar membership,
+active-page selection, and previous/next controls.</p></li>
+<li><p>Confirm no generated page overwrote the handwritten source and no new build
+warnings were introduced.</p></li>
+</ol>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation Authoring Standard</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prose-must-teach-the-complete-contract">Prose Must Teach The Complete Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples-are-a-behavioral-inventory">Examples Are A Behavioral Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-integrity">Output Integrity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authoritative-behavioral-checks">Authoritative Behavioral Checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#public-presentation">Public Presentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#completion-checklist">Completion Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="sphinx/api/timeindex/align_union.html" title="previous chapter">TimeIndex::align_union</a></li>
+      <li>Next: <a href="API_Philosophy.html" title="next chapter">API Philosophy</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/API_Doc_Authoring_Standard.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -19,9 +19,15 @@ notes. This page is the curated entry point into them.
 - [Note API Reference](sphinx/note_api_reference.md): the handwritten per-method
   reference for `Note` — the vectorized text object for cleanup, tokenization,
   regex work, NLP-style text preprocessing, and TeX-aware transforms.
+- [Note Factory API Reference](sphinx/note_factory_api_reference.md): the
+  separate handwritten construction reference for `pluss::note::*` — text and
+  bytes constructors, shape-first and like-factories, generative builders, and
+  text-splitting and assembly factories.
 - [Timeline API Reference](sphinx/timeline_api_reference.md): the handwritten
   per-method reference for `Timeline` — the general temporal payload for scalar,
   vector, and N-D time data.
+- [Timeline Factory API Reference](sphinx/timeline_factory_api_reference.md):
+  construction, ranges, sampling, selection, and rendering in `pluss::timeline`.
 - [Duration API Reference](sphinx/duration_api_reference.md): the handwritten
   per-method reference for `Duration` — the elapsed-time counterpart to
   `Timeline`, for `Timeline - Timeline` results and `Timeline ± Duration`
@@ -43,7 +49,9 @@ notes. This page is the curated entry point into them.
 sphinx/series_api_reference
 sphinx/series_factory_api_reference
 sphinx/note_api_reference
+sphinx/note_factory_api_reference
 sphinx/timeline_api_reference
+sphinx/timeline_factory_api_reference
 sphinx/duration_api_reference
 sphinx/timeindex_api_reference
 ```

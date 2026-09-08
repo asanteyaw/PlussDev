@@ -8,6 +8,12 @@ This note records the standing style and quality bar for the handwritten
 Use this note as the working standard for every remaining `Series` page unless
 the user explicitly changes direction.
 
+The repository-wide requirements in
+[`API_Doc_Authoring_Standard.md`](API_Doc_Authoring_Standard.md) also apply. In
+particular, examples are a behavioral inventory: their count must expand to
+cover every overload and materially distinct branch rather than satisfying an
+arbitrary minimum.
+
 ## Public Naming Rules
 
 - Public-facing names are `Series`, `Note`, and `Timeline`.

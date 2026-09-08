@@ -306,7 +306,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
         }
         const auto& ts = std::get<pluss::Timeline>(value);
         PLUSS_CHECK(ts.numel() == 1, std::string(where) + ": Timeline values must be scalar-like");
-        ticks[static_cast<std::size_t>(i)] = ts.to_epoch_nanos_vector()[0];
+        ticks[static_cast<std::size_t>(i)] = ts.ticks()[0];
         std::string value_tz(ts.tz());
         if (!tz_name.has_value()) {
           tz_name = std::move(value_tz);
@@ -338,7 +338,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
         }
         const auto& index = std::get<pluss::TimeIndex>(value);
         PLUSS_CHECK(index.size() == 1, std::string(where) + ": TimeIndex values must be scalar-like");
-        ticks[static_cast<std::size_t>(i)] = index.timeline().to_epoch_nanos_vector()[0];
+        ticks[static_cast<std::size_t>(i)] = index.timeline().ticks()[0];
         std::string value_tz(index.timeline().tz());
         if (!tz_name.has_value()) {
           tz_name = std::move(value_tz);
@@ -375,13 +375,13 @@ pluss::table::Thread thread_from_slot_value(const Slot::Value& value) {
           return pluss::table::Thread(pluss::make_note(std::vector<std::string>{std::string(v.at(0))}));
         } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
           PLUSS_CHECK(v.numel() == 1, "Slot: Timeline value must be scalar-like for Thread delegation");
-          const auto ticks = v.to_epoch_nanos_vector();
+          const auto ticks = v.ticks();
           return pluss::table::Thread(pluss::timeline::from_epoch(
               std::vector<std::int64_t>{ticks[0]},
               std::vector<std::int64_t>{1}));
         } else if constexpr (std::is_same_v<T, pluss::TimeIndex>) {
           PLUSS_CHECK(v.size() == 1, "Slot: TimeIndex value must be scalar-like for Thread delegation");
-          const auto ticks = v.timeline().to_epoch_nanos_vector();
+          const auto ticks = v.timeline().ticks();
           return pluss::table::Thread(pluss::make_timeindex(std::vector<std::int64_t>{ticks[0]}, false));
         }
       },
@@ -442,11 +442,11 @@ Slot::Value slot_value_to_note(const Slot::Value& value) {
           return pluss::make_note(std::vector<std::string>{std::string(v.at(0))});
         } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
           PLUSS_CHECK(v.numel() == 1, "Slot::cast(Note): Timeline value must be scalar-like");
-          const auto ticks = v.to_epoch_nanos_vector();
+          const auto ticks = v.ticks();
           return pluss::make_note(std::vector<std::string>{std::to_string(ticks[0])});
         } else if constexpr (std::is_same_v<T, pluss::TimeIndex>) {
           PLUSS_CHECK(v.size() == 1, "Slot::cast(Note): TimeIndex value must be scalar-like");
-          const auto ticks = v.timeline().to_epoch_nanos_vector();
+          const auto ticks = v.timeline().ticks();
           return pluss::make_note(std::vector<std::string>{std::to_string(ticks[0])});
         }
       },

@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::split" href="split.html" />
-    <link rel="prev" title="Note::remove_all" href="remove_all.html" />
+    <link rel="next" title="Note::regex_findall" href="regex_findall.html" />
+    <link rel="prev" title="Note::nlp_remove_urls" href="nlp_remove_urls.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,115 +36,138 @@
 
           <div class="body" role="main">
             
-  <section id="note-quote">
+  <!-- pluss-hand-authored -->
+<section id="note-quote">
 <h1>Note::quote<a class="headerlink" href="#note-quote" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">quote</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">quote</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Wraps each text cell in a quoting pair.</p>
-<p>This is a small method, but it is useful in practice when you want explicit
-quoted rendering for export, debugging, prompt construction, or downstream
-serialization where boundaries should be visually obvious.</p>
-<p><code class="docutils literal notranslate"><span class="pre">quote()</span></code> is presentation-oriented. It does not tokenize, escape, or inspect
-the text. It simply surrounds each cell with a quote wrapper.</p>
+<section id="wrap-every-cell-in-double-quotes">
+<h2>Wrap Every Cell In Double Quotes<a class="headerlink" href="#wrap-every-cell-in-double-quotes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">quote()</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with each cell
+wrapped in a leading and trailing <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>. Use it to render text for a context
+that expects quoted tokens — a CSV field that may contain spaces, a
+generated argument list, a display column where the boundaries of each value
+should be visible, or a log line where trailing whitespace would otherwise be
+invisible.</p>
+<p>The wrap is <strong>literal and minimal</strong>: exactly one <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> is prepended and one
+appended, and the cell content in between is copied <strong>verbatim</strong>. <code class="docutils literal notranslate"><span class="pre">quote()</span></code>
+does <strong>not</strong> escape interior <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> characters, does not add a <code class="docutils literal notranslate"><span class="pre">\</span></code> before
+anything, and does not skip cells that are already quoted. So
+<code class="docutils literal notranslate"><span class="pre">quote()</span></code> applied to <code class="docutils literal notranslate"><span class="pre">a&quot;b</span></code> produces <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;b&quot;</span></code> — three quote characters, which
+is not a well-formed quoted literal. If the content can contain <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>, escape
+or replace it first (for example <a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace</span></code></span></a> <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">\&quot;</span></code>), or
+use a real serializer.</p>
+<p><code class="docutils literal notranslate"><span class="pre">unquote()</span></code> is the inverse: it strips one matching pair of leading/trailing
+<code class="docutils literal notranslate"><span class="pre">&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">'</span></code>. Because neither method escapes, <code class="docutils literal notranslate"><span class="pre">quote().unquote()</span></code> round-trips
+exactly only when the original content has no delimiter quotes of its own.</p>
+<p>The operation is shape-preserving, cell-independent, and returns a fresh
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>. An empty cell becomes <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> (two bytes).</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p>This method takes no parameters.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code> with the same shape as the input and each cell wrapped in
-quotes.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Quote two text cells for display-safe rendering.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;alpha beta beta&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;already&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">quoted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">quote</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;quote:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">quoted</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">quoted</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
+<section id="example-1-a-one-dimensional-batch">
+<h2>Example 1: A One-Dimensional Batch<a class="headerlink" href="#example-1-a-one-dimensional-batch" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;payload&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;two words&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">}).</span><span class="n">quote</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>quote:
-  [0] &quot;alpha beta beta&quot;
-  [1] &quot;already&quot;
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;\&quot;payload\&quot;&quot;, &quot;\&quot;two words\&quot;&quot;, &quot;\&quot;\&quot;&quot;]
 </pre></div>
 </div>
-<p>Example 2. Quote after cleanup when the input still has padded boundaries.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  spaced  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">strip</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">quoted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cleaned</span><span class="p">.</span><span class="n">quote</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;quote_strip:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">quoted</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">quoted</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">print</span></code> shows the added quotes as escaped <code class="docutils literal notranslate"><span class="pre">\&quot;</span></code> inside its own quoting; the
+cells actually hold <code class="docutils literal notranslate"><span class="pre">&quot;payload&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;two</span> <span class="pre">words&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p>
 </section>
+</section>
+<section id="example-2-a-scalar">
+<h2>Example 2: A Scalar<a class="headerlink" href="#example-2-a-scalar" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;solo&quot;</span><span class="p">).</span><span class="n">quote</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>quote_strip:
-  [0] &quot;spaced&quot;
-  [1] &quot;&quot;
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;\&quot;solo\&quot;&quot;
 </pre></div>
 </div>
-<p>Example 3. Quote after a structural rewrite when you want the final rendered
-surface to make cell boundaries obvious.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada_Lovelace&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Grace_Hopper&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">display</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;_&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">).</span><span class="n">quote</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;quote_display:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">display</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">display</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<p>The cell holds the five characters <code class="docutils literal notranslate"><span class="pre">&quot;solo&quot;</span></code>.</p>
 </section>
+</section>
+<section id="example-3-shape-is-preserved">
+<h2>Example 3: Shape Is Preserved<a class="headerlink" href="#example-3-shape-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({{</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">}}).</span><span class="n">quote</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>quote_display:
-  [0] &quot;Ada Lovelace&quot;
-  [1] &quot;Grace Hopper&quot;
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;\&quot;a\&quot;&quot;, &quot;\&quot;b\&quot;&quot;], 
+  [&quot;\&quot;c\&quot;&quot;, &quot;\&quot;d\&quot;&quot;]
+]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">quote()</span></code> is shape-preserving and purely textual.</p></li>
-<li><p>This is a formatting transform, not a tokenizer or parser.</p></li>
-<li><p>If your goal is TeX-safe rendering rather than ordinary quoted rendering, use
-<a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tex_escape</span></code></span></a>.</p></li>
-</ul>
+<section id="example-4-interior-quotes-are-not-escaped">
+<h2>Example 4: Interior Quotes Are Not Escaped<a class="headerlink" href="#example-4-interior-quotes-are-not-escaped" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a</span><span class="se">\&quot;</span><span class="s">b&quot;</span><span class="p">}).</span><span class="n">quote</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;\&quot;a\&quot;b\&quot;&quot;]
+</pre></div>
+</div>
+<p>The cell now holds <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;b&quot;</span></code> — a bare wrap, not a valid quoted string. Replace
+or escape interior <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> first if that matters.</p>
+</section>
+</section>
+<section id="example-5-round-trip-with-unquote">
+<h2>Example 5: Round-Trip With <code class="docutils literal notranslate"><span class="pre">unquote</span></code><a class="headerlink" href="#example-5-round-trip-with-unquote" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;payload&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;  spaced  &quot;</span><span class="p">}).</span><span class="n">quote</span><span class="p">().</span><span class="n">unquote</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;payload&quot;, &quot;  spaced  &quot;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">unquote()</span></code> removes exactly the pair <code class="docutils literal notranslate"><span class="pre">quote()</span></code> added, so the boundary spaces
+in the second cell survive intact.</p>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a>: custom formatting rewrites beyond simple
-quoting.</p></li>
-<li><p><a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::tex_escape</span></code></span></a>: escape special TeX characters rather than
-adding ordinary quotes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::unquote</span></code>: strip one matching pair of leading/trailing
+<code class="docutils literal notranslate"><span class="pre">&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::surround</span></code>: wrap each cell in an arbitrary
+prefix/suffix pair rather than double quotes.</p></li>
+<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a>: escape interior <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> before quoting when
+the result must be a valid literal.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="remove_all.html">
+  <a class="prev-link" href="nlp_remove_urls.html">
     <span class="label">Previous</span>
-    <span class="title">remove_all</span>
+    <span class="title">nlp_remove_urls</span>
   </a>
-  <a class="next-link" href="split.html">
+  <a class="next-link" href="regex_findall.html">
     <span class="label">Next</span>
-    <span class="title">split</span>
+    <span class="title">regex_findall</span>
   </a>
 </div>
 </section>
@@ -188,6 +211,7 @@ adding ordinary quotes.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -238,8 +262,8 @@ adding ordinary quotes.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="remove_all.html" title="previous chapter">Note::remove_all</a></li>
-      <li>Next: <a href="split.html" title="next chapter">Note::split</a></li>
+      <li>Previous: <a href="nlp_remove_urls.html" title="previous chapter">Note::nlp_remove_urls</a></li>
+      <li>Next: <a href="regex_findall.html" title="next chapter">Note::regex_findall</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

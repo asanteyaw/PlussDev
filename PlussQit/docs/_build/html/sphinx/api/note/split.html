@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::tokenize_words" href="tokenize_words.html" />
-    <link rel="prev" title="Note::quote" href="quote.html" />
+    <link rel="next" title="Note::split_lines" href="split_lines.html" />
+    <link rel="prev" title="Note::replace" href="replace.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,147 +36,179 @@
 
           <div class="body" role="main">
             
-  <section id="note-split">
+  <!-- pluss-hand-authored -->
+<section id="note-split">
 <h1>Note::split<a class="headerlink" href="#note-split" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">TokenBatch</span>
-<span class="n">Note</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delim</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">TokenBatch</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TokenBatch</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">TokenBatch</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delim</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Splits each text cell on a literal delimiter and returns the pieces as a
-<code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>.</p>
-<p>This is the direct structural splitter for cases where whitespace tokenization
-is not the right boundary rule. It is useful for comma-separated fragments,
-lightweight field extraction, or ad hoc delimiter-based parsing.</p>
-<p>The result is flattened because each input cell can yield a different number of
-pieces. <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> is the map back from that flat token stream to the original
-cell boundaries.</p>
+<section id="split-each-cell-on-a-literal-delimiter">
+<h2>Split Each Cell On A Literal Delimiter<a class="headerlink" href="#split-each-cell-on-a-literal-delimiter" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">split(delim)</span></code> cuts each text cell at every occurrence of the literal string
+<code class="docutils literal notranslate"><span class="pre">delim</span></code> and returns the pieces as a <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>. It is the delimiter-exact
+structural splitter — the right tool for CSV-ish fields, <code class="docutils literal notranslate"><span class="pre">key:value</span></code> pairs,
+<code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-&gt;</span> <span class="pre">b</span></code> arrows, and other formats with a known separator. When the boundary
+is “any run of whitespace,” use <a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code></span></a>;
+when it is a line break, use <a class="reference internal" href="split_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_lines</span></code></span></a>; when it is a
+pattern, use <code class="docutils literal notranslate"><span class="pre">regex_split</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">delim</span></code> is matched <strong>literally</strong> (no regex) and must be <strong>non-empty</strong> — an
+empty delimiter throws <code class="docutils literal notranslate"><span class="pre">pluss::Error</span></code>. It may be more than one character
+(<code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;</span></code> is a single four-byte delimiter).</p>
+<section id="empty-fields-are-kept">
+<h3>Empty fields are kept<a class="headerlink" href="#empty-fields-are-kept" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">split</span></code> is a field splitter, not a token filter. Consecutive delimiters, a
+leading delimiter, and a trailing delimiter each produce an <strong>empty</strong> piece:
+<code class="docutils literal notranslate"><span class="pre">&quot;a,,b&quot;</span></code> splits into <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;b&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;,lead&quot;</span></code> splits into <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;lead&quot;</span></code>. A cell that does not contain <code class="docutils literal notranslate"><span class="pre">delim</span></code> yields one piece: the whole
+cell. (Use <code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code>, which collapses runs, when empty fields are
+noise.)</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>delim</strong></p>
-<p>The literal delimiter to split on.</p>
-<p>This is not a regex pattern. If you need pattern-driven splitting, use the
-regex-based methods instead of <code class="docutils literal notranslate"><span class="pre">split(...)</span></code>.</p>
-<p><strong>limit</strong></p>
-<p>Optional cap on splitting within each cell.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">split(delim)</span></code>
-Uses every matching delimiter boundary in each cell.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">split(delim,</span> <span class="pre">limit)</span></code>
-Stops splitting once the requested number of delimiter cuts has been consumed
-inside a cell and leaves the remainder grouped together as one token.</p></li>
-</ul>
+<section id="limit">
+<h3><code class="docutils literal notranslate"><span class="pre">limit</span></code><a class="headerlink" href="#limit" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the number of splits, not the number of pieces. After <code class="docutils literal notranslate"><span class="pre">limit</span></code>
+splits the rest of the cell is emitted as one final piece: <code class="docutils literal notranslate"><span class="pre">split(&quot;,&quot;,</span> <span class="pre">2)</span></code>
+on <code class="docutils literal notranslate"><span class="pre">&quot;a,b,c,d&quot;</span></code> gives <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;b&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;c,d&quot;</span></code> (2 splits, 3 pieces). <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">=</span> <span class="pre">0</span></code>
+emits the whole cell unsplit; a negative <code class="docutils literal notranslate"><span class="pre">limit</span></code> (the default) means
+unlimited.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>
-A flat token stream plus <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> describing which token range came from
-each original <code class="docutils literal notranslate"><span class="pre">Note</span></code> element.</p>
+<section id="the-tokenbatch-result">
+<h3>The <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> result<a class="headerlink" href="#the-tokenbatch-result" title="Link to this heading">¶</a></h3>
+<p>All pieces from all cells are concatenated into one flat rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> token
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> (<code class="docutils literal notranslate"><span class="pre">batch.tokens()</span></code>); <code class="docutils literal notranslate"><span class="pre">batch.offsets()</span></code> (length <code class="docutils literal notranslate"><span class="pre">numel</span> <span class="pre">+</span> <span class="pre">1</span></code>) marks each
+cell’s run — cell <code class="docutils literal notranslate"><span class="pre">r</span></code> is <code class="docutils literal notranslate"><span class="pre">tokens()[offsets()[r]</span> <span class="pre">..</span> <span class="pre">offsets()[r+1])</span></code>. Every
+cell contributes at least one piece, so no offset range is empty.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Split on the first comma only and preserve the remaining suffix.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A,b;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x,y,z&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">tokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;split_comma_limit1 tokens:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;split_comma_limit1 offsets:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">off</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">offsets</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">off</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</section>
+<section id="example-1-comma-separated-fields">
+<h2>Example 1: Comma-Separated Fields<a class="headerlink" href="#example-1-comma-separated-fields" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a,b,c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x,y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;solo&quot;</span><span class="p">}).</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>split_comma_limit1 tokens: [A] [b;c] [x] [y,z]
-split_comma_limit1 offsets: 0 2 4
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[6], dim=1, numel=6, encoding=utf8)
+[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;x&quot;, &quot;y&quot;, &quot;solo&quot;]
+offsets: [0, 3, 5, 6]
 </pre></div>
 </div>
-<p>Example 2. Use the one-argument form when every delimiter boundary should be
-honored.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;k:v:w&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;id:42&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">tokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;split_colon tokens:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;split_colon offsets:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">off</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">offsets</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">off</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>Cell <code class="docutils literal notranslate"><span class="pre">0</span></code> → <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">3)</span></code>, cell <code class="docutils literal notranslate"><span class="pre">1</span></code> → <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">5)</span></code>, cell <code class="docutils literal notranslate"><span class="pre">2</span></code> (no comma) → <code class="docutils literal notranslate"><span class="pre">[5,</span> <span class="pre">6)</span></code>, one
+piece.</p>
 </section>
+</section>
+<section id="example-2-empty-fields-are-preserved">
+<h2>Example 2: Empty Fields Are Preserved<a class="headerlink" href="#example-2-empty-fields-are-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a,,b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;,lead&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;trail,&quot;</span><span class="p">}).</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>split_colon tokens: [k] [v] [w] [id] [42]
-split_colon offsets: 0 3 5
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[7], dim=1, numel=7, encoding=utf8)
+[&quot;a&quot;, &quot;&quot;, &quot;b&quot;, &quot;&quot;, &quot;lead&quot;, &quot;trail&quot;, &quot;&quot;]
+offsets: [0, 3, 5, 7]
 </pre></div>
 </div>
-<p>Example 3. Use a multi-character literal delimiter when the text is only
-lightly structured.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;left -&gt; right&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;keep -&gt; watch&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">tokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; -&gt; &quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;split_arrow tokens:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;split_arrow offsets:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">off</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">tokens</span><span class="p">.</span><span class="n">offsets</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">off</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>The doubled comma, the leading comma, and the trailing comma each yield an
+empty piece.</p>
 </section>
+</section>
+<section id="example-3-a-multi-character-delimiter">
+<h2>Example 3: A Multi-Character Delimiter<a class="headerlink" href="#example-3-a-multi-character-delimiter" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;left -&gt; right -&gt; end&quot;</span><span class="p">}).</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; -&gt; &quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>split_arrow tokens: [left] [right] [keep] [watch]
-split_arrow offsets: 0 2 4
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;left&quot;, &quot;right&quot;, &quot;end&quot;]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">limit</span></code> overload is the important variant when you are parsing lightly
-structured text instead of fully tokenizing it.</p></li>
-<li><p>The delimiter is always literal text, so multi-character separators such as
-<code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;</span></code> are valid and are matched as a single boundary unit.</p></li>
-<li><p>In the example above, each row contributes exactly two output tokens because
-the split is capped after the first comma.</p></li>
-<li><p>If your real boundary rule is simply whitespace, <a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code></span></a>
-is the simpler starting point.</p></li>
-</ul>
+<section id="example-4-delimiter-absent">
+<h2>Example 4: Delimiter Absent<a class="headerlink" href="#example-4-delimiter-absent" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;no delimiter here&quot;</span><span class="p">}).</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;;&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;no delimiter here&quot;]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-5-capping-the-number-of-splits">
+<h2>Example 5: Capping The Number Of Splits<a class="headerlink" href="#example-5-capping-the-number-of-splits" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a,b,c,d,e&quot;</span><span class="p">}).</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;a&quot;, &quot;b&quot;, &quot;c,d,e&quot;]
+</pre></div>
+</div>
+<p>Two splits, so three pieces; everything after the second comma stays in the
+last piece.</p>
+</section>
+</section>
+<section id="example-6-an-empty-delimiter-is-rejected">
+<h2>Example 6: An Empty Delimiter Is Rejected<a class="headerlink" href="#example-6-an-empty-delimiter-is-rejected" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>split: delimiter must be non-empty
+</pre></div>
+</div>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="split_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::split_lines</span></code></span></a>: line-aware splitting.</p></li>
-<li><p><a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::split_whitespace</span></code></span></a>: whitespace-aware splitting.</p></li>
+<li><p><a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::split_whitespace</span></code></span></a>: split on runs of
+whitespace, dropping empty fields.</p></li>
+<li><p><a class="reference internal" href="split_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::split_lines</span></code></span></a>: split on line breaks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::regex_split</span></code>: split on a regular expression.</p></li>
+<li><p><a class="reference internal" href="tokenize_words.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::tokenize_words</span></code></span></a>: word tokens rather than
+delimiter fields.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="quote.html">
+  <a class="prev-link" href="replace.html">
     <span class="label">Previous</span>
-    <span class="title">quote</span>
+    <span class="title">replace</span>
   </a>
-  <a class="next-link" href="tokenize_words.html">
+  <a class="next-link" href="split_lines.html">
     <span class="label">Next</span>
-    <span class="title">tokenize_words</span>
+    <span class="title">split_lines</span>
   </a>
 </div>
 </section>
@@ -220,6 +252,7 @@ is the simpler starting point.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -270,8 +303,8 @@ is the simpler starting point.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="quote.html" title="previous chapter">Note::quote</a></li>
-      <li>Next: <a href="tokenize_words.html" title="next chapter">Note::tokenize_words</a></li>
+      <li>Previous: <a href="replace.html" title="previous chapter">Note::replace</a></li>
+      <li>Next: <a href="split_lines.html" title="next chapter">Note::split_lines</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

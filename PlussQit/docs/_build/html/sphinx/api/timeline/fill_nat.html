@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::where" href="where.html" />
-    <link rel="prev" title="Timeline::min" href="min.html" />
+    <link rel="next" title="Timeline::floor" href="floor.html" />
+    <link rel="prev" title="Timeline::fill_like" href="fill_like.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -47,8 +47,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces missing timestamps with one scalar replacement timestamp.</p>
-<p>This is the narrow, direct repair surface for missing temporal data.</p>
+<p>Replaces absent instants with one scalar replacement instant.</p>
+<p>This is the narrow, direct substitution surface for absent instants.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -60,11 +60,11 @@ vector of replacements.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code>
-A timeline with missing timestamps filled.</p>
+A Timeline with absent instants replaced.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Replace every missing timestamp with one explicit recovery date.</p>
+<p>Example 1. Replace every absent instant with one explicit fallback instant.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_nat</span><span class="p">.</span><span class="n">fill_nat</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-11-15T00:00:00Z&quot;</span><span class="p">));</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -92,9 +92,9 @@ or another shaped timeline.</p></li>
 <li><p><a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::where</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="min.html">
+  <a class="prev-link" href="fill_like.html">
     <span class="label">Previous</span>
-    <span class="title">min</span>
+    <span class="title">fill_like</span>
   </a>
   <a class="next-link" href="where.html">
     <span class="label">Next</span>
@@ -142,6 +142,7 @@ or another shaped timeline.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -192,8 +193,8 @@ or another shaped timeline.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="min.html" title="previous chapter">Timeline::min</a></li>
-      <li>Next: <a href="where.html" title="next chapter">Timeline::where</a></li>
+      <li>Previous: <a href="fill_like.html" title="previous chapter">Timeline::fill_like</a></li>
+      <li>Next: <a href="floor.html" title="next chapter">Timeline::floor</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

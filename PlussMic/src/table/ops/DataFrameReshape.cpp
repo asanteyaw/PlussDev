@@ -196,10 +196,10 @@ std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
     case ThreadKind::Note:
       return normalize_case_label(std::string(axis.as_note().at(row)));
     case ThreadKind::Timeline:
-      return fmt::format("{}", axis.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+      return fmt::format("{}", axis.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case ThreadKind::TimeIndex:
       return fmt::format("{}",
-                         axis.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+                         axis.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
   }
   return {};
 }

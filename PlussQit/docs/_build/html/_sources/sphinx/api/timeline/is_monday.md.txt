@@ -8,7 +8,7 @@
 Series Timeline::is_monday() const
 ```
 
-Aliases: `mon_is()` and `is_mon()`.
+`is_monday()` is the sole public spelling.
 
 ## Select Local Mondays
 

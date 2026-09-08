@@ -10,7 +10,7 @@ Timeline::isnat_scalar() -> bool
 
 ## What It Does
 
-Returns whether a scalar `Timeline` is missing.
+Returns whether a scalar `Timeline` holds `NaT`.
 
 This is the scalar-only companion to [`isnat`](isnat.md):
 
@@ -22,11 +22,11 @@ This is the scalar-only companion to [`isnat`](isnat.md):
 ## Returns
 
 `bool`
-    `true` when the scalar timestamp is missing, otherwise `false`.
+    `true` when the scalar instant is absent, otherwise `false`.
 
 ## Examples
 
-Example 1. A defined scalar timeline is not missing.
+Example 1. A defined scalar Timeline holds an instant.
 
 ```cpp
 auto flag = scalar.isnat_scalar();
@@ -39,7 +39,7 @@ std::cout << (flag ? "true" : "false") << "\n";
 false
 ```
 
-Example 2. The documented scalar missing-time path reports `true`.
+Example 2. The documented absent-instant path reports `true`.
 
 ```cpp
 auto flag = scalar_nat.isnat_scalar();
@@ -56,7 +56,7 @@ true
 
 - This method expects a scalar timeline. It is not the right surface for 1D,
   2D, or 3D temporal payloads.
-- The current text-input path for a scalar missing timestamp is the empty
+- The current text-input path for a scalar absent instant is the empty
   string, not the literal text `"NaT"`.
 
 ## See Also

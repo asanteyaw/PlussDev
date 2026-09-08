@@ -58,7 +58,7 @@ leaves that row's existing values unchanged. A masked-missing mask entry behaves
 `pluss::null_t`)
 
 The replacement, written into every column on the frame. A scalar (`double`, string,
-or `pluss::null`) is broadcast to every masked row identically. A full `Thread`
+or `pluss::series::null`) is broadcast to every masked row identically. A full `Thread`
 instead supplies a **different** replacement value per row — row `i` of `value`
 replaces row `i` of each column, wherever `bool_mask` is `true` at row `i`.
 
@@ -141,10 +141,10 @@ columns keep their original values there — `replacements`' row-`1` value (`999
 never used, since a `Thread` replacement supplies per-row values rather than a single
 broadcast value.
 
-Example 3. Replace with `pluss::null` to mark matched cells as missing.
+Example 3. Replace with `pluss::series::null` to mark matched cells as missing.
 
 ```cpp
-auto out = orders.features({"sales"}).put(is_middle, pluss::null);
+auto out = orders.features({"sales"}).put(is_middle, pluss::series::null);
 std::cout << orders.update(out);
 ```
 
@@ -163,13 +163,13 @@ std::cout << orders.update(out);
 
 ## Notes
 
-- A scalar `value` (`double`, string, or `pluss::null`) is the same replacement for
+- A scalar `value` (`double`, string, or `pluss::series::null`) is the same replacement for
   every masked row; a `Thread` `value` supplies a different replacement per row,
   taken from that row's own position in `value`.
 - `bool_mask` may be a `Thread` or a `pluss::Series` — the `Series` overloads are pure
   convenience wrappers with identical behavior.
-- `put()` never changes a column's kind: a scalar `double`/`pluss::null` value only
-  works against numeric (`Series`-kind) columns, and a string/`pluss::null` value only
+- `put()` never changes a column's kind: a scalar `double`/`pluss::series::null` value only
+  works against numeric (`Series`-kind) columns, and a string/`pluss::series::null` value only
   works against `Note`-kind columns. Calling `put()` on a frame that mixes kinds throws
   as soon as it reaches an incompatible column — narrow with
   [`features()`](features.md) first to a kind-compatible subset.

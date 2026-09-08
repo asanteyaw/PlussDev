@@ -102,12 +102,12 @@ pluss::table::Thread temporal_thread_for_io(const pluss::table::Thread& t) {
                               || !series_all_zero_i64_for_io(timeline.minute())
                               || !series_all_zero_i64_for_io(timeline.hour());
   if (!has_clock_time) {
-    return pluss::table::Thread(timeline.to_note_date(), pluss::table::detail::validity_mask(t));
+    return pluss::table::Thread(timeline.strftime("%Y-%m-%d"), pluss::table::detail::validity_mask(t));
   }
   if (!has_subsecond) {
-    return pluss::table::Thread(timeline.to_note_datetime(), pluss::table::detail::validity_mask(t));
+    return pluss::table::Thread(timeline.strftime("%Y-%m-%d %H:%M:%S"), pluss::table::detail::validity_mask(t));
   }
-  return pluss::table::Thread(timeline.to_note_datetime_nano(), pluss::table::detail::validity_mask(t));
+  return pluss::table::Thread(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), pluss::table::detail::validity_mask(t));
 }
 
 pluss::table::Thread thread_for_excel_io(const pluss::table::Thread& t) {
@@ -201,10 +201,10 @@ std::string thread_value_for_excel(const pluss::table::Thread& t, std::int64_t r
     case pluss::table::ThreadKind::Note:
       return std::string(t.as_note().at(row));
     case pluss::table::ThreadKind::Timeline:
-      return fmt::format("{}", t.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+      return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case pluss::table::ThreadKind::TimeIndex:
       return fmt::format("{}",
-                         t.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+                         t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
     default:
       return "";
   }

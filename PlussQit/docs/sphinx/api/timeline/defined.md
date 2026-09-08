@@ -13,11 +13,11 @@ bool Timeline::defined() const noexcept
 ## What It Tells You
 
 `defined()` answers whether the `Timeline` owns a valid temporal payload. It
-is a state query, not an emptiness test and not a missing-value test.
+is a state query, not an emptiness test and not an absent-instant test.
 
 A defined timeline may be scalar, empty, or contain `NaT`. Those are all valid
 payload states. Use [`numel()`](numel.md) to ask how many positions exist and
-[`isnat()`](isnat.md) to identify positions whose timestamp is missing.
+[`isnat()`](isnat.md) to identify positions whose instant is absent.
 
 Public factories return defined timelines or throw when construction fails, so
 ordinary application code rarely needs to poll this method after every
@@ -81,7 +81,7 @@ data=[false, true]
 
 - Do not use `defined()` to detect an empty timeline. A defined shape `[0]`
   has `numel() == 0`.
-- Do not use it to detect `NaT`. Missing timestamps are valid stored values.
+- Do not use it to detect `NaT`. Absent instants are valid stored values.
 - A parse or shape error throws during construction; it does not normally
   return a public undefined sentinel for later inspection.
 
@@ -98,6 +98,6 @@ separate.
 - [`Timeline::isvalid`](isvalid.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../timeline_api_reference.html"><span class="label">Previous</span><span class="title">Timeline API Reference</span></a>
+  <a class="prev-link" href="days_between.html"><span class="label">Previous</span><span class="title">days_between</span></a>
   <a class="next-link" href="sizes.html"><span class="label">Next</span><span class="title">sizes</span></a>
 </div>

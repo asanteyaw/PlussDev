@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::note::rand &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="pluss::note::rand_between" href="rand_between.html" />
+    <link rel="prev" title="pluss::note::print" href="print.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="pluss-note-rand">
+<h1>pluss::note::rand<a class="headerlink" href="#pluss-note-rand" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../note_factory_api_reference.html"><span class="doc std std-doc">Back to Note Factory API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">rand</span><span class="p">(</span><span class="n">integer_range</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">capitalize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">                       </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">rand</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span>
+<span class="w">                       </span><span class="kt">bool</span><span class="w"> </span><span class="n">capitalize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="one-random-letter-per-cell">
+<h2>One Random Letter Per Cell<a class="headerlink" href="#one-random-letter-per-cell" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">rand()</span></code> allocates a <code class="docutils literal notranslate"><span class="pre">Note</span></code> of shape <code class="docutils literal notranslate"><span class="pre">sizes</span></code> and fills each cell with a
+single random letter drawn uniformly from the 26-letter English alphabet.
+It is the text counterpart of <code class="docutils literal notranslate"><span class="pre">pluss::series::rand</span></code> — a quick source of
+throwaway data shaped exactly how you need it, for tests, fixtures,
+placeholder tables, and examples.</p>
+<p>Every cell is an independent draw of one character. <code class="docutils literal notranslate"><span class="pre">rand</span></code> does not build
+words or syllables; for random <em>words</em>, draw letters and join, or use a
+domain-specific generator.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">sizes</span></code></strong> — the output shape, same rules as <a class="reference internal" href="full.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">full</span></code></span></a>: an
+<code class="docutils literal notranslate"><span class="pre">initializer_list</span></code> (no wrapper needed) or any contiguous <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+range, empty for a scalar, non-negative extents, rank at most three.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">capitalize</span></code></strong> — <code class="docutils literal notranslate"><span class="pre">true</span></code> (default) draws from <code class="docutils literal notranslate"><span class="pre">A</span></code>–<code class="docutils literal notranslate"><span class="pre">Z</span></code>; <code class="docutils literal notranslate"><span class="pre">false</span></code> draws
+from <code class="docutils literal notranslate"><span class="pre">a</span></code>–<code class="docutils literal notranslate"><span class="pre">z</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">seed</span></code></strong> — the PRNG seed. A <strong>non-zero</strong> <code class="docutils literal notranslate"><span class="pre">seed</span></code> makes the draw fully
+deterministic: the same <code class="docutils literal notranslate"><span class="pre">seed</span></code>, <code class="docutils literal notranslate"><span class="pre">sizes</span></code>, and <code class="docutils literal notranslate"><span class="pre">capitalize</span></code> always produce
+the same <code class="docutils literal notranslate"><span class="pre">Note</span></code>. A <code class="docutils literal notranslate"><span class="pre">seed</span></code> of <code class="docutils literal notranslate"><span class="pre">0</span></code> (the default) is drawn from a
+process-wide entropy source, so each call differs — use <code class="docutils literal notranslate"><span class="pre">0</span></code> for genuine
+scratch data, a fixed non-zero value whenever the output must be
+reproducible (tests, documented examples).</p></li>
+</ul>
+<p>The result is <strong>UTF-8 mode</strong>. Filling <code class="docutils literal notranslate"><span class="pre">n</span></code> cells uses storage proportional to
+<code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</section>
+</section>
+<section id="example-1-a-seeded-row-of-capitals">
+<h2>Example 1: A Seeded Row Of Capitals<a class="headerlink" href="#example-1-a-seeded-row-of-capitals" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">rand</span><span class="p">({</span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[6], dim=1, numel=6, encoding=utf8)
+[&quot;W&quot;, &quot;I&quot;, &quot;K&quot;, &quot;O&quot;, &quot;V&quot;, &quot;A&quot;]
+</pre></div>
+</div>
+<p>Six independent draws from <code class="docutils literal notranslate"><span class="pre">A</span></code>–<code class="docutils literal notranslate"><span class="pre">Z</span></code>. Seed <code class="docutils literal notranslate"><span class="pre">42</span></code> fixes the sequence.</p>
+</section>
+</section>
+<section id="example-2-the-same-seed-reproduces-the-same-draw">
+<h2>Example 2: The Same Seed Reproduces The Same Draw<a class="headerlink" href="#example-2-the-same-seed-reproduces-the-same-draw" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">again</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">rand</span><span class="p">({</span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">again</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[6], dim=1, numel=6, encoding=utf8)
+[&quot;W&quot;, &quot;I&quot;, &quot;K&quot;, &quot;O&quot;, &quot;V&quot;, &quot;A&quot;]
+</pre></div>
+</div>
+<p>Identical to Example 1 — a non-zero seed is a reproducibility guarantee.</p>
+</section>
+</section>
+<section id="example-3-lower-case-letters">
+<h2>Example 3: Lower-Case Letters<a class="headerlink" href="#example-3-lower-case-letters" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">rand</span><span class="p">({</span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[6], dim=1, numel=6, encoding=utf8)
+[&quot;w&quot;, &quot;i&quot;, &quot;k&quot;, &quot;o&quot;, &quot;v&quot;, &quot;a&quot;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">capitalize</span> <span class="pre">=</span> <span class="pre">false</span></code> draws from <code class="docutils literal notranslate"><span class="pre">a</span></code>–<code class="docutils literal notranslate"><span class="pre">z</span></code>. With the same seed the letter
+<em>positions</em> in the alphabet match Example 1, lower-cased.</p>
+</section>
+</section>
+<section id="example-4-a-two-dimensional-block">
+<h2>Example 4: A Two-Dimensional Block<a class="headerlink" href="#example-4-a-two-dimensional-block" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">rand</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 4], dim=2, numel=8, encoding=utf8)
+[
+  [&quot;H&quot;, &quot;C&quot;, &quot;O&quot;, &quot;W&quot;], 
+  [&quot;M&quot;, &quot;B&quot;, &quot;G&quot;, &quot;B&quot;]
+]
+</pre></div>
+</div>
+<p>Any rank up to three; the draw order follows row-major cell order.</p>
+</section>
+</section>
+<section id="example-5-a-scalar-draw">
+<h2>Example 5: A Scalar Draw<a class="headerlink" href="#example-5-a-scalar-draw" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">rand</span><span class="p">({},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="mi">99</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;D&quot;
+</pre></div>
+</div>
+<p>An empty <code class="docutils literal notranslate"><span class="pre">sizes</span></code> list gives a single-cell scalar <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="rand_between.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::rand_between</span></code></span></a>: random single characters
+from an arbitrary ASCII range, not just letters.</p></li>
+<li><p><a class="reference internal" href="arange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::arange</span></code></span></a>: a deterministic stepped run instead of
+a random draw.</p></li>
+<li><p><a class="reference internal" href="full.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::full</span></code></span></a>: fill a shape with one fixed value.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="print.html">
+    <span class="label">Previous</span>
+    <span class="title">print</span>
+  </a>
+  <a class="next-link" href="rand_between.html">
+    <span class="label">Next</span>
+    <span class="title">rand_between</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../note_factory_api_reference.html">Note Factory API Reference</a><ul>
+      <li>Previous: <a href="print.html" title="previous chapter">pluss::note::print</a></li>
+      <li>Next: <a href="rand_between.html" title="next chapter">pluss::note::rand_between</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/note_factory/rand.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

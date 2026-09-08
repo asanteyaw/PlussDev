@@ -1,3 +1,4 @@
+<!-- pluss-hand-authored -->
 # Note::lengths_bytes
 
 [Back to Note API Reference](../../note_api_reference)
@@ -5,92 +6,119 @@
 ## Signature
 
 ```cpp
-Note::lengths_bytes() const -> std::vector<std::int64_t>
+std::vector<std::int64_t> Note::lengths_bytes() const
 ```
 
-## What It Does
+## Measure Every Cell In Bytes
 
-Returns the byte length of each text cell.
+`lengths_bytes()` returns the storage size of each text cell, counted in
+**bytes** (UTF-8 code units), not in characters or grapheme clusters. Use it
+to budget buffers, enforce field-width limits, spot outliers before a costly
+parse, or turn a `Note` into a numeric feature.
 
-This is the raw storage-oriented size question, not the user-visible character
-count question. It is useful when you care about UTF-8 payload size, buffer
-budgets, export diagnostics, or byte-level heuristics.
+For pure ASCII text the byte count equals the character count. For anything
+outside ASCII they differ: `"café"` is four characters but five bytes (`é`
+takes two), and `"日本語"` is three characters but nine bytes. When you need
+the character count, use `lengths_chars()`; when you need on-screen width,
+neither is exact — that requires grapheme and East-Asian-width analysis.
 
-If you want character-oriented or grapheme-oriented size instead, this is not
-the method to reach for.
+### Return value
 
-So `lengths_bytes()` is best thought of as an encoding/storage diagnostic,
-not a linguistic measurement.
+Like [`contains`](contains.md), this does **not** return a `Note`. It is a
+flat `std::vector<std::int64_t>` with one entry per cell, in row-major order,
+length equal to `numel()`. An empty cell measures `0`. Whitespace and control
+bytes count like any other byte, so trim with [`strip`](strip.md) first if
+boundary padding should not be counted.
 
-## Parameters
+The scan is linear in total input size.
 
-This method takes no parameters.
-
-## Returns
-
-`std::vector<std::int64_t>`
-    One byte length per element in the `Note`.
-
-## Examples
-
-Example 1. Measure the UTF-8 byte width of several labels.
+## Example 1: ASCII — Bytes Equal Characters
 
 ```cpp
-auto note = pluss::make_note({"midterm_1", "final_exam", "quiz"});
-auto lengths = note.lengths_bytes();
-std::cout << "lengths_bytes:";
-for (std::int64_t v : lengths) {
-  std::cout << " " << v;
-}
-std::cout << "\n";
+const auto lens = pluss::make_note({"", "a", "abc"}).lengths_bytes();
+std::cout << "[";
+for (std::size_t i = 0; i < lens.size(); ++i)
+  std::cout << (i ? ", " : "") << lens[i];
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-lengths_bytes: 9 10 4
+[0, 1, 3]
 ```
 
-Example 2. Trim boundary noise first when the size question is about cleaned text.
+## Example 2: Multi-Byte UTF-8 — Bytes Exceed Characters
 
 ```cpp
-auto cleaned = pluss::make_note({"  id-001  ", "\tAB\t"}).strip();
-auto lengths = cleaned.lengths_bytes();
-std::cout << "lengths_bytes_strip:";
-for (std::int64_t v : lengths) {
-  std::cout << " " << v;
-}
-std::cout << "\n";
+const auto lens =
+    pluss::make_note({"café", "日本語", "🎯"}).lengths_bytes();
+std::cout << "[";
+for (std::size_t i = 0; i < lens.size(); ++i)
+  std::cout << (i ? ", " : "") << lens[i];
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-lengths_bytes_strip: 6 2
+[5, 9, 4]
 ```
 
-## Notes
+`"café"` is 5 bytes (4 characters), `"日本語"` is 9 bytes (3 characters), and
+the emoji `"🎯"` is a single 4-byte character.
 
-- The result is a plain numeric vector because the answer is metadata about the
-  text payload, not transformed text.
-- For ASCII-only content, byte length and character count are the same.
-- For non-ASCII UTF-8 text, byte length can be larger than the visible
-  character count.
+## Example 3: Boundary Whitespace Counts — Strip First If It Should Not
+
+```cpp
+const auto lens =
+    pluss::make_note({"  id-01  ", "\tAB\t"}).strip().lengths_bytes();
+std::cout << "[";
+for (std::size_t i = 0; i < lens.size(); ++i)
+  std::cout << (i ? ", " : "") << lens[i];
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+[5, 2]
+```
+
+After [`strip`](strip.md), only `"id-01"` (5) and `"AB"` (2) remain.
+
+## Example 4: Higher-Rank Input Is Flattened Row-Major
+
+```cpp
+const auto lens =
+    pluss::make_note({{"a", "bb"}, {"ccc", "dddd"}}).lengths_bytes();
+std::cout << "[";
+for (std::size_t i = 0; i < lens.size(); ++i)
+  std::cout << (i ? ", " : "") << lens[i];
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+[1, 2, 3, 4]
+```
 
 ## See Also
 
-- [`Note::contains`](contains.md): boolean inspection instead of size
-  inspection.
-- [`Note::strip`](strip.md): trim boundary characters before measuring if
-  leading/trailing noise should not count.
+- `pluss::coden::Note::lengths_chars`: the same measurement counted in
+  Unicode characters rather than bytes.
+- [`Note::strip`](strip.md): remove boundary whitespace before measuring.
+- [`Note::contains`](contains.md): the other cell-wise inspector that
+  returns a flat vector instead of a `Note`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="contains.html">
+  <a class="prev-link" href="hex_encode.html">
     <span class="label">Previous</span>
-    <span class="title">contains</span>
+    <span class="title">hex_encode</span>
   </a>
-  <a class="next-link" href="lower.html">
+  <a class="next-link" href="lengths_chars.html">
     <span class="label">Next</span>
-    <span class="title">lower</span>
+    <span class="title">lengths_chars</span>
   </a>
 </div>

@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::remove_all" href="remove_all.html" />
+    <link rel="next" title="Note::title" href="title.html" />
     <link rel="prev" title="Note::tex_escape" href="tex_escape.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -36,111 +36,159 @@
 
           <div class="body" role="main">
             
-  <section id="note-tex-to-text">
+  <!-- pluss-hand-authored -->
+<section id="note-tex-to-text">
 <h1>Note::tex_to_text<a class="headerlink" href="#note-tex-to-text" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">tex_to_text</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
-<span class="n">Note</span><span class="o">::</span><span class="n">tex_to_text</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">mode</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">tex_to_text</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">tex_to_text</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">mode</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reduces TeX-authored content into plain text.</p>
-<p>This is the method to reach for when your input is already TeX or LaTeX-like
-markup and you want a text-oriented downstream surface rather than escaped TeX
-syntax.</p>
-<p>In practical terms, this method strips away much of the TeX structure and keeps
-the readable text payload that remains useful for indexing, summarization, or
-plain-text export.</p>
-<p>So <code class="docutils literal notranslate"><span class="pre">tex_to_text()</span></code> goes in the opposite direction from <a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tex_escape</span></code></span></a>:
-it consumes authored TeX-like markup and tries to recover readable plain text.</p>
+<section id="reduce-authored-tex-to-readable-plain-text">
+<h2>Reduce Authored TeX To Readable Plain Text<a class="headerlink" href="#reduce-authored-tex-to-readable-plain-text" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tex_to_text()</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with each cell
+stripped down from TeX/LaTeX markup to the prose it carries. Use it when the
+input is already <code class="docutils literal notranslate"><span class="pre">.tex</span></code>-style content and the downstream step wants plain
+text — full-text indexing, search snippets, embeddings, summarization, a
+plain-text export column.</p>
+<p>It is the opposite direction from <a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tex_escape</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">tex_escape</span></code>
+protects text so TeX will typeset it verbatim; <code class="docutils literal notranslate"><span class="pre">tex_to_text</span></code> throws the TeX
+scaffolding away and keeps the words.</p>
+<section id="what-is-removed-and-what-is-kept">
+<h3>What is removed and what is kept<a class="headerlink" href="#what-is-removed-and-what-is-kept" title="Link to this heading">¶</a></h3>
+<p>In order, each cell is passed through:</p>
+<ol class="arabic simple">
+<li><p><strong>Comments</strong> — everything from an unescaped <code class="docutils literal notranslate"><span class="pre">%</span></code> to end of line.</p></li>
+<li><p><strong>Preamble</strong> — content before <code class="docutils literal notranslate"><span class="pre">\begin{document}</span></code> and after
+<code class="docutils literal notranslate"><span class="pre">\end{document}</span></code> (when those markers are present).</p></li>
+<li><p><strong>Math</strong> — inline (<code class="docutils literal notranslate"><span class="pre">$…$</span></code>), display (<code class="docutils literal notranslate"><span class="pre">\[…\]</span></code>, <code class="docutils literal notranslate"><span class="pre">$$…$$</span></code>), and
+<code class="docutils literal notranslate"><span class="pre">\begin{equation}</span></code>-style environments are dropped entirely, contents and
+all.</p></li>
+<li><p><strong>Text-wrapping commands</strong> — <code class="docutils literal notranslate"><span class="pre">\text{…}</span></code>, <code class="docutils literal notranslate"><span class="pre">\textbf{…}</span></code>, <code class="docutils literal notranslate"><span class="pre">\textit{…}</span></code>,
+<code class="docutils literal notranslate"><span class="pre">\emph{…}</span></code>, <code class="docutils literal notranslate"><span class="pre">\underline{…}</span></code>, <code class="docutils literal notranslate"><span class="pre">\texttt{…}</span></code>, <code class="docutils literal notranslate"><span class="pre">\mathrm{…}</span></code>, <code class="docutils literal notranslate"><span class="pre">\mathbf{…}</span></code>,
+<code class="docutils literal notranslate"><span class="pre">\mathit{…}</span></code>, <code class="docutils literal notranslate"><span class="pre">\mathsf{…}</span></code>, <code class="docutils literal notranslate"><span class="pre">\operatorname{…}</span></code> are replaced by their
+braced content.</p></li>
+<li><p><strong>Every other <code class="docutils literal notranslate"><span class="pre">\command</span></code></strong> — removed. A symbol macro such as <code class="docutils literal notranslate"><span class="pre">\alpha</span></code>
+leaves nothing behind; it is not transliterated to <code class="docutils literal notranslate"><span class="pre">α</span></code> or <code class="docutils literal notranslate"><span class="pre">alpha</span></code>.</p></li>
+<li><p>Remaining <code class="docutils literal notranslate"><span class="pre">{</span></code> and <code class="docutils literal notranslate"><span class="pre">}</span></code> become spaces; runs of whitespace collapse to one;
+the cell is trimmed.</p></li>
+</ol>
+<p>Because math and symbol macros are dropped, a cell that is <em>only</em> math
+becomes empty, and a round trip through <code class="docutils literal notranslate"><span class="pre">tex_escape</span></code> is lossy (the escapes it
+adds read as commands here).</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>mode</strong></p>
-<p>Optional conversion mode for alternative TeX-to-text policies.</p>
-<p>Use the zero-argument form when you want the default library behavior. Reach
-for the explicit <code class="docutils literal notranslate"><span class="pre">mode</span></code> overload only when you already know the implementation
-mode contract you intend to target.</p>
+<section id="mode">
+<h3><code class="docutils literal notranslate"><span class="pre">mode</span></code><a class="headerlink" href="#mode" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span> <span class="pre">0</span></code> (the default) applies the pipeline above. <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">&gt;=</span> <span class="pre">1</span></code> additionally
+case-folds the recovered text (ASCII lowercase), matching the “sanitize”
+convention used elsewhere in the library — handy when the output feeds a
+case-insensitive index or key. Negative values behave like <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>The operation is shape-preserving, cell-independent, and returns a fresh
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code>
-A shape-preserving <code class="docutils literal notranslate"><span class="pre">Note</span></code> where TeX markup has been reduced toward plain
-text.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Collapse a small TeX document into plain text.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">documentclass{article}</span><span class="se">\n</span><span class="s">&quot;</span>
-<span class="w">    </span><span class="s">&quot;% comment</span><span class="se">\n</span><span class="s">&quot;</span>
-<span class="w">    </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">begin{document}</span><span class="se">\n</span><span class="s">&quot;</span>
-<span class="w">    </span><span class="s">&quot;Text </span><span class="se">\\</span><span class="s">textbf{bold} and $x+y$.</span><span class="se">\n</span><span class="s">&quot;</span>
-<span class="w">    </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">label{l1}</span><span class="se">\\</span><span class="s">ref{l1}</span><span class="se">\\</span><span class="s">cite{k}</span><span class="se">\\</span><span class="s">href{https://x.y}{link}</span><span class="se">\n</span><span class="s">&quot;</span>
-<span class="w">    </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">end{document}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">tex_to_text</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tex_to_text:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
+<section id="example-1-commands-and-math">
+<h2>Example 1: Commands And Math<a class="headerlink" href="#example-1-commands-and-math" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Text </span><span class="se">\\</span><span class="s">textbf{bold} and $x + y$.&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;$only math$&quot;</span><span class="p">}).</span><span class="n">tex_to_text</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tex_to_text:
-  [0] Text bold and . link
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;Text bold and .&quot;, &quot;&quot;]
 </pre></div>
 </div>
-<p>Example 2. Use the same surface on smaller inline markup when you only need the
-readable text payload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">textit{Hello}&quot;</span><span class="p">).</span><span class="n">tex_to_text</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tex_to_text_inline:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">\textbf{bold}</span></code> becomes <code class="docutils literal notranslate"><span class="pre">bold</span></code>; <code class="docutils literal notranslate"><span class="pre">$x</span> <span class="pre">+</span> <span class="pre">y$</span></code> is dropped (the trailing <code class="docutils literal notranslate"><span class="pre">.</span></code> is
+prose and stays, and the gap collapses). A math-only cell reduces to empty.</p>
 </section>
+</section>
+<section id="example-2-comments-and-preamble">
+<h2>Example 2: Comments And Preamble<a class="headerlink" href="#example-2-comments-and-preamble" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">documentclass{article}</span><span class="se">\n</span><span class="s">% note</span><span class="se">\n\\</span><span class="s">begin{document}</span><span class="se">\n</span><span class="s">Body </span><span class="se">\\</span><span class="s">emph{here}</span><span class="se">\n\\</span><span class="s">end{document}&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">tex_to_text</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tex_to_text_inline:
-  [0] Hello
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;Body here&quot;]
+</pre></div>
+</div>
+<p>The class line and the <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">note</span></code> comment are gone; only the document body
+survives, with <code class="docutils literal notranslate"><span class="pre">\emph{here}</span></code> unwrapped.</p>
+</section>
+</section>
+<section id="example-3-mode-1-also-case-folds">
+<h2>Example 3: <code class="docutils literal notranslate"><span class="pre">mode</span></code> &gt;= 1 Also Case-Folds<a class="headerlink" href="#example-3-mode-1-also-case-folds" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">textbf{Hello} World&quot;</span><span class="p">}).</span><span class="n">tex_to_text</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;hello world&quot;]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>The current default behavior keeps readable text and drops much of the TeX
-control structure.</p></li>
-<li><p>The example shows an important practical point: math markup is not preserved
-as literal source text by default here.</p></li>
-<li><p>If the goal is to protect plain text before inserting it into TeX, use
-<a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tex_escape</span></code></span></a> instead. <code class="docutils literal notranslate"><span class="pre">tex_to_text()</span></code> moves in the opposite
-direction.</p></li>
-</ul>
+<section id="example-4-mode-0-is-the-default">
+<h2>Example 4: <code class="docutils literal notranslate"><span class="pre">mode</span></code> 0 Is The Default<a class="headerlink" href="#example-4-mode-0-is-the-default" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">textbf{Hello} World&quot;</span><span class="p">}).</span><span class="n">tex_to_text</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;Hello World&quot;]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-5-a-scalar-symbol-macros-vanish">
+<h2>Example 5: A Scalar — Symbol Macros Vanish<a class="headerlink" href="#example-5-a-scalar-symbol-macros-vanish" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">alpha kept? </span><span class="se">\\</span><span class="s">textit{no}&quot;</span><span class="p">).</span><span class="n">tex_to_text</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;kept? no&quot;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">\alpha</span></code> leaves nothing; <code class="docutils literal notranslate"><span class="pre">\textit{no}</span></code> unwraps to <code class="docutils literal notranslate"><span class="pre">no</span></code>.</p>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::tex_escape</span></code></span></a>: escape plain text for TeX output rather
-than reducing TeX into plain text.</p></li>
-<li><p><a class="reference internal" href="nlp_remove_urls.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::nlp_remove_urls</span></code></span></a>: additional cleanup after
-textualization if you still want to strip noisy link-like remnants.</p></li>
+<li><p><a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::tex_escape</span></code></span></a>: the opposite direction — protect text
+for TeX.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::tex_strip_comments</span></code> / <code class="docutils literal notranslate"><span class="pre">tex_strip_preamble</span></code>: run just
+one stage of the pipeline.</p></li>
+<li><p><a class="reference internal" href="nlp_mask_pii.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::nlp_mask_pii</span></code></span></a>: a different “clean this text”
+pass, keyed to identifiers rather than markup.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tex_escape.html">
     <span class="label">Previous</span>
     <span class="title">tex_escape</span>
   </a>
-  <a class="next-link" href="remove_all.html">
+  <a class="next-link" href="title.html">
     <span class="label">Next</span>
-    <span class="title">remove_all</span>
+    <span class="title">title</span>
   </a>
 </div>
 </section>
@@ -184,6 +232,7 @@ textualization if you still want to strip noisy link-like remnants.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -235,7 +284,7 @@ textualization if you still want to strip noisy link-like remnants.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
       <li>Previous: <a href="tex_escape.html" title="previous chapter">Note::tex_escape</a></li>
-      <li>Next: <a href="remove_all.html" title="next chapter">Note::remove_all</a></li>
+      <li>Next: <a href="title.html" title="next chapter">Note::title</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -8,7 +8,7 @@
 Series Timeline::is_year_end() const
 ```
 
-Aliases: `is_year_finish()` and `is_yearend()`.
+`is_year_end()` is the sole public spelling.
 
 ## Recognize December 31 In Local Time
 

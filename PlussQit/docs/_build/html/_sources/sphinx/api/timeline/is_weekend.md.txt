@@ -8,7 +8,7 @@
 Series Timeline::is_weekend() const
 ```
 
-Aliases: `weekend()` and `is_sat_or_sun()`.
+`is_weekend()` is the sole public spelling.
 
 ## Classify Saturday And Sunday
 
@@ -18,7 +18,7 @@ work weeks, exchange calendars, or organization-specific closures.
 
 The result is a shape-preserving boolean Series. `NaT` returns `false`.
 
-## Example: A Full Week Plus Missing Time
+## Example: A Full Week Plus NaT
 
 ```cpp
 const auto week = pluss::timeline::make({
@@ -37,7 +37,7 @@ Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=tru
 data=[false, false, false, false, false, true, true, false]
 ```
 
-Saturday and Sunday are selected; the missing value remains `false`.
+Saturday and Sunday are selected; the `NaT` position remains `false`.
 
 ## Shape-Preserving Masks
 

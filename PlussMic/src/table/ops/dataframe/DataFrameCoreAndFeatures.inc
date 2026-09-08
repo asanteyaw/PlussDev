@@ -3068,7 +3068,7 @@ Thread make_unify_null_thread(const Thread& reference, std::int64_t size) {
     case ThreadKind::Timeline: {
       const auto platform = reference.as_timeline().epoch_nanos().platform();
       return Thread(
-          pluss::Timeline::fromSeries(pluss::Series::zeros(
+          pluss::timeline::from_epoch(pluss::Series::zeros(
               {size},
               pluss::codem::ScalarType::Int64,
               platform)),
@@ -3081,7 +3081,7 @@ Thread make_unify_null_thread(const Thread& reference, std::int64_t size) {
       const auto platform =
           reference.as_timeindex().timeline().epoch_nanos().platform();
       return Thread(
-          pluss::Timeline::fromSeries(pluss::Series::zeros(
+          pluss::timeline::from_epoch(pluss::Series::zeros(
               {size},
               pluss::codem::ScalarType::Int64,
               platform)).to_timeindex(false),
@@ -3352,14 +3352,14 @@ Thread CategoryEncoding::decode() const {
             std::vector<std::string>(safe.size())));
         break;
       case ThreadKind::Timeline:
-        output = Thread(pluss::Timeline::fromSeries(pluss::Series::zeros(
+        output = Thread(pluss::timeline::from_epoch(pluss::Series::zeros(
             {size},
             pluss::codem::ScalarType::Int64,
             levels.as_timeline().epoch_nanos().platform())));
         break;
       case ThreadKind::TimeIndex:
         output = Thread(
-            pluss::Timeline::fromSeries(pluss::Series::zeros(
+            pluss::timeline::from_epoch(pluss::Series::zeros(
                 {size},
                 pluss::codem::ScalarType::Int64,
                 levels.as_timeindex().timeline().epoch_nanos().platform()))

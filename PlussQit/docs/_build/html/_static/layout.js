@@ -208,7 +208,7 @@
       requestAnimationFrame(scrollActiveIntoView);
     }
 
-    return { apiSidebar: true };
+    return { apiSidebar: true, page, entry: navData[page.key] };
   }
 
   function buildMethodSidebar() {
@@ -520,6 +520,48 @@
       return;
     }
 
+    if (methodNav && methodNav.apiSidebar && !methodNav.page.landing) {
+      const bodywrapper = document.querySelector(".bodywrapper");
+      const methods = methodNav.entry.methods || [];
+      const index = methods.indexOf(methodNav.page.method);
+      if (!bodywrapper || index < 0) {
+        return;
+      }
+
+      const wrap = document.createElement("div");
+      wrap.id = "pluss-prev-next";
+      const makeFamilyLink = (kind, href, titleText) => {
+        const link = document.createElement("a");
+        link.className = kind.toLowerCase() + "-link";
+        link.href = href;
+        const label = document.createElement("span");
+        label.className = "label";
+        label.textContent = kind;
+        const title = document.createElement("span");
+        title.className = "title";
+        title.textContent = titleText;
+        link.appendChild(label);
+        link.appendChild(title);
+        return link;
+      };
+
+      if (index === 0) {
+        wrap.appendChild(makeFamilyLink(
+          "Previous", `../../${methodNav.entry.landing}`, methodNav.entry.title));
+      } else {
+        wrap.appendChild(makeFamilyLink("Previous", `${methods[index - 1]}.html`, methods[index - 1]));
+      }
+      if (index + 1 < methods.length) {
+        wrap.appendChild(makeFamilyLink("Next", `${methods[index + 1]}.html`, methods[index + 1]));
+      } else {
+        wrap.appendChild(makeFamilyLink(
+          "Next", `../../${methodNav.entry.landing}`, methodNav.entry.title));
+      }
+      bodywrapper.appendChild(wrap);
+      wrap.classList.add("show");
+      return;
+    }
+
     if (methodNav && methodNav.items && methodNav.items.length) {
       const bodywrapper = document.querySelector(".bodywrapper");
       if (!bodywrapper) {
@@ -686,8 +728,6 @@
       }
     }
 
-    if (!apiMethodSidebar) {
-      buildPrevNext(methodNav || null);
-    }
+    buildPrevNext(apiMethodSidebar || methodNav || null);
   });
 })();

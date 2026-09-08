@@ -8,7 +8,7 @@
 Series Timeline::millisecond() const
 ```
 
-Aliases: `ms()`, `msec()`, `milli()`, and `milliseconds()`.
+`millisecond()` is the sole public spelling.
 
 ## Read The Fraction At Millisecond Resolution
 

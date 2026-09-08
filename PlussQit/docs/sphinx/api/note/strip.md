@@ -1,128 +1,158 @@
+<!-- pluss-hand-authored -->
 # Note::strip
 
 [Back to Note API Reference](../../note_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-Note::strip() const -> Note
-Note::strip(std::string_view chars) const -> Note
+Note Note::strip() const
+Note Note::strip(std::string_view chars) const
 ```
 
-## What It Does
+## Trim Characters From Both Ends Of Every Cell
 
-Removes boundary characters from each text cell.
+`strip()` returns a new `Note`, same shape as the input, with leading and
+trailing whitespace removed from each cell. `strip(chars)` instead removes
+any character that appears in the `chars` set. Use it to clean boundary noise
+before comparison, tokenization, measurement, or display — padded fields,
+wrapping markers (`##title##`), stray delimiters at the ends of a
+concatenation.
 
-This method has two common modes:
+### `strip()` — whitespace
 
-- plain whitespace trimming
-- explicit trimming of a chosen set of boundary characters
+The no-argument form removes the ASCII whitespace bytes space, `\t`, `\n`,
+`\r`, `\f`, `\v` from both ends. Whitespace **inside** the cell is left
+exactly as-is — `strip()` is a boundary trim, not a normalizer. Combine with
+[`replace`](replace.md) or a tokenizer if interior spacing also needs work.
 
-That makes it one of the core cleanup primitives in the `Note` surface.
+### `strip(chars)` — a character set
 
-The method is intentionally conservative: it only trims the left and right
-edges of each cell. Interior characters are left untouched.
+`chars` is treated as a **set of bytes**: every position at either end whose
+byte is in the set is removed, and trimming stops at the first byte that is
+not. Order and repetition in `chars` do not matter. So `strip("#")` removes
+runs of `#` from the ends only (`"##a#b##"` → `"a#b"`), and `strip("xy-")`
+removes any mix of `x`, `y`, `-` from the ends (`"xy-payload-yx"` →
+`"payload"`). Because the set is byte-based, pass only ASCII characters in
+`chars`; a multi-byte character there would match its individual bytes.
 
-## Parameters
+A cell made entirely of strippable characters becomes empty. The operation
+is shape-preserving, cell-independent, and returns a fresh `Note`.
 
-**chars**
-
-Optional set of characters to trim from both ends of each cell.
-
-- `strip()`
-  Uses the default whitespace-trimming behavior. This is the overload you want
-  for ordinary cleanup of copied text, identifiers with padding, and cells that
-  arrived from CSV or spreadsheet imports with accidental leading or trailing
-  spaces or tabs.
-- `strip(chars)`
-  Uses an explicit boundary character set instead of default whitespace. Every
-  character present in `chars` is eligible for removal from the left boundary,
-  the right boundary, or both, until a non-matching boundary character is
-  reached.
-
-This is boundary trimming only. Interior occurrences are untouched.
-
-## Returns
-
-`Note`
-    A new `Note` with the same shape as the input and trimmed boundaries.
-
-## Examples
-
-Example 1. Remove leading and trailing whitespace.
+## Example 1: Trim Whitespace
 
 ```cpp
-auto note = pluss::make_note({"  Ada Lovelace  ", "\tGRACE HOPPER\t", "Linus"});
-auto out = note.strip();
-std::cout << "strip:\n" << out << "\n";
+std::cout << pluss::note::print(
+    pluss::make_note({"  Ada Lovelace  ", "\tGRACE HOPPER\t", "Linus"}).strip())
+    << "\n";
 ```
 
 ### Output
 
 ```text
-strip:
-  [0] Ada Lovelace
-  [1] GRACE HOPPER
-  [2] Linus
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada Lovelace", "GRACE HOPPER", "Linus"]
 ```
 
-Example 2. Trim a custom boundary character set instead of whitespace.
+## Example 2: Interior Whitespace Is Kept
 
 ```cpp
-auto tagged = pluss::make_note({"##alpha##", "#beta", "gamma##"});
-auto out = tagged.strip("#");
-std::cout << "strip_hash_space:\n" << pluss::note::print(out) << "\n";
+const pluss::Note n = pluss::make_note({"a\tb  c"}).strip();
+std::cout << n << "\n";
 ```
 
 ### Output
 
 ```text
-strip_hash_space:
-  [0] alpha
-  [1] beta
-  [2] gamma
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["a\tb  c"]
 ```
 
-Example 3. Interior matches are preserved because `strip()` is a boundary
-operation, not a global deletion operation.
+There is no leading or trailing whitespace, so the cell is unchanged; the
+tab and double space between the letters stay.
+
+## Example 3: Strip A Character Set
 
 ```cpp
-auto note = pluss::make_note({"#alpha#beta#", "##gamma##"});
-auto trimmed = note.strip("#");
-pluss::tils::OutputEngine out;
-out.writeln("strip_boundary_only:");
-out.writeln(trimmed);
+std::cout << pluss::note::print(
+    pluss::make_note({"##alpha##", "#beta", "gamma##", "#a#b#"}).strip("#"))
+    << "\n";
 ```
 
 ### Output
 
 ```text
-strip_boundary_only:
-  [0] alpha#beta
-  [1] gamma
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["alpha", "beta", "gamma", "a#b"]
 ```
 
-## Notes
+Only the `#` runs at the ends go; the `#` between `a` and `b` stays.
 
-- `strip()` preserves shape.
-- `strip(chars)` does not touch interior matches. It only trims the outer
-  boundary runs.
-- This method is frequently paired with [`lower`](lower.md) for standardized
-  text normalization.
+## Example 4: A Set Of Several Characters
+
+```cpp
+pluss::note::print(std::cout,
+                   pluss::make_note({"xy-payload-yx"}).strip("xy-"))
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["payload"]
+```
+
+Any mix of `x`, `y`, `-` is trimmed from both ends until a different byte is
+reached.
+
+## Example 5: Fully Strippable Cells Become Empty
+
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({"   ", "###"}).strip().strip("#"))
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["", ""]
+```
+
+## Example 6: Shape Is Preserved
+
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({{"  a  ", "  b  "}}).strip())
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
+[
+  ["a", "b"]
+]
+```
 
 ## See Also
 
-- [`Note::lower`](lower.md): normalize case after trimming.
-- [`Note::replace`](replace.md): rewrite interior substrings rather than
-  trimming boundaries.
+- [`Note::lower`](lower.md): case-fold; commonly chained with `strip` for
+  full normalization.
+- [`Note::remove_all`](remove_all.md): delete a substring **anywhere**, not
+  just at the boundaries.
+- `pluss::coden::Note::lstrip` / `rstrip`: trim one end only.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="split_whitespace.html">
+  <a class="prev-link" href="starts_with.html">
     <span class="label">Previous</span>
-    <span class="title">split_whitespace</span>
+    <span class="title">starts_with</span>
   </a>
-  <a class="next-link" href="tex_escape.html">
+  <a class="next-link" href="swapcase.html">
     <span class="label">Next</span>
-    <span class="title">tex_escape</span>
+    <span class="title">swapcase</span>
   </a>
 </div>

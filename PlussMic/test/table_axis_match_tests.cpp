@@ -896,17 +896,17 @@ void test_temporal_subtraction_and_sort_builder() {
          "DataFrame::sort() should support per-key chained sort policies");
 
   const auto order = frame.sort().by("v").desc().order();
-  expect(order.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({2, 0, 1, 3}),
+  expect(order.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({3, 2, 0, 1}),
          "DataFrame::sort().order() should expose the reusable row permutation");
   const auto reordered = frame.take(order);
   expect(reordered.features("v").as_series().to_vec<double>() ==
-             std::vector<double>({30.0, 20.0, 10.0, 40.0}),
+             std::vector<double>({40.0, 30.0, 20.0, 10.0}),
          "DataFrame::take(order) should reuse a sort permutation directly");
   const auto top2 = frame.sort().by("v").desc().head(2);
-  expect(top2.features("v").as_series().to_vec<double>() == std::vector<double>({30.0, 20.0}),
+  expect(top2.features("v").as_series().to_vec<double>() == std::vector<double>({40.0, 30.0}),
          "DataFrame::sort().head(n) should return the ranked prefix");
   const auto tail2 = frame.sort().by("v").desc().tail(2);
-  expect(tail2.features("v").as_series().to_vec<double>() == std::vector<double>({10.0, 40.0}),
+  expect(tail2.features("v").as_series().to_vec<double>() == std::vector<double>({20.0, 10.0}),
          "DataFrame::sort().tail(n) should return the ranked suffix");
 
   const auto grouped = DataFrame(

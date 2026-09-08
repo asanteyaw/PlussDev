@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::note::arange &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="pluss::note::bytes" href="bytes.html" />
+    <link rel="prev" title="Note Factory API Reference" href="../../note_factory_api_reference.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="pluss-note-arange">
+<h1>pluss::note::arange<a class="headerlink" href="#pluss-note-arange" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../note_factory_api_reference.html"><span class="doc std std-doc">Back to Note Factory API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="n">string_view</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">string_view</span><span class="w"> </span><span class="n">end</span><span class="p">,</span>
+<span class="w">                         </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">inclusive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="a-stepped-run-of-single-characters">
+<h2>A Stepped Run Of Single Characters<a class="headerlink" href="#a-stepped-run-of-single-characters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">arange()</span></code> builds a rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">Note</span></code> whose cells are consecutive single
+characters, walking the ASCII code-point line from <code class="docutils literal notranslate"><span class="pre">start</span></code> toward <code class="docutils literal notranslate"><span class="pre">end</span></code> in
+increments of <code class="docutils literal notranslate"><span class="pre">step</span></code>. It is the text analogue of <code class="docutils literal notranslate"><span class="pre">pluss::series::arange</span></code> and
+of Python’s <code class="docutils literal notranslate"><span class="pre">range</span></code> — a generator of an ordered sequence — specialised to
+one-character strings.</p>
+<p>Typical uses are building an alphabet or digit axis (<code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;z&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;9&quot;</span></code>), a header row of column letters, or a small fixed lookup of
+single-character keys, without writing the run out by hand.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code></strong> — each must be exactly one ASCII character (code point
+<code class="docutils literal notranslate"><span class="pre">0x00</span></code>–<code class="docutils literal notranslate"><span class="pre">0x7F</span></code>). They are read as byte values; the sequence runs over those
+values.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">step</span></code></strong> — the code-point stride. Must not be <code class="docutils literal notranslate"><span class="pre">0</span></code>. A positive <code class="docutils literal notranslate"><span class="pre">step</span></code>
+ascends from <code class="docutils literal notranslate"><span class="pre">start</span></code>; a negative <code class="docutils literal notranslate"><span class="pre">step</span></code> descends. <code class="docutils literal notranslate"><span class="pre">step</span></code> may be larger
+than <code class="docutils literal notranslate"><span class="pre">1</span></code> to skip characters (<code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;c&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;e&quot;</span></code>, …).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">inclusive</span></code></strong> — whether <code class="docutils literal notranslate"><span class="pre">end</span></code> itself may appear. It can only ever appear
+when the stride lands on it exactly; when <code class="docutils literal notranslate"><span class="pre">step</span></code> steps past <code class="docutils literal notranslate"><span class="pre">end</span></code> without
+hitting it, <code class="docutils literal notranslate"><span class="pre">inclusive</span></code> makes no difference.</p></li>
+</ul>
+<p>The result is always rank <code class="docutils literal notranslate"><span class="pre">1</span></code> and <strong>UTF-8 mode</strong>. If the direction of <code class="docutils literal notranslate"><span class="pre">step</span></code>
+points away from <code class="docutils literal notranslate"><span class="pre">end</span></code> (ascending <code class="docutils literal notranslate"><span class="pre">step</span></code> with <code class="docutils literal notranslate"><span class="pre">start</span></code> already past <code class="docutils literal notranslate"><span class="pre">end</span></code>, or
+vice versa), the sequence is empty and a zero-length <code class="docutils literal notranslate"><span class="pre">Note</span></code> is returned —
+this is not an error.</p>
+<p>Because <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> are ASCII bytes, <code class="docutils literal notranslate"><span class="pre">arange</span></code> does not walk Unicode
+letters beyond ASCII; for a non-ASCII character list, build it with
+<a class="reference internal" href="make.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">make</span></code></span></a> or <a class="reference internal" href="from_words.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">from_words</span></code></span></a>.</p>
+</section>
+</section>
+<section id="example-1-a-contiguous-letter-run">
+<h2>Example 1: A Contiguous Letter Run<a class="headerlink" href="#example-1-a-contiguous-letter-run" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;e&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[5], dim=1, numel=5, encoding=utf8)
+[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;, &quot;e&quot;]
+</pre></div>
+</div>
+<p>Default <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">=</span> <span class="pre">1</span></code>, default <code class="docutils literal notranslate"><span class="pre">inclusive</span> <span class="pre">=</span> <span class="pre">true</span></code>, so <code class="docutils literal notranslate"><span class="pre">end</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;e&quot;</span></code>) is
+included.</p>
+</section>
+</section>
+<section id="example-2-a-stride-greater-than-one">
+<h2>Example 2: A Stride Greater Than One<a class="headerlink" href="#example-2-a-stride-greater-than-one" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;i&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[5], dim=1, numel=5, encoding=utf8)
+[&quot;a&quot;, &quot;c&quot;, &quot;e&quot;, &quot;g&quot;, &quot;i&quot;]
+</pre></div>
+</div>
+<p>Every second character. <code class="docutils literal notranslate"><span class="pre">&quot;i&quot;</span></code> is reached exactly, so it appears.</p>
+</section>
+</section>
+<section id="example-3-excluding-the-endpoint">
+<h2>Example 3: Excluding The Endpoint<a class="headerlink" href="#example-3-excluding-the-endpoint" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;e&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[4], dim=1, numel=4, encoding=utf8)
+[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">inclusive</span> <span class="pre">=</span> <span class="pre">false</span></code> drops <code class="docutils literal notranslate"><span class="pre">end</span></code> when the walk would otherwise land on it.</p>
+</section>
+</section>
+<section id="example-4-inclusive-is-moot-when-the-stride-overshoots">
+<h2>Example 4: <code class="docutils literal notranslate"><span class="pre">inclusive</span></code> Is Moot When The Stride Overshoots<a class="headerlink" href="#example-4-inclusive-is-moot-when-the-stride-overshoots" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;f&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;a&quot;, &quot;c&quot;, &quot;e&quot;]
+</pre></div>
+</div>
+<p>The stride goes <code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">c,</span> <span class="pre">e,</span> <span class="pre">g</span></code> — it never lands on <code class="docutils literal notranslate"><span class="pre">&quot;f&quot;</span></code>, so <code class="docutils literal notranslate"><span class="pre">end</span></code> is absent
+regardless of <code class="docutils literal notranslate"><span class="pre">inclusive</span></code>.</p>
+</section>
+</section>
+<section id="example-5-a-descending-run">
+<h2>Example 5: A Descending Run<a class="headerlink" href="#example-5-a-descending-run" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="s">&quot;e&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[5], dim=1, numel=5, encoding=utf8)
+[&quot;e&quot;, &quot;d&quot;, &quot;c&quot;, &quot;b&quot;, &quot;a&quot;]
+</pre></div>
+</div>
+<p>A negative <code class="docutils literal notranslate"><span class="pre">step</span></code> counts down.</p>
+</section>
+</section>
+<section id="example-6-a-digit-axis-with-a-stride">
+<h2>Example 6: A Digit Axis With A Stride<a class="headerlink" href="#example-6-a-digit-axis-with-a-stride" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="s">&quot;0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;9&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[4], dim=1, numel=4, encoding=utf8)
+[&quot;0&quot;, &quot;3&quot;, &quot;6&quot;, &quot;9&quot;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">arange</span></code> works over any ASCII range, not just letters.</p>
+</section>
+</section>
+<section id="example-7-a-direction-mismatch-yields-an-empty-note">
+<h2>Example 7: A Direction Mismatch Yields An Empty <code class="docutils literal notranslate"><span class="pre">Note</span></code><a class="headerlink" href="#example-7-a-direction-mismatch-yields-an-empty-note" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="s">&quot;e&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+</pre></div>
+</div>
+<p>A positive <code class="docutils literal notranslate"><span class="pre">step</span></code> cannot move from <code class="docutils literal notranslate"><span class="pre">&quot;e&quot;</span></code> toward <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code>, so the sequence is
+empty. Not an error — a valid zero-length rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
+</section>
+</section>
+<section id="example-8-a-zero-step-is-rejected">
+<h2>Example 8: A Zero Step Is Rejected<a class="headerlink" href="#example-8-a-zero-step-is-rejected" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;e&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::note::arange: step cannot be 0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="rand.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::rand</span></code></span></a>: random letters instead of a fixed run.</p></li>
+<li><p><a class="reference internal" href="perm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::perm</span></code></span></a>: combinations or permutations of a word’s
+characters.</p></li>
+<li><p><a class="reference internal" href="make.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::note::make</span></code></span></a>: write the sequence out explicitly when it
+is short or non-ASCII.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../note_factory_api_reference.html">
+    <span class="label">Previous</span>
+    <span class="title">Note Factory API Reference</span>
+  </a>
+  <a class="next-link" href="bytes.html">
+    <span class="label">Next</span>
+    <span class="title">bytes</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../note_factory_api_reference.html">Note Factory API Reference</a><ul>
+      <li>Previous: <a href="../../note_factory_api_reference.html" title="previous chapter">Note Factory API Reference</a></li>
+      <li>Next: <a href="bytes.html" title="next chapter">pluss::note::bytes</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/note_factory/arange.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

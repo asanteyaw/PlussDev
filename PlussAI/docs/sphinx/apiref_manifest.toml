@@ -283,7 +283,7 @@ family = "lymph/workflow"
 page = "api/lymph/workflow/Payload.md"
 summary = "`Payload` is the typed input carrier -- a frame/batch plus attached roles (label, weights, groups, time) that every Workflow verb accepts."
 since = "0.1"
-methods = []
+methods = ["label", "weights", "time", "roles", "batch"]
 
 [[symbol]]
 qualname = "lymph::workflow::Policy"
@@ -292,7 +292,7 @@ family = "lymph/workflow"
 page = "api/lymph/workflow/Policy.md"
 summary = "`Policy` is the raw-frame admission contract Workflow applies before any prep stage sees data -- drop/require/forbid columns, reject missing rows."
 since = "0.1"
-methods = []
+methods = ["columns", "rows", "apply"]
 
 [[symbol]]
 qualname = "lymph::workflow::TimeOptions"

@@ -97,7 +97,9 @@ std::vector<std::int64_t> SeriesIterator::broadcast_shape(std::span<const std::i
   for (std::size_t i = 0; i < n; ++i) {
     const std::int64_t da = (i < n - na) ? 1 : a[i - (n - na)];
     const std::int64_t db = (i < n - nb) ? 1 : b[i - (n - nb)];
-    if (da == db || da == 1 || db == 1) out[i] = std::max(da, db);
+    if (da == db) out[i] = da;
+    else if (da == 1) out[i] = db;
+    else if (db == 1) out[i] = da;
     else throw_error("broadcast: incompatible shapes");
   }
   return out;

@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::isvalid" href="isvalid.html" />
-    <link rel="prev" title="Timeline::eq" href="eq.html" />
+    <link rel="next" title="Timeline::isnat_scalar" href="isnat_scalar.html" />
+    <link rel="prev" title="Timeline::is_year_start" href="is_year_start.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -47,17 +47,17 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a boolean mask marking which timeline entries are missing.</p>
-<p>This is the load-bearing predicate for temporal missing-data logic.</p>
+<p>Returns a boolean mask marking which Timeline positions hold <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p>
+<p>This is the direct predicate for absent-instant logic.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-<code class="docutils literal notranslate"><span class="pre">true</span></code> where the timestamp is missing, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> where the instant is absent, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Detect missing timestamps in a mixed timeline.</p>
+<p>Example 1. Detect absent instants in a mixed Timeline.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_nat</span><span class="p">.</span><span class="n">isnat</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -74,7 +74,7 @@ data=[false, true, false, true]
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Pair <code class="docutils literal notranslate"><span class="pre">isnat()</span></code> with <a class="reference internal" href="fill_nat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fill_nat</span></code></span></a> or <a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">where</span></code></span></a> to repair
-or branch on missing times.</p></li>
+or branch on absent instants.</p></li>
 <li><p>Use <a class="reference internal" href="isnat_scalar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat_scalar</span></code></span></a> for one scalar timestamp instead of an
 array-shaped result.</p></li>
 </ul>
@@ -86,9 +86,9 @@ array-shaped result.</p></li>
 <li><p><a class="reference internal" href="fill_nat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::fill_nat</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="eq.html">
+  <a class="prev-link" href="ge.html">
     <span class="label">Previous</span>
-    <span class="title">eq</span>
+    <span class="title">ge</span>
   </a>
   <a class="next-link" href="isvalid.html">
     <span class="label">Next</span>
@@ -136,6 +136,7 @@ array-shaped result.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -186,8 +187,8 @@ array-shaped result.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="eq.html" title="previous chapter">Timeline::eq</a></li>
-      <li>Next: <a href="isvalid.html" title="next chapter">Timeline::isvalid</a></li>
+      <li>Previous: <a href="is_year_start.html" title="previous chapter">Timeline::is_year_start</a></li>
+      <li>Next: <a href="isnat_scalar.html" title="next chapter">Timeline::isnat_scalar</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

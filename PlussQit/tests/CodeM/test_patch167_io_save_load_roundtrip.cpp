@@ -91,7 +91,7 @@ TEST_CASE("pluss::save/load roundtrip for Timeline and TimeIndex", "[io][timelin
   const auto loaded_timeline = pluss::load<pluss::Timeline>(timeline_path.string());
 
   REQUIRE(loaded_timeline.defined());
-  REQUIRE(loaded_timeline.to_epoch_nanos_vector() == timeline.to_epoch_nanos_vector());
+  REQUIRE(loaded_timeline.ticks() == timeline.ticks());
   REQUIRE(loaded_timeline.tz() == timeline.tz());
 
   const auto index = pluss::timeindex::make(std::vector<std::int64_t>{3, 1, 2}, false);
@@ -99,7 +99,7 @@ TEST_CASE("pluss::save/load roundtrip for Timeline and TimeIndex", "[io][timelin
   const auto loaded_index = pluss::load<pluss::TimeIndex>(timeindex_path.string());
 
   REQUIRE(loaded_index.size() == index.size());
-  REQUIRE(loaded_index.timeline().to_epoch_nanos_vector() == index.timeline().to_epoch_nanos_vector());
+  REQUIRE(loaded_index.timeline().ticks() == index.timeline().ticks());
 
   remove_if_exists(timeline_path);
   remove_if_exists(timeindex_path);

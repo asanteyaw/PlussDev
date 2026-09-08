@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline API Reference" href="../../timeline_api_reference.html" />
-    <link rel="prev" title="Note::base64_encode" href="base64_encode.html" />
+    <link rel="next" title="Note Factory API Reference" href="../../note_factory_api_reference.html" />
+    <link rel="prev" title="Note::url_decode" href="url_decode.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,107 +36,119 @@
 
           <div class="body" role="main">
             
-  <section id="note-url-encode">
+  <!-- pluss-hand-authored -->
+<section id="note-url-encode">
 <h1>Note::url_encode<a class="headerlink" href="#note-url-encode" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">url_encode</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">url_encode</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Percent-encodes each text cell for URL-safe transport.</p>
-<p>This is the right method when your text must move through a URL or query-string
-style channel where spaces and reserved characters need escaping.</p>
-<p>Like the Base64 surface, this is transport-oriented rather than NLP-oriented.
-Use it when the output must survive URL parsing rules, not when the goal is to
-clean or tokenize natural language.</p>
+<section id="percent-encode-every-cell-for-use-in-a-url">
+<h2>Percent-Encode Every Cell For Use In A URL<a class="headerlink" href="#percent-encode-every-cell-for-use-in-a-url" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">url_encode()</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with each cell
+percent-encoded so it can be dropped into a URL path segment or query value
+without changing the URL’s structure. Use it when building request URLs,
+<code class="docutils literal notranslate"><span class="pre">?key=value</span></code> pairs, or redirect targets from text that may contain spaces,
+<code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">?</span></code>, <code class="docutils literal notranslate"><span class="pre">#</span></code>, or non-ASCII characters.</p>
+<section id="the-rule">
+<h3>The rule<a class="headerlink" href="#the-rule" title="Link to this heading">¶</a></h3>
+<p>The <strong>unreserved</strong> set of RFC 3986 is left as-is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="o">-</span><span class="n">Z</span>   <span class="n">a</span><span class="o">-</span><span class="n">z</span>   <span class="mi">0</span><span class="o">-</span><span class="mi">9</span>   <span class="o">-</span>   <span class="n">_</span>   <span class="o">.</span>   <span class="o">~</span>
+</pre></div>
+</div>
+<p>Every other byte is written as <code class="docutils literal notranslate"><span class="pre">%</span></code> followed by its two uppercase hex digits.
+This means:</p>
+<ul class="simple">
+<li><p>A space becomes <code class="docutils literal notranslate"><span class="pre">%20</span></code> (not <code class="docutils literal notranslate"><span class="pre">+</span></code> — this is component encoding, not
+<code class="docutils literal notranslate"><span class="pre">application/x-www-form-urlencoded</span></code>).</p></li>
+<li><p>The sub-delimiters and gen-delimiters <code class="docutils literal notranslate"><span class="pre">&amp;</span> <span class="pre">=</span> <span class="pre">/</span> <span class="pre">?</span> <span class="pre">#</span> <span class="pre">:</span> <span class="pre">&#64;</span> <span class="pre">[</span> <span class="pre">]</span></code> and so on are all
+encoded, so an encoded value cannot break out of its path segment or query
+field.</p></li>
+<li><p>Non-ASCII text is encoded <strong>per UTF-8 byte</strong>: <code class="docutils literal notranslate"><span class="pre">é</span></code> (bytes <code class="docutils literal notranslate"><span class="pre">C3</span> <span class="pre">A9</span></code>) becomes
+<code class="docutils literal notranslate"><span class="pre">%C3%A9</span></code>, and <code class="docutils literal notranslate"><span class="pre">€</span></code> (bytes <code class="docutils literal notranslate"><span class="pre">E2</span> <span class="pre">82</span> <span class="pre">AC</span></code>) becomes <code class="docutils literal notranslate"><span class="pre">%E2%82%AC</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">url_decode()</span></code> is the exact inverse.</p>
+<p>The operation is shape-preserving, cell-independent, and returns a fresh
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>. Encoded cells are longer wherever a byte had to be escaped; an empty
+cell stays empty.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p>This method takes no parameters.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code>
-A shape-preserving <code class="docutils literal notranslate"><span class="pre">Note</span></code> whose cells are URL-encoded.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Encode a string containing a space and a plus sign.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;a b+c&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">encoded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">url_encode</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;url_encode:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">encoded</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">encoded</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
+<section id="example-1-reserved-characters-and-spaces">
+<h2>Example 1: Reserved Characters And Spaces<a class="headerlink" href="#example-1-reserved-characters-and-spaces" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a b&amp;c=d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;path/to/x?y#z&quot;</span><span class="p">}).</span><span class="n">url_encode</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>url_encode:
-  [0] a%20b%2Bc
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;a%20b%26c%3Dd&quot;, &quot;path%2Fto%2Fx%3Fy%23z&quot;]
 </pre></div>
 </div>
-<p>Example 2. Decode it back to the original text.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;a b+c&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">encoded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">url_encode</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">roundtrip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">encoded</span><span class="p">.</span><span class="n">url_decode</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;url_roundtrip:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">roundtrip</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">roundtrip</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<p>Space → <code class="docutils literal notranslate"><span class="pre">%20</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> → <code class="docutils literal notranslate"><span class="pre">%26</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code> → <code class="docutils literal notranslate"><span class="pre">%3D</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code> → <code class="docutils literal notranslate"><span class="pre">%2F</span></code>, <code class="docutils literal notranslate"><span class="pre">?</span></code> → <code class="docutils literal notranslate"><span class="pre">%3F</span></code>,
+<code class="docutils literal notranslate"><span class="pre">#</span></code> → <code class="docutils literal notranslate"><span class="pre">%23</span></code>.</p>
 </section>
+</section>
+<section id="example-2-unreserved-characters-pass-through">
+<h2>Example 2: Unreserved Characters Pass Through<a class="headerlink" href="#example-2-unreserved-characters-pass-through" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A-Za-z0-9-_.~&quot;</span><span class="p">}).</span><span class="n">url_encode</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>url_roundtrip:
-  [0] a b+c
-</pre></div>
-</div>
-<p>Example 3. Encode a batch of cells for query-safe transport.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a b+c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x/y&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">encoded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">url_encode</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;url_encode_batch:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">encoded</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">encoded</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;A-Za-z0-9-_.~&quot;]
 </pre></div>
 </div>
 </section>
+</section>
+<section id="example-3-non-ascii-is-encoded-per-utf-8-byte">
+<h2>Example 3: Non-ASCII Is Encoded Per UTF-8 Byte<a class="headerlink" href="#example-3-non-ascii-is-encoded-per-utf-8-byte" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;café&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;€&quot;</span><span class="p">}).</span><span class="n">url_encode</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>url_encode_batch:
-  [0] a%20b%2Bc
-  [1] x%2Fy
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;caf%C3%A9&quot;, &quot;%E2%82%AC&quot;]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">url_encode()</span></code> is about transport-safe serialization, not NLP cleanup.</p></li>
-<li><p>The example is useful because <code class="docutils literal notranslate"><span class="pre">+</span></code> is encoded too, which makes it clear the
-output is percent-encoded text rather than a whitespace-only rewrite.</p></li>
-<li><p>For binary-safe or compact interchange, Base64 may be a better fit than URL
-encoding.</p></li>
-</ul>
+<section id="example-4-round-trips-through-url-decode">
+<h2>Example 4: Round-Trips Through <code class="docutils literal notranslate"><span class="pre">url_decode</span></code><a class="headerlink" href="#example-4-round-trips-through-url-decode" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a b/c?d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;café&quot;</span><span class="p">}).</span><span class="n">url_encode</span><span class="p">().</span><span class="n">url_decode</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;a b/c?d&quot;, &quot;café&quot;]
+</pre></div>
+</div>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="base64_encode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::base64_encode</span></code></span></a>: alternate reversible transport
-encoding.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note::url_decode()</span></code>: reverse the percent encoding.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::url_decode</span></code>: the inverse.</p></li>
+<li><p><a class="reference internal" href="base64_encode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::base64_encode</span></code></span></a>: the other “make it ASCII-safe”
+encoding, for transfer rather than URL syntax.</p></li>
+<li><p><a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::tex_escape</span></code></span></a>: escaping for a different consumer.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="base64_encode.html">
+  <a class="prev-link" href="url_decode.html">
     <span class="label">Previous</span>
-    <span class="title">base64_encode</span>
+    <span class="title">url_decode</span>
   </a>
   <a class="next-link" href="../../note_api_reference.html">
     <span class="label">Next</span>
@@ -184,6 +196,7 @@ encoding.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -234,8 +247,8 @@ encoding.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="base64_encode.html" title="previous chapter">Note::base64_encode</a></li>
-      <li>Next: <a href="../../timeline_api_reference.html" title="next chapter">Timeline API Reference</a></li>
+      <li>Previous: <a href="url_decode.html" title="previous chapter">Note::url_decode</a></li>
+      <li>Next: <a href="../../note_factory_api_reference.html" title="next chapter">Note Factory API Reference</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

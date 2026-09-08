@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=151dd15e"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::is_leap_year" href="is_leap_year.html" />
-    <link rel="prev" title="Timeline::quarter" href="quarter.html" />
+    <link rel="next" title="Timeline::week_scalar" href="week_scalar.html" />
+    <link rel="prev" title="Timeline::unique" href="unique.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,14 +44,14 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">week</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">weekofyear()</span></code>, <code class="docutils literal notranslate"><span class="pre">woy()</span></code>, and <code class="docutils literal notranslate"><span class="pre">week_()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">week()</span></code> is the sole public spelling.</p>
 </section>
 <section id="read-the-iso-week-number">
 <h2>Read The ISO Week Number<a class="headerlink" href="#read-the-iso-week-number" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">week()</span></code> returns the ISO week number of each local date as shape-preserving
 <code class="docutils literal notranslate"><span class="pre">int32</span></code>. ISO weeks begin on Monday and are numbered <code class="docutils literal notranslate"><span class="pre">1</span></code> through <code class="docutils literal notranslate"><span class="pre">53</span></code>. Week 1 is
 the week containing the year’s first Thursday, so the week-number boundary
-does not always coincide with 1 January. Missing timestamps return <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
+does not always coincide with 1 January. Absent instants return <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
 <p>This convention explains an initially surprising but correct result: Friday,
 1 January 2021 belongs to ISO week 53 of the preceding ISO week-year.</p>
 </section>
@@ -112,7 +112,7 @@ ignore, and never pair the number blindly with the civil year.</p>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="quarter.html"><span class="label">Previous</span><span class="title">quarter</span></a>
-  <a class="next-link" href="is_leap_year.html"><span class="label">Next</span><span class="title">is_leap_year</span></a>
+  <a class="next-link" href="week_scalar.html"><span class="label">Next</span><span class="title">week_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -156,6 +156,7 @@ ignore, and never pair the number blindly with the civil year.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -206,8 +207,8 @@ ignore, and never pair the number blindly with the civil year.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="quarter.html" title="previous chapter">Timeline::quarter</a></li>
-      <li>Next: <a href="is_leap_year.html" title="next chapter">Timeline::is_leap_year</a></li>
+      <li>Previous: <a href="unique.html" title="previous chapter">Timeline::unique</a></li>
+      <li>Next: <a href="week_scalar.html" title="next chapter">Timeline::week_scalar</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

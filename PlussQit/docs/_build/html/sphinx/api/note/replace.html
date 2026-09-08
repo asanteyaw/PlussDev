@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::split_lines" href="split_lines.html" />
-    <link rel="prev" title="Note::regex_findall" href="regex_findall.html" />
+    <link rel="next" title="Note::split" href="split.html" />
+    <link rel="prev" title="Note::remove_all" href="remove_all.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,137 +36,152 @@
 
           <div class="body" role="main">
             
-  <section id="note-replace">
+  <!-- pluss-hand-authored -->
+<section id="note-replace">
 <h1>Note::replace<a class="headerlink" href="#note-replace" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">replace</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">to</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">replace</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">to</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces every occurrence of one literal substring with another, cell by cell.</p>
-<p>This is the direct batch-text rewrite primitive for simple substitutions:</p>
+<section id="substitute-every-occurrence-of-a-literal-substring">
+<h2>Substitute Every Occurrence Of A Literal Substring<a class="headerlink" href="#substitute-every-occurrence-of-a-literal-substring" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">to)</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with
+<strong>every</strong> occurrence of the literal string <code class="docutils literal notranslate"><span class="pre">from</span></code> in each cell rewritten to
+<code class="docutils literal notranslate"><span class="pre">to</span></code>. Despite the bare name, this is a replace-<strong>all</strong>: it is the workhorse
+for normalizing separators, renaming a token throughout a batch, or swapping
+placeholder text.</p>
+<p>The match is <strong>literal</strong> — <code class="docutils literal notranslate"><span class="pre">from</span></code> is compared byte for byte, no regex
+metacharacters, no case folding. Occurrences are rewritten <strong>left to right
+and non-overlapping</strong>, and the scan resumes <em>after</em> the inserted <code class="docutils literal notranslate"><span class="pre">to</span></code> (not
+inside it), so a <code class="docutils literal notranslate"><span class="pre">to</span></code> that contains <code class="docutils literal notranslate"><span class="pre">from</span></code> does not cause a second pass:
+<code class="docutils literal notranslate"><span class="pre">replace(&quot;aa&quot;,</span> <span class="pre">&quot;b&quot;)</span></code> on <code class="docutils literal notranslate"><span class="pre">&quot;aaaa&quot;</span></code> gives <code class="docutils literal notranslate"><span class="pre">&quot;bb&quot;</span></code>.</p>
+<section id="edge-cases">
+<h3>Edge cases<a class="headerlink" href="#edge-cases" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>renaming markers</p></li>
-<li><p>fixing labels</p></li>
-<li><p>replacing tokens before export</p></li>
-<li><p>standardizing text fragments without invoking regex machinery</p></li>
+<li><p>An <strong>empty <code class="docutils literal notranslate"><span class="pre">from</span></code></strong> is a no-op — the cell is returned unchanged (not an
+error, and not “insert <code class="docutils literal notranslate"><span class="pre">to</span></code> between every character”).</p></li>
+<li><p>An empty <code class="docutils literal notranslate"><span class="pre">to</span></code> deletes every <code class="docutils literal notranslate"><span class="pre">from</span></code>; that is exactly
+<a class="reference internal" href="remove_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">remove_all(from)</span></code></span></a>.</p></li>
+<li><p>No occurrence of <code class="docutils literal notranslate"><span class="pre">from</span></code> leaves the cell unchanged.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">replace()</span></code> is global within each cell: every literal match is rewritten.
-It is not a “first match only” primitive and it is not regex-aware.</p>
+<p>The operation is shape-preserving, cell-independent, and returns a fresh
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>. For “first only” or “last only” or “first N”, use the sibling
+methods <code class="docutils literal notranslate"><span class="pre">replace_first</span></code>, <code class="docutils literal notranslate"><span class="pre">replace_last</span></code>, and <code class="docutils literal notranslate"><span class="pre">replace_n</span></code>.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>from</strong></p>
-<p>The literal substring to replace.</p>
-<p><strong>to</strong></p>
-<p>The literal replacement text.</p>
-<p>Every cell is processed independently, and cells that do not contain the
-substring are left unchanged.</p>
-<p>Neither <code class="docutils literal notranslate"><span class="pre">from</span></code> nor <code class="docutils literal notranslate"><span class="pre">to</span></code> is interpreted as regex syntax here. The method is
-strictly literal on both sides of the substitution.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code> with the same shape as the input and the requested substring
-substitutions applied.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Rewrite a common label prefix.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;score: 75&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;score: 88&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pending&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mark&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;replace:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="example-1-every-occurrence-is-rewritten">
+<h2>Example 1: Every Occurrence Is Rewritten<a class="headerlink" href="#example-1-every-occurrence-is-rewritten" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;score: 75 score: x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pending&quot;</span><span class="p">}).</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mark&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>replace:
-  [0] mark: 75
-  [1] mark: 88
-  [2] pending
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;mark: 75 mark: x&quot;, &quot;pending&quot;]
 </pre></div>
 </div>
-<p>Example 2. Replace structural separators when you want a more readable surface.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada_Lovelace&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Grace_Hopper&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Linus&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;_&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;replace_underscore:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>Both <code class="docutils literal notranslate"><span class="pre">score</span></code>s in the first cell change; the second cell has none and is
+unchanged.</p>
 </section>
+</section>
+<section id="example-2-normalize-a-separator">
+<h2>Example 2: Normalize A Separator<a class="headerlink" href="#example-2-normalize-a-separator" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada_Lovelace&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Grace_Hopper&quot;</span><span class="p">}).</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;_&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>replace_underscore:
-  [0] Ada Lovelace
-  [1] Grace Hopper
-  [2] Linus
-</pre></div>
-</div>
-<p>Example 3. Replace one marker, then inspect whether the old marker is still
-present.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;midterm_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;midterm_2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final_exam&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">renamed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;exam&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">still_old</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">renamed</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">);</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">tils</span><span class="o">::</span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-<span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;replace_then_contains:&quot;</span><span class="p">);</span>
-<span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">renamed</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;replace_then_contains_mask:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">still_old</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;Ada Lovelace&quot;, &quot;Grace Hopper&quot;]
 </pre></div>
 </div>
 </section>
+</section>
+<section id="example-3-matches-do-not-overlap-and-the-result-is-not-re-scanned">
+<h2>Example 3: Matches Do Not Overlap And The Result Is Not Re-Scanned<a class="headerlink" href="#example-3-matches-do-not-overlap-and-the-result-is-not-re-scanned" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;aaaa&quot;</span><span class="p">}).</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;aa&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<p>Renamed note:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>replace_then_contains:
-  [0] exam_1
-  [1] exam_2
-  [2] final_exam
-</pre></div>
-</div>
-<p>Mask after replacement:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>replace_then_contains_mask: 0 0 0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;bb&quot;]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">replace()</span></code> is literal replacement, not regex replacement.</p></li>
-<li><p>The two string parameters are symmetric in the sense that both are treated as
-literal text. There is no overload here that interprets either side as a
-regex program.</p></li>
-<li><p>If you only want the first or last occurrence changed, the broader <code class="docutils literal notranslate"><span class="pre">Note</span></code>
-surface also exposes specialized replacement variants such as
-<code class="docutils literal notranslate"><span class="pre">replace_first(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">replace_last(...)</span></code>.</p></li>
-<li><p>This is often paired with <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip</span></code></span></a> when the surrounding text also
-needs boundary cleanup.</p></li>
-</ul>
+<section id="example-4-an-empty-from-is-a-no-op">
+<h2>Example 4: An Empty <code class="docutils literal notranslate"><span class="pre">from</span></code> Is A No-Op<a class="headerlink" href="#example-4-an-empty-from-is-a-no-op" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;unchanged&quot;</span><span class="p">}).</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;X&quot;</span><span class="p">))</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;unchanged&quot;]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-5-an-empty-to-deletes-same-as-remove-all">
+<h2>Example 5: An Empty <code class="docutils literal notranslate"><span class="pre">to</span></code> Deletes — Same As <code class="docutils literal notranslate"><span class="pre">remove_all</span></code><a class="headerlink" href="#example-5-an-empty-to-deletes-same-as-remove-all" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a.b.c&quot;</span><span class="p">}).</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">))</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;abc&quot;]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-6-shape-is-preserved">
+<h2>Example 6: Shape Is Preserved<a class="headerlink" href="#example-6-shape-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({{</span><span class="s">&quot;x1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x2&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;x3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x4&quot;</span><span class="p">}}).</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;col&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;col1&quot;, &quot;col2&quot;], 
+  [&quot;col3&quot;, &quot;col4&quot;]
+]
+</pre></div>
+</div>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="contains.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::contains</span></code></span></a>: check for the substring before or after
-replacement.</p></li>
-<li><p><a class="reference internal" href="tex_escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::tex_escape</span></code></span></a>: escape special characters rather than
-replacing a literal substring yourself.</p></li>
+<li><p><a class="reference internal" href="remove_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::remove_all</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">&quot;&quot;)</span></code> — delete every
+occurrence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::replace_first</span></code> / <code class="docutils literal notranslate"><span class="pre">replace_last</span></code> / <code class="docutils literal notranslate"><span class="pre">replace_n</span></code>:
+bounded substitution instead of replace-all.</p></li>
+<li><p><a class="reference internal" href="regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::regex_findall</span></code></span></a>: when the target is a pattern,
+not a fixed string.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="regex_findall.html">
+  <a class="prev-link" href="remove_all.html">
     <span class="label">Previous</span>
-    <span class="title">regex_findall</span>
+    <span class="title">remove_all</span>
   </a>
-  <a class="next-link" href="split_lines.html">
+  <a class="next-link" href="split.html">
     <span class="label">Next</span>
-    <span class="title">split_lines</span>
+    <span class="title">split</span>
   </a>
 </div>
 </section>
@@ -210,6 +225,7 @@ replacing a literal substring yourself.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -260,8 +276,8 @@ replacing a literal substring yourself.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="regex_findall.html" title="previous chapter">Note::regex_findall</a></li>
-      <li>Next: <a href="split_lines.html" title="next chapter">Note::split_lines</a></li>
+      <li>Previous: <a href="remove_all.html" title="previous chapter">Note::remove_all</a></li>
+      <li>Next: <a href="split.html" title="next chapter">Note::split</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

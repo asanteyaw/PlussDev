@@ -1,157 +1,199 @@
+<!-- pluss-hand-authored -->
 # Note::regex_findall
 
 [Back to Note API Reference](../../note_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-Note::regex_findall(std::string_view pattern) const -> TokenBatch
-Note::regex_findall(std::string_view pattern, std::int64_t flags) const -> TokenBatch
+TokenBatch Note::regex_findall(std::string_view pattern) const
+TokenBatch Note::regex_findall(std::string_view pattern, std::int64_t flags) const
 ```
 
-## What It Does
+## Extract Every Regex Match From Each Cell
 
-Finds every regex match in each text cell and returns the matches as a
-`TokenBatch`.
+`regex_findall(pattern)` finds all non-overlapping matches of `pattern` in
+each text cell and returns them as a `TokenBatch`. It is the
+**extraction** member of the regex family — reach for it when the goal is to
+pull out substrings (numbers, IDs, dates, hashtags, symbol fragments), not to
+test for a match ([`contains`](contains.md) for literals) or to cut the
+string apart (`regex_split`).
 
-This is the extraction-oriented regex method. Use it when the goal is not just
-"does this match?" but "pull out every token that matches this pattern."
+`pattern` is an ECMAScript regular expression. Matching scans left to right
+and does not overlap: after a match, the search resumes at its end.
 
-That makes it useful for:
+### Capture groups
 
-- numbers
-- ticket IDs
-- dates
-- hashtags
-- symbol-like fragments
+If `pattern` contains at least one capture group, each result is the text of
+**group 1**; otherwise each result is the whole match. So `\d+` yields the
+digit run, while `id=(\d+)` yields just the digits after `id=`. Groups beyond
+the first are not returned — restructure the pattern so the piece you want is
+group 1.
 
-It is a token-extraction surface, not a yes/no predicate surface. If your next
-step depends on the matched substrings themselves, `regex_findall()` is the
-right shape.
+### `flags`
 
-## Parameters
+`flags` is a bitmask of match options; `flags <= 0` (the default) is plain
+case-sensitive ECMAScript.
 
-**pattern**
+| Bit (value) | Effect |
+| --- | --- |
+| `1 << 0` (1) | case-insensitive matching |
+| `1 << 1` (2) | multiline — `^` and `$` also match at line breaks |
 
-The regex pattern to apply to each text cell.
+### The `TokenBatch` result
 
-The returned tokens are the matched substrings themselves, flattened across the
-whole `Note`.
+The matches from all cells are concatenated into one flat token `Note`
+(`batch.tokens()`), and `batch.offsets()` — a `std::vector<std::int64_t>` of
+length `numel + 1` — records the boundaries: cell `r`'s matches are
+`tokens()[offsets()[r] .. offsets()[r+1])`. A cell with no match contributes
+an empty range (`offsets()[r] == offsets()[r+1]`), never a placeholder token.
+The token `Note` is always rank `1`.
 
-**flags**
+### Failure
 
-Optional regex-engine flags encoded as an integer bitmask.
+An invalid `pattern` (unbalanced parenthesis, bad escape) throws
+`pluss::Error` before any cell is processed.
 
-Use this overload only when you already know the regex-engine flag contract you
-need from the implementation. This page does not assign guessed semantics to
-unnamed flag bits.
-
-## Returns
-
-`TokenBatch`
-    A flattened token stream plus `offsets()` that mark where each original
-    `Note` element begins and ends inside that stream.
-
-## Examples
-
-Example 1. Extract every digit run from two text cells.
+## Example 1: Digit Runs
 
 ```cpp
-auto note = pluss::make_note({
-    "Order 17 ships on 2026-08-02",
-    "Ticket 204 closes at 18:30",
-});
+const auto n = pluss::make_note(
+    {"Order 17 ships 2026-08-02", "Ticket 204 at 18:30", "none"});
+const auto batch = n.regex_findall(R"(\d+)");
 
-auto matches = note.regex_findall(R"(\d+)");
-std::cout << "regex_findall_digits tokens:";
-for (std::int64_t i = 0; i < matches.tokens().numel(); ++i) {
-  std::cout << " [" << matches.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "regex_findall_digits offsets:";
-for (std::int64_t off : matches.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-regex_findall_digits tokens: [17] [2026] [08] [02] [204] [18] [30]
-regex_findall_digits offsets: 0 4 7
+Note(shape=[7], dim=1, numel=7, encoding=utf8)
+["17", "2026", "08", "02", "204", "18", "30"]
+offsets: [0, 4, 7, 7]
 ```
 
-Example 2. Extract only uppercase letter runs when the pattern is more
-structural than numeric.
+Cell `0` produced four matches (`offsets[0..1]` = `[0, 4)`), cell `1`
+produced three (`[4, 7)`), and cell `2` (`"none"`) produced none
+(`[7, 7)` — empty).
+
+## Example 2: A Capture Group Selects Part Of The Match
 
 ```cpp
-auto note = pluss::make_note({"AX-17", "BY_204"});
-auto matches = note.regex_findall(R"([A-Z]+)");
-std::cout << "regex_findall_caps tokens:";
-for (std::int64_t i = 0; i < matches.tokens().numel(); ++i) {
-  std::cout << " [" << matches.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "regex_findall_caps offsets:";
-for (std::int64_t off : matches.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch =
+    pluss::make_note({"k=1; v=2", "x=9"}).regex_findall(R"(\w+=(\d))");
+
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-regex_findall_caps tokens: [AX] [BY]
-regex_findall_caps offsets: 0 1 2
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["1", "2", "9"]
+offsets: [0, 2, 3]
 ```
 
-Example 3. Extract hashtag-like fragments from short social-style text.
+The match is `k=1`, but the returned token is group 1, `1`.
+
+## Example 3: Case-Insensitive Matching
 
 ```cpp
-auto note = pluss::make_note({"#alpha update", "ship #beta now"});
-auto matches = note.regex_findall(R"(#\w+)");
-std::cout << "regex_findall_tags tokens:";
-for (std::int64_t i = 0; i < matches.tokens().numel(); ++i) {
-  std::cout << " [" << matches.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "regex_findall_tags offsets:";
-for (std::int64_t off : matches.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch =
+    pluss::make_note({"AbCdE fF"}).regex_findall(R"([a-z]+)", 1);
+std::cout << pluss::note::print(batch.tokens()) << "\n";
 ```
 
 ### Output
 
 ```text
-regex_findall_tags tokens: [#alpha] [#beta]
-regex_findall_tags offsets: 0 1 2
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["AbCdE", "fF"]
 ```
 
-## Notes
+With `flags = 1`, `[a-z]+` also matches upper-case letters, so each word is
+one match.
 
-- `offsets()` is the boundary map back to the original cells.
-- In the example above, the first input cell contributes tokens in the flat
-  range `[0, 4)`, and the second contributes tokens in `[4, 7)`.
-- If you only want a boolean answer, `regex_findall()` is heavier than a regex
-  predicate method because it materializes every match.
+## Example 4: The Same Pattern Without Flags
+
+```cpp
+const auto batch =
+    pluss::make_note({"AbCdE fF"}).regex_findall(R"([a-z]+)");
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["b", "d", "f"]
+```
+
+Case-sensitive, so only the lower-case runs match.
+
+## Example 5: A Cell With No Match
+
+```cpp
+const auto batch =
+    pluss::make_note({"abc", "123"}).regex_findall(R"(\d+)");
+
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["123"]
+offsets: [0, 0, 1]
+```
+
+Cell `0` contributes the empty range `[0, 0)`; cell `1` contributes `[0, 1)`.
+
+## Example 6: An Invalid Pattern Is Rejected
+
+```cpp
+try {
+  pluss::make_note({"x"}).regex_findall("(");
+} catch (const pluss::Error& e) {
+  const std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+regex_findall: The expression contained mismatched ( and ).
+```
 
 ## See Also
 
-- [`Note::contains`](contains.md): literal substring inspection without regex.
-- [`Note::split_whitespace`](split_whitespace.md): tokenize by whitespace rather
-  than regex matches.
+- `pluss::coden::Note::regex_split`: cut each cell at the matches instead of
+  collecting them.
+- [`Note::contains`](contains.md): a literal yes/no test, no regex engine.
+- [`Note::tokenize_words`](tokenize_words.md) /
+  [`Note::split`](split.md): structural tokenizers that also return a
+  `TokenBatch`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nlp_remove_urls.html">
+  <a class="prev-link" href="quote.html">
     <span class="label">Previous</span>
-    <span class="title">nlp_remove_urls</span>
+    <span class="title">quote</span>
   </a>
-  <a class="next-link" href="replace.html">
+  <a class="next-link" href="remove_all.html">
     <span class="label">Next</span>
-    <span class="title">replace</span>
+    <span class="title">remove_all</span>
   </a>
 </div>

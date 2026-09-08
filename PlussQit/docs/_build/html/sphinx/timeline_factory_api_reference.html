@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Timeline Factory API Reference &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=15722e59" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pluss::timeline::arange" href="api/timeline_factory/arange.html" />
+    <link rel="prev" title="Timeline::years_between" href="api/timeline/years_between.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="timeline-factory-api-reference">
+<h1>Timeline Factory API Reference<a class="headerlink" href="#timeline-factory-api-reference" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../api_reference.html"><span class="std std-doc">Back to PlussQit API Reference</span></a></p>
+<p>This reference teaches the free functions in <code class="docutils literal notranslate"><span class="pre">pluss::timeline</span></code>. They answer a
+different question from the <a class="reference internal" href="timeline_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline</span></code> method reference</span></a>:
+how to create, combine, choose, or render instants before there is a receiver on
+which to call a method.</p>
+<section id="choose-by-intent">
+<h2>Choose By Intent<a class="headerlink" href="#choose-by-intent" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Parse complete timestamps with <code class="docutils literal notranslate"><span class="pre">make</span></code>; require date-only or clock-only input
+with <code class="docutils literal notranslate"><span class="pre">date</span></code> and <code class="docutils literal notranslate"><span class="pre">time</span></code>.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">make_timeline</span></code> only when the flat construction shortcut reads more
+naturally at the call site; it is an exact alias of <code class="docutils literal notranslate"><span class="pre">timeline::make</span></code>.</p></li>
+<li><p>Preserve exact integer nanoseconds with <code class="docutils literal notranslate"><span class="pre">from_epoch</span></code>.</p></li>
+<li><p>Build regular sequences with <code class="docutils literal notranslate"><span class="pre">date_range</span></code> or <code class="docutils literal notranslate"><span class="pre">arange</span></code>; their step and endpoint
+contracts differ and are documented separately.</p></li>
+<li><p>Allocate known shapes with <code class="docutils literal notranslate"><span class="pre">epoch</span></code>, <code class="docutils literal notranslate"><span class="pre">full</span></code>, or <code class="docutils literal notranslate"><span class="pre">full_like</span></code>.</p></li>
+<li><p>Sample half-open nanosecond intervals with <code class="docutils literal notranslate"><span class="pre">random</span></code>, or inclusive intervals
+with <code class="docutils literal notranslate"><span class="pre">rand_between</span></code>.</p></li>
+<li><p>Concatenate flattened inputs with <code class="docutils literal notranslate"><span class="pre">unite</span></code>, and choose by ordered conditions
+with <code class="docutils literal notranslate"><span class="pre">select</span></code>.</p></li>
+<li><p>Render a diagnostic representation with <code class="docutils literal notranslate"><span class="pre">print</span></code>, or shape-preserving text
+values with <code class="docutils literal notranslate"><span class="pre">format</span></code>.</p></li>
+<li><p>Resolve fixed or relative scalar expressions with <code class="docutils literal notranslate"><span class="pre">moment</span></code>, <code class="docutils literal notranslate"><span class="pre">now</span></code>, and <code class="docutils literal notranslate"><span class="pre">today</span></code>.</p></li>
+</ul>
+<p>Every deterministic output in these pages is produced by
+<code class="docutils literal notranslate"><span class="pre">examples/CodeH/timeline_factory_reference_demo.cpp</span></code>. Seeded examples make the
+random pages reproducible; live-clock examples state invariants rather than
+pretending that <code class="docutils literal notranslate"><span class="pre">now()</span></code> has a fixed output.</p>
+<p>In signatures, <code class="docutils literal notranslate"><span class="pre">string_range</span></code> and <code class="docutils literal notranslate"><span class="pre">integer_range</span></code> mean any accepted contiguous
+range of those values; <code class="docutils literal notranslate"><span class="pre">nested_string_values</span></code> means a rectangular braced literal
+up to rank three. Those labels describe call-site concepts and intentionally do
+not expose the private reader adapters that implement overload unification.</p>
+<div class="toctree-wrapper compound">
+</div>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../api_reference.html"><span class="label">Previous</span><span class="title">PlussQit API Reference</span></a>
+  <a class="next-link" href="api/timeline_factory/arange.html"><span class="label">Next</span><span class="title">arange</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
+      <li>Previous: <a href="api/timeline/years_between.html" title="previous chapter">Timeline::years_between</a></li>
+      <li>Next: <a href="api/timeline_factory/arange.html" title="next chapter">pluss::timeline::arange</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/sphinx/timeline_factory_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

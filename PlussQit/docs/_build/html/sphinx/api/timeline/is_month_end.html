@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::is_quarter_start" href="is_quarter_start.html" />
-    <link rel="prev" title="Timeline::is_month_start" href="is_month_start.html" />
+    <link rel="next" title="Timeline::is_month_start" href="is_month_start.html" />
+    <link rel="prev" title="Timeline::is_monday" href="is_monday.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,7 +44,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_month_end</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">is_month_finish()</span></code> and <code class="docutils literal notranslate"><span class="pre">is_monthend()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">is_month_end()</span></code> is the sole public spelling.</p>
 </section>
 <section id="recognize-each-month-s-actual-last-date">
 <h2>Recognize Each Month’s Actual Last Date<a class="headerlink" href="#recognize-each-month-s-actual-last-date" title="Link to this heading">¶</a></h2>
@@ -85,7 +85,7 @@ on March 31 is marked even if several such events occur.</p>
 <ul class="simple">
 <li><p>Time-of-day does not need to be the last instant of the date.</p></li>
 <li><p>This is calendar month end, not business month end.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>; use <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> to separate missing values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>; use <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> to separate absent instants.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -141,6 +141,7 @@ on March 31 is marked even if several such events occur.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -191,8 +192,8 @@ on March 31 is marked even if several such events occur.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="is_month_start.html" title="previous chapter">Timeline::is_month_start</a></li>
-      <li>Next: <a href="is_quarter_start.html" title="next chapter">Timeline::is_quarter_start</a></li>
+      <li>Previous: <a href="is_monday.html" title="previous chapter">Timeline::is_monday</a></li>
+      <li>Next: <a href="is_month_start.html" title="next chapter">Timeline::is_month_start</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

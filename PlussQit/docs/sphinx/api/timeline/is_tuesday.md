@@ -8,12 +8,12 @@
 Series Timeline::is_tuesday() const
 ```
 
-Aliases: `tue_is()` and `is_tue()`.
+`is_tuesday()` is the sole public spelling.
 
 ## Select Local Tuesdays
 
 `is_tuesday()` marks timestamps whose local date is Tuesday. It returns a
-boolean Series with unchanged rank, shape, and ordering. Missing timestamps
+boolean Series with unchanged rank, shape, and ordering. Absent instants
 produce `false`; validity must be tracked separately when that distinction is
 important.
 

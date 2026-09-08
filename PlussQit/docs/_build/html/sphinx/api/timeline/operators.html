@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Timeline operators &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Timeline::quarter" href="quarter.html" />
+    <link rel="prev" title="Timeline::numel" href="numel.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="timeline-operators">
+<h1>Timeline operators<a class="headerlink" href="#timeline-operators" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">duration</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Timeline</span><span class="w"> </span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">duration</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">timeline</span><span class="p">)</span>
+<span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">-</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">duration</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Duration</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">-</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">+=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">duration</span><span class="p">)</span>
+<span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">-=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">duration</span><span class="p">)</span>
+
+<span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">!=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">&gt;</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="k">operator</span><span class="o">&gt;=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">stream</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">timeline</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="temporal-algebra">
+<h2>Temporal Algebra<a class="headerlink" href="#temporal-algebra" title="Link to this heading">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> stores instants on the nanosecond epoch axis. A <code class="docutils literal notranslate"><span class="pre">Duration</span></code> stores
+signed elapsed lengths. The operators preserve that distinction instead of
+treating both values as interchangeable integers.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Expression</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Result type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">+</span> <span class="pre">duration</span></code></p></td>
+<td><p>move each instant by a signed elapsed length</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">duration</span> <span class="pre">+</span> <span class="pre">timeline</span></code></p></td>
+<td><p>the same shift with reversed operands</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">-</span> <span class="pre">duration</span></code></p></td>
+<td><p>move each instant by the negated elapsed length</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">-</span> <span class="pre">timeline</span></code></p></td>
+<td><p>measure signed elapsed distance</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Duration</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">relation</span> <span class="pre">timeline</span></code></p></td>
+<td><p>compare paired instants</p></td>
+<td><p>boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stream</span> <span class="pre">&lt;&lt;</span> <span class="pre">timeline</span></code></p></td>
+<td><p>write the public representation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>The operand types are part of the meaning. <code class="docutils literal notranslate"><span class="pre">arrival</span> <span class="pre">-</span> <span class="pre">travel_time</span></code> asks when a
+journey began and returns instants. <code class="docutils literal notranslate"><span class="pre">arrival</span> <span class="pre">-</span> <span class="pre">departure</span></code> asks how long the
+journey took and returns elapsed durations.</p>
+<p>There is no implicit bare-integer timestamp arithmetic. An integer alone does
+not communicate whether its unit is nanoseconds, seconds, or days. Construct a
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code> through an explicit unit factory such as <code class="docutils literal notranslate"><span class="pre">nanos</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds</span></code>,
+<code class="docutils literal notranslate"><span class="pre">minutes</span></code>, <code class="docutils literal notranslate"><span class="pre">hours</span></code>, or <code class="docutils literal notranslate"><span class="pre">days</span></code>.</p>
+</section>
+<section id="shared-execution-contract">
+<h2>Shared Execution Contract<a class="headerlink" href="#shared-execution-contract" title="Link to this heading">¶</a></h2>
+<p>Arithmetic and comparisons are elementwise and rank-polymorphic. Operands
+align from the trailing axis, singleton axes may expand, and the result has the
+broadcast shape. A scalar has shape <code class="docutils literal notranslate"><span class="pre">[]</span></code>, so it broadcasts across every lane of
+the other operand. Shapes <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">1]</span></code> and <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3]</span></code>, for example, produce <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">3]</span></code>.</p>
+<p>Every binary operation allocates a fresh contiguous result. <code class="docutils literal notranslate"><span class="pre">+</span></code>, binary <code class="docutils literal notranslate"><span class="pre">-</span></code>,
+and comparisons never rewrite their inputs. Compound assignment computes the
+same checked out-of-place result and then replaces the left-hand handle.</p>
+<p>Arithmetic uses exact signed 64-bit nanoseconds. It does not pass through a
+floating-point representation. A result that would overflow the epoch range,
+the Duration range, or collide with the reserved <code class="docutils literal notranslate"><span class="pre">NaT</span></code> sentinel is rejected
+instead of wrapping.</p>
+<p>A Timeline’s timezone controls wall-clock presentation, not the stored
+instant. Shift results retain the Timeline operand’s timezone. A <code class="docutils literal notranslate"><span class="pre">Duration</span></code>
+has no timezone. Timeline subtraction and comparison operate on epoch instants,
+so differently displayed values can compare equal when they identify the same
+instant.</p>
+</section>
+<section id="stream-insertion">
+<h2>Stream Insertion<a class="headerlink" href="#stream-insertion" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code> writes the same public representation as
+<code class="docutils literal notranslate"><span class="pre">pluss::timeline::print(...)</span></code>. It returns the stream, so normal stream chaining
+works. It is a presentation operation: it neither exposes the epoch buffer nor
+transfers ownership.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-01-01 02:00:00 ]
+</pre></div>
+</div>
+<p>Use <a class="reference internal" href="epoch_nanos.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">epoch_nanos()</span></code></span></a> when exact machine values are the subject
+of the output. Readable Timeline rendering intentionally does not expose every
+sub-second digit.</p>
+</section>
+</section>
+<section id="addition">
+<h2>Addition<a class="headerlink" href="#addition" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">+</span> <span class="pre">duration</span></code> moves each defined instant later by a positive duration,
+earlier by a negative duration, and not at all by zero. The result timezone is
+copied from the Timeline operand.</p>
+<p><code class="docutils literal notranslate"><span class="pre">duration</span> <span class="pre">+</span> <span class="pre">timeline</span></code> is equally supported because elapsed displacement plus
+an instant is commutative. It reaches the same implementation and follows the
+same broadcasting, precision, absence, and overflow rules.</p>
+<section id="scalar-shift">
+<h3>Scalar Shift<a class="headerlink" href="#scalar-shift" title="Link to this heading">¶</a></h3>
+<p>A rank-zero Timeline and rank-zero Duration produce a rank-zero Timeline.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">shifted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">90</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">shifted</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
+2024-01-01 01:30:00
+</pre></div>
+</div>
+</section>
+<section id="signed-values-and-reversed-operands">
+<h3>Signed Values And Reversed Operands<a class="headerlink" href="#signed-values-and-reversed-operands" title="Link to this heading">¶</a></h3>
+<p>The sign belongs to each Duration lane. Here the first instant moves later and
+the second moves earlier. Reversing the operands does not reverse direction,
+because both expressions are addition.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">offsets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-2</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">offsets</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">offsets</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">times</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 01:00:00, 2024-01-01 00:00:00 ]
+
+Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 01:00:00, 2024-01-01 00:00:00 ]
+</pre></div>
+</div>
+<p>Use whichever operand order makes the surrounding expression clearer. There
+is no semantic or performance distinction.</p>
+</section>
+<section id="n-d-broadcasting">
+<h3>N-D Broadcasting<a class="headerlink" href="#n-d-broadcasting" title="Link to this heading">¶</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">1]</span></code> Timeline can provide two day anchors while a <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3]</span></code> Duration
+provides three intraday offsets. Pairing each anchor with every offset produces
+a <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">3]</span></code> Timeline.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">values</span><span class="p">{</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">anchors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">offsets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">({{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">}});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">anchors</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">offsets</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2, 3], tz=UTC)
+[ 2024-01-01 00:00:00 2024-01-01 00:30:00 2024-01-01 01:00:00 ]
+[ 2024-01-02 00:00:00 2024-01-02 00:30:00 2024-01-02 01:00:00 ]
+</pre></div>
+</div>
+<p>Broadcasting uses virtual singleton strides. It does not first materialize
+expanded copies of both operands.</p>
+</section>
+</section>
+<section id="timeline-minus-duration">
+<h2>Timeline Minus Duration<a class="headerlink" href="#timeline-minus-duration" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">-</span> <span class="pre">duration</span></code> shifts instants by the negation of the Duration. A
+positive lane moves an instant earlier; a negative lane moves it later.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">offsets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-2</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">offsets</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2], tz=UTC)
+[ 2023-12-31 23:00:00, 2024-01-01 04:00:00 ]
+</pre></div>
+</div>
+<p>There is no <code class="docutils literal notranslate"><span class="pre">duration</span> <span class="pre">-</span> <span class="pre">timeline</span></code> overload. An elapsed length minus an epoch
+instant has no stable temporal result type. To measure elapsed distance, use a
+Timeline on both sides of <code class="docutils literal notranslate"><span class="pre">-</span></code>.</p>
+</section>
+</section>
+<section id="timeline-minus-timeline">
+<h2>Timeline Minus Timeline<a class="headerlink" href="#timeline-minus-timeline" title="Link to this heading">¶</a></h2>
+<p>With two Timeline operands, subtraction measures elapsed distance and returns
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code>. Each lane computes <code class="docutils literal notranslate"><span class="pre">left_epoch_nanos</span> <span class="pre">-</span> <span class="pre">right_epoch_nanos</span></code>.</p>
+<ul class="simple">
+<li><p>Positive means the left instant is later.</p></li>
+<li><p>Negative means the left instant is earlier.</p></li>
+<li><p>Zero means both operands identify the same instant.</p></li>
+</ul>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T03:30:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">elapsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">right</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">elapsed</span><span class="p">.</span><span class="n">total</span><span class="p">().</span><span class="n">seconds</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.0000, 5400.0000]
+</pre></div>
+</div>
+<p>The seconds projection is only for readable output. The returned Duration
+retains exact integer nanoseconds. Keep it as a Duration for further temporal
+arithmetic and project to a numeric unit only when the next calculation needs
+that unit.</p>
+<p>This operator is the expression-oriented form of <a class="reference internal" href="diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff()</span></code></span></a>. Both
+allocate a Duration, preserve broadcast shape, propagate absent lanes, and
+leave their Timeline operands unchanged.</p>
+</section>
+</section>
+<section id="nanosecond-precision-and-absence">
+<h2>Nanosecond Precision And Absence<a class="headerlink" href="#nanosecond-precision-and-absence" title="Link to this heading">¶</a></h2>
+<p>Timeline arithmetic preserves every nanosecond. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> is a reserved sentinel,
+not an ordinary early timestamp. If either paired Timeline or Duration lane is
+absent, the arithmetic result lane is absent.</p>
+<p>The Timeline printer hides sub-second digits, so this example uses
+<code class="docutils literal notranslate"><span class="pre">epoch_nanos()</span></code> to make the exact seven-nanosecond shift visible. The second
+lane remains <code class="docutils literal notranslate"><span class="pre">NaT</span></code> instead of performing integer arithmetic on the sentinel.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">precise</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">({</span><span class="mf">100L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">::</span><span class="n">kNaT</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">shifted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">precise</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">({</span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">shifted</span><span class="p">.</span><span class="n">epoch_nanos</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[107, -9223372036854775808]
+</pre></div>
+</div>
+<p>Timeline-to-Timeline subtraction follows the same propagation rule and emits
+<code class="docutils literal notranslate"><span class="pre">Duration::kNaT</span></code> when either paired instant is absent.</p>
+</section>
+</section>
+<section id="fixed-elapsed-time-across-clock-changes">
+<h2>Fixed Elapsed Time Across Clock Changes<a class="headerlink" href="#fixed-elapsed-time-across-clock-changes" title="Link to this heading">¶</a></h2>
+<p>A Duration is fixed elapsed time. Adding two hours always adds exactly
+<code class="docutils literal notranslate"><span class="pre">7,200,000,000,000</span></code> nanoseconds. It does not promise that a displayed local
+clock advances by two labels if its timezone changes offset in that interval.</p>
+<p>The next instant displays as <code class="docutils literal notranslate"><span class="pre">01:30</span></code> before a spring clock change. Two elapsed
+hours later it displays as <code class="docutils literal notranslate"><span class="pre">04:30</span></code>, because that local calendar skips the
+<code class="docutils literal notranslate"><span class="pre">02:00</span></code> hour. The result retains the Timeline’s timezone.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-03-10T08:30:00Z&quot;</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">later</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">later</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=America/Edmonton)
+2024-03-10 04:30:00
+</pre></div>
+</div>
+<p>Use Duration arithmetic when elapsed time is the requirement. Use named
+calendar transformations when the requirement is expressed as preserving or
+changing a wall-clock field.</p>
+</section>
+</section>
+<section id="compound-assignment">
+<h2>Compound Assignment<a class="headerlink" href="#compound-assignment" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">+=</span></code> and <code class="docutils literal notranslate"><span class="pre">-=</span></code> return <code class="docutils literal notranslate"><span class="pre">Timeline&amp;</span></code>. They follow a checked replacement sequence:</p>
+<ol class="arabic simple">
+<li><p>Validate and broadcast both operands.</p></li>
+<li><p>Compute a fresh Timeline through binary <code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>.</p></li>
+<li><p>Replace the left-hand handle only after success.</p></li>
+<li><p>Return a reference to that left-hand object.</p></li>
+</ol>
+<p>They do not write through the old epoch buffer lane by lane. Consequently,
+assigning through a copied handle does not rewrite the original handle.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">original</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">original</span><span class="p">;</span>
+
+<span class="n">changed</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">changed</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">changed</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">original</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 00:30:00, 2024-01-01 02:30:00 ]
+
+Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-01-01 02:00:00 ]
+</pre></div>
+</div>
+<p>Use binary arithmetic when both old and new values remain meaningful. Use
+compound assignment when the variable represents evolving state and its old
+value is no longer needed. A failed compound assignment leaves the left-hand
+Timeline unchanged because replacement happens only after validation and
+checked arithmetic succeed.</p>
+</section>
+</section>
+<section id="comparison-operators">
+<h2>Comparison Operators<a class="headerlink" href="#comparison-operators" title="Link to this heading">¶</a></h2>
+<p>All comparisons are elementwise and return boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code>; none collapses an
+entire Timeline to one C++ <code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Operator</p></th>
+<th class="head"><p>True for a defined pair when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">==</span></code></p></td>
+<td><p>both operands identify the same instant</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">!=</span></code></p></td>
+<td><p>the operands identify different instants</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;</span></code></p></td>
+<td><p>the left instant occurs earlier</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;=</span></code></p></td>
+<td><p>the left instant occurs earlier or at the same instant</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></td>
+<td><p>the left instant occurs later</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&gt;=</span></code></p></td>
+<td><p>the left instant occurs later or at the same instant</p></td>
+</tr>
+</tbody>
+</table>
+<p>The named methods <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a>, <a class="reference internal" href="ne.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ne()</span></code></span></a>, <a class="reference internal" href="lt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lt()</span></code></span></a>,
+<a class="reference internal" href="le.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">le()</span></code></span></a>, <a class="reference internal" href="gt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">gt()</span></code></span></a>, and <a class="reference internal" href="ge.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ge()</span></code></span></a> expose the same relations
+for method-oriented code.</p>
+<section id="every-relation">
+<h3>Every Relation<a class="headerlink" href="#every-relation" title="Link to this heading">¶</a></h3>
+<p>The boundary below is scalar, so it broadcasts over the two-element Timeline.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">boundary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">boundary</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">boundary</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">boundary</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">boundary</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">boundary</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">boundary</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, true]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, false]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+</pre></div>
+</div>
+<p>When one answer is required, reduce explicitly. In this example one lane
+matches and one does not, so <code class="docutils literal notranslate"><span class="pre">all()</span></code> and <code class="docutils literal notranslate"><span class="pre">any()</span></code> answer different questions:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T03:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">matches</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">right</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;all=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">matches</span><span class="p">.</span><span class="n">all</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, any=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">matches</span><span class="p">.</span><span class="n">any</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id10">
+<h3>Output<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>all=false, any=true
+</pre></div>
+</div>
+<p>Explicit reduction prevents a multi-element Timeline from acquiring an
+ambiguous truth value.</p>
+</section>
+<section id="higher-rank-comparison-broadcasting">
+<h3>Higher-Rank Comparison Broadcasting<a class="headerlink" href="#higher-rank-comparison-broadcasting" title="Link to this heading">¶</a></h3>
+<p>Here <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">2]</span></code> is compared with <code class="docutils literal notranslate"><span class="pre">[2]</span></code>. The row operand aligns with the matrix’s
+final axis and is reused for both rows.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T02:00:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T01:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T02:00:00Z&quot;</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">matrix</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h3>Output<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=
+⎡  true  true ⎤
+⎣ false false ⎦
+</pre></div>
+</div>
+<p>Read the result after broadcasting: each matrix row is compared lane by lane
+with the same two row boundaries.</p>
+</section>
+<section id="timezones-compare-instants">
+<h3>Timezones Compare Instants<a class="headerlink" href="#timezones-compare-instants" title="Link to this heading">¶</a></h3>
+<p>Timezone conversion changes presentation while retaining the epoch instant.
+Therefore a UTC value compares equal to its converted local display.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-07-01T18:00:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">utc</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">local</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h3>Output<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+</pre></div>
+</div>
+<p>This is instant equality, not equality of timezone labels or displayed fields.
+Compare <code class="docutils literal notranslate"><span class="pre">tz()</span></code> explicitly if the metadata label is part of the condition.</p>
+</section>
+<section id="absent-instants-are-unordered">
+<h3>Absent Instants Are Unordered<a class="headerlink" href="#absent-instants-are-unordered" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> follows an unordered absent-instant contract:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span> <span class="pre">==</span> <span class="pre">x</span></code> is false, including when <code class="docutils literal notranslate"><span class="pre">x</span></code> is <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span> <span class="pre">!=</span> <span class="pre">x</span></code> is true, including when <code class="docutils literal notranslate"><span class="pre">x</span></code> is <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> are false when either lane is <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
+</ul>
+<p>The second lane below is defined and equal to itself, making the contrast
+visible for every relation.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">values</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">values</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">values</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">values</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">values</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">values</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id13">
+<h3>Output<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, false]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, false]
+
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+</pre></div>
+</div>
+<p>Prefer <a class="reference internal" href="isvalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isvalid()</span></code></span></a> or <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat()</span></code></span></a> when validity itself
+is the question; those methods state the intent directly.</p>
+</section>
+<section id="building-interval-masks">
+<h3>Building Interval Masks<a class="headerlink" href="#building-interval-masks" title="Link to this heading">¶</a></h3>
+<p>Comparison results compose with Series logical operations. A closed interval
+includes both boundaries, so it uses <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code> joined by <code class="docutils literal notranslate"><span class="pre">logical_and()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">samples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T01:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T03:00:00Z&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">stop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">);</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">inside</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="p">(</span><span class="n">samples</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">start</span><span class="p">).</span><span class="n">logical_and</span><span class="p">(</span><span class="n">samples</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">stop</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">inside</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id14">
+<h3>Output<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, true, true, false]
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">&lt;</span> <span class="pre">stop</span></code> for a half-open interval. Keeping boolean composition on the
+returned Series is why Timeline does not overload <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, <code class="docutils literal notranslate"><span class="pre">^</span></code>, or <code class="docutils literal notranslate"><span class="pre">~</span></code>.</p>
+</section>
+</section>
+<section id="empty-shapes">
+<h2>Empty Shapes<a class="headerlink" href="#empty-shapes" title="Link to this heading">¶</a></h2>
+<p>An empty broadcast is valid when the other operand contributes only compatible
+singleton axes. The result preserves its zero-length dimension and performs no
+lane reads. Empty shape is not scalar absence; the shape remains meaningful to
+later operations.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">no_ticks</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">shape</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span><span class="n">no_ticks</span><span class="p">,</span><span class="w"> </span><span class="n">shape</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">boundary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">empty</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">empty</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">boundary</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id15">
+<h3>Output<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[0, 2], tz=UTC)
+
+Series(shape=[0,2], strides=[2,1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<section id="incompatible-shapes">
+<h3>Incompatible Shapes<a class="headerlink" href="#incompatible-shapes" title="Link to this heading">¶</a></h3>
+<p>Dimensions are compatible when equal or when either is <code class="docutils literal notranslate"><span class="pre">1</span></code>. Otherwise the
+operation throws before producing a result. <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">2]</span></code> and <code class="docutils literal notranslate"><span class="pre">[3]</span></code> fail because
+their trailing dimensions are <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T01:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T03:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">three</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">      </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T01:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s">&quot;2024-01-01T02:00:00Z&quot;</span><span class="p">});</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)(</span><span class="n">matrix</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">three</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;rejected: shapes do not broadcast</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id16">
+<h3>Output<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rejected: shapes do not broadcast
+</pre></div>
+</div>
+</section>
+<section id="arithmetic-overflow">
+<h3>Arithmetic Overflow<a class="headerlink" href="#arithmetic-overflow" title="Link to this heading">¶</a></h3>
+<p>The valid Timeline range reserves one signed 64-bit value for <code class="docutils literal notranslate"><span class="pre">NaT</span></code>. Addition,
+shift subtraction, and Timeline difference are checked independently. None can
+wrap to a plausible but incorrect instant or duration.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">latest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;::</span><span class="n">max</span><span class="p">());</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">earliest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;::</span><span class="n">min</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)(</span><span class="n">latest</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;rejected: result is outside Timeline range</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)(</span><span class="n">earliest</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;rejected: result is outside Timeline range</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)(</span><span class="n">latest</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">earliest</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;rejected: result is outside Duration range</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id17">
+<h3>Output<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rejected: result is outside Timeline range
+rejected: result is outside Timeline range
+rejected: result is outside Duration range
+</pre></div>
+</div>
+</section>
+</section>
+<section id="deliberately-unsupported-operators">
+<h2>Deliberately Unsupported Operators<a class="headerlink" href="#deliberately-unsupported-operators" title="Link to this heading">¶</a></h2>
+<p>The absence of an overload is part of the contract. Operators that erase
+units, expose epoch encoding, or invent an arbitrary calendar step are
+intentionally unavailable.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Unsupported form</p></th>
+<th class="head"><p>Why it is not Timeline algebra</p></th>
+<th class="head"><p>Use instead</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">+</span> <span class="pre">timeline</span></code></p></td>
+<td><p>adding epoch origins does not produce an instant</p></td>
+<td><p>subtract Timelines to measure distance</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">duration</span> <span class="pre">-</span> <span class="pre">timeline</span></code></p></td>
+<td><p>elapsed length minus an instant has no temporal result</p></td>
+<td><p>reorder the intended Timeline expression</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">*</span> <span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">/</span> <span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">%</span> <span class="pre">x</span></code></p></td>
+<td><p>scaling an instant is epoch-dependent</p></td>
+<td><p>scale a Duration</p></td>
+</tr>
+<tr class="row-odd"><td><p>unary <code class="docutils literal notranslate"><span class="pre">+timeline</span></code>, unary <code class="docutils literal notranslate"><span class="pre">-timeline</span></code></p></td>
+<td><p>reflecting around the epoch is not a date operation</p></td>
+<td><p>project epoch values only when encoding is intended</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">++timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">--timeline</span></code></p></td>
+<td><p>no uniquely correct step exists</p></td>
+<td><p>add an explicit Duration or use a calendar transform</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">&amp;</span> <span class="pre">timeline</span></code>, `timeline</p></td>
+<td><p>timeline<code class="docutils literal notranslate"><span class="pre">,</span> </code>timeline ^ timeline<code class="docutils literal notranslate"><span class="pre">,</span> </code>~timeline`</p></td>
+<td><p>bitwise operations expose storage rather than time semantics</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">&amp;&amp;</span> <span class="pre">timeline</span></code>, `timeline</p></td>
+<td><p></p></td>
+<td><p>timeline<code class="docutils literal notranslate"><span class="pre">,</span> </code>!timeline`</p></td>
+</tr>
+</tbody>
+</table>
+<p>Multiplication and division may be meaningful for elapsed durations, but not
+for absolute instants. A fixed 24-hour Duration and a local calendar-day move
+also differ near clock changes. Requiring an explicit operation keeps the unit
+and temporal interpretation visible.</p>
+<p>Ordinary copy and move assignment are standard C++ object mechanics rather
+than temporal operators. They copy or move a Timeline handle; only <code class="docutils literal notranslate"><span class="pre">+=</span></code> and
+<code class="docutils literal notranslate"><span class="pre">-=</span></code> carry Timeline-specific arithmetic meaning.</p>
+</section>
+<section id="choosing-the-right-form">
+<h2>Choosing The Right Form<a class="headerlink" href="#choosing-the-right-form" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">+</span> <span class="pre">duration</span></code> or <code class="docutils literal notranslate"><span class="pre">duration</span> <span class="pre">+</span> <span class="pre">timeline</span></code> for fixed elapsed shifts.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">-</span> <span class="pre">duration</span></code> for the opposite elapsed direction.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">timeline</span> <span class="pre">-</span> <span class="pre">timeline</span></code> for signed elapsed measurement.</p></li>
+<li><p>Use comparisons for lane-wise temporal masks.</p></li>
+<li><p>Reduce a comparison explicitly when one bool is required.</p></li>
+<li><p>Use named calendar transformations when wall-clock fields must be preserved.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">epoch_nanos()</span></code> only when storage-scale integers are intentionally part
+of the next operation.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="add_duration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::add_duration</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="sub_duration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::sub_duration</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::diff</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::eq</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::isnat</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="epoch_nanos.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::epoch_nanos</span></code></span></a></p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="from_ymdhms.html"><span class="label">Previous</span><span class="title">from_ymdhms</span></a>
+  <a class="next-link" href="add_duration.html"><span class="label">Next</span><span class="title">add_duration</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
+      <li>Previous: <a href="numel.html" title="previous chapter">Timeline::numel</a></li>
+      <li>Next: <a href="quarter.html" title="next chapter">Timeline::quarter</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/timeline/operators.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

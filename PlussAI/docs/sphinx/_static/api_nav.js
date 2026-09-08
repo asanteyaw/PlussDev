@@ -849,12 +849,66 @@ window.APIREF_NAV = {
         {
           "type": "class",
           "label": "Payload",
-          "page": "api/lymph/workflow/Payload.html"
+          "page": "api/lymph/workflow/Payload.html",
+          "children": [
+            {
+              "type": "page",
+              "label": "Introduction",
+              "page": "api/lymph/workflow/Payload/Introduction.html"
+            },
+            {
+              "type": "method",
+              "label": "batch",
+              "page": "api/lymph/workflow/Payload/batch.html"
+            },
+            {
+              "type": "method",
+              "label": "label",
+              "page": "api/lymph/workflow/Payload/label.html"
+            },
+            {
+              "type": "method",
+              "label": "roles",
+              "page": "api/lymph/workflow/Payload/roles.html"
+            },
+            {
+              "type": "method",
+              "label": "time",
+              "page": "api/lymph/workflow/Payload/time.html"
+            },
+            {
+              "type": "method",
+              "label": "weights",
+              "page": "api/lymph/workflow/Payload/weights.html"
+            }
+          ]
         },
         {
           "type": "class",
           "label": "Policy",
-          "page": "api/lymph/workflow/Policy.html"
+          "page": "api/lymph/workflow/Policy.html",
+          "children": [
+            {
+              "type": "page",
+              "label": "Introduction",
+              "page": "api/lymph/workflow/Policy/Introduction.html"
+            },
+            {
+              "type": "method",
+              "label": "apply",
+              "page": "api/lymph/workflow/Policy/apply.html"
+            },
+            {
+              "type": "method",
+              "label": "columns",
+              "page": "api/lymph/workflow/Policy/columns.html"
+            },
+            {
+              "type": "method",
+              "label": "rows",
+              "page": "api/lymph/workflow/Policy/rows.html"
+            }
+          ]
         },
         {
           "type": "options",

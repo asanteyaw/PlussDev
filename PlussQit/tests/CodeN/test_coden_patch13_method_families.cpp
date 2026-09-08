@@ -70,3 +70,43 @@ TEST_CASE("CodeN TeX cleanup family has concrete behavior", "[coden][patch13]") 
   REQUIRE(plain.at(0).find("Text") != std::string::npos);
   REQUIRE(plain.at(0).find("bold") != std::string::npos);
 }
+
+TEST_CASE("CodeN tokenize/regex/tex parameterized overloads take effect", "[coden][patch13]") {
+  // regex_findall(pattern, flags): bit 0 = case-insensitive.
+  pluss::Note s = pluss::make_note("AbCdE");
+  REQUIRE(s.regex_findall("[a-z]+").tokens().numel() == 2);     // "b", "d"
+  REQUIRE(s.regex_findall("[a-z]+", 0).tokens().numel() == 2);
+  auto ci = s.regex_findall("[a-z]+", 1);
+  REQUIRE(ci.tokens().numel() == 1);
+  REQUIRE(ci.tokens().at(0) == "AbCdE");
+
+  // tokenize_words(flags): bit 0 = case-fold each token.
+  pluss::Note w = pluss::make_note("One TWO three");
+  REQUIRE(w.tokenize_words().tokens().at(1) == "TWO");
+  auto wl = w.tokenize_words(1);
+  REQUIRE(wl.tokens().at(0) == "one");
+  REQUIRE(wl.tokens().at(1) == "two");
+  REQUIRE(wl.tokens().at(2) == "three");
+
+  // tex_to_text(mode): mode >= 1 also case-folds the recovered text.
+  pluss::Note t = pluss::make_note("\\textbf{Hello} World");
+  REQUIRE(t.tex_to_text().at(0) == "Hello World");
+  REQUIRE(t.tex_to_text(1).at(0) == "hello world");
+}
+
+TEST_CASE("CodeN capitalize matches Python str.capitalize semantics", "[coden][patch13]") {
+  // First character upper-cased in place; the rest lower-cased. A leading
+  // digit or space is left as-is (no "first letter" skipping).
+  REQUIRE(pluss::make_note("heLLo wORLd").capitalize().at(0) == "Hello world");
+  REQUIRE(pluss::make_note("3rd place").capitalize().at(0) == "3rd place");
+  REQUIRE(pluss::make_note("ALL_CAPS").capitalize().at(0) == "All_caps");
+}
+
+TEST_CASE("CodeN lengths_graphemes clusters combining marks", "[coden][patch13]") {
+  // "e" + U+0301 (combining acute) is one grapheme but two code points.
+  pluss::Note n = pluss::make_note(std::string("e\xCC\x81"));
+  REQUIRE(n.lengths_chars() == std::vector<std::int64_t>({2}));
+  REQUIRE(n.lengths_graphemes() == std::vector<std::int64_t>({1}));
+  // Pure ASCII: graphemes == chars == bytes.
+  REQUIRE(pluss::make_note("abc").lengths_graphemes() == std::vector<std::int64_t>({3}));
+}

@@ -21,7 +21,7 @@ overload selects which payload kind is required: `double` requires a `Series`-ki
 thread, `std::string_view` requires `Note`-kind, and the `Timeline`/`TimeIndex`
 overloads both accept either a `Timeline`- or `TimeIndex`-kind calling thread
 symmetrically. This is the same operation [`replace(null_t, to)`](replace.md)
-delegates to internally when `from` is `pluss::null`.
+delegates to internally when `from` is `pluss::series::null`.
 
 ## Parameters
 
@@ -157,7 +157,7 @@ Thread::fillnull(string) is only valid for Note payload
 ## See Also
 
 - [`Thread::fillnull_`](fillnull_.md): the mutating (in-place) form of this method.
-- [`Thread::replace`](replace.md): `replace(pluss::null, to)` is equivalent to
+- [`Thread::replace`](replace.md): `replace(pluss::series::null, to)` is equivalent to
   `fillnull(to)`.
 - [`Thread::isnull`](isnull.md): the validity check `fillnull()` acts on.
 - [`Thread::ffill`](ffill.md) / [`Thread::bfill`](bfill.md): fill `NULL` cells from

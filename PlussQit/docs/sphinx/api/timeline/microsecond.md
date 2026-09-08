@@ -8,13 +8,13 @@
 Series Timeline::microsecond() const
 ```
 
-Aliases: `us()`, `usec()`, `micro()`, and `microseconds()`.
+`microsecond()` is the sole public spelling.
 
 ## Read The Fraction At Microsecond Resolution
 
 `microsecond()` returns the fractional second measured in whole microseconds.
 Its valid range is `0` through `999'999`, its dtype is `int32`, and its shape
-matches the Timeline. Missing timestamps produce `-1`.
+matches the Timeline. Absent instants produce `-1`.
 
 The conversion is truncation, not rounding:
 

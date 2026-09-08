@@ -8,7 +8,7 @@
 Series Timeline::weekday() const
 ```
 
-Aliases: `dayofweek()`, `dow()`, and `weekday_()`.
+`weekday()` is the sole public spelling.
 
 ## Number The Days From Monday
 
@@ -24,7 +24,7 @@ Aliases: `dayofweek()`, `dow()`, and `weekday_()`.
 | Saturday | 5 |
 | Sunday | 6 |
 
-The method is elementwise and shape-preserving. A missing timestamp maps to
+The method is elementwise and shape-preserving. An absent instant maps to
 `-1`, which is outside the valid weekday range.
 
 ## Example: Verify The Numbering Convention
@@ -74,7 +74,7 @@ before classifying a timestamp that lies near midnight.
 - [`day`](day.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="millisecond.html"><span class="label">Previous</span><span class="title">millisecond</span></a>
+  <a class="prev-link" href="week_scalar.html"><span class="label">Previous</span><span class="title">week_scalar</span></a>
   <a class="next-link" href="dayofyear.html"><span class="label">Next</span><span class="title">dayofyear</span></a>
 </div>
 <!-- pluss-hand-authored -->

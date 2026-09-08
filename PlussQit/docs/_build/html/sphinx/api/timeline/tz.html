@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::host" href="host.html" />
-    <link rel="prev" title="Timeline::is_scalar" href="is_scalar.html" />
+    <link rel="next" title="Timeline::tz_convert" href="tz_convert.html" />
+    <link rel="prev" title="Timeline::to_timeindex" href="to_timeindex.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -81,11 +81,11 @@ reassigned.</p>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC: tz=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz</span><span class="p">()</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, epoch=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">to_epoch_nanos_vector</span><span class="p">().</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, epoch=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">ticks</span><span class="p">().</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;New York: tz=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">tz</span><span class="p">()</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, epoch=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">to_epoch_nanos_vector</span><span class="p">().</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, epoch=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">ticks</span><span class="p">().</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;same instant: &quot;</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">utc</span><span class="p">.</span><span class="n">to_epoch_nanos_vector</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">to_epoch_nanos_vector</span><span class="p">())</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">utc</span><span class="p">.</span><span class="n">ticks</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">ticks</span><span class="p">())</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -134,11 +134,10 @@ read on a wall clock</em>.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="tz_convert.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::tz_convert</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="tz_localize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::tz_localize</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="to_utc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::to_utc</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="to_epoch_nanos_vector.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::to_epoch_nanos_vector</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="ticks.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::ticks</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_scalar.html"><span class="label">Previous</span><span class="title">is_scalar</span></a>
+  <a class="prev-link" href="to_timeindex.html"><span class="label">Previous</span><span class="title">to_timeindex</span></a>
   <a class="next-link" href="host.html"><span class="label">Next</span><span class="title">host</span></a>
 </div>
 </section>
@@ -182,6 +181,7 @@ read on a wall clock</em>.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -232,8 +232,8 @@ read on a wall clock</em>.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="is_scalar.html" title="previous chapter">Timeline::is_scalar</a></li>
-      <li>Next: <a href="host.html" title="next chapter">Timeline::host</a></li>
+      <li>Previous: <a href="to_timeindex.html" title="previous chapter">Timeline::to_timeindex</a></li>
+      <li>Next: <a href="tz_convert.html" title="next chapter">Timeline::tz_convert</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

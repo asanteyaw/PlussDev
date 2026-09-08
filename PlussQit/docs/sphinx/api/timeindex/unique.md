@@ -6,15 +6,12 @@
 
 ```cpp
 TimeIndex::unique() const -> TimeIndex
-TimeIndex::drop_duplicates() const -> TimeIndex
 ```
 
 ## What It Does
 
 Returns the distinct timestamps in ascending order.
 
-`drop_duplicates()` is the same operation under a more data-cleaning-oriented
-name.
 
 This gives you the canonical exact-time set represented by the axis.
 

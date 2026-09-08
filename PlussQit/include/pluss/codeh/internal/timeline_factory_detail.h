@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cstdint>
 #include <random>
+#include <limits>
 #include <span>
 #include <string>
 #include <string_view>
@@ -18,6 +19,19 @@ namespace pluss::codeh::factory_detail {
 
 inline void check_rank(pluss::detail::ShapeSpec sizes, std::string_view where) {
   CODEM_CHECK(sizes.rank() <= 3, std::string(where) + ": Timeline supports ranks up to 3");
+}
+
+inline std::int64_t checked_numel(pluss::msharp::RangeView::Int sizes,
+                                  std::string_view where) {
+  CODEM_CHECK(sizes.size() <= 3, std::string(where) + ": Timeline supports ranks up to 3");
+  std::int64_t result = 1;
+  for (const auto extent : sizes) {
+    CODEM_CHECK(extent >= 0, std::string(where) + ": shape extents must be non-negative");
+    CODEM_CHECK(extent == 0 || result <= std::numeric_limits<std::int64_t>::max() / extent,
+                std::string(where) + ": shape element count overflows int64");
+    result *= extent;
+  }
+  return result;
 }
 
 inline pluss::codeh::Timeline from_textspan(pluss::detail::TextSpan flat,
@@ -113,11 +127,12 @@ inline pluss::codeh::Timeline random_between_inclusive(pluss::msharp::RangeView:
                                                        std::uint64_t seed = 0) {
   CODEM_CHECK(lo.dim() == 0 && hi.dim() == 0,
               "pluss::timeline::rand_between: lo/hi must be scalar Timelines");
-  const std::int64_t lo_ns = pluss::codeh::detail::impl_to_epoch_nanos_flat(lo)[0];
-  const std::int64_t hi_ns = pluss::codeh::detail::impl_to_epoch_nanos_flat(hi)[0];
+  const std::int64_t lo_ns = lo.ticks()[0];
+  const std::int64_t hi_ns = hi.ticks()[0];
+  CODEM_CHECK(lo_ns != pluss::codeh::Timeline::kNaT && hi_ns != pluss::codeh::Timeline::kNaT,
+              "pluss::timeline::rand_between: NaT bounds are unsupported");
   CODEM_CHECK(hi_ns >= lo_ns, "pluss::timeline::rand_between: expected hi >= lo");
-  std::int64_t n = 1;
-  for (const auto s : sizes) n *= s;
+  const auto n = checked_numel(sizes, "pluss::timeline::rand_between");
   auto rng = pluss::detail::FactoryCore::make_rng(seed);
   std::uniform_int_distribution<std::int64_t> dist(lo_ns, hi_ns);
   std::vector<std::int64_t> flat(static_cast<std::size_t>(n));

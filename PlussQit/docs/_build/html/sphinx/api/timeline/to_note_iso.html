@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::to_note_* Family" href="to_note_family.html" />
-    <link rel="prev" title="Timeline::strftime" href="strftime.html" />
+    <link rel="next" title="Timeline::to_timeindex" href="to_timeindex.html" />
+    <link rel="prev" title="Timeline::time" href="time.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -88,7 +88,7 @@ custom format string.</p></li>
 [&quot;2024-11-01T09:00:00.000000000+00:00&quot;, &quot;2024-11-01T10:15:30.000000000+00:00&quot;, &quot;2024-12-31T23:59:59.000000000+00:00&quot;, &quot;2025-01-01T00:00:00.000000000+00:00&quot;]
 </pre></div>
 </div>
-<p>Example 2. Preserve missing timestamps visibly during ISO conversion.</p>
+<p>Example 2. Preserve absent instants visibly during ISO conversion.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_nat</span><span class="p">.</span><span class="n">to_note_iso</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -128,16 +128,15 @@ formatting path.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="isoformat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::isoformat</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="strftime.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::strftime</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="to_note_family.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::to_note_family</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="strftime.html">
+  <a class="prev-link" href="time.html">
     <span class="label">Previous</span>
-    <span class="title">strftime</span>
+    <span class="title">time</span>
   </a>
-  <a class="next-link" href="to_note_family.html">
+  <a class="next-link" href="to_timeindex.html">
     <span class="label">Next</span>
-    <span class="title">to_note_family</span>
+    <span class="title">to_timeindex</span>
   </a>
 </div>
 </section>
@@ -181,6 +180,7 @@ formatting path.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -231,8 +231,8 @@ formatting path.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="strftime.html" title="previous chapter">Timeline::strftime</a></li>
-      <li>Next: <a href="to_note_family.html" title="next chapter">Timeline::to_note_* Family</a></li>
+      <li>Previous: <a href="time.html" title="previous chapter">Timeline::time</a></li>
+      <li>Next: <a href="to_timeindex.html" title="next chapter">Timeline::to_timeindex</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

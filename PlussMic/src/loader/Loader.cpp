@@ -1831,7 +1831,7 @@ std::shared_ptr<arrow::Array> series_thread_to_arrow_array(const pluss::table::T
 
 std::shared_ptr<arrow::Array> timeline_thread_to_arrow_array(const pluss::table::Thread& thread) {
   const auto valid = thread_validity(thread);
-  const auto ticks = thread.as_timeline().to_epoch_nanos_vector();
+  const auto ticks = thread.as_timeline().ticks();
   PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: Timeline thread length mismatch");
   arrow::TimestampBuilder builder(arrow::timestamp(arrow::TimeUnit::NANO), arrow::default_memory_pool());
   for (std::size_t i = 0; i < ticks.size(); ++i) {
@@ -1846,7 +1846,7 @@ std::shared_ptr<arrow::Array> timeline_thread_to_arrow_array(const pluss::table:
 
 std::shared_ptr<arrow::Array> timeindex_thread_to_arrow_array(const pluss::table::Thread& thread) {
   const auto valid = thread_validity(thread);
-  const auto ticks = thread.as_timeindex().timeline().to_epoch_nanos_vector();
+  const auto ticks = thread.as_timeindex().timeline().ticks();
   PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: TimeIndex thread length mismatch");
   arrow::TimestampBuilder builder(arrow::timestamp(arrow::TimeUnit::NANO), arrow::default_memory_pool());
   for (std::size_t i = 0; i < ticks.size(); ++i) {

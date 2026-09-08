@@ -8,6 +8,7 @@
 #include <ctime>
 #include <exception>
 #include <initializer_list>
+#include <limits>
 #include <span>
 #include <string>
 #include <string_view>
@@ -107,7 +108,7 @@ inline std::string ymd_to_iso(int year, int month, int day) {
 }
 
 inline std::int64_t scalar_epoch_nanos(const pluss::Timeline& t, std::string_view where) {
-  const auto flat = t.to_epoch_nanos_vector();
+  const auto flat = t.ticks();
   CODEM_CHECK(flat.size() == 1, std::string(where) + ": expected scalar timeline");
   return flat[0];
 }
@@ -115,6 +116,29 @@ inline std::int64_t scalar_epoch_nanos(const pluss::Timeline& t, std::string_vie
 inline std::int64_t current_now_ns() {
   const auto now = std::chrono::system_clock::now();
   return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+}
+
+inline std::int64_t midnight_epoch_nanos(int year, int month, int day,
+                                         MomentClock clock) {
+  if (clock == MomentClock::UTC) {
+    return scalar_epoch_nanos(
+        pluss::timeline::make(ymd_to_iso(year, month, day)),
+        "moment(UTC midnight)");
+  }
+
+  std::tm tm{};
+  tm.tm_year = year - 1900;
+  tm.tm_mon = month - 1;
+  tm.tm_mday = day;
+  tm.tm_isdst = -1;
+  const std::time_t seconds = std::mktime(&tm);
+  CODEM_CHECK(seconds != static_cast<std::time_t>(-1),
+              "pluss::timeline::moment: local midnight is outside the system clock range");
+  const __int128 nanos = static_cast<__int128>(seconds) * 1'000'000'000LL;
+  CODEM_CHECK(nanos > static_cast<__int128>(pluss::Timeline::kNaT) &&
+                  nanos <= static_cast<__int128>((std::numeric_limits<std::int64_t>::max)()),
+              "pluss::timeline::moment: local midnight is outside Timeline range");
+  return static_cast<std::int64_t>(nanos);
 }
 
 inline bool parse_offset_ns(std::string_view token, std::int64_t& out_ns) {
@@ -131,7 +155,11 @@ inline bool parse_offset_ns(std::string_view token, std::int64_t& out_ns) {
   bool saw_digit = false;
   while (i < token.size() && std::isdigit(static_cast<unsigned char>(token[i]))) {
     saw_digit = true;
-    magnitude = magnitude * 10 + static_cast<std::int64_t>(token[i] - '0');
+    const auto digit = static_cast<std::int64_t>(token[i] - '0');
+    if (magnitude > ((std::numeric_limits<std::int64_t>::max)() - digit) / 10) {
+      return false;
+    }
+    magnitude = magnitude * 10 + digit;
     ++i;
   }
   if (!saw_digit || i >= token.size()) {
@@ -154,6 +182,9 @@ inline bool parse_offset_ns(std::string_view token, std::int64_t& out_ns) {
     return false;
   }
 
+  if (magnitude > (std::numeric_limits<std::int64_t>::max)() / unit_ns) {
+    return false;
+  }
   out_ns = magnitude * unit_ns;
   if (token[0] == '-') {
     out_ns = -out_ns;
@@ -189,32 +220,37 @@ inline bool parse_expression_ns(std::string_view expr, const MomentOptions& opti
 
     if (base == "today") {
       // already set
-    } else if (base == "yesterday") {
-      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(yesterday)")
-          - 24LL * 3600LL * 1'000'000'000LL;
-    } else if (base == "tomorrow") {
-      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(tomorrow)")
-          + 24LL * 3600LL * 1'000'000'000LL;
-    } else if (base == "som" || base == "startofmonth" || base == "start_of_month") {
+    } else if (base == "yesterday" || base == "tomorrow") {
+      const auto shifted = std::chrono::sys_days{
+          std::chrono::year{year} / std::chrono::month{static_cast<unsigned>(month)} /
+          std::chrono::day{static_cast<unsigned>(day)}} +
+          std::chrono::days{base == "yesterday" ? -1 : 1};
+      const std::chrono::year_month_day ymd{shifted};
+      year = static_cast<int>(ymd.year());
+      month = static_cast<unsigned>(ymd.month());
+      day = static_cast<unsigned>(ymd.day());
+    } else if (base == "start_of_month") {
       day = 1;
-      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(start_of_month)");
-    } else if (base == "eom" || base == "endofmonth" || base == "end_of_month") {
+    } else if (base == "end_of_month") {
       day = days_in_month(year, month);
-      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(end_of_month)");
     } else {
       return false;
     }
-
-    if (base == "today") {
-      base_ns = scalar_epoch_nanos(pluss::timeline::make(ymd_to_iso(year, month, day)), "moment(today)");
-    }
+    base_ns = midnight_epoch_nanos(year, month, day, options.clock);
   }
 
   std::int64_t offset_ns = 0;
   if (!parse_offset_ns(offset_text, offset_ns)) {
     return false;
   }
+  if ((offset_ns > 0 && base_ns > (std::numeric_limits<std::int64_t>::max)() - offset_ns) ||
+      (offset_ns < 0 && base_ns < (std::numeric_limits<std::int64_t>::min)() - offset_ns)) {
+    return false;
+  }
   out_ns = base_ns + offset_ns;
+  if (out_ns == pluss::Timeline::kNaT) {
+    return false;
+  }
   return true;
 }
 
@@ -288,12 +324,12 @@ inline pluss::Timeline moment(std::initializer_list<::pluss::detail::NestedTimel
       std::span<const std::int64_t>(lit.sizes.data(), lit.sizes.size()));
 }
 
-// pluss::timeline::now(clock) -> scalar Timeline at the current instant.
+// pluss::timeline::now() -> scalar Timeline at the current instant.
 // Convenience wrapper over moment("now", ...) for the single most common
 // moment expression -- no string literal or MomentOptions boilerplate needed
 // at the call site.
-inline pluss::Timeline now(MomentClock clock = MomentClock::UTC) {
-  return moment("now", MomentOptions{MomentMode::Auto, clock});
+inline pluss::Timeline now() {
+  return moment("now", MomentOptions{MomentMode::Auto, MomentClock::UTC});
 }
 
 // pluss::timeline::today(clock) -> scalar Timeline at the start of today

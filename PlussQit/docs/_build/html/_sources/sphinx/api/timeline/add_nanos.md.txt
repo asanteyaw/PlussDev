@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::add_nanos(std::int64_t nanos) -> Timeline
+Timeline Timeline::add_nanos(std::int64_t nanos) const
 ```
 
 ## What It Does
@@ -47,7 +47,7 @@ Timeline(shape=[4], tz=UTC)
 
 ## Notes
 
-- Missing timestamps remain missing.
+- Absent instants remain absent.
 - Use `add_duration(...)` when the shift is already represented as a
   `Duration`.
 

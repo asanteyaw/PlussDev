@@ -1,3 +1,4 @@
+<!-- pluss-hand-authored -->
 # Note::base64_encode
 
 [Back to Note API Reference](../../note_api_reference)
@@ -5,107 +6,131 @@
 ## Signature
 
 ```cpp
-Note::base64_encode() const -> Note
+Note Note::base64_encode() const
 ```
 
-## What It Does
+## Encode Every Cell As Standard Base64
 
-Encodes each text cell into Base64.
+`base64_encode()` replaces each text cell with its Base64 transfer encoding,
+using the standard alphabet (`A-Z`, `a-z`, `0-9`, `+`, `/`) and `=` padding
+(RFC 4648 §4). It is the method to reach for when a `Note` has to travel
+through a channel that only carries printable ASCII — a JSON string, a URL
+fragment budget permitting, an HTTP header, a log line, a config value.
 
-This is a transport-oriented method rather than a linguistic one. It is useful
-when text must be embedded into a channel that expects Base64-safe content or
-when you need a deterministic reversible representation for interchange.
+The input is treated as a byte sequence, not as characters: a cell holding
+`"café"` is encoded from its four UTF-8 bytes (`63 61 66 C3 A9` — five bytes),
+so the result depends on the exact bytes, not on how many characters they
+render as. This is why the encoded length grows in blocks of four output
+characters per three input bytes, with `=` padding when the final block is
+short.
 
-The method transforms the cell contents, not the shape. If you start with one
-cell, you get one encoded cell back. If you start with a 1D batch, every batch
-member is encoded independently.
+The operation is **shape-preserving** and cell-independent: the result has
+the same rank and extents as the input, each cell encoded on its own, and a
+new allocation is returned. The result is a UTF-8-mode `Note` (the Base64
+alphabet is ASCII). An empty cell encodes to an empty cell.
 
-## Parameters
+[`base64_decode`](../../note_api_reference.md) is the exact inverse for any
+`Note` produced here.
 
-This method takes no parameters.
-
-## Returns
-
-`Note`
-    A shape-preserving `Note` whose cell contents are Base64-encoded.
-
-## Examples
-
-Example 1. Encode a short text cell into Base64.
+## Example 1: A Scalar
 
 ```cpp
-auto note = pluss::make_note("Hi!");
-auto encoded = note.base64_encode();
-std::cout << "base64_encode:\n";
-for (std::int64_t i = 0; i < encoded.numel(); ++i) {
-  std::cout << "  [" << i << "] " << encoded.at(i) << "\n";
-}
+std::cout << pluss::note::print(pluss::make_note("Hello, Note").base64_encode())
+          << "\n";
 ```
 
 ### Output
 
 ```text
-base64_encode:
-  [0] SGkh
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"SGVsbG8sIE5vdGU="
 ```
 
-Example 2. Decode the encoded text back to the original payload.
+## Example 2: Padding Follows The Input Length
 
 ```cpp
-auto note = pluss::make_note("Hi!");
-auto encoded = note.base64_encode();
-auto roundtrip = encoded.base64_decode();
-std::cout << "base64_roundtrip:\n";
-for (std::int64_t i = 0; i < roundtrip.numel(); ++i) {
-  std::cout << "  [" << i << "] " << roundtrip.at(i) << "\n";
-}
+const pluss::Note n =
+    pluss::make_note({"abc", "ab", "a", ""}).base64_encode();
+std::cout << n << "\n";
 ```
 
 ### Output
 
 ```text
-base64_roundtrip:
-  [0] Hi!
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["YWJj", "YWI=", "YQ==", ""]
 ```
 
-Example 3. Encode a batch of text cells, not just a scalar note.
+Three input bytes give a full four-character block with no padding; two bytes
+give one `=`; one byte gives two `=`. An empty cell stays empty.
+
+## Example 3: Multi-Byte UTF-8 Is Encoded From Its Bytes
 
 ```cpp
-auto note = pluss::make_note({"Hi!", "Pluss"});
-auto encoded = note.base64_encode();
-std::cout << "base64_encode_batch:\n";
-for (std::int64_t i = 0; i < encoded.numel(); ++i) {
-  std::cout << "  [" << i << "] " << encoded.at(i) << "\n";
-}
+pluss::note::print(std::cout,
+                   pluss::make_note({"café", "€"}).base64_encode())
+    << "\n";
 ```
 
 ### Output
 
 ```text
-base64_encode_batch:
-  [0] SGkh
-  [1] UGx1c3M=
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Y2Fmw6k=", "4oKs"]
 ```
 
-## Notes
+`"café"` is five bytes (`é` is two), and `"€"` is three bytes, so they encode
+to eight and four Base64 characters respectively.
 
-- `base64_encode()` is reversible when paired with `base64_decode()`.
-- This is a content transport transform, not a text-cleaning transform.
-- It preserves shape like the rest of the `Note` cellwise transform family.
+## Example 4: Shape Is Preserved
+
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({{"one", "two"}, {"three", "four"}}).base64_encode())
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["b25l", "dHdv"], 
+  ["dGhyZWU=", "Zm91cg=="]
+]
+```
+
+## Example 5: Round-Trips Through `base64_decode`
+
+```cpp
+const pluss::Note original = pluss::make_note({"payload", "café"});
+std::cout << original.base64_encode().base64_decode() << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["payload", "café"]
+```
+
+`base64_decode()` recovers the exact original bytes.
 
 ## See Also
 
-- `Note::base64_decode()`: reverse the encoding.
-- [`Note::url_encode`](url_encode.md): use URL-safe percent encoding when the
-  target transport expects URL escaping rather than Base64.
+- `pluss::coden::Note::base64_decode`: the inverse.
+- [`Note::url_encode`](url_encode.md): percent-encoding for the same
+  "make it ASCII-safe" goal, keyed to URL syntax instead of transfer size.
+- [`Note::tex_escape`](tex_escape.md): escaping for a specific consumer
+  (TeX) rather than a general binary-safe encoding.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nlp_mask_pii.html">
+  <a class="prev-link" href="base64_decode.html">
     <span class="label">Previous</span>
-    <span class="title">nlp_mask_pii</span>
+    <span class="title">base64_decode</span>
   </a>
-  <a class="next-link" href="url_encode.html">
+  <a class="next-link" href="capitalize.html">
     <span class="label">Next</span>
-    <span class="title">url_encode</span>
+    <span class="title">capitalize</span>
   </a>
 </div>

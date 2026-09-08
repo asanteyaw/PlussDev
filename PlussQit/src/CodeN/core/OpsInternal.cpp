@@ -549,6 +549,19 @@ static void tokenize_words_to(::std::string_view s, ::std::vector<::std::string>
   for (const auto& [off, len] : spans) out.emplace_back(s.substr(off, len));
 }
 
+// tokenize_words(flags): bit 0 (value 1) case-folds every emitted token; the
+// token boundaries are identical to the no-flags form. flags <= 0 is unchanged.
+static void tokenize_words_flagged_to(::std::string_view s, ::std::int64_t flags,
+                                      ::std::vector<::std::string>& out) {
+  const ::std::size_t start = out.size();
+  tokenize_words_to(s, out);
+  if (flags > 0 && (flags & 1)) {
+    for (::std::size_t i = start; i < out.size(); ++i) {
+      out[i] = ::pluss::coden::native::cpu::lower_ascii(out[i]);
+    }
+  }
+}
+
 static void tokenize_sentences_to(::std::string_view s, ::std::vector<::std::string>& out) {
   bool ascii_only = true;
   for (unsigned char c : s) {
@@ -596,6 +609,18 @@ static void tokenize_regex_to(::std::string_view s, const ::std::regex& re, ::st
     if ((*it).size() > 1 && (*it)[1].matched) out.push_back((*it)[1].str());
     else out.push_back((*it)[0].str());
   }
+}
+
+// `regex_findall` accepts an optional flags bitmask: bit 0 (value 1) makes the
+// match case-insensitive, bit 1 (value 2) makes `^`/`$` match at line breaks.
+// A flags value <= 0 keeps the default ECMAScript, case-sensitive behavior.
+static ::std::regex make_findall_regex(::std::string_view pattern, ::std::int64_t flags) {
+  auto syntax = ::std::regex::ECMAScript;
+  if (flags > 0) {
+    if (flags & 1) syntax |= ::std::regex::icase;
+    if (flags & 2) syntax |= ::std::regex::multiline;
+  }
+  return ::std::regex(::std::string(pattern), syntax);
 }
 
 static void regex_split_to(::std::string_view s, const ::std::regex& re, ::std::int64_t limit, ::std::vector<::std::string>& out) {
@@ -2417,7 +2442,6 @@ static ::std::string tex_remove_commands_text(::std::string_view s) {
 }
 
 static ::std::string tex_to_text_text(::std::string_view s, ::std::int64_t mode) {
-  (void)mode;
   ::std::string out = tex_strip_comments_text(s);
   out = tex_strip_preamble_text(out);
   out = ::pluss::coden::native::cpu::nlp_remove_math_fast(out);
@@ -2428,7 +2452,11 @@ static ::std::string tex_to_text_text(::std::string_view s, ::std::int64_t mode)
   out = ::pluss::coden::native::cpu::replace_bytes(out, "{", " ");
   out = ::pluss::coden::native::cpu::replace_bytes(out, "}", " ");
   out = ::pluss::coden::native::cpu::collapse_whitespace_ascii(out);
-  return ::pluss::coden::native::cpu::strip_ascii(out);
+  out = ::pluss::coden::native::cpu::strip_ascii(out);
+  // mode >= 1 also case-folds the recovered text, matching the sanitize
+  // convention used elsewhere in this file (see tex_sanitize_text).
+  if (mode >= 1) out = ::pluss::coden::native::cpu::lower_ascii(out);
+  return out;
 }
 
 static ::std::string tex_sanitize_text(::std::string_view s, ::std::int64_t level) {
@@ -3447,7 +3475,7 @@ Note note_from_utf8(::std::span<const ::std::string_view> utf8_flat,
   ::std::int64_t n = 1;
   for (int i = 0; i < dim; ++i) n *= sz[i];
   PLUSS_CHECK(static_cast<::std::int64_t>(utf8_flat.size()) == n,
-              "note_from_utf8 expects flat size == numel");
+              "Note construction: flat text count must equal the product of the requested sizes");
 
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::vector<NoteImpl::OffLen> spans;
@@ -3493,7 +3521,7 @@ Note note_from_bytes(::std::span<const ::std::string_view> bytes_flat,
   ::std::int64_t n = 1;
   for (int i = 0; i < dim; ++i) n *= sz[i];
   PLUSS_CHECK(static_cast<::std::int64_t>(bytes_flat.size()) == n,
-              "note_from_bytes expects flat size == numel");
+              "Note construction: flat byte-string count must equal the product of the requested sizes");
 
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::vector<NoteImpl::OffLen> spans;
@@ -5663,9 +5691,8 @@ TokenBatch split_graphemes(const Chord& x) {
 }
 
 TokenBatch tokenize_words(const Chord& x, ::std::int64_t flags) {
-  (void)flags;
-  return tokenbatch_from_chord(x, [](::std::string_view s, ::std::vector<::std::string>& out) {
-    tokenize_words_to(s, out);
+  return tokenbatch_from_chord(x, [flags](::std::string_view s, ::std::vector<::std::string>& out) {
+    tokenize_words_flagged_to(s, flags, out);
   });
 }
 
@@ -5690,8 +5717,10 @@ TokenBatch tokenize_regex(const Chord& x, ::std::string_view pattern) {
 }
 
 TokenBatch regex_findall(const Chord& x, ::std::string_view pattern, ::std::int64_t flags) {
-  (void)flags;
-  return tokenize_regex(x, pattern);
+  const ::std::regex re = make_findall_regex(pattern, flags);
+  return tokenbatch_from_chord(x, [&re](::std::string_view s, ::std::vector<::std::string>& out) {
+    tokenize_regex_to(s, re, out);
+  });
 }
 
 TokenBatch regex_split(const Chord& x, ::std::string_view pattern, ::std::int64_t limit) {
@@ -5853,9 +5882,8 @@ TokenBatch split_graphemes(const Note& x) {
 }
 
 TokenBatch tokenize_words(const Note& x, ::std::int64_t flags) {
-  (void)flags;
-  return tokenbatch_from_note(x, "Note::tokenize_words", [](::std::string_view s, ::std::vector<::std::string>& out) {
-    tokenize_words_to(s, out);
+  return tokenbatch_from_note(x, "Note::tokenize_words", [flags](::std::string_view s, ::std::vector<::std::string>& out) {
+    tokenize_words_flagged_to(s, flags, out);
   });
 }
 
@@ -5880,8 +5908,10 @@ TokenBatch tokenize_regex(const Note& x, ::std::string_view pattern) {
 }
 
 TokenBatch regex_findall(const Note& x, ::std::string_view pattern, ::std::int64_t flags) {
-  (void)flags;
-  return tokenize_regex(x, pattern);
+  const ::std::regex re = make_findall_regex(pattern, flags);
+  return tokenbatch_from_note(x, "Note::regex_findall", [&re](::std::string_view s, ::std::vector<::std::string>& out) {
+    tokenize_regex_to(s, re, out);
+  });
 }
 
 TokenBatch regex_split(const Note& x, ::std::string_view pattern, ::std::int64_t limit) {

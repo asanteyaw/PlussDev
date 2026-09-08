@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=151dd15e"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::second" href="second.html" />
-    <link rel="prev" title="Timeline::hour" href="hour.html" />
+    <link rel="next" title="Timeline::minute_scalar" href="minute_scalar.html" />
+    <link rel="prev" title="Timeline::min" href="min.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,13 +44,12 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">minute</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">m()</span></code>, <code class="docutils literal notranslate"><span class="pre">minutes()</span></code>, and <code class="docutils literal notranslate"><span class="pre">minute_()</span></code>.</p>
 </section>
 <section id="read-the-minute-within-the-hour">
 <h2>Read The Minute Within The Hour<a class="headerlink" href="#read-the-minute-within-the-hour" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">minute()</span></code> extracts a zero-based clock component in the range <code class="docutils literal notranslate"><span class="pre">0</span></code> through
 <code class="docutils literal notranslate"><span class="pre">59</span></code>. It returns an <code class="docutils literal notranslate"><span class="pre">int32</span></code> Series with the same shape and element ordering as
-the Timeline. Missing timestamps map to <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
+the Timeline. Absent instants map to <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
 <p>The value is only the minute component. For example, <code class="docutils literal notranslate"><span class="pre">10:07</span></code> and <code class="docutils literal notranslate"><span class="pre">18:07</span></code> both
 produce <code class="docutils literal notranslate"><span class="pre">7</span></code>; combine it with <code class="docutils literal notranslate"><span class="pre">hour()</span></code> when constructing a time-of-day key.</p>
 </section>
@@ -85,8 +84,8 @@ subsecond precision.</p>
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Minutes are zero-based clock fields, unlike one-based months and days.</p></li>
-<li><p>The short alias is <code class="docutils literal notranslate"><span class="pre">m()</span></code>; there is no <code class="docutils literal notranslate"><span class="pre">min()</span></code> alias because <code class="docutils literal notranslate"><span class="pre">min()</span></code> is a
-Timeline reduction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minute()</span></code> is the sole public spelling; <code class="docutils literal notranslate"><span class="pre">min()</span></code> remains the Timeline
+reduction.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">-1</span></code> result denotes <code class="docutils literal notranslate"><span class="pre">NaT</span></code> and must not be placed into an ordinary bucket.</p></li>
 </ul>
 </section>
@@ -100,7 +99,7 @@ Timeline reduction.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="hour.html"><span class="label">Previous</span><span class="title">hour</span></a>
-  <a class="next-link" href="second.html"><span class="label">Next</span><span class="title">second</span></a>
+  <a class="next-link" href="minute_scalar.html"><span class="label">Next</span><span class="title">minute_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -144,6 +143,7 @@ Timeline reduction.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -194,8 +194,8 @@ Timeline reduction.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="hour.html" title="previous chapter">Timeline::hour</a></li>
-      <li>Next: <a href="second.html" title="next chapter">Timeline::second</a></li>
+      <li>Previous: <a href="min.html" title="previous chapter">Timeline::min</a></li>
+      <li>Next: <a href="minute_scalar.html" title="next chapter">Timeline::minute_scalar</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

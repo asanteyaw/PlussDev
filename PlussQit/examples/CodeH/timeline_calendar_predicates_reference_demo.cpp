@@ -66,7 +66,7 @@ int main() {
   });
   show("weekend_preserves_shape", matrix.is_weekend());
 
-  std::cout << "\n=== identities_and_aliases ===\n"
+  std::cout << "\n=== predicate_identity ===\n"
             << "weekday partition="
             << week.is_monday().logical_or(week.is_tuesday())
                    .logical_or(week.is_wednesday()).logical_or(week.is_thursday())
@@ -74,8 +74,5 @@ int main() {
                    .logical_or(week.is_sunday()).equal(week.isvalid()) << '\n'
             << "weekend/business complement="
             << boundaries.is_weekend().logical_xor(boundaries.is_business_day())
-                   .equal(boundaries.isvalid()) << '\n'
-            << "month-start alias="
-            << boundaries.is_month_start().equal(boundaries.is_month_begin()) << '\n'
-            << "Monday alias=" << week.is_monday().equal(week.is_mon()) << '\n';
+                   .equal(boundaries.isvalid()) << '\n';
 }

@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::is_thursday" href="is_thursday.html" />
+    <link rel="next" title="Timeline::is_weekend" href="is_weekend.html" />
     <link rel="prev" title="Timeline::is_tuesday" href="is_tuesday.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -44,7 +44,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_wednesday</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">wed_is()</span></code> and <code class="docutils literal notranslate"><span class="pre">is_wed()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">is_wednesday()</span></code> is the sole public spelling.</p>
 </section>
 <section id="select-local-wednesdays">
 <h2>Select Local Wednesdays<a class="headerlink" href="#select-local-wednesdays" title="Link to this heading">¶</a></h2>
@@ -78,7 +78,7 @@ zero, but avoids embedding that numeric convention at the call site.</p>
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>The method returns a mask; it does not return the matching timestamps.</p></li>
-<li><p>Missing timestamps do not form a third boolean state.</p></li>
+<li><p>Absent instants do not form a third boolean state.</p></li>
 <li><p>The current timezone, not the timestamp’s original text suffix, determines
 the local weekday after conversion.</p></li>
 </ul>
@@ -136,6 +136,7 @@ the local weekday after conversion.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -187,7 +188,7 @@ the local weekday after conversion.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
       <li>Previous: <a href="is_tuesday.html" title="previous chapter">Timeline::is_tuesday</a></li>
-      <li>Next: <a href="is_thursday.html" title="next chapter">Timeline::is_thursday</a></li>
+      <li>Next: <a href="is_weekend.html" title="next chapter">Timeline::is_weekend</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

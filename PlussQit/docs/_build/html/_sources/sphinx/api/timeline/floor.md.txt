@@ -13,8 +13,8 @@ Timeline::floor(std::string_view unit) -> Timeline
 Rounds each timestamp down to the start of the requested unit.
 
 This is the "snap backward" temporal primitive. It is commonly used to build
-calendar buckets, normalize intraday times to daily anchors, or prepare a time
-column for grouping.
+calendar intervals, project intraday times to daily anchors, or prepare a
+Timeline for boundary-based computation.
 
 ## Parameters
 
@@ -57,14 +57,14 @@ Timeline(shape=[4], tz=UTC)
 ## Notes
 
 - Floor never moves a timestamp forward.
-- [`normalize`](normalize.md) and [`date`](normalize.md) are day-level
-  conveniences built on this idea.
+- [`date`](date.md) is the day-level operation for retaining local calendar
+  dates.
 
 ## See Also
 
 - [`Timeline::ceil`](ceil.md)
 - [`Timeline::round`](round.md)
-- [`Timeline::normalize`](normalize.md)
+- [`Timeline::date`](date.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month_name.html">

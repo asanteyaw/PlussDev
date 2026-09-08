@@ -8,14 +8,14 @@
 Series Timeline::dayofyear() const
 ```
 
-Aliases: `doy()`, `day_of_year()`, and `dayofyear_()`.
+`dayofyear()` is the sole public spelling.
 
 ## Read The Ordinal Day
 
 `dayofyear()` counts local calendar days from the start of each civil year.
 It is one-based: 1 January is `1`; 31 December is `365` in a common year and
 `366` in a leap year. The result is a shape-preserving `int32` Series, with
-`-1` for missing timestamps.
+`-1` for absent instants.
 
 Ordinal day is useful for annual seasonality because it reduces month and day
 to one coordinate. It is not a stable elapsed-day counter across years: every
@@ -64,7 +64,7 @@ why timezone conversion must precede local-seasonality feature extraction.
 - [`is_leap_year`](is_leap_year.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="weekday.html"><span class="label">Previous</span><span class="title">weekday</span></a>
-  <a class="next-link" href="quarter.html"><span class="label">Next</span><span class="title">quarter</span></a>
+  <a class="prev-link" href="day_scalar.html"><span class="label">Previous</span><span class="title">day_scalar</span></a>
+  <a class="next-link" href="days_between.html"><span class="label">Next</span><span class="title">days_between</span></a>
 </div>
 <!-- pluss-hand-authored -->

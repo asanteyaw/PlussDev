@@ -1316,7 +1316,7 @@ Thread reduce_temporal_minmax_(
   for (std::size_t k = 0; k < indices.size(); ++k) {
     const auto& col = src.columns_[indices[k]];
     const pluss::Timeline timeline = as_timeindex ? col.as_timeindex().timeline() : col.as_timeline();
-    const auto all_ticks = timeline.to_epoch_nanos_vector();
+    const auto all_ticks = timeline.ticks();
 
     bool any_invalid = false;
     std::vector<std::int64_t> observed;
@@ -2490,7 +2490,7 @@ DataFrame DataFrame::mask(const Thread& bool_mask,
   const auto picked = normalize_name_list(features);
   if (picked.empty()) {
     for (auto& col : out_cols) {
-      col = col.put(Thread(mask), pluss::null);
+      col = col.put(Thread(mask), pluss::series::null);
     }
   } else {
     std::unordered_set<std::size_t> seen;
@@ -2499,7 +2499,7 @@ DataFrame DataFrame::mask(const Thread& bool_mask,
       const auto it = src.name_to_idx_.find(name);
       PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::mask: unknown feature '" + name + "'");
       if (seen.insert(it->second).second) {
-        out_cols[it->second] = src.columns_[it->second].put(Thread(mask), pluss::null);
+        out_cols[it->second] = src.columns_[it->second].put(Thread(mask), pluss::series::null);
       }
     }
   }

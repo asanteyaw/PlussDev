@@ -2,164 +2,91 @@
 
 [Back to Timeline API Reference](../../timeline_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Timeline::searchsorted_left(const Timeline& values) -> Series
-Timeline::searchsorted_right(const Timeline& values) -> Series
-Timeline::to_epoch_nanos_flat() -> std::vector<std::int64_t>
+Series Timeline::searchsorted_left(const Timeline& values) const
 ```
 
-This page covers the ordered insertion and raw tick-export family.
+## Find The Start Of Each Insertion Range
 
-## What These Methods Do
+`searchsorted_left(values)` performs binary searches in a sorted 1-D receiver.
+For every query timestamp, it returns the earliest position where that value
+could be inserted without disturbing ascending order.
 
-`searchsorted_left(...)` and `searchsorted_right(...)` answer the question:
-"if I inserted these query timestamps into this already-sorted timeline, at
-what positions would they land?"
+If a query equals existing timestamps, the answer points before the first
+equal entry. If it falls between timestamps, the answer points at the later
+neighbor. Query `NaT` points to the beginning of the trailing `NaT` group.
 
-That makes them useful for:
+The receiver and query play different shape roles: the receiver must be 1-D,
+but `values` may have any Timeline shape. The returned Int64 `Series` preserves
+the query shape.
 
-- ordered lookup preparation
-- bin-edge reasoning
-- merge/as-of style temporal alignment
-- converting exact-or-nearest timestamp reasoning into integer positions
-
-`to_epoch_nanos_flat()` is the low-level export surface that exposes the raw
-epoch-nanosecond representation as a flat integer vector.
-
-## Parameters
-
-**values**
-
-The timestamps whose insertion positions you want to compute.
-
-The shape does not need to match the source timeline length; the result length
-matches the number of query timestamps you provide.
-
-The behavioral toggle is the side rule:
-
-- `searchsorted_left(...)`
-  Insert before existing equal timestamps.
-- `searchsorted_right(...)`
-  Insert after existing equal timestamps.
-
-That difference only matters when the query timestamp is already present.
-
-## Returns
-
-`Series`
-    Integer insertion positions for the search methods.
-
-`std::vector<std::int64_t>`
-    Raw epoch-nanosecond ticks for `to_epoch_nanos_flat()`.
-
-## Notes
-
-- The search methods are meant for sorted 1D timelines.
-- Left versus right matters exactly at equal-key boundaries.
-- `to_epoch_nanos_flat()` is intentionally lower level: use it when you need to
-  interoperate with external systems or numerical kernels that expect raw tick
-  values instead of `Timeline`.
-
-## Examples
-
-Example 1. Compute left insertion positions for queries that land before,
-inside, and after the sorted range.
+## Example 1: Search A Matrix Of Queries
 
 ```cpp
-auto pos = sorted.searchsorted_left(queries);
-std::cout << pluss::series::print(pos) << "\n";
+const auto sorted = pluss::timeline::make({
+    "2024-01-01T00:00:00Z", "2024-06-01T00:00:00Z",
+    "2024-06-01T00:00:00Z", "2025-01-01T00:00:00Z", "", "",
+});
+const auto queries = pluss::timeline::make({
+    {"2023-12-01T00:00:00Z", "2024-06-01T00:00:00Z"},
+    {"2024-08-01T00:00:00Z", ""},
+});
+std::cout << pluss::series::print(sorted.searchsorted_left(queries)) << '\n';
 ```
 
 ### Output
 
 ```text
-Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
-data=[0, 2, 4]
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 0 1 ⎤
+⎣ 3 4 ⎦
 ```
 
-Example 2. Switch to right insertion positions so equal timestamps fall after
-existing matches.
+The equal June query returns `1`, before both matches. The absent query returns
+`4`, before both trailing `NaT` entries.
+
+## Example 2: Use Both Sides As A Match Range
 
 ```cpp
-auto pos = sorted.searchsorted_right(queries);
-std::cout << pluss::series::print(pos) << "\n";
+const auto key = pluss::timeline::make("2024-06-01T00:00:00Z");
+const auto begin = sorted.searchsorted_left(key).item<std::int64_t>();
+const auto end = sorted.searchsorted_right(key).item<std::int64_t>();
+std::cout << "begin=" << begin << ", end=" << end
+          << ", count=" << (end - begin) << '\n';
 ```
 
 ### Output
 
 ```text
-Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
-data=[0, 4, 4]
+begin=1, end=3, count=2
 ```
 
-Example 3. See the equal-key difference directly on timestamps that already
-exist in the sorted timeline.
+The half-open interval `[begin, end)` identifies every exact match without a
+linear scan.
 
-```cpp
-auto left = sorted.searchsorted_left(pluss::timeline::make({
-    "2024-11-01T09:00:00Z",
-    "2024-11-01T11:00:00Z",
-}));
-std::cout << pluss::series::print(left) << "\n";
-```
+## Preconditions And Failure Modes
 
-### Output
+- The receiver must be 1-D and already ascending with `NaT` last. Call `sort()`
+  first when necessary.
+- The method does not sort or validate arbitrary receiver order.
+- The query may be scalar or N-D; only the receiver has the 1-D restriction.
+- Results are insertion positions, not proof that an exact match exists.
 
-```text
-Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[0, 2]
-```
+## Summary
 
-Example 4. Use the right-side rule on the same exact matches.
-
-```cpp
-auto right = sorted.searchsorted_right(pluss::timeline::make({
-    "2024-11-01T09:00:00Z",
-    "2024-11-01T11:00:00Z",
-}));
-std::cout << pluss::series::print(right) << "\n";
-```
-
-### Output
-
-```text
-Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[1, 4]
-```
-
-Example 5. Export the same timeline as raw epoch nanoseconds.
-
-```cpp
-auto ticks = base.to_epoch_nanos_flat();
-std::cout << "[";
-for (std::size_t i = 0; i < ticks.size(); ++i) {
-    if (i != 0) std::cout << ", ";
-    std::cout << ticks[i];
-}
-std::cout << "]\n";
-```
-
-### Output
-
-```text
-[1730451600000000000, 1730456130000000000, 1735689599000000000, 1735689600000000000]
-```
+`searchsorted_left()` returns the first insertion boundary for each query,
+preserves query shape, and resolves ties and `NaT` to the left edge.
 
 ## See Also
 
-- [`TimeIndex::searchsorted`](../timeindex/searchsorted.md)
-- [`Timeline::argsort`](argsort.md)
-- [`Timeline::min`](min.md)
+- [`searchsorted_right`](searchsorted_right.md)
+- [`sort`](sort.md)
+- [`argsort`](argsort.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="add_nanos.html">
-    <span class="label">Previous</span>
-    <span class="title">add_nanos</span>
-  </a>
-  <a class="next-link" href="year.html">
-    <span class="label">Next</span>
-    <span class="title">year</span>
-  </a>
+  <a class="prev-link" href="unique.html"><span class="label">Previous</span><span class="title">unique</span></a>
+  <a class="next-link" href="searchsorted_right.html"><span class="label">Next</span><span class="title">searchsorted_right</span></a>
 </div>

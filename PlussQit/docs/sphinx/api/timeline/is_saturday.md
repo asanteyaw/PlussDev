@@ -8,7 +8,7 @@
 Series Timeline::is_saturday() const
 ```
 
-Aliases: `sat_is()` and `is_sat()`.
+`is_saturday()` is the sole public spelling.
 
 ## Select Local Saturdays
 

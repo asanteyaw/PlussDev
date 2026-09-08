@@ -1,115 +1,159 @@
+<!-- pluss-hand-authored -->
 # Note::nlp_mask_pii
 
 [Back to Note API Reference](../../note_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-Note::nlp_mask_pii() const -> Note
-Note::nlp_mask_pii(std::int64_t flags) const -> Note
+Note Note::nlp_mask_pii() const
+Note Note::nlp_mask_pii(std::int64_t flags) const
 ```
 
-## What It Does
+## Replace Identifying Spans With Category Placeholders
 
-Masks several classes of personally identifiable or sensitive text-like spans
-with placeholder markers.
+`nlp_mask_pii()` scans each text cell for common identifying patterns and
+replaces every hit with a bracketed placeholder that names the category. Use
+it to sanitize free text before it lands in logs, analytics, prompts, or a
+shared dataset, while keeping the surrounding prose readable and the record
+count stable.
 
-This is one of the most practically useful `Note` preprocessing methods when
-you want to keep the sentence structure but neutralize emails, dates, times,
-currency amounts, mentions, hashtags, and related surface forms before export,
-modeling, or logging.
+The eight built-in categories, with their placeholders:
 
-The important distinction from deletion-based cleanup is that masking preserves
-the sentence shell. Downstream code can still see roughly what kind of content
-was present and where it appeared.
+| Bit (value) | Category | Placeholder | Examples it catches |
+| --- | --- | --- | --- |
+| `1 << 0` (1) | numbers | `[NUM]` | `42`, `555-0100`, `3.14` |
+| `1 << 1` (2) | emails | `[EMAIL]` | `bob@example.com` |
+| `1 << 2` (4) | URLs | `[URL]` | `https://x.io/a`, `www.x.io` |
+| `1 << 3` (8) | @-mentions | `[MENTION]` | `@alice` |
+| `1 << 4` (16) | #-hashtags | `[HASHTAG]` | `#ship` |
+| `1 << 5` (32) | dates | `[DATE]` | `2026-01-03`, `Jan 2, 2026` |
+| `1 << 6` (64) | times | `[TIME]` | `09:30`, `7pm` |
+| `1 << 7` (128) | currency | `[CUR]` | `$12.50`, `99 GBP` |
 
-## Parameters
+The categories are detected by pattern, not by a model, so the guarantee is
+"masks these shapes," not "removes all PII." Names, street addresses, and
+free-form identifiers are **not** masked. Treat it as a strong first pass,
+not a compliance control.
 
-**flags**
+### `flags`
 
-Optional masking-policy flags.
+`flags` is a bitmask that selects which categories to mask. `flags <= 0`
+(the default) means **all** categories. A positive `flags` masks only the
+selected bits; `flags` with no recognized bit set leaves the cell unchanged.
+So `nlp_mask_pii(1)` masks numbers only, and `nlp_mask_pii(2 | 4)` masks
+emails and URLs and nothing else.
 
-Use the zero-argument form when you want the library’s default masking policy.
-Reach for the flagged overload only when you already know the implementation
-flag contract you want. This page avoids inventing undocumented flag semantics.
+When several categories are active they are applied in a fixed order (emails,
+URLs, mentions, hashtags, currency, dates, times, numbers), so a `$12.50`
+becomes `[CUR]` before the bare-number pass can touch its digits.
 
-## Returns
+The operation is **shape-preserving**, cell-independent, and returns a fresh
+`Note`. A cell with no detected pattern is copied through unchanged.
 
-`Note`
-    A shape-preserving `Note` with supported sensitive spans replaced by
-    placeholder markers.
-
-## Examples
-
-Example 1. Mask multiple sensitive span classes while preserving the sentence
-shell.
+## Example 1: Mask Everything
 
 ```cpp
-auto pii = pluss::make_note({
-    "Email bob@example.com at 9:30am on 2025-01-03, pay $12.50 to @alice #ops",
-    "Backup contact: jane@pluss.dev",
-});
-
-auto out = pii.nlp_mask_pii();
-std::cout << "nlp_mask_pii:\n";
-for (std::int64_t i = 0; i < out.numel(); ++i) {
-  std::cout << "  [" << i << "] " << out.at(i) << "\n";
-}
+const auto n = pluss::make_note(
+    {"email bob@x.io url https://a.b @alice #ship on 2026-01-03 at 09:30 for $12.50 id 42",
+     "call jane 555-0100 tomorrow"});
+std::cout << pluss::note::print(n.nlp_mask_pii()) << "\n";
 ```
 
 ### Output
 
 ```text
-nlp_mask_pii:
-  [0] Email [EMAIL] at [TIME] on [DATE], pay [CUR] to [MENTION] [HASHTAG]
-  [1] Backup contact: [EMAIL]
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["email [EMAIL] url [URL] [MENTION] [HASHTAG] on [DATE] at [TIME] for [CUR] id [NUM]", "call jane [NUM] tomorrow"]
 ```
 
-Example 2. Inspect the masked result when you want to confirm a specific
-placeholder class was emitted.
+Every recognized span is replaced; the connecting words stay. `555-0100` is
+masked as `[NUM]` — there is no separate phone category.
+
+## Example 2: Numbers Only
 
 ```cpp
-auto masked = pluss::make_note({
-    "Email bob@example.com at 9:30am on 2025-01-03, pay $12.50 to @alice #ops",
-    "Backup contact: jane@pluss.dev",
-}).nlp_mask_pii();
-
-auto email_slots = masked.contains("[EMAIL]");
-std::cout << "nlp_mask_pii_contains_email:";
-for (std::uint8_t v : email_slots) {
-  std::cout << " " << static_cast<int>(v);
-}
-std::cout << "\n";
+const auto n = pluss::make_note(
+    {"email bob@x.io url https://a.b @alice #ship on 2026-01-03 at 09:30 for $12.50 id 42",
+     "call jane 555-0100 tomorrow"});
+const pluss::Note out = n.nlp_mask_pii(1);
+std::cout << out << "\n";
 ```
 
 ### Output
 
 ```text
-nlp_mask_pii_contains_email: 1 1
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["email bob@x.io url https://a.b @alice #ship on [NUM] at [NUM] for $[NUM] id [NUM]", "call jane [NUM] tomorrow"]
 ```
 
-## Notes
+`flags = 1` leaves the email, URL, mention, and hashtag intact and masks
+every digit run.
 
-- `nlp_mask_pii()` keeps the sentence skeleton readable while masking detected
-  sensitive fragments.
-- This is usually preferable to full deletion when downstream consumers still
-  benefit from the surrounding context or syntax.
-- If your only goal is link removal, [`nlp_remove_urls`](nlp_remove_urls.md) is
-  the smaller and more targeted primitive.
+## Example 3: A Subset — Emails And URLs
+
+```cpp
+const auto n = pluss::make_note(
+    {"email bob@x.io url https://a.b @alice #ship on 2026-01-03 at 09:30 for $12.50 id 42",
+     "call jane 555-0100 tomorrow"});
+std::cout << pluss::note::print(n.nlp_mask_pii(2 | 4)) << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["email [EMAIL] url [URL] @alice #ship on 2026-01-03 at 09:30 for $12.50 id 42", "call jane 555-0100 tomorrow"]
+```
+
+## Example 4: Nothing To Mask
+
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({"plain prose with no identifiers"}).nlp_mask_pii())
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["plain prose with no identifiers"]
+```
+
+## Example 5: Shape Is Preserved
+
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({{"ping a@b.io", "code 7"}}).nlp_mask_pii())
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
+[
+  ["ping [EMAIL]", "code [NUM]"]
+]
+```
 
 ## See Also
 
-- [`Note::nlp_remove_urls`](nlp_remove_urls.md): remove only URL-like spans.
-- [`Note::tokenize_words`](tokenize_words.md): tokenize the masked text after
-  cleanup.
+- [`Note::nlp_remove_urls`](nlp_remove_urls.md): delete URLs outright
+  instead of replacing them with `[URL]`.
+- [`Note::replace`](replace.md) / [`Note::remove_all`](remove_all.md):
+  literal, non-pattern rewriting when you know the exact string.
+- [`Note::regex_findall`](regex_findall.md): extract the spans (for review
+  or an allow-list) rather than mask them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tokenize_words.html">
+  <a class="prev-link" href="lower.html">
     <span class="label">Previous</span>
-    <span class="title">tokenize_words</span>
+    <span class="title">lower</span>
   </a>
-  <a class="next-link" href="base64_encode.html">
+  <a class="next-link" href="nlp_remove_urls.html">
     <span class="label">Next</span>
-    <span class="title">base64_encode</span>
+    <span class="title">nlp_remove_urls</span>
   </a>
 </div>

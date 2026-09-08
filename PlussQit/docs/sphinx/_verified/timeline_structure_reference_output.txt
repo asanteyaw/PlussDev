@@ -1,0 +1,93 @@
+
+=== concat_matrix ===
+Timeline(shape=[2, 2], tz=UTC)
+[ 2024-01-01 00:00:00 2024-01-02 00:00:00 ]
+[ 2024-01-03 00:00:00 2024-01-04 00:00:00 ]
+
+=== concat_many ===
+Timeline(shape=[3, 2], tz=UTC)
+[ 2024-01-01 00:00:00 2024-01-02 00:00:00 ]
+[ 2024-01-03 00:00:00 2024-01-04 00:00:00 ]
+[ 2024-01-05 00:00:00 2024-01-06 00:00:00 ]
+
+=== concat_scalars ===
+Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-01-02 00:00:00 ]
+
+=== concat_empty_list ===
+Timeline(shape=[1, 2], tz=UTC)
+[ 2024-01-01 00:00:00 2024-01-02 00:00:00 ]
+
+=== concat_strided ===
+Timeline(shape=[3], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-01-02 00:00:00, 2024-01-03 00:00:00 ]
+
+=== concat_absent ===
+Timeline(shape=[3], tz=UTC)
+[ 2024-01-01 00:00:00, NaT, 2024-01-03 00:00:00 ]
+
+=== concat_trailing_shape ===
+rejected
+
+=== concat_timezone ===
+rejected
+
+=== concat_rank ===
+rejected
+
+=== repeat_vector ===
+Timeline(shape=[4], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-01-02 00:00:00, 2024-01-01 00:00:00, 2024-01-02 00:00:00 ]
+
+=== repeat_matrix ===
+Timeline(shape=[2, 2], tz=UTC)
+[ 2024-01-01 00:00:00 2024-01-02 00:00:00 ]
+[ 2024-01-01 00:00:00 2024-01-02 00:00:00 ]
+
+=== repeat_strided ===
+Timeline(shape=[4], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-01-02 00:00:00, 2024-01-01 00:00:00, 2024-01-02 00:00:00 ]
+
+=== repeat_scalar_once ===
+Timeline(shape=[1], tz=UTC)
+[ 2024-01-01 00:00:00 ]
+
+=== repeat_zero ===
+Timeline(shape=[0, 2], tz=UTC)
+
+=== repeat_negative ===
+rejected
+
+=== repeat_overflow ===
+rejected
+
+=== empty_like_scalar ===
+Timeline(shape=[0], tz=UTC)[  ]
+
+=== empty_like_cube ===
+Timeline(shape=[0, 1, 2], tz=UTC)
+
+=== fill_like_fields ===
+Timeline(shape=[1, 2], tz=America/Edmonton)
+[ 2035-07-08 00:00:00 2035-07-08 00:00:00 ]
+
+=== fill_like_text ===
+Timeline(shape=[1, 2], tz=America/Edmonton)
+[ 2036-03-04 00:00:00 2036-03-04 00:00:00 ]
+
+=== fill_like_slash_text ===
+Timeline(shape=[1, 2], tz=America/Edmonton)
+[ 2036-03-04 00:00:00 2036-03-04 00:00:00 ]
+
+=== fill_like_scalar ===
+Timeline(shape=[], tz=UTC)
+2040-02-29 00:00:00
+
+=== fill_like_empty ===
+Timeline(shape=[0, 1, 2], tz=UTC)
+
+=== fill_like_invalid_date ===
+rejected
+
+=== fill_like_datetime_text ===
+rejected

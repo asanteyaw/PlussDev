@@ -37,6 +37,10 @@ The alternate timeline to draw from where the mask is `false`.
 This may be a scalar or a shaped timeline as long as broadcast rules can align
 it with `self`.
 
+It must carry the same timezone label as `self`. One result cannot retain two
+display-zone contracts, so mixed labels are rejected instead of silently
+choosing one operand's metadata.
+
 ## Returns
 
 `Timeline`
@@ -44,7 +48,7 @@ it with `self`.
 
 ## Examples
 
-Example 1. Keep the original values where they are missing and otherwise take a
+Example 1. Keep the original values where they are absent and otherwise take a
 date-normalized replacement.
 
 ```cpp
@@ -65,9 +69,10 @@ This verified output shows the mask is selecting `self` where the predicate is
 ## Notes
 
 - `where()` is the general branch/choose surface.
-- For the narrower task "replace only missing timestamps with one scalar
+- For the narrower task "replace only absent instants with one scalar
   timestamp", [`fill_nat`](fill_nat.md) is more direct.
 - The mask must be boolean. Passing a numeric `Series` is a contract error.
+- `self`, `other`, and the mask broadcast to one common output shape.
 
 ## See Also
 
@@ -76,9 +81,9 @@ This verified output shows the mask is selecting `self` where the predicate is
 - [`Timeline::eq`](eq.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fill_nat.html">
+  <a class="prev-link" href="weekday_scalar.html">
     <span class="label">Previous</span>
-    <span class="title">fill_nat</span>
+    <span class="title">weekday_scalar</span>
   </a>
   <a class="next-link" href="add_nanos.html">
     <span class="label">Next</span>

@@ -1,120 +1,157 @@
+<!-- pluss-hand-authored -->
 # Note::split_lines
 
 [Back to Note API Reference](../../note_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-Note::split_lines() const -> TokenBatch
-Note::split_lines(bool keep_ends) const -> TokenBatch
+TokenBatch Note::split_lines() const
+TokenBatch Note::split_lines(bool keep_ends) const
 ```
 
-## What It Does
+## Split Each Cell Into Lines
 
-Splits each text cell into line tokens.
+`split_lines()` breaks each text cell at line terminators and returns the
+lines as a `TokenBatch`. Reach for it when the cells hold multi-line content
+— prompts, templates, markdown, copied terminal output, document sections —
+and you want line-level structure.
 
-Use this when your `Note` elements are multi-line content such as prompts,
-templates, markdown fragments, copied terminal output, or document sections and
-you want explicit line-level structure.
+A line terminator is `\n`, a lone `\r`, or the pair `\r\n` (consumed as a
+single break). By default the terminators are removed from the returned line
+tokens; `split_lines(true)` keeps each line's terminator attached (a `\r\n`
+line keeps both bytes), which is what you want if you intend to rejoin the
+lines and reproduce the original exactly.
 
-Like the rest of the token-batch family, this returns a flattened token stream
-plus `offsets()`. The flattening is not a loss of structure; it is the library
-surface used to preserve ragged per-cell token counts without forcing a padded
-2D text object.
+### Trailing terminator and blank lines
 
-## Parameters
+A terminator at the very end of a cell ends the last line rather than
+starting an empty one, so `"a\nb\n"` yields two lines, not three. A blank
+line **in the middle** is a real empty line and is kept: `"a\n\nc"` yields
+`"a"`, `""`, `"c"`. An empty cell yields no lines at all.
 
-**keep_ends**
+### The `TokenBatch` result
 
-Controls whether line terminators remain attached to each returned line token.
+All lines from all cells are concatenated into one flat rank-`1` token
+`Note` (`batch.tokens()`); `batch.offsets()` (length `numel + 1`) marks each
+cell's run: cell `r` is `tokens()[offsets()[r] .. offsets()[r+1])`. A cell
+that produced no lines contributes an empty range.
 
-- `split_lines()`
-  Uses the default behavior, which discards the newline markers and returns the
-  logical line contents only.
-- `split_lines(true)`
-  Preserves the original line-ending characters on the tokens that ended with
-  them, which is useful when you need closer fidelity to the serialized source.
-
-This matters when you want to preserve the original serialized shape of the
-text, not just the logical line contents.
-
-## Returns
-
-`TokenBatch`
-    A flat line token stream plus `offsets()` describing which lines came from
-    each original `Note` cell.
-
-## Examples
-
-Example 1. Split text into logical lines and discard the newline markers.
+## Example 1: Basic Line Split
 
 ```cpp
-auto note = pluss::make_note({"line1\nline2\n", "solo"});
-auto lines = note.split_lines();
-std::cout << "split_lines tokens:";
-for (std::int64_t i = 0; i < lines.tokens().numel(); ++i) {
-  std::cout << " [" << lines.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "split_lines offsets:";
-for (std::int64_t off : lines.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch =
+    pluss::make_note({"line1\nline2\nline3", "solo"}).split_lines();
+
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-split_lines tokens: [line1] [line2] [solo]
-split_lines offsets: 0 2 3
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["line1", "line2", "line3", "solo"]
+offsets: [0, 3, 4]
 ```
 
-Example 2. Keep the line endings when you need to preserve serialized structure.
+## Example 2: A Trailing Newline Adds No Empty Line
 
 ```cpp
-auto note = pluss::make_note({"line1\nline2\n", "solo"});
-auto lines = note.split_lines(true);
-std::cout << "split_lines_keep tokens:";
-for (std::int64_t i = 0; i < lines.tokens().numel(); ++i) {
-  std::cout << " [" << lines.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "split_lines_keep offsets:";
-for (std::int64_t off : lines.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch = pluss::make_note({"a\nb\n"}).split_lines();
+std::cout << pluss::note::print(batch.tokens()) << "\n";
 ```
 
 ### Output
 
 ```text
-split_lines_keep tokens: [line1
-] [line2
-] [solo]
-split_lines_keep offsets: 0 2 3
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["a", "b"]
 ```
 
-## Notes
+## Example 3: A Blank Line In The Middle Is Kept
 
-- `offsets()` still map the flat token stream back to the original cases.
-- In the first example, the first cell contributes two lines and the second
-  contributes one, which is why the offsets are `0 2 3`.
-- `split_lines()` is usually the right starting point before line-level cleanup,
-  filtering, or diff work.
+```cpp
+const auto batch = pluss::make_note({"a\n\nc"}).split_lines();
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["a", "", "c"]
+```
+
+## Example 4: `\r\n` Is One Break
+
+```cpp
+const auto batch = pluss::make_note({"a\r\nb"}).split_lines();
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["a", "b"]
+```
+
+The `\r` and `\n` are consumed together; neither remains in a token.
+
+## Example 5: Keeping The Terminators
+
+```cpp
+const auto batch = pluss::make_note({"a\nb\n"}).split_lines(true);
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["a\n", "b\n"]
+```
+
+Each line keeps its `\n` (shown by `print` as the escape `\n`).
+
+## Example 6: An Empty Cell Produces No Lines
+
+```cpp
+const auto batch = pluss::make_note({""}).split_lines();
+
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets: [0, 0]
+```
+
+The one input cell maps to the empty range `[0, 0)`.
 
 ## See Also
 
-- [`Note::split_whitespace`](split_whitespace.md): tokenize by whitespace rather
-  than line boundaries.
-- [`Note::regex_findall`](regex_findall.md): extract pattern matches from the
-  original text instead of structural lines.
+- [`pluss::note::from_lines`](../note_factory/from_lines.md): the factory
+  that splits a **single** string into a 1-D `Note` (not a `TokenBatch`).
+- [`Note::split`](split.md): split on an arbitrary literal delimiter.
+- [`Note::split_whitespace`](split_whitespace.md): split on whitespace
+  runs.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="replace.html">
+  <a class="prev-link" href="split.html">
     <span class="label">Previous</span>
-    <span class="title">replace</span>
+    <span class="title">split</span>
   </a>
   <a class="next-link" href="split_whitespace.html">
     <span class="label">Next</span>

@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::quarter" href="quarter.html" />
-    <link rel="prev" title="Timeline::weekday" href="weekday.html" />
+    <link rel="next" title="Timeline::days_between" href="days_between.html" />
+    <link rel="prev" title="Timeline::day_scalar" href="day_scalar.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,14 +44,14 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">dayofyear</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">doy()</span></code>, <code class="docutils literal notranslate"><span class="pre">day_of_year()</span></code>, and <code class="docutils literal notranslate"><span class="pre">dayofyear_()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dayofyear()</span></code> is the sole public spelling.</p>
 </section>
 <section id="read-the-ordinal-day">
 <h2>Read The Ordinal Day<a class="headerlink" href="#read-the-ordinal-day" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">dayofyear()</span></code> counts local calendar days from the start of each civil year.
 It is one-based: 1 January is <code class="docutils literal notranslate"><span class="pre">1</span></code>; 31 December is <code class="docutils literal notranslate"><span class="pre">365</span></code> in a common year and
 <code class="docutils literal notranslate"><span class="pre">366</span></code> in a leap year. The result is a shape-preserving <code class="docutils literal notranslate"><span class="pre">int32</span></code> Series, with
-<code class="docutils literal notranslate"><span class="pre">-1</span></code> for missing timestamps.</p>
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> for absent instants.</p>
 <p>Ordinal day is useful for annual seasonality because it reduces month and day
 to one coordinate. It is not a stable elapsed-day counter across years: every
 1 January resets it to <code class="docutils literal notranslate"><span class="pre">1</span></code>, and leap years insert day <code class="docutils literal notranslate"><span class="pre">366</span></code>.</p>
@@ -101,8 +101,8 @@ policy for dates after February.</p></li>
 <li><p><a class="reference internal" href="is_leap_year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_leap_year</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="weekday.html"><span class="label">Previous</span><span class="title">weekday</span></a>
-  <a class="next-link" href="quarter.html"><span class="label">Next</span><span class="title">quarter</span></a>
+  <a class="prev-link" href="day_scalar.html"><span class="label">Previous</span><span class="title">day_scalar</span></a>
+  <a class="next-link" href="days_between.html"><span class="label">Next</span><span class="title">days_between</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -146,6 +146,7 @@ policy for dates after February.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -196,8 +197,8 @@ policy for dates after February.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="weekday.html" title="previous chapter">Timeline::weekday</a></li>
-      <li>Next: <a href="quarter.html" title="next chapter">Timeline::quarter</a></li>
+      <li>Previous: <a href="day_scalar.html" title="previous chapter">Timeline::day_scalar</a></li>
+      <li>Next: <a href="days_between.html" title="next chapter">Timeline::days_between</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

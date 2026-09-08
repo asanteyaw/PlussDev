@@ -8,7 +8,7 @@
 Series Timeline::is_quarter_end() const
 ```
 
-Aliases: `is_qe()`, `is_quarter_finish()`, and `is_quarterend()`.
+`is_quarter_end()` is the sole public spelling.
 
 ## Find Calendar-Quarter Closing Dates
 

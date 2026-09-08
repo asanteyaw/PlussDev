@@ -56,10 +56,10 @@ searched; pass a string and only `Note` features are searched; pass a `Timeline`
 completely alone, the same way [`fillnull()`](fillnull.md) and
 [`astype()`](astype.md) restrict themselves by dtype.
 
-The other half of the rule concerns `pluss::null` (of type `pluss::null_t`), the
+The other half of the rule concerns `pluss::series::null` (of type `pluss::null_t`), the
 project's null-sentinel constant: pass it as `to` to turn matched cells into missing
 values instead of a replacement value, or pass it as `from` to replace **existing**
-nulls with a concrete value (`replace(pluss::null, 0.0)` is a targeted, single-value
+nulls with a concrete value (`replace(pluss::series::null, 0.0)` is a targeted, single-value
 alternative to a broader [`fillnull(0.0)`](fillnull.md) call).
 
 ## Parameters
@@ -69,11 +69,11 @@ alternative to a broader [`fillnull(0.0)`](fillnull.md) call).
 `pluss::null_t`)
 
 The value to search for. Its type selects which feature kind participates in the search;
-`pluss::null` searches for existing missing values instead of a concrete value.
+`pluss::series::null` searches for existing missing values instead of a concrete value.
 
 **to** (same family of types as `from`, or `pluss::null_t`)
 
-The replacement value written wherever `from` matches. Pass `pluss::null` to turn
+The replacement value written wherever `from` matches. Pass `pluss::series::null` to turn
 matches into missing values instead of a concrete replacement.
 
 **features** (`pluss::RangeView<std::string_view>`, default empty)
@@ -132,7 +132,7 @@ auto orders_with_price = DataFrame({
 });
 
 // Suppose 42.0 was actually a placeholder for "price not yet set" upstream.
-auto out = orders_with_price.replace(42.0, pluss::null);
+auto out = orders_with_price.replace(42.0, pluss::series::null);
 std::cout << out;
 ```
 
@@ -159,7 +159,7 @@ value, none of which equal `42.0`, is left untouched.
 Example 3. Replace existing nulls with a concrete fallback in one named column.
 
 ```cpp
-auto out2 = orders_with_price.replace(42.0, pluss::null).replace(pluss::null, 0.0, {"unit_price"});
+auto out2 = orders_with_price.replace(42.0, pluss::series::null).replace(pluss::series::null, 0.0, {"unit_price"});
 std::cout << out2;
 ```
 
@@ -178,7 +178,7 @@ std::cout << out2;
 ```
 
 This is the mirror image of Example 2, and functionally similar to
-`fillnull(0.0, {"unit_price"})` — `replace(pluss::null, ...)` is most useful when you
+`fillnull(0.0, {"unit_price"})` — `replace(pluss::series::null, ...)` is most useful when you
 want the "search for a value" framing to read consistently alongside other
 `replace(...)` calls in the same block of code, rather than switching vocabulary to
 `fillnull` mid-pipeline.

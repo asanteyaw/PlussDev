@@ -1,3 +1,4 @@
+<!-- pluss-hand-authored -->
 # Note::quote
 
 [Back to Note API Reference](../../note_api_reference)
@@ -5,112 +6,136 @@
 ## Signature
 
 ```cpp
-Note::quote() const -> Note
+Note Note::quote() const
 ```
 
-## What It Does
+## Wrap Every Cell In Double Quotes
 
-Wraps each text cell in a quoting pair.
+`quote()` returns a new `Note`, same shape as the input, with each cell
+wrapped in a leading and trailing `"`. Use it to render text for a context
+that expects quoted tokens — a CSV field that may contain spaces, a
+generated argument list, a display column where the boundaries of each value
+should be visible, or a log line where trailing whitespace would otherwise be
+invisible.
 
-This is a small method, but it is useful in practice when you want explicit
-quoted rendering for export, debugging, prompt construction, or downstream
-serialization where boundaries should be visually obvious.
+The wrap is **literal and minimal**: exactly one `"` is prepended and one
+appended, and the cell content in between is copied **verbatim**. `quote()`
+does **not** escape interior `"` characters, does not add a `\` before
+anything, and does not skip cells that are already quoted. So
+`quote()` applied to `a"b` produces `"a"b"` — three quote characters, which
+is not a well-formed quoted literal. If the content can contain `"`, escape
+or replace it first (for example [`replace`](replace.md) `"` with `\"`), or
+use a real serializer.
 
-`quote()` is presentation-oriented. It does not tokenize, escape, or inspect
-the text. It simply surrounds each cell with a quote wrapper.
+`unquote()` is the inverse: it strips one matching pair of leading/trailing
+`"` or `'`. Because neither method escapes, `quote().unquote()` round-trips
+exactly only when the original content has no delimiter quotes of its own.
 
-## Parameters
+The operation is shape-preserving, cell-independent, and returns a fresh
+`Note`. An empty cell becomes `""` (two bytes).
 
-This method takes no parameters.
-
-## Returns
-
-`Note`
-    A new `Note` with the same shape as the input and each cell wrapped in
-    quotes.
-
-## Examples
-
-Example 1. Quote two text cells for display-safe rendering.
+## Example 1: A One-Dimensional Batch
 
 ```cpp
-auto note = pluss::make_note({"alpha beta beta", "already"});
-auto quoted = note.quote();
-std::cout << "quote:\n";
-for (std::int64_t i = 0; i < quoted.numel(); ++i) {
-  std::cout << "  [" << i << "] " << quoted.at(i) << "\n";
-}
+std::cout << pluss::note::print(
+    pluss::make_note({"payload", "two words", ""}).quote())
+    << "\n";
 ```
 
 ### Output
 
 ```text
-quote:
-  [0] "alpha beta beta"
-  [1] "already"
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\"payload\"", "\"two words\"", "\"\""]
 ```
 
-Example 2. Quote after cleanup when the input still has padded boundaries.
+`print` shows the added quotes as escaped `\"` inside its own quoting; the
+cells actually hold `"payload"`, `"two words"`, and `""`.
+
+## Example 2: A Scalar
 
 ```cpp
-auto note = pluss::make_note({"  spaced  ", ""});
-auto cleaned = note.strip();
-auto quoted = cleaned.quote();
-std::cout << "quote_strip:\n";
-for (std::int64_t i = 0; i < quoted.numel(); ++i) {
-  std::cout << "  [" << i << "] " << quoted.at(i) << "\n";
-}
+const pluss::Note n = pluss::make_note("solo").quote();
+std::cout << n << "\n";
 ```
 
 ### Output
 
 ```text
-quote_strip:
-  [0] "spaced"
-  [1] ""
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"\"solo\""
 ```
 
-Example 3. Quote after a structural rewrite when you want the final rendered
-surface to make cell boundaries obvious.
+The cell holds the five characters `"solo"`.
+
+## Example 3: Shape Is Preserved
 
 ```cpp
-auto note = pluss::make_note({"Ada_Lovelace", "Grace_Hopper"});
-auto display = note.replace("_", " ").quote();
-std::cout << "quote_display:\n";
-for (std::int64_t i = 0; i < display.numel(); ++i) {
-  std::cout << "  [" << i << "] " << display.at(i) << "\n";
-}
+pluss::note::print(std::cout,
+                   pluss::make_note({{"a", "b"}, {"c", "d"}}).quote())
+    << "\n";
 ```
 
 ### Output
 
 ```text
-quote_display:
-  [0] "Ada Lovelace"
-  [1] "Grace Hopper"
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["\"a\"", "\"b\""], 
+  ["\"c\"", "\"d\""]
+]
 ```
 
-## Notes
+## Example 4: Interior Quotes Are Not Escaped
 
-- `quote()` is shape-preserving and purely textual.
-- This is a formatting transform, not a tokenizer or parser.
-- If your goal is TeX-safe rendering rather than ordinary quoted rendering, use
-  [`tex_escape`](tex_escape.md).
+```cpp
+std::cout << pluss::note::print(pluss::make_note({"a\"b"}).quote()) << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["\"a\"b\""]
+```
+
+The cell now holds `"a"b"` — a bare wrap, not a valid quoted string. Replace
+or escape interior `"` first if that matters.
+
+## Example 5: Round-Trip With `unquote`
+
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({"payload", "  spaced  "}).quote().unquote())
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["payload", "  spaced  "]
+```
+
+`unquote()` removes exactly the pair `quote()` added, so the boundary spaces
+in the second cell survive intact.
 
 ## See Also
 
-- [`Note::replace`](replace.md): custom formatting rewrites beyond simple
-  quoting.
-- [`Note::tex_escape`](tex_escape.md): escape special TeX characters rather than
-  adding ordinary quotes.
+- `pluss::coden::Note::unquote`: strip one matching pair of leading/trailing
+  `"` or `'`.
+- `pluss::coden::Note::surround`: wrap each cell in an arbitrary
+  prefix/suffix pair rather than double quotes.
+- [`Note::replace`](replace.md): escape interior `"` before quoting when
+  the result must be a valid literal.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="remove_all.html">
+  <a class="prev-link" href="nlp_remove_urls.html">
     <span class="label">Previous</span>
-    <span class="title">remove_all</span>
+    <span class="title">nlp_remove_urls</span>
   </a>
-  <a class="next-link" href="split.html">
+  <a class="next-link" href="regex_findall.html">
     <span class="label">Next</span>
-    <span class="title">split</span>
+    <span class="title">regex_findall</span>
   </a>
 </div>

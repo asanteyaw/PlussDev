@@ -115,6 +115,6 @@ dim=3, numel=0
 - [`Timeline::is_scalar`](is_scalar.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="defined.html"><span class="label">Previous</span><span class="title">defined</span></a>
+  <a class="prev-link" href="shift.html"><span class="label">Previous</span><span class="title">shift</span></a>
   <a class="next-link" href="dim.html"><span class="label">Next</span><span class="title">dim</span></a>
 </div>

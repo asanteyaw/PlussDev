@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::fill_nat" href="fill_nat.html" />
-    <link rel="prev" title="Timeline::to_utc" href="to_utc.html" />
+    <link rel="next" title="Timeline::minute" href="minute.html" />
+    <link rel="prev" title="Timeline::millisecond" href="millisecond.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -39,109 +39,160 @@
   <section id="timeline-min">
 <h1>Timeline::min<a class="headerlink" href="#timeline-min" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
-<section id="signatures">
-<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">min</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Timeline</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Timeline</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">sort</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Timeline</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Timeline</span>
-<span class="n">Timeline</span><span class="o">::</span><span class="n">drop_duplicates</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Timeline</span>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">skipna</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>This page covers the ordering and deduplication family:</p>
+<section id="find-the-earliest-valid-instant">
+<h2>Find The Earliest Valid Instant<a class="headerlink" href="#find-the-earliest-valid-instant" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">min()</span></code> searches every element and returns the earliest valid timestamp as a
+scalar Timeline. It is a global reduction: a vector, matrix, or higher-rank
+Timeline is reduced to <code class="docutils literal notranslate"><span class="pre">shape=[]</span></code>. There is no dimension argument and no
+<code class="docutils literal notranslate"><span class="pre">keepdim</span></code> form.</p>
+<p><code class="docutils literal notranslate"><span class="pre">skipna</span></code> controls <code class="docutils literal notranslate"><span class="pre">NaT</span></code> propagation:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">min()</span></code>
-Return the earliest defined timestamp as a scalar timeline.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max()</span></code>
-Return the latest defined timestamp as a scalar timeline.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sort()</span></code>
-Return the sorted 1D timeline.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">unique()</span></code>
-Return distinct timestamps.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code>
-The same deduplication result as <code class="docutils literal notranslate"><span class="pre">unique()</span></code> in the current implementation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code> (the default) excludes <code class="docutils literal notranslate"><span class="pre">NaT</span></code> and returns the earliest valid instant.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> returns scalar <code class="docutils literal notranslate"><span class="pre">NaT</span></code> if any input element is <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
 </ul>
+<p>The comparison uses absolute epoch nanoseconds, not formatted date strings or
+array position. Input order and duplicate timestamps therefore do not change
+the result. The receiver is not sorted or mutated.</p>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Read the earliest and latest defined timestamps.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">lo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">min</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">hi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">max</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">lo</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">hi</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="absent-instant-rule">
+<h2>Absent-Instant Rule<a class="headerlink" href="#absent-instant-rule" title="Link to this heading">¶</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">skipna=true</span></code>, <code class="docutils literal notranslate"><span class="pre">NaT</span></code> values are skipped while at least one valid timestamp exists. If the
+Timeline is empty or every element is <code class="docutils literal notranslate"><span class="pre">NaT</span></code>, <code class="docutils literal notranslate"><span class="pre">min()</span></code> returns a scalar <code class="docutils literal notranslate"><span class="pre">NaT</span></code>
+instead of throwing. This gives the reduction a stable return type, but callers
+that require a valid result should check <code class="docutils literal notranslate"><span class="pre">isnat_scalar()</span></code>.</p>
+</section>
+<section id="example-1-reduce-a-matrix-and-ignore-nat">
+<h2>Example 1: Reduce A Matrix And Ignore <code class="docutils literal notranslate"><span class="pre">NaT</span></code><a class="headerlink" href="#example-1-reduce-a-matrix-and-ignore-nat" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">observations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2025-06-15T08:30:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-02T18:45:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2026-09-30T03:15:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">observations</span><span class="p">.</span><span class="n">min</span><span class="p">());</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">duplicated.min()</span></code>:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
-2024-11-01 09:00:00
+2024-01-02 18:45:00
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">duplicated.max()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
-2025-01-01 00:00:00
-</pre></div>
-</div>
-<p>Example 2. Sort the timeline and then remove duplicates.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ordered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">sort</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">distinct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">deduped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">drop_duplicates</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">ordered</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">deduped</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>The earliest value sits in the second row. <code class="docutils literal notranslate"><span class="pre">min()</span></code> examines the whole matrix;
+it does not reduce rows independently, and the absent first-row value is not
+allowed to erase the valid result.</p>
 </section>
+</section>
+<section id="example-2-empty-and-all-nat-inputs">
+<h2>Example 2: Empty And All-NaT Inputs<a class="headerlink" href="#example-2-empty-and-all-nat-inputs" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">absent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">absent</span><span class="p">.</span><span class="n">min</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">empty</span><span class="p">.</span><span class="n">min</span><span class="p">());</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">duplicated.sort()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[6], tz=UTC)
-[ 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2024-11-01 10:15:30, 2025-01-01 00:00:00, NaT, NaT ]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
+NaT
+Timeline(shape=[], tz=UTC)
+NaT
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">duplicated.unique()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[4], tz=UTC)
-[ NaT, 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2025-01-01 00:00:00 ]
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">duplicated.drop_duplicates()</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[4], tz=UTC)
-[ NaT, 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2025-01-01 00:00:00 ]
-</pre></div>
-</div>
+<p>An empty Timeline has no candidate; an all-<code class="docutils literal notranslate"><span class="pre">NaT</span></code> Timeline has no valid
+candidate. Both cases deliberately converge on the same scalar <code class="docutils literal notranslate"><span class="pre">NaT</span></code> result.</p>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<section id="example-3-timezone-changes-rendering-not-the-winner">
+<h2>Example 3: Timezone Changes Rendering, Not The Winner<a class="headerlink" href="#example-3-timezone-changes-rendering-not-the-winner" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-06-15T08:30:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-01-02T18:45:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2026-09-30T03:15:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">min</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=America/New_York)
+2024-01-02 13:45:00
+</pre></div>
+</div>
+<p>The selected instant is still <code class="docutils literal notranslate"><span class="pre">2024-01-02T18:45:00Z</span></code>; the result simply keeps
+the receiver’s New York timezone and renders that instant locally.</p>
+</section>
+</section>
+<section id="example-4-require-a-completely-valid-input">
+<h2>Example 4: Require A Completely Valid Input<a class="headerlink" href="#example-4-require-a-completely-valid-input" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">observations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-06-15T08:30:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-01-02T18:45:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">observations</span><span class="p">.</span><span class="n">min</span><span class="p">(</span><span class="nb">false</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=UTC)
+NaT
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">skipna=false</span></code> when an absent instant should invalidate the reduction
+instead of being excluded.</p>
+</section>
+</section>
+<section id="choosing-the-right-operation">
+<h2>Choosing The Right Operation<a class="headerlink" href="#choosing-the-right-operation" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Missing timestamps are ignored by <code class="docutils literal notranslate"><span class="pre">min()</span></code> and <code class="docutils literal notranslate"><span class="pre">max()</span></code> when searching for
-extrema.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sort()</span></code>, <code class="docutils literal notranslate"><span class="pre">unique()</span></code>, and <code class="docutils literal notranslate"><span class="pre">drop_duplicates()</span></code> are currently 1D-oriented
-operations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">unique()</span></code> currently returns sorted distinct values rather than preserving
-first-occurrence order.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">min()</span></code> for the earliest timestamp value anywhere in the Timeline.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">argsort()</span></code> when you need the positions that establish ordering.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">sort()</span></code> when you need all timestamps arranged chronologically.</p></li>
+<li><p>Do not use <code class="docutils literal notranslate"><span class="pre">min()</span></code> to obtain the first stored element; chronological minimum
+and first position are unrelated unless the data is already sorted.</p></li>
 </ul>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The reduction is global and always returns a scalar Timeline.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> is ignored by default and propagated when <code class="docutils literal notranslate"><span class="pre">skipna=false</span></code>.</p></li>
+<li><p>Ties do not expose which occurrence won because the method returns a value,
+not an index.</p></li>
+<li><p>The default Timeline printer displays whole seconds; the stored timestamp
+and comparison retain nanosecond precision.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">min()</span></code> means “earliest valid instant over all elements.” It preserves temporal
+type and timezone, skips <code class="docutils literal notranslate"><span class="pre">NaT</span></code> by default, can propagate it on
+request, returns scalar <code class="docutils literal notranslate"><span class="pre">NaT</span></code> when no valid candidate exists, and never changes
+the receiver.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="argsort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::argsort</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="searchsorted_left.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::searchsorted_left</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max</span></code></span></a>: return the latest valid instant.</p></li>
+<li><p><a class="reference internal" href="argsort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argsort</span></code></span></a>: obtain chronological positions.</p></li>
+<li><p><a class="reference internal" href="isnat_scalar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat_scalar</span></code></span></a>: validate the scalar result.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_utc.html">
-    <span class="label">Previous</span>
-    <span class="title">to_utc</span>
-  </a>
-  <a class="next-link" href="fill_nat.html">
-    <span class="label">Next</span>
-    <span class="title">fill_nat</span>
-  </a>
+  <a class="prev-link" href="tz_localize.html"><span class="label">Previous</span><span class="title">tz_localize</span></a>
+  <a class="next-link" href="max.html"><span class="label">Next</span><span class="title">max</span></a>
 </div>
+<!-- pluss-hand-authored -->
 </section>
 </section>
 
@@ -183,6 +234,7 @@ first-occurrence order.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -233,8 +285,8 @@ first-occurrence order.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="to_utc.html" title="previous chapter">Timeline::to_utc</a></li>
-      <li>Next: <a href="fill_nat.html" title="next chapter">Timeline::fill_nat</a></li>
+      <li>Previous: <a href="millisecond.html" title="previous chapter">Timeline::millisecond</a></li>
+      <li>Next: <a href="minute.html" title="next chapter">Timeline::minute</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

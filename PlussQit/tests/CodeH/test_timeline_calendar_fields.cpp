@@ -41,7 +41,7 @@ TEST_CASE("Timeline calendar fields use presentation timezone", "[timeline-calen
   const auto utc = pluss::timeline::make("2024-03-01T00:30:00Z");
   const auto local = utc.tz_convert("America/New_York");
 
-  REQUIRE(utc.to_epoch_nanos_vector() == local.to_epoch_nanos_vector());
+  REQUIRE(utc.ticks() == local.ticks());
   REQUIRE(utc.month().item<std::int32_t>() == 3);
   REQUIRE(utc.day().item<std::int32_t>() == 1);
   REQUIRE(utc.hour().item<std::int32_t>() == 0);
@@ -52,7 +52,7 @@ TEST_CASE("Timeline calendar fields use presentation timezone", "[timeline-calen
   REQUIRE(local.dayofyear().item<std::int32_t>() == 60);
 }
 
-TEST_CASE("Timeline calendar fields preserve shape and aliases preserve values", "[timeline-calendar-fields]") {
+TEST_CASE("Timeline calendar fields preserve shape", "[timeline-calendar-fields]") {
   const auto matrix = pluss::timeline::make({
       {"2024-01-01T00:00:00Z", "2024-04-01T00:00:00Z"},
       {"2024-07-01T00:00:00Z", "2024-10-01T00:00:00Z"},
@@ -60,17 +60,4 @@ TEST_CASE("Timeline calendar fields preserve shape and aliases preserve values",
 
   REQUIRE(matrix.quarter().sizes().vec() == std::vector<std::int64_t>{2, 2});
   REQUIRE(values_of<std::int32_t>(matrix.quarter()) == std::vector<std::int32_t>{1, 2, 3, 4});
-  REQUIRE(matrix.year().equal(matrix.y()));
-  REQUIRE(matrix.month().equal(matrix.mon()));
-  REQUIRE(matrix.day().equal(matrix.dom()));
-  REQUIRE(matrix.hour().equal(matrix.hr()));
-  REQUIRE(matrix.minute().equal(matrix.minutes()));
-  REQUIRE(matrix.second().equal(matrix.sec()));
-  REQUIRE(matrix.nanosecond().equal(matrix.ns()));
-  REQUIRE(matrix.microsecond().equal(matrix.us()));
-  REQUIRE(matrix.millisecond().equal(matrix.ms()));
-  REQUIRE(matrix.weekday().equal(matrix.dayofweek()));
-  REQUIRE(matrix.dayofyear().equal(matrix.doy()));
-  REQUIRE(matrix.quarter().equal(matrix.qtr()));
-  REQUIRE(matrix.week().equal(matrix.weekofyear()));
 }

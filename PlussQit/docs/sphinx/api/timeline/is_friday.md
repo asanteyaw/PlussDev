@@ -8,7 +8,7 @@
 Series Timeline::is_friday() const
 ```
 
-Aliases: `fri_is()` and `is_fri()`.
+`is_friday()` is the sole public spelling.
 
 ## Select Local Fridays
 

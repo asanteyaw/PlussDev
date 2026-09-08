@@ -899,7 +899,7 @@ pluss::table::Thread materialize_grouped_pull(const pluss::table::DataFrame& roo
         root_time_column.has_value()) {
       joined.set(output_name) =
           joined.features(output_name)
-              .put(root_frame.features(*root_time_column).isnull(), pluss::null);
+              .put(root_frame.features(*root_time_column).isnull(), pluss::series::null);
     }
   }
   return joined.features(output_name);

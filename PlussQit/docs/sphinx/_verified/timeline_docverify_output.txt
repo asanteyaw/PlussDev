@@ -174,11 +174,7 @@ Timeline(shape=[6], tz=UTC)
 
 == unique ==
 Timeline(shape=[4], tz=UTC)
-[ NaT, 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2025-01-01 00:00:00 ]
-
-== drop_duplicates ==
-Timeline(shape=[4], tz=UTC)
-[ NaT, 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2025-01-01 00:00:00 ]
+[ 2024-11-01 10:15:30, 2024-11-01 09:00:00, NaT, 2025-01-01 00:00:00 ]
 
 == fill_nat_scalar ==
 Timeline(shape=[4], tz=UTC)
@@ -208,7 +204,7 @@ data=[0, 2]
 Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
 data=[1, 4]
 
-== to_epoch_nanos_flat ==
+== ticks ==
 [1730451600000000000, 1730456130000000000, 1735689599000000000, 1735689600000000000]
 
 == year ==

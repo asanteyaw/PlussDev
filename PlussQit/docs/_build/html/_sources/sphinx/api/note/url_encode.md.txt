@@ -1,3 +1,4 @@
+<!-- pluss-hand-authored -->
 # Note::url_encode
 
 [Back to Note API Reference](../../note_api_reference)
@@ -5,105 +6,115 @@
 ## Signature
 
 ```cpp
-Note::url_encode() const -> Note
+Note Note::url_encode() const
 ```
 
-## What It Does
+## Percent-Encode Every Cell For Use In A URL
 
-Percent-encodes each text cell for URL-safe transport.
+`url_encode()` returns a new `Note`, same shape as the input, with each cell
+percent-encoded so it can be dropped into a URL path segment or query value
+without changing the URL's structure. Use it when building request URLs,
+`?key=value` pairs, or redirect targets from text that may contain spaces,
+`&`, `=`, `/`, `?`, `#`, or non-ASCII characters.
 
-This is the right method when your text must move through a URL or query-string
-style channel where spaces and reserved characters need escaping.
+### The rule
 
-Like the Base64 surface, this is transport-oriented rather than NLP-oriented.
-Use it when the output must survive URL parsing rules, not when the goal is to
-clean or tokenize natural language.
+The **unreserved** set of RFC 3986 is left as-is:
 
-## Parameters
+```
+A-Z   a-z   0-9   -   _   .   ~
+```
 
-This method takes no parameters.
+Every other byte is written as `%` followed by its two uppercase hex digits.
+This means:
 
-## Returns
+- A space becomes `%20` (not `+` — this is component encoding, not
+  `application/x-www-form-urlencoded`).
+- The sub-delimiters and gen-delimiters `& = / ? # : @ [ ]` and so on are all
+  encoded, so an encoded value cannot break out of its path segment or query
+  field.
+- Non-ASCII text is encoded **per UTF-8 byte**: `é` (bytes `C3 A9`) becomes
+  `%C3%A9`, and `€` (bytes `E2 82 AC`) becomes `%E2%82%AC`.
 
-`Note`
-    A shape-preserving `Note` whose cells are URL-encoded.
+`url_decode()` is the exact inverse.
 
-## Examples
+The operation is shape-preserving, cell-independent, and returns a fresh
+`Note`. Encoded cells are longer wherever a byte had to be escaped; an empty
+cell stays empty.
 
-Example 1. Encode a string containing a space and a plus sign.
+## Example 1: Reserved Characters And Spaces
 
 ```cpp
-auto note = pluss::make_note("a b+c");
-auto encoded = note.url_encode();
-std::cout << "url_encode:\n";
-for (std::int64_t i = 0; i < encoded.numel(); ++i) {
-  std::cout << "  [" << i << "] " << encoded.at(i) << "\n";
-}
+std::cout << pluss::note::print(
+    pluss::make_note({"a b&c=d", "path/to/x?y#z"}).url_encode())
+    << "\n";
 ```
 
 ### Output
 
 ```text
-url_encode:
-  [0] a%20b%2Bc
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["a%20b%26c%3Dd", "path%2Fto%2Fx%3Fy%23z"]
 ```
 
-Example 2. Decode it back to the original text.
+Space → `%20`, `&` → `%26`, `=` → `%3D`, `/` → `%2F`, `?` → `%3F`,
+`#` → `%23`.
+
+## Example 2: Unreserved Characters Pass Through
 
 ```cpp
-auto note = pluss::make_note("a b+c");
-auto encoded = note.url_encode();
-auto roundtrip = encoded.url_decode();
-std::cout << "url_roundtrip:\n";
-for (std::int64_t i = 0; i < roundtrip.numel(); ++i) {
-  std::cout << "  [" << i << "] " << roundtrip.at(i) << "\n";
-}
+const pluss::Note n = pluss::make_note({"A-Za-z0-9-_.~"}).url_encode();
+std::cout << n << "\n";
 ```
 
 ### Output
 
 ```text
-url_roundtrip:
-  [0] a b+c
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["A-Za-z0-9-_.~"]
 ```
 
-Example 3. Encode a batch of cells for query-safe transport.
+## Example 3: Non-ASCII Is Encoded Per UTF-8 Byte
 
 ```cpp
-auto note = pluss::make_note({"a b+c", "x/y"});
-auto encoded = note.url_encode();
-std::cout << "url_encode_batch:\n";
-for (std::int64_t i = 0; i < encoded.numel(); ++i) {
-  std::cout << "  [" << i << "] " << encoded.at(i) << "\n";
-}
+pluss::note::print(std::cout,
+                   pluss::make_note({"café", "€"}).url_encode())
+    << "\n";
 ```
 
 ### Output
 
 ```text
-url_encode_batch:
-  [0] a%20b%2Bc
-  [1] x%2Fy
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["caf%C3%A9", "%E2%82%AC"]
 ```
 
-## Notes
+## Example 4: Round-Trips Through `url_decode`
 
-- `url_encode()` is about transport-safe serialization, not NLP cleanup.
-- The example is useful because `+` is encoded too, which makes it clear the
-  output is percent-encoded text rather than a whitespace-only rewrite.
-- For binary-safe or compact interchange, Base64 may be a better fit than URL
-  encoding.
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({"a b/c?d", "café"}).url_encode().url_decode())
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["a b/c?d", "café"]
+```
 
 ## See Also
 
-- [`Note::base64_encode`](base64_encode.md): alternate reversible transport
-  encoding.
-- `Note::url_decode()`: reverse the percent encoding.
+- `pluss::coden::Note::url_decode`: the inverse.
+- [`Note::base64_encode`](base64_encode.md): the other "make it ASCII-safe"
+  encoding, for transfer rather than URL syntax.
+- [`Note::tex_escape`](tex_escape.md): escaping for a different consumer.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="base64_encode.html">
+  <a class="prev-link" href="url_decode.html">
     <span class="label">Previous</span>
-    <span class="title">base64_encode</span>
+    <span class="title">url_decode</span>
   </a>
   <a class="next-link" href="../../note_api_reference.html">
     <span class="label">Next</span>

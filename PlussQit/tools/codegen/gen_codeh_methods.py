@@ -84,23 +84,19 @@ def emit_timeline(out_dir: Path, dt_fields: list[tuple[str, str]],
     lines.append("  inline Timeline floor(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"floor\", *this, std::string(unit)); }")
     lines.append("  inline Timeline ceil(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"ceil\", *this, std::string(unit)); }")
     lines.append("  inline Timeline round(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"round\", *this, std::string(unit)); }")
-    lines.append("  inline Timeline normalize() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"floor\", *this, std::string(\"D\")); }")
     lines.append("  inline Timeline date() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"floor\", *this, std::string(\"D\")); }")
     lines.append("  inline Timeline time() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"time_of_day\", *this); }")
     lines.append("  inline Timeline tz_convert(std::string_view tz_name) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"tz_convert\", *this, std::string(tz_name)); }")
     lines.append("  inline Timeline tz_localize(std::string_view tz_name, int fold=0, std::string_view nonexistent=\"raise\") const { return ::pluss::codeh::_compat::invoke<Timeline>(\"tz_localize\", *this, std::string(tz_name), (std::int64_t)fold, std::string(nonexistent)); }")
-    lines.append("  inline Timeline to_utc() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"tz_convert\", *this, std::string(\"UTC\")); }")
-    lines.append("  inline Timeline min() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"min\", *this); }")
-    lines.append("  inline Timeline max() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"max\", *this); }")
+    lines.append("  inline Timeline min(bool skipna=true) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"min\", *this, skipna); }")
+    lines.append("  inline Timeline max(bool skipna=true) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"max\", *this, skipna); }")
     lines.append("  inline Timeline sort() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"sort\", *this); }")
     lines.append("  inline Timeline unique() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"unique\", *this); }")
-    lines.append("  inline Timeline drop_duplicates() const { return ::pluss::codeh::_compat::invoke<Timeline>(\"unique\", *this); }")
     lines.append("  inline Timeline fill_nat(const Timeline& value) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"fill_nat\", *this, value); }")
     lines.append("  inline Timeline where(const pluss::codem::Series& mask, const Timeline& other) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"where\", *this, mask, other); }")
     lines.append("  inline Timeline add_nanos(std::int64_t nanos) const { return ::pluss::codeh::_compat::invoke<Timeline>(\"add_nanos\", *this, nanos); }")
     lines.append("  inline pluss::codem::Series searchsorted_left(const Timeline& values) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(\"searchsorted_left\", *this, values); }")
     lines.append("  inline pluss::codem::Series searchsorted_right(const Timeline& values) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(\"searchsorted_right\", *this, values); }")
-    lines.append("  inline std::vector<std::int64_t> to_epoch_nanos_flat() const { return ::pluss::codeh::_compat::invoke<std::vector<std::int64_t>>(\"to_epoch_nanos_flat\", *this); }")
     lines.append("")
 
     reserved_names = {
@@ -109,29 +105,33 @@ def emit_timeline(out_dir: Path, dt_fields: list[tuple[str, str]],
         "isnat", "isvalid", "argsort", "isnat_scalar",
         "isoformat", "strftime", "to_note_iso",
         "weekday_name", "month_name",
-        "floor", "ceil", "round", "normalize", "date", "time",
-        "tz_convert", "tz_localize", "to_utc",
-        "min", "max", "sort", "unique", "drop_duplicates",
+        "floor", "ceil", "round", "date", "time",
+        "tz_convert", "tz_localize",
+        "min", "max", "sort", "unique",
         "fill_nat", "where", "add_nanos",
         "searchsorted_left", "searchsorted_right",
-        "to_epoch_nanos_flat",
     }
 
+    emitted_fields: set[str] = set()
     for name, field in dt_fields:
         if name in reserved_names:
             continue
+        if field in emitted_fields:
+            continue
+        emitted_fields.add(field)
         lines.append(f"  inline pluss::codem::Series {name}() const {{ return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(\"dt_{field}\", *this); }}")
+    emitted_predicates: set[str] = set()
     for name, op in predicates:
         if name in reserved_names:
             continue
+        if op in emitted_predicates:
+            continue
+        emitted_predicates.add(op)
         lines.append(f"  inline pluss::codem::Series {name}() const {{ return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(\"{op}\", *this); }}")
 
-    emitted = {"to_note_iso"}
-    for name, fmt in strftime_methods:
-        if name in emitted:
-            continue
-        emitted.add(name)
-        lines.append(f"  inline pluss::coden::Note {name}() const {{ return ::pluss::codeh::_compat::invoke<pluss::coden::Note>(\"strftime\", *this, std::string(\"{fmt}\")); }}")
+    # Keep formatting policy in strftime() rather than generating hundreds of
+    # named aliases. to_note_iso() is the one established convenience form.
+    _ = strftime_methods
 
     lines = normalize_codeh_invoke_lines(lines)
     out_path = out_dir / "TimelineMethodsGen.h"
@@ -247,7 +247,6 @@ def emit_duration(out_dir: Path) -> None:
     lines.append("// ---- Sorting / uniqueness ----")
     lines.append("Duration sort() const { return ::pluss::codeh::_compat::invoke<Duration>(\"sort\", *this); }")
     lines.append("Duration unique() const { return ::pluss::codeh::_compat::invoke<Duration>(\"unique\", *this); }")
-    lines.append("Duration drop_duplicates() const { return unique(); }")
     lines.append("pluss::codem::Series argsort() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(\"argsort\", *this); }")
     lines.append("")
     lines.append("// More ordering helpers")
@@ -321,7 +320,6 @@ def emit_timeindex(out_dir: Path) -> None:
     lines.append("// ---- Reordering / uniqueness ----")
     add("TimeIndex sort() const { return ::pluss::codeh::_compat::invoke<TimeIndex>(\"sort\", *this); }", "sort")
     add("TimeIndex unique() const { return ::pluss::codeh::_compat::invoke<TimeIndex>(\"unique\", *this); }", "unique")
-    lines.append("TimeIndex drop_duplicates() const { return unique(); }")
     add("pluss::codem::Series argsort() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(\"argsort\", *this); }",
         "argsort")
     lines.append("")

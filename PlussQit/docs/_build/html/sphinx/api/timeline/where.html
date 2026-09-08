@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::add_nanos" href="add_nanos.html" />
-    <link rel="prev" title="Timeline::fill_nat" href="fill_nat.html" />
+    <link rel="next" title="Timeline::year" href="year.html" />
+    <link rel="prev" title="Timeline::weekday_scalar" href="weekday_scalar.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -67,6 +67,9 @@ output below makes that branch direction concrete.</p>
 <p>The alternate timeline to draw from where the mask is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 <p>This may be a scalar or a shaped timeline as long as broadcast rules can align
 it with <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>It must carry the same timezone label as <code class="docutils literal notranslate"><span class="pre">self</span></code>. One result cannot retain two
+display-zone contracts, so mixed labels are rejected instead of silently
+choosing one operand’s metadata.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -75,7 +78,7 @@ A new timeline assembled from the two temporal operands.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Keep the original values where they are missing and otherwise take a
+<p>Example 1. Keep the original values where they are absent and otherwise take a
 date-normalized replacement.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_nat</span><span class="p">.</span><span class="n">where</span><span class="p">(</span><span class="n">with_nat</span><span class="p">.</span><span class="n">isnat</span><span class="p">(),</span><span class="w"> </span><span class="n">with_nat</span><span class="p">.</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">));</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -95,9 +98,10 @@ date-normalized replacement.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">where()</span></code> is the general branch/choose surface.</p></li>
-<li><p>For the narrower task “replace only missing timestamps with one scalar
+<li><p>For the narrower task “replace only absent instants with one scalar
 timestamp”, <a class="reference internal" href="fill_nat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fill_nat</span></code></span></a> is more direct.</p></li>
 <li><p>The mask must be boolean. Passing a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> is a contract error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">self</span></code>, <code class="docutils literal notranslate"><span class="pre">other</span></code>, and the mask broadcast to one common output shape.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -108,9 +112,9 @@ timestamp”, <a class="reference internal" href="fill_nat.html"><span class="st
 <li><p><a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::eq</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fill_nat.html">
+  <a class="prev-link" href="weekday_scalar.html">
     <span class="label">Previous</span>
-    <span class="title">fill_nat</span>
+    <span class="title">weekday_scalar</span>
   </a>
   <a class="next-link" href="add_nanos.html">
     <span class="label">Next</span>
@@ -158,6 +162,7 @@ timestamp”, <a class="reference internal" href="fill_nat.html"><span class="st
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -208,8 +213,8 @@ timestamp”, <a class="reference internal" href="fill_nat.html"><span class="st
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="fill_nat.html" title="previous chapter">Timeline::fill_nat</a></li>
-      <li>Next: <a href="add_nanos.html" title="next chapter">Timeline::add_nanos</a></li>
+      <li>Previous: <a href="weekday_scalar.html" title="previous chapter">Timeline::weekday_scalar</a></li>
+      <li>Next: <a href="year.html" title="next chapter">Timeline::year</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

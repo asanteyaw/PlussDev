@@ -1103,6 +1103,34 @@ plussqit_coden_note_factory_demo/fast:
 .PHONY : plussqit_coden_note_factory_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_factory_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_factory_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_factory_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/build
+.PHONY : plussqit_coden_note_factory_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_method_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_method_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_method_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/build
+.PHONY : plussqit_coden_note_method_reference_demo/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_coden_note_base_methods_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_base_methods_demo.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_coden_note_base_methods_demo.dir/rule
@@ -1269,6 +1297,174 @@ plussqit_codeh_timeline_calendar_predicates_reference_demo: PlussQit/CMakeFiles/
 plussqit_codeh_timeline_calendar_predicates_reference_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_calendar_predicates_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_calendar_predicates_reference_demo.dir/build
 .PHONY : plussqit_codeh_timeline_calendar_predicates_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_extrema_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_extrema_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_extrema_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_extrema_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_ordering_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_ordering_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_ordering_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_ordering_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_storage_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_storage_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_storage_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_storage_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_factory_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_factory_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_factory_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_factory_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_set_fields_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_set_fields_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_set_fields_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_set_fields_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_operators_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_operators_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_operators_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_operators_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_unit_shifts_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_unit_shifts_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_unit_shifts_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_unit_shifts_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_span_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_span_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_span_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_span_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_structure_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_structure_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_structure_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_structure_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_shift_promotion_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_shift_promotion_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_shift_promotion_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_shift_promotion_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_between_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_between_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_between_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_between_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_timeline_scalar_fields_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_scalar_fields_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_timeline_scalar_fields_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/build
+.PHONY : plussqit_codeh_timeline_scalar_fields_reference_demo/fast
 
 # Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codeh_duration_docverify_demo.dir/rule:
@@ -1510,6 +1706,30 @@ examples/CodeH/timeindex_docverify_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/examples/CodeH/timeindex_docverify_demo.cpp.s
 .PHONY : examples/CodeH/timeindex_docverify_demo.cpp.s
 
+examples/CodeH/timeline_between_reference_demo.o: examples/CodeH/timeline_between_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_between_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_between_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/examples/CodeH/timeline_between_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_between_reference_demo.cpp.o
+
+examples/CodeH/timeline_between_reference_demo.i: examples/CodeH/timeline_between_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_between_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_between_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/examples/CodeH/timeline_between_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_between_reference_demo.cpp.i
+
+examples/CodeH/timeline_between_reference_demo.s: examples/CodeH/timeline_between_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_between_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_between_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_between_reference_demo.dir/examples/CodeH/timeline_between_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_between_reference_demo.cpp.s
+
 examples/CodeH/timeline_calendar_fields_reference_demo.o: examples/CodeH/timeline_calendar_fields_reference_demo.cpp.o
 .PHONY : examples/CodeH/timeline_calendar_fields_reference_demo.o
 
@@ -1630,6 +1850,54 @@ examples/CodeH/timeline_duration_interop_docverify_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_duration_interop_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_duration_interop_docverify_demo.dir/examples/CodeH/timeline_duration_interop_docverify_demo.cpp.s
 .PHONY : examples/CodeH/timeline_duration_interop_docverify_demo.cpp.s
 
+examples/CodeH/timeline_extrema_reference_demo.o: examples/CodeH/timeline_extrema_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_extrema_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_extrema_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/examples/CodeH/timeline_extrema_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_extrema_reference_demo.cpp.o
+
+examples/CodeH/timeline_extrema_reference_demo.i: examples/CodeH/timeline_extrema_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_extrema_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_extrema_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/examples/CodeH/timeline_extrema_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_extrema_reference_demo.cpp.i
+
+examples/CodeH/timeline_extrema_reference_demo.s: examples/CodeH/timeline_extrema_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_extrema_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_extrema_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_extrema_reference_demo.dir/examples/CodeH/timeline_extrema_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_extrema_reference_demo.cpp.s
+
+examples/CodeH/timeline_factory_reference_demo.o: examples/CodeH/timeline_factory_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_factory_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_factory_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/examples/CodeH/timeline_factory_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_factory_reference_demo.cpp.o
+
+examples/CodeH/timeline_factory_reference_demo.i: examples/CodeH/timeline_factory_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_factory_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_factory_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/examples/CodeH/timeline_factory_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_factory_reference_demo.cpp.i
+
+examples/CodeH/timeline_factory_reference_demo.s: examples/CodeH/timeline_factory_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_factory_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_factory_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_factory_reference_demo.dir/examples/CodeH/timeline_factory_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_factory_reference_demo.cpp.s
+
 examples/CodeH/timeline_foundations_reference_demo.o: examples/CodeH/timeline_foundations_reference_demo.cpp.o
 .PHONY : examples/CodeH/timeline_foundations_reference_demo.o
 
@@ -1678,6 +1946,54 @@ examples/CodeH/timeline_non_generated_and_factory_methods_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_non_generated_and_factory_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_non_generated_and_factory_methods_demo.dir/examples/CodeH/timeline_non_generated_and_factory_methods_demo.cpp.s
 .PHONY : examples/CodeH/timeline_non_generated_and_factory_methods_demo.cpp.s
 
+examples/CodeH/timeline_operators_reference_demo.o: examples/CodeH/timeline_operators_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_operators_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_operators_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/examples/CodeH/timeline_operators_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_operators_reference_demo.cpp.o
+
+examples/CodeH/timeline_operators_reference_demo.i: examples/CodeH/timeline_operators_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_operators_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_operators_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/examples/CodeH/timeline_operators_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_operators_reference_demo.cpp.i
+
+examples/CodeH/timeline_operators_reference_demo.s: examples/CodeH/timeline_operators_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_operators_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_operators_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_operators_reference_demo.dir/examples/CodeH/timeline_operators_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_operators_reference_demo.cpp.s
+
+examples/CodeH/timeline_ordering_reference_demo.o: examples/CodeH/timeline_ordering_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_ordering_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_ordering_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/examples/CodeH/timeline_ordering_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_ordering_reference_demo.cpp.o
+
+examples/CodeH/timeline_ordering_reference_demo.i: examples/CodeH/timeline_ordering_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_ordering_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_ordering_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/examples/CodeH/timeline_ordering_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_ordering_reference_demo.cpp.i
+
+examples/CodeH/timeline_ordering_reference_demo.s: examples/CodeH/timeline_ordering_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_ordering_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_ordering_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_ordering_reference_demo.dir/examples/CodeH/timeline_ordering_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_ordering_reference_demo.cpp.s
+
 examples/CodeH/timeline_printing_2d_3d_demo.o: examples/CodeH/timeline_printing_2d_3d_demo.cpp.o
 .PHONY : examples/CodeH/timeline_printing_2d_3d_demo.o
 
@@ -1701,6 +2017,174 @@ examples/CodeH/timeline_printing_2d_3d_demo.s: examples/CodeH/timeline_printing_
 examples/CodeH/timeline_printing_2d_3d_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_printing_2d_3d_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_printing_2d_3d_demo.dir/examples/CodeH/timeline_printing_2d_3d_demo.cpp.s
 .PHONY : examples/CodeH/timeline_printing_2d_3d_demo.cpp.s
+
+examples/CodeH/timeline_scalar_fields_reference_demo.o: examples/CodeH/timeline_scalar_fields_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_scalar_fields_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_scalar_fields_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/examples/CodeH/timeline_scalar_fields_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_scalar_fields_reference_demo.cpp.o
+
+examples/CodeH/timeline_scalar_fields_reference_demo.i: examples/CodeH/timeline_scalar_fields_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_scalar_fields_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_scalar_fields_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/examples/CodeH/timeline_scalar_fields_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_scalar_fields_reference_demo.cpp.i
+
+examples/CodeH/timeline_scalar_fields_reference_demo.s: examples/CodeH/timeline_scalar_fields_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_scalar_fields_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_scalar_fields_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_scalar_fields_reference_demo.dir/examples/CodeH/timeline_scalar_fields_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_scalar_fields_reference_demo.cpp.s
+
+examples/CodeH/timeline_set_fields_reference_demo.o: examples/CodeH/timeline_set_fields_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_set_fields_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_set_fields_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/examples/CodeH/timeline_set_fields_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_set_fields_reference_demo.cpp.o
+
+examples/CodeH/timeline_set_fields_reference_demo.i: examples/CodeH/timeline_set_fields_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_set_fields_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_set_fields_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/examples/CodeH/timeline_set_fields_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_set_fields_reference_demo.cpp.i
+
+examples/CodeH/timeline_set_fields_reference_demo.s: examples/CodeH/timeline_set_fields_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_set_fields_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_set_fields_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_set_fields_reference_demo.dir/examples/CodeH/timeline_set_fields_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_set_fields_reference_demo.cpp.s
+
+examples/CodeH/timeline_shift_promotion_reference_demo.o: examples/CodeH/timeline_shift_promotion_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_shift_promotion_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_shift_promotion_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/examples/CodeH/timeline_shift_promotion_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_shift_promotion_reference_demo.cpp.o
+
+examples/CodeH/timeline_shift_promotion_reference_demo.i: examples/CodeH/timeline_shift_promotion_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_shift_promotion_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_shift_promotion_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/examples/CodeH/timeline_shift_promotion_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_shift_promotion_reference_demo.cpp.i
+
+examples/CodeH/timeline_shift_promotion_reference_demo.s: examples/CodeH/timeline_shift_promotion_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_shift_promotion_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_shift_promotion_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_shift_promotion_reference_demo.dir/examples/CodeH/timeline_shift_promotion_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_shift_promotion_reference_demo.cpp.s
+
+examples/CodeH/timeline_span_reference_demo.o: examples/CodeH/timeline_span_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_span_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_span_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/examples/CodeH/timeline_span_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_span_reference_demo.cpp.o
+
+examples/CodeH/timeline_span_reference_demo.i: examples/CodeH/timeline_span_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_span_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_span_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/examples/CodeH/timeline_span_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_span_reference_demo.cpp.i
+
+examples/CodeH/timeline_span_reference_demo.s: examples/CodeH/timeline_span_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_span_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_span_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_span_reference_demo.dir/examples/CodeH/timeline_span_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_span_reference_demo.cpp.s
+
+examples/CodeH/timeline_storage_reference_demo.o: examples/CodeH/timeline_storage_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_storage_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_storage_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/examples/CodeH/timeline_storage_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_storage_reference_demo.cpp.o
+
+examples/CodeH/timeline_storage_reference_demo.i: examples/CodeH/timeline_storage_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_storage_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_storage_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/examples/CodeH/timeline_storage_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_storage_reference_demo.cpp.i
+
+examples/CodeH/timeline_storage_reference_demo.s: examples/CodeH/timeline_storage_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_storage_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_storage_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_storage_reference_demo.dir/examples/CodeH/timeline_storage_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_storage_reference_demo.cpp.s
+
+examples/CodeH/timeline_structure_reference_demo.o: examples/CodeH/timeline_structure_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_structure_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_structure_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/examples/CodeH/timeline_structure_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_structure_reference_demo.cpp.o
+
+examples/CodeH/timeline_structure_reference_demo.i: examples/CodeH/timeline_structure_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_structure_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_structure_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/examples/CodeH/timeline_structure_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_structure_reference_demo.cpp.i
+
+examples/CodeH/timeline_structure_reference_demo.s: examples/CodeH/timeline_structure_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_structure_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_structure_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_structure_reference_demo.dir/examples/CodeH/timeline_structure_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_structure_reference_demo.cpp.s
+
+examples/CodeH/timeline_unit_shifts_reference_demo.o: examples/CodeH/timeline_unit_shifts_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_unit_shifts_reference_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_unit_shifts_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/examples/CodeH/timeline_unit_shifts_reference_demo.cpp.o
+.PHONY : examples/CodeH/timeline_unit_shifts_reference_demo.cpp.o
+
+examples/CodeH/timeline_unit_shifts_reference_demo.i: examples/CodeH/timeline_unit_shifts_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_unit_shifts_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_unit_shifts_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/examples/CodeH/timeline_unit_shifts_reference_demo.cpp.i
+.PHONY : examples/CodeH/timeline_unit_shifts_reference_demo.cpp.i
+
+examples/CodeH/timeline_unit_shifts_reference_demo.s: examples/CodeH/timeline_unit_shifts_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_unit_shifts_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_unit_shifts_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_unit_shifts_reference_demo.dir/examples/CodeH/timeline_unit_shifts_reference_demo.cpp.s
+.PHONY : examples/CodeH/timeline_unit_shifts_reference_demo.cpp.s
 
 examples/CodeM/autodiff_derivatives_demo.o: examples/CodeM/autodiff_derivatives_demo.cpp.o
 .PHONY : examples/CodeM/autodiff_derivatives_demo.o
@@ -3238,6 +3722,30 @@ examples/CodeN/note_factory_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_factory_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_factory_demo.dir/examples/CodeN/note_factory_demo.cpp.s
 .PHONY : examples/CodeN/note_factory_demo.cpp.s
 
+examples/CodeN/note_factory_reference_demo.o: examples/CodeN/note_factory_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_factory_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_factory_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/examples/CodeN/note_factory_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_factory_reference_demo.cpp.o
+
+examples/CodeN/note_factory_reference_demo.i: examples/CodeN/note_factory_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_factory_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_factory_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/examples/CodeN/note_factory_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_factory_reference_demo.cpp.i
+
+examples/CodeN/note_factory_reference_demo.s: examples/CodeN/note_factory_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_factory_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_factory_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_factory_reference_demo.dir/examples/CodeN/note_factory_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_factory_reference_demo.cpp.s
+
 examples/CodeN/note_method_families_demo.o: examples/CodeN/note_method_families_demo.cpp.o
 .PHONY : examples/CodeN/note_method_families_demo.o
 
@@ -3261,6 +3769,30 @@ examples/CodeN/note_method_families_demo.s: examples/CodeN/note_method_families_
 examples/CodeN/note_method_families_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_method_families_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_method_families_demo.dir/examples/CodeN/note_method_families_demo.cpp.s
 .PHONY : examples/CodeN/note_method_families_demo.cpp.s
+
+examples/CodeN/note_method_reference_demo.o: examples/CodeN/note_method_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_method_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_method_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/examples/CodeN/note_method_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_method_reference_demo.cpp.o
+
+examples/CodeN/note_method_reference_demo.i: examples/CodeN/note_method_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_method_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_method_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/examples/CodeN/note_method_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_method_reference_demo.cpp.i
+
+examples/CodeN/note_method_reference_demo.s: examples/CodeN/note_method_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_method_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_method_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/examples/CodeN/note_method_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_method_reference_demo.cpp.s
 
 examples/CodeN/note_printing_demo.o: examples/CodeN/note_printing_demo.cpp.o
 .PHONY : examples/CodeN/note_printing_demo.o
@@ -5518,6 +6050,30 @@ tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s
 .PHONY : tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s
 
+tests/CodeH/test_timeline_between.o: tests/CodeH/test_timeline_between.cpp.o
+.PHONY : tests/CodeH/test_timeline_between.o
+
+# target to build an object file
+tests/CodeH/test_timeline_between.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_between.cpp.o
+.PHONY : tests/CodeH/test_timeline_between.cpp.o
+
+tests/CodeH/test_timeline_between.i: tests/CodeH/test_timeline_between.cpp.i
+.PHONY : tests/CodeH/test_timeline_between.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_between.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_between.cpp.i
+.PHONY : tests/CodeH/test_timeline_between.cpp.i
+
+tests/CodeH/test_timeline_between.s: tests/CodeH/test_timeline_between.cpp.s
+.PHONY : tests/CodeH/test_timeline_between.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_between.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_between.cpp.s
+.PHONY : tests/CodeH/test_timeline_between.cpp.s
+
 tests/CodeH/test_timeline_calendar_fields.o: tests/CodeH/test_timeline_calendar_fields.cpp.o
 .PHONY : tests/CodeH/test_timeline_calendar_fields.o
 
@@ -5566,6 +6122,30 @@ tests/CodeH/test_timeline_calendar_predicates.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_calendar_predicates.cpp.s
 .PHONY : tests/CodeH/test_timeline_calendar_predicates.cpp.s
 
+tests/CodeH/test_timeline_extrema.o: tests/CodeH/test_timeline_extrema.cpp.o
+.PHONY : tests/CodeH/test_timeline_extrema.o
+
+# target to build an object file
+tests/CodeH/test_timeline_extrema.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_extrema.cpp.o
+.PHONY : tests/CodeH/test_timeline_extrema.cpp.o
+
+tests/CodeH/test_timeline_extrema.i: tests/CodeH/test_timeline_extrema.cpp.i
+.PHONY : tests/CodeH/test_timeline_extrema.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_extrema.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_extrema.cpp.i
+.PHONY : tests/CodeH/test_timeline_extrema.cpp.i
+
+tests/CodeH/test_timeline_extrema.s: tests/CodeH/test_timeline_extrema.cpp.s
+.PHONY : tests/CodeH/test_timeline_extrema.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_extrema.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_extrema.cpp.s
+.PHONY : tests/CodeH/test_timeline_extrema.cpp.s
+
 tests/CodeH/test_timeline_foundations.o: tests/CodeH/test_timeline_foundations.cpp.o
 .PHONY : tests/CodeH/test_timeline_foundations.o
 
@@ -5589,6 +6169,174 @@ tests/CodeH/test_timeline_foundations.s: tests/CodeH/test_timeline_foundations.c
 tests/CodeH/test_timeline_foundations.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_foundations.cpp.s
 .PHONY : tests/CodeH/test_timeline_foundations.cpp.s
+
+tests/CodeH/test_timeline_ordering.o: tests/CodeH/test_timeline_ordering.cpp.o
+.PHONY : tests/CodeH/test_timeline_ordering.o
+
+# target to build an object file
+tests/CodeH/test_timeline_ordering.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_ordering.cpp.o
+.PHONY : tests/CodeH/test_timeline_ordering.cpp.o
+
+tests/CodeH/test_timeline_ordering.i: tests/CodeH/test_timeline_ordering.cpp.i
+.PHONY : tests/CodeH/test_timeline_ordering.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_ordering.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_ordering.cpp.i
+.PHONY : tests/CodeH/test_timeline_ordering.cpp.i
+
+tests/CodeH/test_timeline_ordering.s: tests/CodeH/test_timeline_ordering.cpp.s
+.PHONY : tests/CodeH/test_timeline_ordering.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_ordering.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_ordering.cpp.s
+.PHONY : tests/CodeH/test_timeline_ordering.cpp.s
+
+tests/CodeH/test_timeline_set_fields.o: tests/CodeH/test_timeline_set_fields.cpp.o
+.PHONY : tests/CodeH/test_timeline_set_fields.o
+
+# target to build an object file
+tests/CodeH/test_timeline_set_fields.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_set_fields.cpp.o
+.PHONY : tests/CodeH/test_timeline_set_fields.cpp.o
+
+tests/CodeH/test_timeline_set_fields.i: tests/CodeH/test_timeline_set_fields.cpp.i
+.PHONY : tests/CodeH/test_timeline_set_fields.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_set_fields.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_set_fields.cpp.i
+.PHONY : tests/CodeH/test_timeline_set_fields.cpp.i
+
+tests/CodeH/test_timeline_set_fields.s: tests/CodeH/test_timeline_set_fields.cpp.s
+.PHONY : tests/CodeH/test_timeline_set_fields.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_set_fields.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_set_fields.cpp.s
+.PHONY : tests/CodeH/test_timeline_set_fields.cpp.s
+
+tests/CodeH/test_timeline_shift_promotion.o: tests/CodeH/test_timeline_shift_promotion.cpp.o
+.PHONY : tests/CodeH/test_timeline_shift_promotion.o
+
+# target to build an object file
+tests/CodeH/test_timeline_shift_promotion.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_shift_promotion.cpp.o
+.PHONY : tests/CodeH/test_timeline_shift_promotion.cpp.o
+
+tests/CodeH/test_timeline_shift_promotion.i: tests/CodeH/test_timeline_shift_promotion.cpp.i
+.PHONY : tests/CodeH/test_timeline_shift_promotion.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_shift_promotion.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_shift_promotion.cpp.i
+.PHONY : tests/CodeH/test_timeline_shift_promotion.cpp.i
+
+tests/CodeH/test_timeline_shift_promotion.s: tests/CodeH/test_timeline_shift_promotion.cpp.s
+.PHONY : tests/CodeH/test_timeline_shift_promotion.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_shift_promotion.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_shift_promotion.cpp.s
+.PHONY : tests/CodeH/test_timeline_shift_promotion.cpp.s
+
+tests/CodeH/test_timeline_span.o: tests/CodeH/test_timeline_span.cpp.o
+.PHONY : tests/CodeH/test_timeline_span.o
+
+# target to build an object file
+tests/CodeH/test_timeline_span.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_span.cpp.o
+.PHONY : tests/CodeH/test_timeline_span.cpp.o
+
+tests/CodeH/test_timeline_span.i: tests/CodeH/test_timeline_span.cpp.i
+.PHONY : tests/CodeH/test_timeline_span.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_span.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_span.cpp.i
+.PHONY : tests/CodeH/test_timeline_span.cpp.i
+
+tests/CodeH/test_timeline_span.s: tests/CodeH/test_timeline_span.cpp.s
+.PHONY : tests/CodeH/test_timeline_span.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_span.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_span.cpp.s
+.PHONY : tests/CodeH/test_timeline_span.cpp.s
+
+tests/CodeH/test_timeline_storage_bridge.o: tests/CodeH/test_timeline_storage_bridge.cpp.o
+.PHONY : tests/CodeH/test_timeline_storage_bridge.o
+
+# target to build an object file
+tests/CodeH/test_timeline_storage_bridge.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_storage_bridge.cpp.o
+.PHONY : tests/CodeH/test_timeline_storage_bridge.cpp.o
+
+tests/CodeH/test_timeline_storage_bridge.i: tests/CodeH/test_timeline_storage_bridge.cpp.i
+.PHONY : tests/CodeH/test_timeline_storage_bridge.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_storage_bridge.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_storage_bridge.cpp.i
+.PHONY : tests/CodeH/test_timeline_storage_bridge.cpp.i
+
+tests/CodeH/test_timeline_storage_bridge.s: tests/CodeH/test_timeline_storage_bridge.cpp.s
+.PHONY : tests/CodeH/test_timeline_storage_bridge.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_storage_bridge.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_storage_bridge.cpp.s
+.PHONY : tests/CodeH/test_timeline_storage_bridge.cpp.s
+
+tests/CodeH/test_timeline_structure.o: tests/CodeH/test_timeline_structure.cpp.o
+.PHONY : tests/CodeH/test_timeline_structure.o
+
+# target to build an object file
+tests/CodeH/test_timeline_structure.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_structure.cpp.o
+.PHONY : tests/CodeH/test_timeline_structure.cpp.o
+
+tests/CodeH/test_timeline_structure.i: tests/CodeH/test_timeline_structure.cpp.i
+.PHONY : tests/CodeH/test_timeline_structure.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_structure.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_structure.cpp.i
+.PHONY : tests/CodeH/test_timeline_structure.cpp.i
+
+tests/CodeH/test_timeline_structure.s: tests/CodeH/test_timeline_structure.cpp.s
+.PHONY : tests/CodeH/test_timeline_structure.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_structure.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_structure.cpp.s
+.PHONY : tests/CodeH/test_timeline_structure.cpp.s
+
+tests/CodeH/test_timeline_unit_shifts.o: tests/CodeH/test_timeline_unit_shifts.cpp.o
+.PHONY : tests/CodeH/test_timeline_unit_shifts.o
+
+# target to build an object file
+tests/CodeH/test_timeline_unit_shifts.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_unit_shifts.cpp.o
+.PHONY : tests/CodeH/test_timeline_unit_shifts.cpp.o
+
+tests/CodeH/test_timeline_unit_shifts.i: tests/CodeH/test_timeline_unit_shifts.cpp.i
+.PHONY : tests/CodeH/test_timeline_unit_shifts.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_unit_shifts.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_unit_shifts.cpp.i
+.PHONY : tests/CodeH/test_timeline_unit_shifts.cpp.i
+
+tests/CodeH/test_timeline_unit_shifts.s: tests/CodeH/test_timeline_unit_shifts.cpp.s
+.PHONY : tests/CodeH/test_timeline_unit_shifts.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_unit_shifts.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_unit_shifts.cpp.s
+.PHONY : tests/CodeH/test_timeline_unit_shifts.cpp.s
 
 tests/CodeM/test_advanced_indexing.o: tests/CodeM/test_advanced_indexing.cpp.o
 .PHONY : tests/CodeM/test_advanced_indexing.o
@@ -10520,14 +11268,26 @@ help:
 	@echo "... plussqit_codeh_duration_docverify_demo"
 	@echo "... plussqit_codeh_tests"
 	@echo "... plussqit_codeh_timeindex_docverify_demo"
+	@echo "... plussqit_codeh_timeline_between_reference_demo"
 	@echo "... plussqit_codeh_timeline_calendar_fields_reference_demo"
 	@echo "... plussqit_codeh_timeline_calendar_predicates_reference_demo"
 	@echo "... plussqit_codeh_timeline_dataframe_timeindex_methods_demo"
 	@echo "... plussqit_codeh_timeline_docverify_demo"
 	@echo "... plussqit_codeh_timeline_duration_interop_docverify_demo"
+	@echo "... plussqit_codeh_timeline_extrema_reference_demo"
+	@echo "... plussqit_codeh_timeline_factory_reference_demo"
 	@echo "... plussqit_codeh_timeline_foundations_reference_demo"
 	@echo "... plussqit_codeh_timeline_non_generated_and_factory_methods_demo"
+	@echo "... plussqit_codeh_timeline_operators_reference_demo"
+	@echo "... plussqit_codeh_timeline_ordering_reference_demo"
 	@echo "... plussqit_codeh_timeline_printing_2d_3d_demo"
+	@echo "... plussqit_codeh_timeline_scalar_fields_reference_demo"
+	@echo "... plussqit_codeh_timeline_set_fields_reference_demo"
+	@echo "... plussqit_codeh_timeline_shift_promotion_reference_demo"
+	@echo "... plussqit_codeh_timeline_span_reference_demo"
+	@echo "... plussqit_codeh_timeline_storage_reference_demo"
+	@echo "... plussqit_codeh_timeline_structure_reference_demo"
+	@echo "... plussqit_codeh_timeline_unit_shifts_reference_demo"
 	@echo "... plussqit_codem"
 	@echo "... plussqit_codem_autodiff_derivatives_demo"
 	@echo "... plussqit_codem_autodiff_minimal_demo"
@@ -10598,7 +11358,9 @@ help:
 	@echo "... plussqit_coden_note_cleanup_demo"
 	@echo "... plussqit_coden_note_docverify_demo"
 	@echo "... plussqit_coden_note_factory_demo"
+	@echo "... plussqit_coden_note_factory_reference_demo"
 	@echo "... plussqit_coden_note_method_families_demo"
+	@echo "... plussqit_coden_note_method_reference_demo"
 	@echo "... plussqit_coden_note_printing_demo"
 	@echo "... plussqit_coden_tests"
 	@echo "... plussqit_dispense_demo"
@@ -10614,6 +11376,9 @@ help:
 	@echo "... examples/CodeH/timeindex_docverify_demo.o"
 	@echo "... examples/CodeH/timeindex_docverify_demo.i"
 	@echo "... examples/CodeH/timeindex_docverify_demo.s"
+	@echo "... examples/CodeH/timeline_between_reference_demo.o"
+	@echo "... examples/CodeH/timeline_between_reference_demo.i"
+	@echo "... examples/CodeH/timeline_between_reference_demo.s"
 	@echo "... examples/CodeH/timeline_calendar_fields_reference_demo.o"
 	@echo "... examples/CodeH/timeline_calendar_fields_reference_demo.i"
 	@echo "... examples/CodeH/timeline_calendar_fields_reference_demo.s"
@@ -10629,15 +11394,48 @@ help:
 	@echo "... examples/CodeH/timeline_duration_interop_docverify_demo.o"
 	@echo "... examples/CodeH/timeline_duration_interop_docverify_demo.i"
 	@echo "... examples/CodeH/timeline_duration_interop_docverify_demo.s"
+	@echo "... examples/CodeH/timeline_extrema_reference_demo.o"
+	@echo "... examples/CodeH/timeline_extrema_reference_demo.i"
+	@echo "... examples/CodeH/timeline_extrema_reference_demo.s"
+	@echo "... examples/CodeH/timeline_factory_reference_demo.o"
+	@echo "... examples/CodeH/timeline_factory_reference_demo.i"
+	@echo "... examples/CodeH/timeline_factory_reference_demo.s"
 	@echo "... examples/CodeH/timeline_foundations_reference_demo.o"
 	@echo "... examples/CodeH/timeline_foundations_reference_demo.i"
 	@echo "... examples/CodeH/timeline_foundations_reference_demo.s"
 	@echo "... examples/CodeH/timeline_non_generated_and_factory_methods_demo.o"
 	@echo "... examples/CodeH/timeline_non_generated_and_factory_methods_demo.i"
 	@echo "... examples/CodeH/timeline_non_generated_and_factory_methods_demo.s"
+	@echo "... examples/CodeH/timeline_operators_reference_demo.o"
+	@echo "... examples/CodeH/timeline_operators_reference_demo.i"
+	@echo "... examples/CodeH/timeline_operators_reference_demo.s"
+	@echo "... examples/CodeH/timeline_ordering_reference_demo.o"
+	@echo "... examples/CodeH/timeline_ordering_reference_demo.i"
+	@echo "... examples/CodeH/timeline_ordering_reference_demo.s"
 	@echo "... examples/CodeH/timeline_printing_2d_3d_demo.o"
 	@echo "... examples/CodeH/timeline_printing_2d_3d_demo.i"
 	@echo "... examples/CodeH/timeline_printing_2d_3d_demo.s"
+	@echo "... examples/CodeH/timeline_scalar_fields_reference_demo.o"
+	@echo "... examples/CodeH/timeline_scalar_fields_reference_demo.i"
+	@echo "... examples/CodeH/timeline_scalar_fields_reference_demo.s"
+	@echo "... examples/CodeH/timeline_set_fields_reference_demo.o"
+	@echo "... examples/CodeH/timeline_set_fields_reference_demo.i"
+	@echo "... examples/CodeH/timeline_set_fields_reference_demo.s"
+	@echo "... examples/CodeH/timeline_shift_promotion_reference_demo.o"
+	@echo "... examples/CodeH/timeline_shift_promotion_reference_demo.i"
+	@echo "... examples/CodeH/timeline_shift_promotion_reference_demo.s"
+	@echo "... examples/CodeH/timeline_span_reference_demo.o"
+	@echo "... examples/CodeH/timeline_span_reference_demo.i"
+	@echo "... examples/CodeH/timeline_span_reference_demo.s"
+	@echo "... examples/CodeH/timeline_storage_reference_demo.o"
+	@echo "... examples/CodeH/timeline_storage_reference_demo.i"
+	@echo "... examples/CodeH/timeline_storage_reference_demo.s"
+	@echo "... examples/CodeH/timeline_structure_reference_demo.o"
+	@echo "... examples/CodeH/timeline_structure_reference_demo.i"
+	@echo "... examples/CodeH/timeline_structure_reference_demo.s"
+	@echo "... examples/CodeH/timeline_unit_shifts_reference_demo.o"
+	@echo "... examples/CodeH/timeline_unit_shifts_reference_demo.i"
+	@echo "... examples/CodeH/timeline_unit_shifts_reference_demo.s"
 	@echo "... examples/CodeM/autodiff_derivatives_demo.o"
 	@echo "... examples/CodeM/autodiff_derivatives_demo.i"
 	@echo "... examples/CodeM/autodiff_derivatives_demo.s"
@@ -10830,9 +11628,15 @@ help:
 	@echo "... examples/CodeN/note_factory_demo.o"
 	@echo "... examples/CodeN/note_factory_demo.i"
 	@echo "... examples/CodeN/note_factory_demo.s"
+	@echo "... examples/CodeN/note_factory_reference_demo.o"
+	@echo "... examples/CodeN/note_factory_reference_demo.i"
+	@echo "... examples/CodeN/note_factory_reference_demo.s"
 	@echo "... examples/CodeN/note_method_families_demo.o"
 	@echo "... examples/CodeN/note_method_families_demo.i"
 	@echo "... examples/CodeN/note_method_families_demo.s"
+	@echo "... examples/CodeN/note_method_reference_demo.o"
+	@echo "... examples/CodeN/note_method_reference_demo.i"
+	@echo "... examples/CodeN/note_method_reference_demo.s"
 	@echo "... examples/CodeN/note_printing_demo.o"
 	@echo "... examples/CodeN/note_printing_demo.i"
 	@echo "... examples/CodeN/note_printing_demo.s"
@@ -11115,15 +11919,42 @@ help:
 	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.o"
 	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.i"
 	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.s"
+	@echo "... tests/CodeH/test_timeline_between.o"
+	@echo "... tests/CodeH/test_timeline_between.i"
+	@echo "... tests/CodeH/test_timeline_between.s"
 	@echo "... tests/CodeH/test_timeline_calendar_fields.o"
 	@echo "... tests/CodeH/test_timeline_calendar_fields.i"
 	@echo "... tests/CodeH/test_timeline_calendar_fields.s"
 	@echo "... tests/CodeH/test_timeline_calendar_predicates.o"
 	@echo "... tests/CodeH/test_timeline_calendar_predicates.i"
 	@echo "... tests/CodeH/test_timeline_calendar_predicates.s"
+	@echo "... tests/CodeH/test_timeline_extrema.o"
+	@echo "... tests/CodeH/test_timeline_extrema.i"
+	@echo "... tests/CodeH/test_timeline_extrema.s"
 	@echo "... tests/CodeH/test_timeline_foundations.o"
 	@echo "... tests/CodeH/test_timeline_foundations.i"
 	@echo "... tests/CodeH/test_timeline_foundations.s"
+	@echo "... tests/CodeH/test_timeline_ordering.o"
+	@echo "... tests/CodeH/test_timeline_ordering.i"
+	@echo "... tests/CodeH/test_timeline_ordering.s"
+	@echo "... tests/CodeH/test_timeline_set_fields.o"
+	@echo "... tests/CodeH/test_timeline_set_fields.i"
+	@echo "... tests/CodeH/test_timeline_set_fields.s"
+	@echo "... tests/CodeH/test_timeline_shift_promotion.o"
+	@echo "... tests/CodeH/test_timeline_shift_promotion.i"
+	@echo "... tests/CodeH/test_timeline_shift_promotion.s"
+	@echo "... tests/CodeH/test_timeline_span.o"
+	@echo "... tests/CodeH/test_timeline_span.i"
+	@echo "... tests/CodeH/test_timeline_span.s"
+	@echo "... tests/CodeH/test_timeline_storage_bridge.o"
+	@echo "... tests/CodeH/test_timeline_storage_bridge.i"
+	@echo "... tests/CodeH/test_timeline_storage_bridge.s"
+	@echo "... tests/CodeH/test_timeline_structure.o"
+	@echo "... tests/CodeH/test_timeline_structure.i"
+	@echo "... tests/CodeH/test_timeline_structure.s"
+	@echo "... tests/CodeH/test_timeline_unit_shifts.o"
+	@echo "... tests/CodeH/test_timeline_unit_shifts.i"
+	@echo "... tests/CodeH/test_timeline_unit_shifts.s"
 	@echo "... tests/CodeM/test_advanced_indexing.o"
 	@echo "... tests/CodeM/test_advanced_indexing.i"
 	@echo "... tests/CodeM/test_advanced_indexing.s"

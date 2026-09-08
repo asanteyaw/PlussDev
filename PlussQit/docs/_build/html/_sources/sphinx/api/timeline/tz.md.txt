@@ -52,11 +52,11 @@ auto local = utc.tz_convert("America/New_York");
 
 std::cout << std::boolalpha
           << "UTC: tz=" << utc.tz()
-          << ", epoch=" << utc.to_epoch_nanos_vector().front() << "\n"
+          << ", epoch=" << utc.ticks().front() << "\n"
           << "New York: tz=" << local.tz()
-          << ", epoch=" << local.to_epoch_nanos_vector().front() << "\n"
+          << ", epoch=" << local.ticks().front() << "\n"
           << "same instant: "
-          << (utc.to_epoch_nanos_vector() == local.to_epoch_nanos_vector())
+          << (utc.ticks() == local.ticks())
           << "\n";
 ```
 
@@ -102,10 +102,9 @@ read on a wall clock*.
 
 - [`Timeline::tz_convert`](tz_convert.md)
 - [`Timeline::tz_localize`](tz_localize.md)
-- [`Timeline::to_utc`](to_utc.md)
-- [`Timeline::to_epoch_nanos_vector`](to_epoch_nanos_vector.md)
+- [`Timeline::ticks`](ticks.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_scalar.html"><span class="label">Previous</span><span class="title">is_scalar</span></a>
+  <a class="prev-link" href="to_timeindex.html"><span class="label">Previous</span><span class="title">to_timeindex</span></a>
   <a class="next-link" href="host.html"><span class="label">Next</span><span class="title">host</span></a>
 </div>

@@ -78,15 +78,14 @@ Timeline(shape=[2], tz=America/New_York)
 ## See Also
 
 - [`Timeline::tz_convert`](tz_convert.md)
-- [`Timeline::to_utc`](to_utc.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tz_convert.html">
     <span class="label">Previous</span>
     <span class="title">tz_convert</span>
   </a>
-  <a class="next-link" href="to_utc.html">
+  <a class="next-link" href="min.html">
     <span class="label">Next</span>
-    <span class="title">to_utc</span>
+    <span class="title">min</span>
   </a>
 </div>

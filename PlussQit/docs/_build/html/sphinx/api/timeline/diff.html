@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::eq" href="eq.html" />
-    <link rel="prev" title="Timeline::sub_duration" href="sub_duration.html" />
+    <link rel="next" title="Timeline::dim" href="dim.html" />
+    <link rel="prev" title="Timeline::defined" href="defined.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -171,6 +171,8 @@ corresponding <code class="docutils literal notranslate"><span class="pre">base<
 <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> in either operand propagates to <code class="docutils literal notranslate"><span class="pre">Duration::kNaT</span></code> in the result, the
 same as <code class="docutils literal notranslate"><span class="pre">add_duration</span></code>/<code class="docutils literal notranslate"><span class="pre">sub_duration</span></code>.</p></li>
+<li><p>A distance outside the representable signed nanosecond range throws instead
+of wrapping.</p></li>
 <li><p>If what you actually want is to move timestamps forward or backward, use
 <a class="reference internal" href="add_duration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add_duration</span></code></span></a> or <a class="reference internal" href="sub_duration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sub_duration</span></code></span></a>
 instead.</p></li>
@@ -235,6 +237,7 @@ duration, identical to <code class="docutils literal notranslate"><span class="p
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -285,8 +288,8 @@ duration, identical to <code class="docutils literal notranslate"><span class="p
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="sub_duration.html" title="previous chapter">Timeline::sub_duration</a></li>
-      <li>Next: <a href="eq.html" title="next chapter">Timeline::eq</a></li>
+      <li>Previous: <a href="defined.html" title="previous chapter">Timeline::defined</a></li>
+      <li>Next: <a href="dim.html" title="next chapter">Timeline::dim</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

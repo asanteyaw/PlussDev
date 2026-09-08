@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::add_duration(const Duration& d) -> Timeline
+Timeline Timeline::add_duration(const Duration& duration) const
 ```
 
 ## What It Does
@@ -41,7 +41,7 @@ you construct:
 
 - minutes for intraday shifts
 - hours for session or timezone-style offsets
-- days for calendar roll-forward work
+- days for an exact multiple of 24 elapsed hours
 
 ## Returns
 
@@ -130,12 +130,13 @@ Timeline(shape=[], tz=UTC)
 1999-04-18 00:15:23
 ```
 
-This is plain fixed-offset nanosecond arithmetic on the UTC epoch axis — it
+This is plain fixed-offset nanosecond arithmetic on the UTC epoch axis; it
 has no concept of calendar irregularities. If you instead want "3 calendar
-hours in a given timezone, respecting DST transitions," or "add 1 calendar
-month," that is a different, unrelated mechanism: `Timeline::add_years`,
-`add_months`, `add_days` (calendar-offset based, not `Duration`-based; not
-yet documented on their own page).
+days in a given timezone, respecting offset transitions," or "add 1 calendar
+month," use [`Timeline::add_days`](add_days.md),
+[`Timeline::add_months`](add_months.md), or
+[`Timeline::add_years`](add_years.md). Those methods operate on local calendar
+fields rather than adding a fixed `Duration`.
 
 ## Operator Sugar Is the Named Method, Not a Separate Path
 
@@ -155,9 +156,10 @@ Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
 data=true
 ```
 
-The reverse form, `duration + timeline`, does not exist — only
-`Timeline::operator+(const Duration&)` is defined, so the `Timeline` must be
-the left-hand operand.
+Addition is commutative at the public surface: both `timeline + duration` and
+`duration + timeline` return the same Timeline. The reverse form is useful
+when a duration expression naturally comes first; it is not a different
+kernel or a different broadcasting rule.
 
 `t += d` and `t -= d` also exist, as compound-assignment sugar around the
 same two binary operators (`*this = *this + d; return *this;`), and are
@@ -231,17 +233,17 @@ Timeline(shape=[4], tz=UTC)
 [ 2024-11-01 10:00:00, 2024-11-01 12:00:00, 2024-11-01 14:00:00, 2024-11-01 16:00:00 ]
 ```
 
-## Missing Values
+## Absent Instants
 
-`NaT` propagates from either side of the addition — a missing timestamp or a
-missing (`Duration::kNaT`) duration both produce `NaT`:
+`NaT` propagates from either side of the addition: an absent instant or an
+absent (`Duration::kNaT`) duration both produce `NaT`:
 
 ```cpp
-const auto t_missing = pluss::timeline::make(""); // documented missing-timestamp text
-std::cout << pluss::timeline::print(t_missing + pluss::duration::hours(1)) << "\n";
+const auto t_absent = pluss::timeline::make(""); // documented absent-instant text
+std::cout << pluss::timeline::print(t_absent + pluss::duration::hours(1)) << "\n";
 
-const auto d_missing = pluss::duration::nanos(pluss::Duration::kNaT);
-std::cout << pluss::timeline::print(t0 + d_missing) << "\n";
+const auto d_absent = pluss::duration::nanos(pluss::Duration::kNaT);
+std::cout << pluss::timeline::print(t0 + d_absent) << "\n";
 ```
 
 ### Output
@@ -285,11 +287,13 @@ reflects the timezone label.
 
 ## Notes
 
-- Missing timestamps stay missing.
+- Absent instants remain absent.
 - The timeline shape is preserved (subject to broadcasting, see above).
 - Crossing a date boundary is handled naturally by the underlying timestamp
   arithmetic, as shown by the verified `2024-12-31` to `2025-01-01` rollover in
   Example 2 above and the `21:15:23` to next-day `00:15:23` rollover above.
+- A shift outside the representable nanosecond epoch range throws; it never
+  wraps into another date or into `NaT`.
 - Operator sugar also exists: `t + d`, and it is identical to `add_duration`,
   not an approximation of it. `t += d` is the compound-assignment form of the
   same thing.
@@ -301,9 +305,9 @@ reflects the timezone label.
 - [`Timeline::add_nanos`](add_nanos.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="epoch_nanos.html">
+  <a class="prev-link" href="operators.html">
     <span class="label">Previous</span>
-    <span class="title">epoch_nanos</span>
+    <span class="title">operators</span>
   </a>
   <a class="next-link" href="sub_duration.html">
     <span class="label">Next</span>

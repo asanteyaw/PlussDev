@@ -40,7 +40,13 @@ static ::std::string encode_hex(::std::string_view s) {
   return oss.str();
 }
 
-static ::std::string escape_text(::std::string_view s, bool escape_controls) {
+// `escape_controls` escapes C0 controls and DEL as `\xNN` (plus the named
+// escapes). `escape_high` additionally escapes every byte >= 0x80, so the
+// escaped view of a bytes-mode Note is always printable ASCII and safe to
+// embed in text; UTF-8-mode text passes high bytes through so real characters
+// still render.
+static ::std::string escape_text(::std::string_view s, bool escape_controls,
+                                 bool escape_high) {
   ::std::string out;
   out.reserve(s.size() + 8);
   for (unsigned char c : s) {
@@ -52,8 +58,10 @@ static ::std::string escape_text(::std::string_view s, bool escape_controls) {
       case '\t': out += "\\t"; break;
       case '\f': out += "\\f"; break;
       case '\b': out += "\\b"; break;
-      default:
-        if (!escape_controls || (c >= 0x20 && c != 0x7F)) {
+      default: {
+        const bool is_control = escape_controls && (c < 0x20 || c == 0x7F);
+        const bool is_high = escape_high && c >= 0x80;
+        if (!is_control && !is_high) {
           out.push_back(static_cast<char>(c));
         } else {
           static constexpr char kHex[] = "0123456789ABCDEF";
@@ -62,22 +70,33 @@ static ::std::string escape_text(::std::string_view s, bool escape_controls) {
           out.push_back(kHex[c & 0xF]);
         }
         break;
+      }
     }
   }
   return out;
 }
 
 static ::std::string format_cell(::std::string_view s, bool is_bytes, const NotePrintOptions& opt) {
+  // `max_cell_chars` caps the inner content of a cell. Any surrounding
+  // delimiters (`"..."`, `b"..."`, `hex[...]`) are added after clipping so a
+  // clipped cell is never left with an unbalanced quote or bracket.
+  const ::std::int64_t budget = opt.max_cell_chars;
+  const auto inner_budget = [&](::std::int64_t wrap) {
+    return (budget > wrap) ? (budget - wrap) : budget;
+  };
+
   if (is_bytes && opt.bytes_mode == NotePrintBytesMode::Hex) {
-    ::std::string out = "hex[" + encode_hex(s) + "]";
-    return maybe_clip(::std::move(out), opt.max_cell_chars);
+    return "hex[" + maybe_clip(encode_hex(s), inner_budget(5)) + "]";
   }
 
-  ::std::string body = escape_text(s, opt.escape_controls);
+  ::std::string body = escape_text(s, opt.escape_controls,
+                                   /*escape_high=*/is_bytes && opt.escape_controls);
   if (opt.quote_strings) {
-    body = (is_bytes ? "b\"" : "\"") + body + "\"";
+    const ::std::int64_t wrap = is_bytes ? 3 : 2;  // b"" or ""
+    body = maybe_clip(::std::move(body), inner_budget(wrap));
+    return (is_bytes ? "b\"" : "\"") + body + "\"";
   }
-  return maybe_clip(::std::move(body), opt.max_cell_chars);
+  return maybe_clip(::std::move(body), budget);
 }
 
 static ::std::vector<::std::int64_t> visible_tokens(::std::int64_t n,
@@ -114,6 +133,9 @@ static void append_metadata(::std::ostringstream& oss, const Note& n, const Note
     oss << key << "=" << val;
   };
 
+  // Compact mode is a deliberately terse one-liner: shape and encoding only
+  // (dim and numel are both derivable from shape). Full mode honors the
+  // individual show_* toggles.
   if (opt.show_shape || compact) {
     ::std::ostringstream sh;
     sh << "[";
@@ -124,8 +146,8 @@ static void append_metadata(::std::ostringstream& oss, const Note& n, const Note
     sh << "]";
     add("shape", sh.str());
   }
-  if (opt.show_dim || compact) add("dim", ::std::to_string(n.dim()));
-  if (opt.show_numel) add("numel", ::std::to_string(n.numel()));
+  if (opt.show_dim && !compact) add("dim", ::std::to_string(n.dim()));
+  if (opt.show_numel && !compact) add("numel", ::std::to_string(n.numel()));
   if (opt.show_encoding || compact) {
     add("encoding", static_cast<const NoteBase&>(n).is_bytes() ? "bytes" : "utf8");
   }
@@ -188,7 +210,7 @@ static ::std::string render_note(const Note& n, const NotePrintOptions& opt) {
   if (!n.defined()) return "Note(undefined)";
 
   ::std::ostringstream oss;
-  if (show_header(opt)) {
+  if (show_header(opt) && opt.metadata_mode != NotePrintMetadataMode::None) {
     append_metadata(oss, n, opt);
     if (show_values(opt)) oss << "\n";
   }

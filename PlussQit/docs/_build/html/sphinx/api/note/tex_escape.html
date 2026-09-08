@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Note::tex_to_text" href="tex_to_text.html" />
-    <link rel="prev" title="Note::strip" href="strip.html" />
+    <link rel="prev" title="Note::swapcase" href="swapcase.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,100 +36,153 @@
 
           <div class="body" role="main">
             
-  <section id="note-tex-escape">
+  <!-- pluss-hand-authored -->
+<section id="note-tex-escape">
 <h1>Note::tex_escape<a class="headerlink" href="#note-tex-escape" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">tex_escape</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">tex_escape</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Escapes TeX-sensitive characters so ordinary text can be inserted more safely
-into LaTeX-oriented content.</p>
-<p>This is the first TeX-facing method many users need. It is useful when you have
-plain text containing <code class="docutils literal notranslate"><span class="pre">%</span></code>, <code class="docutils literal notranslate"><span class="pre">$</span></code>, backslashes, or similar special characters and
-you want to move that text into a TeX document without it being interpreted as
-raw TeX syntax.</p>
-<p>It is not the right method when the input is already authored LaTeX that you
-intend to preserve as live commands. In that case, escaping would destroy the
-meaning of the source.</p>
+<section id="make-every-cell-safe-to-drop-into-tex-source">
+<h2>Make Every Cell Safe To Drop Into TeX Source<a class="headerlink" href="#make-every-cell-safe-to-drop-into-tex-source" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tex_escape()</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with every
+TeX/LaTeX special character in each cell replaced by its escaped form. Use it
+when arbitrary text — a name, a title, a value from a dataset — has to be
+inserted into a <code class="docutils literal notranslate"><span class="pre">.tex</span></code> document or a formula label without the TeX compiler
+mis-reading a <code class="docutils literal notranslate"><span class="pre">_</span></code>, <code class="docutils literal notranslate"><span class="pre">%</span></code>, or <code class="docutils literal notranslate"><span class="pre">$</span></code>.</p>
+<p>The ten characters TeX treats specially are escaped as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">\</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\textbackslash{}</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">{</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\{</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\}</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">#</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\#</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">$</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\$</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">%</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\%</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&amp;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\&amp;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\_</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">^</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\^{}</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">~</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">\~{}</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Every other byte is copied unchanged, so text with no specials is returned
+as-is. The escape is purely lexical — it does not know or care whether the
+cell was already partly escaped, so escaping twice doubles the backslashes.</p>
+<p>This is the opposite direction from <a class="reference internal" href="tex_to_text.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tex_to_text</span></code></span></a>, which
+<em>consumes</em> TeX markup. The exact inverse of <code class="docutils literal notranslate"><span class="pre">tex_escape()</span></code> is
+<code class="docutils literal notranslate"><span class="pre">tex_unescape()</span></code>; <code class="docutils literal notranslate"><span class="pre">tex_to_text()</span></code> is lossy here because it also strips
+commands and separates the digits it leaves behind.</p>
+<p>The operation is shape-preserving, cell-independent, and returns a fresh
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>. Output cells are longer than their inputs wherever a special
+appeared.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p>This method takes no parameters.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code> with TeX-special characters escaped.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Escape percent signs, dollar signs, and literal backslash-led names.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;Price is 50% of $x+y$&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">Use \alpha and \beta.</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tex</span><span class="p">.</span><span class="n">tex_escape</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tex_escape:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
+<section id="example-1-all-ten-specials">
+<h2>Example 1: All Ten Specials<a class="headerlink" href="#example-1-all-ten-specials" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a_b $x$ 50% cost #1 &amp; more {y} ~ ^ </span><span class="se">\\</span><span class="s">&quot;</span><span class="p">}).</span><span class="n">tex_escape</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tex_escape:
-  [0] Price is 50\% of \$x+y\$
-  [1] Use \textbackslash{}alpha and \textbackslash{}beta.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;a\\_b \\$x\\$ 50\\% cost \\#1 \\&amp; more \\{y\\} \\~{} \\^{} \\textbackslash{}&quot;]
 </pre></div>
 </div>
-<p>Example 2. Plain text that has no TeX-sensitive characters stays readable after
-the pass.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;chapter title&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;plain text&quot;</span><span class="p">}).</span><span class="n">tex_escape</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;tex_escape_plain:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">numel</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;] &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">print</span></code> shows each output backslash as <code class="docutils literal notranslate"><span class="pre">\\</span></code>; the cell holds single
+backslashes (<code class="docutils literal notranslate"><span class="pre">a\_b</span> <span class="pre">\$x\$</span> <span class="pre">…</span></code>).</p>
 </section>
+</section>
+<section id="example-2-plain-text-is-unchanged">
+<h2>Example 2: Plain Text Is Unchanged<a class="headerlink" href="#example-2-plain-text-is-unchanged" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;nothing special here&quot;</span><span class="p">}).</span><span class="n">tex_escape</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tex_escape_plain:
-  [0] chapter title
-  [1] plain text
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;nothing special here&quot;]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tex_escape()</span></code> is for protecting plain text, not for preserving live TeX
-commands.</p></li>
-<li><p>If your input is already authored TeX and you want to inspect or simplify it,
-use the broader TeX method family instead of escaping it again.</p></li>
-<li><p>This method preserves shape and works cell by cell like the rest of the <code class="docutils literal notranslate"><span class="pre">Note</span></code>
-transform family.</p></li>
-</ul>
+<section id="example-3-a-scalar">
+<h2>Example 3: A Scalar<a class="headerlink" href="#example-3-a-scalar" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;C_1 &amp; C_2&quot;</span><span class="p">).</span><span class="n">tex_escape</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;C\\_1 \\&amp; C\\_2&quot;
+</pre></div>
+</div>
+<p>The cell holds <code class="docutils literal notranslate"><span class="pre">C\_1</span> <span class="pre">\&amp;</span> <span class="pre">C\_2</span></code>.</p>
+</section>
+</section>
+<section id="example-4-tex-to-text-is-not-a-clean-inverse">
+<h2>Example 4: <code class="docutils literal notranslate"><span class="pre">tex_to_text</span></code> Is Not A Clean Inverse<a class="headerlink" href="#example-4-tex-to-text-is-not-a-clean-inverse" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;rate 50% of x_1&quot;</span><span class="p">}).</span><span class="n">tex_escape</span><span class="p">().</span><span class="n">tex_to_text</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;rate 50 of x 1&quot;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tex_escape</span></code> produced <code class="docutils literal notranslate"><span class="pre">rate</span> <span class="pre">50\%</span> <span class="pre">of</span> <span class="pre">x\_1</span></code>; <code class="docutils literal notranslate"><span class="pre">tex_to_text</span></code> then removed the
+<code class="docutils literal notranslate"><span class="pre">\%</span></code> and <code class="docutils literal notranslate"><span class="pre">\_</span></code> as commands and split the remaining tokens. Use
+<code class="docutils literal notranslate"><span class="pre">tex_unescape()</span></code> for a lossless round trip.</p>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a>: manual literal substitution if you only need a
-tiny custom escape rule.</p></li>
-<li><p><a class="reference internal" href="nlp_remove_urls.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::nlp_remove_urls</span></code></span></a>: remove unwanted link text
-before escaping for TeX export.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::tex_unescape</span></code>: the exact inverse of <code class="docutils literal notranslate"><span class="pre">tex_escape</span></code>.</p></li>
+<li><p><a class="reference internal" href="tex_to_text.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::tex_to_text</span></code></span></a>: the other direction — reduce
+authored TeX to readable plain text (lossy).</p></li>
+<li><p><a class="reference internal" href="url_encode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::url_encode</span></code></span></a> /
+<a class="reference internal" href="base64_encode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::base64_encode</span></code></span></a>: escaping/encoding for other
+specific consumers.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="strip.html">
+  <a class="prev-link" href="swapcase.html">
     <span class="label">Previous</span>
-    <span class="title">strip</span>
+    <span class="title">swapcase</span>
   </a>
   <a class="next-link" href="tex_to_text.html">
     <span class="label">Next</span>
@@ -177,6 +230,7 @@ before escaping for TeX export.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -227,7 +281,7 @@ before escaping for TeX export.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="strip.html" title="previous chapter">Note::strip</a></li>
+      <li>Previous: <a href="swapcase.html" title="previous chapter">Note::swapcase</a></li>
       <li>Next: <a href="tex_to_text.html" title="next chapter">Note::tex_to_text</a></li>
   </ul></li>
   </ul></li>

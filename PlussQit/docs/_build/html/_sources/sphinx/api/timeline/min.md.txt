@@ -2,113 +2,157 @@
 
 [Back to Timeline API Reference](../../timeline_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Timeline::min() -> Timeline
-Timeline::max() -> Timeline
-Timeline::sort() -> Timeline
-Timeline::unique() -> Timeline
-Timeline::drop_duplicates() -> Timeline
+Timeline Timeline::min(bool skipna = true) const
 ```
 
-## What It Does
+## Find The Earliest Valid Instant
 
-This page covers the ordering and deduplication family:
+`min()` searches every element and returns the earliest valid timestamp as a
+scalar Timeline. It is a global reduction: a vector, matrix, or higher-rank
+Timeline is reduced to `shape=[]`. There is no dimension argument and no
+`keepdim` form.
 
-- `min()`
-  Return the earliest defined timestamp as a scalar timeline.
-- `max()`
-  Return the latest defined timestamp as a scalar timeline.
-- `sort()`
-  Return the sorted 1D timeline.
-- `unique()`
-  Return distinct timestamps.
-- `drop_duplicates()`
-  The same deduplication result as `unique()` in the current implementation.
+`skipna` controls `NaT` propagation:
 
-## Examples
+- `true` (the default) excludes `NaT` and returns the earliest valid instant.
+- `false` returns scalar `NaT` if any input element is `NaT`.
 
-Example 1. Read the earliest and latest defined timestamps.
+The comparison uses absolute epoch nanoseconds, not formatted date strings or
+array position. Input order and duplicate timestamps therefore do not change
+the result. The receiver is not sorted or mutated.
+
+## Absent-Instant Rule
+
+With `skipna=true`, `NaT` values are skipped while at least one valid timestamp exists. If the
+Timeline is empty or every element is `NaT`, `min()` returns a scalar `NaT`
+instead of throwing. This gives the reduction a stable return type, but callers
+that require a valid result should check `isnat_scalar()`.
+
+## Example 1: Reduce A Matrix And Ignore `NaT`
 
 ```cpp
-auto lo = duplicated.min();
-auto hi = duplicated.max();
-std::cout << pluss::timeline::print(lo) << "\n";
-std::cout << pluss::timeline::print(hi) << "\n";
+const auto observations = pluss::timeline::make({
+    {"2025-06-15T08:30:00Z", ""},
+    {"2024-01-02T18:45:00Z", "2026-09-30T03:15:00Z"},
+});
+
+pluss::timeline::print(std::cout, observations.min());
 ```
 
 ### Output
 
-`duplicated.min()`:
-
 ```text
 Timeline(shape=[], tz=UTC)
-2024-11-01 09:00:00
+2024-01-02 18:45:00
 ```
 
-`duplicated.max()`:
+The earliest value sits in the second row. `min()` examines the whole matrix;
+it does not reduce rows independently, and the absent first-row value is not
+allowed to erase the valid result.
 
-```text
-Timeline(shape=[], tz=UTC)
-2025-01-01 00:00:00
-```
-
-Example 2. Sort the timeline and then remove duplicates.
+## Example 2: Empty And All-NaT Inputs
 
 ```cpp
-auto ordered = duplicated.sort();
-auto distinct = duplicated.unique();
-auto deduped = duplicated.drop_duplicates();
-std::cout << pluss::timeline::print(ordered) << "\n";
-std::cout << pluss::timeline::print(distinct) << "\n";
-std::cout << pluss::timeline::print(deduped) << "\n";
+const auto absent = pluss::timeline::make({"", ""});
+const auto empty =
+    pluss::timeline::from_epoch(std::vector<std::int64_t>{});
+
+pluss::timeline::print(std::cout, absent.min());
+std::cout << '\n';
+pluss::timeline::print(std::cout, empty.min());
 ```
 
 ### Output
 
-`duplicated.sort()`:
-
 ```text
-Timeline(shape=[6], tz=UTC)
-[ 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2024-11-01 10:15:30, 2025-01-01 00:00:00, NaT, NaT ]
+Timeline(shape=[], tz=UTC)
+NaT
+Timeline(shape=[], tz=UTC)
+NaT
 ```
 
-`duplicated.unique()`:
+An empty Timeline has no candidate; an all-`NaT` Timeline has no valid
+candidate. Both cases deliberately converge on the same scalar `NaT` result.
 
-```text
-Timeline(shape=[4], tz=UTC)
-[ NaT, 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2025-01-01 00:00:00 ]
+## Example 3: Timezone Changes Rendering, Not The Winner
+
+```cpp
+const auto utc = pluss::timeline::make({
+    "2025-06-15T08:30:00Z",
+    "2024-01-02T18:45:00Z",
+    "2026-09-30T03:15:00Z",
+});
+const auto local = utc.tz_convert("America/New_York");
+
+pluss::timeline::print(std::cout, local.min());
 ```
 
-`duplicated.drop_duplicates()`:
+### Output
 
 ```text
-Timeline(shape=[4], tz=UTC)
-[ NaT, 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2025-01-01 00:00:00 ]
+Timeline(shape=[], tz=America/New_York)
+2024-01-02 13:45:00
 ```
 
-## Notes
+The selected instant is still `2024-01-02T18:45:00Z`; the result simply keeps
+the receiver's New York timezone and renders that instant locally.
 
-- Missing timestamps are ignored by `min()` and `max()` when searching for
-  extrema.
-- `sort()`, `unique()`, and `drop_duplicates()` are currently 1D-oriented
-  operations.
-- `unique()` currently returns sorted distinct values rather than preserving
-  first-occurrence order.
+## Example 4: Require A Completely Valid Input
+
+```cpp
+const auto observations = pluss::timeline::make({
+    "2025-06-15T08:30:00Z", "",
+    "2024-01-02T18:45:00Z",
+});
+
+pluss::timeline::print(std::cout, observations.min(false));
+```
+
+### Output
+
+```text
+Timeline(shape=[], tz=UTC)
+NaT
+```
+
+Use `skipna=false` when an absent instant should invalidate the reduction
+instead of being excluded.
+
+## Choosing The Right Operation
+
+- Use `min()` for the earliest timestamp value anywhere in the Timeline.
+- Use `argsort()` when you need the positions that establish ordering.
+- Use `sort()` when you need all timestamps arranged chronologically.
+- Do not use `min()` to obtain the first stored element; chronological minimum
+  and first position are unrelated unless the data is already sorted.
+
+## Gotchas And Failure Modes
+
+- The reduction is global and always returns a scalar Timeline.
+- `NaT` is ignored by default and propagated when `skipna=false`.
+- Ties do not expose which occurrence won because the method returns a value,
+  not an index.
+- The default Timeline printer displays whole seconds; the stored timestamp
+  and comparison retain nanosecond precision.
+
+## Summary
+
+`min()` means “earliest valid instant over all elements.” It preserves temporal
+type and timezone, skips `NaT` by default, can propagate it on
+request, returns scalar `NaT` when no valid candidate exists, and never changes
+the receiver.
 
 ## See Also
 
-- [`Timeline::argsort`](argsort.md)
-- [`Timeline::searchsorted_left`](searchsorted_left.md)
+- [`max`](max.md): return the latest valid instant.
+- [`argsort`](argsort.md): obtain chronological positions.
+- [`isnat_scalar`](isnat_scalar.md): validate the scalar result.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_utc.html">
-    <span class="label">Previous</span>
-    <span class="title">to_utc</span>
-  </a>
-  <a class="next-link" href="fill_nat.html">
-    <span class="label">Next</span>
-    <span class="title">fill_nat</span>
-  </a>
+  <a class="prev-link" href="tz_localize.html"><span class="label">Previous</span><span class="title">tz_localize</span></a>
+  <a class="next-link" href="max.html"><span class="label">Next</span><span class="title">max</span></a>
 </div>
+<!-- pluss-hand-authored -->

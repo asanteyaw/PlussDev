@@ -70,7 +70,7 @@ broadcasting to every selected row) or exactly that same length.
 **default_value** (`Thread` / `double` / `std::string_view` / `const char*` /
 `pluss::Timeline` / `pluss::TimeIndex` / `pluss::null_t`)
     The value used for any row where **no** condition is `true`. Must match `choices`'
-    payload kind (or be `pluss::null`, which is always accepted).
+    payload kind (or be `pluss::series::null`, which is always accepted).
 
 ## Returns
 

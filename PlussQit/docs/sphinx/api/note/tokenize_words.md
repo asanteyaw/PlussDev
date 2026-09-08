@@ -1,149 +1,148 @@
+<!-- pluss-hand-authored -->
 # Note::tokenize_words
 
 [Back to Note API Reference](../../note_api_reference)
 
-## Signature
+## Signatures
 
 ```cpp
-Note::tokenize_words() const -> TokenBatch
-Note::tokenize_words(std::int64_t flags) const -> TokenBatch
+TokenBatch Note::tokenize_words() const
+TokenBatch Note::tokenize_words(std::int64_t flags) const
 ```
 
-## What It Does
+## Tokenize Each Cell Into Word-Like Units
 
-Tokenizes each text cell into word-like units.
+`tokenize_words()` splits each text cell into word tokens and returns them as
+a `TokenBatch`. It sits one step above [`split_whitespace`](split_whitespace.md):
+instead of "everything between spaces," it recognizes word shapes and drops
+the punctuation between them, so `"One.\nTwo!"` tokenizes to `One`, `Two` —
+no trailing `.` or `!`.
 
-This sits one step above raw delimiter splitting: instead of splitting on a
-single literal character or on whitespace only, `tokenize_words()` applies the
-library’s word tokenization behavior and returns a flattened token stream with
-case offsets.
+### What counts as a word
 
-Use this when punctuation and spacing are not enough to describe the token
-boundaries you want. It is the bridge between very light structural splitting
-and fuller NLP surfaces.
+The tokenizer is **ASCII-oriented**. A word is a run of ASCII letters and
+digits, with a few extensions:
 
-## Parameters
+- `_` is part of a word (`snake_case` is one token).
+- A single `-` or `'` **between** two alphanumeric characters stays inside
+  the word (`state-of-the-art`, `don't`).
+- Trailing `+` or `#` after a letter is kept (`C++`, `C#`).
+- URLs, email addresses, and common dotted abbreviations are recognized and
+  kept whole rather than shattered on their `.` and `/`.
 
-**flags**
+Everything else — spaces, standalone punctuation, and **every byte outside
+ASCII** — is a separator. That last point matters: a non-ASCII letter breaks
+the word around it, so `"café2"` tokenizes to `caf`, `2` and `"über-cool"` to
+`ber-cool`. For Unicode-aware segmentation, use `regex_split` /
+[`regex_findall`](regex_findall.md) with an explicit pattern, or normalize
+the text first.
 
-Optional tokenizer-behavior flags.
+### `flags`
 
-- `tokenize_words()`
-  Uses the library's default word-tokenization policy.
-- `tokenize_words(flags)`
-  Uses an explicit flag bitmask. Reach for this overload only when you already
-  know the library-defined flag contract you want to opt into.
+`flags` is a bitmask; `flags <= 0` (the default) leaves tokens as they appear
+in the source. Bit `1 << 0` (value `1`) case-folds every emitted token
+(ASCII lowercase) without changing the token boundaries — convenient for
+building a bag-of-words key in one call instead of chaining
+[`lower`](lower.md).
 
-This page does not invent semantics for unnamed flag bits. When a future pass
-documents a specific flag family, it should do so with explicit flag names and
-verified examples rather than hand-waving about possible behaviors.
+### The `TokenBatch` result
 
-## Returns
+Tokens from all cells are concatenated into one flat rank-`1` token `Note`
+(`batch.tokens()`); `batch.offsets()` (length `numel + 1`) marks each cell's
+run: cell `r` is `tokens()[offsets()[r] .. offsets()[r+1])`. A cell with no
+word contributes an empty range.
 
-`TokenBatch`
-    A flat word-token stream plus `offsets()` describing which tokens belong to
-    each input cell.
-
-## Examples
-
-Example 1. Tokenize mixed punctuation and newline text into words.
+## Example 1: Punctuation Is Dropped
 
 ```cpp
-auto note = pluss::make_note({"One.\nTwo!", "A,b;c"});
-auto out = note.tokenize_words();
-std::cout << "tokenize_words tokens:";
-for (std::int64_t i = 0; i < out.tokens().numel(); ++i) {
-  std::cout << " [" << out.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "tokenize_words offsets:";
-for (std::int64_t off : out.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch =
+    pluss::make_note({"One.\nTwo!", "price=12.50, paid!"}).tokenize_words();
+
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-tokenize_words tokens: [One] [Two] [A] [b] [c]
-tokenize_words offsets: 0 2 5
+Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["One", "Two", "price", "12", "50", "paid"]
+offsets: [0, 2, 6]
 ```
 
-Example 2. Normalize case first when you want lowercase word tokens directly.
+The `.`, `!`, `=`, and `,` are all separators; `12.50` splits at the `.`.
+
+## Example 2: The Case-Fold Flag
 
 ```cpp
-auto note = pluss::make_note({"Ada LOVELACE", "Grace Hopper"});
-auto lower = note.lower();
-auto out = lower.tokenize_words();
-std::cout << "tokenize_words_lower tokens:";
-for (std::int64_t i = 0; i < out.tokens().numel(); ++i) {
-  std::cout << " [" << out.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "tokenize_words_lower offsets:";
-for (std::int64_t off : out.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch =
+    pluss::make_note({"Ada LOVELACE", "Grace Hopper"}).tokenize_words(1);
+std::cout << pluss::note::print(batch.tokens()) << "\n";
 ```
 
 ### Output
 
 ```text
-tokenize_words_lower tokens: [ada] [lovelace] [grace] [hopper]
-tokenize_words_lower offsets: 0 2 4
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["ada", "lovelace", "grace", "hopper"]
 ```
 
-Example 3. Compare it mentally with `split_whitespace()` when you want a more
-word-like split but still need to see what the default tokenizer keeps intact.
+## Example 3: Without The Flag
 
 ```cpp
-auto note = pluss::make_note({"price=12.50, paid!", "ref:A-17"});
-auto out = note.tokenize_words();
-std::cout << "tokenize_words_punct tokens:";
-for (std::int64_t i = 0; i < out.tokens().numel(); ++i) {
-  std::cout << " [" << out.tokens().at(i) << "]";
-}
-std::cout << "\n";
-std::cout << "tokenize_words_punct offsets:";
-for (std::int64_t off : out.offsets()) {
-  std::cout << " " << off;
-}
-std::cout << "\n";
+const auto batch = pluss::make_note({"Ada LOVELACE"}).tokenize_words();
+std::cout << pluss::note::print(batch.tokens()) << "\n";
 ```
 
 ### Output
 
 ```text
-tokenize_words_punct tokens: [price] [12] [50] [paid] [ref] [A-17]
-tokenize_words_punct offsets: 0 4 6
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Ada", "LOVELACE"]
 ```
 
-## Notes
+## Example 4: Per-Cell Runs
 
-- The current default behavior often strips obvious punctuation boundaries, but
-  some compound fragments can remain intact, as `A-17` does in the third
-  example.
-- `offsets()` show that the first input cell contributed two words and the
-  second contributed three.
-- If your use case is pure whitespace structure without word-token logic,
-  [`split_whitespace`](split_whitespace.md) is the more direct primitive.
+```cpp
+const auto batch = pluss::make_note({{"a b", "c d e"}}).tokenize_words();
+
+std::cout << pluss::note::print(batch.tokens()) << "\n";
+std::cout << "offsets: [";
+for (std::size_t i = 0; i < batch.offsets().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets()[i];
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["a", "b", "c", "d", "e"]
+offsets: [0, 2, 5]
+```
+
+The `1×2` input flattens row-major: cell `0` → `[0, 2)`, cell `1` →
+`[2, 5)`.
 
 ## See Also
 
-- [`Note::split_whitespace`](split_whitespace.md): simpler structural token
-  splitting.
-- [`Note::regex_findall`](regex_findall.md): extract only tokens that match a
-  pattern.
+- [`Note::split_whitespace`](split_whitespace.md): faster, purely
+  whitespace-delimited, keeps punctuation attached.
+- [`Note::regex_findall`](regex_findall.md) / `regex_split`: define your own
+  token pattern, including Unicode ranges.
+- `pluss::coden::Note::tokenize_sentences` / `tokenize_punct`: sibling
+  tokenizers for other units.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="split.html">
+  <a class="prev-link" href="title.html">
     <span class="label">Previous</span>
-    <span class="title">split</span>
+    <span class="title">title</span>
   </a>
-  <a class="next-link" href="nlp_mask_pii.html">
+  <a class="next-link" href="unquote.html">
     <span class="label">Next</span>
-    <span class="title">nlp_mask_pii</span>
+    <span class="title">unquote</span>
   </a>
 </div>

@@ -1599,8 +1599,8 @@ Thread Thread::arrange(bool ascending, bool nulls_last) const {
 
   if (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex) {
     const auto ticks = (kind() == ThreadKind::Timeline)
-        ? as_timeline().to_epoch_nanos_vector()
-        : as_timeindex().timeline().to_epoch_nanos_vector();
+        ? as_timeline().ticks()
+        : as_timeindex().timeline().ticks();
     std::optional<std::vector<bool>> valid = std::nullopt;
     if (has_validity_mask()) {
       valid = validity_mask()->to_vec<bool>();
@@ -2197,12 +2197,12 @@ ThreadValue Thread::min() const {
     }
     case ThreadKind::Timeline: {
       const auto sorted = observed.arrange(true, true);
-      const auto ticks = sorted.as_timeline().to_epoch_nanos_vector();
+      const auto ticks = sorted.as_timeline().ticks();
       return ThreadValue(Thread(rebuild_timeline_like(sorted.as_timeline(), {ticks.front()})));
     }
     case ThreadKind::TimeIndex: {
       const auto sorted = observed.arrange(true, true);
-      const auto ticks = sorted.as_timeindex().timeline().to_epoch_nanos_vector();
+      const auto ticks = sorted.as_timeindex().timeline().ticks();
       auto timeline = rebuild_timeline_like(sorted.as_timeindex().timeline(), {ticks.front()});
       return ThreadValue(Thread(timeline.to_timeindex(false)));
     }
@@ -2222,12 +2222,12 @@ ThreadValue Thread::max() const {
     }
     case ThreadKind::Timeline: {
       const auto sorted = observed.arrange(false, true);
-      const auto ticks = sorted.as_timeline().to_epoch_nanos_vector();
+      const auto ticks = sorted.as_timeline().ticks();
       return ThreadValue(Thread(rebuild_timeline_like(sorted.as_timeline(), {ticks.front()})));
     }
     case ThreadKind::TimeIndex: {
       const auto sorted = observed.arrange(false, true);
-      const auto ticks = sorted.as_timeindex().timeline().to_epoch_nanos_vector();
+      const auto ticks = sorted.as_timeindex().timeline().ticks();
       auto timeline = rebuild_timeline_like(sorted.as_timeindex().timeline(), {ticks.front()});
       return ThreadValue(Thread(timeline.to_timeindex(false)));
     }
@@ -2921,7 +2921,7 @@ Thread Thread::between(std::string_view lo, std::string_view hi, bool include_le
 
   auto lower = pluss::make_timeline(lo);
   auto upper = pluss::make_timeline(hi);
-  if (lower > upper) {
+  if ((lower > upper).item<bool>()) {
     std::swap(lower, upper);
     std::swap(include_left, include_right);
   }
@@ -2995,7 +2995,7 @@ int Thread::compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_
     case ThreadKind::Note:
       return cmp_string(std::string(as_note().at(l)), std::string(as_note().at(r)));
     case ThreadKind::Timeline: {
-      const auto ticks = as_timeline().to_epoch_nanos_vector();
+      const auto ticks = as_timeline().ticks();
       const auto lv_tick = ticks[static_cast<std::size_t>(l)];
       const auto rv_tick = ticks[static_cast<std::size_t>(r)];
       if (lv_tick < rv_tick) {
@@ -3007,7 +3007,7 @@ int Thread::compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_
       return 0;
     }
     case ThreadKind::TimeIndex: {
-      const auto ticks = as_timeindex().timeline().to_epoch_nanos_vector();
+      const auto ticks = as_timeindex().timeline().ticks();
       const auto lv_tick = ticks[static_cast<std::size_t>(l)];
       const auto rv_tick = ticks[static_cast<std::size_t>(r)];
       if (lv_tick < rv_tick) {
@@ -3271,7 +3271,7 @@ std::optional<std::int64_t> cast_timeline_tick_from_utf8_(std::string_view text)
     const auto parsed = pluss::codeh::ops_internal::timeline_from_utf8(
         std::span<const std::string_view>(views.data(), views.size()),
         std::span<const std::int64_t>(shape.data(), shape.size()));
-    auto ticks = parsed.to_epoch_nanos_vector();
+    auto ticks = parsed.ticks();
     if (ticks.empty() || !parsed.isvalid().all().item<bool>()) {
       return std::nullopt;
     }
@@ -3366,8 +3366,8 @@ Thread Thread::cast_(
 
       if (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex) {
         const auto ticks = (kind() == ThreadKind::Timeline)
-                               ? as_timeline().to_epoch_nanos_vector()
-                               : as_timeindex().timeline().to_epoch_nanos_vector();
+                               ? as_timeline().ticks()
+                               : as_timeindex().timeline().ticks();
         auto out = pluss::Series::empty({static_cast<std::int64_t>(ticks.size())}, pluss::codem::ScalarType::Int64);
         if (!ticks.empty()) {
           std::memcpy(out.raw_data(), ticks.data(), ticks.size() * sizeof(std::int64_t));

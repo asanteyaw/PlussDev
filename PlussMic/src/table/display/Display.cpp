@@ -213,12 +213,12 @@ Thread temporal_thread_to_display_note(const Thread& t) {
                               || !series_all_zero_i64(timeline.minute())
                               || !series_all_zero_i64(timeline.hour());
   if (!has_clock_time) {
-    return Thread(timeline.to_note_date(), detail::validity_mask(t));
+    return Thread(timeline.strftime("%Y-%m-%d"), detail::validity_mask(t));
   }
   if (!has_subsecond) {
-    return Thread(timeline.to_note_datetime(), detail::validity_mask(t));
+    return Thread(timeline.strftime("%Y-%m-%d %H:%M:%S"), detail::validity_mask(t));
   }
-  return Thread(timeline.to_note_datetime_nano(), detail::validity_mask(t));
+  return Thread(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), detail::validity_mask(t));
 }
 
 Thread display_thread(const Thread& t) {
@@ -239,9 +239,9 @@ std::string thread_value_at(const Thread& t, std::int64_t row) {
     case ThreadKind::Note:
       return std::string(t.as_note().at(row));
     case ThreadKind::Timeline:
-      return fmt::format("{}", t.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+      return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case ThreadKind::TimeIndex:
-      return fmt::format("{}", t.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+      return fmt::format("{}", t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
     default:
       return "<?>";
   }

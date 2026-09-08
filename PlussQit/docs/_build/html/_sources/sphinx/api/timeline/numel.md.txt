@@ -75,7 +75,7 @@ Example 3. Flat epoch export has exactly `numel()` entries.
 
 ```cpp
 auto times = pluss::timeline::epoch({2, 3});
-auto ticks = times.to_epoch_nanos_vector();
+auto ticks = times.ticks();
 std::cout << "numel=" << times.numel()
           << ", exported=" << ticks.size() << "\n";
 ```
@@ -99,7 +99,7 @@ numel=6, exported=6
 
 - [`Timeline::sizes`](sizes.md)
 - [`Timeline::dim`](dim.md)
-- [`Timeline::to_epoch_nanos_vector`](to_epoch_nanos_vector.md)
+- [`Timeline::ticks`](ticks.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dim.html"><span class="label">Previous</span><span class="title">dim</span></a>

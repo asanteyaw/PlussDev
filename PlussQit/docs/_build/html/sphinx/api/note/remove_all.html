@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::quote" href="quote.html" />
-    <link rel="prev" title="Note::tex_to_text" href="tex_to_text.html" />
+    <link rel="next" title="Note::replace" href="replace.html" />
+    <link rel="prev" title="Note::regex_findall" href="regex_findall.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,121 +36,117 @@
 
           <div class="body" role="main">
             
-  <section id="note-remove-all">
+  <!-- pluss-hand-authored -->
+<section id="note-remove-all">
 <h1>Note::remove_all<a class="headerlink" href="#note-remove-all" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">remove_all</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">needle</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">remove_all</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">needle</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Removes every literal occurrence of a substring from each text cell.</p>
-<p>This differs from <a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace</span></code></span></a> in one practical way: you are not
-rewriting the match into something else, you are deleting it entirely.</p>
-<p>That makes <code class="docutils literal notranslate"><span class="pre">remove_all()</span></code> useful for:</p>
-<ul class="simple">
-<li><p>marker cleanup</p></li>
-<li><p>substring erasure before tokenization</p></li>
-<li><p>deleting repeated labels or prefixes without involving regex</p></li>
-</ul>
-<p>The key behavioral point is that <code class="docutils literal notranslate"><span class="pre">remove_all()</span></code> is global within each cell:
-every matching substring is removed, not just the first occurrence and not just
-boundary occurrences.</p>
+<section id="delete-every-occurrence-of-a-literal-substring">
+<h2>Delete Every Occurrence Of A Literal Substring<a class="headerlink" href="#delete-every-occurrence-of-a-literal-substring" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">remove_all(needle)</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with
+every occurrence of the literal string <code class="docutils literal notranslate"><span class="pre">needle</span></code> deleted from each cell. It is
+<a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace</span></code></span></a> with an empty replacement, given its own name because
+“strip this marker out entirely” is a common enough intent to be worth
+spelling directly: separators, bracket noise, a repeated tag, a prefix that
+leaked into the data.</p>
+<p>The match is <strong>literal</strong> — <code class="docutils literal notranslate"><span class="pre">needle</span></code> is compared byte for byte, with no
+regex metacharacters and no case folding. Occurrences are removed
+<strong>left to right and non-overlapping</strong>: after one match is cut, scanning
+resumes at the following byte, so <code class="docutils literal notranslate"><span class="pre">remove_all(&quot;aa&quot;)</span></code> on <code class="docutils literal notranslate"><span class="pre">&quot;aaaaa&quot;</span></code> removes two
+pairs and leaves one <code class="docutils literal notranslate"><span class="pre">a</span></code>. Bytes around the deletions are <strong>not</strong> otherwise
+touched — no whitespace collapsing, no trimming — so removing a mid-string
+token can leave a double space; chain <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip</span></code></span></a> or
+<a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace</span></code></span></a> if that matters.</p>
+<p>The operation is shape-preserving, cell-independent, and returns a fresh
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>. A cell that does not contain <code class="docutils literal notranslate"><span class="pre">needle</span></code> is copied through unchanged.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>needle</strong></p>
-<p>The literal substring to remove everywhere it appears in each cell.</p>
-<p>Interior occurrences are removed too, not just boundary occurrences. If you
-only want to trim a boundary run, use <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip</span></code></span></a> instead.</p>
-<p><code class="docutils literal notranslate"><span class="pre">needle</span></code> is treated literally. Characters such as <code class="docutils literal notranslate"><span class="pre">.</span></code> or <code class="docutils literal notranslate"><span class="pre">*</span></code> have no regex
-meaning here.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code>
-A shape-preserving <code class="docutils literal notranslate"><span class="pre">Note</span></code> with all literal occurrences removed.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Remove every <code class="docutils literal notranslate"><span class="pre">beta</span></code> substring from each cell.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;alpha beta beta&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;beta only&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;beta&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;remove_all:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="example-1-remove-a-repeated-word">
+<h2>Example 1: Remove A Repeated Word<a class="headerlink" href="#example-1-remove-a-repeated-word" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;alpha beta beta&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;beta only&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;none&quot;</span><span class="p">}).</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;beta&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>remove_all:
-  [0] alpha  
-  [1]  only
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;alpha  &quot;, &quot; only&quot;, &quot;none&quot;]
 </pre></div>
 </div>
-<p>Example 2. Normalize the result afterward when deletion leaves boundary noise.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;##alpha##&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;##beta&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">normalized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cleaned</span><span class="p">.</span><span class="n">strip</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;remove_all_strip:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>Both <code class="docutils literal notranslate"><span class="pre">beta</span></code>s go from the first cell (leaving two spaces where they were), the
+leading <code class="docutils literal notranslate"><span class="pre">beta</span></code> goes from the second, and the third is unchanged.</p>
 </section>
+</section>
+<section id="example-2-matches-do-not-overlap">
+<h2>Example 2: Matches Do Not Overlap<a class="headerlink" href="#example-2-matches-do-not-overlap" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;aaaaa&quot;</span><span class="p">}).</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;aa&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>remove_all_strip:
-  [0] alpha
-  [1] beta
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;a&quot;]
 </pre></div>
 </div>
-<p>Example 3. Remove a repeated marker substring literally. A trailing bare <code class="docutils literal notranslate"><span class="pre">id</span></code>
-remains because the pattern here is <code class="docutils literal notranslate"><span class="pre">id-</span></code>, not <code class="docutils literal notranslate"><span class="pre">id</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;id-001-id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;id-204&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;id-&quot;</span><span class="p">);</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">tils</span><span class="o">::</span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-<span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;remove_all_marker:&quot;</span><span class="p">);</span>
-<span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">cleaned</span><span class="p">);</span>
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">aa</span></code> is removed at positions 0 and 2; the trailing <code class="docutils literal notranslate"><span class="pre">a</span></code> has no pair.</p>
 </section>
+</section>
+<section id="example-3-a-needle-that-is-not-present">
+<h2>Example 3: A Needle That Is Not Present<a class="headerlink" href="#example-3-a-needle-that-is-not-present" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;keep me&quot;</span><span class="p">}).</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;zzz&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>remove_all_marker:
-  [0] 001-id
-  [1] 204
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;keep me&quot;]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">remove_all()</span></code> is literal substring erasure, not regex erasure.</p></li>
-<li><p>The first example intentionally leaves doubled spaces behind. Deletion and
-whitespace normalization are separate concerns.</p></li>
-<li><p>The third example is intentionally exact: <code class="docutils literal notranslate"><span class="pre">id-</span></code> is removed, but the trailing
-bare <code class="docutils literal notranslate"><span class="pre">id</span></code> in <code class="docutils literal notranslate"><span class="pre">001-id</span></code> remains because it is not the same literal substring.</p></li>
-<li><p>If you want the result normalized afterward, pair this with
-<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip</span></code></span></a> or another whitespace cleanup pass.</p></li>
-<li><p>This is often the cleanest intermediate step before retokenizing text.</p></li>
-</ul>
+<section id="example-4-shape-is-preserved">
+<h2>Example 4: Shape Is Preserved<a class="headerlink" href="#example-4-shape-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({{</span><span class="s">&quot;a-b-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d-e&quot;</span><span class="p">}}).</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;-&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
+[
+  [&quot;abc&quot;, &quot;de&quot;]
+]
+</pre></div>
+</div>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a>: rewrite a substring instead of deleting it.</p></li>
-<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::strip</span></code></span></a>: clean up boundary whitespace or marker runs after
-removal.</p></li>
+<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a>: the general form — substitute a
+replacement instead of deleting.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::remove</span></code>: delete only the <strong>first</strong> occurrence.</p></li>
+<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::strip</span></code></span></a>: remove characters only at the cell boundaries.</p></li>
+<li><p><a class="reference internal" href="nlp_remove_urls.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::nlp_remove_urls</span></code></span></a>: pattern-based removal (URLs)
+with whitespace cleanup.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tex_to_text.html">
+  <a class="prev-link" href="regex_findall.html">
     <span class="label">Previous</span>
-    <span class="title">tex_to_text</span>
+    <span class="title">regex_findall</span>
   </a>
-  <a class="next-link" href="quote.html">
+  <a class="next-link" href="replace.html">
     <span class="label">Next</span>
-    <span class="title">quote</span>
+    <span class="title">replace</span>
   </a>
 </div>
 </section>
@@ -194,6 +190,7 @@ removal.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -244,8 +241,8 @@ removal.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="tex_to_text.html" title="previous chapter">Note::tex_to_text</a></li>
-      <li>Next: <a href="quote.html" title="next chapter">Note::quote</a></li>
+      <li>Previous: <a href="regex_findall.html" title="previous chapter">Note::regex_findall</a></li>
+      <li>Next: <a href="replace.html" title="next chapter">Note::replace</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

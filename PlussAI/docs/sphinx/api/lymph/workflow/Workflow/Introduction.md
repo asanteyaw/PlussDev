@@ -53,9 +53,9 @@ const workflow::Workflow fitted = final_pipe.learn(raw, data_options);
 
 That is the full mapping of a two-argument
 `Pipeline([("preprocessing", ColumnTransformer([("num", …), ("cat", …)])),
-("model", LogisticRegression())])`. A complete, compiled version — with the
-`num`/`cat` branch counts and predictions printed — ships as the
-`lymph_workflow_vs_sklearn_columntransformer_example_2` example program.
+("model", LogisticRegression())])` — the numeric branch's imputer/scaler
+chain, the categorical branch's imputer/encoder chain, and the estimator
+they both feed, in one `Workflow` instead of four nested objects.
 
 The real difference: a branch holds a flat list of `Stage` *values*, not a
 nested `Model`/`Workflow` object. You cannot build a `numeric_pipeline` as

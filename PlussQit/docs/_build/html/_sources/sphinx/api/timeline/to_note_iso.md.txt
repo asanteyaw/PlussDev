@@ -54,7 +54,7 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 ["2024-11-01T09:00:00.000000000+00:00", "2024-11-01T10:15:30.000000000+00:00", "2024-12-31T23:59:59.000000000+00:00", "2025-01-01T00:00:00.000000000+00:00"]
 ```
 
-Example 2. Preserve missing timestamps visibly during ISO conversion.
+Example 2. Preserve absent instants visibly during ISO conversion.
 
 ```cpp
 auto labels = with_nat.to_note_iso();
@@ -98,15 +98,14 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 
 - [`Timeline::isoformat`](isoformat.md)
 - [`Timeline::strftime`](strftime.md)
-- [`Timeline::to_note_family`](to_note_family.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="strftime.html">
+  <a class="prev-link" href="time.html">
     <span class="label">Previous</span>
-    <span class="title">strftime</span>
+    <span class="title">time</span>
   </a>
-  <a class="next-link" href="to_note_family.html">
+  <a class="next-link" href="to_timeindex.html">
     <span class="label">Next</span>
-    <span class="title">to_note_family</span>
+    <span class="title">to_timeindex</span>
   </a>
 </div>

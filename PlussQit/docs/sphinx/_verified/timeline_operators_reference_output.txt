@@ -1,0 +1,141 @@
+
+=== stream insertion ===
+Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-01-01 02:00:00 ]
+
+=== timeline + duration ===
+Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 01:00:00, 2024-01-01 00:00:00 ]
+
+=== duration + timeline ===
+Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 01:00:00, 2024-01-01 00:00:00 ]
+
+=== timeline - duration ===
+Timeline(shape=[2], tz=UTC)
+[ 2023-12-31 23:00:00, 2024-01-01 04:00:00 ]
+
+=== timeline - timeline ===
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[3600.0000, -7200.0000]
+
+=== scalar + scalar duration ===
+Timeline(shape=[], tz=UTC)
+2024-01-01 01:30:00
+
+=== two-dimensional outer broadcast ===
+Timeline(shape=[2, 3], tz=UTC)
+[ 2024-01-01 00:00:00 2024-01-01 00:30:00 2024-01-01 01:00:00 ]
+[ 2024-01-02 00:00:00 2024-01-02 00:30:00 2024-01-02 01:00:00 ]
+
+=== nanosecond arithmetic ===
+Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[107, -9223372036854775808]
+
+=== fixed elapsed hours across clock change ===
+Timeline(shape=[], tz=America/Edmonton)
+2024-03-10 04:30:00
+
+=== compound assignment ===
+Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 00:30:00, 2024-01-01 02:30:00 ]
+
+=== original after compound assignment on copy ===
+Timeline(shape=[2], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-01-01 02:00:00 ]
+
+=== signed timeline difference ===
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.0000, 5400.0000]
+
+=== comparison row broadcast ===
+Series(shape=[2,2], strides=[2,1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=
+⎡  true  true ⎤
+⎣ false false ⎦
+
+=== operator == ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+=== operator != ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
+
+=== operator < ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
+
+=== operator <= ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, true]
+
+=== operator > ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, false]
+
+=== operator >= ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+=== explicit comparison reductions ===
+all=false, any=true
+
+=== operator > start ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+=== operator >= start ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, true]
+
+=== closed interval ===
+Series(shape=[4], strides=[1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=[true, true, true, false]
+
+=== timezone-converted equality ===
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+=== NaT == self ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+=== NaT != self ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
+
+=== NaT < self ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, false]
+
+=== NaT <= self ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+=== NaT > self ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, false]
+
+=== NaT >= self ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[false, true]
+
+=== empty arithmetic ===
+Timeline(shape=[0, 2], tz=UTC)
+
+=== empty comparison ===
+Series(shape=[0,2], strides=[2,1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+
+=== incompatible shapes ===
+rejected: shapes do not broadcast
+
+=== addition overflow ===
+rejected: result is outside Timeline range
+
+=== subtraction overflow ===
+rejected: result is outside Timeline range
+
+=== difference overflow ===
+rejected: result is outside Duration range

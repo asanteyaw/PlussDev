@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::isoformat" href="isoformat.html" />
-    <link rel="prev" title="Timeline::isnat_scalar" href="isnat_scalar.html" />
+    <link rel="next" title="Timeline::ceil" href="ceil.html" />
+    <link rel="prev" title="Timeline::add_years" href="add_years.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -41,102 +41,86 @@
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">argsort</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">argsort</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Returns the positions that would sort a 1D timeline into ascending temporal
-order.</p>
-<p>Use <code class="docutils literal notranslate"><span class="pre">argsort()</span></code> when you want the ordering information itself rather than the
-sorted timestamps. That distinction matters when the timeline is acting as the
-ordering key for some other payload that you plan to rearrange in the same way.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p>This method takes no parameters.</p>
-<p>The practical choice is between two related operations:</p>
-<ul class="simple">
-<li><p>use <code class="docutils literal notranslate"><span class="pre">argsort()</span></code> when you need positions</p></li>
-<li><p>use <a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort()</span></code></span></a> when you need the sorted <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> itself</p></li>
-</ul>
+<section id="compute-an-ordering-without-moving-the-timestamps">
+<h2>Compute An Ordering Without Moving The Timestamps<a class="headerlink" href="#compute-an-ordering-without-moving-the-timestamps" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">argsort()</span></code> returns the zero-based positions that would order a one-dimensional
+Timeline in ascending chronological order. The timestamps themselves are not
+returned and the receiver is not changed.</p>
+<p>This indirection is useful whenever timestamps are the ordering key for another
+collection. Compute the permutation once, then apply the same positions to each
+aligned payload so their row relationships survive the reorder.</p>
+<p>The result always has integer dtype and the same number of elements as the
+receiver. Equal timestamps use a stable order: an earlier occurrence in the
+input remains earlier in the permutation. Valid timestamps come first and all
+<code class="docutils literal notranslate"><span class="pre">NaT</span></code> positions come last, also in their original relative order.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-An integer position vector describing the ascending sort order.</p>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>This method is meaningful for ordered 1D temporal vectors.</p></li>
-<li><p>In the current implementation, valid timestamps sort before <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
-<li><p>Equal timestamps remain tied as equal keys; the returned positions tell you
-where those equal entries appear in ascending order, but not a semantic
-grouping beyond that.</p></li>
-</ul>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Compute the sort order for an unsorted timeline that contains
-duplicates and <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">argsort</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="example-1-read-the-permutation">
+<h2>Example 1: Read The Permutation<a class="headerlink" href="#example-1-read-the-permutation" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-03-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-03-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-06-01T12:00:00.123456789Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">argsort</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[6], strides=[1], dtype=int64, platform=cpu, numel=6, contiguous=true)
-data=[1, 0, 2, 4, 3, 5]
+data=[2, 5, 0, 3, 1, 4]
 </pre></div>
 </div>
-<p>Example 2. Call <code class="docutils literal notranslate"><span class="pre">argsort()</span></code> on a timeline that is already increasing.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">argsort</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">2</span></code> comes first because it contains the earliest timestamp. Positions
+<code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> hold equal timestamps and remain in input order. Absent positions
+<code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">4</span></code> form the final stable group.</p>
 </section>
+</section>
+<section id="example-2-contrast-positions-with-values">
+<h2>Example 2: Contrast Positions With Values<a class="headerlink" href="#example-2-contrast-positions-with-values" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">argsort</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">sort</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
-data=[0, 1, 2, 3]
-</pre></div>
-</div>
-<p>Example 3. Compare <code class="docutils literal notranslate"><span class="pre">argsort()</span></code> with sorting the timeline values themselves.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">argsort</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">duplicated</span><span class="p">.</span><span class="n">sort</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">sorted</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">argsort()</span></code> gives positions:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[6], strides=[1], dtype=int64, platform=cpu, numel=6, contiguous=true)
-data=[1, 0, 2, 4, 3, 5]
+data=[2, 5, 0, 3, 1, 4]
+Timeline(shape=[6], tz=UTC)
+[ 2024-01-01 00:00:00, 2024-06-01 12:00:00, 2025-03-01 00:00:00, 2025-03-01 00:00:00, NaT, NaT ]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">sort()</span></code> gives the reordered timestamps:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[6], tz=UTC)
-[ 2024-11-01 09:00:00, 2024-11-01 10:15:30, 2024-11-01 10:15:30, 2025-01-01 00:00:00, NaT, NaT ]
-</pre></div>
-</div>
+<p>Choose <code class="docutils literal notranslate"><span class="pre">argsort()</span></code> when positions are the product you need. Choose <code class="docutils literal notranslate"><span class="pre">sort()</span></code>
+when the reordered Timeline itself is the product.</p>
 </section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The receiver must be 1-D. A scalar, matrix, or higher-rank Timeline throws.</p></li>
+<li><p>The order is chronological by stored instant, not lexicographic by rendered text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> is placed last; it is not treated as the earliest possible integer tick.</p></li>
+<li><p>The returned positions refer to the original receiver and are invalid for an
+unrelated or differently sized collection.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">argsort()</span></code> produces a stable ascending permutation, preserves tie order, puts
+absent instants last, and leaves the receiver untouched.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::min</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="searchsorted_left.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::searchsorted_left</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort</span></code></span></a>: return the reordered timestamps.</p></li>
+<li><p><a class="reference internal" href="searchsorted_left.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">searchsorted_left</span></code></span></a>: locate insertion boundaries.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnat_scalar.html">
-    <span class="label">Previous</span>
-    <span class="title">isnat_scalar</span>
-  </a>
-  <a class="next-link" href="isoformat.html">
-    <span class="label">Next</span>
-    <span class="title">isoformat</span>
-  </a>
+  <a class="prev-link" href="isnat_scalar.html"><span class="label">Previous</span><span class="title">isnat_scalar</span></a>
+  <a class="next-link" href="isoformat.html"><span class="label">Next</span><span class="title">isoformat</span></a>
 </div>
 </section>
 </section>
@@ -179,6 +163,7 @@ data=[1, 0, 2, 4, 3, 5]
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -229,8 +214,8 @@ data=[1, 0, 2, 4, 3, 5]
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="isnat_scalar.html" title="previous chapter">Timeline::isnat_scalar</a></li>
-      <li>Next: <a href="isoformat.html" title="next chapter">Timeline::isoformat</a></li>
+      <li>Previous: <a href="add_years.html" title="previous chapter">Timeline::add_years</a></li>
+      <li>Next: <a href="ceil.html" title="next chapter">Timeline::ceil</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

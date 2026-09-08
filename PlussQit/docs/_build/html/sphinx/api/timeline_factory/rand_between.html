@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::timeline::rand_between &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="pluss::timeline::random" href="random.html" />
+    <link rel="prev" title="pluss::timeline::print" href="print.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="pluss-timeline-rand-between">
+<h1>pluss::timeline::rand_between<a class="headerlink" href="#pluss-timeline-rand-between" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../timeline_factory_api_reference.html"><span class="doc std std-doc">Back to Timeline Factory API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">rand_between</span><span class="p">(</span><span class="n">integer_range</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span>
+<span class="w">                                       </span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">low</span><span class="p">,</span>
+<span class="w">                                       </span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">high</span><span class="p">,</span>
+<span class="w">                                       </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">rand_between</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">low</span><span class="p">,</span>
+<span class="w">                                       </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">high</span><span class="p">,</span>
+<span class="w">                                       </span><span class="n">integer_range</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span>
+<span class="w">                                       </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="sample-a-closed-interval-of-instants">
+<h2>Sample A Closed Interval Of Instants<a class="headerlink" href="#sample-a-closed-interval-of-instants" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">rand_between()</span></code> allocates a Timeline with the requested shape and samples each
+lane uniformly from the closed integer nanosecond interval <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code>.
+Both endpoints are eligible. This makes the factory suitable when the upper
+boundary is itself a valid outcome, and it makes <code class="docutils literal notranslate"><span class="pre">low</span> <span class="pre">==</span> <span class="pre">high</span></code> a useful,
+well-defined constant construction.</p>
+<p>The distribution is over representable instants, not displayed calendar
+labels. Text dates such as <code class="docutils literal notranslate"><span class="pre">&quot;2024-01-01&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;2024-01-03&quot;</span></code> delimit a
+continuous interval containing every nanosecond between the two midnights;
+they do not mean “choose one of three dates.” For whole-day sampling, sample an
+integer day offset and add <code class="docutils literal notranslate"><span class="pre">pluss::duration::days(offset)</span></code> to a fixed midnight.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">random()</span></code> when the upper endpoint must be excluded. Use <code class="docutils literal notranslate"><span class="pre">full()</span></code> when a
+constant result is intentional rather than a degenerate random interval.</p>
+</section>
+<section id="bounds-shape-and-timezone">
+<h2>Bounds, Shape, And Timezone<a class="headerlink" href="#bounds-shape-and-timezone" title="Link to this heading">¶</a></h2>
+<p>Timeline bounds must each be rank-zero, defined, and ordered so <code class="docutils literal notranslate"><span class="pre">high</span> <span class="pre">&gt;=</span> <span class="pre">low</span></code>.
+Their stored epoch nanoseconds define the interval. The result carries the
+lower bound’s timezone metadata, so its fields and default printing use the
+same civil projection without changing sampled instants.</p>
+<p>Text bounds must have the same kind: date with date, time with time, or
+datetime with datetime. Date-only bounds use midnight; time-only bounds use the
+Unix epoch date; datetime bounds retain explicit offsets while being stored as
+absolute epoch nanoseconds.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sizes</span></code> may describe a scalar or a rank-one, rank-two, or rank-three result.
+Zero extents are valid and produce an empty Timeline of that shape. Negative
+extents, rank above three, and element-count overflow are rejected before
+allocation.</p>
+</section>
+<section id="seeds-and-reproducibility">
+<h2>Seeds And Reproducibility<a class="headerlink" href="#seeds-and-reproducibility" title="Link to this heading">¶</a></h2>
+<p>A nonzero seed creates a repeatable sequence for the same build and inputs.
+Seed <code class="docutils literal notranslate"><span class="pre">0</span></code> requests the library’s evolving seed stream; it does not promise the
+same values on repeated calls. Reproducible examples, tests, and simulations
+should therefore pass an explicit nonzero seed.</p>
+<p>Do not make persisted file formats depend on the exact generated sequence.
+The contract is uniform closed-interval sampling and same-seed reproducibility,
+not permanent standardization of a particular random-engine implementation.</p>
+</section>
+<section id="example-1-equal-bounds-produce-a-constant-matrix">
+<h2>Example 1: Equal Bounds Produce A Constant Matrix<a class="headerlink" href="#example-1-equal-bounds-produce-a-constant-matrix" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">constant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">rand_between</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;2024-02-29&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-29&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="mi">99</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;2024-02-29T00:00:00.000000000+00:00&quot;, &quot;2024-02-29T00:00:00.000000000+00:00&quot;], 
+  [&quot;2024-02-29T00:00:00.000000000+00:00&quot;, &quot;2024-02-29T00:00:00.000000000+00:00&quot;]
+]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-2-demonstrate-the-closed-nanosecond-boundary">
+<h2>Example 2: Demonstrate The Closed Nanosecond Boundary<a class="headerlink" href="#example-2-demonstrate-the-closed-nanosecond-boundary" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">sampled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">rand_between</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span><span class="mf">100L</span><span class="n">L</span><span class="p">),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span><span class="mf">102L</span><span class="n">L</span><span class="p">),</span>
+<span class="w">    </span><span class="mi">99</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sampled</span><span class="p">.</span><span class="n">epoch_nanos</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=int64, platform=cpu, numel=8, contiguous=true)
+data=[101, 102, 100, 101, 102, 100, 101, 100]
+</pre></div>
+</div>
+<p>Seeing <code class="docutils literal notranslate"><span class="pre">102</span></code> confirms that the upper endpoint participates. Every lane is one
+of the three exactly representable ticks; no floating-point conversion is used
+to select nanoseconds.</p>
+</section>
+</section>
+<section id="example-3-verify-a-seed-without-depending-on-its-particular-values">
+<h2>Example 3: Verify A Seed Without Depending On Its Particular Values<a class="headerlink" href="#example-3-verify-a-seed-without-depending-on-its-particular-values" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">rand_between</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-03&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">},</span><span class="w"> </span><span class="mi">7</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">rand_between</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-03&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">},</span><span class="w"> </span><span class="mi">7</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">epoch_nanos</span><span class="p">().</span><span class="n">equal</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">epoch_nanos</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+<p>This is the stable property applications should test. Calling with seed <code class="docutils literal notranslate"><span class="pre">0</span></code>
+twice is intentionally not the equivalent operation.</p>
+</section>
+</section>
+<section id="example-4-the-lower-bound-supplies-the-display-zone">
+<h2>Example 4: The Lower Bound Supplies The Display Zone<a class="headerlink" href="#example-4-the-lower-bound-supplies-the-display-zone" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-07-01T06:00:00Z&quot;</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-07-01T06:00:00.000000002Z&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">rand_between</span><span class="p">({</span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">local</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;2024-07-01T00:00:00.000000002-06:00&quot;, &quot;2024-07-01T00:00:00.000000000-06:00&quot;, &quot;2024-07-01T00:00:00.000000000-06:00&quot;]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<p>The call throws for reversed bounds, absent bounds, non-scalar Timeline bounds,
+mixed text kinds, malformed endpoint text, invalid timezone text, invalid
+shape, or shape-product overflow. Bounds in different display timezones are
+still ordered by their absolute epoch nanoseconds; normalize display metadata
+first if inheriting the lower bound’s zone would surprise the reader.</p>
+<p>Sampling allocates contiguous storage and performs one random draw per output
+lane, so time and storage are both linear in <code class="docutils literal notranslate"><span class="pre">numel()</span></code>.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="random.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">random</span></code></span></a>: sample the half-open interval <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high)</span></code>.</p></li>
+<li><p><a class="reference internal" href="full.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">full</span></code></span></a>: allocate a known constant instant.</p></li>
+<li><p><a class="reference internal" href="from_epoch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">from_epoch</span></code></span></a>: construct exact integer nanosecond bounds.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../timeline_factory_api_reference.html">Timeline Factory API Reference</a><ul>
+      <li>Previous: <a href="print.html" title="previous chapter">pluss::timeline::print</a></li>
+      <li>Next: <a href="random.html" title="next chapter">pluss::timeline::random</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/timeline_factory/rand_between.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

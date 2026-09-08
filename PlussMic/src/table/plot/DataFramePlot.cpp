@@ -247,21 +247,21 @@ std::vector<std::string> temporal_thread_to_plot_labels(const Thread& t, DateTim
   const auto rendered = [&]() -> pluss::Note {
     switch (infer_temporal_label_kind(timeline)) {
       case TemporalLabelKind::Date:
-        return timeline.to_note_date();
+        return timeline.strftime("%Y-%m-%d");
       case TemporalLabelKind::Time:
-        return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.to_note_time();
+        return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.strftime("%H:%M:%S");
       case TemporalLabelKind::DateTime:
         switch (datetime_label_view) {
           case DateTimeLabelView::Date:
-            return timeline.to_note_date();
+            return timeline.strftime("%Y-%m-%d");
           case DateTimeLabelView::Time:
-            return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.to_note_time();
+            return has_subsecond ? timeline.strftime("%H:%M:%S.%f") : timeline.strftime("%H:%M:%S");
           case DateTimeLabelView::Full:
           default:
-            return has_subsecond ? timeline.to_note_datetime_nano() : timeline.to_note_datetime();
+            return has_subsecond ? timeline.strftime("%Y-%m-%d %H:%M:%S.%f") : timeline.strftime("%Y-%m-%d %H:%M:%S");
         }
     }
-    return timeline.to_note_datetime();
+    return timeline.strftime("%Y-%m-%d %H:%M:%S");
   }();
 
   std::vector<std::string> out;

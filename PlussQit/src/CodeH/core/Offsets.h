@@ -25,6 +25,12 @@ struct Years : CalendarOffset {
   std::int64_t apply_utc(std::int64_t utc_epoch_nanos, const char* tz_name) const override;
 };
 
+struct Days : CalendarOffset {
+  explicit Days(int n) : n(n) {}
+  int n;
+  std::int64_t apply_utc(std::int64_t utc_epoch_nanos, const char* tz_name) const override;
+};
+
 struct BusinessDays : CalendarOffset {
   explicit BusinessDays(int n) : n(n) {}
   int n;

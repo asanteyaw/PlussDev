@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::nlp_remove_urls" href="nlp_remove_urls.html" />
-    <link rel="prev" title="Note::lengths_bytes" href="lengths_bytes.html" />
+    <link rel="next" title="Note::nlp_mask_pii" href="nlp_mask_pii.html" />
+    <link rel="prev" title="Note::lengths_graphemes" href="lengths_graphemes.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,93 +36,153 @@
 
           <div class="body" role="main">
             
-  <section id="note-lower">
+  <!-- pluss-hand-authored -->
+<section id="note-lower">
 <h1>Note::lower<a class="headerlink" href="#note-lower" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">lower</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Note</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">lower</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Converts every text cell to lowercase.</p>
-<p>This is the straightforward case-normalization pass for batch text. It is
-useful before substring checks, de-duplication, token comparison, and any
-pipeline where <code class="docutils literal notranslate"><span class="pre">&quot;Exam&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;exam&quot;</span></code> should be treated the same.</p>
-<p><code class="docutils literal notranslate"><span class="pre">lower()</span></code> does not trim whitespace or remove punctuation. It only changes case.</p>
-<p>That narrow contract is useful: if later output still contains padding or
-punctuation, you know <code class="docutils literal notranslate"><span class="pre">lower()</span></code> is not the stage that changed it.</p>
+<section id="case-fold-every-cell-to-lowercase">
+<h2>Case-Fold Every Cell To Lowercase<a class="headerlink" href="#case-fold-every-cell-to-lowercase" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">lower()</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>, same shape as the input, with every text cell
+lowercased. It is the standard case-normalization step before a
+case-insensitive comparison, de-duplication, grouping key, or substring test
+(<a class="reference internal" href="contains.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contains</span></code></span></a> is byte-exact, so folding case first is how you
+make it case-insensitive).</p>
+<p>The mapping is <strong>full Unicode lowercase</strong>, not ASCII-only. Latin letters with
+diacritics (<code class="docutils literal notranslate"><span class="pre">É</span> <span class="pre">→</span> <span class="pre">é</span></code>), Greek (<code class="docutils literal notranslate"><span class="pre">Α</span> <span class="pre">→</span> <span class="pre">α</span></code>), and Cyrillic (<code class="docutils literal notranslate"><span class="pre">Д</span> <span class="pre">→</span> <span class="pre">д</span></code>) all fold, and
+locale-independent special cases apply: German <code class="docutils literal notranslate"><span class="pre">ẞ</span></code> (capital sharp s) becomes
+<code class="docutils literal notranslate"><span class="pre">ß</span></code>, and Turkish dotted capital <code class="docutils literal notranslate"><span class="pre">İ</span></code> becomes <code class="docutils literal notranslate"><span class="pre">i</span></code> followed by a combining dot
+(<code class="docutils literal notranslate"><span class="pre">i̇</span></code>), the Unicode default mapping. Because a few of these mappings change
+length, the output cell can have a different byte length than the input — do
+not assume <code class="docutils literal notranslate"><span class="pre">lower()</span></code> is length-preserving even though it is shape-preserving.</p>
+<p><code class="docutils literal notranslate"><span class="pre">lower()</span></code> changes <strong>case only</strong>. It does not trim whitespace, strip
+punctuation, collapse spaces, or normalize Unicode form. That narrow contract
+is useful: if the output still has padding or odd spacing, <code class="docutils literal notranslate"><span class="pre">lower()</span></code> is not
+the stage that introduced or failed to remove it — pair it with
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip</span></code></span></a> when you want both. The operation is idempotent
+(<code class="docutils literal notranslate"><span class="pre">lower().lower()</span></code> equals <code class="docutils literal notranslate"><span class="pre">lower()</span></code>), allocates a fresh <code class="docutils literal notranslate"><span class="pre">Note</span></code>, and does not
+touch the input.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p>This method takes no parameters.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code> with the same shape as the input, with each cell lowercased.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Lowercase a batch of names while preserving spaces and tabs.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Ada Lovelace  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\t</span><span class="s">GRACE HOPPER</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Linus&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">lower</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;lower:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<section id="example-1-a-one-dimensional-batch">
+<h2>Example 1: A One-Dimensional Batch<a class="headerlink" href="#example-1-a-one-dimensional-batch" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Ada LOVELACE  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\t</span><span class="s">GRACE Hopper</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Linus&quot;</span><span class="p">}).</span><span class="n">lower</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>lower:
-  [0]   ada lovelace  
-  [1] 	grace hopper	
-  [2] linus
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;  ada lovelace  &quot;, &quot;\tgrace hopper\t&quot;, &quot;linus&quot;]
 </pre></div>
 </div>
-<p>Example 2. Trim first when the real goal is normalized text rather than
-lowercased-but-still-padded text.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Ada Lovelace  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\t</span><span class="s">GRACE HOPPER</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Linus&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">strip</span><span class="p">().</span><span class="n">lower</span><span class="p">();</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;lower_strip:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">cleaned</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>Case changes; the leading spaces and the tab characters are untouched.</p>
 </section>
+</section>
+<section id="example-2-a-scalar">
+<h2>Example 2: A Scalar<a class="headerlink" href="#example-2-a-scalar" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;HeLLo, WORLD&quot;</span><span class="p">).</span><span class="n">lower</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>lower_strip:
-  [0] ada lovelace
-  [1] grace hopper
-  [2] linus
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;hello, world&quot;
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">lower()</span></code> preserves shape.</p></li>
-<li><p>It also preserves boundary whitespace exactly as-is.</p></li>
-<li><p>In real pipelines, <code class="docutils literal notranslate"><span class="pre">lower()</span></code> is often paired with <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip</span></code></span></a> when you
-want both case normalization and boundary cleanup.</p></li>
-</ul>
+<section id="example-3-shape-is-preserved">
+<h2>Example 3: Shape Is Preserved<a class="headerlink" href="#example-3-shape-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({{</span><span class="s">&quot;AB&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cD&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;Ef&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;GH&quot;</span><span class="p">}}).</span><span class="n">lower</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;ab&quot;, &quot;cd&quot;], 
+  [&quot;ef&quot;, &quot;gh&quot;]
+]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-4-full-unicode-including-special-cases">
+<h2>Example 4: Full Unicode, Including Special Cases<a class="headerlink" href="#example-4-full-unicode-including-special-cases" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;CAFÉ&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ΑΒΓ ДЕЁ&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;İ&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ẞ&quot;</span><span class="p">}).</span><span class="n">lower</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[4], dim=1, numel=4, encoding=utf8)
+[&quot;café&quot;, &quot;αβγ деё&quot;, &quot;i̇&quot;, &quot;ß&quot;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">É</span></code>, <code class="docutils literal notranslate"><span class="pre">Α</span></code>–<code class="docutils literal notranslate"><span class="pre">Γ</span></code>, and <code class="docutils literal notranslate"><span class="pre">Д</span></code>–<code class="docutils literal notranslate"><span class="pre">Ё</span></code> fold normally; <code class="docutils literal notranslate"><span class="pre">İ</span></code> maps to <code class="docutils literal notranslate"><span class="pre">i</span></code> plus a combining
+dot; <code class="docutils literal notranslate"><span class="pre">ẞ</span></code> maps to <code class="docutils literal notranslate"><span class="pre">ß</span></code>.</p>
+</section>
+</section>
+<section id="example-5-idempotent">
+<h2>Example 5: Idempotent<a class="headerlink" href="#example-5-idempotent" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;already lower&quot;</span><span class="p">}).</span><span class="n">lower</span><span class="p">().</span><span class="n">lower</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;already lower&quot;]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-6-paired-with-strip-for-full-normalization">
+<h2>Example 6: Paired With <code class="docutils literal notranslate"><span class="pre">strip</span></code> For Full Normalization<a class="headerlink" href="#example-6-paired-with-strip-for-full-normalization" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Ada LOVELACE  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\t</span><span class="s">GRACE Hopper</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">}).</span><span class="n">strip</span><span class="p">().</span><span class="n">lower</span><span class="p">())</span>
+<span class="w">    </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;ada lovelace&quot;, &quot;grace hopper&quot;]
+</pre></div>
+</div>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::strip</span></code></span></a>: remove leading and trailing whitespace or specific
-boundary characters.</p></li>
-<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a>: rewrite substrings after case normalization if
-needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::upper</span></code>: the uppercase counterpart.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::casefold</span></code>: aggressive case folding for
+caseless matching (handles more edge cases than <code class="docutils literal notranslate"><span class="pre">lower</span></code> for comparison
+keys).</p></li>
+<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::strip</span></code></span></a>: remove boundary whitespace; commonly chained
+with <code class="docutils literal notranslate"><span class="pre">lower</span></code>.</p></li>
+<li><p><a class="reference internal" href="contains.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::contains</span></code></span></a>: the byte-exact predicate that <code class="docutils literal notranslate"><span class="pre">lower</span></code>
+makes case-insensitive.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="lengths_bytes.html">
+  <a class="prev-link" href="lengths_graphemes.html">
     <span class="label">Previous</span>
-    <span class="title">lengths_bytes</span>
+    <span class="title">lengths_graphemes</span>
   </a>
-  <a class="next-link" href="nlp_remove_urls.html">
+  <a class="next-link" href="nlp_mask_pii.html">
     <span class="label">Next</span>
-    <span class="title">nlp_remove_urls</span>
+    <span class="title">nlp_mask_pii</span>
   </a>
 </div>
 </section>
@@ -166,6 +226,7 @@ needed.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -216,8 +277,8 @@ needed.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="lengths_bytes.html" title="previous chapter">Note::lengths_bytes</a></li>
-      <li>Next: <a href="nlp_remove_urls.html" title="next chapter">Note::nlp_remove_urls</a></li>
+      <li>Previous: <a href="lengths_graphemes.html" title="previous chapter">Note::lengths_graphemes</a></li>
+      <li>Next: <a href="nlp_mask_pii.html" title="next chapter">Note::nlp_mask_pii</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

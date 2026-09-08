@@ -66,7 +66,7 @@ void test_statistics() {
   near(logged_x[1], std::log(2.0), 1e-6, "DataFrame::log should preserve numeric log values");
   const auto exp_x = frame.exp().features("x").as_series().to_vec<double>();
   near(exp_x[0], std::exp(1.0), 1e-5, "DataFrame::exp should delegate numeric features to Thread::exp");
-  const auto temporal = Thread(pluss::codeh::Timeline::fromSeries(pluss::make_series(
+  const auto temporal = Thread(pluss::timeline::from_epoch(pluss::make_series(
       std::vector<std::int64_t>{
           1'704'067'200'000'000'000LL,
           pluss::codeh::Timeline::kNaT,
@@ -374,12 +374,12 @@ void test_statistics() {
   };
   const auto timeline_label_ops =
       Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
-          .label().set(Thread(pluss::codeh::Timeline::fromSeries(
+          .label().set(Thread(pluss::timeline::from_epoch(
               pluss::make_series(timeline_left_values, {3}))));
   const auto timeline_united = timeline_label_ops.label().unite(
-      Thread(pluss::codeh::Timeline::fromSeries(pluss::make_series(timeline_right_values, {2}))));
+      Thread(pluss::timeline::from_epoch(pluss::make_series(timeline_right_values, {2}))));
   expect(timeline_united.kind() == pluss::table::ThreadKind::Timeline &&
-             timeline_united.as_timeline().to_epoch_nanos_vector() ==
+             timeline_united.as_timeline().ticks() ==
                  std::vector<std::int64_t>({
                      1'704'067'200'000'000'000LL,
                      1'704'153'600'000'000'000LL,
@@ -1553,7 +1553,7 @@ void test_axis_dtype_and_host_exports() {
 
   const auto timeindex_host = timeindex.host();
   expect(timeindex_host.size() == 2 &&
-             timeindex_host == timeline.to_epoch_nanos_vector(),
+             timeindex_host == timeline.ticks(),
          "TimeIndex::host should export epoch-nanos vector");
 
   const auto amount_value = frame.features("amount").sum();
@@ -1577,7 +1577,7 @@ void test_axis_dtype_and_host_exports() {
          "ThreadValue::host stream should print raw Note scalar");
 
   const auto timeline_value = Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"})).value();
-  const auto timeline_nanos = pluss::make_timeline({"2024-01-01T00:00:00Z"}).to_epoch_nanos_vector().front();
+  const auto timeline_nanos = pluss::make_timeline({"2024-01-01T00:00:00Z"}).ticks().front();
   expect(timeline_value.to_int() == timeline_nanos,
          "ThreadValue::to_int should extract epoch nanoseconds from Timeline");
   expect(timeline_value.to_str().find("2024-01-01") != std::string::npos,

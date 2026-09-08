@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::argsort" href="argsort.html" />
-    <link rel="prev" title="Timeline::isvalid" href="isvalid.html" />
+    <link rel="next" title="Timeline::isoformat" href="isoformat.html" />
+    <link rel="prev" title="Timeline::isnat" href="isnat.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -47,7 +47,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns whether a scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> is missing.</p>
+<p>Returns whether a scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> holds <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p>
 <p>This is the scalar-only companion to <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat</span></code></span></a>:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">isnat()</span></code>
@@ -59,11 +59,11 @@ Returns one <code class="docutils literal notranslate"><span class="pre">bool</s
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
-<code class="docutils literal notranslate"><span class="pre">true</span></code> when the scalar timestamp is missing, otherwise <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> when the scalar instant is absent, otherwise <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. A defined scalar timeline is not missing.</p>
+<p>Example 1. A defined scalar Timeline holds an instant.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scalar</span><span class="p">.</span><span class="n">isnat_scalar</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">flag</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -73,7 +73,7 @@ Returns one <code class="docutils literal notranslate"><span class="pre">bool</s
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
 </pre></div>
 </div>
-<p>Example 2. The documented scalar missing-time path reports <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<p>Example 2. The documented absent-instant path reports <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scalar_nat</span><span class="p">.</span><span class="n">isnat_scalar</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">flag</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -91,7 +91,7 @@ Returns one <code class="docutils literal notranslate"><span class="pre">bool</s
 <ul class="simple">
 <li><p>This method expects a scalar timeline. It is not the right surface for 1D,
 2D, or 3D temporal payloads.</p></li>
-<li><p>The current text-input path for a scalar missing timestamp is the empty
+<li><p>The current text-input path for a scalar absent instant is the empty
 string, not the literal text <code class="docutils literal notranslate"><span class="pre">&quot;NaT&quot;</span></code>.</p></li>
 </ul>
 </section>
@@ -152,6 +152,7 @@ string, not the literal text <code class="docutils literal notranslate"><span cl
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -202,8 +203,8 @@ string, not the literal text <code class="docutils literal notranslate"><span cl
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="isvalid.html" title="previous chapter">Timeline::isvalid</a></li>
-      <li>Next: <a href="argsort.html" title="next chapter">Timeline::argsort</a></li>
+      <li>Previous: <a href="isnat.html" title="previous chapter">Timeline::isnat</a></li>
+      <li>Next: <a href="isoformat.html" title="next chapter">Timeline::isoformat</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

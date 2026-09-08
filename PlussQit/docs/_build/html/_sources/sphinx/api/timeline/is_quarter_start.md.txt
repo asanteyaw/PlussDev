@@ -8,7 +8,7 @@
 Series Timeline::is_quarter_start() const
 ```
 
-Aliases: `is_qs()`, `is_quarter_begin()`, and `is_quarterstart()`.
+`is_quarter_start()` is the sole public spelling.
 
 ## Find Calendar-Quarter Opening Dates
 

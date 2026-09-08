@@ -103,8 +103,8 @@ data=[11, 11, 12, 1]
     <span class="label">Previous</span>
     <span class="title">weekday_name</span>
   </a>
-  <a class="next-link" href="floor.html">
+  <a class="next-link" href="month_scalar.html">
     <span class="label">Next</span>
-    <span class="title">floor</span>
+    <span class="title">month_scalar</span>
   </a>
 </div>

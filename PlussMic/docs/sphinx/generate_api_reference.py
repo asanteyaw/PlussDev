@@ -1805,7 +1805,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         ('DataFrame', 'replace', 'from'):
             'Value to search for inside the selected compatible features. Its type decides which feature kinds participate.',
         ('DataFrame', 'replace', 'to'):
-            'Replacement value written anywhere `from` matches. Use `pluss::null` when you want matched cells to become missing.',
+            'Replacement value written anywhere `from` matches. Use `pluss::series::null` when you want matched cells to become missing.',
         ('DataFrame', 'replace', 'features'):
             'Optional feature subset. Leave empty to apply the replacement across every compatible feature of the relevant kind.',
         ('DataFrame', 'rolling', 'specs'):
@@ -3068,7 +3068,7 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'const Thread& value' in sig:
                 value_kind = 'another full Thread as the replacement values'
             elif 'pluss::null_t value' in sig:
-                value_kind = '`pluss::null` to mark the matched cells as missing'
+                value_kind = '`pluss::series::null` to mark the matched cells as missing'
             elif 'std::string_view value' in sig or 'const char* value' in sig:
                 value_kind = 'a text literal as the replacement value'
             else:
@@ -7617,7 +7617,7 @@ def example_for(class_name: str, method: Method) -> str:
             if 'const pluss::Series& bool_mask' in sig and 'const Thread& value' in sig:
                 return df_base() + f'\n\n{series_mask}\nauto repl = pluss::table::Thread(pluss::make_series({{500.0, 999.0, 500.0}}));\n' + ('auto out = df.put("sales", mask, repl);' if n == 'put' else 'df.put_("sales", mask, repl);')
             if 'const pluss::Series& bool_mask' in sig and 'pluss::null_t value' in sig:
-                return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("sales", mask, pluss::null);' if n == 'put' else 'df.put_("sales", mask, pluss::null);')
+                return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("sales", mask, pluss::series::null);' if n == 'put' else 'df.put_("sales", mask, pluss::series::null);')
             if 'const pluss::Series& bool_mask' in sig and 'std::string_view value' in sig:
                 return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("city", mask, std::string_view("Tamale"));' if n == 'put' else 'df.put_("city", mask, std::string_view("Tamale"));')
             if 'const pluss::Series& bool_mask' in sig:
@@ -7627,7 +7627,7 @@ def example_for(class_name: str, method: Method) -> str:
             if 'const Thread& bool_mask' in sig and 'const Thread& value' in sig:
                 return df_base() + f'\n\n{thread_mask}\nauto repl = pluss::table::Thread(pluss::make_series({{500.0, 999.0, 500.0}}));\n' + ('auto out = df.put("sales", mask, repl);' if n == 'put' else 'df.put_("sales", mask, repl);')
             if 'const Thread& bool_mask' in sig and 'pluss::null_t value' in sig:
-                return df_base() + f'\n\n{thread_mask}\n' + ('auto out = df.put("sales", mask, pluss::null);' if n == 'put' else 'df.put_("sales", mask, pluss::null);')
+                return df_base() + f'\n\n{thread_mask}\n' + ('auto out = df.put("sales", mask, pluss::series::null);' if n == 'put' else 'df.put_("sales", mask, pluss::series::null);')
             if 'const Thread& bool_mask' in sig and 'std::string_view value' in sig:
                 return df_base() + f'\n\n{thread_mask}\n' + ('auto out = df.put("city", mask, std::string_view("Tamale"));' if n == 'put' else 'df.put_("city", mask, std::string_view("Tamale"));')
             return df_base() + f'\n\n{thread_mask}\n' + ('auto out = df.put("sales", mask, 999.0);' if n == 'put' else 'df.put_("sales", mask, 999.0);')
@@ -9229,7 +9229,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`replace(from, to, features)` dispatches by value type, so numeric replacements touch numeric series features while string replacements touch note features.',
                 'If `features` is empty, every compatible feature of the relevant kind participates automatically.',
-                'Use `pluss::null` as `to` when you want matched cells to become missing.',
+                'Use `pluss::series::null` as `to` when you want matched cells to become missing.',
             ])
         if class_name == 'DataFrame' and n == 'rolling':
             return bullets('Practical Behavior', [

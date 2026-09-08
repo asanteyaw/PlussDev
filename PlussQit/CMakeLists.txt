@@ -746,6 +746,26 @@ if (PLUSSQIT_BUILD_EXAMPLES)
     target_link_libraries(plussqit_coden_note_factory_demo PRIVATE PlussQit::CodeM)
   endif()
 
+  # Permanent verifier for the Note Factory API Reference
+  # (docs/sphinx/api/note_factory/*.md).
+  add_executable(plussqit_coden_note_factory_reference_demo
+    examples/CodeN/note_factory_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_factory_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_factory_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  # The method verifier is added once its generated source is present. Keeping
+  # the configure step valid allows partial documentation worktrees to build.
+  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/CodeN/note_method_reference_demo.cpp")
+    add_executable(plussqit_coden_note_method_reference_demo
+      examples/CodeN/note_method_reference_demo.cpp)
+    target_link_libraries(plussqit_coden_note_method_reference_demo PRIVATE PlussQit::CodeN)
+    if (TARGET plussqit_codem)
+      target_link_libraries(plussqit_coden_note_method_reference_demo PRIVATE PlussQit::CodeM)
+    endif()
+  endif()
+
   add_executable(plussqit_coden_note_base_methods_demo examples/CodeN/note_base_methods_demo.cpp)
   target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeN)
   if (TARGET plussqit_codem)
@@ -879,6 +899,66 @@ if (PLUSSQIT_BUILD_CODEH)
       examples/CodeH/timeline_calendar_predicates_reference_demo.cpp
     )
     target_link_libraries(plussqit_codeh_timeline_calendar_predicates_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_extrema_reference_demo
+      examples/CodeH/timeline_extrema_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_extrema_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_ordering_reference_demo
+      examples/CodeH/timeline_ordering_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_ordering_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_storage_reference_demo
+      examples/CodeH/timeline_storage_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_storage_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_factory_reference_demo
+      examples/CodeH/timeline_factory_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_factory_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_set_fields_reference_demo
+      examples/CodeH/timeline_set_fields_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_set_fields_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_operators_reference_demo
+      examples/CodeH/timeline_operators_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_operators_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_unit_shifts_reference_demo
+      examples/CodeH/timeline_unit_shifts_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_unit_shifts_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_span_reference_demo
+      examples/CodeH/timeline_span_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_span_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_structure_reference_demo
+      examples/CodeH/timeline_structure_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_structure_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_shift_promotion_reference_demo
+      examples/CodeH/timeline_shift_promotion_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_shift_promotion_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_between_reference_demo
+      examples/CodeH/timeline_between_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_between_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_scalar_fields_reference_demo
+      examples/CodeH/timeline_scalar_fields_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_scalar_fields_reference_demo PRIVATE PlussQit::CodeH)
 
     add_executable(plussqit_codeh_duration_docverify_demo
       examples/CodeH/duration_docverify_demo.cpp

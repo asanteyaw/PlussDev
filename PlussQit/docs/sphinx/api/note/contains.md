@@ -1,3 +1,4 @@
+<!-- pluss-hand-authored -->
 # Note::contains
 
 [Back to Note API Reference](../../note_api_reference)
@@ -5,111 +6,163 @@
 ## Signature
 
 ```cpp
-Note::contains(std::string_view needle) const -> std::vector<std::uint8_t>
+std::vector<std::uint8_t> Note::contains(std::string_view needle) const
 ```
 
-## What It Does
+## Test Every Cell For A Literal Substring
 
-Checks each text cell for the presence of a substring and returns one boolean
-flag per cell.
+`contains(needle)` reports, for each text cell, whether `needle` occurs
+anywhere inside it. It is the predicate half of the substring family: use it
+to build a mask for filtering, counting, or branching, when the question is
+"which cells mention this?" rather than "rewrite the matches" (that is
+[`replace`](replace.md) / [`remove_all`](remove_all.md)) or "pull the matches
+out" (that is [`regex_findall`](regex_findall.md)).
 
-This is the direct `Note`-level membership question:
+The match is a **literal byte-substring** search — no regular-expression
+metacharacters, no word boundaries, no normalization. `needle` and the cell
+are compared exactly as stored, so the test is **case-sensitive** and
+byte-oriented; fold case first with [`lower`](lower.md) when you want a
+case-insensitive check.
 
-- "Does this case mention `exam`?"
-- "Does this row contain `http`?"
-- "Does this cell still contain a marker I expected to remove?"
+### Return value
 
-The output is returned as a dense vector of `0/1` flags rather than another
-`Note`, because the method is answering a predicate question, not building new
-text.
+The result is **not** a `Note`. It is a flat `std::vector<std::uint8_t>` with
+one entry per cell — `1` where `needle` was found, `0` where it was not — in
+row-major order. For a rank-`0` `Note` the vector has one entry; for a
+rank-`2` or rank-`3` `Note` the cells are flattened in the same order
+[`print`](../../note_api_reference.md) walks them. The length always equals
+`numel()`.
 
-That makes `contains()` one of the easiest inspection surfaces to compose with
-later transforms: you can check first, then decide whether a cleanup or
-replacement pass is even needed.
+Returning a plain `std::uint8_t` vector (rather than a boolean `Series`) keeps
+the predicate cheap and lets you feed it straight into indexing loops or into
+`pluss::make_series` if you want Series-side masking.
 
-## Parameters
+### Edge cases
 
-**needle**
+- An **empty `needle`** is contained in every cell, including empty cells, so
+  every entry is `1`.
+- A `needle` longer than a cell can never match that cell: its entry is `0`.
+- The scan is linear in total input size and does no allocation beyond the
+  result vector.
 
-The substring to search for inside each cell.
-
-The match is literal substring matching, not regex matching. If you need
-pattern syntax, use [`regex_findall`](regex_findall.md) or one of the regex
-predicate methods instead.
-
-Matching is case-sensitive unless you normalize the text first, for example
-with [`lower`](lower.md).
-
-## Returns
-
-`std::vector<std::uint8_t>`
-    One flag per element in the `Note`.
-
-- `1` means the substring was found.
-- `0` means it was not found.
-
-## Examples
-
-Example 1. Check which feature names mention `exam`.
+## Example 1: A Basic Mask
 
 ```cpp
-auto note = pluss::make_note({"midterm_1", "final_exam", "quiz"});
-auto mask = note.contains("exam");
-std::cout << "contains_exam:";
-for (std::uint8_t v : mask) {
-  std::cout << " " << static_cast<int>(v);
-}
-std::cout << "\n";
+const auto n = pluss::make_note({"midterm_1", "final_exam", "quiz"});
+const auto mask = n.contains("exam");
+std::cout << "[";
+for (std::size_t i = 0; i < mask.size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-contains_exam: 0 1 0
+[0, 1, 0]
 ```
 
-Example 2. Lowercase first when you want a case-insensitive substring workflow.
+Only `"final_exam"` contains the substring `exam`.
+
+## Example 2: The Test Is Case-Sensitive
 
 ```cpp
-auto cleaned = pluss::make_note({"Exam 1", "final exam", "Quiz"}).lower();
-auto mask = cleaned.contains("exam");
-std::cout << "contains_exam_lower:";
-for (std::uint8_t v : mask) {
-  std::cout << " " << static_cast<int>(v);
-}
-std::cout << "\n";
+const auto n = pluss::make_note({"midterm_1", "final_exam", "quiz"});
+const auto mask = n.contains("EXAM");
+std::cout << "[";
+for (std::size_t i = 0; i < mask.size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+std::cout << "]\n";
 ```
 
 ### Output
 
 ```text
-contains_exam_lower: 1 1 0
+[0, 0, 0]
 ```
 
-## Notes
+`"EXAM"` is a different byte sequence from `"exam"`.
 
-- `contains()` is shape-preserving in the sense that it evaluates every text
-  cell independently, but it returns a flag vector rather than a new `Note`.
-- Matching is substring-based, so `"exam"` matches `"final_exam"` without
-  needing an exact whole-cell match.
-- This is often the cheapest way to build a quick text mask before handing the
-  result to another layer such as `Thread`, `DataFrame`, or custom control
-  logic.
+## Example 3: Fold Case First For A Case-Insensitive Check
+
+```cpp
+const auto mask =
+    pluss::make_note({"Exam 1", "FINAL EXAM", "Quiz"}).lower().contains("exam");
+std::cout << "[";
+for (std::size_t i = 0; i < mask.size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+[1, 1, 0]
+```
+
+## Example 4: An Empty Needle Matches Everything
+
+```cpp
+const auto mask = pluss::make_note({"abc", "", "x"}).contains("");
+std::cout << "[";
+for (std::size_t i = 0; i < mask.size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+[1, 1, 1]
+```
+
+## Example 5: A Needle Longer Than The Cell Never Matches
+
+```cpp
+const auto mask = pluss::make_note({"ab"}).contains("abcd");
+std::cout << "[" << static_cast<int>(mask[0]) << "]\n";
+```
+
+### Output
+
+```text
+[0]
+```
+
+## Example 6: Higher-Rank Input Is Flattened Row-Major
+
+```cpp
+const auto mask =
+    pluss::make_note({{"apple", "grape"}, {"plum", "pear"}}).contains("p");
+std::cout << "[";
+for (std::size_t i = 0; i < mask.size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+std::cout << "]\n";
+```
+
+### Output
+
+```text
+[1, 1, 1, 1]
+```
+
+Four cells, flattened in row-major order; every one contains a `p`.
 
 ## See Also
 
-- [`Note::regex_findall`](regex_findall.md): extract regex matches rather than
-  returning a yes/no mask.
-- [`Note::replace`](replace.md): rewrite matching substrings instead of testing
-  for them.
+- [`Note::regex_findall`](regex_findall.md): when you need the matching
+  substrings, not just a yes/no.
+- [`Note::replace`](replace.md) / [`Note::remove_all`](remove_all.md):
+  rewrite or delete matches instead of testing for them.
+- [`Note::lower`](lower.md): normalize case before a case-insensitive test.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../note_api_reference.html">
+  <a class="prev-link" href="casefold.html">
     <span class="label">Previous</span>
-    <span class="title">Note API Reference</span>
+    <span class="title">casefold</span>
   </a>
-  <a class="next-link" href="lengths_bytes.html">
+  <a class="next-link" href="count_substring.html">
     <span class="label">Next</span>
-    <span class="title">lengths_bytes</span>
+    <span class="title">count_substring</span>
   </a>
 </div>

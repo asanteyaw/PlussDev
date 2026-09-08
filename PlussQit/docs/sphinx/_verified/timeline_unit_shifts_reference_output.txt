@@ -1,0 +1,168 @@
+
+=== calendar_source ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["2024-02-29T08:15:30.123456789+00:00", "2023-01-31T23:00:00.000000000+00:00"], 
+  ["2024-03-31T12:00:00.000000000+00:00", "2024-12-31T23:59:59.999999999+00:00"]
+]
+
+=== add_years_positive ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["2025-02-28T08:15:30.123456789+00:00", "2024-01-31T23:00:00.000000000+00:00"], 
+  ["2025-03-31T12:00:00.000000000+00:00", "2025-12-31T23:59:59.999999999+00:00"]
+]
+
+=== add_years_negative ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["2023-02-28T08:15:30.123456789+00:00", "2022-01-31T23:00:00.000000000+00:00"], 
+  ["2023-03-31T12:00:00.000000000+00:00", "2023-12-31T23:59:59.999999999+00:00"]
+]
+
+=== add_years_zero ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-02-29T08:15:30.123456789+00:00"
+
+=== add_years_source_unchanged ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-02-29T08:15:30.123456789+00:00"
+
+=== add_months_positive ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["2024-03-29T08:15:30.123456789+00:00", "2023-02-28T23:00:00.000000000+00:00"], 
+  ["2024-04-30T12:00:00.000000000+00:00", "2025-01-31T23:59:59.999999999+00:00"]
+]
+
+=== add_months_negative ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["2024-01-29T08:15:30.123456789+00:00", "2022-12-31T23:00:00.000000000+00:00"], 
+  ["2024-02-29T12:00:00.000000000+00:00", "2024-11-30T23:59:59.999999999+00:00"]
+]
+
+=== add_months_year_boundary ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2026-02-28T06:00:00.000000000+00:00"
+
+=== add_months_local_offset ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-03-10T03:30:00.000000000-06:00"
+
+=== add_months_absent ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["2024-02-01T00:00:00.123456789+00:00", "NaT"]
+
+=== spring_source ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-03-09T03:30:00.000000000-07:00"
+
+=== add_calendar_day_across_spring ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-03-10T03:30:00.000000000-06:00"
+
+=== add_elapsed_hours_across_spring ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-03-10T04:30:00.000000000-06:00"
+
+=== add_two_elapsed_hours_across_spring ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-03-10T04:30:00.000000000-06:00"
+
+=== add_days_positive ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2025-01-01T23:59:30.123456789+00:00"
+
+=== add_days_negative ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-12-30T23:59:30.123456789+00:00"
+
+=== add_days_zero ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-12-31T23:59:30.123456789+00:00"
+
+=== add_hours_negative ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-12-31T22:15:00.123456789+00:00"
+
+=== add_minutes_crosses_year ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2025-01-01T00:01:30.123456789+00:00"
+
+=== add_minutes_negative ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-12-31T23:57:30.123456789+00:00"
+
+=== add_minutes_zero ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-12-31T23:59:30.123456789+00:00"
+
+=== add_minutes_matrix ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["2024-01-01T09:01:00.000000000+00:00", "2024-01-01T09:31:15.000000004+00:00"], 
+  ["NaT", "2024-01-02T00:00:45.000000000+00:00"]
+]
+
+=== add_seconds_crosses_midnight ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2025-01-01T00:00:15.123456789+00:00"
+
+=== subtract_seconds ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-12-31T23:58:00.123456789+00:00"
+
+=== zero_shift ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-12-31T23:59:30.123456789+00:00"
+
+=== source_is_unchanged ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-12-31T23:59:30.123456789+00:00"
+
+=== absent_propagates ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["2024-01-04T00:00:00.123456789+00:00", "NaT"]
+
+=== add_seconds_absent ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["2024-01-01T00:00:01.123456789+00:00", "NaT"]
+
+=== empty_shape ===
+Note(shape=[0, 2], dim=2, numel=0, encoding=utf8)
+[]
+
+=== strided_source ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["2024-01-01T00:00:00.123456789+00:00", "2024-02-29T00:00:00.000000004+00:00"]
+
+=== strided_add_years ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["2025-01-01T00:00:00.123456789+00:00", "2025-02-28T00:00:00.000000004+00:00"]
+
+=== strided_add_hours ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["2024-01-01T01:00:00.123456789+00:00", "2024-02-29T01:00:00.000000004+00:00"]
+
+=== elapsed_difference_nanos ===
+Series(shape=[1], strides=[1], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=[82800000000000]
+
+=== calendar_day_into_dst_gap ===
+rejected
+
+=== calendar_month_into_dst_gap ===
+rejected
+
+=== year_out_of_calendar_range ===
+rejected
+
+=== elapsed_tick_overflow ===
+rejected
+
+=== unit_scale_overflow ===
+rejected
+
+=== minute_scale_overflow ===
+rejected

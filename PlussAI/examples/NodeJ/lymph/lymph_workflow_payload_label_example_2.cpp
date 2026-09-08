@@ -1,0 +1,41 @@
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <iostream>
+
+// label(Series y): supervise with an already-separate label vector instead
+// of a column name. This is the form to use when the label does not live in
+// the frame -- including a FeatureBatch-only Payload that has no frame at
+// all.
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  namespace workflow = lymph::workflow;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const DataFrame raw({
+      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"balance", Thread(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
+  });
+  const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
+
+  const workflow::Payload payload =
+      workflow::payload::make(raw).features({"income", "balance"}).label(y);
+
+  std::cout << "has_label()         = " << std::boolalpha << payload.has_label() << "\n";
+  std::cout << "has_label_feature() = " << payload.has_label_feature() << "\n";
+
+  const lymph::LabeledBatch batch = payload.labeled_batch();
+  std::cout << "labeled_batch: rows=" << batch.features.sample_count()
+            << " features=" << batch.features.feature_count() << "\n";
+
+  const workflow::Workflow trained =
+      workflow::make(lymph::models::logistic_regression()).learn(payload);
+  std::cout << "pred = " << trained.infer(payload) << "\n";
+
+  return 0;
+}

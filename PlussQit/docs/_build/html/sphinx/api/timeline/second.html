@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=151dd15e"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::nanosecond" href="nanosecond.html" />
-    <link rel="prev" title="Timeline::minute" href="minute.html" />
+    <link rel="next" title="Timeline::second_scalar" href="second_scalar.html" />
+    <link rel="prev" title="Timeline::searchsorted_right" href="searchsorted_right.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,7 +44,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">second</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">sec()</span></code>, <code class="docutils literal notranslate"><span class="pre">s()</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds()</span></code>, and <code class="docutils literal notranslate"><span class="pre">second_()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">second()</span></code> is the sole public spelling.</p>
 </section>
 <section id="read-the-whole-second-component">
 <h2>Read The Whole-Second Component<a class="headerlink" href="#read-the-whole-second-component" title="Link to this heading">¶</a></h2>
@@ -73,7 +73,7 @@ data=[59, 0, 8, -1]
 </div>
 <p>To reconstruct the within-minute numeric offset at nanosecond precision, pair
 the field with <code class="docutils literal notranslate"><span class="pre">nanosecond()</span></code>: conceptually
-<code class="docutils literal notranslate"><span class="pre">second</span> <span class="pre">*</span> <span class="pre">1'000'000'000</span> <span class="pre">+</span> <span class="pre">nanosecond</span></code>. Guard <code class="docutils literal notranslate"><span class="pre">NaT</span></code> first, because both missing
+<code class="docutils literal notranslate"><span class="pre">second</span> <span class="pre">*</span> <span class="pre">1'000'000'000</span> <span class="pre">+</span> <span class="pre">nanosecond</span></code>. Guard <code class="docutils literal notranslate"><span class="pre">NaT</span></code> first, because both absent
 sentinels are <code class="docutils literal notranslate"><span class="pre">-1</span></code> and are not valid temporal components.</p>
 </section>
 </section>
@@ -92,11 +92,11 @@ required.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="nanosecond.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nanosecond</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="epoch_nanos.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">epoch_nanos</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="to_epoch_nanos_flat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_epoch_nanos_flat</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="ticks.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ticks</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="minute.html"><span class="label">Previous</span><span class="title">minute</span></a>
-  <a class="next-link" href="nanosecond.html"><span class="label">Next</span><span class="title">nanosecond</span></a>
+  <a class="next-link" href="second_scalar.html"><span class="label">Next</span><span class="title">second_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -140,6 +140,7 @@ required.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -190,8 +191,8 @@ required.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="minute.html" title="previous chapter">Timeline::minute</a></li>
-      <li>Next: <a href="nanosecond.html" title="next chapter">Timeline::nanosecond</a></li>
+      <li>Previous: <a href="searchsorted_right.html" title="previous chapter">Timeline::searchsorted_right</a></li>
+      <li>Next: <a href="second_scalar.html" title="next chapter">Timeline::second_scalar</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

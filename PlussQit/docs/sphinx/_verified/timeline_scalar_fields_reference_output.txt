@@ -1,0 +1,69 @@
+=== leap_day ===
+year=2024, month=2, day=29, weekday=3, yearday=60
+
+=== weekday_convention ===
+Friday=4, Sunday=6
+
+=== timezone_boundary ===
+UTC=2025-1-1
+Edmonton=2024-12-31
+
+=== ordinal_boundaries ===
+start=1, end=366
+
+=== absent_instant ===
+year=-1, month=-1, day=-1, weekday=-1, yearday=-1
+
+=== rank_check ===
+one-element vector rejected
+
+=== clock_timezone ===
+UTC=1:30:45
+Edmonton=18:30:45
+
+=== quarter_boundary ===
+March=1, April=2
+
+=== fractional_second ===
+second=45, nanos=999999999
+
+=== quarter_timezone ===
+UTC=2, Edmonton=1
+
+=== iso_week_boundaries ===
+2021-01-01: year=2021, week=53
+2021-01-04: year=2021, week=1
+2024-12-31: year=2024, week=1
+
+=== remaining_absent_fields ===
+hour=-1, minute=-1, second=-1, quarter=-1, week=-1
+
+=== remaining_rank_check ===
+one-element vector rejected
+
+=== leap_predicate ===
+2024=true, 2023=false
+
+=== month_boundaries ===
+Feb 1: start=true, end=false
+Feb 29: start=false, end=true
+
+=== quarter_boundaries ===
+Mar 31: start=false, end=true
+Apr 1: start=true, end=false
+
+=== weekend_predicate ===
+Friday=false, Saturday=true, Sunday=true
+
+=== boundary_timezone ===
+UTC: month_start=true, month_end=false, quarter_start=true, quarter_end=false
+Edmonton: month_start=false, month_end=true, quarter_start=false, quarter_end=true
+
+=== leap_timezone ===
+UTC=true, Edmonton=false
+
+=== absent_predicates ===
+leap=false, month_start=false, month_end=false, quarter_start=false, quarter_end=false, weekend=false
+
+=== predicate_rank_check ===
+one-element vector rejected

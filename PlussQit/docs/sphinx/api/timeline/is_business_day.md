@@ -8,7 +8,7 @@
 Series Timeline::is_business_day() const
 ```
 
-Aliases: `is_bday()`, `is_businessday()`, and `business_day()`.
+`is_business_day()` is the sole public spelling.
 
 ## Apply The Built-In Weekday Rule
 
@@ -37,7 +37,7 @@ Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=tru
 data=[true, true, true, true, true, false, false, false]
 ```
 
-The final `false` is missing, not a weekend. On valid timestamps,
+The final `false` marks `NaT`, not a weekend. On valid instants,
 `is_business_day()` and `is_weekend()` are complements; across a Timeline that
 may contain `NaT`, retain `isvalid()` to express that identity correctly.
 
@@ -61,7 +61,7 @@ rule.
 - [`weekday`](weekday.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_weekend.html"><span class="label">Previous</span><span class="title">is_weekend</span></a>
+  <a class="prev-link" href="hours_between.html"><span class="label">Previous</span><span class="title">hours_between</span></a>
   <a class="next-link" href="is_monday.html"><span class="label">Next</span><span class="title">is_monday</span></a>
 </div>
 <!-- pluss-hand-authored -->

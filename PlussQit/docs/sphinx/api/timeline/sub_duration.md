@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::sub_duration(const Duration& d) -> Timeline
+Timeline Timeline::sub_duration(const Duration& duration) const
 ```
 
 ## What It Does
@@ -65,14 +65,14 @@ Timeline(shape=[4], tz=UTC)
 [ 2024-11-01 08:45:00, 2024-11-01 10:00:30, 2024-12-31 23:44:59, 2024-12-31 23:45:00 ]
 ```
 
-## Operator Sugar, Broadcasting, Missing Values, Timezone
+## Operator Sugar, Broadcasting, NaT, And Timezone
 
 `sub_duration` shares its full arithmetic model with
 [`add_duration`](add_duration.md) -- same unit factories, same broadcasting
 rules, same `NaT`-from-either-side propagation, same left-operand-only
 timezone preservation. See that page's "Full Scope" and "Broadcasting"
 sections for the complete unit-factory sweep and the
-broadcasting/missing-value/timezone examples; this page just confirms
+broadcasting/`NaT`/timezone examples; this page just confirms
 `t - d` is exactly `t.sub_duration(d)`, not an approximation of it:
 
 ```cpp
@@ -112,8 +112,9 @@ data=true
 
 ## Notes
 
-- Missing timestamps propagate through the subtraction, from either operand.
+- Absent instants propagate through the subtraction, from either operand.
 - Shape is preserved, subject to the same broadcasting rules as `add_duration`.
+- A result outside the representable nanosecond epoch range throws.
 - Operator sugar also exists: `t - d`, identical to `sub_duration`; `t -= d`
   is its compound-assignment form.
 

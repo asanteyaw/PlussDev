@@ -118,7 +118,7 @@ pluss::Timeline pack_timeline_columns(const std::vector<pluss::Timeline>& cols,
     std::vector<pluss::Series> tail(epoch_cols.begin() + 1, epoch_cols.end());
     matrix = matrix.unite(tail, 1);
   }
-  return pluss::Timeline::fromSeries(matrix);
+  return pluss::timeline::from_epoch(matrix);
 }
 
 } // namespace
@@ -449,9 +449,9 @@ std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
     case ThreadKind::Note:
       return std::string(t.as_note().at(row));
     case ThreadKind::Timeline:
-      return fmt::format("{}", t.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+      return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case ThreadKind::TimeIndex:
-      return fmt::format("{}", t.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+      return fmt::format("{}", t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
     default:
       return "";
   }

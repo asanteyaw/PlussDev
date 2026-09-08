@@ -8,7 +8,7 @@
 Series Timeline::is_month_start() const
 ```
 
-Aliases: `is_month_begin()` and `is_monthstart()`.
+`is_month_start()` is the sole public spelling.
 
 ## Find The First Local Date Of Each Month
 
@@ -44,7 +44,7 @@ calendar boundary of another kind.
 ## Using The Mask Correctly
 
 Use this predicate to select actual observations landing on day 1. It does not
-manufacture missing month starts, resample irregular data, or choose the first
+manufacture absent month starts, regularize an irregular Timeline, or choose the first
 available business day. Those require an explicit alignment policy.
 
 ## Gotchas And Failure Modes

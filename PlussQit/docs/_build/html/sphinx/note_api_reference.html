@@ -13,11 +13,11 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=d751f226"></script>
-    <script src="../_static/layout.js?v=33e21169"></script>
+    <script src="../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Note::contains" href="api/note/contains.html" />
+    <link rel="next" title="Note::base64_decode" href="api/note/base64_decode.html" />
     <link rel="prev" title="pluss::series::from_torch" href="api/series_factory/from_torch.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -40,115 +40,112 @@
 <section id="note-api-reference">
 <h1>Note API Reference<a class="headerlink" href="#note-api-reference" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../api_reference.html"><span class="std std-doc">Back to PlussQit API Reference</span></a></p>
-<p>This page documents <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code> and <code class="docutils literal notranslate"><span class="pre">pluss::coden::Note</span></code> in the same
-handwritten, usage-first style as the rest of the PlussQit object references:
-one method page at a time, with compiled-and-run examples under each method
-page rather than generated stubs.</p>
-<p>The examples are intentionally written as standalone snippets: each example
-defines its own input object, stores intermediate results in named variables,
-and explicitly prints the result it is discussing. That makes the pages more
-reliable as copy-paste starting points and as templates for future <code class="docutils literal notranslate"><span class="pre">Note</span></code>
-documentation passes.</p>
+<p>This is the per-method reference for <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code> — one page per method, in
+the same handwritten, compiled-and-verified style as the rest of the PlussQit
+object references. For <em>building</em> a <code class="docutils literal notranslate"><span class="pre">Note</span></code>, see the separate
+<a class="reference internal" href="note_factory_api_reference.html"><span class="std std-doc">Note Factory API Reference</span></a>; everything on
+this page assumes a <code class="docutils literal notranslate"><span class="pre">Note</span></code> already exists.</p>
 <section id="what-note-is">
 <h2>What <code class="docutils literal notranslate"><span class="pre">Note</span></code> Is<a class="headerlink" href="#what-note-is" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code> is the text payload object in PlussQit.</p>
-<p>Use it when your data are strings, tokens, lines, snippets, prompts, LaTeX, or
-document fragments and you want to transform them in a shape-preserving,
-vectorized way.</p>
-<p>That is the main difference from the other foundational objects:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Note</span></code> is the text object in the plussmic data-analysis stack. A <code class="docutils literal notranslate"><span class="pre">Note</span></code> is a
+shape (up to 3-D) of text cells — UTF-8 by default, or raw bytes — and its
+methods transform those cells in a <strong>vectorized, shape-preserving</strong> way, the
+same way <code class="docutils literal notranslate"><span class="pre">Series</span></code> transforms numbers and <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> transforms instants.</p>
+<p>Reach for <code class="docutils literal notranslate"><span class="pre">Note</span></code> when the data are strings, tokens, lines, snippets, prompts,
+document fragments, or LaTeX, and the work is cleanup, matching, rewriting,
+splitting, tokenization, regex extraction, or text-oriented natural-language
+preprocessing.</p>
+</section>
+<section id="how-the-methods-are-shaped">
+<h2>How The Methods Are Shaped<a class="headerlink" href="#how-the-methods-are-shaped" title="Link to this heading">¶</a></h2>
+<p>Most <code class="docutils literal notranslate"><span class="pre">Note</span></code> methods <strong>preserve shape</strong> and act cell by cell: a rank-<code class="docutils literal notranslate"><span class="pre">1</span></code>
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> of three cells maps to a rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">Note</span></code> of three cells. Three
+families break that mould:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Series</span></code> carries numeric and boolean values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span></code> carries UTF-8 text or raw byte-oriented textual content.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code> carries temporal values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> is the ordered 1D time-axis surface built for lookup, slicing,
-and alignment.</p></li>
+<li><p><strong>Predicates</strong> — <a class="reference internal" href="api/note/contains.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contains</span></code></span></a>,
+<a class="reference internal" href="api/note/starts_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">starts_with</span></code></span></a>, and
+<a class="reference internal" href="api/note/ends_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ends_with</span></code></span></a> return a flat
+<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::uint8_t&gt;</span></code> of <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code>, one entry per cell in row-major
+order.</p></li>
+<li><p><strong>Measurements</strong> — <a class="reference internal" href="api/note/lengths_bytes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lengths_bytes</span></code></span></a>,
+<a class="reference internal" href="api/note/lengths_chars.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lengths_chars</span></code></span></a>,
+<a class="reference internal" href="api/note/lengths_graphemes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lengths_graphemes</span></code></span></a>, and
+<a class="reference internal" href="api/note/count_substring.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count_substring</span></code></span></a> return a flat
+<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::int64_t&gt;</span></code>, one entry per cell.</p></li>
+<li><p><strong>Tokenizers</strong> — <a class="reference internal" href="api/note/split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split</span></code></span></a>,
+<a class="reference internal" href="api/note/split_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_lines</span></code></span></a>,
+<a class="reference internal" href="api/note/split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code></span></a>,
+<a class="reference internal" href="api/note/tokenize_words.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tokenize_words</span></code></span></a>, and
+<a class="reference internal" href="api/note/regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex_findall</span></code></span></a> return a <strong><code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code></strong>:
+one flat token <code class="docutils literal notranslate"><span class="pre">Note</span></code> (<code class="docutils literal notranslate"><span class="pre">batch.tokens()</span></code>) plus an
+<code class="docutils literal notranslate"><span class="pre">offsets()</span></code> vector (<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::int64_t&gt;</span></code>, length <code class="docutils literal notranslate"><span class="pre">numel</span> <span class="pre">+</span> <span class="pre">1</span></code>) that
+marks where each input cell’s run of tokens begins and ends in the flat
+stream. Row <code class="docutils literal notranslate"><span class="pre">r</span></code>’s tokens are <code class="docutils literal notranslate"><span class="pre">tokens()[offsets()[r]</span> <span class="pre">..</span> <span class="pre">offsets()[r+1])</span></code>.</p></li>
 </ul>
 </section>
-<section id="includes">
-<h2>Includes<a class="headerlink" href="#includes" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/pluss.h&gt;</span>
-<span class="c1">// or the narrower surface</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/coden/coden.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/coden/note_factory.h&gt;</span>
+<section id="running-the-examples">
+<h2>Running The Examples<a class="headerlink" href="#running-the-examples" title="Link to this heading">¶</a></h2>
+<p>Every example is a runnable fragment (assume <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&lt;pluss/pluss.h&gt;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&lt;iostream&gt;</span></code>), and every <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">Output</span></code> block is copied verbatim from
+the compiled program <code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_method_reference_demo.cpp</span></code>.</p>
+<p>To print a <code class="docutils literal notranslate"><span class="pre">Note</span></code>, any of these render byte-identical text, and the pages
+rotate through them:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// print(n) -&gt; std::string</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">                       </span><span class="c1">// operator&lt;&lt; (default options)</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">     </span><span class="c1">// print(os, n) -&gt; the stream</span>
 </pre></div>
 </div>
-</section>
-<section id="practical-construction-patterns">
-<h2>Practical Construction Patterns<a class="headerlink" href="#practical-construction-patterns" title="Link to this heading">¶</a></h2>
-<p>Example 1. Build a scalar text value.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;Final Exam Review&quot;</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Example 2. Build a 1D batch of text cases.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada Lovelace&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Grace Hopper&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Linus&quot;</span><span class="p">});</span>
-</pre></div>
-</div>
-<p>Example 3. Build from flat storage plus explicit shape when the text already
-arrives from another system in flattened form.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flat</span><span class="p">{</span><span class="s">&quot;r0c0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r0c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1c0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1c1&quot;</span><span class="p">};</span>
-<span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">};</span>
+<p>The non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> results are printed plainly:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// contains / lengths_bytes: a flat vector, one entry per cell</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">mask</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">sizes</span><span class="p">);</span>
+<span class="c1">// a TokenBatch: the flat token Note, then the offsets</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
-</section>
-<section id="how-to-read-the-examples">
-<h2>How to Read the Examples<a class="headerlink" href="#how-to-read-the-examples" title="Link to this heading">¶</a></h2>
-<p>Most <code class="docutils literal notranslate"><span class="pre">Note</span></code> methods preserve shape and operate cell by cell.</p>
-<p>That means when you see a 1D <code class="docutils literal notranslate"><span class="pre">Note</span></code> with three cases, the transformed result is
-usually still a 1D <code class="docutils literal notranslate"><span class="pre">Note</span></code> with three cases. Tokenizing methods are the main
-exception: they return a <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>, which flattens tokens into one <code class="docutils literal notranslate"><span class="pre">Note</span></code>
-plus an <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> vector describing where each original case begins and ends
-inside that flattened token stream.</p>
-</section>
-<section id="using-this-reference">
-<h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Use the left sidebar to open one <code class="docutils literal notranslate"><span class="pre">Note</span></code> method page at a time.</p></li>
-<li><p>This first handwritten slice focuses on the methods users reach for early:
-cleanup, substring matching, replacement, tokenization, regex extraction,
-NLP-adjacent cleanup, and TeX escaping.</p></li>
-<li><p>Every method page below embeds its output directly under the example that
-produced it.</p></li>
-<li><p>Those outputs were verified against the current library state from the
-<code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_docverify_demo.cpp</span></code> run, but the page itself stays
-self-contained instead of delegating readers into one large verifier dump.</p></li>
-</ul>
+<p>Examples that show a rejection call the method inside a <code class="docutils literal notranslate"><span class="pre">try</span></code> block and print
+the first line of <code class="docutils literal notranslate"><span class="pre">pluss::Error::what()</span></code> (the message); <code class="docutils literal notranslate"><span class="pre">what()</span></code> also appends
+a <code class="docutils literal notranslate"><span class="pre">Triggered</span> <span class="pre">at:</span></code> location line, which the output blocks omit.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>
 <section id="coverage">
 <h2>Coverage<a class="headerlink" href="#coverage" title="Link to this heading">¶</a></h2>
-<p>This first <code class="docutils literal notranslate"><span class="pre">Note</span></code> pass now covers:</p>
+<p>This reference documents the methods users reach for first:</p>
 <ul class="simple">
-<li><p>substring predicates: <code class="docutils literal notranslate"><span class="pre">contains</span></code></p></li>
-<li><p>byte-length inspection: <code class="docutils literal notranslate"><span class="pre">lengths_bytes</span></code></p></li>
-<li><p>case normalization: <code class="docutils literal notranslate"><span class="pre">lower</span></code></p></li>
-<li><p>URL cleanup for text preprocessing: <code class="docutils literal notranslate"><span class="pre">nlp_remove_urls</span></code></p></li>
-<li><p>regex token extraction: <code class="docutils literal notranslate"><span class="pre">regex_findall</span></code></p></li>
-<li><p>elementwise substring replacement: <code class="docutils literal notranslate"><span class="pre">replace</span></code></p></li>
-<li><p>literal substring removal: <code class="docutils literal notranslate"><span class="pre">remove_all</span></code></p></li>
-<li><p>boundary quoting: <code class="docutils literal notranslate"><span class="pre">quote</span></code></p></li>
-<li><p>delimiter-based and whitespace-based tokenization: <code class="docutils literal notranslate"><span class="pre">split</span></code>, <code class="docutils literal notranslate"><span class="pre">split_lines</span></code>,
-<code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code>, <code class="docutils literal notranslate"><span class="pre">tokenize_words</span></code></p></li>
-<li><p>line and whitespace tokenization: <code class="docutils literal notranslate"><span class="pre">split_lines</span></code>, <code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code></p></li>
-<li><p>boundary trimming: <code class="docutils literal notranslate"><span class="pre">strip</span></code></p></li>
-<li><p>targeted text masking: <code class="docutils literal notranslate"><span class="pre">nlp_mask_pii</span></code>, <code class="docutils literal notranslate"><span class="pre">nlp_remove_urls</span></code></p></li>
-<li><p>TeX-safe escaping and TeX-to-text reduction: <code class="docutils literal notranslate"><span class="pre">tex_escape</span></code>, <code class="docutils literal notranslate"><span class="pre">tex_to_text</span></code></p></li>
-<li><p>transport encodings: <code class="docutils literal notranslate"><span class="pre">base64_encode</span></code>, <code class="docutils literal notranslate"><span class="pre">url_encode</span></code></p></li>
+<li><p><strong>Case</strong> — <code class="docutils literal notranslate"><span class="pre">lower</span></code>, <code class="docutils literal notranslate"><span class="pre">upper</span></code>, <code class="docutils literal notranslate"><span class="pre">casefold</span></code>, <code class="docutils literal notranslate"><span class="pre">title</span></code>, <code class="docutils literal notranslate"><span class="pre">capitalize</span></code>,
+<code class="docutils literal notranslate"><span class="pre">swapcase</span></code>.</p></li>
+<li><p><strong>Boundary and rewriting</strong> — <code class="docutils literal notranslate"><span class="pre">strip</span></code>, <code class="docutils literal notranslate"><span class="pre">replace</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_all</span></code>, <code class="docutils literal notranslate"><span class="pre">quote</span></code>,
+<code class="docutils literal notranslate"><span class="pre">unquote</span></code>.</p></li>
+<li><p><strong>Inspection</strong> — <code class="docutils literal notranslate"><span class="pre">contains</span></code>, <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>, <code class="docutils literal notranslate"><span class="pre">ends_with</span></code>,
+<code class="docutils literal notranslate"><span class="pre">count_substring</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_chars</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_graphemes</span></code>.</p></li>
+<li><p><strong>Tokenizers</strong> — <code class="docutils literal notranslate"><span class="pre">split</span></code>, <code class="docutils literal notranslate"><span class="pre">split_lines</span></code>, <code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tokenize_words</span></code>, <code class="docutils literal notranslate"><span class="pre">regex_findall</span></code>.</p></li>
+<li><p><strong>Targeted masking</strong> — <code class="docutils literal notranslate"><span class="pre">nlp_mask_pii</span></code>, <code class="docutils literal notranslate"><span class="pre">nlp_remove_urls</span></code>.</p></li>
+<li><p><strong>TeX</strong> — <code class="docutils literal notranslate"><span class="pre">tex_escape</span></code>, <code class="docutils literal notranslate"><span class="pre">tex_to_text</span></code>.</p></li>
+<li><p><strong>Transport encodings</strong> — <code class="docutils literal notranslate"><span class="pre">base64_encode</span></code>/<code class="docutils literal notranslate"><span class="pre">base64_decode</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hex_encode</span></code>/<code class="docutils literal notranslate"><span class="pre">hex_decode</span></code>, <code class="docutils literal notranslate"><span class="pre">url_encode</span></code>/<code class="docutils literal notranslate"><span class="pre">url_decode</span></code>.</p></li>
 </ul>
-<p>The rest of the <code class="docutils literal notranslate"><span class="pre">Note</span></code> surface is much larger than this first slice. It
-includes broader cleanup families, NLP helpers, TeX parsers, token comparison
-helpers, and encoding transforms. Those will be expanded method by method in
-later passes rather than bulk-filled with shallow prose.</p>
+<p>The rest of the <code class="docutils literal notranslate"><span class="pre">Note</span></code> surface — broader cleanup, NLP extraction, diff/align,
+Unicode normalization, transliteration, and phonetics — is documented method
+by method in later passes.</p>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="../api_reference.html">
     <span class="label">Previous</span>
     <span class="title">PlussQit API Reference</span>
   </a>
-  <a class="next-link" href="api/note/contains.html">
+  <a class="next-link" href="api/note/base64_decode.html">
     <span class="label">Next</span>
-    <span class="title">contains</span>
+    <span class="title">base64_decode</span>
   </a>
 </div>
 </section>
@@ -192,6 +189,7 @@ later passes rather than bulk-filled with shallow prose.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Broadcasting.html">Broadcasting</a></li>
@@ -242,7 +240,7 @@ later passes rather than bulk-filled with shallow prose.</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
       <li>Previous: <a href="api/series_factory/from_torch.html" title="previous chapter">pluss::series::from_torch</a></li>
-      <li>Next: <a href="api/note/contains.html" title="next chapter">Note::contains</a></li>
+      <li>Next: <a href="api/note/base64_decode.html" title="next chapter">Note::base64_decode</a></li>
   </ul></li>
   </ul></li>
 </ul>

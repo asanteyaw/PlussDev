@@ -8,7 +8,7 @@
 Series Timeline::is_thursday() const
 ```
 
-Aliases: `thu_is()` and `is_thu()`.
+`is_thursday()` is the sole public spelling.
 
 ## Select Local Thursdays
 

@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::hour" href="hour.html" />
-    <link rel="prev" title="Timeline::month" href="month.html" />
+    <link rel="next" title="Timeline::day_scalar" href="day_scalar.html" />
+    <link rel="prev" title="pluss::timeline::date_range" href="date_range.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,7 +44,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">day</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">d()</span></code>, <code class="docutils literal notranslate"><span class="pre">dom()</span></code>, <code class="docutils literal notranslate"><span class="pre">days()</span></code>, and <code class="docutils literal notranslate"><span class="pre">day_()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">day()</span></code> is the sole public spelling.</p>
 </section>
 <section id="read-the-day-of-month">
 <h2>Read The Day Of Month<a class="headerlink" href="#read-the-day-of-month" title="Link to this heading">¶</a></h2>
@@ -53,7 +53,7 @@ from <code class="docutils literal notranslate"><span class="pre">1</span></code
 on month and year. Leap-day timestamps correctly produce <code class="docutils literal notranslate"><span class="pre">29</span></code> in February.</p>
 <p>The method preserves the Timeline’s shape and returns <code class="docutils literal notranslate"><span class="pre">int32</span></code>. It is not the
 same as <code class="docutils literal notranslate"><span class="pre">weekday()</span></code> (position in the week) or <code class="docutils literal notranslate"><span class="pre">dayofyear()</span></code> (position in the
-year). A missing timestamp produces <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
+year). An absent instant produces <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
 </section>
 <section id="example-month-boundaries-and-leap-day">
 <h2>Example: Month Boundaries And Leap Day<a class="headerlink" href="#example-month-boundaries-and-leap-day" title="Link to this heading">¶</a></h2>
@@ -104,7 +104,7 @@ temporal representation.</p>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month.html"><span class="label">Previous</span><span class="title">month</span></a>
-  <a class="next-link" href="hour.html"><span class="label">Next</span><span class="title">hour</span></a>
+  <a class="next-link" href="day_scalar.html"><span class="label">Next</span><span class="title">day_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -148,6 +148,7 @@ temporal representation.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -198,8 +199,8 @@ temporal representation.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="month.html" title="previous chapter">Timeline::month</a></li>
-      <li>Next: <a href="hour.html" title="next chapter">Timeline::hour</a></li>
+      <li>Previous: <a href="date_range.html" title="previous chapter">pluss::timeline::date_range</a></li>
+      <li>Next: <a href="day_scalar.html" title="next chapter">Timeline::day_scalar</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

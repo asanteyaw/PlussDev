@@ -13,12 +13,12 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=d751f226"></script>
-    <script src="../_static/layout.js?v=33e21169"></script>
+    <script src="../_static/api_nav.js?v=151dd15e"></script>
+    <script src="../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Timeline::defined" href="api/timeline/defined.html" />
-    <link rel="prev" title="Note::url_encode" href="api/note/url_encode.html" />
+    <link rel="next" title="Timeline::add_days" href="api/timeline/add_days.html" />
+    <link rel="prev" title="pluss::note::select" href="api/note_factory/select.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -125,9 +125,9 @@ A date-only form, usually interpreted as midnight on that date.</p></li>
 </ul>
 <p>Important current behavior:</p>
 <ul class="simple">
-<li><p>The documented text path for a missing timestamp is an empty string, not the
+<li><p>The documented text path for an absent instant is an empty string, not the
 literal text <code class="docutils literal notranslate"><span class="pre">&quot;NaT&quot;</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code> may contain missing times, and those render as <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code> may contain absent instants, and those render as <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
 </ul>
 </section>
 <section id="coverage">
@@ -135,34 +135,50 @@ literal text <code class="docutils literal notranslate"><span class="pre">&quot;
 <p>The current handwritten pages cover these starting families:</p>
 <ul class="simple">
 <li><p>representation and export: <code class="docutils literal notranslate"><span class="pre">defined</span></code>, <code class="docutils literal notranslate"><span class="pre">sizes</span></code>, <code class="docutils literal notranslate"><span class="pre">dim</span></code>, <code class="docutils literal notranslate"><span class="pre">numel</span></code>,
-<code class="docutils literal notranslate"><span class="pre">is_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">tz</span></code>, <code class="docutils literal notranslate"><span class="pre">host</span></code>, <code class="docutils literal notranslate"><span class="pre">to_epoch_nanos_vector</span></code>,
-<code class="docutils literal notranslate"><span class="pre">to_epoch_nanos_flat</span></code>, <code class="docutils literal notranslate"><span class="pre">epoch_nanos</span></code></p></li>
-<li><p>arithmetic and distance: <code class="docutils literal notranslate"><span class="pre">add_duration</span></code>, <code class="docutils literal notranslate"><span class="pre">sub_duration</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">add_nanos</span></code></p></li>
-<li><p>comparisons: <code class="docutils literal notranslate"><span class="pre">eq</span></code>, <code class="docutils literal notranslate"><span class="pre">ne</span></code>, <code class="docutils literal notranslate"><span class="pre">lt</span></code>, <code class="docutils literal notranslate"><span class="pre">le</span></code>, <code class="docutils literal notranslate"><span class="pre">gt</span></code>, <code class="docutils literal notranslate"><span class="pre">ge</span></code></p></li>
-<li><p>missing-time work: <code class="docutils literal notranslate"><span class="pre">isnat</span></code>, <code class="docutils literal notranslate"><span class="pre">isvalid</span></code>, <code class="docutils literal notranslate"><span class="pre">isnat_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">fill_nat</span></code>, <code class="docutils literal notranslate"><span class="pre">where</span></code></p></li>
-<li><p>ordering and deduplication: <code class="docutils literal notranslate"><span class="pre">argsort</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">sort</span></code>, <code class="docutils literal notranslate"><span class="pre">unique</span></code>,
-<code class="docutils literal notranslate"><span class="pre">drop_duplicates</span></code></p></li>
+<code class="docutils literal notranslate"><span class="pre">is_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">tz</span></code>, <code class="docutils literal notranslate"><span class="pre">host</span></code>, <code class="docutils literal notranslate"><span class="pre">from_buffer</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ticks</span></code>, <code class="docutils literal notranslate"><span class="pre">copy_ticks</span></code>, and the shape-preserving
+<code class="docutils literal notranslate"><span class="pre">epoch_*</span></code> projections</p></li>
+<li><p>component and coarse-epoch construction: <code class="docutils literal notranslate"><span class="pre">from_ymd</span></code>, <code class="docutils literal notranslate"><span class="pre">from_ymdhms</span></code>,
+<code class="docutils literal notranslate"><span class="pre">from_epoch_micros</span></code>, <code class="docutils literal notranslate"><span class="pre">from_epoch_millis</span></code>, <code class="docutils literal notranslate"><span class="pre">from_epoch_seconds</span></code></p></li>
+<li><p>temporal operators, arithmetic, and distance: <code class="docutils literal notranslate"><span class="pre">operators</span></code>, calendar-aware
+<code class="docutils literal notranslate"><span class="pre">add_years</span></code>, <code class="docutils literal notranslate"><span class="pre">add_months</span></code>, and <code class="docutils literal notranslate"><span class="pre">add_days</span></code>, fixed elapsed <code class="docutils literal notranslate"><span class="pre">add_hours</span></code>,
+<code class="docutils literal notranslate"><span class="pre">add_minutes</span></code>, <code class="docutils literal notranslate"><span class="pre">add_seconds</span></code>, and <code class="docutils literal notranslate"><span class="pre">add_nanos</span></code>, plus <code class="docutils literal notranslate"><span class="pre">add_duration</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sub_duration</span></code>, exact <code class="docutils literal notranslate"><span class="pre">diff</span></code>, policy-driven integer <code class="docutils literal notranslate"><span class="pre">span</span></code>, scalar calendar
+<code class="docutils literal notranslate"><span class="pre">years_between</span></code> and <code class="docutils literal notranslate"><span class="pre">months_between</span></code>, and scalar elapsed <code class="docutils literal notranslate"><span class="pre">days_between</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hours_between</span></code>, <code class="docutils literal notranslate"><span class="pre">minutes_between</span></code>, and <code class="docutils literal notranslate"><span class="pre">seconds_between</span></code></p></li>
+<li><p>elementwise comparisons: <code class="docutils literal notranslate"><span class="pre">eq</span></code>, <code class="docutils literal notranslate"><span class="pre">ne</span></code>, <code class="docutils literal notranslate"><span class="pre">lt</span></code>, <code class="docutils literal notranslate"><span class="pre">le</span></code>, <code class="docutils literal notranslate"><span class="pre">gt</span></code>, <code class="docutils literal notranslate"><span class="pre">ge</span></code></p></li>
+<li><p>validity and absent-instant handling: <code class="docutils literal notranslate"><span class="pre">isnat</span></code>, <code class="docutils literal notranslate"><span class="pre">isvalid</span></code>, <code class="docutils literal notranslate"><span class="pre">isnat_scalar</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fill_nat</span></code>, <code class="docutils literal notranslate"><span class="pre">where</span></code></p></li>
+<li><p>temporal ordering and identity: <code class="docutils literal notranslate"><span class="pre">argsort</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">sort</span></code>, <code class="docutils literal notranslate"><span class="pre">unique</span></code></p></li>
+<li><p>structural axis-0 operations: <code class="docutils literal notranslate"><span class="pre">concat</span></code>, <code class="docutils literal notranslate"><span class="pre">repeat</span></code>, <code class="docutils literal notranslate"><span class="pre">empty_like</span></code>, and
+shape-preserving constant construction with <code class="docutils literal notranslate"><span class="pre">fill_like</span></code></p></li>
+<li><p>runtime-selected temporal movement with <code class="docutils literal notranslate"><span class="pre">shift</span></code>, and checked promotion from
+a one-dimensional <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> to <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> with <code class="docutils literal notranslate"><span class="pre">to_timeindex</span></code></p></li>
 <li><p>scalar formatting: <code class="docutils literal notranslate"><span class="pre">isoformat</span></code></p></li>
-<li><p>formatting and text conversion: <code class="docutils literal notranslate"><span class="pre">strftime</span></code>, <code class="docutils literal notranslate"><span class="pre">to_note_iso</span></code>, the convenience
-<code class="docutils literal notranslate"><span class="pre">to_note_*</span></code> family, <code class="docutils literal notranslate"><span class="pre">weekday_name</span></code>, <code class="docutils literal notranslate"><span class="pre">month_name</span></code></p></li>
-<li><p>rounding and projection: <code class="docutils literal notranslate"><span class="pre">floor</span></code>, <code class="docutils literal notranslate"><span class="pre">ceil</span></code>, <code class="docutils literal notranslate"><span class="pre">round</span></code>, <code class="docutils literal notranslate"><span class="pre">normalize</span></code>, <code class="docutils literal notranslate"><span class="pre">date</span></code>,
-<code class="docutils literal notranslate"><span class="pre">time</span></code></p></li>
-<li><p>timezone work: <code class="docutils literal notranslate"><span class="pre">tz_convert</span></code>, <code class="docutils literal notranslate"><span class="pre">tz_localize</span></code>, <code class="docutils literal notranslate"><span class="pre">to_utc</span></code></p></li>
+<li><p>formatting and text conversion: <code class="docutils literal notranslate"><span class="pre">strftime</span></code>, <code class="docutils literal notranslate"><span class="pre">to_note_iso</span></code>, <code class="docutils literal notranslate"><span class="pre">weekday_name</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">month_name</span></code>; custom layouts belong in <code class="docutils literal notranslate"><span class="pre">strftime()</span></code> rather than named
+formatting aliases</p></li>
+<li><p>rounding and projection: <code class="docutils literal notranslate"><span class="pre">floor</span></code>, <code class="docutils literal notranslate"><span class="pre">ceil</span></code>, <code class="docutils literal notranslate"><span class="pre">round</span></code>, <code class="docutils literal notranslate"><span class="pre">date</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code></p></li>
+<li><p>timezone work: <code class="docutils literal notranslate"><span class="pre">tz_convert</span></code>, <code class="docutils literal notranslate"><span class="pre">tz_localize</span></code></p></li>
 <li><p>ordered insertion helpers on sorted 1D timelines:
 <code class="docutils literal notranslate"><span class="pre">searchsorted_left</span></code>, <code class="docutils literal notranslate"><span class="pre">searchsorted_right</span></code></p></li>
 <li><p>calendar component extraction: <code class="docutils literal notranslate"><span class="pre">year</span></code>, <code class="docutils literal notranslate"><span class="pre">month</span></code>, <code class="docutils literal notranslate"><span class="pre">day</span></code>, <code class="docutils literal notranslate"><span class="pre">hour</span></code>, <code class="docutils literal notranslate"><span class="pre">minute</span></code>,
 <code class="docutils literal notranslate"><span class="pre">second</span></code>, <code class="docutils literal notranslate"><span class="pre">nanosecond</span></code>, <code class="docutils literal notranslate"><span class="pre">microsecond</span></code>, <code class="docutils literal notranslate"><span class="pre">millisecond</span></code>, <code class="docutils literal notranslate"><span class="pre">weekday</span></code>,
-<code class="docutils literal notranslate"><span class="pre">dayofyear</span></code>, <code class="docutils literal notranslate"><span class="pre">quarter</span></code>, <code class="docutils literal notranslate"><span class="pre">week</span></code></p></li>
+<code class="docutils literal notranslate"><span class="pre">dayofyear</span></code>, <code class="docutils literal notranslate"><span class="pre">quarter</span></code>, <code class="docutils literal notranslate"><span class="pre">week</span></code>, plus native-value scalar extraction through
+<code class="docutils literal notranslate"><span class="pre">year_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">month_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">day_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">hour_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">minute_scalar</span></code>,
+<code class="docutils literal notranslate"><span class="pre">second_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">quarter_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">week_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">weekday_scalar</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">yearday_scalar</span></code></p></li>
+<li><p>strict local-calendar field replacement: <code class="docutils literal notranslate"><span class="pre">set_year</span></code>, <code class="docutils literal notranslate"><span class="pre">set_month</span></code>, <code class="docutils literal notranslate"><span class="pre">set_day</span></code>,
+<code class="docutils literal notranslate"><span class="pre">set_hour</span></code>, <code class="docutils literal notranslate"><span class="pre">set_minute</span></code>, <code class="docutils literal notranslate"><span class="pre">set_second</span></code></p></li>
 <li><p>calendar predicates: <code class="docutils literal notranslate"><span class="pre">is_leap_year</span></code>, boundary predicates, business-day
 predicates, and the weekday-specific predicates</p></li>
 <li><p>regular sequence construction: <code class="docutils literal notranslate"><span class="pre">date_range(...)</span></code></p></li>
 </ul>
-<p>This is not yet the full public surface. The representation, export, canonical
-calendar-field, and calendar-predicate layers are now documented method by
-method; later passes will separate ordering operations and transformations
-that are still grouped behind their starting pages. Public aliases are listed
-on their canonical method page so readers can recognize every supported
-spelling.</p>
+<p>This is not yet the full public surface. The representation, export, ordering,
+canonical calendar-field, calendar-shift, elapsed-shift, and
+calendar-predicate layers are documented method by method. The Timeline
+reference documents one canonical spelling for each operation rather than
+carrying compatibility aliases.</p>
 </section>
 <section id="using-this-reference">
 <h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
@@ -170,8 +186,7 @@ spelling.</p>
 <li><p>Use the left sidebar to open one <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> method page at a time.</p></li>
 <li><p>Each page now embeds verified output directly under the example that produced
 it.</p></li>
-<li><p>Alias pages identify the canonical method they forward to and explain when
-the alternate spelling is useful; they do not replace method-level
+<li><p>Each operation has one canonical page and one position in method-level
 navigation.</p></li>
 </ul>
 <div class="toctree-wrapper compound">
@@ -181,9 +196,9 @@ navigation.</p></li>
     <span class="label">Previous</span>
     <span class="title">PlussQit API Reference</span>
   </a>
-  <a class="next-link" href="api/timeline/defined.html">
+  <a class="next-link" href="api/timeline/add_days.html">
     <span class="label">Next</span>
-    <span class="title">defined</span>
+    <span class="title">add_days</span>
   </a>
 </div>
 </section>
@@ -227,6 +242,7 @@ navigation.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Broadcasting.html">Broadcasting</a></li>
@@ -276,8 +292,8 @@ navigation.</p></li>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
-      <li>Previous: <a href="api/note/url_encode.html" title="previous chapter">Note::url_encode</a></li>
-      <li>Next: <a href="api/timeline/defined.html" title="next chapter">Timeline::defined</a></li>
+      <li>Previous: <a href="api/note_factory/select.html" title="previous chapter">pluss::note::select</a></li>
+      <li>Next: <a href="api/timeline/add_days.html" title="next chapter">Timeline::add_days</a></li>
   </ul></li>
   </ul></li>
 </ul>

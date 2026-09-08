@@ -10,9 +10,9 @@ Timeline::fill_nat(const Timeline& value) -> Timeline
 
 ## What It Does
 
-Replaces missing timestamps with one scalar replacement timestamp.
+Replaces absent instants with one scalar replacement instant.
 
-This is the narrow, direct repair surface for missing temporal data.
+This is the narrow, direct substitution surface for absent instants.
 
 ## Parameters
 
@@ -26,11 +26,11 @@ vector of replacements.
 ## Returns
 
 `Timeline`
-    A timeline with missing timestamps filled.
+    A Timeline with absent instants replaced.
 
 ## Examples
 
-Example 1. Replace every missing timestamp with one explicit recovery date.
+Example 1. Replace every absent instant with one explicit fallback instant.
 
 ```cpp
 auto out = with_nat.fill_nat(pluss::timeline::make("2024-11-15T00:00:00Z"));
@@ -56,9 +56,9 @@ Timeline(shape=[4], tz=UTC)
 - [`Timeline::where`](where.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="min.html">
+  <a class="prev-link" href="fill_like.html">
     <span class="label">Previous</span>
-    <span class="title">min</span>
+    <span class="title">fill_like</span>
   </a>
   <a class="next-link" href="where.html">
     <span class="label">Next</span>

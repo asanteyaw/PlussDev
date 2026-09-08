@@ -150,7 +150,8 @@ int main() {
   show_timeline("factory date_range(start, end, freq, step)", t_date_range_factory);
   const auto t_date_only = pluss::timeline::date({"2024-06-10", "2024-06-11"});
   const auto t_time_only = pluss::timeline::time({"09:30:00", "17:45:30"});
-  const auto t_repeated = pluss::timeline::rep("2025-02-05", {2, 2});
+  const auto t_repeated = pluss::timeline::full(
+      {2, 2}, pluss::timeline::date("2025-02-05"));
   const auto t_rand_between = pluss::timeline::rand_between(
       "2024-06-01", "2024-06-03", {5}, 11);
   const auto t_arange_dates = pluss::timeline::arange(
@@ -164,7 +165,7 @@ int main() {
       true);
   show_timeline("factory date(strict)", t_date_only);
   show_timeline("factory time(strict)", t_time_only);
-  show_timeline("factory rep(value, sizes)", t_repeated);
+  show_timeline("factory full(sizes, value)", t_repeated);
   show_timeline("factory rand_between(lo, hi, sizes)", t_rand_between);
   show_timeline("factory arange(date, date, step)", t_arange_dates);
   show_timeline("factory arange(time, time, step)", t_arange_times);
@@ -210,33 +211,32 @@ int main() {
   // --------------------------------------------------------------------------
   // Non-generated Timeline methods (TimelineBase + manual surface)
   // --------------------------------------------------------------------------
-  const auto scalar = Timeline::createFromDateTimeInts(2024, 2, 29, 12, 34, 56);
-  const auto scalar2 = Timeline::createFromDateTimeInts(2025, 3, 1, 13, 35, 57);
+  const auto scalar = pluss::timeline::make("2024-02-29T12:34:56");
+  const auto scalar2 = pluss::timeline::make("2025-03-01T13:35:57");
 
   std::cout << "\n== Timeline scalar base helpers ==\n";
-  std::cout << "has_date=" << scalar.has_date() << " has_time=" << scalar.has_time() << "\n";
   std::cout << "year=" << scalar.year_scalar()
             << " month=" << scalar.month_scalar()
             << " day=" << scalar.day_scalar()
             << " hour=" << scalar.hour_scalar()
             << " minute=" << scalar.minute_scalar()
             << " second=" << scalar.second_scalar() << "\n";
-  std::cout << "dow=" << scalar.day_of_week_scalar()
-            << " doy=" << scalar.day_of_year_scalar()
+  std::cout << "dow=" << scalar.weekday_scalar()
+            << " doy=" << scalar.yearday_scalar()
             << " quarter=" << scalar.quarter_scalar()
-            << " week=" << scalar.week_of_year_scalar() << "\n";
-  std::cout << "is_leap=" << scalar.is_leap_year_scalar()
-            << " is_month_start=" << scalar.is_month_start_scalar()
-            << " is_month_end=" << scalar.is_month_end_scalar()
-            << " is_quarter_start=" << scalar.is_quarter_start_scalar()
-            << " is_quarter_end=" << scalar.is_quarter_end_scalar()
+            << " week=" << scalar.week_scalar() << "\n";
+  std::cout << "is_leap=" << scalar.leap_scalar()
+            << " is_month_start=" << scalar.month_start_scalar()
+            << " is_month_end=" << scalar.month_end_scalar()
+            << " is_quarter_start=" << scalar.quarter_start_scalar()
+            << " is_quarter_end=" << scalar.quarter_end_scalar()
             << " is_weekend=" << scalar.is_weekend_scalar() << "\n";
   std::cout << "weekday_name=" << scalar.weekday_name(false)
             << " month_name=" << scalar.month_name(false) << "\n";
   std::cout << "weekday_name(short)=" << scalar.weekday_name(true)
             << " month_name(short)=" << scalar.month_name(true) << "\n";
   std::cout << "format=%Y/%m/%d %H:%M:%S => " << scalar.format("%Y/%m/%d %H:%M:%S") << "\n";
-  std::cout << "toISOString => " << scalar.toISOString() << "\n";
+  std::cout << "isoformat => " << scalar.isoformat() << "\n";
   std::cout << "to_string => " << scalar.to_string() << "\n";
   show_series("to_Series()", scalar.to_Series());
 
@@ -294,25 +294,25 @@ int main() {
   const auto t_today = Timeline::today();
   const auto t_yesterday = Timeline::yesterday();
   const auto t_tomorrow = Timeline::tomorrow();
-  const auto t_from_ts = Timeline::fromTimestamp(0);
-  const auto t_from_series = Timeline::fromSeries(t_epoch_vec.to_Series());
-  const auto t_from_date = Timeline::createFromDateInts(2024, 12, 31);
-  const auto t_from_time = Timeline::createFromTimeInts(23, 59, 58);
-  const auto t_from_dt = Timeline::createFromDateTimeInts(2024, 12, 31, 23, 59, 58);
+  const auto t_from_ts = pluss::timeline::from_epoch(0LL);
+  const auto t_from_series = pluss::timeline::from_epoch(t_epoch_vec.to_Series());
+  const auto t_from_date = pluss::timeline::date("2024-12-31");
+  const auto t_from_time = pluss::timeline::time("23:59:58");
+  const auto t_from_dt = pluss::timeline::make("2024-12-31T23:59:58");
   const auto t_static_range = Timeline::date_range(
-      Timeline::createFromDateInts(2024, 1, 1),
-      Timeline::createFromDateInts(2024, 1, 3),
-      "D",
+      pluss::timeline::date("2024-01-01"),
+      pluss::timeline::date("2024-01-03"),
+      "day",
       1);
   show_timeline("Timeline::now()", t_now);
   show_timeline("Timeline::today()", t_today);
   show_timeline("Timeline::yesterday()", t_yesterday);
   show_timeline("Timeline::tomorrow()", t_tomorrow);
-  show_timeline("Timeline::fromTimestamp", t_from_ts);
-  show_timeline("Timeline::fromSeries", t_from_series);
-  show_timeline("Timeline::createFromDateInts", t_from_date);
-  show_timeline("Timeline::createFromTimeInts", t_from_time);
-  show_timeline("Timeline::createFromDateTimeInts", t_from_dt);
+  show_timeline("pluss::timeline::from_epoch", t_from_ts);
+  show_timeline("pluss::timeline::from_epoch", t_from_series);
+  show_timeline("pluss::timeline::date", t_from_date);
+  show_timeline("pluss::timeline::time", t_from_time);
+  show_timeline("pluss::timeline::make", t_from_dt);
   std::cout << "\nTimeline::date_range count=" << t_static_range.size() << "\n";
 
   // Static dataframe-oriented constructors with 3D input.
@@ -341,10 +341,10 @@ int main() {
   show_timeline("from_epoch_seconds()", Timeline::from_epoch_seconds(e_s, "UTC"));
 
   std::vector<std::int64_t> copied_nanos;
-  t_from_ymdhms.copy_epoch_nanos_to(std::back_inserter(copied_nanos));
-  const auto copied_vec = t_from_ymdhms.to_epoch_nanos_vector();
+  t_from_ymdhms.copy_ticks(std::back_inserter(copied_nanos));
+  const auto copied_vec = t_from_ymdhms.ticks();
   std::cout << "\ncopy_epoch_nanos_to size=" << copied_nanos.size()
-            << " to_epoch_nanos_vector size=" << copied_vec.size() << "\n";
+            << " ticks size=" << copied_vec.size() << "\n";
 
   // --------------------------------------------------------------------------
   // Non-generated TimeIndex methods

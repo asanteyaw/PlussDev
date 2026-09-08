@@ -79,7 +79,7 @@ The practical toggle is the helper you choose:
 Example 1. Extract date-only text.
 
 ```cpp
-auto out = base.to_note_date();
+auto out = base.strftime("%Y-%m-%d");
 std::cout << pluss::note::print(out) << "\n";
 ```
 
@@ -93,7 +93,7 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 Example 2. Extract time-only text.
 
 ```cpp
-auto out = base.to_note_time();
+auto out = base.strftime("%H:%M:%S");
 std::cout << pluss::note::print(out) << "\n";
 ```
 
@@ -107,7 +107,7 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 Example 3. Extract a plain datetime layout.
 
 ```cpp
-auto out = base.to_note_datetime();
+auto out = base.strftime("%Y-%m-%d %H:%M:%S");
 std::cout << pluss::note::print(out) << "\n";
 ```
 
@@ -121,7 +121,7 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 Example 4. Extract RFC-style text with explicit offset.
 
 ```cpp
-auto out = base.to_note_rfc3339();
+auto out = base.strftime("%Y-%m-%dT%H:%M:%S%z");
 std::cout << pluss::note::print(out) << "\n";
 ```
 
@@ -148,12 +148,12 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 - [`Timeline::to_note_iso`](to_note_iso.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_note_iso.html">
+  <a class="prev-link" href="ticks.html">
     <span class="label">Previous</span>
-    <span class="title">to_note_iso</span>
+    <span class="title">ticks</span>
   </a>
-  <a class="next-link" href="weekday_name.html">
+  <a class="next-link" href="to_note_iso.html">
     <span class="label">Next</span>
-    <span class="title">weekday_name</span>
+    <span class="title">to_note_iso</span>
   </a>
 </div>

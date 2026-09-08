@@ -100,12 +100,12 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 - [`Timeline::is_monday`](is_monday.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_note_family.html">
+  <a class="prev-link" href="weekday.html">
     <span class="label">Previous</span>
-    <span class="title">to_note_family</span>
+    <span class="title">weekday</span>
   </a>
-  <a class="next-link" href="month_name.html">
+  <a class="next-link" href="weekday_scalar.html">
     <span class="label">Next</span>
-    <span class="title">month_name</span>
+    <span class="title">weekday_scalar</span>
   </a>
 </div>

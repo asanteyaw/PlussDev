@@ -63,16 +63,14 @@ int main() {
             << ", empty=" << (empty.numel() == 0) << '\n';
 
   std::cout << "\n=== epoch_nanos_logical_order ===\n";
-  print_range(matrix.to_epoch_nanos_vector());
+  print_range(matrix.ticks());
   std::cout << '\n';
-  std::cout << "flat alias equal: "
-            << (matrix.to_epoch_nanos_flat() == matrix.to_epoch_nanos_vector()) << '\n';
   pluss::series::print(std::cout, matrix.epoch_nanos());
   std::cout << '\n';
 
   std::cout << "\n=== epoch_round_trip ===\n";
   const auto shaped_epoch = pluss::timeline::epoch({2, 3});
-  const auto shaped_ticks = shaped_epoch.to_epoch_nanos_vector();
+  const auto shaped_ticks = shaped_epoch.ticks();
   const std::vector<std::int64_t> shaped_sizes(
       shaped_epoch.sizes().begin(), shaped_epoch.sizes().end());
   const auto rebuilt = pluss::timeline::from_epoch(shaped_ticks, shaped_sizes);
@@ -116,11 +114,11 @@ int main() {
   std::cout << "\n=== timezone_metadata_and_instant ===\n";
   const auto new_york = scalar.tz_convert("America/New_York");
   std::cout << "UTC: tz=" << scalar.tz()
-            << ", epoch=" << scalar.to_epoch_nanos_vector().front() << '\n';
+            << ", epoch=" << scalar.ticks().front() << '\n';
   std::cout << "New York: tz=" << new_york.tz()
-            << ", epoch=" << new_york.to_epoch_nanos_vector().front() << '\n';
+            << ", epoch=" << new_york.ticks().front() << '\n';
   std::cout << "same instant: "
-            << (scalar.to_epoch_nanos_vector() == new_york.to_epoch_nanos_vector()) << '\n';
+            << (scalar.ticks() == new_york.ticks()) << '\n';
   std::cout << "UTC ISO: " << scalar.isoformat() << '\n';
   std::cout << "New York ISO: " << new_york.isoformat() << '\n';
 }

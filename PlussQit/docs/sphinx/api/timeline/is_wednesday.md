@@ -8,7 +8,7 @@
 Series Timeline::is_wednesday() const
 ```
 
-Aliases: `wed_is()` and `is_wed()`.
+`is_wednesday()` is the sole public spelling.
 
 ## Select Local Wednesdays
 
@@ -42,7 +42,7 @@ zero, but avoids embedding that numeric convention at the call site.
 ## Gotchas And Failure Modes
 
 - The method returns a mask; it does not return the matching timestamps.
-- Missing timestamps do not form a third boolean state.
+- Absent instants do not form a third boolean state.
 - The current timezone, not the timestamp's original text suffix, determines
   the local weekday after conversion.
 

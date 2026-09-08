@@ -46,8 +46,8 @@ std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
 std::int64_t find_timeline_label(const Stream& labels, const pluss::Timeline& key) {
   PLUSS_CHECK(key.defined(), "Archive::loc(Timeline): key is undefined");
   PLUSS_CHECK(key.numel() == 1, "Archive::loc(Timeline): key must be scalar Timeline");
-  const auto keys = labels.to_thread().cast().timeline().as_timeline().to_epoch_nanos_vector();
-  const auto want = key.to_epoch_nanos_vector();
+  const auto keys = labels.to_thread().cast().timeline().as_timeline().ticks();
+  const auto want = key.ticks();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (keys[static_cast<std::size_t>(i)] == want[0]) {
       return i;

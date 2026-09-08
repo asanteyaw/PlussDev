@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::month" href="month.html" />
-    <link rel="prev" title="Timeline::searchsorted_left" href="searchsorted_left.html" />
+    <link rel="next" title="Timeline::year_scalar" href="year_scalar.html" />
+    <link rel="prev" title="Timeline::where" href="where.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,7 +44,6 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">year</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">y()</span></code>, <code class="docutils literal notranslate"><span class="pre">yr()</span></code>, <code class="docutils literal notranslate"><span class="pre">years()</span></code>, and <code class="docutils literal notranslate"><span class="pre">year_()</span></code>.</p>
 </section>
 <section id="read-the-civil-year">
 <h2>Read The Civil Year<a class="headerlink" href="#read-the-civil-year" title="Link to this heading">¶</a></h2>
@@ -55,11 +54,11 @@ element order are unchanged, while the result dtype is <code class="docutils lit
 the local date belongs to. It does not return the ISO week-numbering year; a
 date such as 1 January 2021 can therefore have <code class="docutils literal notranslate"><span class="pre">year()</span> <span class="pre">==</span> <span class="pre">2021</span></code> and
 <code class="docutils literal notranslate"><span class="pre">week()</span> <span class="pre">==</span> <span class="pre">53</span></code> at the same time.</p>
-<p>Missing timestamps become <code class="docutils literal notranslate"><span class="pre">-1</span></code>. Treat that value as a missing-field sentinel,
+<p>Absent instants become <code class="docutils literal notranslate"><span class="pre">-1</span></code>. Treat that value as an absent-field sentinel,
 not as a historical year. Use <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> when the distinction matters.</p>
 </section>
-<section id="example-years-boundaries-and-missing-values">
-<h2>Example: Years, Boundaries, And Missing Values<a class="headerlink" href="#example-years-boundaries-and-missing-values" title="Link to this heading">¶</a></h2>
+<section id="example-years-boundaries-and-absent-instants">
+<h2>Example: Years, Boundaries, And Absent Instants<a class="headerlink" href="#example-years-boundaries-and-absent-instants" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2020-12-31T23:59:59.123456789Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2021-01-01T00:00:00.987654321Z&quot;</span><span class="p">,</span>
@@ -94,7 +93,7 @@ calendar.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">year()</span></code> does not mutate the timeline and does not return timestamps.</p></li>
 <li><p>A result of <code class="docutils literal notranslate"><span class="pre">-1</span></code> means the source element was <code class="docutils literal notranslate"><span class="pre">NaT</span></code>; it is not a valid year.</p></li>
 <li><p>Do not combine <code class="docutils literal notranslate"><span class="pre">year()</span></code> and <code class="docutils literal notranslate"><span class="pre">week()</span></code> as an ISO year-week key at New Year.</p></li>
-<li><p>The aliases are exact synonyms; they do not use different calendars.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">year()</span></code> is the sole public spelling for this field.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -106,7 +105,7 @@ calendar.</p>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="searchsorted_left.html"><span class="label">Previous</span><span class="title">searchsorted_left</span></a>
-  <a class="next-link" href="month.html"><span class="label">Next</span><span class="title">month</span></a>
+  <a class="next-link" href="year_scalar.html"><span class="label">Next</span><span class="title">year_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -150,6 +149,7 @@ calendar.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -200,8 +200,8 @@ calendar.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="searchsorted_left.html" title="previous chapter">Timeline::searchsorted_left</a></li>
-      <li>Next: <a href="month.html" title="next chapter">Timeline::month</a></li>
+      <li>Previous: <a href="where.html" title="previous chapter">Timeline::where</a></li>
+      <li>Next: <a href="year_scalar.html" title="next chapter">Timeline::year_scalar</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

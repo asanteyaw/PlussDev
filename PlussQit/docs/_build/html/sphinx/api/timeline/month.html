@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::day" href="day.html" />
-    <link rel="prev" title="Timeline::year" href="year.html" />
+    <link rel="next" title="Timeline::month_name" href="month_name.html" />
+    <link rel="prev" title="Timeline::minutes_between" href="minutes_between.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -44,7 +44,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">month</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p>Aliases: <code class="docutils literal notranslate"><span class="pre">mon()</span></code>, <code class="docutils literal notranslate"><span class="pre">mo()</span></code>, <code class="docutils literal notranslate"><span class="pre">months()</span></code>, and <code class="docutils literal notranslate"><span class="pre">month_()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">month()</span></code> is the sole public spelling.</p>
 </section>
 <section id="read-the-month-number">
 <h2>Read The Month Number<a class="headerlink" href="#read-the-month-number" title="Link to this heading">¶</a></h2>
@@ -100,7 +100,7 @@ which that instant is interpreted, so the month changed at the boundary.</p>
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>The valid range is <code class="docutils literal notranslate"><span class="pre">1</span></code> through <code class="docutils literal notranslate"><span class="pre">12</span></code>; <code class="docutils literal notranslate"><span class="pre">0</span></code> is never January.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-1</span></code> identifies a missing timestamp.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-1</span></code> identifies an absent instant.</p></li>
 <li><p>For a readable label such as <code class="docutils literal notranslate"><span class="pre">February</span></code>, use <code class="docutils literal notranslate"><span class="pre">month_name()</span></code>.</p></li>
 <li><p>For three-month buckets use <code class="docutils literal notranslate"><span class="pre">quarter()</span></code> rather than hand-written thresholds.</p></li>
 </ul>
@@ -114,7 +114,7 @@ which that instant is interpreted, so the month changed at the boundary.</p>
 <li><p><a class="reference internal" href="quarter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">quarter</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="year.html"><span class="label">Previous</span><span class="title">year</span></a>
+  <a class="prev-link" href="minutes_between.html"><span class="label">Previous</span><span class="title">minutes_between</span></a>
   <a class="next-link" href="day.html"><span class="label">Next</span><span class="title">day</span></a>
 </div>
 <!-- pluss-hand-authored -->
@@ -159,6 +159,7 @@ which that instant is interpreted, so the month changed at the boundary.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -209,8 +210,8 @@ which that instant is interpreted, so the month changed at the boundary.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="year.html" title="previous chapter">Timeline::year</a></li>
-      <li>Next: <a href="day.html" title="next chapter">Timeline::day</a></li>
+      <li>Previous: <a href="minutes_between.html" title="previous chapter">Timeline::minutes_between</a></li>
+      <li>Next: <a href="month_name.html" title="next chapter">Timeline::month_name</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

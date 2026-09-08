@@ -79,7 +79,7 @@ pluss::scribble::Slot Stream::scribbelize() const {
     case pluss::kindle::StreamKind::Timeline: {
       const auto& tl = as_timeline();
       const std::string tz_name(tl.tz());
-      const auto x = tl.to_epoch_nanos_vector();
+      const auto x = tl.ticks();
       for (std::int64_t i = 0; i < n; ++i) {
         if (has_validity && !valid[static_cast<std::size_t>(i)]) {
           out.emplace_back(std::monostate{});
@@ -92,7 +92,7 @@ pluss::scribble::Slot Stream::scribbelize() const {
     case pluss::kindle::StreamKind::TimeIndex: {
       const auto& idx_tl = as_timeindex().timeline();
       const std::string tz_name(idx_tl.tz());
-      const auto x = idx_tl.to_epoch_nanos_vector();
+      const auto x = idx_tl.ticks();
       for (std::int64_t i = 0; i < n; ++i) {
         if (has_validity && !valid[static_cast<std::size_t>(i)]) {
           out.emplace_back(std::monostate{});
@@ -348,7 +348,7 @@ std::string Stream::to_json() const {
       break;
     }
     case StreamKind::Timeline: {
-      const auto values = as_timeline().to_epoch_nanos_vector();
+      const auto values = as_timeline().ticks();
       for (std::size_t i = 0; i < values.size(); ++i) {
         if (i == 0) oss << "\n";
         oss << "    " << values[i];
@@ -358,7 +358,7 @@ std::string Stream::to_json() const {
       break;
     }
     case StreamKind::TimeIndex: {
-      const auto values = as_timeindex().timeline().to_epoch_nanos_vector();
+      const auto values = as_timeindex().timeline().ticks();
       for (std::size_t i = 0; i < values.size(); ++i) {
         if (i == 0) oss << "\n";
         oss << "    " << values[i];

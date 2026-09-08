@@ -621,13 +621,16 @@ inline bool suppress_sentence_break(std::string_view s,
 }
 
 ::std::string capitalize_ascii(::std::string_view s) {
+  // Match Python str.capitalize(): the first character is upper-cased in
+  // place (a leading digit or symbol is left as-is), every following ASCII
+  // letter is lower-cased.
   ::std::string out;
   out.reserve(s.size());
-  bool first_alpha_done = false;
+  bool first = true;
   for (unsigned char c : s) {
-    if (!first_alpha_done && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
+    if (first) {
       out.push_back(static_cast<char>(to_upper_ascii_byte(c)));
-      first_alpha_done = true;
+      first = false;
     } else {
       out.push_back(static_cast<char>(to_lower_ascii_byte(c)));
     }

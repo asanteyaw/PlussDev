@@ -1,130 +1,264 @@
-# Lymph persistence
+<!-- pluss-hand-authored -->
 
-## Summary
+# `lymph::io` — the persistence contract
 
-This page describes the persistence contract around Lymph artifacts at a high level.
+[Back to `io`](../io.md)
 
-Use it when you want to understand:
-
-- what gets saved
-- what kind of reproducibility is intended
-- where Lymph persistence meets Procedure persistence
-
-## The Core Persistence Promise
-
-Lymph persistence is meant to preserve a modeling artifact faithfully enough that
-the artifact can be restored and reused without retraining.
-
-That does not mean "every possible runtime situation is automatically compatible
-forever."
-
-It means:
-
-- the artifact carries its learned state and owned modeling contract
-- the restore path is explicit
-- compatibility and artifact ownership are treated seriously
+What a saved bundle guarantees when it comes back, and where the line is.
 
 ## Signature
 
 ```cpp
-void lymph::Model::save(const std::string& path) const;
-lymph::Model lymph::Model::load(const std::string& path);
-void lymph::Workflow::save(const std::string& path) const;
-lymph::Workflow lymph::workflow::load(const std::string& path);
+// The four user-facing entry points the contract covers:
+void          models::Model::save(const std::string& path) const;
+static models::Model models::Model::load(const std::string& path);
+void          workflow::Workflow::save(const std::string& path) const;
+workflow::Workflow   workflow::load(const std::string& path);
 ```
 
-## What Persistence Is For
+## Parameters
 
-Use persistence when the project needs:
+`path`
+: The bundle file. `save` writes it (and, for `Workflow`, a `path +
+  ".policy"` sidecar); `load` reads it. The containing directory must exist.
+  See [`save`](save.md) / [`load`](load.md) for the fuller overload set.
 
-- repeatable inference
-- artifact handoff between training and deployment steps
-- long-running experiment preservation
-- reproducible evaluation on a chosen fitted object
+## The Round-Trip Promise
 
-If the project only needs an in-memory experimental object for the current process,
-save/load may be unnecessary. The moment the artifact must outlive the process,
-persistence stops being optional.
+A saved artifact reloads into an object that **produces the same predictions
+on the same input** — without retraining. Concretely, the bundle carries:
 
-## Model Artifact Versus Workflow Artifact
+- the estimator's learned parameters
+- every fitted prep stage's state (a scaler's centre/spread, an encoder's
+  vocabulary, an imputer's fill values)
+- the `ModelSpec` (algorithm + hyper-parameters)
+- for a `Workflow`: the `Policy` (in the `.policy` sidecar) and the branch
+  structure
+- optionally, the training batch and `TrainOptions` (the self-describing
+  form — see [`save`](save.md))
+- category maps for any `DataNotePolicy::Factorize` column, so a raw `Note`
+  column keeps encoding to the same integer codes
 
-This distinction is one of the most important in the whole Lymph documentation.
+## What Does *Not* Round-Trip
 
-### Model artifact
+- **Nothing that was not fitted.** Saving an untrained `Model` / `Workflow`
+  throws.
+- **Cross-version bundles.** The bundle `schema_version` must match the
+  running build exactly; an older bundle is rejected, not read leniently.
+  Re-save after a version bump.
+- **Opaque custom stages.** A `Workflow` carrying a
+  [`prep::stage::custom(...)`](../prep/stage/custom.md) function transformer
+  cannot be cloned, and the value-returning `learn(...)` / `with(...)` throw
+  on it — persistence of such a workflow is not supported.
+- **Runtime context.** RNG state mid-stream, thread counts, device
+  placement — a reload is a fresh process; only the modeling artifact is
+  preserved.
 
-A saved `Model` preserves the trainable pipeline artifact.
+## Model Artifact vs. Workflow Artifact
 
-That is appropriate when the model itself is the meaningful reusable unit.
+| Save this | When | The reload gives you |
+| --- | --- | --- |
+| `Model` | the fitted pipeline is the reusable unit | the learned estimator + prep stages |
+| `Workflow` | the *deployable behavior* matters | the above **plus** the `Policy` admission contract |
 
-### Workflow artifact
+If a `Policy` (dropped ID columns, forbidden leakage columns, row admission)
+is part of how the model is meant to be used, the `Workflow` bundle is the
+honest artifact — the `Model` bundle alone would lose that contract.
 
-A saved `Workflow` preserves the trainable pipeline plus the runtime contract around
-it.
+## Practical Examples
 
-That is appropriate when the deployable behavior matters, not just the fitted
-learner state.
+### Example 1
 
-In many production situations, the workflow artifact is the stronger truth.
-
-## End-To-End Roundtrip Example
+Fitted prep state round-trips: a scaler's learned parameters survive, so
+`map()` output is identical after reload.
 
 ```cpp
-lymph::Workflow workflow = lymph::workflow::make(model, policy);
-workflow.save("artifacts/default_workflow");
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
 
-lymph::Workflow loaded =
-    lymph::workflow::load("artifacts/default_workflow");
-Series predicted = loaded.infer(incoming, data_options);
+#include <filesystem>
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const DataFrame x({
+      {"a", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
+      {"b", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
+  });
+  const pluss::Series y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
+
+  lymph::models::Model model = lymph::models::logistic_regression();
+  model.prepare().scale({"a", "b"});
+  model.learn_(x, y);
+
+  const std::string path =
+      (std::filesystem::temp_directory_path() / "lymph_io_persistence_example_1.flow").string();
+  model.save(path);
+  const lymph::models::Model loaded = lymph::models::Model::load(path);
+
+  std::cout << "original map =\n" << model.map(x) << "\n";
+  std::cout << "loaded   map =\n" << loaded.map(x) << "\n";
+  std::cout << "loaded.stage_count() = " << loaded.stage_count() << "\n";
+
+  std::filesystem::remove(path);
+  return 0;
+}
 ```
 
-### Output
-
-Copied from an executed run of
-`plussai_lymph_model_prep_io_docverify_demo`:
+Output
 
 ```text
-== workflow ==
-predictions=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[0, 1, 0]
-roundtrip_match=1
-== io ==
-model_roundtrip=1
-workflow_roundtrip=1
-loaded_workflow_trained=1
+original map =
+pluss::Series(shape=[4,2], strides=[2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[-1.3416408, -1.3416408],
+  [-0.4472136, -0.4472136],
+  [0.4472136, 0.4472136],
+  [1.3416408, 1.3416408]]
+loaded   map =
+pluss::Series(shape=[4,2], strides=[2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[-1.3416408, -1.3416408],
+  [-0.4472136, -0.4472136],
+  [0.4472136, 0.4472136],
+  [1.3416408, 1.3416408]]
+loaded.stage_count() = 1
 ```
 
-This is the persistence promise rendered concretely. The saved workflow comes back
-as the same trained runtime contract, not just a vaguely similar object.
+### Example 2
 
-## Persistence And Reproducibility
+The same trained model, saved as a `Model` and as a `Workflow`. Only the
+`Workflow` bundle brings the `Policy` back.
 
-Persistence improves reproducibility because it lets you reuse the actual selected
-artifact rather than reconstructing it from memory.
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
 
-But persistence is not magic.
+#include <filesystem>
+#include <iostream>
 
-Good reproducibility still depends on:
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  namespace workflow = lymph::workflow;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
 
-- disciplined artifact versioning
-- stable save paths and naming
-- explicit runtime contracts
-- clear distinction between training-time and deployment-time objects
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
-Lymph gives you the persistence surface; teams still need sound artifact hygiene.
+  const DataFrame raw({
+      {"id", Thread(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
+      {"income", Thread(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
+      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
+      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+  });
 
-## Relationship To Procedure
+  lymph::options::DFBatch data_options{};
+  data_options.feature_names = {"income", "balance"};
+  data_options.label_feature = "default";
 
-Lymph persistence and Procedure persistence are related but not identical.
+  workflow::Policy policy{};
+  policy.drop({"id"});
 
-- Lymph owns the model/workflow artifact layer
-- Procedure owns the broader multi-component orchestration layer
+  const workflow::Workflow wf =
+      workflow::make(lymph::models::logistic_regression(), policy).learn(raw, data_options);
 
-That means a user can work productively with Lymph persistence without needing the
-full Procedure system, while Procedure can still build on top of Lymph artifacts
-when the project grows.
+  const std::string model_path =
+      (std::filesystem::temp_directory_path() / "lymph_io_persistence_example_2_model.flow").string();
+  const std::string wf_path =
+      (std::filesystem::temp_directory_path() / "lymph_io_persistence_example_2_wf.flow").string();
 
-## Related Pages
+  wf.model().save(model_path);
+  wf.save(wf_path);
 
-- [save](save.md)
-- [load](load.md)
-- [PlussAI `procedure`](../../plussai_procedure.md)
+  const lymph::models::Model loaded_model = lymph::models::Model::load(model_path);
+  const workflow::Workflow loaded_wf = workflow::load(wf_path);
+
+  std::cout << "loaded_model.trained()          = " << std::boolalpha << loaded_model.trained() << "\n";
+  std::cout << "loaded_wf.trained()             = " << loaded_wf.trained() << "\n";
+  std::cout << "loaded_wf.policy().drop_columns = " << loaded_wf.policy().drop_columns.size()
+            << " (Model bundle has no Policy concept)\n";
+
+  std::filesystem::remove(model_path);
+  std::filesystem::remove(wf_path);
+  std::filesystem::remove(wf_path + ".policy");
+  return 0;
+}
+```
+
+Output
+
+```text
+loaded_model.trained()          = true
+loaded_wf.trained()             = true
+loaded_wf.policy().drop_columns = 1 (Model bundle has no Policy concept)
+```
+
+### Example 3
+
+The schema version is reported by `io::load`, and a bad path fails rather
+than returning junk.
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+
+#include <filesystem>
+#include <iostream>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::ScalarType;
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+
+  const pluss::Series a = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64);
+  const pluss::Series y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
+  const DataFrame x({{"a", Thread(a)}});
+
+  lymph::models::Model model = lymph::models::logistic_regression();
+  model.learn_(x, y);
+
+  const std::string path =
+      (std::filesystem::temp_directory_path() / "lymph_io_persistence_example_3.flow").string();
+  model.save(path);
+
+  const lymph::io::FlowBundle ok = lymph::resolve(lymph::io::load(path), "io::load");
+  std::cout << "current schema_version = " << ok.metadata.schema_version << "\n";
+
+  const std::string bogus =
+      (std::filesystem::temp_directory_path() / "lymph_io_persistence_example_3_missing.flow").string();
+  const auto result = lymph::io::load(bogus);
+  std::cout << "load(missing).ok() = " << std::boolalpha << result.ok() << "\n";
+
+  std::filesystem::remove(path);
+  return 0;
+}
+```
+
+Output
+
+```text
+current schema_version = 5
+load(missing).ok() = false
+```
+
+## See Also
+
+- [`save`](save.md) / [`load`](load.md) — the write and read paths.
+- [`models::Model::save`](../models/Model/save.md) — the bundle format in
+  full.
+- [`workflow::Workflow::save`](../workflow/Workflow/save.md) — the `Policy`
+  sidecar.
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

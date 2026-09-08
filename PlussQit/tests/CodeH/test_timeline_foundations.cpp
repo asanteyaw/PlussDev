@@ -59,17 +59,17 @@ TEST_CASE("Timeline host materialization distinguishes cardinality and rank", "[
   REQUIRE(one_vector.host().is_scalar());
   REQUIRE(matrix.host().is_array());
   REQUIRE(matrix.host().array().sizes == std::vector<std::int64_t>{2, 2});
-  REQUIRE(matrix.host().array().data == matrix.to_epoch_nanos_vector());
+  REQUIRE(matrix.host().array().data == matrix.ticks());
   REQUIRE(matrix.host().array().contiguous);
-  REQUIRE(matrix.to_epoch_nanos_flat() == matrix.to_epoch_nanos_vector());
-  REQUIRE(matrix.epoch_nanos().to_vec<std::int64_t>() == matrix.to_epoch_nanos_vector());
+  REQUIRE(matrix.ticks().size() == static_cast<std::size_t>(matrix.numel()));
+  REQUIRE(matrix.epoch_nanos().to_vec<std::int64_t>() == matrix.ticks());
 
   const auto shaped = pluss::timeline::epoch({2, 3});
-  const auto ticks = shaped.to_epoch_nanos_vector();
+  const auto ticks = shaped.ticks();
   const std::vector<std::int64_t> sizes(shaped.sizes().begin(), shaped.sizes().end());
   const auto rebuilt = pluss::timeline::from_epoch(ticks, sizes);
   REQUIRE(shape_of(rebuilt) == sizes);
-  REQUIRE(rebuilt.to_epoch_nanos_vector() == ticks);
+  REQUIRE(rebuilt.ticks() == ticks);
 }
 
 TEST_CASE("timezone conversion changes presentation metadata not the instant", "[timeline-foundations]") {
@@ -77,7 +77,7 @@ TEST_CASE("timezone conversion changes presentation metadata not the instant", "
   const auto local = utc.tz_convert("America/New_York");
   REQUIRE(utc.tz() == "UTC");
   REQUIRE(local.tz() == "America/New_York");
-  REQUIRE(utc.to_epoch_nanos_vector() == local.to_epoch_nanos_vector());
+  REQUIRE(utc.ticks() == local.ticks());
   REQUIRE(utc.isoformat() == "2024-02-29T12:30:00.000000000+00:00");
   REQUIRE(local.isoformat() == "2024-02-29T07:30:00.000000000-05:00");
 }

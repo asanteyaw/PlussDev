@@ -1,96 +1,48 @@
 # Lymph `io`
 
-`io` is the Lymph family for persistence, restore, reproducibility, and saved
-workflow artifacts.
+`io` is the cross-cutting family for **persistence** — writing a trained
+artifact to disk and reading it back without retraining. It has no header of
+its own; `lymph::io` is an alias for the underlying bundle read/write
+primitives, and the user-facing save/load calls are methods on the artifact
+types themselves.
 
-Use this branch when you are deciding:
+## Where Persistence Actually Lives
 
-- how to save and reload trained models or workflows
-- what persistence guarantees exist
-- how artifacts fit into larger Procedure-based execution
+| Call | Writes / reads | Full reference |
+| --- | --- | --- |
+| `models::Model::save(path)` / `Model::load(path)` | a trained model bundle | [`models/Model/save`](models/Model/save.md), [`models/Model/load`](models/Model/load.md) |
+| `workflow::Workflow::save(path)` / `workflow::load(path)` | a model bundle **+ a `Policy` sidecar** (`path + ".policy"`) | [`workflow/Workflow/save`](workflow/Workflow/save.md), [`workflow/make`](workflow/make.md) |
+| `lymph::io::load(path)` → `FlowBundle` | the raw bundle, as an inspectable value | [`io/load`](io/load.md) |
+| `workflow::restore(bundle, policy)` | rebuild a `Workflow` from a bundle + a `Policy` you choose | [`workflow/make`](workflow/make.md) |
 
-## Why This Family Exists
+The `io/` pages below are the **cross-cutting** view — the write path, the
+read path, and the round-trip contract in one place. Each links out to the
+per-type reference for the exhaustive overload list.
 
-Training a model is only part of the job.
+## The Bundle
 
-Sooner or later every serious project asks:
+A saved file is a `FlowBundle`: `metadata` (a `schema_version` plus a
+`producer` / `producer_version` provenance stamp), the `ModelSpec`, the
+fitted prep-stage specs and their state, the estimator parameters,
+category maps for `Note` columns, and — in the self-describing save form —
+the training batch and its `TrainOptions`. The schema is versioned and read
+strictly: a bundle from a build with a different `schema_version` is rejected
+outright.
 
-- how do I save this artifact?
-- what exactly gets saved?
-- can I trust the loaded object to behave the same way?
-- where does this stop being a modeling concern and become a deployment concern?
+## Reading Order
 
-The `io` family answers those questions.
+1. [`save`](io/save.md) — the write path, minimal and self-describing forms.
+2. [`load`](io/load.md) — `Model::load`, `workflow::load`, and the raw
+   `io::load` → `FlowBundle`.
+3. [`persistence`](io/persistence.md) — what round-trips, what does not, and
+   Model-artifact vs. Workflow-artifact.
 
-## What Gets Persisted Conceptually
+## Related Pages
 
-At a high level, Lymph persistence is about preserving the modeling artifact that
-matters, not just arbitrary in-memory state.
-
-Depending on the object, that can include:
-
-- learned model state
-- prep-stage state
-- workflow-level structure
-- policy sidecars
-- runtime compatibility metadata
-
-This is why the `io` docs matter even for users who think they only care about
-training. If the artifact cannot be saved and restored honestly, the project still
-has a deployment gap.
-
-## Save Versus Load
-
-### Save
-
-Saving answers:
-
-"how do I turn this trained object into a reusable artifact?"
-
-### Load
-
-Loading answers:
-
-"how do I restore that artifact later without retraining it?"
-
-These are separate concerns because persistence quality is judged not just by
-whether save succeeds, but by whether load produces a faithful and compatible
-object.
-
-## Relationship To `Workflow`
-
-Persistence becomes especially important once you use `Workflow`.
-
-Why:
-
-- a saved `Model` is a trained engine
-- a saved `Workflow` is a trained engine plus its runtime contract
-
-If the deployment boundary matters, the workflow artifact is often the more honest
-thing to persist.
-
-## Relationship To `procedure`
-
-Lymph persistence is about model/workflow artifact ownership.
-
-Procedure persistence is about broader pipeline orchestration and component routing.
-
-The two meet, but they do not own the same abstraction layer.
-
-That distinction is useful because it prevents a modeling user from needing the
-full Procedure machinery just to save a trained learner or workflow artifact.
-
-## How To Read This Family
-
-Use the pages in this order:
-
-1. [persistence](io/persistence.md) for the contract
-2. [save](io/save.md) for artifact emission
-3. [load](io/load.md) for restoration
-
-That order moves from concept, to write path, to read path.
-
-## Main Objects
+- [`models`](models.md) / [`workflow`](workflow.md) — the types the
+  save/load methods live on.
+- [`options`](options.md) — the sibling umbrella family, for option structs
+  rather than persistence.
 
 <!-- apiref:toctree:start -->
 ```{toctree}

@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::ceil" href="ceil.html" />
-    <link rel="prev" title="Timeline::month_name" href="month_name.html" />
+    <link rel="next" title="Timeline::from_buffer" href="from_buffer.html" />
+    <link rel="prev" title="Timeline::fill_nat" href="fill_nat.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -49,8 +49,8 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Rounds each timestamp down to the start of the requested unit.</p>
 <p>This is the “snap backward” temporal primitive. It is commonly used to build
-calendar buckets, normalize intraday times to daily anchors, or prepare a time
-column for grouping.</p>
+calendar intervals, project intraday times to daily anchors, or prepare a
+Timeline for boundary-based computation.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -91,8 +91,8 @@ A timeline of rounded timestamps.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Floor never moves a timestamp forward.</p></li>
-<li><p><a class="reference internal" href="normalize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">normalize</span></code></span></a> and <a class="reference internal" href="normalize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">date</span></code></span></a> are day-level
-conveniences built on this idea.</p></li>
+<li><p><a class="reference internal" href="date.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">date</span></code></span></a> is the day-level operation for retaining local calendar
+dates.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -100,7 +100,7 @@ conveniences built on this idea.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="ceil.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::ceil</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="round.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::round</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="normalize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::normalize</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="date.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::date</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month_name.html">
@@ -153,6 +153,7 @@ conveniences built on this idea.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -203,8 +204,8 @@ conveniences built on this idea.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="month_name.html" title="previous chapter">Timeline::month_name</a></li>
-      <li>Next: <a href="ceil.html" title="next chapter">Timeline::ceil</a></li>
+      <li>Previous: <a href="fill_nat.html" title="previous chapter">Timeline::fill_nat</a></li>
+      <li>Next: <a href="from_buffer.html" title="next chapter">Timeline::from_buffer</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -10,8 +10,8 @@ Timeline::isvalid() -> Series
 
 Returns a boolean mask that marks the timestamps that are actually defined.
 
-`isvalid()` is the positive-form missing-time check. Use it when your next step
-is phrased as "keep the real timestamps" rather than "find the missing ones".
+`isvalid()` is the positive-form validity check. Use it when the next operation
+should receive represented instants rather than `NaT` positions.
 That usually reads better than writing the same intent as `!t.isnat()`.
 
 The returned `Series` follows the exact shape of the source `Timeline`:
@@ -27,7 +27,7 @@ This method takes no parameters.
 The main behavioral choice is conceptual:
 
 - use `isvalid()` when the positive case is the one you care about
-- use [`isnat()`](isnat.md) when the missing case is the one you care about
+- use [`isnat()`](isnat.md) when the absent case is the one you care about
 
 ## Returns
 
@@ -45,7 +45,7 @@ The main behavioral choice is conceptual:
 
 ## Examples
 
-Example 1. Build a keep-mask from a timeline that contains missing timestamps.
+Example 1. Build a validity mask from a Timeline containing absent instants.
 
 ```cpp
 auto keep = with_nat.isvalid();

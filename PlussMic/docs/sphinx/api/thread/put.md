@@ -35,8 +35,8 @@ its broadcast rule for free: a scalar `value` (numeric, text, or a size-1 `Threa
 broadcasts to every masked row; a same-length `Thread` value supplies one replacement per
 row instead.
 
-```{important} put(mask, pluss::null) takes a different code path than every other overload
-Unlike the value-writing overloads, `put(mask, pluss::null)` doesn't go through `select()`
+```{important} put(mask, pluss::series::null) takes a different code path than every other overload
+Unlike the value-writing overloads, `put(mask, pluss::series::null)` doesn't go through `select()`
 at all — it directly nulls out the masked rows' validity mask, keeping their underlying
 stored values untouched (just marked invalid). This is the masked equivalent of
 [`fillnull`](fillnull.md) run in reverse — see Example 4.
@@ -50,7 +50,7 @@ stored values untouched (just marked invalid). This is the masked equivalent of
     in `Thread(bool_mask)` first.
 
 **value** (`const Thread&` / `double` / `std::string_view` / `const char*` / `pluss::null_t`)
-    The replacement written into every masked row. A scalar (`double`/text/`pluss::null`)
+    The replacement written into every masked row. A scalar (`double`/text/`pluss::series::null`)
     or a size-1 `Thread` broadcasts to every masked row; a `Thread` matching `*this`'s
     length supplies one replacement value per row instead.
 
@@ -124,14 +124,14 @@ std::cout << out;
 ptype: Note
 ```
 
-Example 4. `put(mask, pluss::null)` nulls out masked rows instead of writing a value —
+Example 4. `put(mask, pluss::series::null)` nulls out masked rows instead of writing a value —
 see the important callout above.
 
 ```cpp
 auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0}));
 auto mask = scores.compare(15.0, ThreadBinaryCompareOp::Gt);
 
-auto out = scores.put(mask, pluss::null);
+auto out = scores.put(mask, pluss::series::null);
 std::cout << out;
 ```
 
@@ -150,7 +150,7 @@ ptype: Series
   result (`thread = thread.put(...)`) if you want the effect to stick.
 - `put(mask, value)` is exactly `Thread::select({mask}, {value}, *this)` — see
   [`Thread::select`](select.md) for the general multi-condition form this specializes.
-- `put(mask, pluss::null)` is the one overload that doesn't go through `select()` — it nulls
+- `put(mask, pluss::series::null)` is the one overload that doesn't go through `select()` — it nulls
   the validity mask directly rather than writing a value.
 - The `pluss::Series`-mask overloads exist purely for convenience; they're identical to
   wrapping the mask in `Thread(...)` first.

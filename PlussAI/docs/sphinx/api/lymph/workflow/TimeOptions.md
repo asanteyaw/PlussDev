@@ -164,7 +164,7 @@ validate_time_options threw: example(invalid): horizon cannot be negative.
 
 ## See Also
 
-- [`Workflow::time`](Workflow.md#configuration) / [`Payload::time`](Payload.md#configuration)
+- [`Workflow::time`](Workflow.md#configuration) / [`Payload::time`](Payload/time.md)
   — the two setters that accept `TimeOptions`.
 - [`selection::validate::time`](../selection/validate/time.md) — reads back
   any unset chronological-split field from here.

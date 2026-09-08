@@ -1,3 +1,4 @@
+<!-- pluss-hand-authored -->
 # Note::replace
 
 [Back to Note API Reference](../../note_api_reference)
@@ -5,141 +6,144 @@
 ## Signature
 
 ```cpp
-Note::replace(std::string_view from, std::string_view to) const -> Note
+Note Note::replace(std::string_view from, std::string_view to) const
 ```
 
-## What It Does
+## Substitute Every Occurrence Of A Literal Substring
 
-Replaces every occurrence of one literal substring with another, cell by cell.
+`replace(from, to)` returns a new `Note`, same shape as the input, with
+**every** occurrence of the literal string `from` in each cell rewritten to
+`to`. Despite the bare name, this is a replace-**all**: it is the workhorse
+for normalizing separators, renaming a token throughout a batch, or swapping
+placeholder text.
 
-This is the direct batch-text rewrite primitive for simple substitutions:
+The match is **literal** — `from` is compared byte for byte, no regex
+metacharacters, no case folding. Occurrences are rewritten **left to right
+and non-overlapping**, and the scan resumes *after* the inserted `to` (not
+inside it), so a `to` that contains `from` does not cause a second pass:
+`replace("aa", "b")` on `"aaaa"` gives `"bb"`.
 
-- renaming markers
-- fixing labels
-- replacing tokens before export
-- standardizing text fragments without invoking regex machinery
+### Edge cases
 
-`replace()` is global within each cell: every literal match is rewritten.
-It is not a "first match only" primitive and it is not regex-aware.
+- An **empty `from`** is a no-op — the cell is returned unchanged (not an
+  error, and not "insert `to` between every character").
+- An empty `to` deletes every `from`; that is exactly
+  [`remove_all(from)`](remove_all.md).
+- No occurrence of `from` leaves the cell unchanged.
 
-## Parameters
+The operation is shape-preserving, cell-independent, and returns a fresh
+`Note`. For "first only" or "last only" or "first N", use the sibling
+methods `replace_first`, `replace_last`, and `replace_n`.
 
-**from**
-
-The literal substring to replace.
-
-**to**
-
-The literal replacement text.
-
-Every cell is processed independently, and cells that do not contain the
-substring are left unchanged.
-
-Neither `from` nor `to` is interpreted as regex syntax here. The method is
-strictly literal on both sides of the substitution.
-
-## Returns
-
-`Note`
-    A new `Note` with the same shape as the input and the requested substring
-    substitutions applied.
-
-## Examples
-
-Example 1. Rewrite a common label prefix.
+## Example 1: Every Occurrence Is Rewritten
 
 ```cpp
-auto note = pluss::make_note({"score: 75", "score: 88", "pending"});
-auto out = note.replace("score", "mark");
-std::cout << "replace:\n" << out << "\n";
+std::cout << pluss::note::print(
+    pluss::make_note({"score: 75 score: x", "pending"}).replace("score", "mark"))
+    << "\n";
 ```
 
 ### Output
 
 ```text
-replace:
-  [0] mark: 75
-  [1] mark: 88
-  [2] pending
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["mark: 75 mark: x", "pending"]
 ```
 
-Example 2. Replace structural separators when you want a more readable surface.
+Both `score`s in the first cell change; the second cell has none and is
+unchanged.
+
+## Example 2: Normalize A Separator
 
 ```cpp
-auto names = pluss::make_note({"Ada_Lovelace", "Grace_Hopper", "Linus"});
-auto out = names.replace("_", " ");
-std::cout << "replace_underscore:\n" << pluss::note::print(out) << "\n";
+const pluss::Note n =
+    pluss::make_note({"Ada_Lovelace", "Grace_Hopper"}).replace("_", " ");
+std::cout << n << "\n";
 ```
 
 ### Output
 
 ```text
-replace_underscore:
-  [0] Ada Lovelace
-  [1] Grace Hopper
-  [2] Linus
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Ada Lovelace", "Grace Hopper"]
 ```
 
-Example 3. Replace one marker, then inspect whether the old marker is still
-present.
+## Example 3: Matches Do Not Overlap And The Result Is Not Re-Scanned
 
 ```cpp
-auto note = pluss::make_note({"midterm_1", "midterm_2", "final_exam"});
-auto renamed = note.replace("midterm", "exam");
-auto still_old = renamed.contains("midterm");
-pluss::tils::OutputEngine out;
-out.writeln("replace_then_contains:");
-out.writeln(renamed);
-std::cout << "replace_then_contains_mask:";
-for (std::uint8_t v : still_old) {
-  std::cout << " " << static_cast<int>(v);
-}
-std::cout << "\n";
+pluss::note::print(std::cout, pluss::make_note({"aaaa"}).replace("aa", "b"))
+    << "\n";
 ```
 
 ### Output
 
-Renamed note:
-
 ```text
-replace_then_contains:
-  [0] exam_1
-  [1] exam_2
-  [2] final_exam
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["bb"]
 ```
 
-Mask after replacement:
+## Example 4: An Empty `from` Is A No-Op
 
-```text
-replace_then_contains_mask: 0 0 0
+```cpp
+std::cout << pluss::note::print(pluss::make_note({"unchanged"}).replace("", "X"))
+          << "\n";
 ```
 
-## Notes
+### Output
 
-- `replace()` is literal replacement, not regex replacement.
-- The two string parameters are symmetric in the sense that both are treated as
-  literal text. There is no overload here that interprets either side as a
-  regex program.
-- If you only want the first or last occurrence changed, the broader `Note`
-  surface also exposes specialized replacement variants such as
-  `replace_first(...)` and `replace_last(...)`.
-- This is often paired with [`strip`](strip.md) when the surrounding text also
-  needs boundary cleanup.
+```text
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["unchanged"]
+```
+
+## Example 5: An Empty `to` Deletes — Same As `remove_all`
+
+```cpp
+std::cout << pluss::note::print(pluss::make_note({"a.b.c"}).replace(".", ""))
+          << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["abc"]
+```
+
+## Example 6: Shape Is Preserved
+
+```cpp
+std::cout << pluss::note::print(
+    pluss::make_note({{"x1", "x2"}, {"x3", "x4"}}).replace("x", "col"))
+    << "\n";
+```
+
+### Output
+
+```text
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["col1", "col2"], 
+  ["col3", "col4"]
+]
+```
 
 ## See Also
 
-- [`Note::contains`](contains.md): check for the substring before or after
-  replacement.
-- [`Note::tex_escape`](tex_escape.md): escape special characters rather than
-  replacing a literal substring yourself.
+- [`Note::remove_all`](remove_all.md): `replace(from, "")` — delete every
+  occurrence.
+- `pluss::coden::Note::replace_first` / `replace_last` / `replace_n`:
+  bounded substitution instead of replace-all.
+- [`Note::regex_findall`](regex_findall.md): when the target is a pattern,
+  not a fixed string.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="regex_findall.html">
+  <a class="prev-link" href="remove_all.html">
     <span class="label">Previous</span>
-    <span class="title">regex_findall</span>
+    <span class="title">remove_all</span>
   </a>
-  <a class="next-link" href="split_lines.html">
+  <a class="next-link" href="split.html">
     <span class="label">Next</span>
-    <span class="title">split_lines</span>
+    <span class="title">split</span>
   </a>
 </div>

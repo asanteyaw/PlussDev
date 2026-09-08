@@ -80,6 +80,119 @@ void test_generated_timeline_surface() {
   expect_true(weekdays.defined(), "strftime() generated Note");
 }
 
+void test_timeline_factory_format() {
+  std::cout << "[RUN] codeh:timeline_factory_format\n";
+  const auto values = pluss::timeline::from_epoch(
+      {1'709'249'445'120'000'000LL, pluss::Timeline::kNaT,
+       1'719'813'600'000'000'001LL, 1'704'067'200'000'000'000LL},
+      {2, 2});
+  auto options = pluss::timeline::FormatOptions{};
+  options.pattern = "%F %R | day=%j weekday=%u quarter=%q | %f | %Z %z";
+  options.timezone = "America/Edmonton";
+  options.nat = "not-recorded";
+  options.fractional_digits = 6;
+  options.trim_fractional_zeros = true;
+  const auto rendered = pluss::timeline::format(values, options);
+  expect_eq_vec(rendered.vector(), std::vector<std::string_view>({
+      "2024-02-29 16:30 | day=060 weekday=4 quarter=1 | 12 | America/Edmonton -07:00",
+      "not-recorded",
+      "2024-07-01 00:00 | day=183 weekday=1 quarter=3 | 0 | America/Edmonton -06:00",
+      "2023-12-31 17:00 | day=365 weekday=7 quarter=4 | 0 | America/Edmonton -07:00",
+  }), "timeline::format values");
+  expect_true(rendered.dim() == 2 && rendered.numel() == 4,
+              "timeline::format preserves rank and cardinality");
+  expect_throw([&] { (void)pluss::timeline::format(values, "%Q"); },
+               "timeline::format rejects unknown directives");
+
+  const auto local = pluss::timeline::make("2024-01-01T00:00:00Z")
+                         .tz_convert("America/Edmonton");
+  expect_true(pluss::timeline::full({2}, local).tz() == "America/Edmonton",
+              "timeline::full preserves scalar timezone");
+  expect_true(pluss::timeline::random(
+                  {2}, local, pluss::timeline::make("2024-01-02T00:00:00Z"), 3).tz() ==
+                  "America/Edmonton",
+              "timeline::random preserves lower-bound timezone");
+  expect_throw([&] { (void)pluss::timeline::full({-1}, local); },
+               "timeline::full rejects negative shape");
+}
+
+void test_timeline_local_field_replacement() {
+  std::cout << "[RUN] codeh:timeline_local_field_replacement\n";
+
+  const auto base = pluss::timeline::make({
+      {"2024-01-15T23:58:59.123456789Z", "2024-06-20T04:05:06.000000004Z"},
+      {"2024-09-28T12:30:45.900000000Z", "2024-12-01T00:00:00.000000001Z"},
+  });
+  const auto changed = base.set_year(2030)
+                           .set_month(2)
+                           .set_day(1)
+                           .set_hour(6)
+                           .set_minute(15)
+                           .set_second(0);
+  expect_true(changed.dim() == 2 && changed.sizes() == base.sizes(),
+              "set_* preserves rank and shape");
+  expect_eq_vec(changed.year().to_vec<std::int32_t>(), {2030, 2030, 2030, 2030},
+                "set_year applies elementwise");
+  expect_eq_vec(changed.month().to_vec<std::int32_t>(), {2, 2, 2, 2},
+                "set_month applies elementwise");
+  expect_eq_vec(changed.day().to_vec<std::int32_t>(), {1, 1, 1, 1},
+                "set_day applies elementwise");
+  expect_eq_vec(changed.hour().to_vec<std::int32_t>(), {6, 6, 6, 6},
+                "set_hour applies elementwise");
+  expect_eq_vec(changed.minute().to_vec<std::int32_t>(), {15, 15, 15, 15},
+                "set_minute applies elementwise");
+  expect_eq_vec(changed.second().to_vec<std::int32_t>(), {0, 0, 0, 0},
+                "set_second applies elementwise");
+  expect_eq_vec(changed.nanosecond().to_vec<std::int32_t>(),
+                {123456789, 4, 900000000, 1},
+                "set_* preserves fractional nanoseconds");
+
+  const auto with_nat = pluss::timeline::make({"2024-01-01T00:00:00Z", ""});
+  expect_true(with_nat.set_hour(8).isnat().to_vec<bool>(1),
+              "set_* propagates NaT");
+
+  expect_throw([] {
+    (void)pluss::timeline::make("2024-02-29T12:00:00Z").set_year(2023);
+  }, "set_year rejects invalid leap-day result");
+  expect_throw([] {
+    (void)pluss::timeline::make("2024-05-31T12:00:00Z").set_month(2);
+  }, "set_month rejects invalid retained day");
+  expect_throw([] {
+    (void)pluss::timeline::make({"2024-01-01", "2024-02-01"}).set_day(30);
+  }, "set_day validates every defined lane");
+  expect_throw([] { (void)pluss::timeline::epoch({0}).set_hour(24); },
+               "set_hour validates empty receiver argument");
+  expect_throw([] { (void)pluss::timeline::epoch({0}).set_minute(-1); },
+               "set_minute validates empty receiver argument");
+  expect_throw([] { (void)pluss::timeline::epoch({0}).set_second(60); },
+               "set_second validates empty receiver argument");
+  expect_throw([] {
+    const auto local = pluss::timeline::make("2024-03-10T06:30:00Z")
+                           .tz_convert("America/New_York");
+    (void)local.set_hour(2);
+  }, "set_hour rejects a nonexistent local time");
+
+  bool freed = false;
+  {
+    constexpr std::int64_t a = 1'704'067'200'123'456'789LL;
+    constexpr std::int64_t b = 1'709'337'600'000'000'004LL;
+    auto* raw = static_cast<std::int64_t*>(std::malloc(3 * sizeof(std::int64_t)));
+    raw[0] = a;
+    raw[1] = 99;
+    raw[2] = b;
+    const std::array<std::int64_t, 1> shape{2};
+    const std::array<std::int64_t, 1> strides{2};
+    const auto strided = pluss::Timeline::from_buffer(
+        raw, shape, strides, [&](void* p) {
+          freed = true;
+          std::free(p);
+        });
+    expect_eq_vec(strided.set_year(2030).year().to_vec<std::int32_t>(), {2030, 2030},
+                  "set_year follows logical strided positions");
+  }
+  expect_true(freed, "strided replacement source deleter called");
+}
+
 void test_base_static_and_legacy_surface() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:base_surface\n";
@@ -93,29 +206,40 @@ void test_base_static_and_legacy_surface() {
   expect_true(today.days_between(tomorrow) == 1, "today->tomorrow day distance");
   expect_true(yesterday.days_between(today) == 1, "yesterday->today day distance");
 
-  const Timeline leap =
-      Timeline::createFromDateTimeInts(2024, 2, 29, 12, 0, 0);
-  expect_true(leap.is_leap_year_scalar(), "scalar leap year predicate");
+  const Timeline leap = pluss::timeline::make("2024-02-29T12:00:00");
+  expect_true(leap.leap_scalar(), "scalar leap year predicate");
   expect_true(leap.year_scalar() == 2024, "year_scalar");
   expect_true(leap.month_scalar() == 2, "month_scalar");
   expect_true(leap.day_scalar() == 29, "day_scalar");
+  expect_true(leap.weekday_scalar() == 3, "weekday_scalar is Monday-zero");
+  expect_true(leap.yearday_scalar() == 60, "yearday_scalar");
+  expect_true(leap.hour_scalar() == 12, "hour_scalar");
+  expect_true(leap.minute_scalar() == 0, "minute_scalar");
+  expect_true(leap.second_scalar() == 0, "second_scalar");
+  expect_true(leap.quarter_scalar() == 1, "quarter_scalar");
+  expect_true(leap.week_scalar() == 9, "week_scalar");
+  expect_true(!leap.month_start_scalar(), "month_start_scalar");
+  expect_true(leap.month_end_scalar(), "month_end_scalar");
+  expect_true(!leap.quarter_start_scalar(), "quarter_start_scalar");
+  expect_true(!leap.quarter_end_scalar(), "quarter_end_scalar");
+  expect_true(!leap.is_weekend_scalar(), "is_weekend_scalar");
   expect_true(!leap.weekday_name(true).empty(), "base weekday_name(abbrev)");
   expect_true(!leap.month_name(true).empty(), "base month_name(abbrev)");
 
   const Timeline adjusted =
-      leap.set_year(2025).set_month(3).set_day(1).set_hour(8).set_minute(9).set_second(10);
+      leap.set_day(1).set_month(3).set_year(2025).set_hour(8).set_minute(9).set_second(10);
   expect_true(adjusted.year_scalar() == 2025, "set_year");
   expect_true(adjusted.month_scalar() == 3, "set_month");
   expect_true(adjusted.day_scalar() == 1, "set_day");
   expect_true(adjusted.hour_scalar() == 8, "set_hour");
   expect_true(adjusted.minute_scalar() == 9, "set_minute");
   expect_true(adjusted.second_scalar() == 10, "set_second");
-  expect_true(adjusted.toISOString().find("2025-03-01T08:09:10") != std::string::npos,
-              "toISOString base helper");
+  expect_true(adjusted.isoformat().find("2025-03-01T08:09:10") != std::string::npos,
+              "isoformat base helper");
 
-  const auto dr = Timeline::date_range(today, today.add_days(2), "D", 1);
+  const auto dr = Timeline::date_range(today, today.add_days(2), "day", 1);
   expect_true(dr.size() == 3, "base Timeline::date_range");
-  const auto dr_desc = Timeline::date_range(today.add_days(2), today, "D", -1);
+  const auto dr_desc = Timeline::date_range(today.add_days(2), today, "day", -1);
   expect_true(dr_desc.size() == 3, "base Timeline::date_range descending");
 
   const auto rep = today.repeat(3);
@@ -125,22 +249,31 @@ void test_base_static_and_legacy_surface() {
   const auto filled = rep.fill_like(2030, 1, 2);
   expect_true(filled.numel() == 3, "fill_like keeps shape");
 
-  const auto from_ts = Timeline::fromTimestamp(0);
-  expect_true(from_ts.year_scalar() == 1970, "fromTimestamp epoch");
+  const auto from_ts = pluss::timeline::from_epoch(0LL);
+  expect_true(from_ts.year_scalar() == 1970, "from_epoch epoch");
 
-  const auto from_date = Timeline::createFromDateInts(2025, 12, 31);
-  expect_true(from_date.year_scalar() == 2025, "createFromDateInts year");
-  expect_true(from_date.hour_scalar() == 0, "createFromDateInts hour reset");
+  const auto from_date = pluss::timeline::date("2025-12-31");
+  expect_true(from_date.year_scalar() == 2025, "timeline::date year");
+  expect_true(from_date.hour_scalar() == 0, "timeline::date hour reset");
 
-  const auto from_time = Timeline::createFromTimeInts(23, 59, 58);
-  expect_true(from_time.hour_scalar() == 23, "createFromTimeInts hour");
-  expect_true(from_time.minute_scalar() == 59, "createFromTimeInts minute");
-  expect_true(from_time.second_scalar() == 58, "createFromTimeInts second");
+  const auto from_time = pluss::timeline::time("23:59:58");
+  expect_true(from_time.hour_scalar() == 23, "timeline::time hour");
+  expect_true(from_time.minute_scalar() == 59, "timeline::time minute");
+  expect_true(from_time.second_scalar() == 58, "timeline::time second");
 
   const auto e = pluss::make_series(std::vector<std::int64_t>{0, 1'000'000'000LL}, {2});
-  const auto from_series = Timeline::fromSeries(e);
-  expect_eq_vec(from_series.to_epoch_nanos_flat(), std::vector<std::int64_t>{0, 1'000'000'000LL},
-                "fromSeries epoch nanos");
+  const auto from_series = pluss::timeline::from_epoch(e);
+  expect_eq_vec(from_series.ticks(), std::vector<std::int64_t>{0, 1'000'000'000LL},
+                "from_epoch Series nanos");
+  const auto matrix_ticks = pluss::make_series(
+      {{std::int64_t{0}, std::int64_t{1}},
+       {std::int64_t{2}, std::int64_t{3}}});
+  const auto matrix_time = pluss::timeline::from_epoch(matrix_ticks);
+  expect_true(matrix_time.sizes().vec() == std::vector<std::int64_t>{2, 2},
+              "from_epoch Series preserves shape");
+  expect_throw(
+      [] { (void)pluss::timeline::from_epoch(pluss::make_series({0.0, 1.0})); },
+      "from_epoch Series rejects non-int64 dtype");
 }
 
 void test_dataframe_datetime_tranche() {
@@ -180,11 +313,11 @@ void test_dataframe_datetime_tranche() {
   const auto rt_s = Timeline::from_epoch_seconds(epoch_s, "UTC");
   const auto rt_ms = Timeline::from_epoch_millis(epoch_ms, "UTC");
   const auto rt_us = Timeline::from_epoch_micros(epoch_us, "UTC");
-  expect_eq_vec(rt_s.to_epoch_nanos_flat(), ymdhms.to_epoch_nanos_flat(),
+  expect_eq_vec(rt_s.ticks(), ymdhms.ticks(),
                 "from_epoch_seconds roundtrip");
-  expect_eq_vec(rt_ms.to_epoch_nanos_flat(), ymdhms.to_epoch_nanos_flat(),
+  expect_eq_vec(rt_ms.ticks(), ymdhms.ticks(),
                 "from_epoch_millis roundtrip");
-  expect_eq_vec(rt_us.to_epoch_nanos_flat(), ymdhms.to_epoch_nanos_flat(),
+  expect_eq_vec(rt_us.ticks(), ymdhms.ticks(),
                 "from_epoch_micros roundtrip");
 
   const auto idx = ymdhms.sort().to_timeindex(true);
@@ -234,7 +367,7 @@ void test_factory_rank_and_printing() {
   const std::vector<std::int64_t> epoch_shape{1, 2, 3};
   const auto t_epoch = pluss::timeline::from_epoch(epoch_flat, epoch_shape);
   expect_true(t_epoch.dim() == 3, "from_epoch_nanos lvalue rank");
-  expect_eq_vec(t_epoch.to_epoch_nanos_flat(), epoch_flat,
+  expect_eq_vec(t_epoch.ticks(), epoch_flat,
                 "from_epoch_nanos lvalue preserves data");
 
   bool timeline_freed = false;
@@ -242,7 +375,7 @@ void test_factory_rank_and_printing() {
     auto* raw = static_cast<std::int64_t*>(std::malloc(sizeof(std::int64_t) * epoch_flat.size()));
     std::memcpy(raw, epoch_flat.data(), sizeof(std::int64_t) * epoch_flat.size());
     const std::array<std::int64_t, 3> epoch_strides{6, 3, 1};
-    const auto t_epoch_buf = pluss::codeh::Timeline::from_buffer_epoch_nanos(
+    const auto t_epoch_buf = pluss::codeh::Timeline::from_buffer(
         raw,
         std::span<const std::int64_t>(epoch_shape.data(), epoch_shape.size()),
         std::span<const std::int64_t>(epoch_strides.data(), epoch_strides.size()),
@@ -250,11 +383,11 @@ void test_factory_rank_and_printing() {
           timeline_freed = true;
           std::free(p);
         });
-    expect_true(t_epoch_buf.dim() == 3, "Timeline::from_buffer_epoch_nanos rank");
-    expect_eq_vec(t_epoch_buf.to_epoch_nanos_vector(), epoch_flat,
-                  "Timeline::from_buffer_epoch_nanos preserves data");
+    expect_true(t_epoch_buf.dim() == 3, "Timeline::from_buffer rank");
+    expect_eq_vec(t_epoch_buf.ticks(), epoch_flat,
+                  "Timeline::from_buffer preserves data");
   }
-  expect_true(timeline_freed, "Timeline::from_buffer_epoch_nanos deleter called");
+  expect_true(timeline_freed, "Timeline::from_buffer deleter called");
 
   const auto t_epoch_nested = pluss::timeline::from_epoch({
       {
@@ -279,7 +412,8 @@ void test_factory_rank_and_printing() {
   expect_eq_vec(t_time.hour().to_vec<std::int32_t>(), std::vector<std::int32_t>{9, 17},
                 "timeline::time preserves time component");
 
-  const auto t_rep = pluss::timeline::rep("2025-02-05", {2, 2});
+  const auto t_rep = pluss::timeline::full(
+      {2, 2}, pluss::timeline::date("2025-02-05"));
   const auto t_rep_sizes = t_rep.sizes();
   expect_true(t_rep.dim() == 2 && t_rep_sizes.size() == 2 &&
                   t_rep_sizes[0] == 2 && t_rep_sizes[1] == 2,
@@ -292,9 +426,9 @@ void test_factory_rank_and_printing() {
       "2024-06-01", "2024-06-03", {5}, 11);
   expect_true(t_rand_between.dim() == 1 && t_rand_between.numel() == 5,
               "timeline::rand_between shape");
-  for (const auto tick : t_rand_between.to_epoch_nanos_vector()) {
-    expect_true(tick >= pluss::timeline::date("2024-06-01").to_epoch_nanos_vector()[0] &&
-                    tick <= pluss::timeline::date("2024-06-03").to_epoch_nanos_vector()[0],
+  for (const auto tick : t_rand_between.ticks()) {
+    expect_true(tick >= pluss::timeline::date("2024-06-01").ticks()[0] &&
+                    tick <= pluss::timeline::date("2024-06-03").ticks()[0],
                 "timeline::rand_between uses inclusive bounds");
   }
 
@@ -345,7 +479,7 @@ void test_factory_rank_and_printing() {
     raw[0] = 0;
     raw[1] = 1'000'000'000LL;
     raw[2] = 2'000'000'000LL;
-    const auto idx_buf = pluss::codeh::TimeIndex::from_buffer_epoch_nanos(
+    const auto idx_buf = pluss::codeh::TimeIndex::from_buffer(
         raw,
         3,
         1,
@@ -354,12 +488,12 @@ void test_factory_rank_and_printing() {
           std::free(p);
         },
         true);
-    expect_true(idx_buf.size() == 3, "TimeIndex::from_buffer_epoch_nanos size");
-    expect_eq_vec(idx_buf.timeline().to_epoch_nanos_vector(),
+    expect_true(idx_buf.size() == 3, "TimeIndex::from_buffer size");
+    expect_eq_vec(idx_buf.timeline().ticks(),
                   std::vector<std::int64_t>{0, 1'000'000'000LL, 2'000'000'000LL},
-                  "TimeIndex::from_buffer_epoch_nanos preserves data");
+                  "TimeIndex::from_buffer preserves data");
   }
-  expect_true(timeindex_freed, "TimeIndex::from_buffer_epoch_nanos deleter called");
+  expect_true(timeindex_freed, "TimeIndex::from_buffer deleter called");
 
   pluss::codeh::TimelinePrintOptions popt;
   popt.max_rows = 4;
@@ -429,13 +563,13 @@ void test_generated_timeindex_dataframe_family() {
           20'000'000'000LL,
       },
       {5});
-  const auto t_nat = Timeline::fromSeries(ticks_with_nat);
+  const auto t_nat = pluss::timeline::from_epoch(ticks_with_nat);
   expect_eq_vec(
       t_nat.argsort().to_vec<std::int64_t>(),
       std::vector<std::int64_t>{2, 4, 0, 1, 3},
       "Timeline argsort keeps NaT last and preserves NaT stability");
   expect_eq_vec(
-      t_nat.sort().to_epoch_nanos_flat(),
+      t_nat.sort().ticks(),
       std::vector<std::int64_t>{
           10'000'000'000LL,
           20'000'000'000LL,
@@ -486,10 +620,20 @@ void test_3d_non_generated_timeline_support() {
   expect_true(m_period.day().to_vec<std::int32_t>(0) == 1, "to_period(month) normalized day");
 
   const auto t3_plus = t3.add_seconds(1);
-  expect_true(t3 < t3_plus, "operator< supports 3D");
-  expect_true(t3 <= t3_plus, "operator<= supports 3D");
-  expect_true(t3_plus > t3, "operator> supports 3D");
-  expect_true(t3_plus >= t3, "operator>= supports 3D");
+  expect_true((t3 < t3_plus).all().item<bool>(), "operator< supports 3D");
+  expect_true((t3 <= t3_plus).all().item<bool>(), "operator<= supports 3D");
+  expect_true((t3_plus > t3).all().item<bool>(), "operator> supports 3D");
+  expect_true((t3_plus >= t3).all().item<bool>(), "operator>= supports 3D");
+
+  expect_true((pluss::duration::seconds(1) + t3).eq(t3_plus).all().item<bool>(),
+              "Duration + Timeline is commutative sugar");
+  expect_true((t3 != t3_plus).all().item<bool>(), "operator!= is elementwise");
+  expect_true((t3 == t3).all().item<bool>(), "operator== is elementwise");
+
+  const auto with_nat = pluss::timeline::make({"", "2024-01-01T00:00:00Z"});
+  expect_true((with_nat != with_nat).to_vec<bool>(0), "NaT is unequal to itself");
+  expect_true(!(with_nat < with_nat).to_vec<bool>(0), "NaT is unordered");
+
 }
 
 void test_queue_dynamic_dispatch() {
@@ -563,6 +707,8 @@ void test_dynamic_dispense_utility() {
 
 int main() {
   test_generated_timeline_surface();
+  test_timeline_factory_format();
+  test_timeline_local_field_replacement();
   test_base_static_and_legacy_surface();
   test_dataframe_datetime_tranche();
   test_factory_rank_and_printing();

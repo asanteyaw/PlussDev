@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::isnat_scalar" href="isnat_scalar.html" />
-    <link rel="prev" title="Timeline::isnat" href="isnat.html" />
+    <link rel="next" title="Timeline::le" href="le.html" />
+    <link rel="prev" title="Timeline::isoformat" href="isoformat.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -45,8 +45,8 @@
 </pre></div>
 </div>
 <p>Returns a boolean mask that marks the timestamps that are actually defined.</p>
-<p><code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> is the positive-form missing-time check. Use it when your next step
-is phrased as “keep the real timestamps” rather than “find the missing ones”.
+<p><code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> is the positive-form validity check. Use it when the next operation
+should receive represented instants rather than <code class="docutils literal notranslate"><span class="pre">NaT</span></code> positions.
 That usually reads better than writing the same intent as <code class="docutils literal notranslate"><span class="pre">!t.isnat()</span></code>.</p>
 <p>The returned <code class="docutils literal notranslate"><span class="pre">Series</span></code> follows the exact shape of the source <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>:</p>
 <ul class="simple">
@@ -61,7 +61,7 @@ That usually reads better than writing the same intent as <code class="docutils 
 <p>The main behavioral choice is conceptual:</p>
 <ul class="simple">
 <li><p>use <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> when the positive case is the one you care about</p></li>
-<li><p>use <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat()</span></code></span></a> when the missing case is the one you care about</p></li>
+<li><p>use <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat()</span></code></span></a> when the absent case is the one you care about</p></li>
 </ul>
 </section>
 <section id="returns">
@@ -82,7 +82,7 @@ inspects presence versus missingness.</p></li>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Build a keep-mask from a timeline that contains missing timestamps.</p>
+<p>Example 1. Build a validity mask from a Timeline containing absent instants.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">keep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_nat</span><span class="p">.</span><span class="n">isvalid</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -181,6 +181,7 @@ to the alternate timeline where the mask is <code class="docutils literal notran
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -231,8 +232,8 @@ to the alternate timeline where the mask is <code class="docutils literal notran
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="isnat.html" title="previous chapter">Timeline::isnat</a></li>
-      <li>Next: <a href="isnat_scalar.html" title="next chapter">Timeline::isnat_scalar</a></li>
+      <li>Previous: <a href="isoformat.html" title="previous chapter">Timeline::isoformat</a></li>
+      <li>Next: <a href="le.html" title="next chapter">Timeline::le</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

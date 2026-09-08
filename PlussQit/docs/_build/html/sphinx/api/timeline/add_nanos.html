@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Timeline::searchsorted_left" href="searchsorted_left.html" />
-    <link rel="prev" title="Timeline::where" href="where.html" />
+    <link rel="next" title="Timeline::add_seconds" href="add_seconds.html" />
+    <link rel="prev" title="Timeline::add_months" href="add_months.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -41,7 +41,7 @@
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">add_nanos</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">nanos</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Timeline</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">add_nanos</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">nanos</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -83,7 +83,7 @@ A shifted timeline.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Missing timestamps remain missing.</p></li>
+<li><p>Absent instants remain absent.</p></li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">add_duration(...)</span></code> when the shift is already represented as a
 <code class="docutils literal notranslate"><span class="pre">Duration</span></code>.</p></li>
 </ul>
@@ -145,6 +145,7 @@ A shifted timeline.</p>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -195,8 +196,8 @@ A shifted timeline.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
-      <li>Previous: <a href="where.html" title="previous chapter">Timeline::where</a></li>
-      <li>Next: <a href="searchsorted_left.html" title="next chapter">Timeline::searchsorted_left</a></li>
+      <li>Previous: <a href="add_months.html" title="previous chapter">Timeline::add_months</a></li>
+      <li>Next: <a href="add_seconds.html" title="next chapter">Timeline::add_seconds</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

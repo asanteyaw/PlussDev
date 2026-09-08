@@ -982,6 +982,91 @@ Current coverage:
   section. wire/nav/sighash/lint (0 in family)/sphinx-build (0
   warnings)/forbidden-terms all re-verified clean; `lymph_*_test` suite
   still green.
+  **Second follow-up (same day):** converted `Payload` and `Policy` from
+  flat self-contained pages into full HUB pages (like `Workflow`) with
+  indented method children in the sidebar. `Payload` -> `label` / `weights`
+  / `time` / `roles` (features/groups/note-layout-thread) / `batch`
+  (feature_batch/labeled_batch/with_frame); `Policy` -> `columns`
+  (drop/require/forbid) / `rows` (reject/allow/reject_any_missing) /
+  `apply` (apply/empty). Each child page has Signature + Parameters +
+  Returns + Errors + 3 end-to-end verified examples (24 new
+  `lymph_workflow_{payload,policy}_*_example_*` programs). Plus a real bug
+  fix surfaced while writing `Payload/label.md`: `Payload::label(name)` and
+  `label(Series)` did not clear each other, so calling both left
+  `has_label()` AND `has_label_feature()` true and `labeled_batch()`
+  silently took the column-name branch. Fixed in `pluss/ai/lymph/payload.h`
+  -- each `label(...)` overload now resets the other, so "last call wins"
+  and the two queries are genuinely exclusive. `lymph_workflow_test` +
+  `lymph_validate/search/spotcheck_test` still green.
+  NOTE: the user committed the first-follow-up work as `288aae763`
+  ("completed series api reference"); the `_static/layout.js` double-nav
+  fix was dropped in that commit and has been re-applied as a working-tree
+  change. A concurrent `PlussQit/src/CodeH` Timeline refactor by the user
+  currently breaks a full C++ build (`to_epoch_nanos_vector` /
+  `from_buffer_epoch_nanos` declaration mismatches in `Timeline.cpp` /
+  `TimeIndex.h`) -- unrelated to lymph; the 24 new example programs and the
+  lymph test suite were all built+run green earlier this turn, before that
+  breakage set in.
+
+  **Third follow-up (same day): io + reports + options families -- prose
+  and examples written, Output blocks pending build recovery.**
+  - `options` family: `api/lymph/options.md` (single umbrella-alias landing,
+    `children = []`) verified accurate vs `options.h` and lint/forbidden
+    clean -- CLOSED, nothing more to write.
+  - `io` family: `io.md` landing rewritten (cross-cutting persistence map +
+    `FlowBundle` description); `io/save.md`, `io/load.md`,
+    `io/persistence.md` rewritten from hand-wavy drafts to standard
+    (correct current signatures -- `models::Model::save/load`,
+    `workflow::Workflow::save` / `workflow::load` / `workflow::restore`,
+    `lymph::io::load` -> `FlowBundle`; Parameters/Returns/Errors; 3
+    end-to-end examples each). 9 new programs
+    (`lymph_io_{save,load,persistence}_example_{1,2,3}`) written + wired
+    into `PlussAI/examples/NodeJ/lymph/CMakeLists.txt`.
+  - `reports` family: `reports.md` + `reports/Introduction.md` were already
+    done; replaced the 3 "Phase 4 placeholder" stubs with full pages --
+    `reports/Model.md` (the `ModelReports` accessor from `model.reports()`:
+    Scope/Construction/State/Methods table/Changelog + example),
+    `reports/classification_summary.md` (covers `classification_summary` +
+    `confusion_table` + `classification_metric_series`, `Model` + `Workflow`
+    overloads), `reports/threshold_curve.md` (covers `threshold_curve` +
+    `best_threshold`). 7 new programs
+    (`lymph_reports_classification_summary_example_{1,2,3}`,
+    `lymph_reports_threshold_curve_example_{1,2,3}`,
+    `lymph_reports_model_example_1`) written + wired. Note: `lymph::ClassReport`
+    / `lymph::ConfusionTable` / `lymph::ThresholdCurve` are the report types
+    (from `common.h`), distinct from `lymph::options::ClassReport` (an
+    options struct); binary `ClassReport::f1` is a per-class vector so the
+    examples print it whole, `.item<double>()` only on `accuracy` / `mcc`.
+  - All 3 families: `apiref.py lint` 0 in-family problems, `sphinx-build` 0
+    warnings, forbidden-terms 0 hits.
+  - DONE (build recovered): all 16 io + reports example programs built,
+    run, and their real output pasted into the pages -- no TODO markers
+    left anywhere in `api/lymph/`. Verified: `io_persistence_example_1`
+    confirms fitted scaler state round-trips (`map()` identical after
+    save/load); `io_persistence_example_3` / `io_load_example_3` show
+    `schema_version = 5`; `io_load_example_3` shows `io::load` ->
+    `FlowBundle` inspection + `workflow::restore(bundle, policy)` with a
+    chosen policy; `reports_classification_summary_example_1` shows the
+    facade == by-hand `metrics::classification::summary`;
+    `reports_threshold_curve_example_2` shows `best_threshold` picks
+    different cutoffs for Precision vs F1/Recall.
+  - Whole-repo `apiref.py lint` now = **1 problem total**, and it is the
+    long-pre-existing `api/lymph/prep/stage/Introduction.md: page exists but
+    has no manifest entry` -- caused by the `prep/stage` family's page being
+    `api/lymph/prep/stage_family.md` while its Introduction lives at
+    `api/lymph/prep/stage/Introduction.md`, so lint's
+    `{family.page[:-3]}/Introduction.md` derivation (`stage_family/`) misses
+    it. Cosmetic; NOT in io/reports/options; left for a separate `prep`
+    cleanup.
+  - `sphinx-build` 0 warnings, forbidden-terms 0, `lymph_workflow_test` +
+    `lymph_validate/search/spotcheck/metrics/builder/model_append_test` all
+    green.
+  - `_static/layout.js` double-nav fix was reverted a SECOND time by a user
+    git operation (it is a tracked file at HEAD `ff77415be` with no
+    working-tree change every time it gets clobbered) -- re-applied a third
+    time; verified single footer in the browser on the new pages. **This
+    one-line guard in `buildPrevNext()` needs to actually be committed** or
+    it will keep getting lost.
 
 Pending expansions:
 

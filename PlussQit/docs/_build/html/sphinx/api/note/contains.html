@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d751f226"></script>
-    <script src="../../../_static/layout.js?v=33e21169"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::lengths_bytes" href="lengths_bytes.html" />
-    <link rel="prev" title="Note API Reference" href="../../note_api_reference.html" />
+    <link rel="next" title="Note::count_substring" href="count_substring.html" />
+    <link rel="prev" title="Note::casefold" href="casefold.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,114 +36,169 @@
 
           <div class="body" role="main">
             
-  <section id="note-contains">
+  <!-- pluss-hand-authored -->
+<section id="note-contains">
 <h1>Note::contains<a class="headerlink" href="#note-contains" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="o">::</span><span class="n">contains</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">needle</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">&gt;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">contains</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">needle</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Checks each text cell for the presence of a substring and returns one boolean
-flag per cell.</p>
-<p>This is the direct <code class="docutils literal notranslate"><span class="pre">Note</span></code>-level membership question:</p>
+<section id="test-every-cell-for-a-literal-substring">
+<h2>Test Every Cell For A Literal Substring<a class="headerlink" href="#test-every-cell-for-a-literal-substring" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">contains(needle)</span></code> reports, for each text cell, whether <code class="docutils literal notranslate"><span class="pre">needle</span></code> occurs
+anywhere inside it. It is the predicate half of the substring family: use it
+to build a mask for filtering, counting, or branching, when the question is
+“which cells mention this?” rather than “rewrite the matches” (that is
+<a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace</span></code></span></a> / <a class="reference internal" href="remove_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">remove_all</span></code></span></a>) or “pull the matches
+out” (that is <a class="reference internal" href="regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex_findall</span></code></span></a>).</p>
+<p>The match is a <strong>literal byte-substring</strong> search — no regular-expression
+metacharacters, no word boundaries, no normalization. <code class="docutils literal notranslate"><span class="pre">needle</span></code> and the cell
+are compared exactly as stored, so the test is <strong>case-sensitive</strong> and
+byte-oriented; fold case first with <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower</span></code></span></a> when you want a
+case-insensitive check.</p>
+<section id="return-value">
+<h3>Return value<a class="headerlink" href="#return-value" title="Link to this heading">¶</a></h3>
+<p>The result is <strong>not</strong> a <code class="docutils literal notranslate"><span class="pre">Note</span></code>. It is a flat <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::uint8_t&gt;</span></code> with
+one entry per cell — <code class="docutils literal notranslate"><span class="pre">1</span></code> where <code class="docutils literal notranslate"><span class="pre">needle</span></code> was found, <code class="docutils literal notranslate"><span class="pre">0</span></code> where it was not — in
+row-major order. For a rank-<code class="docutils literal notranslate"><span class="pre">0</span></code> <code class="docutils literal notranslate"><span class="pre">Note</span></code> the vector has one entry; for a
+rank-<code class="docutils literal notranslate"><span class="pre">2</span></code> or rank-<code class="docutils literal notranslate"><span class="pre">3</span></code> <code class="docutils literal notranslate"><span class="pre">Note</span></code> the cells are flattened in the same order
+<a class="reference internal" href="../../note_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">print</span></code></span></a> walks them. The length always equals
+<code class="docutils literal notranslate"><span class="pre">numel()</span></code>.</p>
+<p>Returning a plain <code class="docutils literal notranslate"><span class="pre">std::uint8_t</span></code> vector (rather than a boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code>) keeps
+the predicate cheap and lets you feed it straight into indexing loops or into
+<code class="docutils literal notranslate"><span class="pre">pluss::make_series</span></code> if you want Series-side masking.</p>
+</section>
+<section id="edge-cases">
+<h3>Edge cases<a class="headerlink" href="#edge-cases" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>“Does this case mention <code class="docutils literal notranslate"><span class="pre">exam</span></code>?”</p></li>
-<li><p>“Does this row contain <code class="docutils literal notranslate"><span class="pre">http</span></code>?”</p></li>
-<li><p>“Does this cell still contain a marker I expected to remove?”</p></li>
-</ul>
-<p>The output is returned as a dense vector of <code class="docutils literal notranslate"><span class="pre">0/1</span></code> flags rather than another
-<code class="docutils literal notranslate"><span class="pre">Note</span></code>, because the method is answering a predicate question, not building new
-text.</p>
-<p>That makes <code class="docutils literal notranslate"><span class="pre">contains()</span></code> one of the easiest inspection surfaces to compose with
-later transforms: you can check first, then decide whether a cleanup or
-replacement pass is even needed.</p>
-</section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>needle</strong></p>
-<p>The substring to search for inside each cell.</p>
-<p>The match is literal substring matching, not regex matching. If you need
-pattern syntax, use <a class="reference internal" href="regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex_findall</span></code></span></a> or one of the regex
-predicate methods instead.</p>
-<p>Matching is case-sensitive unless you normalize the text first, for example
-with <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower</span></code></span></a>.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::uint8_t&gt;</span></code>
-One flag per element in the <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> means the substring was found.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code> means it was not found.</p></li>
+<li><p>An <strong>empty <code class="docutils literal notranslate"><span class="pre">needle</span></code></strong> is contained in every cell, including empty cells, so
+every entry is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">needle</span></code> longer than a cell can never match that cell: its entry is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p>The scan is linear in total input size and does no allocation beyond the
+result vector.</p></li>
 </ul>
 </section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Check which feature names mention <code class="docutils literal notranslate"><span class="pre">exam</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;midterm_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final_exam&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quiz&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;exam&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;contains_exam:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">mask</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</section>
+<section id="example-1-a-basic-mask">
+<h2>Example 1: A Basic Mask<a class="headerlink" href="#example-1-a-basic-mask" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;midterm_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final_exam&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quiz&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;exam&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">mask</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>contains_exam: 0 1 0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[0, 1, 0]
 </pre></div>
 </div>
-<p>Example 2. Lowercase first when you want a case-insensitive substring workflow.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Exam 1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final exam&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Quiz&quot;</span><span class="p">}).</span><span class="n">lower</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cleaned</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;exam&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;contains_exam_lower:&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">mask</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>Only <code class="docutils literal notranslate"><span class="pre">&quot;final_exam&quot;</span></code> contains the substring <code class="docutils literal notranslate"><span class="pre">exam</span></code>.</p>
 </section>
+</section>
+<section id="example-2-the-test-is-case-sensitive">
+<h2>Example 2: The Test Is Case-Sensitive<a class="headerlink" href="#example-2-the-test-is-case-sensitive" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;midterm_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final_exam&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quiz&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;EXAM&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">mask</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>contains_exam_lower: 1 1 0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[0, 0, 0]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;EXAM&quot;</span></code> is a different byte sequence from <code class="docutils literal notranslate"><span class="pre">&quot;exam&quot;</span></code>.</p>
+</section>
+</section>
+<section id="example-3-fold-case-first-for-a-case-insensitive-check">
+<h2>Example 3: Fold Case First For A Case-Insensitive Check<a class="headerlink" href="#example-3-fold-case-first-for-a-case-insensitive-check" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Exam 1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;FINAL EXAM&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Quiz&quot;</span><span class="p">}).</span><span class="n">lower</span><span class="p">().</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;exam&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">mask</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[1, 1, 0]
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">contains()</span></code> is shape-preserving in the sense that it evaluates every text
-cell independently, but it returns a flag vector rather than a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p></li>
-<li><p>Matching is substring-based, so <code class="docutils literal notranslate"><span class="pre">&quot;exam&quot;</span></code> matches <code class="docutils literal notranslate"><span class="pre">&quot;final_exam&quot;</span></code> without
-needing an exact whole-cell match.</p></li>
-<li><p>This is often the cheapest way to build a quick text mask before handing the
-result to another layer such as <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, or custom control
-logic.</p></li>
-</ul>
+<section id="example-4-an-empty-needle-matches-everything">
+<h2>Example 4: An Empty Needle Matches Everything<a class="headerlink" href="#example-4-an-empty-needle-matches-everything" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;abc&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">mask</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[1, 1, 1]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-5-a-needle-longer-than-the-cell-never-matches">
+<h2>Example 5: A Needle Longer Than The Cell Never Matches<a class="headerlink" href="#example-5-a-needle-longer-than-the-cell-never-matches" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;ab&quot;</span><span class="p">}).</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;abcd&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[0]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-6-higher-rank-input-is-flattened-row-major">
+<h2>Example 6: Higher-Rank Input Is Flattened Row-Major<a class="headerlink" href="#example-6-higher-rank-input-is-flattened-row-major" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({{</span><span class="s">&quot;apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;grape&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;plum&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pear&quot;</span><span class="p">}}).</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;p&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">mask</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[1, 1, 1, 1]
+</pre></div>
+</div>
+<p>Four cells, flattened in row-major order; every one contains a <code class="docutils literal notranslate"><span class="pre">p</span></code>.</p>
+</section>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::regex_findall</span></code></span></a>: extract regex matches rather than
-returning a yes/no mask.</p></li>
-<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a>: rewrite matching substrings instead of testing
-for them.</p></li>
+<li><p><a class="reference internal" href="regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::regex_findall</span></code></span></a>: when you need the matching
+substrings, not just a yes/no.</p></li>
+<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::replace</span></code></span></a> / <a class="reference internal" href="remove_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::remove_all</span></code></span></a>:
+rewrite or delete matches instead of testing for them.</p></li>
+<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::lower</span></code></span></a>: normalize case before a case-insensitive test.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../note_api_reference.html">
+  <a class="prev-link" href="casefold.html">
     <span class="label">Previous</span>
-    <span class="title">Note API Reference</span>
+    <span class="title">casefold</span>
   </a>
-  <a class="next-link" href="lengths_bytes.html">
+  <a class="next-link" href="count_substring.html">
     <span class="label">Next</span>
-    <span class="title">lengths_bytes</span>
+    <span class="title">count_substring</span>
   </a>
 </div>
 </section>
@@ -187,6 +242,7 @@ for them.</p></li>
 </li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
@@ -237,8 +293,8 @@ for them.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
-      <li>Previous: <a href="../../note_api_reference.html" title="previous chapter">Note API Reference</a></li>
-      <li>Next: <a href="lengths_bytes.html" title="next chapter">Note::lengths_bytes</a></li>
+      <li>Previous: <a href="casefold.html" title="previous chapter">Note::casefold</a></li>
+      <li>Next: <a href="count_substring.html" title="next chapter">Note::count_substring</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

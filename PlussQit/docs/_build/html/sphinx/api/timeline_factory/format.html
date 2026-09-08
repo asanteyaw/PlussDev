@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::timeline::format &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="pluss::timeline::from_epoch" href="from_epoch.html" />
+    <link rel="prev" title="pluss::timeline::epoch" href="epoch.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="pluss-timeline-format">
+<h1>pluss::timeline::format<a class="headerlink" href="#pluss-timeline-format" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../timeline_factory_api_reference.html"><span class="doc std std-doc">Back to Timeline Factory API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="nf">pluss::timeline::format</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">)</span>
+<span class="n">Note</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">FormatOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">FormatOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">pattern</span><span class="p">{</span><span class="s">&quot;%Y-%m-%dT%H:%M:%S.%f%z&quot;</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">timezone</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">nat</span><span class="p">{</span><span class="s">&quot;NaT&quot;</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">fractional_digits</span><span class="p">{</span><span class="mi">9</span><span class="p">};</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">trim_fractional_zeros</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="convert-instants-into-shape-preserving-text">
+<h2>Convert Instants Into Shape-Preserving Text<a class="headerlink" href="#convert-instants-into-shape-preserving-text" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">format()</span></code> renders every instant into a <code class="docutils literal notranslate"><span class="pre">Note</span></code> while preserving the input rank,
+shape, and row-major element order. It exists for structured text that remains
+usable by later string operations. Use <code class="docutils literal notranslate"><span class="pre">print()</span></code> instead for a single diagnostic
+string containing headers and layout.</p>
+<p>Formatting never changes the source <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, its epoch nanoseconds, or its
+timezone metadata. Calendar and clock directives are evaluated in the source
+timezone unless <code class="docutils literal notranslate"><span class="pre">FormatOptions::timezone</span></code> names a projection timezone. That
+projection is applied independently to every instant, so seasonal offsets are
+not cached once for the whole value.</p>
+<p>The pattern-only overload changes only <code class="docutils literal notranslate"><span class="pre">pattern</span></code>; all other options retain their
+defaults. The options overload controls the complete rendering contract:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pattern</span></code> supplies literal text and <code class="docutils literal notranslate"><span class="pre">%</span></code> directives.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timezone</span></code> selects a named display zone; an empty string uses <code class="docutils literal notranslate"><span class="pre">value.tz()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nat</span></code> is the complete output token for each absent instant. The pattern is not
+applied to that lane.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fractional_digits</span></code> selects 1 through 9 leading nanosecond digits for <code class="docutils literal notranslate"><span class="pre">%f</span></code> and
+<code class="docutils literal notranslate"><span class="pre">%N</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trim_fractional_zeros</span></code> removes trailing zeros from those digits but retains
+at least one digit.</p></li>
+</ul>
+<p>Reducing fractional precision truncates; it does not round the instant. Pattern
+compilation and validation occur once per call, then the compiled pieces are
+reused for every lane. The result owns its strings.</p>
+</section>
+<section id="directive-reference">
+<h2>Directive Reference<a class="headerlink" href="#directive-reference" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">%Y</span></code>, <code class="docutils literal notranslate"><span class="pre">%m</span></code>, <code class="docutils literal notranslate"><span class="pre">%d</span></code>: year, two-digit month, and two-digit day.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%H</span></code>, <code class="docutils literal notranslate"><span class="pre">%M</span></code>, <code class="docutils literal notranslate"><span class="pre">%S</span></code>: two-digit hour, minute, and second.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%F</span></code>: <code class="docutils literal notranslate"><span class="pre">%Y-%m-%d</span></code>; <code class="docutils literal notranslate"><span class="pre">%T</span></code>: <code class="docutils literal notranslate"><span class="pre">%H:%M:%S</span></code>; <code class="docutils literal notranslate"><span class="pre">%R</span></code>: <code class="docutils literal notranslate"><span class="pre">%H:%M</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%f</span></code>, <code class="docutils literal notranslate"><span class="pre">%N</span></code>: fractional nanoseconds under the configured precision policy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%a</span></code>, <code class="docutils literal notranslate"><span class="pre">%A</span></code>: abbreviated and full English weekday name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%b</span></code>, <code class="docutils literal notranslate"><span class="pre">%B</span></code>: abbreviated and full English month name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%j</span></code>: day of year from <code class="docutils literal notranslate"><span class="pre">001</span></code> through <code class="docutils literal notranslate"><span class="pre">366</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%u</span></code>: weekday <code class="docutils literal notranslate"><span class="pre">1</span></code> through <code class="docutils literal notranslate"><span class="pre">7</span></code>, Monday first.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%w</span></code>: weekday <code class="docutils literal notranslate"><span class="pre">0</span></code> through <code class="docutils literal notranslate"><span class="pre">6</span></code>, Sunday first.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%q</span></code>: calendar quarter <code class="docutils literal notranslate"><span class="pre">1</span></code> through <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%z</span></code>: numeric UTC offset such as <code class="docutils literal notranslate"><span class="pre">-07:00</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%Z</span></code>: the selected timezone label.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%%</span></code>: a literal percent sign.</p></li>
+</ul>
+</section>
+<section id="example-1-defaults-preserve-matrix-shape-and-nanoseconds">
+<h2>Example 1: Defaults Preserve Matrix Shape And Nanoseconds<a class="headerlink" href="#example-1-defaults-preserve-matrix-shape-and-nanoseconds" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-02-29T23:30:45.123456789Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-01T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-07-01T06:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">values</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;2024-02-29T23:30:45.123456789+00:00&quot;, &quot;2024-03-01T00:00:00.000000000+00:00&quot;], 
+  [&quot;2024-07-01T06:00:00.000000000+00:00&quot;, &quot;NaT&quot;]
+]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-2-the-pattern-overload">
+<h2>Example 2: The Pattern Overload<a class="headerlink" href="#example-2-the-pattern-overload" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-02-29T23:30:45.123456789Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-01T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-07-01T06:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%a %b %d, day=%j weekday=%u/%w quarter=Q%q&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;Thu Feb 29, day=060 weekday=4/4 quarter=Q1&quot;, &quot;Fri Mar 01, day=061 weekday=5/5 quarter=Q1&quot;], 
+  [&quot;Mon Jul 01, day=183 weekday=1/1 quarter=Q3&quot;, &quot;NaT&quot;]
+]
+</pre></div>
+</div>
+<p>The absent lane bypasses all directives and remains the default <code class="docutils literal notranslate"><span class="pre">NaT</span></code> token.</p>
+</section>
+</section>
+<section id="example-3-timezone-projection-is-per-instant">
+<h2>Example 3: Timezone Projection Is Per Instant<a class="headerlink" href="#example-3-timezone-projection-is-per-instant" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">FormatOptions</span><span class="p">{};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">pattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;%F %T %Z %z&quot;</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">timezone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;America/New_York&quot;</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">seasons</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-15T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-07-15T12:00:00Z&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">seasons</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;2024-01-15 07:00:00 America/New_York -05:00&quot;, &quot;2024-07-15 08:00:00 America/New_York -04:00&quot;]
+</pre></div>
+</div>
+<p>The two rows use different offsets because the zone rules are resolved at each
+instant.</p>
+</section>
+</section>
+<section id="example-4-fractional-precision-and-trimming">
+<h2>Example 4: Fractional Precision And Trimming<a class="headerlink" href="#example-4-fractional-precision-and-trimming" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">FormatOptions</span><span class="p">{};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">pattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;%T.%f | %N&quot;</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">fractional_digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">trim_fractional_zeros</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fractions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00.120000000Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00.123456789Z&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">fractions</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;00:00:00.12 | 12&quot;, &quot;00:00:00.123456 | 123456&quot;]
+</pre></div>
+</div>
+<p>The last three digits of the second instant are omitted, not rounded into the
+sixth digit.</p>
+</section>
+</section>
+<section id="example-5-literal-percent-and-a-custom-absent-token">
+<h2>Example 5: Literal Percent And A Custom Absent Token<a class="headerlink" href="#example-5-literal-percent-and-a-custom-absent-token" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">FormatOptions</span><span class="p">{};</span>
+<span class="n">options</span><span class="p">.</span><span class="n">pattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;observed=%F %% %T&quot;</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">nat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;not-observed&quot;</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">observations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T03:04:05Z&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;not-observed&quot;, &quot;observed=2024-01-02 % 03:04:05&quot;]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-6-empty-geometry-survives-formatting">
+<h2>Example 6: Empty Geometry Survives Formatting<a class="headerlink" href="#example-6-empty-geometry-survives-formatting" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">empty</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%F&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 0], dim=2, numel=0, encoding=utf8)
+[]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="validation-and-failure">
+<h2>Validation And Failure<a class="headerlink" href="#validation-and-failure" title="Link to this heading">¶</a></h2>
+<p>An unsupported directive, a trailing <code class="docutils literal notranslate"><span class="pre">%</span></code>, an unknown timezone, or a
+<code class="docutils literal notranslate"><span class="pre">fractional_digits</span></code> value outside <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">9]</span></code> rejects the complete call before a
+partial <code class="docutils literal notranslate"><span class="pre">Note</span></code> is returned. Timezone and pattern validation still occur for an
+empty input.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%Y-%Q&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;rejected</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rejected
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="print.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">print</span></code></span></a>: produce one diagnostic rendering string.</p></li>
+<li><p><a class="reference internal" href="make.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">make</span></code></span></a>: parse textual instants.</p></li>
+<li><p><a class="reference internal" href="from_epoch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">from_epoch</span></code></span></a>: preserve and inspect exact integer ticks.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../timeline_factory_api_reference.html">Timeline Factory API Reference</a><ul>
+      <li>Previous: <a href="epoch.html" title="previous chapter">pluss::timeline::epoch</a></li>
+      <li>Next: <a href="from_epoch.html" title="next chapter">pluss::timeline::from_epoch</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/timeline_factory/format.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

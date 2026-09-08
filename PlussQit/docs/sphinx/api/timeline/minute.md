@@ -8,13 +8,11 @@
 Series Timeline::minute() const
 ```
 
-Aliases: `m()`, `minutes()`, and `minute_()`.
-
 ## Read The Minute Within The Hour
 
 `minute()` extracts a zero-based clock component in the range `0` through
 `59`. It returns an `int32` Series with the same shape and element ordering as
-the Timeline. Missing timestamps map to `-1`.
+the Timeline. Absent instants map to `-1`.
 
 The value is only the minute component. For example, `10:07` and `18:07` both
 produce `7`; combine it with `hour()` when constructing a time-of-day key.
@@ -49,8 +47,8 @@ subsecond precision.
 ## Gotchas And Failure Modes
 
 - Minutes are zero-based clock fields, unlike one-based months and days.
-- The short alias is `m()`; there is no `min()` alias because `min()` is a
-  Timeline reduction.
+- `minute()` is the sole public spelling; `min()` remains the Timeline
+  reduction.
 - A `-1` result denotes `NaT` and must not be placed into an ordinary bucket.
 
 ## See Also
@@ -62,6 +60,6 @@ subsecond precision.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="hour.html"><span class="label">Previous</span><span class="title">hour</span></a>
-  <a class="next-link" href="second.html"><span class="label">Next</span><span class="title">second</span></a>
+  <a class="next-link" href="minute_scalar.html"><span class="label">Next</span><span class="title">minute_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->

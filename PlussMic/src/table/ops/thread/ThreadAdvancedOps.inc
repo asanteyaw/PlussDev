@@ -752,8 +752,8 @@ Thread Thread::mode(bool drop_nulls) const {
       kind() == ThreadKind::TimeIndex) {
     const auto ticks =
         kind() == ThreadKind::Timeline
-            ? as_timeline().to_epoch_nanos_vector()
-            : as_timeindex().timeline().to_epoch_nanos_vector();
+            ? as_timeline().ticks()
+            : as_timeindex().timeline().ticks();
     std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>>
         counts;
     std::int64_t first_null = -1;
@@ -1380,9 +1380,9 @@ Thread Thread::timed(
       "Thread::timed: axis cannot contain null values");
   std::vector<std::int64_t> ticks;
   if (axis.kind() == ThreadKind::Timeline) {
-    ticks = axis.as_timeline().to_epoch_nanos_vector();
+    ticks = axis.as_timeline().ticks();
   } else if (axis.kind() == ThreadKind::TimeIndex) {
-    ticks = axis.as_timeindex().timeline().to_epoch_nanos_vector();
+    ticks = axis.as_timeindex().timeline().ticks();
   } else if (axis.kind() == ThreadKind::Series &&
              axis.as_series().scalar_type() ==
                  pluss::codem::ScalarType::Int64) {
@@ -2536,7 +2536,8 @@ Thread ThreadTimelineAccessor::localize(const TimelineLocalizeOptions& options) 
 }
 
 Thread ThreadTimelineAccessor::utc() const {
-  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().utc").to_utc());
+  return tl_temporal_(base_,
+                      tl_payload_(base_, "Thread::tl().utc").tz_convert("UTC"));
 }
 
 Thread ThreadTimelineAccessor::index(bool require_sorted) const {

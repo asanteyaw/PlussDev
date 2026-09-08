@@ -8,7 +8,7 @@
 Series Timeline::hour() const
 ```
 
-Aliases: `h()`, `hr()`, `hours()`, and `hour_()`.
+`hour()` is the sole public spelling.
 
 ## Read The Local Hour
 
@@ -70,11 +70,11 @@ in UTC and then relabeling the result cannot recover the local hour.
 ## See Also
 
 - [`minute`](minute.md)
-- [`normalize`](normalize.md)
+- [`date`](date.md)
 - [`tz_convert`](tz_convert.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="day.html"><span class="label">Previous</span><span class="title">day</span></a>
-  <a class="next-link" href="minute.html"><span class="label">Next</span><span class="title">minute</span></a>
+  <a class="next-link" href="hour_scalar.html"><span class="label">Next</span><span class="title">hour_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->

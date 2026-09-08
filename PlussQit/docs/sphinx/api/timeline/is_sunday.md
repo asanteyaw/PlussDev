@@ -8,7 +8,7 @@
 Series Timeline::is_sunday() const
 ```
 
-Aliases: `sun_is()` and `is_sun()`.
+`is_sunday()` is the sole public spelling.
 
 ## Select Local Sundays
 
@@ -50,7 +50,7 @@ combined OR therefore equals `isvalid()` for this complete weekday partition.
 
 Use the named weekday methods when the day itself expresses the business rule.
 Use `weekday()` when the weekday is data-driven. In both cases, choose the
-timezone first and retain validity when missing timestamps are possible.
+timezone first and retain validity when absent instants are possible.
 
 ## See Also
 

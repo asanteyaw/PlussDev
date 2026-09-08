@@ -99,123 +99,192 @@ them:
 
 Important current behavior:
 
-- The documented text path for a missing timestamp is an empty string, not the
+- The documented text path for an absent instant is an empty string, not the
   literal text `"NaT"`.
-- `Timeline` may contain missing times, and those render as `NaT`.
+- `Timeline` may contain absent instants, and those render as `NaT`.
 
 ## Coverage
 
 The current handwritten pages cover these starting families:
 
 - representation and export: `defined`, `sizes`, `dim`, `numel`,
-  `is_scalar`, `tz`, `host`, `to_epoch_nanos_vector`,
-  `to_epoch_nanos_flat`, `epoch_nanos`
-- arithmetic and distance: `add_duration`, `sub_duration`, `diff`, `add_nanos`
-- comparisons: `eq`, `ne`, `lt`, `le`, `gt`, `ge`
-- missing-time work: `isnat`, `isvalid`, `isnat_scalar`, `fill_nat`, `where`
-- ordering and deduplication: `argsort`, `min`, `max`, `sort`, `unique`,
-  `drop_duplicates`
+  `is_scalar`, `tz`, `host`, `from_buffer`,
+  `ticks`, `copy_ticks`, and the shape-preserving
+  `epoch_*` projections
+- component and coarse-epoch construction: `from_ymd`, `from_ymdhms`,
+  `from_epoch_micros`, `from_epoch_millis`, `from_epoch_seconds`
+- temporal operators, arithmetic, and distance: `operators`, calendar-aware
+  `add_years`, `add_months`, and `add_days`, fixed elapsed `add_hours`,
+  `add_minutes`, `add_seconds`, and `add_nanos`, plus `add_duration`,
+  `sub_duration`, exact `diff`, policy-driven integer `span`, scalar calendar
+  `years_between` and `months_between`, and scalar elapsed `days_between`,
+  `hours_between`, `minutes_between`, and `seconds_between`
+- elementwise comparisons: `eq`, `ne`, `lt`, `le`, `gt`, `ge`
+- validity and absent-instant handling: `isnat`, `isvalid`, `isnat_scalar`,
+  `fill_nat`, `where`
+- temporal ordering and identity: `argsort`, `min`, `max`, `sort`, `unique`
+- structural axis-0 operations: `concat`, `repeat`, `empty_like`, and
+  shape-preserving constant construction with `fill_like`
+- runtime-selected temporal movement with `shift`, and checked promotion from
+  a one-dimensional `Timeline` to `TimeIndex` with `to_timeindex`
 - scalar formatting: `isoformat`
-- formatting and text conversion: `strftime`, `to_note_iso`, the convenience
-  `to_note_*` family, `weekday_name`, `month_name`
-- rounding and projection: `floor`, `ceil`, `round`, `normalize`, `date`,
-  `time`
-- timezone work: `tz_convert`, `tz_localize`, `to_utc`
+- formatting and text conversion: `strftime`, `to_note_iso`, `weekday_name`,
+  and `month_name`; custom layouts belong in `strftime()` rather than named
+  formatting aliases
+- rounding and projection: `floor`, `ceil`, `round`, `date`, `time`
+- timezone work: `tz_convert`, `tz_localize`
 - ordered insertion helpers on sorted 1D timelines:
   `searchsorted_left`, `searchsorted_right`
 - calendar component extraction: `year`, `month`, `day`, `hour`, `minute`,
   `second`, `nanosecond`, `microsecond`, `millisecond`, `weekday`,
-  `dayofyear`, `quarter`, `week`
+  `dayofyear`, `quarter`, `week`, plus native-value scalar extraction through
+  `year_scalar`, `month_scalar`, `day_scalar`, `hour_scalar`, `minute_scalar`,
+  `second_scalar`, `quarter_scalar`, `week_scalar`, `weekday_scalar`, and
+  `yearday_scalar`
+- strict local-calendar field replacement: `set_year`, `set_month`, `set_day`,
+  `set_hour`, `set_minute`, `set_second`
 - calendar predicates: `is_leap_year`, boundary predicates, business-day
   predicates, and the weekday-specific predicates
 - regular sequence construction: `date_range(...)`
 
-This is not yet the full public surface. The representation, export, canonical
-calendar-field, and calendar-predicate layers are now documented method by
-method; later passes will separate ordering operations and transformations
-that are still grouped behind their starting pages. Public aliases are listed
-on their canonical method page so readers can recognize every supported
-spelling.
+This is not yet the full public surface. The representation, export, ordering,
+canonical calendar-field, calendar-shift, elapsed-shift, and
+calendar-predicate layers are documented method by method. The Timeline
+reference documents one canonical spelling for each operation rather than
+carrying compatibility aliases.
 
 ## Using This Reference
 
 - Use the left sidebar to open one `Timeline` method page at a time.
 - Each page now embeds verified output directly under the example that produced
   it.
-- Alias pages identify the canonical method they forward to and explain when
-  the alternate spelling is useful; they do not replace method-level
+- Each operation has one canonical page and one position in method-level
   navigation.
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
-api/timeline/defined
-api/timeline/sizes
-api/timeline/dim
-api/timeline/numel
-api/timeline/is_scalar
-api/timeline/tz
-api/timeline/host
-api/timeline/to_epoch_nanos_vector
-api/timeline/to_epoch_nanos_flat
-api/timeline/epoch_nanos
+api/timeline/add_days
 api/timeline/add_duration
-api/timeline/sub_duration
-api/timeline/diff
-api/timeline/eq
-api/timeline/isnat
-api/timeline/isvalid
-api/timeline/isnat_scalar
-api/timeline/argsort
-api/timeline/isoformat
-api/timeline/strftime
-api/timeline/to_note_iso
-api/timeline/to_note_family
-api/timeline/weekday_name
-api/timeline/month_name
-api/timeline/floor
-api/timeline/ceil
-api/timeline/round
-api/timeline/normalize
-api/timeline/tz_convert
-api/timeline/tz_localize
-api/timeline/to_utc
-api/timeline/min
-api/timeline/fill_nat
-api/timeline/where
+api/timeline/add_hours
+api/timeline/add_minutes
+api/timeline/add_months
 api/timeline/add_nanos
-api/timeline/searchsorted_left
-api/timeline/year
-api/timeline/month
+api/timeline/add_seconds
+api/timeline/add_years
+api/timeline/argsort
+api/timeline/ceil
+api/timeline/concat
+api/timeline/copy_ticks
+api/timeline/date
+api/timeline/date_range
 api/timeline/day
-api/timeline/hour
-api/timeline/minute
-api/timeline/second
-api/timeline/nanosecond
-api/timeline/microsecond
-api/timeline/millisecond
-api/timeline/weekday
+api/timeline/day_scalar
 api/timeline/dayofyear
-api/timeline/quarter
-api/timeline/week
-api/timeline/is_leap_year
-api/timeline/is_month_start
-api/timeline/is_month_end
-api/timeline/is_quarter_start
-api/timeline/is_quarter_end
-api/timeline/is_year_start
-api/timeline/is_year_end
-api/timeline/is_weekend
+api/timeline/days_between
+api/timeline/defined
+api/timeline/diff
+api/timeline/dim
+api/timeline/empty_like
+api/timeline/epoch_days
+api/timeline/epoch_micros
+api/timeline/epoch_millis
+api/timeline/epoch_nanos
+api/timeline/epoch_seconds
+api/timeline/eq
+api/timeline/fill_like
+api/timeline/fill_nat
+api/timeline/floor
+api/timeline/from_buffer
+api/timeline/from_epoch_micros
+api/timeline/from_epoch_millis
+api/timeline/from_epoch_seconds
+api/timeline/from_ymd
+api/timeline/from_ymdhms
+api/timeline/ge
+api/timeline/gt
+api/timeline/host
+api/timeline/hour
+api/timeline/hour_scalar
+api/timeline/hours_between
 api/timeline/is_business_day
+api/timeline/is_friday
+api/timeline/is_leap_year
 api/timeline/is_monday
+api/timeline/is_month_end
+api/timeline/is_month_start
+api/timeline/is_quarter_end
+api/timeline/is_quarter_start
+api/timeline/is_saturday
+api/timeline/is_scalar
+api/timeline/is_sunday
+api/timeline/is_thursday
 api/timeline/is_tuesday
 api/timeline/is_wednesday
-api/timeline/is_thursday
-api/timeline/is_friday
-api/timeline/is_saturday
-api/timeline/is_sunday
-api/timeline/date_range
+api/timeline/is_weekend
+api/timeline/is_year_end
+api/timeline/is_year_start
+api/timeline/isnat
+api/timeline/isnat_scalar
+api/timeline/isoformat
+api/timeline/isvalid
+api/timeline/le
+api/timeline/lt
+api/timeline/max
+api/timeline/microsecond
+api/timeline/millisecond
+api/timeline/min
+api/timeline/minute
+api/timeline/minute_scalar
+api/timeline/minutes_between
+api/timeline/month
+api/timeline/month_name
+api/timeline/month_scalar
+api/timeline/months_between
+api/timeline/nanosecond
+api/timeline/ne
+api/timeline/numel
+api/timeline/operators
+api/timeline/quarter
+api/timeline/quarter_scalar
+api/timeline/repeat
+api/timeline/round
+api/timeline/searchsorted_left
+api/timeline/searchsorted_right
+api/timeline/second
+api/timeline/second_scalar
+api/timeline/seconds_between
+api/timeline/set_day
+api/timeline/set_hour
+api/timeline/set_minute
+api/timeline/set_month
+api/timeline/set_second
+api/timeline/set_year
+api/timeline/shift
+api/timeline/sizes
+api/timeline/sort
+api/timeline/span
+api/timeline/strftime
+api/timeline/sub_duration
+api/timeline/ticks
+api/timeline/time
+api/timeline/to_note_iso
+api/timeline/to_timeindex
+api/timeline/tz
+api/timeline/tz_convert
+api/timeline/tz_localize
+api/timeline/unique
+api/timeline/week
+api/timeline/week_scalar
+api/timeline/weekday
+api/timeline/weekday_name
+api/timeline/weekday_scalar
+api/timeline/where
+api/timeline/year
+api/timeline/year_scalar
+api/timeline/yearday_scalar
+api/timeline/years_between
 ```
 
 <div class="pluss-inline-prev-next">
@@ -223,8 +292,8 @@ api/timeline/date_range
     <span class="label">Previous</span>
     <span class="title">PlussQit API Reference</span>
   </a>
-  <a class="next-link" href="api/timeline/defined.html">
+  <a class="next-link" href="api/timeline/add_days.html">
     <span class="label">Next</span>
-    <span class="title">defined</span>
+    <span class="title">add_days</span>
   </a>
 </div>

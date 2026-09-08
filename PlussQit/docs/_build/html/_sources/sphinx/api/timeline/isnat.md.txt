@@ -10,18 +10,18 @@ Timeline::isnat() -> Series
 
 ## What It Does
 
-Returns a boolean mask marking which timeline entries are missing.
+Returns a boolean mask marking which Timeline positions hold `NaT`.
 
-This is the load-bearing predicate for temporal missing-data logic.
+This is the direct predicate for absent-instant logic.
 
 ## Returns
 
 `Series`
-    `true` where the timestamp is missing, `false` otherwise.
+    `true` where the instant is absent, `false` otherwise.
 
 ## Examples
 
-Example 1. Detect missing timestamps in a mixed timeline.
+Example 1. Detect absent instants in a mixed Timeline.
 
 ```cpp
 auto mask = with_nat.isnat();
@@ -38,7 +38,7 @@ data=[false, true, false, true]
 ## Notes
 
 - Pair `isnat()` with [`fill_nat`](fill_nat.md) or [`where`](where.md) to repair
-  or branch on missing times.
+  or branch on absent instants.
 - Use [`isnat_scalar`](isnat_scalar.md) for one scalar timestamp instead of an
   array-shaped result.
 
@@ -48,9 +48,9 @@ data=[false, true, false, true]
 - [`Timeline::fill_nat`](fill_nat.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="eq.html">
+  <a class="prev-link" href="ge.html">
     <span class="label">Previous</span>
-    <span class="title">eq</span>
+    <span class="title">ge</span>
   </a>
   <a class="next-link" href="isvalid.html">
     <span class="label">Next</span>

@@ -8,7 +8,7 @@
 Series Timeline::is_leap_year() const
 ```
 
-Aliases: `leap_year()`, `isleapyear()`, and `is_leap()`.
+`is_leap_year()` is the sole public spelling.
 
 ## Classify The Local Calendar Year
 
@@ -18,7 +18,7 @@ leap year, except a century year must also be divisible by 400. The method
 tests year membership, not whether the timestamp itself is 29 February.
 
 The result is a shape-preserving boolean Series. `NaT` becomes `false`; combine
-with `isvalid()` if missing and non-leap must remain distinguishable.
+with `isvalid()` if absent and non-leap positions must remain distinguishable.
 
 ## Example: Membership Across Boundaries
 

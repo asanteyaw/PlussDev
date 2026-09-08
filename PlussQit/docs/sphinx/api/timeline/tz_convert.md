@@ -59,12 +59,11 @@ Timeline(shape=[2], tz=UTC)
 ## See Also
 
 - [`Timeline::tz_localize`](tz_localize.md)
-- [`Timeline::to_utc`](to_utc.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="normalize.html">
+  <a class="prev-link" href="time.html">
     <span class="label">Previous</span>
-    <span class="title">normalize</span>
+    <span class="title">time</span>
   </a>
   <a class="next-link" href="tz_localize.html">
     <span class="label">Next</span>
