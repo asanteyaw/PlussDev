@@ -91,8 +91,8 @@ std::cout << "]\n";
 
 - [`Note::lengths_chars`](lengths_chars.md): Unicode code-point count.
 - [`Note::lengths_bytes`](lengths_bytes.md): storage size in UTF-8 bytes.
-- `pluss::coden::Note::normalize`: fold combining sequences to precomposed
-  form (NFC) so `lengths_chars` and `lengths_graphemes` agree.
+- [`Note::to_nfc`](to_nfc.md): fold combining sequences to precomposed form
+  so `lengths_chars` and `lengths_graphemes` agree.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lengths_chars.html">

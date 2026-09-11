@@ -32,27 +32,27 @@ int main(int argc, char** argv) {
     return pluss::make_series(std::move(vals), std::move(shape)).to(run_platform, run_float_dt);
   };
 
-  let x = make_f({-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0}, {7});
-  let y = make_f({3.0, 2.0, 1.0, 0.0, -1.0, -2.0, -3.0}, {7});
-  let pos = make_f({0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0}, {7});
-  let unit = make_f({-0.9, -0.5, -0.1, 0.0, 0.1, 0.5, 0.9}, {7});
+  auto x = make_f({-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0}, {7});
+  auto y = make_f({3.0, 2.0, 1.0, 0.0, -1.0, -2.0, -3.0}, {7});
+  auto pos = make_f({0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0}, {7});
+  auto unit = make_f({-0.9, -0.5, -0.1, 0.0, 0.1, 0.5, 0.9}, {7});
   
-  let m = make_f({1, 2, 3, 4, 5, 6}, {2, 3});
-  let n = make_f({6, 5, 4, 3, 2, 1}, {2, 3});
-  let mm = make_f({1,2,3,4,5,6,7,8,9}, {3,3});
+  auto m = make_f({1, 2, 3, 4, 5, 6}, {2, 3});
+  auto n = make_f({6, 5, 4, 3, 2, 1}, {2, 3});
+  auto mm = make_f({1,2,3,4,5,6,7,8,9}, {3,3});
 
-  let i = pluss::make_series(std::vector<std::int64_t>{1,2,3,4,5,6,7}, {7}).to(run_platform);
-  let bi = pluss::make_series(std::vector<std::int64_t>{1,2,3,4,5,6}, {2,3}).to(run_platform);
+  auto i = pluss::make_series(std::vector<std::int64_t>{1,2,3,4,5,6,7}, {7}).to(run_platform);
+  auto bi = pluss::make_series(std::vector<std::int64_t>{1,2,3,4,5,6}, {2,3}).to(run_platform);
 
-  let gather_src = pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40, 50, 60}, {2, 3}).to(run_platform);
-  let gather_idx = pluss::make_series(std::vector<std::int64_t>{2, 1, 0, 0, 1, 2}, {2, 3}).to(run_platform);
-  let scatter_base = pluss::Series::zeros({2, 3}, ScalarType::Int64).to(run_platform);
-  let scatter_val = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {2, 3}).to(run_platform);
-  let flat_idx = pluss::make_series(std::vector<std::int64_t>{0, 3, 5}, {3}).to(run_platform);
-  let flat_src = pluss::make_series(std::vector<std::int64_t>{99, 88, 77}, {3}).to(run_platform);
+  auto gather_src = pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40, 50, 60}, {2, 3}).to(run_platform);
+  auto gather_idx = pluss::make_series(std::vector<std::int64_t>{2, 1, 0, 0, 1, 2}, {2, 3}).to(run_platform);
+  auto scatter_base = pluss::Series::zeros({2, 3}, ScalarType::Int64).to(run_platform);
+  auto scatter_val = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {2, 3}).to(run_platform);
+  auto flat_idx = pluss::make_series(std::vector<std::int64_t>{0, 3, 5}, {3}).to(run_platform);
+  auto flat_src = pluss::make_series(std::vector<std::int64_t>{99, 88, 77}, {3}).to(run_platform);
 
-  let cond = pluss::Series::ones({7}, ScalarType::Bool).to(run_platform);
-  let mask = pluss::Series::ones({2, 3}, ScalarType::Bool).to(run_platform);
+  auto cond = pluss::Series::ones({7}, ScalarType::Bool).to(run_platform);
+  auto mask = pluss::Series::ones({2, 3}, ScalarType::Bool).to(run_platform);
   const std::array<std::int64_t, 2> shape_3x2{3, 2};
   const std::array<std::int64_t, 2> perm_10{1, 0};
 

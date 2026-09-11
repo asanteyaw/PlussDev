@@ -1533,8 +1533,8 @@ methods:
 
   # Tranche 7/12: broad concrete wrappers batch (~50 methods).
   - name: _addmm_activation
-    signature: "Series _addmm_activation() const"
-    forward: ""
+    signature: "Series _addmm_activation(const Series& mat1, const Series& mat2, double beta=1.0, double alpha=1.0, bool use_gelu=false) const"
+    forward: "mat1, mat2, beta, alpha, use_gelu"
 
   - name: _autocast_to_full_precision
     signature: "Series _autocast_to_full_precision() const"
@@ -1569,8 +1569,8 @@ methods:
     forward: ""
 
   - name: istft
-    signature: "Series istft() const"
-    forward: ""
+    signature: "Series istft(std::int64_t n_fft, std::int64_t hop_length=-1, std::int64_t win_length=-1, const Series& window={}, bool center=true, bool normalized=false, bool onesided=true, std::int64_t length=-1) const"
+    forward: "n_fft, hop_length, win_length, window, center, normalized, onesided, length"
 
   - name: record_stream
     signature: "Series record_stream() const"
@@ -1585,8 +1585,8 @@ methods:
     forward: ""
 
   - name: stft
-    signature: "Series stft() const"
-    forward: ""
+    signature: 'Series stft(std::int64_t n_fft, std::int64_t hop_length=-1, std::int64_t win_length=-1, const Series& window={}, bool center=true, const std::string& pad_mode="reflect", bool normalized=false, bool onesided=true, bool return_complex=true) const'
+    forward: "n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided, return_complex"
 
   - name: _reshape_alias
     signature: "Series _reshape_alias(pluss::msharp::RangeView::Int sizes) const"
@@ -2086,6 +2086,110 @@ methods:
     signature: "Series& index_reduce_(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce, bool include_self) const"
     forward: "dim, index, source, reduce, include_self"
 
+  - name: elu
+    signature: "Series elu() const"
+    forward: ""
+
+  - name: elu
+    signature: "Series elu(double alpha) const"
+    forward: "alpha"
+
+  - name: elu
+    signature: "Series elu(double alpha, double scale, double input_scale) const"
+    forward: "alpha, scale, input_scale"
+
+  - name: elu_
+    signature: "Series& elu_() const"
+    forward: ""
+
+  - name: elu_
+    signature: "Series& elu_(double alpha) const"
+    forward: "alpha"
+
+  - name: elu_
+    signature: "Series& elu_(double alpha, double scale, double input_scale) const"
+    forward: "alpha, scale, input_scale"
+
+  - name: celu
+    signature: "Series celu() const"
+    forward: ""
+
+  - name: celu
+    signature: "Series celu(double alpha) const"
+    forward: "alpha"
+
+  - name: celu_
+    signature: "Series& celu_() const"
+    forward: ""
+
+  - name: celu_
+    signature: "Series& celu_(double alpha) const"
+    forward: "alpha"
+
+  - name: selu
+    signature: "Series selu() const"
+    forward: ""
+
+  - name: selu_
+    signature: "Series& selu_() const"
+    forward: ""
+
+  - name: hardsigmoid
+    signature: "Series hardsigmoid() const"
+    forward: ""
+
+  - name: hardsigmoid_
+    signature: "Series& hardsigmoid_() const"
+    forward: ""
+
+  - name: hardswish
+    signature: "Series hardswish() const"
+    forward: ""
+
+  - name: hardswish_
+    signature: "Series& hardswish_() const"
+    forward: ""
+
+  - name: mish
+    signature: "Series mish() const"
+    forward: ""
+
+  - name: mish_
+    signature: "Series& mish_() const"
+    forward: ""
+
+  - name: threshold
+    signature: "Series threshold(double threshold_val, double value) const"
+    forward: "threshold_val, value"
+
+  - name: threshold_
+    signature: "Series& threshold_(double threshold_val, double value) const"
+    forward: "threshold_val, value"
+
+  - name: rrelu
+    signature: "Series rrelu(bool training) const"
+    forward: "training"
+
+  - name: rrelu
+    signature: "Series rrelu(double lower, double upper) const"
+    forward: "lower, upper"
+
+  - name: rrelu
+    signature: "Series rrelu(double lower, double upper, bool training) const"
+    forward: "lower, upper, training"
+
+  - name: rrelu_
+    signature: "Series& rrelu_(bool training) const"
+    forward: "training"
+
+  - name: rrelu_
+    signature: "Series& rrelu_(double lower, double upper) const"
+    forward: "lower, upper"
+
+  - name: rrelu_
+    signature: "Series& rrelu_(double lower, double upper, bool training) const"
+    forward: "lower, upper, training"
+
   - name: leaky_relu
     signature: "Series leaky_relu(double negative_slope) const"
     forward: "negative_slope"
@@ -2539,6 +2643,8 @@ methods:
 skip_methods:
   - _backward
   - _coalesced_
+  # Free function (two inputs), not a method — torch exposes this as at::complex.
+  - complex_from_parts
   # Introspection methods are hand-declared because metadata queries and
   # whole-Series comparisons return native C++ values rather than Series.
   - stride

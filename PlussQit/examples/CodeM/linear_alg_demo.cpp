@@ -7,16 +7,16 @@
 int main() {
   using pluss::ScalarType;
 
-  let a = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
-  let b = pluss::make_series(std::vector<double>{7, 8, 9, 10, 11, 12}, {3, 2});
-  let i3 = pluss::series::eye(3, 3, ScalarType::Float64);
+  auto a = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
+  auto b = pluss::make_series(std::vector<double>{7, 8, 9, 10, 11, 12}, {3, 2});
+  auto i3 = pluss::series::eye(3, 3, ScalarType::Float64);
 
   std::cout << "A:\n" << a << "\n\n";
   std::cout << "B:\n" << b << "\n\n";
   std::cout << "A @ B:\n" << a.matmul(b) << "\n\n";
   std::cout << "A.linearalg(B).matmul():\n" << a.linearalg(b).matmul() << "\n\n";
 
-  let gram = a.transpose(0, 1).matmul(a);
+  auto gram = a.transpose(0, 1).matmul(a);
   std::cout << "Gram = A^T A:\n" << gram << "\n\n";
   auto gram_i = gram.add(i3);
   std::cout << "subsp::linalg::det(Gram + I):\n" << pluss::subsp::math::linalg::det(gram_i) << "\n\n";
@@ -37,12 +37,12 @@ int main() {
   std::cout << "subsp::linalg::svd(A).S:\n" << svd_res.S << "\n\n";
   std::cout << "subsp::linalg::svd(A).Vh:\n" << svd_res.Vh << "\n\n";
 
-  let x = pluss::make_series(std::vector<double>{1, 2, 3}, {3});
-  let y = pluss::make_series(std::vector<double>{3, 2, 1}, {3});
+  auto x = pluss::make_series(std::vector<double>{1, 2, 3}, {3});
+  auto y = pluss::make_series(std::vector<double>{3, 2, 1}, {3});
   std::cout << "vdot(x, y):\n" << x.vdot(y) << "\n\n";
 
-  let p = pluss::make_series(std::vector<double>{0, 0, 1, 0, 2, 0}, {3, 2});
-  let q = pluss::make_series(std::vector<double>{0, 1, 2, 1, 3, 1}, {3, 2});
+  auto p = pluss::make_series(std::vector<double>{0, 0, 1, 0, 2, 0}, {3, 2});
+  auto q = pluss::make_series(std::vector<double>{0, 1, 2, 1, 3, 1}, {3, 2});
   std::cout << "cdist(p, q):\n" << p.cdist(q) << "\n";
 
   pluss::Series s1{pluss::make_series({3.4, 2.4})}, s2{pluss::make_series({3.4, 2.5})};

@@ -558,7 +558,7 @@ Thread aligned_compare_(const Thread& left,
   if (lk == ThreadKind::Note && rk == ThreadKind::Note) {
     const auto& ln = lhs.as_note();
     const auto& rn = rhs.as_note();
-    std::vector<std::uint8_t> raw;
+    pluss::Note raw = pluss::Note::undefined();
     switch (op) {
       case ThreadBinaryCompareOp::Eq:
         raw = (ln == rn);

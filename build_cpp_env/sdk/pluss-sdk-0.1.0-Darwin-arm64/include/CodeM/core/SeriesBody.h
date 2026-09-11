@@ -69,6 +69,20 @@ inline Series value(std::initializer_list<T> list, ScalarType dtype = ScalarType
   static_assert(pluss::codem::factories::depth<std::initializer_list<T>>::value <= 7,
                 "pluss::value: supports up to 7D nested initializer_list");
   auto inf = pluss::codem::factories::infer(list);
+  if (inf.leaf_is_complex) {
+    // A std::complex<...> leaf yields a complex Series. Honour an explicit
+    // complex dtype; otherwise pick Complex64 (Complex128 for a float64 request).
+    const ScalarType cdt =
+        pluss::codem::dtype_of(dtype).is_complex()
+            ? dtype
+            : (dtype == ScalarType::Float64 ? ScalarType::Complex128 : ScalarType::Complex64);
+    Series tmp = Series::empty(inf.sizes, ScalarType::Complex128);
+    std::memcpy(
+        tmp.raw_mutable_data(),
+        inf.data_cx.data(),
+        sizeof(std::complex<double>) * static_cast<std::size_t>(tmp.numel()));
+    return (cdt == ScalarType::Complex128) ? tmp : tmp.to(cdt);
+  }
   Series out = Series::empty(inf.sizes, dtype);
   if (inf.leaf_is_exact_integer && pluss::codem::dtype_of(dtype).is_integral()) {
     Series tmp = Series::empty(inf.sizes, ScalarType::Int64);

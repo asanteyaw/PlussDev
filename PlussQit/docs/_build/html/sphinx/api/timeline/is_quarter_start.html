@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -44,17 +44,26 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_quarter_start</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">is_quarter_start()</span></code> is the sole public spelling.</p>
 </section>
-<section id="find-calendar-quarter-opening-dates">
-<h2>Find Calendar-Quarter Opening Dates<a class="headerlink" href="#find-calendar-quarter-opening-dates" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">is_quarter_start()</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> on January 1, April 1, July 1, and October 1 in
-the Timeline’s current timezone. It uses calendar quarters beginning in
-January; it has no inferred fiscal-year offset.</p>
-<p>The result is boolean and shape-preserving. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> becomes <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<section id="calendar-quarter-membership">
+<h2>Calendar-Quarter Membership<a class="headerlink" href="#calendar-quarter-membership" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is_quarter_start()</span></code> marks January 1, April 1, July 1, and October 1 in the
+Timeline’s local calendar. It uses fixed January-based civil quarters. It does
+not infer a fiscal calendar, inspect data ordering, or find the first observed
+instant in a quarter.</p>
+<p>Time-of-day is irrelevant. Every instant on a qualifying local date is marked,
+including the final nanosecond of that date.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">¶</a></h2>
+<p>The result is a new boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> with the receiver’s exact rank and shape.
+<code class="docutils literal notranslate"><span class="pre">NaT</span></code> becomes <code class="docutils literal notranslate"><span class="pre">false</span></code>; scalar and empty shapes remain scalar and empty. The
+receiver is unchanged. Timezone conversion can alter the result because it
+changes the local date used for classification, not because it changes the
+stored instant.</p>
+</section>
+<section id="example-1-quarter-openings">
+<h2>Example 1: Quarter Openings<a class="headerlink" href="#example-1-quarter-openings" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2019-12-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-01-01T12:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2020-02-29T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-03-31T12:00:00Z&quot;</span><span class="p">,</span>
@@ -64,41 +73,77 @@ January; it has no inferred fiscal-year offset.</p>
 <span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">calendar</span><span class="p">.</span><span class="n">is_quarter_start</span><span class="p">());</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
 data=[false, true, false, false, true, false, true, false, false]
 </pre></div>
 </div>
-<p>January 1 is both a year and quarter start; April 1 is a quarter and month
-start but not a year start. Predicates can be combined when that distinction
-is useful.</p>
+<p>January 1 is both a year and quarter start; April 1 starts a quarter but not a
+year.</p>
 </section>
+<section id="example-2-higher-rank-classification">
+<h2>Example 2: Higher-Rank Classification<a class="headerlink" href="#example-2-higher-rank-classification" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-01T23:59:59.999999999Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="s">&quot;2024-02-29T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-03-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-04-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="s">&quot;2024-12-31T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">is_quarter_start</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  true false false ⎤
+⎣ false  true false ⎦
+</pre></div>
+</div>
 </section>
-<section id="policy-boundary">
-<h2>Policy Boundary<a class="headerlink" href="#policy-boundary" title="Link to this heading">¶</a></h2>
-<p>A fiscal quarter beginning in February is not represented by this predicate.
-Define that offset explicitly rather than relabeling the calendar result,
-because the associated fiscal year may also differ.</p>
+<section id="example-3-timezone-sensitive-boundary">
+<h2>Example 3: Timezone-Sensitive Boundary<a class="headerlink" href="#example-3-timezone-sensitive-boundary" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2021-01-01T00:30:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">is_quarter_start</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;New York=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">is_quarter_start</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>UTC=true
+New York=false
+</pre></div>
+</div>
+</section>
+<section id="example-4-predicate-containment">
+<h2>Example 4: Predicate Containment<a class="headerlink" href="#example-4-predicate-containment" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">starts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">is_quarter_start</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">starts</span><span class="p">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">dates</span><span class="p">.</span><span class="n">is_month_start</span><span class="p">()).</span><span class="n">equal</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+<p>Every quarter start must be a month start. This identity is useful for checking
+composed calendar masks.</p>
 </section>
 <section id="gotchas-and-failure-modes">
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The date must be the first day of a quarter-opening month.</p></li>
-<li><p>“Start” does not mean first observed timestamp in the quarter.</p></li>
-<li><p>Timezone conversion can move an instant across the boundary.</p></li>
+<li><p>Fiscal quarters with another starting month require an explicit policy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> includes ordinary dates and <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
+<li><p>The method supports every Timeline rank and does not reduce dimensions.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">quarter_start_scalar()</span></code> for a native <code class="docutils literal notranslate"><span class="pre">bool</span></code> from rank-zero input.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a class="reference internal" href="quarter_start_scalar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">quarter_start_scalar</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="quarter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">quarter</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="is_quarter_end.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_quarter_end</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="is_year_start.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_year_start</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_month_end.html"><span class="label">Previous</span><span class="title">is_month_end</span></a>
-  <a class="next-link" href="is_quarter_end.html"><span class="label">Next</span><span class="title">is_quarter_end</span></a>
+  <a class="prev-link" href="is_quarter_end.html"><span class="label">Previous</span><span class="title">is_quarter_end</span></a>
+  <a class="next-link" href="is_saturday.html"><span class="label">Next</span><span class="title">is_saturday</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -158,6 +203,7 @@ because the associated fiscal year may also differ.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -185,6 +231,7 @@ because the associated fiscal year may also differ.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

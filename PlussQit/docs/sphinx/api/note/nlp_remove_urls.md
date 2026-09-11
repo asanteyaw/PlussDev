@@ -104,8 +104,8 @@ touch it.
     <span class="label">Previous</span>
     <span class="title">nlp_mask_pii</span>
   </a>
-  <a class="next-link" href="quote.html">
+  <a class="next-link" href="normalize_dashes.html">
     <span class="label">Next</span>
-    <span class="title">quote</span>
+    <span class="title">normalize_dashes</span>
   </a>
 </div>

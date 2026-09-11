@@ -84,13 +84,13 @@ int main() {
   std::cout << "lambda pipeline result: " << shout << "\n\n";
 
   std::cout << "5) `let` for concise Pluss payload naming\n";
-  let payload = pluss::make_series(std::vector<double>{1, 2, 3}, {3});
+  auto payload = pluss::make_series(std::vector<double>{1, 2, 3}, {3});
   std::cout << "let payload = make_series(...) -> numel=" << payload.numel()
             << ", mean=" << payload.mean().item<double>() << "\n";
 
-  let queue = pluss::Queue(std::vector<double>{1.5, 2.5, 3.5});
-  std::cout << "let queue = pluss::Queue(...) -> size=" << queue.size()
-            << ", front=" << queue.front<double>() << "\n";
+  auto queue = pluss::Queue(pluss::make_series(std::vector<double>{1.5, 2.5, 3.5}));
+  std::cout << "let queue = pluss::Queue(...) -> numel=" << queue.series().numel()
+            << ", front=" << queue.series().to_vec<double>(0) << "\n";
 
   std::cout << "\nDone.\n";
   return 0;

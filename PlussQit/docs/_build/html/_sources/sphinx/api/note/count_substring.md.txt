@@ -101,12 +101,12 @@ std::cout << "]\n";
   their count.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="contains.html">
+  <a class="prev-link" href="contiguous.html">
     <span class="label">Previous</span>
-    <span class="title">contains</span>
+    <span class="title">contiguous</span>
   </a>
-  <a class="next-link" href="ends_with.html">
+  <a class="next-link" href="dedent.html">
     <span class="label">Next</span>
-    <span class="title">ends_with</span>
+    <span class="title">dedent</span>
   </a>
 </div>

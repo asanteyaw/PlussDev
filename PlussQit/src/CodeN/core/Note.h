@@ -13,6 +13,7 @@
 
 #include "CodeN/core/Errors.h"
 #include "CodeN/core/NoteBase.h"
+#include "CodeN/core/TextRef.h"
 
 namespace pluss::codem {
 class Series;
@@ -31,6 +32,12 @@ namespace ops_internal {
                              ::std::span<const ::std::int64_t> sizes);
   Note note_from_bytes(::std::span<const ::std::string_view> bytes_flat,
                      ::std::span<const ::std::int64_t> sizes);
+  Note note_from_bool(::std::span<const ::std::uint8_t> values,
+                      ::std::span<const ::std::int64_t> sizes);
+  Note note_from_int64(::std::span<const ::std::int64_t> values,
+                       ::std::span<const ::std::int64_t> sizes);
+  Note note_from_float64(::std::span<const double> values,
+                         ::std::span<const ::std::int64_t> sizes);
 } // namespace ops_internal
 
 namespace ops_internal {
@@ -39,21 +46,36 @@ struct NoteFactoryAccess;
 
 class TokenBatch;
 
-// Note: up to 3D "tensor" of UTF-8 text.
-// Patch 9: scalar text is represented as a 0D Note; the internal Chord type is
-// no longer part of the public surface.
+// Note is a rank-0 through rank-3 homogeneous value with Text, Bytes, Bool,
+// Int64, or Float64 lanes. TextRef is the owning single-cell text boundary;
+// native lanes use the typed item and contiguous-span accessors on NoteBase.
 class CODEN_API Note final : public NoteBase {
 public:
   static Note undefined() noexcept { return Note(); }
 
   // Minimal core API remains implemented in Note.cpp
   ::std::vector<::std::int64_t> sizes() const;
-  pluss::msharp::RangeView::Int sizes_view() const;
+  ::std::span<const ::std::int64_t> sizes_view() const;
   ::std::string_view at(::std::int64_t linear) const;
+
+  // Owning per-cell access. `cell(i)` and `cell_at({i,j,...})` return a TextRef
+  // that co-owns the backing storage, so the result stays valid after this
+  // Note is destroyed (unlike the borrowed view from `at`). `owned()` is the
+  // keep-past-lifetime form of `scalar()` and requires exactly one element.
+  TextRef cell(::std::int64_t linear) const;
+  TextRef cell_at(::std::span<const ::std::int64_t> indices) const;
+  TextRef owned() const;
+
   Note latex_to_text(::std::int64_t mode = 0) const;
   Note text_to_latex(::std::int64_t mode = 0) const;
   Note render_latex(::std::int64_t mode = 0) const;
   Note take(pluss::msharp::RangeView::Int indices) const;
+
+  // Ordering positions: the permutation of linear indices (0..numel()-1)
+  // that would sort this Note's cells, as a 1-D Int64 Note -- closed over
+  // Note itself, no CodeM/Series dependency required. 1D/scalar Notes only
+  // (matches ops_internal::note_argsort_indices_1d).
+  Note argsort(bool descending = false, bool stable = true) const;
 
   // Full surface (hundreds of methods + factories)
   #include "CodeN/generated/NoteMethodDeclsGen.h"
@@ -70,25 +92,37 @@ public:
   Note operator*(::std::int64_t times) const;
   Note& operator*=(::std::int64_t times);
 
-  ::std::vector<::std::uint8_t> operator==(const Note& other) const;
-  ::std::vector<::std::uint8_t> operator!=(const Note& other) const;
-  ::std::vector<::std::uint8_t> operator<(const Note& other) const;
-  ::std::vector<::std::uint8_t> operator<=(const Note& other) const;
-  ::std::vector<::std::uint8_t> operator>(const Note& other) const;
-  ::std::vector<::std::uint8_t> operator>=(const Note& other) const;
+  Note operator==(const Note& other) const;
+  Note operator!=(const Note& other) const;
+  Note operator<(const Note& other) const;
+  Note operator<=(const Note& other) const;
+  Note operator>(const Note& other) const;
+  Note operator>=(const Note& other) const;
 
-  ::std::vector<::std::uint8_t> operator==(::std::string_view other) const;
-  ::std::vector<::std::uint8_t> operator!=(::std::string_view other) const;
-  ::std::vector<::std::uint8_t> operator<(::std::string_view other) const;
-  ::std::vector<::std::uint8_t> operator<=(::std::string_view other) const;
-  ::std::vector<::std::uint8_t> operator>(::std::string_view other) const;
-  ::std::vector<::std::uint8_t> operator>=(::std::string_view other) const;
+  Note operator==(::std::string_view other) const;
+  Note operator!=(::std::string_view other) const;
+  Note operator<(::std::string_view other) const;
+  Note operator<=(::std::string_view other) const;
+  Note operator>(::std::string_view other) const;
+  Note operator>=(::std::string_view other) const;
+
+  // Bitwise-style logical combinators over Bool Notes. Shape-preserving with
+  // the same scalar-broadcast rule as the comparison operators above (either
+  // operand may be a single-element Note broadcast against the other's
+  // shape). Both operands must be Bool Notes.
+  Note operator&(const Note& other) const;
+  Note operator|(const Note& other) const;
+  Note operator^(const Note& other) const;
+  Note operator~() const;
+
+  // Full reductions over a Bool Note (requires is_bool()).
+  bool any() const;
+  bool all() const;
 
 #ifdef CODEN_ENABLE_SERIES_INTEROP
   // Interop helpers returning CodeM Series.
   pluss::codem::Series contains_series(::std::string_view needle) const;
   pluss::codem::Series lengths_bytes_series() const;
-  pluss::codem::Series argsort(bool descending = false, bool stable = true) const;
 #endif
 
 private:
@@ -103,12 +137,12 @@ private:
 Note operator+(::std::string_view prefix, const Note& rhs);
 Note operator*(::std::int64_t times, const Note& rhs);
 
-::std::vector<::std::uint8_t> operator==(::std::string_view lhs, const Note& rhs);
-::std::vector<::std::uint8_t> operator!=(::std::string_view lhs, const Note& rhs);
-::std::vector<::std::uint8_t> operator<(::std::string_view lhs, const Note& rhs);
-::std::vector<::std::uint8_t> operator<=(::std::string_view lhs, const Note& rhs);
-::std::vector<::std::uint8_t> operator>(::std::string_view lhs, const Note& rhs);
-::std::vector<::std::uint8_t> operator>=(::std::string_view lhs, const Note& rhs);
+Note operator==(::std::string_view lhs, const Note& rhs);
+Note operator!=(::std::string_view lhs, const Note& rhs);
+Note operator<(::std::string_view lhs, const Note& rhs);
+Note operator<=(::std::string_view lhs, const Note& rhs);
+Note operator>(::std::string_view lhs, const Note& rhs);
+Note operator>=(::std::string_view lhs, const Note& rhs);
 
 
 } // namespace pluss::coden

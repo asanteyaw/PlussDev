@@ -85,6 +85,11 @@ inline pluss::Timeline make(pluss::msharp::RangeView::Of<std::string> flat,
 inline pluss::Timeline date(pluss::codeh::detail::TimelineTextReader data) {
   return pluss::codeh::factory_detail::from_date_textspan(data.flat(), data.shape());
 }
+#ifdef CODEH_ENABLE_TIMELINE_SURFACE
+inline pluss::Timeline date(const pluss::Timeline& value) {
+  return value.date();
+}
+#endif
 inline pluss::Timeline date(pluss::msharp::RangeView::Of<std::string_view> flat,
                             pluss::msharp::RangeView::Of<std::int64_t> sizes) {
   return date(pluss::codeh::detail::TimelineTextReader(flat, sizes));
@@ -97,6 +102,11 @@ inline pluss::Timeline date(pluss::msharp::RangeView::Of<std::string> flat,
 inline pluss::Timeline time(pluss::codeh::detail::TimelineTextReader data) {
   return pluss::codeh::factory_detail::from_time_textspan(data.flat(), data.shape());
 }
+#ifdef CODEH_ENABLE_TIMELINE_SURFACE
+inline pluss::Timeline time(const pluss::Timeline& value) {
+  return value.time();
+}
+#endif
 inline pluss::Timeline time(pluss::msharp::RangeView::Of<std::string_view> flat,
                             pluss::msharp::RangeView::Of<std::int64_t> sizes) {
   return time(pluss::codeh::detail::TimelineTextReader(flat, sizes));

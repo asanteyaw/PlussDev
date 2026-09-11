@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -54,12 +54,12 @@ returns the result as a <strong>scalar</strong> (<code class="docutils literal n
 the finished string. It is the assembly counterpart to the splitting
 factories: where <a class="reference internal" href="from_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">from_lines</span></code></span></a> and <a class="reference internal" href="from_words.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">from_words</span></code></span></a>
 break a string apart, <code class="docutils literal notranslate"><span class="pre">format</span></code> builds one up.</p>
-<p>Use it wherever you would reach for <code class="docutils literal notranslate"><span class="pre">std::format</span></code> or an f-string: a labelled
-message, a generated identifier, a one-line report, a path or query built
-from parts. Unlike <code class="docutils literal notranslate"><span class="pre">std::format</span></code> it also evaluates a small <strong>expression
-language</strong> inside each placeholder, so light computation — arithmetic,
-choices, list joins, a bound callback — can happen in the template instead
-of in the surrounding code.</p>
+<p>Use it whenever a string has to be built from named parts: a labelled
+message, a generated identifier, a one-line report, a path or query. Beyond
+plain substitution it also evaluates a small <strong>expression language</strong> inside
+each placeholder, so light computation — arithmetic, choices, list joins, a
+bound callback — can happen in the template instead of in the surrounding
+code.</p>
 <p>The result is a scalar <code class="docutils literal notranslate"><span class="pre">Note</span></code> and never larger; <code class="docutils literal notranslate"><span class="pre">format</span></code> produces a single
 string, not a column. To build many strings, call it per row, or use the
 vectorised <code class="docutils literal notranslate"><span class="pre">Note</span></code> methods on an existing <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
@@ -463,6 +463,7 @@ string apart.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -490,6 +491,7 @@ string apart.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

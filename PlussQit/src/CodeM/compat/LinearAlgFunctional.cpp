@@ -17,6 +17,7 @@
 #include <exception>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -434,7 +435,12 @@ Series eye_matrix_like_(const Series& matrix) {
   const auto nd = matrix.dim();
   const auto rows = matrix.sizes()[static_cast<std::size_t>(nd - 2)];
   const auto cols = matrix.sizes()[static_cast<std::size_t>(nd - 1)];
-  Series eye = Series::eye(rows, cols, matrix.scalar_type()).to(matrix.platform());
+  const ScalarType eye_dtype = matrix.scalar_type() == ScalarType::Complex64
+      ? ScalarType::Float32
+      : (matrix.scalar_type() == ScalarType::Complex128
+             ? ScalarType::Float64
+             : matrix.scalar_type());
+  Series eye = Series::eye(rows, cols, eye_dtype).to(matrix.scalar_type()).to(matrix.platform());
   while (eye.dim() < matrix.dim()) {
     eye = eye.unsqueeze(0);
   }
@@ -446,14 +452,26 @@ Series right_triangular_solve_(const Series& factor, const Series& rhs, bool upp
   return matrix_adjoint_(solved_h);
 }
 
-Series qr_syminv_adjoint_real_(const Series& x) {
-  Series upper = triangular_masked_like_(x, /*upper=*/true, /*unitriangular=*/false);
-  const Series diag = upper.mul(eye_matrix_like_(upper));
-  return upper.add(matrix_adjoint_(upper)).sub(diag);
+Series matrix_diagonal_(const Series& x) {
+  return x.mul(eye_matrix_like_(x));
 }
 
-Series qr_backward_real_reduced_(const Series& q, const Series& r, const Series& grad, bool grad_is_q) {
-  PLUSS_CHECK(!is_complex_scalar_(q.scalar_type()), "subsp::linearalg::qr: complex reverse-mode is not implemented yet");
+Series real_as_complex_like_(const Series& x, const Series& like) {
+  Series out = pluss::codem::ops_internal::real(x);
+  return linalg_sensitivity_like_(std::move(out), like);
+}
+
+Series qr_syminv_adjoint_(const Series& x) {
+  Series upper = triangular_masked_like_(x, /*upper=*/true, /*unitriangular=*/false);
+  Series out = upper.add(matrix_adjoint_(upper));
+  Series diagonal = matrix_diagonal_(out);
+  if (is_complex_scalar_(out.scalar_type())) {
+    diagonal = real_as_complex_like_(diagonal, out);
+  }
+  return out.sub(matrix_diagonal_(out)).add(diagonal.mul(0.5));
+}
+
+Series qr_backward_(const Series& q, const Series& r, const Series& grad, bool grad_is_q) {
   const auto m = q.sizes()[static_cast<std::size_t>(q.dim() - 2)];
   const auto n = r.sizes()[static_cast<std::size_t>(r.dim() - 1)];
 
@@ -464,7 +482,7 @@ Series qr_backward_real_reduced_(const Series& q, const Series& r, const Series&
     core = grad.matmul(matrix_adjoint_(r));
   }
   if (m >= n) {
-    Series out = q.matmul(qr_syminv_adjoint_real_(core));
+    Series out = q.matmul(qr_syminv_adjoint_(core));
     if (grad_is_q) {
       out = out.add(grad);
     }
@@ -474,6 +492,9 @@ Series qr_backward_real_reduced_(const Series& q, const Series& r, const Series&
   const Series skew_arg = core.neg();
   Series lower_skew =
       triangular_masked_like_(skew_arg.sub(matrix_adjoint_(skew_arg)), /*upper=*/false, /*unitriangular=*/false);
+  if (is_complex_scalar_(lower_skew.scalar_type())) {
+    lower_skew = lower_skew.sub(matrix_diagonal_(lower_skew).mul(0.5));
+  }
   Series wide_out = q.matmul(lower_skew);
   Series r_lead = r.slice(static_cast<std::int64_t>(r.dim()) - 1, 0, m).contiguous();
   r_lead = linalg_sensitivity_like_(r_lead, wide_out);
@@ -497,7 +518,7 @@ Series svd_gap_matrix_(const Series& s) {
   return gap.add(eye_matrix_like_(gap));
 }
 
-Series svd_values_backward_real_(const Series& u, const Series& s, const Series& vh, const Series& grad_s) {
+Series svd_values_backward_(const Series& u, const Series& s, const Series& vh, const Series& grad_s) {
   (void)s;
   const auto m = u.sizes()[static_cast<std::size_t>(u.dim() - 2)];
   const auto n = vh.sizes()[static_cast<std::size_t>(vh.dim() - 1)];
@@ -505,13 +526,24 @@ Series svd_values_backward_real_(const Series& u, const Series& s, const Series&
                   : u.mul(grad_s.unsqueeze(static_cast<std::int64_t>(grad_s.dim()) - 1)).matmul(vh);
 }
 
-Series svd_vector_backward_real_(
+void check_single_svd_phase_(const Series& skew, const Series& singular_values) {
+  if (!is_complex_scalar_(skew.scalar_type())) return;
+  const std::size_t k = static_cast<std::size_t>(singular_values.sizes().back());
+  const auto values = skew.to(Platform::CPU).to(ScalarType::Complex128)
+                          .contiguous().to_vec<pluss::codem::Complex128>();
+  for (std::size_t i = 0; i < k; ++i) {
+    PLUSS_CHECK(
+        std::abs(values[i * k + i].imag()) <= 1e-2,
+        "subsp::linearalg::svd: singular-vector loss depends on an arbitrary complex phase");
+  }
+}
+
+Series svd_vector_backward_(
     const Series& u,
     const Series& s,
     const Series& vh,
     const Series& grad,
     bool grad_is_u) {
-  PLUSS_CHECK(!is_complex_scalar_(u.scalar_type()), "subsp::linearalg::svd: complex reverse-mode is not implemented yet");
   const auto m = u.sizes()[static_cast<std::size_t>(u.dim() - 2)];
   const auto n = vh.sizes()[static_cast<std::size_t>(vh.dim() - 1)];
   const Series gap = svd_gap_matrix_(s);
@@ -519,10 +551,20 @@ Series svd_vector_backward_real_(
 
   if (grad_is_u) {
     const Series skew = matrix_adjoint_(u).matmul(grad);
+    check_single_svd_phase_(skew.sub(matrix_adjoint_(skew)), s);
     core = skew.sub(matrix_adjoint_(skew)).div(gap).mul(s.unsqueeze(static_cast<std::int64_t>(s.dim()) - 1));
+    if (is_complex_scalar_(u.scalar_type())) {
+      const Series diagonal = matrix_diagonal_(skew.sub(matrix_adjoint_(skew)));
+      core = core.add(diagonal.div(s.unsqueeze(0).mul(4.0)));
+    }
   } else {
     const Series skew = vh.matmul(matrix_adjoint_(grad));
+    check_single_svd_phase_(skew.sub(matrix_adjoint_(skew)), s);
     core = s.unsqueeze(static_cast<std::int64_t>(s.dim())).mul(skew.sub(matrix_adjoint_(skew)).div(gap));
+    if (is_complex_scalar_(u.scalar_type())) {
+      const Series diagonal = matrix_diagonal_(skew.sub(matrix_adjoint_(skew)));
+      core = core.sub(diagonal.div(s.unsqueeze(1).mul(4.0)));
+    }
   }
 
   if (m > n && grad_is_u) {
@@ -540,14 +582,157 @@ Series svd_vector_backward_real_(
   return (m >= n) ? u.matmul(core).matmul(vh) : u.matmul(core.matmul(vh));
 }
 
+void check_svd_phase_invariance_(
+    const std::optional<Series>& uhgu,
+    const std::optional<Series>& vhgv,
+    const Series& singular_values) {
+  if ((!uhgu.has_value() || !is_complex_scalar_(uhgu->scalar_type())) &&
+      (!vhgv.has_value() || !is_complex_scalar_(vhgv->scalar_type()))) {
+    return;
+  }
+  const std::size_t k = static_cast<std::size_t>(singular_values.sizes().back());
+  std::vector<double> lhs(k, 0.0);
+  std::vector<double> rhs(k, 0.0);
+  const auto read_diagonal = [k](const Series& matrix, std::vector<double>& out) {
+    const auto values = matrix.to(Platform::CPU).to(ScalarType::Complex128)
+                            .contiguous().to_vec<pluss::codem::Complex128>();
+    for (std::size_t i = 0; i < k; ++i) {
+      out[i] = values[i * k + i].imag();
+    }
+  };
+  if (uhgu.has_value()) read_diagonal(*uhgu, lhs);
+  if (vhgv.has_value()) read_diagonal(*vhgv, rhs);
+  for (std::size_t i = 0; i < k; ++i) {
+    const double target = -rhs[i];
+    const double tolerance = 1e-2 + 1e-2 * std::abs(target);
+    PLUSS_CHECK(
+        std::abs(lhs[i] - target) <= tolerance,
+        "subsp::linearalg::svd: singular-vector loss depends on an arbitrary complex phase");
+  }
+}
+
+Series svd_backward_combined_(
+    const Series& u,
+    const Series& s,
+    const Series& vh,
+    const std::optional<Series>& grad_u,
+    const std::optional<Series>& grad_s,
+    const std::optional<Series>& grad_vh) {
+  const auto m = u.sizes()[static_cast<std::size_t>(u.dim() - 2)];
+  const auto n = vh.sizes()[static_cast<std::size_t>(vh.dim() - 1)];
+  const Series gap = svd_gap_matrix_(s);
+  std::optional<Series> uhgu;
+  std::optional<Series> vhgv;
+  if (grad_u.has_value()) {
+    const Series product = matrix_adjoint_(u).matmul(*grad_u);
+    uhgu = product.sub(matrix_adjoint_(product));
+  }
+  if (grad_vh.has_value()) {
+    const Series product = vh.matmul(matrix_adjoint_(*grad_vh));
+    vhgv = product.sub(matrix_adjoint_(product));
+  }
+  check_svd_phase_invariance_(uhgu, vhgv, s);
+
+  Series core = Series::zeros(gap.sizes(), u.scalar_type()).to(u.platform());
+  if (uhgu.has_value()) {
+    core = core.add(uhgu->div(gap).mul(s.unsqueeze(static_cast<std::int64_t>(s.dim()) - 1)));
+  }
+  if (vhgv.has_value()) {
+    core = core.add(s.unsqueeze(static_cast<std::int64_t>(s.dim())).mul(vhgv->div(gap)));
+  }
+  if (grad_s.has_value()) {
+    Series diagonal = grad_s->to(u.scalar_type()).unsqueeze(0).mul(eye_matrix_like_(core));
+    core = core.add(diagonal);
+  }
+  if (is_complex_scalar_(u.scalar_type()) && uhgu.has_value() && vhgv.has_value()) {
+    core = core.add(matrix_diagonal_(*uhgu).div(s.unsqueeze(0).mul(2.0)));
+  }
+
+  if (m > n && grad_u.has_value()) {
+    Series out = u.matmul(core);
+    const Series scaled = grad_u->div(s.unsqueeze(static_cast<std::int64_t>(s.dim()) - 1));
+    out = out.add(scaled).sub(u.matmul(matrix_adjoint_(u).matmul(scaled)));
+    return out.matmul(vh);
+  }
+  if (m < n && grad_vh.has_value()) {
+    Series out = core.matmul(vh);
+    const Series scaled = grad_vh->div(s.unsqueeze(static_cast<std::int64_t>(s.dim())));
+    out = out.add(scaled).sub(scaled.matmul(matrix_adjoint_(vh)).matmul(vh));
+    return u.matmul(out);
+  }
+  return (m >= n) ? u.matmul(core).matmul(vh) : u.matmul(core.matmul(vh));
+}
+
+struct SvdBackwardState final {
+  std::optional<Series> grad_u;
+  std::optional<Series> grad_s;
+  std::optional<Series> grad_vh;
+};
+
+void bind_svd_group_backward_(
+    SvdDecomposition& decomposition,
+    const Series& a,
+    bool full_matrices) {
+  if (!linalg_tracks_slope_(a)) return;
+  const auto state = std::make_shared<SvdBackwardState>();
+  Series carrier = Series::zeros({1}, a.scalar_type()).to(a.platform());
+  pluss::codem::series_tape::set_tracks_slope(carrier, true);
+
+  auto group_link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  group_link->op_name = "subsp::linearalg::svd";
+  group_link->parents = {a};
+  group_link->propagate = [a, decomposition, state, full_matrices](const Series&) {
+    const auto k = decomposition.s.sizes().back();
+    const Series u = full_matrices
+        ? decomposition.u.slice(-1, 0, k).contiguous()
+        : decomposition.u;
+    const Series vh = full_matrices
+        ? decomposition.vh.slice(-2, 0, k).contiguous()
+        : decomposition.vh;
+    const auto narrow = [k, full_matrices](const std::optional<Series>& grad, int slot) {
+      if (!grad.has_value() || !full_matrices || slot == 1) return grad;
+      return std::optional<Series>{
+          slot == 0 ? grad->slice(-1, 0, k).contiguous()
+                    : grad->slice(-2, 0, k).contiguous()};
+    };
+    Series grad = svd_backward_combined_(
+        u, decomposition.s, vh,
+        narrow(state->grad_u, 0), state->grad_s, narrow(state->grad_vh, 2));
+    pluss::codem::series_tape::accumulate_sensitivity(
+        a, linalg_sensitivity_like_(std::move(grad), a));
+  };
+  pluss::codem::series_tape::bind_source_link(carrier, std::move(group_link));
+
+  const auto bind_output = [&](const Series& output, int slot) {
+    auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+    link->op_name = slot == 0 ? "subsp::linearalg::svd_u" :
+        (slot == 1 ? "subsp::linearalg::svd_s" : "subsp::linearalg::svd_vh");
+    link->parents = {carrier};
+    link->propagate = [carrier, state, slot](const Series& out_sens) {
+      if (slot == 0) state->grad_u = out_sens;
+      else if (slot == 1) state->grad_s = out_sens;
+      else state->grad_vh = out_sens;
+      pluss::codem::series_tape::accumulate_sensitivity(
+          carrier, Series::ones({1}, carrier.scalar_type()).to(carrier.platform()));
+    };
+    pluss::codem::series_tape::bind_source_link(output, std::move(link));
+  };
+  bind_output(decomposition.u, 0);
+  bind_output(decomposition.s, 1);
+  bind_output(decomposition.vh, 2);
+}
+
 void bind_qr_backward_(const Series& out, const Series& a, const Series& q, const Series& r, bool grad_is_q, bool reduced) {
   if (!linalg_tracks_slope_(a)) return;
   auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
   link->op_name = grad_is_q ? "subsp::linearalg::qr_q" : "subsp::linearalg::qr_r";
   link->parents = {a};
   link->propagate = [a, q, r, grad_is_q, reduced](const Series& out_sens) {
-    PLUSS_CHECK(reduced, "subsp::linearalg::qr: reverse-mode currently requires reduced=true");
-    Series grad = qr_backward_real_reduced_(q, r, linalg_sensitivity_like_(out_sens, q), grad_is_q);
+    const auto m = q.sizes()[static_cast<std::size_t>(q.dim() - 2)];
+    const auto n = r.sizes()[static_cast<std::size_t>(r.dim() - 1)];
+    PLUSS_CHECK(reduced || m <= n,
+                "subsp::linearalg::qr: complete QR is not differentiable when rows exceed columns");
+    Series grad = qr_backward_(q, r, linalg_sensitivity_like_(out_sens, q), grad_is_q);
     grad = linalg_sensitivity_like_(grad, a);
     pluss::codem::series_tape::accumulate_sensitivity(a, grad);
   };
@@ -560,9 +745,17 @@ void bind_svd_backward_(const Series& out, const Series& a, const Series& u, con
   link->op_name = slot == 0 ? "subsp::linearalg::svd_u" : (slot == 1 ? "subsp::linearalg::svd_s" : "subsp::linearalg::svd_vh");
   link->parents = {a};
   link->propagate = [a, u, s, vh, slot, full_matrices](const Series& out_sens) {
-    PLUSS_CHECK(!full_matrices, "subsp::linearalg::svd: reverse-mode currently requires full_matrices=false");
-    Series grad = slot == 1 ? svd_values_backward_real_(u, s, vh, linalg_sensitivity_like_(out_sens, s))
-                            : svd_vector_backward_real_(u, s, vh, linalg_sensitivity_like_(out_sens, slot == 0 ? u : vh), slot == 0);
+    const auto k = s.sizes().back();
+    Series reduced_u = full_matrices ? u.slice(-1, 0, k).contiguous() : u;
+    Series reduced_vh = full_matrices ? vh.slice(-2, 0, k).contiguous() : vh;
+    Series reduced_sens = out_sens;
+    if (full_matrices && slot == 0) reduced_sens = out_sens.slice(-1, 0, k).contiguous();
+    if (full_matrices && slot == 2) reduced_sens = out_sens.slice(-2, 0, k).contiguous();
+    Series grad = slot == 1
+        ? svd_values_backward_(reduced_u, s, reduced_vh, linalg_sensitivity_like_(reduced_sens, s))
+        : svd_vector_backward_(reduced_u, s, reduced_vh,
+                              linalg_sensitivity_like_(reduced_sens, slot == 0 ? reduced_u : reduced_vh),
+                              slot == 0);
     grad = linalg_sensitivity_like_(grad, a);
     pluss::codem::series_tape::accumulate_sensitivity(a, grad);
   };
@@ -575,7 +768,13 @@ std::uint64_t matrix_power_magnitude_(std::int64_t exponent) {
       : static_cast<std::uint64_t>(exponent);
 }
 
-Series matrix_power_positive_backward_(const Series& base, const Series& grad, std::uint64_t exponent) {
+Series matrix_power_positive_backward_(const Series& base_in, const Series& grad, std::uint64_t exponent) {
+  // The internal power/inverse solvers compute in float64 regardless of input
+  // dtype; keep the captured base in the gradient's dtype so every matmul below
+  // has matching operands (a lower-precision input would otherwise mismatch).
+  const Series base = base_in.scalar_type() == grad.scalar_type()
+                          ? base_in
+                          : base_in.to(grad.scalar_type());
   if (exponent == 1) return grad;
   const std::uint64_t half = exponent / 2ULL;
   const Series half_power = matrix_power(base, static_cast<std::int64_t>(half));
@@ -599,14 +798,12 @@ void bind_matrix_power_backward_(const Series& out, const Series& a, std::int64_
   link->op_name = "subsp::linearalg::matrix_power";
   link->parents = {a};
   link->propagate = [a, exponent](const Series& out_sens) {
-    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
-                "subsp::linearalg::matrix_power: complex reverse-mode is not implemented yet");
     const std::uint64_t magnitude = matrix_power_magnitude_(exponent);
     Series grad;
     if (magnitude == 0) {
       grad = Series::zeros(a.sizes(), a.scalar_type()).to(a.platform());
     } else if (exponent > 0) {
-      grad = matrix_power_positive_backward_(a, linalg_sensitivity_like_(out_sens, a), magnitude);
+      grad = matrix_power_positive_backward_(a, out_sens, magnitude);
     } else {
       const Series inverse_a = inverse(a);
       const Series grad_inverse = matrix_power_positive_backward_(
@@ -626,10 +823,51 @@ void bind_matrix_exp_backward_(const Series& out, const Series& a) {
   link->op_name = "subsp::linearalg::matrix_exp";
   link->parents = {a};
   link->propagate = [a](const Series& out_sens) {
-    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
-                "subsp::linearalg::matrix_exp: complex reverse-mode is not implemented yet");
     const auto n = a.sizes()[static_cast<std::size_t>(a.dim() - 1)];
     const auto matrix_size = static_cast<std::size_t>(n * n);
+    if (is_complex_scalar_(a.scalar_type())) {
+      const auto av = a.to(Platform::CPU)
+                          .to(ScalarType::Complex128)
+                          .contiguous()
+                          .to_vec<std::complex<double>>();
+      const auto gv = out_sens.to(Platform::CPU)
+                          .to(ScalarType::Complex128)
+                          .contiguous()
+                          .to_vec<std::complex<double>>();
+      PLUSS_CHECK(av.size() == gv.size() && matrix_size > 0 && av.size() % matrix_size == 0,
+                  "subsp::linearalg::matrix_exp: invalid complex reverse-mode batch shape");
+      std::vector<std::complex<double>> values(av.size());
+      const std::int64_t block_n = 2 * n;
+      for (std::size_t offset = 0; offset < av.size(); offset += matrix_size) {
+        std::vector<std::complex<double>> block(
+            static_cast<std::size_t>(block_n * block_n));
+        for (std::int64_t r = 0; r < n; ++r) {
+          for (std::int64_t c = 0; c < n; ++c) {
+            const auto ah = std::conj(av[offset + static_cast<std::size_t>(c * n + r)]);
+            block[static_cast<std::size_t>(r * block_n + c)] = ah;
+            block[static_cast<std::size_t>((r + n) * block_n + c + n)] = ah;
+            block[static_cast<std::size_t>(r * block_n + c + n)] =
+                gv[offset + static_cast<std::size_t>(r * n + c)];
+          }
+        }
+        const auto exponential =
+            pluss::subsp::math::linalg::detail::matrix_exp_t_(block, block_n);
+        for (std::int64_t r = 0; r < n; ++r) {
+          for (std::int64_t c = 0; c < n; ++c) {
+            values[offset + static_cast<std::size_t>(r * n + c)] =
+                exponential[static_cast<std::size_t>(r * block_n + c + n)];
+          }
+        }
+      }
+      const std::vector<std::int64_t> shape(a.sizes().begin(), a.sizes().end());
+      Series grad = pluss::make_series(
+          values,
+          shape,
+          Config{}.with_dtype(ScalarType::Complex128).with_platform(Platform::CPU));
+      grad = linalg_sensitivity_like_(grad, a);
+      pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+      return;
+    }
     const auto av = a.to(Platform::CPU).to(ScalarType::Float64).contiguous().to_vec<double>();
     const auto gv = out_sens.to(Platform::CPU).to(ScalarType::Float64).contiguous().to_vec<double>();
     PLUSS_CHECK(av.size() == gv.size() && matrix_size > 0 && av.size() % matrix_size == 0,
@@ -660,14 +898,15 @@ void bind_pinverse_backward_(const Series& out, const Series& a) {
   link->op_name = "subsp::linearalg::pinverse";
   link->parents = {a};
   link->propagate = [a, out](const Series& out_sens) {
-    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
-                "subsp::linearalg::pinverse: complex reverse-mode is not implemented yet");
     const Series p = out;
     const Series p_h = matrix_adjoint_(p);
     const Series g = linalg_sensitivity_like_(out_sens, p);
     const Series g_h = matrix_adjoint_(g);
-    const Series left_residual = eye_matrix_like_(a.matmul(p)).sub(a.matmul(p));
-    const Series right_residual = eye_matrix_like_(p.matmul(a)).sub(p.matmul(a));
+    // `p` is computed in float64; align the captured input so the residual
+    // matmuls below match when `a` is a lower-precision real dtype.
+    const Series a_c = a.scalar_type() == p.scalar_type() ? a : a.to(p.scalar_type());
+    const Series left_residual = eye_matrix_like_(a_c.matmul(p)).sub(a_c.matmul(p));
+    const Series right_residual = eye_matrix_like_(p.matmul(a_c)).sub(p.matmul(a_c));
     Series grad = p_h.matmul(g).matmul(p_h).neg();
     grad = grad.add(left_residual.matmul(g_h).matmul(p).matmul(p_h));
     grad = grad.add(p_h.matmul(p).matmul(g_h).matmul(right_residual));
@@ -739,9 +978,24 @@ void bind_slogdet_backward_(const Series& out, const Series& a) {
   auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
   link->op_name = "subsp::linearalg::slogdet";
   link->parents = {a};
-  link->propagate = [a](const Series& out_sens) {
+  link->propagate = [a, out](const Series& out_sens) {
     const std::int64_t last = static_cast<std::int64_t>(out_sens.dim()) - 1;
     Series logabs_sens = out_sens.select(last, 1);
+    if (is_complex_scalar_(a.scalar_type())) {
+      const Series sign_sens = out_sens.select(last, 0);
+      const Series sign = out.select(last, 0);
+      const Series phase_scale = pluss::codem::ops_internal::imag(
+          pluss::codem::ops_internal::conj(sign_sens).mul(sign));
+      const auto i = pluss::make_series(
+          std::vector<std::complex<double>>{{0.0, 1.0}},
+          std::vector<std::int64_t>{},
+          Config{}.with_dtype(ScalarType::Complex128).with_platform(Platform::CPU))
+                         .to(a.scalar_type())
+                         .to(a.platform());
+      logabs_sens = pluss::codem::ops_internal::real(logabs_sens)
+                        .to(a.scalar_type())
+                        .sub(phase_scale.to(a.scalar_type()).mul(i));
+    }
     const Series inv_h = matrix_adjoint_(inverse(a));
     Series scale = scale_to_matrix_batch_(logabs_sens, inv_h);
     Series grad = inv_h.mul(scale);
@@ -816,19 +1070,17 @@ void bind_cholesky_solve_backward_(const Series& out, const Series& factor, cons
   pluss::codem::series_tape::bind_source_link(out, std::move(link));
 }
 
-Series cholesky_backward_real_(const Series& factor, const Series& grad, bool upper) {
-  PLUSS_CHECK(!is_complex_scalar_(factor.scalar_type()),
-              "subsp::linearalg::cholesky: complex reverse-mode is not implemented yet");
+Series cholesky_backward_(const Series& factor, const Series& grad, bool upper) {
   const Series lower = upper ? matrix_adjoint_(factor) : factor;
   const Series lower_grad = upper ? matrix_adjoint_(grad) : grad;
   Series middle = matrix_adjoint_(lower).matmul(lower_grad);
   middle = triangular_masked_like_(middle, /*upper=*/false, /*unitriangular=*/false);
-  const Series diagonal = middle.mul(eye_matrix_like_(middle));
-  middle = middle.sub(diagonal.mul(0.5));
+  const Series diagonal = matrix_diagonal_(middle);
+  middle = middle.add(matrix_adjoint_(middle.sub(diagonal))).mul(0.5);
   Series result = triangular_solve(
       matrix_adjoint_(lower), middle, /*upper=*/true, /*unitriangular=*/false);
   result = right_triangular_solve_(lower, result, /*upper=*/false, /*unitriangular=*/false);
-  return result.add(matrix_adjoint_(result)).mul(0.5);
+  return result;
 }
 
 void bind_cholesky_backward_(const Series& out, const Series& a, bool upper) {
@@ -837,7 +1089,7 @@ void bind_cholesky_backward_(const Series& out, const Series& a, bool upper) {
   link->op_name = "subsp::linearalg::cholesky";
   link->parents = {a};
   link->propagate = [a, out, upper](const Series& out_sens) {
-    Series grad = cholesky_backward_real_(out, linalg_sensitivity_like_(out_sens, out), upper);
+    Series grad = cholesky_backward_(out, linalg_sensitivity_like_(out_sens, out), upper);
     grad = linalg_sensitivity_like_(grad, a);
     pluss::codem::series_tape::accumulate_sensitivity(a, grad);
   };
@@ -896,10 +1148,13 @@ void bind_qr_backward_lazy_(const Series& out, const Series& a, bool grad_is_q, 
   link->op_name = grad_is_q ? "subsp::linearalg::qr_q" : "subsp::linearalg::qr_r";
   link->parents = {a};
   link->propagate = [a, out, grad_is_q, reduced](const Series& out_sens) {
-    PLUSS_CHECK(reduced, "subsp::linearalg::qr: reverse-mode currently requires reduced=true");
     const Series q = grad_is_q ? out : qr_q(a, reduced);
     const Series r = grad_is_q ? qr_r(a, reduced) : out;
-    Series grad = qr_backward_real_reduced_(q, r, linalg_sensitivity_like_(out_sens, out), grad_is_q);
+    const auto m = q.sizes()[static_cast<std::size_t>(q.dim() - 2)];
+    const auto n = r.sizes()[static_cast<std::size_t>(r.dim() - 1)];
+    PLUSS_CHECK(reduced || m <= n,
+                "subsp::linearalg::qr: complete QR is not differentiable when rows exceed columns");
+    Series grad = qr_backward_(q, r, linalg_sensitivity_like_(out_sens, out), grad_is_q);
     grad = linalg_sensitivity_like_(grad, a);
     pluss::codem::series_tape::accumulate_sensitivity(a, grad);
   };
@@ -916,13 +1171,19 @@ void bind_svd_backward_lazy_(
   link->op_name = slot == 0 ? "subsp::linearalg::svd_u" : (slot == 1 ? "subsp::linearalg::svd_s" : "subsp::linearalg::svd_vh");
   link->parents = {a};
   link->propagate = [a, out, slot, full_matrices](const Series& out_sens) {
-    PLUSS_CHECK(!full_matrices, "subsp::linearalg::svd: reverse-mode currently requires full_matrices=false");
     const SvdDecomposition decomposition = svd(a, full_matrices);
+    const auto k = decomposition.s.sizes().back();
+    Series reduced_u = full_matrices ? decomposition.u.slice(-1, 0, k).contiguous() : decomposition.u;
+    Series reduced_vh = full_matrices ? decomposition.vh.slice(-2, 0, k).contiguous() : decomposition.vh;
+    Series reduced_sens = out_sens;
+    if (full_matrices && slot == 0) reduced_sens = out_sens.slice(-1, 0, k).contiguous();
+    if (full_matrices && slot == 2) reduced_sens = out_sens.slice(-2, 0, k).contiguous();
     Series grad = slot == 1
-        ? svd_values_backward_real_(decomposition.u, decomposition.s, decomposition.vh,
-                                    linalg_sensitivity_like_(out_sens, out))
-        : svd_vector_backward_real_(decomposition.u, decomposition.s, decomposition.vh,
-                                    linalg_sensitivity_like_(out_sens, out), slot == 0);
+        ? svd_values_backward_(reduced_u, decomposition.s, reduced_vh,
+                               linalg_sensitivity_like_(reduced_sens, decomposition.s))
+        : svd_vector_backward_(reduced_u, decomposition.s, reduced_vh,
+                               linalg_sensitivity_like_(reduced_sens, slot == 0 ? reduced_u : reduced_vh),
+                               slot == 0);
     grad = linalg_sensitivity_like_(grad, a);
     pluss::codem::series_tape::accumulate_sensitivity(a, grad);
   };
@@ -1115,12 +1376,7 @@ inline bool mps_native_device_triangular_enabled_() noexcept {
 }
 
 inline Series eye_like_(const Series& a) {
-  const auto n = a.sizes()[0];
-  auto out = Series::eye(n, n, a.scalar_type());
-  if (out.platform() != a.platform()) {
-    out = out.to(a.platform());
-  }
-  return out;
+  return eye_matrix_like_(a);
 }
 
 inline Series canonical_mps_native_f32_(const Series& x) {
@@ -2214,8 +2470,6 @@ Series det(const Series& a) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
-                "subsp::linearalg::det: complex det currently supports only 1x1 and 2x2 matrices");
     Series out = pluss::subsp::math::linalg::det(a);
     bind_det_backward_(out, a, out);
     return out;
@@ -2304,8 +2558,6 @@ Series inverse(const Series& a) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
-                "subsp::linearalg::inverse: complex inverse currently supports only 1x1 and 2x2 matrices");
     Series out = pluss::subsp::math::linalg::inverse(a);
     bind_inverse_backward_(out, a, out);
     return out;
@@ -2448,8 +2700,6 @@ Series logdet(const Series& a) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
-                "subsp::linearalg::logdet: complex logdet is not implemented yet");
     Series out = pluss::subsp::math::linalg::logdet(a);
     bind_logdet_backward_(out, a);
     return out;
@@ -2525,8 +2775,6 @@ Series slogdet(const Series& a) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
-                "subsp::linearalg::slogdet: complex slogdet is not implemented yet");
     Series out = pluss::subsp::math::linalg::slogdet(a);
     bind_slogdet_backward_(out, a);
     return out;
@@ -2604,6 +2852,9 @@ Series matrix_power(const Series& a, std::int64_t n) {
     return finish(std::move(out));
   }
   if (a.platform() == Platform::CPU) {
+    if (is_complex_scalar_(a.scalar_type())) {
+      return finish(matrix_power_native_(a, n));
+    }
     return finish(pluss::subsp::math::linalg::matrix_power(a, n));
   }
   if (a.platform() == Platform::MPS) {
@@ -2721,6 +2972,26 @@ Series pinverse(const Series& a, double rcond) {
     return finish(std::move(out));
   }
   if (a.platform() == Platform::CPU) {
+    if (is_complex_scalar_(a.scalar_type())) {
+      const auto decomposition = pluss::subsp::math::linalg::svd(a, /*full_matrices=*/false);
+      const auto singular_values = decomposition.S.to(ScalarType::Float64).to_vec<double>();
+      const double largest = singular_values.empty() ? 0.0 : singular_values.front();
+      const double cutoff = rcond * largest;
+      std::vector<double> reciprocal;
+      reciprocal.reserve(singular_values.size());
+      for (double value : singular_values) {
+        reciprocal.push_back(value > cutoff ? 1.0 / value : 0.0);
+      }
+      Series inverse_s = pluss::make_series(
+          reciprocal,
+          {static_cast<std::int64_t>(reciprocal.size())},
+          Config{}.with_dtype(ScalarType::Float64).with_platform(Platform::CPU));
+      inverse_s = inverse_s.to(a.scalar_type());
+      Series out = matrix_adjoint_(decomposition.Vh)
+                       .mul(inverse_s.unsqueeze(0))
+                       .matmul(matrix_adjoint_(decomposition.U));
+      return finish(out.contiguous());
+    }
     return finish(pluss::subsp::math::linalg::pinverse(a, rcond));
   }
   if (a.platform() == Platform::MPS) {
@@ -2932,18 +3203,14 @@ SvdDecomposition svd(const Series& a, bool full_matrices) {
       out.s = out.s.to(Platform::MPS).contiguous();
       out.vh = out.vh.to(Platform::MPS).contiguous();
     }
-    bind_svd_backward_(out.u, a, out.u, out.s, out.vh, /*slot=*/0, full_matrices);
-    bind_svd_backward_(out.s, a, out.u, out.s, out.vh, /*slot=*/1, full_matrices);
-    bind_svd_backward_(out.vh, a, out.u, out.s, out.vh, /*slot=*/2, full_matrices);
+    bind_svd_group_backward_(out, a, full_matrices);
     return out;
   }
 
   if (a.platform() == Platform::CPU) {
     auto raw = pluss::subsp::math::linalg::svd(a, full_matrices);
     SvdDecomposition out{raw.U, raw.S, raw.Vh};
-    bind_svd_backward_(out.u, a, out.u, out.s, out.vh, /*slot=*/0, full_matrices);
-    bind_svd_backward_(out.s, a, out.u, out.s, out.vh, /*slot=*/1, full_matrices);
-    bind_svd_backward_(out.vh, a, out.u, out.s, out.vh, /*slot=*/2, full_matrices);
+    bind_svd_group_backward_(out, a, full_matrices);
     return out;
   }
 
@@ -2953,9 +3220,7 @@ SvdDecomposition svd(const Series& a, bool full_matrices) {
       bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
     SvdDecomposition out{dispatch.svd.u, dispatch.svd.s, dispatch.svd.vh};
-    bind_svd_backward_(out.u, a, out.u, out.s, out.vh, /*slot=*/0, full_matrices);
-    bind_svd_backward_(out.s, a, out.u, out.s, out.vh, /*slot=*/1, full_matrices);
-    bind_svd_backward_(out.vh, a, out.u, out.s, out.vh, /*slot=*/2, full_matrices);
+    bind_svd_group_backward_(out, a, full_matrices);
     return out;
   }
 
@@ -2974,9 +3239,7 @@ SvdDecomposition svd(const Series& a, bool full_matrices) {
           bridge_cpu_result_to_cuda_(raw.S, "svd", /*allow_strict_native=*/true),
           bridge_cpu_result_to_cuda_(raw.Vh, "svd", /*allow_strict_native=*/true),
       };
-      bind_svd_backward_(out.u, a, out.u, out.s, out.vh, /*slot=*/0, full_matrices);
-      bind_svd_backward_(out.s, a, out.u, out.s, out.vh, /*slot=*/1, full_matrices);
-      bind_svd_backward_(out.vh, a, out.u, out.s, out.vh, /*slot=*/2, full_matrices);
+      bind_svd_group_backward_(out, a, full_matrices);
       return out;
     }
     if (native_strict) {
@@ -2990,9 +3253,7 @@ SvdDecomposition svd(const Series& a, bool full_matrices) {
           bridge_cpu_result_to_cuda_(raw.S, "svd"),
           bridge_cpu_result_to_cuda_(raw.Vh, "svd"),
       };
-      bind_svd_backward_(out.u, a, out.u, out.s, out.vh, /*slot=*/0, full_matrices);
-      bind_svd_backward_(out.s, a, out.u, out.s, out.vh, /*slot=*/1, full_matrices);
-      bind_svd_backward_(out.vh, a, out.u, out.s, out.vh, /*slot=*/2, full_matrices);
+      bind_svd_group_backward_(out, a, full_matrices);
       return out;
     }
     throw_cuda_linalg_unavailable_("svd", native_enabled, native_strict, route_supported);

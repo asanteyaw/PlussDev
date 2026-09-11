@@ -17,6 +17,8 @@ struct LayerNormOptions {
 // elements. Promoted out of ice::models::TemporalFusionTransformer's
 // originally-private building blocks (Ice/models/ts/tft_blocks.h) once a
 // second consumer needed it -- see ICE_BLUEPRINT.md's centralization note.
+// Forward/reverse run through Series::layer_norm's single fused tape node
+// rather than this file's own mean/sub/var/rsqrt/mul/mul/add chain.
 class PLUSS_API LayerNormImpl final : public Module {
 public:
   explicit LayerNormImpl(LayerNormOptions options) : Module(true), options_(std::move(options)) {
@@ -28,10 +30,7 @@ public:
   }
 
   [[nodiscard]] Series forward(const Series& x) const {
-    const Series mean = x.mean(-1, true);
-    const Series var = x.var(-1, false, true);
-    Series out = x.sub(mean).mul(var.add(options_.eps).rsqrt());
-    return out.mul(weight_).add(bias_);
+    return x.layer_norm(std::vector<std::int64_t>{options_.normalized_size}, weight_, bias_, options_.eps);
   }
   Series operator()(const Series& x) const { return forward(x); }
   LayerNormImpl* operator->() noexcept { return this; }

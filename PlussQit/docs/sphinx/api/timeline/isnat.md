@@ -48,12 +48,12 @@ data=[false, true, false, true]
 - [`Timeline::fill_nat`](fill_nat.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ge.html">
+  <a class="prev-link" href="is_year_start.html">
     <span class="label">Previous</span>
-    <span class="title">ge</span>
+    <span class="title">is_year_start</span>
   </a>
-  <a class="next-link" href="isvalid.html">
+  <a class="next-link" href="isnat_scalar.html">
     <span class="label">Next</span>
-    <span class="title">isvalid</span>
+    <span class="title">isnat_scalar</span>
   </a>
 </div>

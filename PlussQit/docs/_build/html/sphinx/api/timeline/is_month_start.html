@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -44,18 +44,26 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_month_start</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">is_month_start()</span></code> is the sole public spelling.</p>
 </section>
-<section id="find-the-first-local-date-of-each-month">
-<h2>Find The First Local Date Of Each Month<a class="headerlink" href="#find-the-first-local-date-of-each-month" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">is_month_start()</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> when the local day-of-month is <code class="docutils literal notranslate"><span class="pre">1</span></code>. Time-of-day is
-irrelevant: midnight, noon, and the final nanosecond of the first date all
-belong to the month start. The method does not ask whether the timestamp is the
-first observed row in your data.</p>
-<p>The boolean output preserves shape. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<section id="what-counts-as-a-month-start">
+<h2>What Counts As A Month Start<a class="headerlink" href="#what-counts-as-a-month-start" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is_month_start()</span></code> marks every instant whose local day-of-month is <code class="docutils literal notranslate"><span class="pre">1</span></code>.
+Time-of-day is deliberately irrelevant: midnight, noon, and the final
+nanosecond before day 2 all belong to the first calendar date. The method does
+not inspect ordering or neighbors, so “start” never means the first stored
+observation or the earliest instant in the receiver.</p>
+<p>This is a civil-calendar predicate. It does not move an absent first-of-month
+date into the data, choose the first weekday, or apply a holiday calendar.</p>
 </section>
-<section id="example-month-and-year-starts">
-<h2>Example: Month And Year Starts<a class="headerlink" href="#example-month-and-year-starts" title="Link to this heading">¶</a></h2>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">¶</a></h2>
+<p>The method returns a new boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code>, preserving rank and every extent.
+<code class="docutils literal notranslate"><span class="pre">NaT</span></code> becomes <code class="docutils literal notranslate"><span class="pre">false</span></code>; zero-length dimensions remain zero-length. The receiver
+and its nanosecond values are unchanged. Calendar fields are interpreted in
+the Timeline’s current timezone.</p>
+</section>
+<section id="example-1-calendar-membership">
+<h2>Example 1: Calendar Membership<a class="headerlink" href="#example-1-calendar-membership" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2019-12-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-01-01T12:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2020-02-29T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-03-31T12:00:00Z&quot;</span><span class="p">,</span>
@@ -65,41 +73,75 @@ first observed row in your data.</p>
 <span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">calendar</span><span class="p">.</span><span class="n">is_month_start</span><span class="p">());</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
 data=[false, true, false, false, true, false, true, false, false]
 </pre></div>
 </div>
-<p>January 1 and April 1 qualify. February 29 does not, despite being a notable
-calendar boundary of another kind.</p>
 </section>
+<section id="example-2-matrices-stay-matrices">
+<h2>Example 2: Matrices Stay Matrices<a class="headerlink" href="#example-2-matrices-stay-matrices" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-01T23:59:59.999999999Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="s">&quot;2024-02-29T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-03-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-04-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="s">&quot;2024-12-31T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">is_month_start</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  true false false ⎤
+⎣ false  true false ⎦
+</pre></div>
+</div>
+<p>The late time on January 1 remains a month start. No flattening or reduction
+occurs.</p>
 </section>
-<section id="using-the-mask-correctly">
-<h2>Using The Mask Correctly<a class="headerlink" href="#using-the-mask-correctly" title="Link to this heading">¶</a></h2>
-<p>Use this predicate to select actual observations landing on day 1. It does not
-manufacture absent month starts, regularize an irregular Timeline, or choose the first
-available business day. Those require an explicit alignment policy.</p>
+<section id="example-3-timezone-chooses-the-local-date">
+<h2>Example 3: Timezone Chooses The Local Date<a class="headerlink" href="#example-3-timezone-chooses-the-local-date" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2021-01-01T00:30:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">is_month_start</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;New York=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">is_month_start</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>UTC=true
+New York=false
+</pre></div>
+</div>
 </section>
-<section id="gotchas-and-failure-modes">
-<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>“Start” means calendar membership, not first array position.</p></li>
-<li><p>The Timeline timezone decides the local date.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> includes both ordinary dates and <code class="docutils literal notranslate"><span class="pre">NaT</span></code>; preserve <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> when
-missingness matters.</p></li>
-</ul>
+<section id="example-4-empty-geometry-is-preserved">
+<h2>Example 4: Empty Geometry Is Preserved<a class="headerlink" href="#example-4-empty-geometry-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-02-29T00:00:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">full</span><span class="p">({</span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="n">scalar</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">empty</span><span class="p">.</span><span class="n">is_month_start</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[0], strides=[1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+</pre></div>
+</div>
+</section>
+<section id="relationships-and-failure-modes">
+<h2>Relationships And Failure Modes<a class="headerlink" href="#relationships-and-failure-modes" title="Link to this heading">¶</a></h2>
+<p>Every calendar quarter start and year start is also a month start, but most
+month starts are neither. <code class="docutils literal notranslate"><span class="pre">false</span></code> also covers <code class="docutils literal notranslate"><span class="pre">NaT</span></code>; pair with <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> when
+that distinction matters. There are no value-domain failures for a valid
+Timeline and no scalar-rank restriction. Use <code class="docutils literal notranslate"><span class="pre">month_start_scalar()</span></code> only when
+the receiver is rank zero and a native <code class="docutils literal notranslate"><span class="pre">bool</span></code> is required.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a class="reference internal" href="month_start_scalar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">month_start_scalar</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="is_month_end.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_month_end</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="is_quarter_start.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_quarter_start</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="day.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">day</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_leap_year.html"><span class="label">Previous</span><span class="title">is_leap_year</span></a>
-  <a class="next-link" href="is_month_end.html"><span class="label">Next</span><span class="title">is_month_end</span></a>
+  <a class="prev-link" href="is_month_end.html"><span class="label">Previous</span><span class="title">is_month_end</span></a>
+  <a class="next-link" href="is_quarter_end.html"><span class="label">Next</span><span class="title">is_quarter_end</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -159,6 +201,7 @@ missingness matters.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -186,6 +229,7 @@ missingness matters.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

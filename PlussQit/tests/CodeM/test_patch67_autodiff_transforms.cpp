@@ -657,7 +657,7 @@ TEST_CASE("autodiff reverse does not build higher-order graph by default", "[aut
   y.reverse();
   const Series first = x.sensitivity();
   x.clear_sensitivity();
-  first.reverse();
+  REQUIRE_THROWS(first.reverse());
   REQUIRE_FALSE(x.has_sensitivity());
 }
 
@@ -700,7 +700,7 @@ TEST_CASE("autodiff reverse distinguishes tracked inputs from output sensitivity
   {
     Series x = make_series(1.7).to(ScalarType::Float64);
     const Series y = x * x.cos();
-    y.reverse();
+    REQUIRE_THROWS(y.reverse());
 
     REQUIRE_FALSE(x.has_sensitivity());
     REQUIRE_FALSE(y.has_sensitivity());
@@ -774,7 +774,7 @@ TEST_CASE("autodiff sensitivity examples stay verified", "[autodiff][reverse][do
   {
     Series x = make_series(1.7).to(ScalarType::Float64);
     const Series y = x * x.cos();
-    y.reverse();
+    REQUIRE_THROWS(y.reverse());
 
     REQUIRE(y.item<double>() == Approx(-0.21903564030239187).margin(1e-12));
     REQUIRE_FALSE(x.has_sensitivity());
@@ -1606,14 +1606,28 @@ TEST_CASE("autodiff scatter_reduce(sum, include_self=false) zeros base sensitivi
   REQUIRE(gs[1] == Approx(1.0));
 }
 
-TEST_CASE("autodiff scatter_reduce fail-loud for unsupported tracked reduce mode", "[autodiff][reverse][diagnostics]") {
+TEST_CASE("autodiff scatter_reduce(prod) handles receiver and source zeros", "[autodiff][reverse]") {
   Series base = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}).to(ScalarType::Float64);
-  Series src = make_series(std::vector<double>{5.0, 6.0}, {2}).to(ScalarType::Float64);
-  const Series idx = make_series(std::vector<std::int64_t>{1, 3}, {2});
+  Series src = make_series(std::vector<double>{0.0, 5.0, 0.0}, {3}).to(ScalarType::Float64);
+  const Series idx = make_series(std::vector<std::int64_t>{1, 1, 3}, {3});
   base.tracks_slope_(true);
   src.tracks_slope_(true);
 
-  REQUIRE_THROWS(base.scatter_reduce(0, idx, src, "prod", /*include_self=*/true));
+  base.scatter_reduce(0, idx, src, "prod", /*include_self=*/true).sum().reverse();
+
+  REQUIRE(base.sensitivity().to_vec<double>() == std::vector<double>{1.0, 0.0, 1.0, 0.0});
+  REQUIRE(src.sensitivity().to_vec<double>() == std::vector<double>{10.0, 0.0, 4.0});
+}
+
+TEST_CASE("autodiff index backward accepts an empty index into an empty input", "[autodiff][reverse][index]") {
+  Series input = Series::empty({0, 3}, ScalarType::Float64);
+  input.tracks_slope_(true);
+  const Series index = Series::empty({0}, ScalarType::Int64);
+
+  input.index({index}).sum().reverse();
+
+  REQUIRE(input.sensitivity().sizes() == input.sizes());
+  REQUIRE(input.sensitivity().numel() == 0);
 }
 
 TEST_CASE("autodiff scatter_reduce(amax) distributes ties across base and source", "[autodiff][reverse]") {
@@ -1637,6 +1651,26 @@ TEST_CASE("autodiff scatter_reduce(amax) distributes ties across base and source
   REQUIRE(gb[3] == Approx(0.0));
   REQUIRE(gs[0] == Approx(0.5));
   REQUIRE(gs[1] == Approx(1.0));
+}
+
+TEST_CASE("autodiff elementwise extrema follow torch tie routing", "[autodiff][reverse][parity]") {
+  for (const bool maximum : {false, true}) {
+    Series lhs = make_series(std::vector<double>{1.0, 2.0, 4.0}, {3}).to(ScalarType::Float64);
+    Series rhs = make_series(std::vector<double>{2.0, 2.0, 1.0}, {3}).to(ScalarType::Float64);
+    lhs.tracks_slope_(true);
+    rhs.tracks_slope_(true);
+
+    (maximum ? lhs.maximum(rhs) : lhs.minimum(rhs)).sum().reverse();
+
+    const std::vector<double> expected_lhs = maximum
+        ? std::vector<double>{0.0, 0.5, 1.0}
+        : std::vector<double>{1.0, 0.5, 0.0};
+    const std::vector<double> expected_rhs = maximum
+        ? std::vector<double>{1.0, 0.5, 0.0}
+        : std::vector<double>{0.0, 0.5, 1.0};
+    REQUIRE(lhs.sensitivity().to_vec<double>() == expected_lhs);
+    REQUIRE(rhs.sensitivity().to_vec<double>() == expected_rhs);
+  }
 }
 
 TEST_CASE("autodiff scatter_reduce(amin, include_self=false) propagates only through source", "[autodiff][reverse]") {

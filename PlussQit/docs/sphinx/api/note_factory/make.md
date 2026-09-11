@@ -8,15 +8,29 @@
 ```cpp
 Note pluss::note::make(text_source values)
 Note pluss::note::make(string_range flat, integer_range sizes)
+Note pluss::note::make(bool value)
+Note pluss::note::make(signed_integer value)
+Note pluss::note::make(floating_point value)
+Note pluss::note::make(native_values)
+Note pluss::note::make(native_values, integer_range sizes)
 Note pluss::make_note(text_source values)
 ```
 
-## The General Text Entrance To `Note`
+## The General Typed Entrance To `Note`
 
-`make()` is how UTF-8 text becomes a `Note`. It is the first factory to reach
-for whenever you already hold the strings — a literal, a batch of rows, a
-small nested block — and want the vectorized, shape-preserving text and
-natural-language operations that `Note` methods provide.
+`make()` constructs a homogeneous Note from text, Bool, signed integer, or
+floating-point input. The source category selects `Text`, `Bool`, `Int64`, or
+`Float64`; numeric input is converted once into the Note's canonical native
+lane width and is never encoded as text. This makes construction the beginning
+of a closed Note pipeline rather than an escape into unrelated containers.
+
+For native values, a scalar produces rank zero, a vector or braced list
+produces rank one, and `(flat, sizes)` supplies rank-two or rank-three geometry.
+All signed integer widths converge to Int64 and all floating widths converge to
+Float64. Bool is stored as contiguous canonical `0`/`1` lanes rather than
+`std::vector<bool>` proxies. Unsigned integers are deliberately not accepted:
+silently narrowing their full range into Int64 would violate the accuracy-first
+contract.
 
 `text_source` is a single converted parameter that accepts every reasonable
 call-site spelling of "some text":
@@ -65,6 +79,47 @@ spelling has been retired in favor of `pluss::note::*`.
 
 `Note` is at most 3-dimensional. A four-level nested list, or a `sizes` range
 longer than three, is rejected.
+
+The same ceiling and cardinality check applies to native lanes. For example,
+four values cannot be paired with shape `[3, 2]`; construction rejects before
+publishing a partially formed Note.
+
+## Native Example: Scalars Keep Their Meaning
+
+```cpp
+const auto ready = pluss::note::make(true);
+const auto count = pluss::note::make(std::int32_t{42});
+const auto score = pluss::note::make(0.875F);
+
+std::cout << std::boolalpha << ready.bool_item() << ' '
+          << count.int_item() << ' ' << score.float_item() << '\n';
+```
+
+### Output
+
+```text
+true 42 0.875
+```
+
+## Native Example: Flat Values Plus Shape
+
+```cpp
+const auto grid = pluss::note::make(
+    std::vector<double>{0.5, 1.5, 2.5, 3.5},
+    std::array<std::int64_t, 2>{2, 2});
+
+std::cout << grid << '\n';
+```
+
+### Output
+
+```text
+Note(shape=[2, 2], dim=2, numel=4, dtype=Float64)
+[
+  [0.5, 1.5],
+  [2.5, 3.5]
+]
+```
 
 ## Example 1: A Scalar From A String Literal
 

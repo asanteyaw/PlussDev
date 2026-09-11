@@ -13,6 +13,9 @@
 Timeline operator+(const Duration& d) const { return add_duration(d); }
 Timeline operator-(const Duration& d) const { return sub_duration(d); }
 Duration operator-(const Timeline& other) const { return diff(other); }
+friend Timeline operator+(const Duration& d, const Timeline& t) {
+  return t.add_duration(d);
+}
 
 // Compound-assignment sugar around the two binary operators above -- same
 // trivial "*this = *this OP other; return *this;" pattern as Duration's

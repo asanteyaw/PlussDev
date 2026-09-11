@@ -724,7 +724,7 @@ signatures left to the per-method reference pages.
 
 ## Encoding / bytes (6)
 
-- `::std::vector<::std::uint8_t> is_bytes() const`
+- `bool is_bytes() const`
 - `::std::vector<::std::int64_t> lengths_bytes() const`
 - `Note base64_encode() const`
 - `Note base64_decode() const`
@@ -811,4 +811,3 @@ signatures left to the per-method reference pages.
 - `Note deduplicate() const`
 - `Note expand_dims(::std::int64_t dim) const`
 - `Note repeat_interleave(::std::int64_t repeats, ::std::int64_t dim) const`
-

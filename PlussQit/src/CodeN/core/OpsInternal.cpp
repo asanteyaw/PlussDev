@@ -9,6 +9,7 @@
 #include <limits>
 #include <random>
 #include <numeric>
+#include <optional>
 #include <string_view>
 #include <string>
 #include <sstream>
@@ -1586,19 +1587,6 @@ static ::std::int64_t coden_parallel_workers(::std::int64_t tasks, ::std::int64_
 }
 
 template <class TokenizeFn>
-static TokenBatch tokenbatch_from_chord(const Chord& x, TokenizeFn&& fn) {
-  if (!x.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0,0});
-  ::std::vector<::std::string> tokens;
-  fn(x.utf8(), tokens);
-  ::std::vector<::std::string_view> views;
-  views.reserve(tokens.size());
-  for (const auto& tok : tokens) views.push_back(tok);
-  const ::std::array<::std::int64_t, 1> sizes{static_cast<::std::int64_t>(tokens.size())};
-  Note token_note = note_from_utf8(views, ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
-  return TokenBatchFactoryAccess::make(::std::move(token_note), {0, sizes[0]});
-}
-
-template <class TokenizeFn>
 static TokenBatch tokenbatch_from_note(const Note& x, const char* op, TokenizeFn&& fn) {
   if (!x.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0});
   const auto& impl = NoteAccess::impl(x);
@@ -1775,6 +1763,37 @@ static Note transform_note_pair(const Note& x,
       views, ::std::span<const ::std::int64_t>(sz.data(), static_cast<::std::size_t>(dim)));
 }
 
+// Float64 counterpart of transform_note_pair: maps each cell pair to a raw
+// double (e.g. a similarity score) and stores it as a native Float64 Note,
+// with the same scalar-broadcast rule as the text version.
+template <class TransformPairFn>
+static Note transform_note_pair_to_float64(const Note& x,
+                                           const Note& other,
+                                           const char* op,
+                                           TransformPairFn&& fn) {
+  if (!x.defined() || !other.defined()) return Note::undefined();
+  const auto& x_impl = NoteAccess::impl(x);
+  const auto& y_impl = NoteAccess::impl(other);
+  PLUSS_CHECK(!x_impl->is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (lhs is bytes)");
+  PLUSS_CHECK(!y_impl->is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (rhs is bytes)");
+
+  const ::std::int64_t nx = x_impl->numel();
+  const ::std::int64_t ny = y_impl->numel();
+  const bool bx = (nx == 1);
+  const bool by = (ny == 1);
+  PLUSS_CHECK(nx == ny || bx || by, ::std::string(op) + " expects equal numel or scalar broadcast");
+  const ::std::int64_t n = (nx == ny) ? nx : (bx ? ny : nx);
+
+  const auto& out_impl = bx ? y_impl : x_impl;
+  NoteImpl::Float64Storage values(static_cast<::std::size_t>(n));
+  for (::std::int64_t i = 0; i < n; ++i) {
+    const ::std::string_view sx = x_impl->bytes_at(bx ? 0 : i);
+    const ::std::string_view sy = y_impl->bytes_at(by ? 0 : i);
+    values[static_cast<::std::size_t>(i)] = fn(sx, sy);
+  }
+  return note_from_float64_storage(::std::move(values), out_impl->sizes());
+}
+
 enum class TokenSetKind {
   Tokens,
   Terms,
@@ -1876,26 +1895,16 @@ static double set_overlap_score(::std::string_view a_text, ::std::string_view b_
   return static_cast<double>(inter) / static_cast<double>(denom);
 }
 
-static ::std::string format_score(double x) {
-  if (x < 0.0) x = 0.0;
-  if (x > 1.0) x = 1.0;
-  ::std::ostringstream oss;
-  oss.setf(::std::ios::fixed);
-  oss << ::std::setprecision(6) << x;
-  ::std::string s = oss.str();
-  while (s.size() > 1 && s.back() == '0') s.pop_back();
-  if (!s.empty() && s.back() == '.') s.push_back('0');
-  return s;
-}
-
-static ::std::string format_float(double x, int precision = 2) {
-  ::std::ostringstream oss;
-  oss.setf(::std::ios::fixed);
-  oss << ::std::setprecision(precision) << x;
-  ::std::string s = oss.str();
-  while (s.size() > 1 && s.back() == '0') s.pop_back();
-  if (!s.empty() && s.back() == '.') s.push_back('0');
-  return s;
+// Similarity/sentiment-style scores are contractually in [0, 1]; a heuristic
+// computation can occasionally overshoot by floating-point error, so this
+// clamp is a correctness guard, not a formatting nicety (unlike the decimal
+// rounding these numeric-score methods used to apply when they stored their
+// result as text -- now that they store a native Float64 Note, the value
+// itself no longer needs to be quantized for display).
+static double clamp01(double x) {
+  if (x < 0.0) return 0.0;
+  if (x > 1.0) return 1.0;
+  return x;
 }
 
 static bool decode_utf8_cp(::std::string_view s,
@@ -2192,37 +2201,51 @@ static ::std::string transliterate_latin_text(::std::string_view s) {
   return transliterate_ascii_text(s);
 }
 
-static ::std::string greek_map_cp(::std::uint32_t cp) {
+// Script maps return: nullopt -> code point is not handled, keep the original
+// bytes; "" -> drop the code point entirely; non-empty -> ASCII replacement.
+// Combining diacritics (U+0300..U+036F) are dropped by every script map, so
+// `to_nfd().transliterate_*()` widens coverage to any accented / polytonic form.
+using ScriptMapResult = ::std::optional<::std::string>;
+
+static bool is_combining_mark_cp(::std::uint32_t cp) {
+  return cp >= 0x0300u && cp <= 0x036Fu;
+}
+
+static ScriptMapResult greek_map_cp(::std::uint32_t cp) {
+  if (is_combining_mark_cp(cp)) return ::std::string{};
   switch (cp) {
-    case 0x0391: case 0x03B1: return "a";
+    case 0x0391: case 0x03B1: case 0x0386: case 0x03AC: return "a";
     case 0x0392: case 0x03B2: return "b";
     case 0x0393: case 0x03B3: return "g";
     case 0x0394: case 0x03B4: return "d";
-    case 0x0395: case 0x03B5: return "e";
+    case 0x0395: case 0x03B5: case 0x0388: case 0x03AD: return "e";
     case 0x0396: case 0x03B6: return "z";
-    case 0x0397: case 0x03B7: return "i";
+    case 0x0397: case 0x03B7: case 0x0389: case 0x03AE: return "i";
     case 0x0398: case 0x03B8: return "th";
-    case 0x0399: case 0x03B9: return "i";
+    case 0x0399: case 0x03B9: case 0x038A: case 0x03AF:
+    case 0x03AA: case 0x03CA: case 0x0390: return "i";
     case 0x039A: case 0x03BA: return "k";
     case 0x039B: case 0x03BB: return "l";
     case 0x039C: case 0x03BC: return "m";
     case 0x039D: case 0x03BD: return "n";
     case 0x039E: case 0x03BE: return "x";
-    case 0x039F: case 0x03BF: return "o";
+    case 0x039F: case 0x03BF: case 0x038C: case 0x03CC: return "o";
     case 0x03A0: case 0x03C0: return "p";
     case 0x03A1: case 0x03C1: return "r";
     case 0x03A3: case 0x03C3: case 0x03C2: return "s";
     case 0x03A4: case 0x03C4: return "t";
-    case 0x03A5: case 0x03C5: return "y";
+    case 0x03A5: case 0x03C5: case 0x038E: case 0x03CD:
+    case 0x03AB: case 0x03CB: case 0x03B0: return "y";
     case 0x03A6: case 0x03C6: return "f";
     case 0x03A7: case 0x03C7: return "ch";
     case 0x03A8: case 0x03C8: return "ps";
-    case 0x03A9: case 0x03C9: return "o";
-    default: return {};
+    case 0x03A9: case 0x03C9: case 0x038F: case 0x03CE: return "o";
+    default: return ::std::nullopt;
   }
 }
 
-static ::std::string cyrillic_map_cp(::std::uint32_t cp) {
+static ScriptMapResult cyrillic_map_cp(::std::uint32_t cp) {
+  if (is_combining_mark_cp(cp)) return ::std::string{};
   switch (cp) {
     case 0x0410: case 0x0430: return "a";
     case 0x0411: case 0x0431: return "b";
@@ -2251,11 +2274,13 @@ static ::std::string cyrillic_map_cp(::std::uint32_t cp) {
     case 0x0427: case 0x0447: return "ch";
     case 0x0428: case 0x0448: return "sh";
     case 0x0429: case 0x0449: return "shch";
+    case 0x042A: case 0x044A: return "";   // hard sign -> dropped
+    case 0x042C: case 0x044C: return "";   // soft sign -> dropped
     case 0x042B: case 0x044B: return "y";
     case 0x042D: case 0x044D: return "e";
     case 0x042E: case 0x044E: return "yu";
     case 0x042F: case 0x044F: return "ya";
-    default: return {};
+    default: return ::std::nullopt;
   }
 }
 
@@ -2267,9 +2292,9 @@ static ::std::string transliterate_with_map(::std::string_view s, MapFn map_fn) 
     ::std::uint32_t cp = 0;
     ::std::size_t cp_len = 0;
     decode_utf8_cp(s, i, cp, cp_len);
-    const ::std::string repl = map_fn(cp);
-    if (!repl.empty()) out.append(repl);
-    else out.append(s.substr(i, cp_len));
+    const ScriptMapResult repl = map_fn(cp);
+    if (repl.has_value()) out.append(*repl);          // may be "" -> drop
+    else out.append(s.substr(i, cp_len));             // unmapped -> keep original
     i += cp_len;
   }
   return out;
@@ -2294,6 +2319,11 @@ static ::std::string soundex_word(::std::string_view w) {
   for (::std::size_t i = 1; i < w.size() && out.size() < 4; ++i) {
     const char c = up(static_cast<unsigned char>(w[i]));
     if (c < 'A' || c > 'Z') continue;
+    // 'H' and 'W' are transparent: they neither emit a digit nor break a run,
+    // so two identically-coded consonants separated only by H/W collapse to
+    // one digit (NARA / U.S. Census Soundex rule). Vowels and 'Y' are
+    // separators and do reset the run.
+    if (c == 'H' || c == 'W') continue;
     const char cur = code(c);
     if (cur != '0' && cur != prev) out.push_back(cur);
     prev = cur;
@@ -3437,20 +3467,18 @@ static ::std::int64_t wrap_dim(::std::int64_t d, ::std::int64_t nd, bool allow_e
   return d;
 }
 
-static void check_dim(const Note& x, ::std::int64_t d) {
+// Validate an axis argument and normalize a negative axis (-1 == last).
+static ::std::int64_t check_dim(const Note& x, ::std::int64_t d) {
   PLUSS_CHECK(x.defined(), "Note op on undefined Note");
   const auto dim = x.dim();
+  if (d < 0) d += dim;
   PLUSS_CHECK(d >= 0 && d < dim, "dim out of range");
+  return d;
 }
 
 } // namespace
 
 // Internal construction hooks.
-struct ChordFactoryAccess {
-  static Chord wrap(::pluss::flame::intrusive_ptr<ChordImpl> impl) {
-    return Chord(::std::move(impl));
-  }
-};
 
 struct NoteFactoryAccess {
   static Note wrap(::pluss::flame::intrusive_ptr<NoteImpl> impl) {
@@ -3458,24 +3486,27 @@ struct NoteFactoryAccess {
   }
 };
 
-Chord chord_from_utf8(::std::string_view utf8) {
-  auto arena = ::pluss::flame::make_intrusive<TextArena>();
-  auto [off, len] = arena->append(utf8);
-  auto impl = ::pluss::flame::make_intrusive<ChordImpl>(arena, off, len);
-  return ChordFactoryAccess::wrap(::std::move(impl));
+static ::std::pair<::std::array<::std::int64_t, 3>, ::std::int64_t>
+note_shape3(::std::span<const ::std::int64_t> sizes) {
+  PLUSS_CHECK(sizes.size() <= 3, "Note supports up to 3D");
+  ::std::array<::std::int64_t, 3> shape{1, 1, 1};
+  for (::std::size_t i = 0; i < sizes.size(); ++i) shape[i] = sizes[i];
+  return {shape, static_cast<::std::int64_t>(sizes.size())};
+}
+
+static void require_note_payload_count(
+    ::std::size_t count,
+    const ::std::array<::std::int64_t, 3>& shape,
+    ::std::int64_t dim) {
+  const auto expected = NoteImpl::shape_numel(shape, dim);
+  PLUSS_CHECK(count == static_cast<::std::size_t>(expected),
+              "Note payload count must equal shape cardinality");
 }
 
 Note note_from_utf8(::std::span<const ::std::string_view> utf8_flat,
                     ::std::span<const ::std::int64_t> sizes) {
-  PLUSS_CHECK(sizes.size() >= 0 && sizes.size() <= 3, "Note supports up to 3D");
-  ::std::array<::std::int64_t, 3> sz{1,1,1};
-  for (::std::size_t i = 0; i < sizes.size(); ++i) sz[i] = sizes[i];
-
-  ::std::int64_t dim = static_cast<::std::int64_t>(sizes.size());
-  ::std::int64_t n = 1;
-  for (int i = 0; i < dim; ++i) n *= sz[i];
-  PLUSS_CHECK(static_cast<::std::int64_t>(utf8_flat.size()) == n,
-              "Note construction: flat text count must equal the product of the requested sizes");
+  const auto [sz, dim] = note_shape3(sizes);
+  require_note_payload_count(utf8_flat.size(), sz, dim);
 
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::vector<NoteImpl::OffLen> spans;
@@ -3483,22 +3514,15 @@ Note note_from_utf8(::std::span<const ::std::string_view> utf8_flat,
   for (auto s : utf8_flat) {
     spans.push_back(arena->append(s));
   }
-  auto impl = ::pluss::flame::make_intrusive<NoteImpl>(arena, ::std::move(spans), sz, dim, NoteImpl::Encoding::Utf8Text);
+  auto impl = ::pluss::flame::make_intrusive<NoteImpl>(arena, ::std::move(spans), sz, dim, NoteDType::Text);
   return NoteFactoryAccess::wrap(::std::move(impl));
 }
 
 Note note_from_utf8_packed(::std::vector<char>&& utf8_arena,
                            ::std::vector<::std::pair<::std::size_t, ::std::size_t>>&& spans,
                            ::std::span<const ::std::int64_t> sizes) {
-  PLUSS_CHECK(sizes.size() >= 0 && sizes.size() <= 3, "Note supports up to 3D");
-  ::std::array<::std::int64_t, 3> sz{1,1,1};
-  for (::std::size_t i = 0; i < sizes.size(); ++i) sz[i] = sizes[i];
-
-  ::std::int64_t dim = static_cast<::std::int64_t>(sizes.size());
-  ::std::int64_t n = 1;
-  for (int i = 0; i < dim; ++i) n *= sz[i];
-  PLUSS_CHECK(static_cast<::std::int64_t>(spans.size()) == n,
-              "note_from_utf8_packed expects span count == numel");
+  const auto [sz, dim] = note_shape3(sizes);
+  require_note_payload_count(spans.size(), sz, dim);
 
   auto arena = ::pluss::flame::make_intrusive<TextArena>(::std::move(utf8_arena));
   ::std::vector<NoteImpl::OffLen> note_spans = ::std::move(spans);
@@ -3507,21 +3531,14 @@ Note note_from_utf8_packed(::std::vector<char>&& utf8_arena,
       ::std::move(note_spans),
       sz,
       dim,
-      NoteImpl::Encoding::Utf8Text);
+      NoteDType::Text);
   return NoteFactoryAccess::wrap(::std::move(impl));
 }
 
 Note note_from_bytes(::std::span<const ::std::string_view> bytes_flat,
                      ::std::span<const ::std::int64_t> sizes) {
-  PLUSS_CHECK(sizes.size() >= 0 && sizes.size() <= 3, "Note supports up to 3D");
-  ::std::array<::std::int64_t, 3> sz{1,1,1};
-  for (::std::size_t i = 0; i < sizes.size(); ++i) sz[i] = sizes[i];
-
-  ::std::int64_t dim = static_cast<::std::int64_t>(sizes.size());
-  ::std::int64_t n = 1;
-  for (int i = 0; i < dim; ++i) n *= sz[i];
-  PLUSS_CHECK(static_cast<::std::int64_t>(bytes_flat.size()) == n,
-              "Note construction: flat byte-string count must equal the product of the requested sizes");
+  const auto [sz, dim] = note_shape3(sizes);
+  require_note_payload_count(bytes_flat.size(), sz, dim);
 
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::vector<NoteImpl::OffLen> spans;
@@ -3529,18 +3546,89 @@ Note note_from_bytes(::std::span<const ::std::string_view> bytes_flat,
   for (auto b : bytes_flat) {
     spans.push_back(arena->append(b));
   }
-  auto impl = ::pluss::flame::make_intrusive<NoteImpl>(arena, ::std::move(spans), sz, dim, NoteImpl::Encoding::Bytes);
+  auto impl = ::pluss::flame::make_intrusive<NoteImpl>(arena, ::std::move(spans), sz, dim, NoteDType::Bytes);
   return NoteFactoryAccess::wrap(::std::move(impl));
+}
+
+Note note_from_bool(::std::span<const ::std::uint8_t> values,
+                    ::std::span<const ::std::int64_t> sizes) {
+  return note_from_bool_storage(NoteImpl::BoolStorage(values.begin(), values.end()), sizes);
+}
+
+Note note_from_bool_storage(NoteImpl::BoolStorage values,
+                            ::std::span<const ::std::int64_t> sizes) {
+  const auto [shape, dim] = note_shape3(sizes);
+  require_note_payload_count(values.size(), shape, dim);
+  auto impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      ::std::move(values), shape, dim);
+  return NoteFactoryAccess::wrap(::std::move(impl));
+}
+
+Note note_from_int64(::std::span<const ::std::int64_t> values,
+                     ::std::span<const ::std::int64_t> sizes) {
+  return note_from_int64_storage(NoteImpl::Int64Storage(values.begin(), values.end()), sizes);
+}
+
+Note note_from_int64_storage(NoteImpl::Int64Storage values,
+                             ::std::span<const ::std::int64_t> sizes) {
+  const auto [shape, dim] = note_shape3(sizes);
+  require_note_payload_count(values.size(), shape, dim);
+  auto impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      ::std::move(values), shape, dim);
+  return NoteFactoryAccess::wrap(::std::move(impl));
+}
+
+Note note_from_float64(::std::span<const double> values,
+                       ::std::span<const ::std::int64_t> sizes) {
+  return note_from_float64_storage(NoteImpl::Float64Storage(values.begin(), values.end()), sizes);
+}
+
+Note note_from_float64_storage(NoteImpl::Float64Storage values,
+                               ::std::span<const ::std::int64_t> sizes) {
+  const auto [shape, dim] = note_shape3(sizes);
+  require_note_payload_count(values.size(), shape, dim);
+  auto impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      ::std::move(values), shape, dim);
+  return NoteFactoryAccess::wrap(::std::move(impl));
+}
+
+Note note_contiguous_view(const Note &source, ::std::int64_t offset,
+                          ::std::span<const ::std::int64_t> sizes) {
+  PLUSS_CHECK(source.defined(), "Note view source must be defined");
+  const auto [shape, dim] = note_shape3(sizes);
+  const auto count = NoteImpl::shape_numel(shape, dim);
+  PLUSS_CHECK(offset >= 0 && offset <= source.numel(),
+              "Note view offset is out of range");
+  PLUSS_CHECK(count <= source.numel() - offset,
+              "Note view extends beyond its source");
+
+  const auto &source_impl = NoteAccess::impl(source);
+  ::pluss::flame::intrusive_ptr<NoteImpl> view_impl;
+  if (source_impl->is_textual()) {
+    const auto spans = source_impl->spans();
+    const auto first = spans.begin() + offset;
+    view_impl = ::pluss::flame::make_intrusive<NoteImpl>(
+        source_impl->arena(),
+        ::std::vector<NoteImpl::OffLen>(first, first + count), shape, dim,
+        source_impl->dtype());
+  } else if (source_impl->is_bool()) {
+    auto view = source_impl->bool_view();
+    view.offset += static_cast<::std::size_t>(offset);
+    view_impl = ::pluss::flame::make_intrusive<NoteImpl>(::std::move(view), shape, dim);
+  } else if (source_impl->is_int64()) {
+    auto view = source_impl->int64_view();
+    view.offset += static_cast<::std::size_t>(offset);
+    view_impl = ::pluss::flame::make_intrusive<NoteImpl>(::std::move(view), shape, dim);
+  } else {
+    auto view = source_impl->float64_view();
+    view.offset += static_cast<::std::size_t>(offset);
+    view_impl = ::pluss::flame::make_intrusive<NoteImpl>(::std::move(view), shape, dim);
+  }
+  return NoteFactoryAccess::wrap(::std::move(view_impl));
 }
 
 static void require_text_note(const NoteImpl& impl, const char* op) {
   PLUSS_CHECK(!impl.is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (not bytes)");
-}
-
-template <class Transform>
-static Chord transform_chord_text(const Chord& x, Transform&& fn) {
-  if (!x.defined()) return Chord::undefined();
-  return chord_from_utf8(fn(x.utf8()));
 }
 
 template <class Transform>
@@ -3557,8 +3645,25 @@ static Note transform_note_text(const Note& x, const char* op, Transform&& fn) {
   }
 
   auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->encoding());
+      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->dtype());
   return NoteFactoryAccess::wrap(::std::move(new_impl));
+}
+
+// Float64 counterpart of transform_note_text: maps each text cell to a raw
+// double and stores it as a native Float64 Note, preserving the receiver's
+// shape. Used by the numeric-score family (nlp_sentiment, jaccard_*, ...)
+// so these produce a real Float64 Note instead of a formatted Text Note.
+template <class Transform>
+static Note transform_note_text_to_float64(const Note& x, const char* op, Transform&& fn) {
+  if (!x.defined()) return Note::undefined();
+  const auto& impl = NoteAccess::impl(x);
+  require_text_note(*impl, op);
+
+  NoteImpl::Float64Storage values(static_cast<::std::size_t>(impl->numel()));
+  for (::std::int64_t i = 0; i < impl->numel(); ++i) {
+    values[static_cast<::std::size_t>(i)] = fn(impl->bytes_at(i));
+  }
+  return note_from_float64_storage(::std::move(values), impl->sizes());
 }
 
 template <class Transform>
@@ -3572,7 +3677,7 @@ static Note transform_note_any(const Note& x, Transform&& fn) {
     spans.push_back(arena->append(fn(impl->bytes_at(i))));
   }
   auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->encoding());
+      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->dtype());
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
@@ -3594,13 +3699,13 @@ static Note transform_note_any_reserve(const Note& x,
     spans.push_back(arena->append(fn(impl->bytes_at(i))));
   }
   auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->encoding());
+      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->dtype());
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
 template <class Transform>
 static Note transform_note_with_encoding(const Note& x,
-                                         NoteImpl::Encoding out_encoding,
+                                         NoteDType out_encoding,
                                          Transform&& fn) {
   if (!x.defined()) return Note::undefined();
   const auto& impl = NoteAccess::impl(x);
@@ -3635,489 +3740,6 @@ static ::std::string unicode_case_map_(
   return mapped;
 }
 #endif
-
-Chord lower(const Chord& x) {
-#if defined(PLUSSQIT_HAS_LIBUNISTRING)
-  return transform_chord_text(
-      x, [](auto value) {
-        return unicode_case_map_(
-            value, u8_tolower, "Chord::lower");
-      });
-#else
-  return transform_chord_text(x, [](auto value) {
-    PLUSS_CHECK(
-        ascii_only_(value),
-        "Chord::lower: non-ASCII text requires a Unicode backend");
-    return ::pluss::coden::native::cpu::lower_ascii(value);
-  });
-#endif
-}
-Chord upper(const Chord& x) {
-#if defined(PLUSSQIT_HAS_LIBUNISTRING)
-  return transform_chord_text(
-      x, [](auto value) {
-        return unicode_case_map_(
-            value, u8_toupper, "Chord::upper");
-      });
-#else
-  return transform_chord_text(x, [](auto value) {
-    PLUSS_CHECK(
-        ascii_only_(value),
-        "Chord::upper: non-ASCII text requires a Unicode backend");
-    return ::pluss::coden::native::cpu::upper_ascii(value);
-  });
-#endif
-}
-Chord title(const Chord& x) {
-#if defined(PLUSSQIT_HAS_LIBUNISTRING)
-  return transform_chord_text(
-      x, [](auto value) {
-        return unicode_case_map_(
-            value, u8_totitle, "Chord::title");
-      });
-#else
-  return transform_chord_text(x, [](auto value) {
-    PLUSS_CHECK(
-        ascii_only_(value),
-        "Chord::title: non-ASCII text requires a Unicode backend");
-    return ::pluss::coden::native::cpu::title_ascii(value);
-  });
-#endif
-}
-Chord capitalize(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::capitalize_ascii); }
-Chord swapcase(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::swapcase_ascii); }
-Chord strip(const Chord& x) { return transform_chord_text(x, [](auto s) { return ::pluss::coden::native::cpu::strip_ascii(s); }); }
-Chord lstrip(const Chord& x) { return transform_chord_text(x, [](auto s) { return ::pluss::coden::native::cpu::lstrip_ascii(s); }); }
-Chord rstrip(const Chord& x) { return transform_chord_text(x, [](auto s) { return ::pluss::coden::native::cpu::rstrip_ascii(s); }); }
-Chord trim(const Chord& x) { return strip(x); }
-Chord trim_left(const Chord& x) { return lstrip(x); }
-Chord trim_right(const Chord& x) { return rstrip(x); }
-Chord collapse_whitespace(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::collapse_whitespace_ascii); }
-Chord dedent(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::dedent_ascii); }
-Chord indent(const Chord& x) { return transform_chord_text(x, [](auto s) { return ::pluss::coden::native::cpu::indent_ascii(s, 2); }); }
-Chord normalize_spaces(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::normalize_spaces_ascii); }
-Chord remove_control_chars(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::remove_control_ascii); }
-Chord remove_non_ascii(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::remove_non_ascii); }
-Chord to_ascii(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::to_ascii_lossy); }
-Chord remove_punctuation(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::remove_punctuation_ascii); }
-Chord remove_digits(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::remove_digits_ascii); }
-Chord remove_letters(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::remove_letters_ascii); }
-Chord remove_symbols(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::remove_symbols_ascii); }
-Chord remove_emojis(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::remove_emojis_utf8); }
-Chord keep_alnum(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::keep_alnum_ascii); }
-Chord keep_alpha(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::keep_alpha_ascii); }
-Chord keep_digits(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::keep_digits_ascii); }
-Chord keep_ascii(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::keep_ascii); }
-Chord keep_printable(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::keep_printable_ascii); }
-Chord normalize_quotes(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::normalize_quotes_utf8); }
-Chord normalize_dashes(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::normalize_dashes_utf8); }
-Chord normalize_ellipsis(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::normalize_ellipsis_utf8); }
-Chord strip_accents(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::strip_accents_utf8); }
-Chord strip_diacritics(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::strip_diacritics_utf8); }
-Chord strip_zero_width(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::strip_zero_width_utf8); }
-Chord strip_bom(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::strip_bom_utf8); }
-Chord collapse_repeats(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::collapse_repeats_ascii); }
-Chord collapse_punct(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::collapse_punct_ascii); }
-Chord collapse_spaces(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::collapse_spaces_ascii); }
-Chord collapse_newlines(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::collapse_newlines_ascii); }
-Chord nlp_normalize_punct(const Chord& x, bool ascii_only) {
-  auto out = normalize_quotes(x);
-  out = normalize_dashes(out);
-  out = normalize_ellipsis(out);
-  if (ascii_only) out = to_ascii(out);
-  return out;
-}
-Chord nlp_clean(const Chord& x) {
-  auto out = nlp_normalize_punct(x, false);
-  out = remove_control_chars(out);
-  out = strip_zero_width(out);
-  out = normalize_spaces(out);
-  out = strip(out);
-  return out;
-}
-Chord nlp_normalize_numbers(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return nlp_normalize_numbers_text(s); });
-}
-Chord nlp_expand_contractions(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return nlp_expand_contractions_text(s); });
-}
-Chord nlp_remove_stopwords(const Chord& x) {
-  return nlp_remove_stopwords(x, "en");
-}
-Chord nlp_remove_stopwords(const Chord& x, ::std::string_view lang) {
-  return transform_chord_text(x, [lang](auto s) { return nlp_remove_stopwords_text(s, lang); });
-}
-Chord nlp_language(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return detect_script_and_language(s).lang; });
-}
-Chord nlp_language_confidence(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return format_float(detect_script_and_language(s).confidence, 3); });
-}
-Chord nlp_script(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return detect_script_and_language(s).script; });
-}
-Chord nlp_remove_urls(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_urls_fast); }
-Chord nlp_remove_emails(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_emails_fast); }
-Chord nlp_remove_mentions(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_mentions_fast); }
-Chord nlp_remove_hashtags(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_hashtags_fast); }
-Chord nlp_remove_html(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_html_fast); }
-Chord nlp_remove_markdown(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_markdown_fast); }
-Chord nlp_remove_code(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_code_fast); }
-Chord nlp_remove_math(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_math_fast); }
-Chord nlp_remove_latex(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_latex_fast); }
-Chord nlp_remove_brackets(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_brackets_fast); }
-Chord nlp_remove_parentheticals(const Chord& x) {
-  return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_parentheticals_fast);
-}
-Chord nlp_remove_quotes(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_quotes_fast); }
-Chord nlp_remove_bullets(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_bullets_fast); }
-Chord nlp_remove_headers(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_headers_fast); }
-Chord nlp_remove_footers(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_footers_fast); }
-Chord nlp_remove_boilerplate(const Chord& x) {
-  return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_boilerplate_fast);
-}
-Chord nlp_remove_tables(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_remove_tables_fast); }
-Chord nlp_mask_numbers(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_mask_numbers_fast); }
-Chord nlp_mask_emails(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_mask_emails_fast); }
-Chord nlp_mask_urls(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_mask_urls_fast); }
-Chord nlp_mask_mentions(const Chord& x) {
-  return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_mask_mentions_fast);
-}
-Chord nlp_mask_hashtags(const Chord& x) {
-  return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_mask_hashtags_fast);
-}
-Chord nlp_mask_dates(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_mask_dates_fast); }
-Chord nlp_mask_times(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_mask_times_fast); }
-Chord nlp_mask_currency(const Chord& x) {
-  return transform_chord_text(x, ::pluss::coden::native::cpu::nlp_mask_currency_fast);
-}
-Chord nlp_mask_pii(const Chord& x, ::std::int64_t flags) {
-  return transform_chord_text(x, [flags](auto s) { return ::pluss::coden::native::cpu::nlp_mask_pii_fast(s, flags); });
-}
-Chord tex_strip_comments(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_strip_comments_text(s); });
-}
-Chord tex_strip_preamble(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_strip_preamble_text(s); });
-}
-Chord tex_strip_metadata(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_strip_metadata_text(s); });
-}
-Chord tex_remove_commands(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_commands_text(s); });
-}
-Chord tex_remove_environments(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_environments_text(s); });
-}
-Chord tex_remove_environment(const Chord& x, ::std::string_view name) {
-  return transform_chord_text(x, [name](auto s) { return tex_remove_environment_text(s, name); });
-}
-Chord tex_remove_labels(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_labels_text(s); });
-}
-Chord tex_remove_refs(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_refs_text(s); });
-}
-Chord tex_remove_citations(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_citations_text(s); });
-}
-Chord tex_remove_graphics(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_graphics_text(s); });
-}
-Chord tex_remove_tables(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_tables_text(s); });
-}
-Chord tex_remove_figures(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_figures_text(s); });
-}
-Chord tex_remove_packages(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_packages_text(s); });
-}
-Chord tex_remove_bibliography(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_bibliography_text(s); });
-}
-Chord tex_remove_color(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_color_text(s); });
-}
-Chord tex_remove_hyperref(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_hyperref_text(s); });
-}
-Chord tex_remove_urls(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_urls_text(s); });
-}
-Chord tex_remove_left_right(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_left_right_text(s); });
-}
-Chord tex_remove_big_delims(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_big_delims_text(s); });
-}
-Chord tex_remove_spacing_cmds(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_spacing_cmds_text(s); });
-}
-Chord tex_strip_math(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_strip_math_text(s); });
-}
-Chord tex_strip_text(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_strip_text_text(s); });
-}
-Chord tex_strip_environments(const Chord& x) {
-  return tex_remove_environments(x);
-}
-Chord tex_strip_commands(const Chord& x) {
-  return tex_remove_commands(x);
-}
-Chord tex_balance_braces(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_balance_braces_text(s); });
-}
-Chord tex_balance_math_delims(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_balance_math_delims_text(s); });
-}
-Chord tex_canonicalize_macros(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_canonicalize_macros_text(s); });
-}
-Chord tex_expand_macros(const Chord& x, ::std::int64_t max_passes) {
-  return transform_chord_text(x, [max_passes](auto s) { return tex_expand_macros_text(s, max_passes); });
-}
-Chord tex_inline_macros(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_inline_macros_text(s); });
-}
-Chord tex_collapse_macros(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_collapse_macros_text(s); });
-}
-Chord tex_expand_inputs(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_expand_inputs_text(s); });
-}
-Chord tex_resolve_includes(const Chord& x) {
-  return tex_expand_inputs(x);
-}
-Chord tex_resolve_graphics(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_resolve_graphics_text(s); });
-}
-Chord tex_set_macro(const Chord& x, ::std::string_view name, ::std::string_view body) {
-  return transform_chord_text(x, [name, body](auto s) { return tex_set_macro_text(s, name, body); });
-}
-Chord tex_remove_macro(const Chord& x, ::std::string_view name) {
-  return transform_chord_text(x, [name](auto s) { return tex_remove_macro_text(s, name); });
-}
-Chord tex_wrap_inline_math(const Chord& x, ::std::string_view delim) {
-  return transform_chord_text(x, [delim](auto s) { return tex_wrap_inline_math_text(s, delim); });
-}
-Chord tex_wrap_display_math(const Chord& x, ::std::string_view delim) {
-  return transform_chord_text(x, [delim](auto s) { return tex_wrap_display_math_text(s, delim); });
-}
-Chord tex_simplify_fractions(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_simplify_fractions_text(s); });
-}
-Chord tex_simplify_roots(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_simplify_roots_text(s); });
-}
-Chord tex_simplify_spacing(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_simplify_spacing_text(s); });
-}
-Chord tex_convert_frac_to_slash(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_convert_frac_to_slash_text(s); });
-}
-Chord tex_convert_sqrt_to_pow(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_convert_sqrt_to_pow_text(s); });
-}
-Chord tex_convert_pm_to_plusminus(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_convert_pm_to_plusminus_text(s); });
-}
-Chord tex_standardize_vectors(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_vectors_text(s); });
-}
-Chord tex_standardize_matrices(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_matrices_text(s); });
-}
-Chord tex_standardize_integrals(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_integrals_text(s); });
-}
-Chord tex_standardize_summations(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_summations_text(s); });
-}
-Chord tex_standardize_limits(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_limits_text(s); });
-}
-Chord tex_standardize_subscripts(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_subscripts_text(s); });
-}
-Chord tex_standardize_superscripts(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_superscripts_text(s); });
-}
-Chord tex_standardize_primes(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_primes_text(s); });
-}
-Chord tex_standardize_dots(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_standardize_dots_text(s); });
-}
-Chord tex_remove_accents(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_accents_text(s); });
-}
-Chord tex_replace_command(const Chord& x, ::std::string_view cmd, ::std::string_view repl) {
-  return transform_chord_text(x, [cmd, repl](auto s) { return tex_replace_command_text(s, cmd, repl); });
-}
-Chord tex_to_text(const Chord& x, ::std::int64_t mode) {
-  return transform_chord_text(x, [mode](auto s) { return tex_to_text_text(s, mode); });
-}
-Chord text_to_tex(const Chord& x, ::std::int64_t mode) {
-  return transform_chord_text(x, [mode](auto s) { return text_to_tex_text(s, mode); });
-}
-Chord tex_render(const Chord& x, ::std::int64_t mode) {
-  return transform_chord_text(x, [mode](auto s) { return tex_render_text(s, mode); });
-}
-Chord tex_sanitize(const Chord& x, ::std::int64_t level) {
-  return transform_chord_text(x, [level](auto s) { return tex_sanitize_text(s, level); });
-}
-Chord tex_normalize_newlines(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_normalize_newlines_text(s); });
-}
-Chord tex_dedup_blank_lines(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_dedup_blank_lines_text(s); });
-}
-Chord tex_collapse_whitespace(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return ::pluss::coden::native::cpu::collapse_whitespace_ascii(s); });
-}
-Chord tex_fix_linebreaks(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_fix_linebreaks_text(s); });
-}
-Chord tex_escape(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_escape_text(s); });
-}
-Chord tex_unescape(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_unescape_text(s); });
-}
-Chord tex_remove_math_delimiters(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_math_delimiters_text(s); });
-}
-Chord tex_add_math_delimiters(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_add_math_delimiters_text(s); });
-}
-Chord tex_math_only(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_strip_text_text(s); });
-}
-Chord tex_text_only(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_strip_math_text(s); });
-}
-Chord tex_remove_formatting(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_formatting_text(s); });
-}
-Chord tex_remove_font_commands(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return tex_remove_font_commands_text(s); });
-}
-Chord tex_to_markdown(const Chord& x, ::std::int64_t mode) {
-  return transform_chord_text(x, [mode](auto s) { return tex_to_markdown_text(s, mode); });
-}
-Chord tex_to_html(const Chord& x, ::std::int64_t mode) {
-  return transform_chord_text(x, [mode](auto s) { return tex_to_html_text(s, mode); });
-}
-
-Chord strip(const Chord& x, ::std::string_view chars) {
-  return transform_chord_text(x, [chars](auto s) { return ::pluss::coden::native::cpu::strip_ascii(s, chars); });
-}
-Chord lstrip(const Chord& x, ::std::string_view chars) {
-  return transform_chord_text(x, [chars](auto s) { return ::pluss::coden::native::cpu::lstrip_ascii(s, chars); });
-}
-Chord rstrip(const Chord& x, ::std::string_view chars) {
-  return transform_chord_text(x, [chars](auto s) { return ::pluss::coden::native::cpu::rstrip_ascii(s, chars); });
-}
-Chord trim(const Chord& x, ::std::string_view chars) { return strip(x, chars); }
-Chord trim_left(const Chord& x, ::std::string_view chars) { return lstrip(x, chars); }
-Chord trim_right(const Chord& x, ::std::string_view chars) { return rstrip(x, chars); }
-
-Chord replace(const Chord& x, ::std::string_view from, ::std::string_view to) {
-  if (!x.defined()) return Chord::undefined();
-  ::std::string out = ::pluss::coden::native::cpu::replace_bytes(x.utf8(), from, to);
-  return chord_from_utf8(out);
-}
-
-Chord replace_first(const Chord& x, ::std::string_view from, ::std::string_view to) {
-  return transform_chord_text(x, [from, to](auto s) { return replace_first_text(s, from, to); });
-}
-
-Chord replace_last(const Chord& x, ::std::string_view from, ::std::string_view to) {
-  return transform_chord_text(x, [from, to](auto s) { return replace_last_text(s, from, to); });
-}
-
-Chord replace_n(const Chord& x, ::std::string_view from, ::std::string_view to, ::std::int64_t n) {
-  return transform_chord_text(x, [from, to, n](auto s) { return replace_n_text(s, from, to, n); });
-}
-
-Chord remove(const Chord& x, ::std::string_view needle) {
-  return replace_first(x, needle, {});
-}
-
-Chord remove_all(const Chord& x, ::std::string_view needle) {
-  return replace(x, needle, {});
-}
-
-Chord remove_prefix(const Chord& x, ::std::string_view prefix) {
-  return transform_chord_text(x, [prefix](auto s) { return remove_prefix_text(s, prefix); });
-}
-
-Chord remove_suffix(const Chord& x, ::std::string_view suffix) {
-  return transform_chord_text(x, [suffix](auto s) { return remove_suffix_text(s, suffix); });
-}
-
-Chord ensure_prefix(const Chord& x, ::std::string_view prefix) {
-  return transform_chord_text(x, [prefix](auto s) { return ensure_prefix_text(s, prefix); });
-}
-
-Chord ensure_suffix(const Chord& x, ::std::string_view suffix) {
-  return transform_chord_text(x, [suffix](auto s) { return ensure_suffix_text(s, suffix); });
-}
-
-Chord surround(const Chord& x, ::std::string_view left, ::std::string_view right) {
-  return transform_chord_text(x, [left, right](auto s) { return surround_text(s, left, right); });
-}
-
-Chord quote(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return quote_text(s); });
-}
-
-Chord unquote(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return unquote_text(s); });
-}
-
-Chord base64_encode(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return base64_encode_text(s); });
-}
-
-Chord base64_decode(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return base64_decode_text(s); });
-}
-
-Chord hex_encode(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return hex_encode_text(s); });
-}
-
-Chord hex_decode(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return hex_decode_text(s); });
-}
-
-Chord url_encode(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return url_encode_text(s); });
-}
-
-Chord url_decode(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return url_decode_text(s); });
-}
-
-Chord html_escape(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return html_escape_text(s); });
-}
-
-Chord html_unescape(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return html_unescape_text(s); });
-}
-
-Chord json_escape(const Chord& x) {
-  return transform_chord_text(x, [](auto s) { return json_escape_text(s); });
-}
-
-bool contains(const Chord& x, ::std::string_view needle) {
-  if (!x.defined()) return false;
-  return ::pluss::coden::native::cpu::contains_bytes(x.utf8(), needle);
-}
 
 Note lower(const Note& x) {
 #if defined(PLUSSQIT_HAS_LIBUNISTRING)
@@ -4296,15 +3918,15 @@ Note nlp_script(const Note& x) {
   return transform_note_text(x, "Note::nlp_script", [](auto s) { return detect_script_and_language(s).script; });
 }
 Note nlp_sentiment(const Note& x) {
-  return transform_note_text(x, "Note::nlp_sentiment", [](auto s) { return format_score(sentiment_score_text(s)); });
+  return transform_note_text_to_float64(x, "Note::nlp_sentiment", [](auto s) { return clamp01(sentiment_score_text(s)); });
 }
 Note nlp_toxicity(const Note& x) {
-  return transform_note_text(x, "Note::nlp_toxicity", [](auto s) { return format_score(toxicity_score_text(s)); });
+  return transform_note_text_to_float64(x, "Note::nlp_toxicity", [](auto s) { return clamp01(toxicity_score_text(s)); });
 }
 Note nlp_readability_grade(const Note& x) {
-  return transform_note_text(
+  return transform_note_text_to_float64(
       x, "Note::nlp_readability_grade",
-      [](auto s) { return format_float(::std::max(0.0, readability_grade_raw(s)), 2); });
+      [](auto s) { return ::std::max(0.0, readability_grade_raw(s)); });
 }
 Note nlp_readability_level(const Note& x) {
   return transform_note_text(
@@ -4312,15 +3934,15 @@ Note nlp_readability_level(const Note& x) {
       [](auto s) { return readability_level_text(s); });
 }
 Note nlp_spam_score(const Note& x) {
-  return transform_note_text(x, "Note::nlp_spam_score", [](auto s) { return format_score(spam_score_text(s)); });
+  return transform_note_text_to_float64(x, "Note::nlp_spam_score", [](auto s) { return clamp01(spam_score_text(s)); });
 }
 Note nlp_formality(const Note& x) {
-  return transform_note_text(x, "Note::nlp_formality", [](auto s) { return format_score(formality_score_text(s)); });
+  return transform_note_text_to_float64(x, "Note::nlp_formality", [](auto s) { return clamp01(formality_score_text(s)); });
 }
 Note nlp_subjectivity(const Note& x) {
-  return transform_note_text(
+  return transform_note_text_to_float64(
       x, "Note::nlp_subjectivity",
-      [](auto s) { return format_score(subjectivity_score_text(s)); });
+      [](auto s) { return clamp01(subjectivity_score_text(s)); });
 }
 Note to_utf8_strict(const Note& x) {
   if (!x.defined()) return Note::undefined();
@@ -4329,12 +3951,12 @@ Note to_utf8_strict(const Note& x) {
     PLUSS_CHECK(is_valid_utf8_text(impl->bytes_at(i)), "Note::to_utf8_strict found invalid UTF-8 payload");
   }
   return transform_note_with_encoding(
-      x, NoteImpl::Encoding::Utf8Text,
+      x, NoteDType::Text,
       [](auto s) { return ::std::string(s); });
 }
 Note to_utf8_lossy(const Note& x) {
   return transform_note_with_encoding(
-      x, NoteImpl::Encoding::Utf8Text,
+      x, NoteDType::Text,
       [](auto s) {
         ::std::string out;
         out.reserve(s.size());
@@ -4351,22 +3973,22 @@ Note to_utf8_lossy(const Note& x) {
 }
 Note from_latin1(const Note& x) {
   return transform_note_with_encoding(
-      x, NoteImpl::Encoding::Utf8Text,
+      x, NoteDType::Text,
       [](auto s) { return latin1_decode_text(s); });
 }
 Note to_latin1_lossy(const Note& x) {
   return transform_note_with_encoding(
-      to_utf8_lossy(x), NoteImpl::Encoding::Bytes,
+      to_utf8_lossy(x), NoteDType::Bytes,
       [](auto s) { return latin1_encode_lossy_text(s); });
 }
 Note from_windows1252(const Note& x) {
   return transform_note_with_encoding(
-      x, NoteImpl::Encoding::Utf8Text,
+      x, NoteDType::Text,
       [](auto s) { return windows1252_decode_text(s); });
 }
 Note to_windows1252_lossy(const Note& x) {
   return transform_note_with_encoding(
-      to_utf8_lossy(x), NoteImpl::Encoding::Bytes,
+      to_utf8_lossy(x), NoteDType::Bytes,
       [](auto s) { return windows1252_encode_lossy_text(s); });
 }
 Note transliterate_ascii(const Note& x) {
@@ -4754,7 +4376,7 @@ Note replace(const Note& x, ::std::string_view from, ::std::string_view to) {
     ::std::string out = ::pluss::coden::native::cpu::replace_bytes(impl->bytes_at(i), from, to);
     spans.push_back(arena->append(out));
   }
-  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->encoding());
+  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->dtype());
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
@@ -4873,20 +4495,116 @@ Note json_escape(const Note& x) {
   return out;
 }
 
+namespace {
+
+// Rebuilds a NoteImpl over `new_sizes`/`new_dim`, gathering output element k
+// from source linear index `old_lin_for_new[k]`. Preserves dtype: Text/Bytes
+// gather arena-backed spans (zero-copy per span); Bool/Int64/Float64 gather
+// into freshly packed contiguous lanes. Shared by every shape/index op below
+// (permute, select, narrow, repeat, repeat_interleave, ...) so none of them
+// hardcode a textual-only storage path.
+::pluss::flame::intrusive_ptr<NoteImpl> gather_note_impl(
+    const NoteImpl& impl,
+    const ::std::vector<::std::int64_t>& old_lin_for_new,
+    ::std::array<::std::int64_t, 3> new_sizes,
+    ::std::int64_t new_dim) {
+  switch (impl.dtype()) {
+    case NoteDType::Text:
+    case NoteDType::Bytes: {
+      const auto& spans = impl.spans();
+      ::std::vector<NoteImpl::OffLen> out(old_lin_for_new.size());
+      for (::std::size_t i = 0; i < old_lin_for_new.size(); ++i) {
+        out[i] = spans.at(static_cast<::std::size_t>(old_lin_for_new[i]));
+      }
+      return ::pluss::flame::make_intrusive<NoteImpl>(
+          impl.arena(), ::std::move(out), new_sizes, new_dim, impl.dtype());
+    }
+    case NoteDType::Bool: {
+      const auto values = impl.bool_values();
+      NoteImpl::BoolStorage out(old_lin_for_new.size());
+      for (::std::size_t i = 0; i < old_lin_for_new.size(); ++i) {
+        out[i] = values[static_cast<::std::size_t>(old_lin_for_new[i])];
+      }
+      return ::pluss::flame::make_intrusive<NoteImpl>(::std::move(out), new_sizes, new_dim);
+    }
+    case NoteDType::Int64: {
+      const auto values = impl.int64_values();
+      NoteImpl::Int64Storage out(old_lin_for_new.size());
+      for (::std::size_t i = 0; i < old_lin_for_new.size(); ++i) {
+        out[i] = values[static_cast<::std::size_t>(old_lin_for_new[i])];
+      }
+      return ::pluss::flame::make_intrusive<NoteImpl>(::std::move(out), new_sizes, new_dim);
+    }
+    case NoteDType::Float64: {
+      const auto values = impl.float64_values();
+      NoteImpl::Float64Storage out(old_lin_for_new.size());
+      for (::std::size_t i = 0; i < old_lin_for_new.size(); ++i) {
+        out[i] = values[static_cast<::std::size_t>(old_lin_for_new[i])];
+      }
+      return ::pluss::flame::make_intrusive<NoteImpl>(::std::move(out), new_sizes, new_dim);
+    }
+  }
+  PLUSS_CHECK(false, "gather_note_impl: unhandled Note dtype");
+  return {};
+}
+
+} // namespace
+
 Note reshape(const Note& x, ::std::span<const ::std::int64_t> sizes) {
   PLUSS_CHECK(x.defined(), "reshape on undefined Note");
   PLUSS_CHECK(sizes.size() >= 0 && sizes.size() <= 3, "Note supports up to 3D");
   const auto& impl = NoteAccess::impl(x);
+  const ::std::int64_t total = impl->numel();
+
   ::std::array<::std::int64_t,3> sz{1,1,1};
-  ::std::int64_t dim = static_cast<::std::int64_t>(sizes.size());
-  ::std::int64_t n = 1;
-  for (int i = 0; i < dim; ++i) {
-    sz[static_cast<::std::size_t>(i)] = sizes[static_cast<::std::size_t>(i)];
-    n *= sizes[static_cast<::std::size_t>(i)];
+  const ::std::int64_t dim = static_cast<::std::int64_t>(sizes.size());
+
+  // One dimension may be given as -1 and is inferred from the total element
+  // count and the product of the other (explicit) dimensions.
+  ::std::int64_t infer_at = -1;
+  ::std::int64_t known = 1;
+  for (::std::int64_t i = 0; i < dim; ++i) {
+    const ::std::int64_t d = sizes[static_cast<::std::size_t>(i)];
+    if (d == -1) {
+      PLUSS_CHECK(infer_at == -1, "reshape allows at most one inferred (-1) dimension");
+      infer_at = i;
+      continue;
+    }
+    PLUSS_CHECK(d >= 0, "reshape sizes must be non-negative (or a single -1)");
+    known *= d;
   }
-  PLUSS_CHECK(n == impl->numel(), "reshape numel mismatch");
-  // share arena/spans: view-only reshape
-  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(impl->arena(), ::std::vector<NoteImpl::OffLen>(impl->spans()), sz, dim, impl->encoding());
+  for (::std::int64_t i = 0; i < dim; ++i) {
+    sz[static_cast<::std::size_t>(i)] = sizes[static_cast<::std::size_t>(i)];
+  }
+  if (infer_at >= 0) {
+    PLUSS_CHECK(known > 0 && total % known == 0,
+               "reshape cannot infer the -1 dimension: total element count is not divisible by the other dimensions");
+    sz[static_cast<::std::size_t>(infer_at)] = total / known;
+  }
+
+  ::std::int64_t n = 1;
+  for (::std::int64_t i = 0; i < dim; ++i) n *= sz[static_cast<::std::size_t>(i)];
+  PLUSS_CHECK(n == total, "reshape numel mismatch");
+  // View-only reshape: relabels the same contiguous storage under new_sizes
+  // without gathering/copying, for every dtype (shares arena/spans for
+  // Text/Bytes, shares the LaneBuffer for Bool/Int64/Float64).
+  ::pluss::flame::intrusive_ptr<NoteImpl> new_impl;
+  switch (impl->dtype()) {
+    case NoteDType::Text:
+    case NoteDType::Bytes:
+      new_impl = ::pluss::flame::make_intrusive<NoteImpl>(
+          impl->arena(), ::std::vector<NoteImpl::OffLen>(impl->spans()), sz, dim, impl->dtype());
+      break;
+    case NoteDType::Bool:
+      new_impl = ::pluss::flame::make_intrusive<NoteImpl>(impl->bool_view(), sz, dim);
+      break;
+    case NoteDType::Int64:
+      new_impl = ::pluss::flame::make_intrusive<NoteImpl>(impl->int64_view(), sz, dim);
+      break;
+    case NoteDType::Float64:
+      new_impl = ::pluss::flame::make_intrusive<NoteImpl>(impl->float64_view(), sz, dim);
+      break;
+  }
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
@@ -4912,8 +4630,7 @@ Note permute(const Note& x, ::std::span<const ::std::int64_t> dims) {
   for (::std::int64_t i = 0; i < dim; ++i) {
     new_sizes[static_cast<::std::size_t>(i)] = old_sizes[static_cast<::std::size_t>(dims[static_cast<::std::size_t>(i)])];
   }
-  ::std::vector<NoteImpl::OffLen> new_spans;
-  new_spans.resize(static_cast<::std::size_t>(impl->numel()));
+  ::std::vector<::std::int64_t> old_lin_for_new(static_cast<::std::size_t>(impl->numel()));
 
   ::std::array<::std::int64_t,3> new_c{0,0,0};
   ::std::array<::std::int64_t,3> old_c{0,0,0};
@@ -4924,11 +4641,10 @@ Note permute(const Note& x, ::std::span<const ::std::int64_t> dims) {
       const auto old_d = dims[static_cast<::std::size_t>(i)];
       old_c[static_cast<::std::size_t>(old_d)] = new_c[static_cast<::std::size_t>(i)];
     }
-    const auto old_lin = ravel(old_c, old_strides, dim);
-    new_spans[static_cast<::std::size_t>(new_lin)] = impl->spans().at(static_cast<::std::size_t>(old_lin));
+    old_lin_for_new[static_cast<::std::size_t>(new_lin)] = ravel(old_c, old_strides, dim);
   }
 
-  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(impl->arena(), ::std::move(new_spans), new_sizes, dim, impl->encoding());
+  auto new_impl = gather_note_impl(*impl, old_lin_for_new, new_sizes, dim);
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
@@ -4947,12 +4663,13 @@ Note transpose(const Note& x, ::std::int64_t dim0, ::std::int64_t dim1) {
 }
 
 Note select(const Note& x, ::std::int64_t dim, ::std::int64_t index) {
-  check_dim(x, dim);
+  dim = check_dim(x, dim);
   const auto& impl = NoteAccess::impl(x);
   const auto old_sizes = impl->sizes3();
   const auto old_dim = impl->dim();
   PLUSS_CHECK(old_dim > 0, "select expects dim() > 0");
   const auto size_d = old_sizes[static_cast<::std::size_t>(dim)];
+  if (index < 0) index += size_d;
   PLUSS_CHECK(index >= 0 && index < size_d, "select index out of range");
 
   // Build new sizes (remove dim).
@@ -4964,9 +4681,8 @@ Note select(const Note& x, ::std::int64_t dim, ::std::int64_t index) {
   }
 
   const auto old_strides = strides3(old_sizes, old_dim);
-  ::std::vector<NoteImpl::OffLen> new_spans;
   const ::std::int64_t new_numel = (new_dim == 0) ? 1 : (new_sizes[0] * (new_dim > 1 ? new_sizes[1] : 1) * (new_dim > 2 ? new_sizes[2] : 1));
-  new_spans.resize(static_cast<::std::size_t>(new_numel));
+  ::std::vector<::std::int64_t> old_lin_for_new(static_cast<::std::size_t>(new_numel));
 
   ::std::array<::std::int64_t,3> new_c{0,0,0};
   ::std::array<::std::int64_t,3> old_c{0,0,0};
@@ -4980,16 +4696,15 @@ Note select(const Note& x, ::std::int64_t dim, ::std::int64_t index) {
         old_c[static_cast<::std::size_t>(i)] = new_c[static_cast<::std::size_t>(j++)];
       }
     }
-    const auto old_lin = ravel(old_c, old_strides, old_dim);
-    new_spans[static_cast<::std::size_t>(new_lin)] = impl->spans().at(static_cast<::std::size_t>(old_lin));
+    old_lin_for_new[static_cast<::std::size_t>(new_lin)] = ravel(old_c, old_strides, old_dim);
   }
 
-  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(impl->arena(), ::std::move(new_spans), new_sizes, new_dim, impl->encoding());
+  auto new_impl = gather_note_impl(*impl, old_lin_for_new, new_sizes, new_dim);
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
 Note narrow(const Note& x, ::std::int64_t dim, ::std::int64_t start, ::std::int64_t length) {
-  check_dim(x, dim);
+  dim = check_dim(x, dim);
   const auto& impl = NoteAccess::impl(x);
   const auto old_sizes = impl->sizes3();
   const auto old_dim = impl->dim();
@@ -5002,12 +4717,9 @@ Note narrow(const Note& x, ::std::int64_t dim, ::std::int64_t start, ::std::int6
   new_sizes[static_cast<::std::size_t>(dim)] = length;
   const auto old_strides = strides3(old_sizes, old_dim);
 
-  ::std::vector<NoteImpl::OffLen> new_spans;
-  new_spans.resize(static_cast<::std::size_t>(impl->numel() / size_d * length));
-
   const auto new_dim = old_dim;
   const ::std::int64_t new_numel = (new_dim == 0) ? 1 : (new_sizes[0] * (new_dim > 1 ? new_sizes[1] : 1) * (new_dim > 2 ? new_sizes[2] : 1));
-  new_spans.resize(static_cast<::std::size_t>(new_numel));
+  ::std::vector<::std::int64_t> old_lin_for_new(static_cast<::std::size_t>(new_numel));
 
   ::std::array<::std::int64_t,3> new_c{0,0,0};
   ::std::array<::std::int64_t,3> old_c{0,0,0};
@@ -5015,11 +4727,10 @@ Note narrow(const Note& x, ::std::int64_t dim, ::std::int64_t start, ::std::int6
     unravel(new_lin, new_sizes, new_dim, new_c);
     old_c = new_c;
     old_c[static_cast<::std::size_t>(dim)] += start;
-    const auto old_lin = ravel(old_c, old_strides, old_dim);
-    new_spans[static_cast<::std::size_t>(new_lin)] = impl->spans().at(static_cast<::std::size_t>(old_lin));
+    old_lin_for_new[static_cast<::std::size_t>(new_lin)] = ravel(old_c, old_strides, old_dim);
   }
 
-  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(impl->arena(), ::std::move(new_spans), new_sizes, new_dim, impl->encoding());
+  auto new_impl = gather_note_impl(*impl, old_lin_for_new, new_sizes, new_dim);
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
@@ -5038,7 +4749,7 @@ Note expand_dims(const Note& x, ::std::int64_t dim) {
   if (!x.defined()) return Note::undefined();
   const auto& impl = NoteAccess::impl(x);
   const ::std::int64_t old_dim = impl->dim();
-  PLUSS_CHECK(old_dim < 3, "expand_dims would exceed Note max rank 3");
+  PLUSS_CHECK(old_dim < 3, "inserting an axis would exceed Note max rank 3");
   dim = wrap_dim(dim, old_dim, true);
   const auto old_sizes = impl->sizes3();
   ::std::array<::std::int64_t, 3> new_sizes{1, 1, 1};
@@ -5115,7 +4826,7 @@ Note repeat(const Note& x, ::std::span<const ::std::int64_t> repeats) {
 
   ::std::int64_t out_numel = 1;
   for (::std::int64_t i = 0; i < out_dim; ++i) out_numel *= out_sizes[static_cast<::std::size_t>(i)];
-  ::std::vector<NoteImpl::OffLen> out_spans(static_cast<::std::size_t>(out_numel));
+  ::std::vector<::std::int64_t> old_lin_for_new(static_cast<::std::size_t>(out_numel));
 
   const auto src_strides = strides3(aligned_src, out_dim);
   ::std::array<::std::int64_t, 3> out_c{0, 0, 0};
@@ -5126,12 +4837,10 @@ Note repeat(const Note& x, ::std::span<const ::std::int64_t> repeats) {
       const auto sz = aligned_src[static_cast<::std::size_t>(d)];
       src_c[static_cast<::std::size_t>(d)] = (sz == 0) ? 0 : (out_c[static_cast<::std::size_t>(d)] % sz);
     }
-    const auto src_lin = ravel(src_c, src_strides, out_dim);
-    out_spans[static_cast<::std::size_t>(out_lin)] = impl->spans().at(static_cast<::std::size_t>(src_lin));
+    old_lin_for_new[static_cast<::std::size_t>(out_lin)] = ravel(src_c, src_strides, out_dim);
   }
 
-  auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      impl->arena(), ::std::move(out_spans), out_sizes, out_dim, impl->encoding());
+  auto out_impl = gather_note_impl(*impl, old_lin_for_new, out_sizes, out_dim);
   return NoteFactoryAccess::wrap(::std::move(out_impl));
 }
 
@@ -5159,8 +4868,7 @@ Note repeat_interleave(const Note& x, ::std::int64_t repeats, ::std::int64_t dim
   }
 
   const auto old_strides = strides3(old_sizes, old_dim);
-  ::std::vector<NoteImpl::OffLen> new_spans;
-  new_spans.resize(static_cast<::std::size_t>(new_numel));
+  ::std::vector<::std::int64_t> old_lin_for_new(static_cast<::std::size_t>(new_numel), 0);
   if (new_numel > 0 && repeats > 0) {
     ::std::array<::std::int64_t, 3> new_c{0, 0, 0};
     ::std::array<::std::int64_t, 3> old_c{0, 0, 0};
@@ -5168,13 +4876,11 @@ Note repeat_interleave(const Note& x, ::std::int64_t repeats, ::std::int64_t dim
       unravel(new_lin, new_sizes, old_dim, new_c);
       old_c = new_c;
       old_c[static_cast<::std::size_t>(dim)] /= repeats;
-      const auto old_lin = ravel(old_c, old_strides, old_dim);
-      new_spans[static_cast<::std::size_t>(new_lin)] = impl->spans().at(static_cast<::std::size_t>(old_lin));
+      old_lin_for_new[static_cast<::std::size_t>(new_lin)] = ravel(old_c, old_strides, old_dim);
     }
   }
 
-  auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      impl->arena(), ::std::move(new_spans), new_sizes, old_dim, impl->encoding());
+  auto out_impl = gather_note_impl(*impl, old_lin_for_new, new_sizes, old_dim);
   return NoteFactoryAccess::wrap(::std::move(out_impl));
 }
 
@@ -5296,10 +5002,10 @@ static EncodedSpanLane maybe_build_encoded_lane(
 static Note make_note_from_spans_1d(
     const ::pluss::flame::intrusive_ptr<TextArena>& arena,
     ::std::vector<NoteImpl::OffLen> spans,
-    NoteImpl::Encoding enc) {
+    NoteDType dtype) {
   const ::std::array<::std::int64_t, 3> sizes{static_cast<::std::int64_t>(spans.size()), 1, 1};
   auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      arena, ::std::move(spans), sizes, /*dim=*/1, enc);
+      arena, ::std::move(spans), sizes, /*dim=*/1, dtype);
   return NoteFactoryAccess::wrap(::std::move(out_impl));
 }
 
@@ -5472,15 +5178,114 @@ Note sort(const Note& x, ::std::int64_t dim) {
   }
 
   auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->encoding());
+      arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->dtype());
   return NoteFactoryAccess::wrap(::std::move(out_impl));
 }
 
+namespace {
+
+constexpr ::std::int64_t kFlattenedDistinct =
+    ::std::numeric_limits<::std::int64_t>::min();
+
+Note distinct_slices(const Note& x, ::std::int64_t dim, bool sorted) {
+  const auto& impl = NoteAccess::impl(x);
+  const auto rank = impl->dim();
+  dim = wrap_dim(dim, rank, false);
+
+  auto out_sizes = impl->sizes3();
+  const auto axis_size = out_sizes[static_cast<::std::size_t>(dim)];
+
+  ::std::int64_t inner = 1;
+  for (::std::int64_t d = dim + 1; d < rank; ++d) {
+    inner *= out_sizes[static_cast<::std::size_t>(d)];
+  }
+  ::std::int64_t outer = 1;
+  for (::std::int64_t d = 0; d < dim; ++d) {
+    outer *= out_sizes[static_cast<::std::size_t>(d)];
+  }
+
+  const auto& src = impl->spans();
+  const auto arena = impl->arena();
+  auto cell = [&](::std::int64_t axis, ::std::int64_t outer_index,
+                  ::std::int64_t inner_index) {
+    const auto linear = (outer_index * axis_size + axis) * inner + inner_index;
+    const auto& span = src[static_cast<::std::size_t>(linear)];
+    return arena->view(span.first, span.second);
+  };
+  auto same_slice = [&](::std::int64_t lhs, ::std::int64_t rhs) {
+    for (::std::int64_t o = 0; o < outer; ++o) {
+      for (::std::int64_t i = 0; i < inner; ++i) {
+        if (cell(lhs, o, i) != cell(rhs, o, i)) return false;
+      }
+    }
+    return true;
+  };
+  auto less_slice = [&](::std::int64_t lhs, ::std::int64_t rhs) {
+    for (::std::int64_t o = 0; o < outer; ++o) {
+      for (::std::int64_t i = 0; i < inner; ++i) {
+        const auto a = cell(lhs, o, i);
+        const auto b = cell(rhs, o, i);
+        if (a < b) return true;
+        if (b < a) return false;
+      }
+    }
+    return false;
+  };
+
+  ::std::vector<::std::int64_t> kept;
+  kept.reserve(static_cast<::std::size_t>(axis_size));
+  if (sorted) {
+    kept.resize(static_cast<::std::size_t>(axis_size));
+    ::std::iota(kept.begin(), kept.end(), 0);
+    ::std::stable_sort(kept.begin(), kept.end(), less_slice);
+    kept.erase(::std::unique(kept.begin(), kept.end(), same_slice), kept.end());
+  } else {
+    ::std::unordered_map<::std::size_t, ::std::vector<::std::int64_t>> buckets;
+    buckets.reserve(static_cast<::std::size_t>(axis_size));
+    for (::std::int64_t axis = 0; axis < axis_size; ++axis) {
+      ::std::size_t hash = 0xcbf29ce484222325ULL;
+      for (::std::int64_t o = 0; o < outer; ++o) {
+        for (::std::int64_t i = 0; i < inner; ++i) {
+          const auto value_hash = ::std::hash<::std::string_view>{}(cell(axis, o, i));
+          hash ^= value_hash + 0x9e3779b97f4a7c15ULL + (hash << 6) + (hash >> 2);
+        }
+      }
+      auto& bucket = buckets[hash];
+      const bool seen = ::std::any_of(
+          bucket.begin(), bucket.end(),
+          [&](::std::int64_t prior) { return same_slice(prior, axis); });
+      if (!seen) {
+        bucket.push_back(axis);
+        kept.push_back(axis);
+      }
+    }
+  }
+
+  out_sizes[static_cast<::std::size_t>(dim)] =
+      static_cast<::std::int64_t>(kept.size());
+  ::std::vector<NoteImpl::OffLen> out;
+  out.reserve(static_cast<::std::size_t>(outer *
+                                         static_cast<::std::int64_t>(kept.size()) *
+                                         inner));
+  for (::std::int64_t o = 0; o < outer; ++o) {
+    for (const auto axis : kept) {
+      const auto base = (o * axis_size + axis) * inner;
+      for (::std::int64_t i = 0; i < inner; ++i) {
+        out.push_back(src[static_cast<::std::size_t>(base + i)]);
+      }
+    }
+  }
+
+  auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      arena, ::std::move(out), out_sizes, rank, impl->dtype());
+  return NoteFactoryAccess::wrap(::std::move(out_impl));
+}
+
+} // namespace
+
 Note unique(const Note& x, ::std::int64_t dim) {
   if (!x.defined()) return Note::undefined();
-  if (dim != -1 && x.dim() > 0) {
-    (void)wrap_dim(dim, x.dim(), false);
-  }
+  if (dim != kFlattenedDistinct) return distinct_slices(x, dim, true);
   const auto& impl = NoteAccess::impl(x);
 
   if (coden_reference_mode_enabled()) {
@@ -5518,7 +5323,7 @@ Note unique(const Note& x, ::std::int64_t dim) {
           arena->view(b.first, b.second),
           native::cpu::LexCompareOp::Lt);
     });
-    return make_note_from_spans_1d(arena, ::std::move(dict), impl->encoding());
+    return make_note_from_spans_1d(arena, ::std::move(dict), impl->dtype());
   }
 
   auto distinct = distinct_first_seen_spans_hashed(src, arena);
@@ -5528,14 +5333,12 @@ Note unique(const Note& x, ::std::int64_t dim) {
         arena->view(b.first, b.second),
         native::cpu::LexCompareOp::Lt);
   });
-  return make_note_from_spans_1d(arena, ::std::move(distinct), impl->encoding());
+  return make_note_from_spans_1d(arena, ::std::move(distinct), impl->dtype());
 }
 
 Note deduplicate(const Note& x, ::std::int64_t dim) {
   if (!x.defined()) return Note::undefined();
-  if (dim != -1 && x.dim() > 0) {
-    (void)wrap_dim(dim, x.dim(), false);
-  }
+  if (dim != kFlattenedDistinct) return distinct_slices(x, dim, false);
   const auto& impl = NoteAccess::impl(x);
 
   if (coden_reference_mode_enabled()) {
@@ -5566,14 +5369,14 @@ Note deduplicate(const Note& x, ::std::int64_t dim) {
 
   auto encoded = maybe_build_encoded_lane(src, arena);
   if (encoded.enabled) {
-    return make_note_from_spans_1d(arena, ::std::move(encoded.dict_spans), impl->encoding());
+    return make_note_from_spans_1d(arena, ::std::move(encoded.dict_spans), impl->dtype());
   }
 
   auto out = distinct_first_seen_spans_hashed(src, arena);
 
   const ::std::array<::std::int64_t, 3> sizes{static_cast<::std::int64_t>(out.size()), 1, 1};
   auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      arena, ::std::move(out), sizes, /*dim=*/1, impl->encoding());
+      arena, ::std::move(out), sizes, /*dim=*/1, impl->dtype());
   return NoteFactoryAccess::wrap(::std::move(out_impl));
 }
 
@@ -5584,157 +5387,6 @@ TokenBatch split_whitespace(const Note& x) {
 
 
 // ---- Patch8: Unicode/regex/split/join hooks ----
-
-Chord normalize(const Chord& x, ::std::int64_t form) {
-  if (!x.defined()) return Chord::undefined();
-#if defined(PLUSSQIT_HAS_LIBUNISTRING)
-  PLUSS_CHECK(form >= 0 && form <= 3,
-              "Chord::normalize: form must be NFC, NFD, NFKC, or NFKD");
-  const ::std::array<uninorm_t, 4> forms{
-      UNINORM_NFC, UNINORM_NFD, UNINORM_NFKC, UNINORM_NFKD};
-  size_t output_size = 0;
-  auto* output = u8_normalize(
-      forms[static_cast<::std::size_t>(form)],
-      reinterpret_cast<const uint8_t*>(x.utf8().data()),
-      x.utf8().size(), nullptr, &output_size);
-  PLUSS_CHECK(output != nullptr,
-              "Chord::normalize: Unicode normalization failed");
-  ::std::string normalized(
-      reinterpret_cast<const char*>(output), output_size);
-  ::std::free(output);
-  return chord_from_utf8(normalized);
-#else
-  PLUSS_CHECK(
-      ascii_only_(x.utf8()),
-      "Chord::normalize: non-ASCII text requires a Unicode backend");
-  return x;
-#endif
-}
-
-Chord casefold(const Chord& x, ::std::string_view locale) {
-  if (!x.defined()) return Chord::undefined();
-#if defined(PLUSSQIT_HAS_LIBUNISTRING)
-  const auto language = ::std::string(locale);
-  size_t output_size = 0;
-  auto* output = u8_casefold(
-      reinterpret_cast<const uint8_t*>(x.utf8().data()),
-      x.utf8().size(), language.empty() ? nullptr : language.c_str(),
-      nullptr, nullptr, &output_size);
-  PLUSS_CHECK(output != nullptr,
-              "Chord::casefold: Unicode case folding failed");
-  ::std::string folded(
-      reinterpret_cast<const char*>(output), output_size);
-  ::std::free(output);
-  return chord_from_utf8(folded);
-#else
-  (void)locale;
-  PLUSS_CHECK(
-      ascii_only_(x.utf8()),
-      "Chord::casefold: non-ASCII text requires a Unicode backend");
-  return lower(x);
-#endif
-}
-
-bool regex_match(const Chord& x, ::std::string_view pattern) {
-  if (!x.defined()) return false;
-  const ::std::regex re{::std::string(pattern)};
-  return ::std::regex_match(::std::string(x.utf8()), re);
-}
-
-bool regex_search(const Chord& x, ::std::string_view pattern) {
-  if (!x.defined()) return false;
-  const ::std::regex re{::std::string(pattern)};
-  return ::std::regex_search(::std::string(x.utf8()), re);
-}
-
-Chord regex_replace(const Chord& x, ::std::string_view pattern, ::std::string_view repl) {
-  if (!x.defined()) return Chord::undefined();
-  const ::std::regex re{::std::string(pattern)};
-  ::std::string out = ::std::regex_replace(::std::string(x.utf8()), re, ::std::string(repl));
-  return chord_from_utf8(out);
-}
-
-TokenBatch split_whitespace(const Chord& x) {
-  return split_whitespace(x, -1);
-}
-
-TokenBatch split(const Chord& x, ::std::string_view delim) {
-  return split(x, delim, -1);
-}
-
-TokenBatch split_whitespace(const Chord& x, ::std::int64_t limit) {
-  return tokenbatch_from_chord(x, [limit](::std::string_view s, ::std::vector<::std::string>& out) {
-    split_whitespace_with_limit_to(s, limit, out);
-  });
-}
-
-TokenBatch split(const Chord& x, ::std::string_view delim, ::std::int64_t limit) {
-  return tokenbatch_from_chord(x, [delim, limit](::std::string_view s, ::std::vector<::std::string>& out) {
-    split_delim_with_limit_to(s, delim, limit, out);
-  });
-}
-
-TokenBatch split_lines(const Chord& x, bool keep_ends) {
-  return tokenbatch_from_chord(x, [keep_ends](::std::string_view s, ::std::vector<::std::string>& out) {
-    split_lines_to(s, keep_ends, out);
-  });
-}
-
-TokenBatch split_chars(const Chord& x) {
-  return tokenbatch_from_chord(x, [](::std::string_view s, ::std::vector<::std::string>& out) {
-    split_chars_to(s, out);
-  });
-}
-
-TokenBatch split_graphemes(const Chord& x) {
-  return split_chars(x);
-}
-
-TokenBatch tokenize_words(const Chord& x, ::std::int64_t flags) {
-  return tokenbatch_from_chord(x, [flags](::std::string_view s, ::std::vector<::std::string>& out) {
-    tokenize_words_flagged_to(s, flags, out);
-  });
-}
-
-TokenBatch tokenize_sentences(const Chord& x, ::std::int64_t flags) {
-  (void)flags;
-  return tokenbatch_from_chord(x, [](::std::string_view s, ::std::vector<::std::string>& out) {
-    tokenize_sentences_to(s, out);
-  });
-}
-
-TokenBatch tokenize_punct(const Chord& x) {
-  return tokenbatch_from_chord(x, [](::std::string_view s, ::std::vector<::std::string>& out) {
-    tokenize_punct_to(s, out);
-  });
-}
-
-TokenBatch tokenize_regex(const Chord& x, ::std::string_view pattern) {
-  const ::std::regex re{::std::string(pattern)};
-  return tokenbatch_from_chord(x, [&re](::std::string_view s, ::std::vector<::std::string>& out) {
-    tokenize_regex_to(s, re, out);
-  });
-}
-
-TokenBatch regex_findall(const Chord& x, ::std::string_view pattern, ::std::int64_t flags) {
-  const ::std::regex re = make_findall_regex(pattern, flags);
-  return tokenbatch_from_chord(x, [&re](::std::string_view s, ::std::vector<::std::string>& out) {
-    tokenize_regex_to(s, re, out);
-  });
-}
-
-TokenBatch regex_split(const Chord& x, ::std::string_view pattern, ::std::int64_t limit) {
-  const ::std::regex re{::std::string(pattern)};
-  return tokenbatch_from_chord(x, [&re, limit](::std::string_view s, ::std::vector<::std::string>& out) {
-    regex_split_to(s, re, limit, out);
-  });
-}
-
-TokenBatch token_feature(const Chord& x, ::std::string_view op, ::std::int64_t iarg, ::std::string_view sarg) {
-  return tokenbatch_from_chord(x, [op, iarg, sarg](::std::string_view s, ::std::vector<::std::string>& out) {
-    token_feature_extract_to(s, op, iarg, sarg, out);
-  });
-}
 
 Note normalize(const Note& x, ::std::int64_t form) {
   PLUSS_CHECK(form >= 0 && form <= 3,
@@ -5831,8 +5483,14 @@ Note casefold(const Note& x, ::std::string_view locale) {
 }
 
 Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view repl) {
+  return regex_replace(x, pattern, repl, 0);
+}
+
+Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view repl,
+                   ::std::int64_t flags) {
   if (!x.defined()) return Note::undefined();
-  const ::std::regex re{::std::string(pattern)};
+  // flags: bit 0 (1) case-insensitive, bit 1 (2) multiline `^`/`$`.
+  const ::std::regex re = make_findall_regex(pattern, flags);
   const auto& impl = NoteAccess::impl(x);
   require_text_note(*impl, "Note::regex_replace");
 
@@ -5845,7 +5503,7 @@ Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view
     spans.push_back(arena->append(out));
   }
 
-  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->encoding());
+  auto new_impl = ::pluss::flame::make_intrusive<NoteImpl>(arena, ::std::move(spans), impl->sizes3(), impl->dim(), impl->dtype());
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
@@ -5968,82 +5626,82 @@ TokenBatch intersect_terms(const Note& x, const Note& other) {
 }
 
 Note jaccard_tokens(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::jaccard_tokens",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_jaccard_score(a, b, TokenSetKind::Tokens));
+        return clamp01(set_jaccard_score(a, b, TokenSetKind::Tokens));
       });
 }
 
 Note jaccard_terms(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::jaccard_terms",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_jaccard_score(a, b, TokenSetKind::Terms));
+        return clamp01(set_jaccard_score(a, b, TokenSetKind::Terms));
       });
 }
 
 Note jaccard_acronyms(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::jaccard_acronyms",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_jaccard_score(a, b, TokenSetKind::Acronyms));
+        return clamp01(set_jaccard_score(a, b, TokenSetKind::Acronyms));
       });
 }
 
 Note jaccard_citations(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::jaccard_citations",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_jaccard_score(a, b, TokenSetKind::Citations));
+        return clamp01(set_jaccard_score(a, b, TokenSetKind::Citations));
       });
 }
 
 Note jaccard_math_symbols(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::jaccard_math_symbols",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_jaccard_score(a, b, TokenSetKind::MathSymbols));
+        return clamp01(set_jaccard_score(a, b, TokenSetKind::MathSymbols));
       });
 }
 
 Note overlap_tokens(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::overlap_tokens",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_overlap_score(a, b, TokenSetKind::Tokens));
+        return clamp01(set_overlap_score(a, b, TokenSetKind::Tokens));
       });
 }
 
 Note overlap_terms(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::overlap_terms",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_overlap_score(a, b, TokenSetKind::Terms));
+        return clamp01(set_overlap_score(a, b, TokenSetKind::Terms));
       });
 }
 
 Note overlap_acronyms(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::overlap_acronyms",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_overlap_score(a, b, TokenSetKind::Acronyms));
+        return clamp01(set_overlap_score(a, b, TokenSetKind::Acronyms));
       });
 }
 
 Note overlap_citations(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::overlap_citations",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_overlap_score(a, b, TokenSetKind::Citations));
+        return clamp01(set_overlap_score(a, b, TokenSetKind::Citations));
       });
 }
 
 Note overlap_math_symbols(const Note& x, const Note& other) {
-  return transform_note_pair(
+  return transform_note_pair_to_float64(
       x, other, "Note::overlap_math_symbols",
       [](::std::string_view a, ::std::string_view b) {
-        return format_score(set_overlap_score(a, b, TokenSetKind::MathSymbols));
+        return clamp01(set_overlap_score(a, b, TokenSetKind::MathSymbols));
       });
 }
 

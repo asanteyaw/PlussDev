@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -46,16 +46,21 @@
 <span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">date</span><span class="p">(</span><span class="n">string_range</span><span class="w"> </span><span class="n">values</span><span class="p">)</span>
 <span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">date</span><span class="p">(</span><span class="n">nested_string_values</span><span class="w"> </span><span class="n">values</span><span class="p">)</span>
 <span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">date</span><span class="p">(</span><span class="n">string_range</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">integer_range</span><span class="w"> </span><span class="n">sizes</span><span class="p">)</span>
+<span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">date</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="require-calendar-dates">
 <h2>Require Calendar Dates<a class="headerlink" href="#require-calendar-dates" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">date()</span></code> parses date-only text and anchors every defined value at midnight UTC.
-It exists to make a calendar-date requirement executable: a clock or timezone
-suffix is rejected rather than ignored. Use it when accepting a complete
-timestamp would conceal malformed input; use <code class="docutils literal notranslate"><span class="pre">make()</span></code> when clock fields are
-valid data.</p>
+<p><code class="docutils literal notranslate"><span class="pre">date()</span></code> has two related construction paths. Text overloads parse date-only
+input and anchor every value at midnight UTC. The <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> overload extracts
+each input instant’s date in its presentation timezone and resolves that local
+date at local midnight. Both paths construct exact instants whose clock fields
+are zero; they differ in where the date and timezone come from.</p>
+<p>Use the strict text path when accepting a clock or timezone suffix would conceal
+malformed input. Use the Timeline path when complete instants already exist and
+their local calendar dates are the desired values. Use <code class="docutils literal notranslate"><span class="pre">make()</span></code> when clock
+fields remain meaningful data.</p>
 <p>The result is still a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, not a date-without-time type. Each lane is a
 real instant at <code class="docutils literal notranslate"><span class="pre">00:00:00.000000000+00:00</span></code>, so comparison, duration,
 formatting, and timezone operations remain available. Converting that instant
@@ -65,6 +70,12 @@ than assuming that <code class="docutils literal notranslate"><span class="pre">
 <p>Accepted tokens use <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code> or <code class="docutils literal notranslate"><span class="pre">YYYY/MM/DD</span></code>, with optional surrounding
 ASCII whitespace. Empty text is not accepted here: a strict date lane must
 actually contain a date.</p>
+<p>The Timeline overload preserves rank, shape, timezone metadata, ordering, and
+lane-wise <code class="docutils literal notranslate"><span class="pre">NaT</span></code>. A Timeline never has a detectable “missing date part”: every
+defined lane is a complete instant, including clock-only values represented on
+their documented anchor date. Consequently, <code class="docutils literal notranslate"><span class="pre">NaT</span></code> is the only absent lane and
+remains <code class="docutils literal notranslate"><span class="pre">NaT</span></code>; the factory never destroys the complete result shape merely
+because one lane is absent.</p>
 </section>
 <section id="example-1-scalar-date">
 <h2>Example 1: Scalar Date<a class="headerlink" href="#example-1-scalar-date" title="Link to this heading">¶</a></h2>
@@ -156,11 +167,52 @@ actually contain a date.</p>
 <p>The shape is validated even though there are no tokens to parse.</p>
 </section>
 </section>
+<section id="example-6-extract-dates-from-an-existing-timeline">
+<h2>Example 6: Extract Dates From An Existing Timeline<a class="headerlink" href="#example-6-extract-dates-from-an-existing-timeline" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">schedule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-04-01T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-07-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-10-01T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">date</span><span class="p">(</span><span class="n">schedule</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2, 2], tz=UTC)
+[ 2024-01-01 00:00:00 2024-04-01 00:00:00 ]
+[ 2024-07-01 00:00:00 2024-10-01 00:00:00 ]
+</pre></div>
+</div>
+<p>The overload is equivalent to <code class="docutils literal notranslate"><span class="pre">schedule.date()</span></code> and allocates a new Timeline.
+It is idempotent: passing this result to <code class="docutils literal notranslate"><span class="pre">date()</span></code> again retains the same ticks.</p>
+</section>
+</section>
+<section id="example-7-projection-uses-local-dates-and-preserves-nat">
+<h2>Example 7: Projection Uses Local Dates And Preserves <code class="docutils literal notranslate"><span class="pre">NaT</span></code><a class="headerlink" href="#example-7-projection-uses-local-dates-and-preserves-nat" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-07-15T18:34:56.123456789Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="p">}).</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">date</span><span class="p">(</span><span class="n">events</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2], tz=America/Edmonton)
+[ 2024-07-15 00:00:00, NaT ]
+</pre></div>
+</div>
+<p>The first lane uses July 15 in Edmonton, not the UTC date independently of its
+presentation timezone. The absent second lane remains in place.</p>
+</section>
+</section>
 <section id="validation-and-failure">
 <h2>Validation And Failure<a class="headerlink" href="#validation-and-failure" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">date()</span></code> rejects impossible dates, clocks, offsets, empty tokens, ragged
 nesting, negative extents, ranks above three, and explicit shapes whose element
-count differs from the flat range.</p>
+count differs from the flat range. Those parsing failures apply to text
+overloads; a Timeline input is already parsed and validated.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">date</span><span class="p">(</span><span class="s">&quot;2024-06-10T09:30:00Z&quot;</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -168,8 +220,8 @@ count differs from the flat range.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rejected
 </pre></div>
 </div>
@@ -240,6 +292,7 @@ count differs from the flat range.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -267,6 +320,7 @@ count differs from the flat range.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

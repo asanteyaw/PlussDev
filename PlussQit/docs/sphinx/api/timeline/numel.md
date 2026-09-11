@@ -103,5 +103,5 @@ numel=6, exported=6
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dim.html"><span class="label">Previous</span><span class="title">dim</span></a>
-  <a class="next-link" href="is_scalar.html"><span class="label">Next</span><span class="title">is_scalar</span></a>
+  <a class="next-link" href="operators.html"><span class="label">Next</span><span class="title">operators</span></a>
 </div>

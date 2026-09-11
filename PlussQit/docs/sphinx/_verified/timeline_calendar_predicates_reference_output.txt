@@ -1,0 +1,239 @@
+
+=== is_leap_year ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[false, true, true, true, true, true, false, true, false]
+
+=== is_month_start ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[false, true, false, false, true, false, true, false, false]
+
+=== is_month_end ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[true, false, true, true, false, true, false, true, false]
+
+=== is_quarter_start ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[false, true, false, false, true, false, true, false, false]
+
+=== is_quarter_end ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[true, false, false, true, false, true, false, false, false]
+
+=== is_year_start ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[false, true, false, false, false, false, true, false, false]
+
+=== is_year_end ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[true, false, false, false, false, true, false, false, false]
+
+=== is_weekend ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[false, false, true, false, false, false, false, false, false]
+
+=== is_business_day ===
+Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
+data=[true, true, false, true, true, true, true, true, false]
+
+=== is_monday ===
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[true, false, false, false, false, false, false, false]
+
+=== is_tuesday ===
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, true, false, false, false, false, false, false]
+
+=== is_wednesday ===
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, true, false, false, false, false, false]
+
+=== is_thursday ===
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, true, false, false, false, false]
+
+=== is_friday ===
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, false, true, false, false, false]
+
+=== is_saturday ===
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, false, false, true, false, false]
+
+=== is_sunday ===
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, false, false, false, false, false, true, false]
+
+=== tuesday_or_thursday ===
+Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=[false, true, false, true, false, false, false, false]
+
+=== matrix_named_monday ===
+Series(shape=[2,4], strides=[4,1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=
+⎡  true false false false ⎤
+⎣ false false false false ⎦
+
+=== matrix_named_tuesday ===
+Series(shape=[2,4], strides=[4,1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=
+⎡ false  true false false ⎤
+⎣ false false false false ⎦
+
+=== matrix_named_wednesday ===
+Series(shape=[2,4], strides=[4,1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=
+⎡ false false  true false ⎤
+⎣ false false false false ⎦
+
+=== matrix_named_thursday ===
+Series(shape=[2,4], strides=[4,1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=
+⎡ false false false  true ⎤
+⎣ false false false false ⎦
+
+=== matrix_named_friday ===
+Series(shape=[2,4], strides=[4,1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=
+⎡ false false false false ⎤
+⎣  true false false false ⎦
+
+=== matrix_named_saturday ===
+Series(shape=[2,4], strides=[4,1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=
+⎡ false false false false ⎤
+⎣ false  true false false ⎦
+
+=== matrix_named_sunday ===
+Series(shape=[2,4], strides=[4,1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=
+⎡ false false false false ⎤
+⎣ false false  true false ⎦
+
+=== weekday_only_business_rule ===
+Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
+
+=== timezone_year_boundary ===
+UTC: 2021-01-01T00:30:00.000000000+00:00, year_start=true, year_end=false
+New York: 2020-12-31T19:30:00.000000000-05:00, year_start=false, year_end=true
+
+=== century_leap_rules ===
+Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[false, true, false]
+
+=== matrix_month_start ===
+Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  true false false ⎤
+⎣ false  true false ⎦
+
+=== matrix_month_end ===
+Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ false false true ⎤
+⎣  true false true ⎦
+
+=== matrix_quarter_start ===
+Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  true false false ⎤
+⎣ false  true false ⎦
+
+=== matrix_quarter_end ===
+Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ false false false ⎤
+⎣  true false  true ⎦
+
+=== matrix_year_start ===
+Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  true false false ⎤
+⎣ false false false ⎦
+
+=== matrix_year_end ===
+Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ false false false ⎤
+⎣ false false  true ⎦
+
+=== timezone_boundary_family ===
+UTC: leap=false, month_start=true, month_end=false, quarter_start=true, quarter_end=false, year_start=true, year_end=false
+New York: leap=true, month_start=false, month_end=true, quarter_start=false, quarter_end=true, year_start=false, year_end=true
+
+=== scalar_leap ===
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+=== scalar_month_end ===
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+=== empty_month_start ===
+Series(shape=[0], strides=[1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+
+=== empty_year_end ===
+Series(shape=[0], strides=[1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+
+=== weekend_preserves_shape ===
+Series(shape=[2,2], strides=[2,1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ false true ⎤
+⎣ false true ⎦
+
+=== matrix_monday ===
+Series(shape=[2,2], strides=[2,1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=
+⎡  true false ⎤
+⎣ false false ⎦
+
+=== matrix_saturday ===
+Series(shape=[2,2], strides=[2,1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ false  true ⎤
+⎣ false false ⎦
+
+=== matrix_sunday ===
+Series(shape=[2,2], strides=[2,1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ false false ⎤
+⎣ false  true ⎦
+
+=== timezone_weekday_flip ===
+UTC: friday=false, saturday=true, weekend=true, business=false
+New York: friday=true, saturday=false, weekend=false, business=true
+
+=== scalar_friday ===
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+
+=== empty_business_day ===
+Series(shape=[0], strides=[1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+
+=== empty_weekend ===
+Series(shape=[0], strides=[1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+
+=== empty_sunday ===
+Series(shape=[0], strides=[1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+
+=== predicate_identity ===
+weekday partition=true
+weekend/business complement=true
+weekend is Saturday or Sunday=true
+business day is Monday through Friday=true
+Monday code 0=true
+Tuesday code 1=true
+Wednesday code 2=true
+Thursday code 3=true
+Friday code 4=true
+Saturday code 5=true
+Sunday code 6=true
+quarter starts are month starts=true
+quarter ends are month ends=true
+year starts are quarter starts=true
+year ends are quarter ends=true

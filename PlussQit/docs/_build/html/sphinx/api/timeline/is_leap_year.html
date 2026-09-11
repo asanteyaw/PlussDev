@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -44,19 +44,32 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_leap_year</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">is_leap_year()</span></code> is the sole public spelling.</p>
 </section>
-<section id="classify-the-local-calendar-year">
-<h2>Classify The Local Calendar Year<a class="headerlink" href="#classify-the-local-calendar-year" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">is_leap_year()</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for every timestamp whose local civil year has
-366 days. The Gregorian rule is applied in full: a year divisible by 4 is a
-leap year, except a century year must also be divisible by 400. The method
-tests year membership, not whether the timestamp itself is 29 February.</p>
-<p>The result is a shape-preserving boolean Series. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> becomes <code class="docutils literal notranslate"><span class="pre">false</span></code>; combine
-with <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> if absent and non-leap positions must remain distinguishable.</p>
+<section id="what-the-predicate-asks">
+<h2>What The Predicate Asks<a class="headerlink" href="#what-the-predicate-asks" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is_leap_year()</span></code> classifies the <strong>local civil year</strong> containing each instant.
+It returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for every instant in a 366-day Gregorian year, not only for
+29 February. This makes it useful before calendar arithmetic whose result may
+depend on February’s length, or when partitioning observations by calendar
+type.</p>
+<p>The complete Gregorian rule is used: years divisible by four are leap years,
+except century years are common years unless divisible by 400. Consequently,
+1900 and 2100 are common years while 2000 is a leap year.</p>
 </section>
-<section id="example-membership-across-boundaries">
-<h2>Example: Membership Across Boundaries<a class="headerlink" href="#example-membership-across-boundaries" title="Link to this heading">¶</a></h2>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">¶</a></h2>
+<p>The result is a newly allocated boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> with exactly the receiver’s
+rank and shape. A scalar Timeline produces a rank-zero Series; a matrix
+produces a matrix; an empty extent remains empty. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> maps to <code class="docutils literal notranslate"><span class="pre">false</span></code>, so use
+<code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> as a second mask when an absent instant must remain distinguishable
+from an instant in a common year.</p>
+<p>The receiver is not modified. The timezone is read as calendar context: the
+same stored instant can belong to different local years after <code class="docutils literal notranslate"><span class="pre">tz_convert()</span></code>.
+The operation performs one pass over the values and loads timezone rules once
+for the call.</p>
+</section>
+<section id="example-1-classify-years-not-leap-days">
+<h2>Example 1: Classify Years, Not Leap Days<a class="headerlink" href="#example-1-classify-years-not-leap-days" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2019-12-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-01-01T12:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2020-02-29T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-03-31T12:00:00Z&quot;</span><span class="p">,</span>
@@ -66,35 +79,77 @@ with <code class="docutils literal notranslate"><span class="pre">isvalid()</spa
 <span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">calendar</span><span class="p">.</span><span class="n">is_leap_year</span><span class="p">());</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
 data=[false, true, true, true, true, true, false, true, false]
 </pre></div>
 </div>
-<p>Every 2020 timestamp is <code class="docutils literal notranslate"><span class="pre">true</span></code>, not only leap day. The final <code class="docutils literal notranslate"><span class="pre">false</span></code> belongs to
-<code class="docutils literal notranslate"><span class="pre">NaT</span></code>, not to a known common year.</p>
+<p>Every 2020 instant is <code class="docutils literal notranslate"><span class="pre">true</span></code>. The final <code class="docutils literal notranslate"><span class="pre">false</span></code> represents <code class="docutils literal notranslate"><span class="pre">NaT</span></code>, not a known
+common year.</p>
 </section>
+<section id="example-2-century-exceptions">
+<h2>Example 2: Century Exceptions<a class="headerlink" href="#example-2-century-exceptions" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">centuries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;1900-06-15T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2000-06-15T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2100-06-15T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">centuries</span><span class="p">.</span><span class="n">is_leap_year</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[false, true, false]
+</pre></div>
+</div>
+</section>
+<section id="example-3-scalar-rank-is-preserved">
+<h2>Example 3: Scalar Rank Is Preserved<a class="headerlink" href="#example-3-scalar-rank-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">leap_day</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-02-29T23:59:59.999999999Z&quot;</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">leap_day</span><span class="p">.</span><span class="n">is_leap_year</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">leap_scalar()</span></code> when the receiver is rank zero and a native <code class="docutils literal notranslate"><span class="pre">bool</span></code>, rather
+than a rank-zero <code class="docutils literal notranslate"><span class="pre">Series</span></code>, is the desired result.</p>
+</section>
+<section id="example-4-timezone-can-change-the-year">
+<h2>Example 4: Timezone Can Change The Year<a class="headerlink" href="#example-4-timezone-can-change-the-year" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2021-01-01T00:30:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">is_leap_year</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;New York=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">is_leap_year</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>UTC=false
+New York=true
+</pre></div>
+</div>
+<p>Both values represent one instant. It lies in 2021 in UTC and in 2020 in New
+York.</p>
 </section>
 <section id="gotchas-and-failure-modes">
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>This is an elementwise classifier, not one scalar property of the Timeline.</p></li>
-<li><p>Timezone conversion can change the local year near New Year.</p></li>
-<li><p>Do not infer validity from <code class="docutils literal notranslate"><span class="pre">false</span></code>; use <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code>.</p></li>
-<li><p>For leap-day itself, combine <code class="docutils literal notranslate"><span class="pre">month()</span> <span class="pre">==</span> <span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">day()</span> <span class="pre">==</span> <span class="pre">29</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> means either a common local year or <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
+<li><p>Time-of-day and month do not affect membership once the local year is known.</p></li>
+<li><p>The method accepts every supported Timeline rank; it is not a reduction.</p></li>
+<li><p>To identify leap day itself, combine <code class="docutils literal notranslate"><span class="pre">month()</span> <span class="pre">==</span> <span class="pre">2</span></code> with <code class="docutils literal notranslate"><span class="pre">day()</span> <span class="pre">==</span> <span class="pre">29</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a class="reference internal" href="leap_scalar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">leap_scalar</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">year</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="dayofyear.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dayofyear</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="is_month_start.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_month_start</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="isvalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isvalid</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="week.html"><span class="label">Previous</span><span class="title">week</span></a>
-  <a class="next-link" href="is_month_start.html"><span class="label">Next</span><span class="title">is_month_start</span></a>
+  <a class="prev-link" href="is_friday.html"><span class="label">Previous</span><span class="title">is_friday</span></a>
+  <a class="next-link" href="is_monday.html"><span class="label">Next</span><span class="title">is_monday</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -154,6 +209,7 @@ data=[false, true, true, true, true, true, false, true, false]
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -181,6 +237,7 @@ data=[false, true, true, true, true, true, false, true, false]
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

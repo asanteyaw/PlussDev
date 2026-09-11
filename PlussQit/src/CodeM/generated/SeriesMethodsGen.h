@@ -9,7 +9,7 @@
   // or explicitly listed under `skip_methods` in typed YAML.
 
   // Typed wrappers for `_addmm_activation` (staged migration off variadic surface).
-  Series _addmm_activation() const { return pluss::codem::_compat::invoke("_addmm_activation", *this); }
+  Series _addmm_activation(const Series& mat1, const Series& mat2, double beta=1.0, double alpha=1.0, bool use_gelu=false) const { return pluss::codem::_compat::invoke("_addmm_activation", *this, {mat1, mat2, beta, alpha, use_gelu}); }
 
   // Typed wrappers for `_autocast_to_full_precision` (staged migration off variadic surface).
   Series _autocast_to_full_precision() const { return pluss::codem::_compat::invoke("_autocast_to_full_precision", *this); }
@@ -456,6 +456,8 @@
 
   // Typed wrappers for `col_indices` (staged migration off variadic surface).
   Series col_indices() const { return pluss::codem::_compat::invoke("col_indices", *this); }
+
+  // `complex_from_parts` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `conj` (staged migration off variadic surface).
   Series conj() const { return pluss::codem::_compat::invoke("conj", *this); }
@@ -1022,7 +1024,7 @@
   Series isreal() const { return pluss::codem::_compat::invoke("isreal", *this); }
 
   // Typed wrappers for `istft` (staged migration off variadic surface).
-  Series istft() const { return pluss::codem::_compat::invoke("istft", *this); }
+  Series istft(std::int64_t n_fft, std::int64_t hop_length=-1, std::int64_t win_length=-1, const Series& window={}, bool center=true, bool normalized=false, bool onesided=true, std::int64_t length=-1) const { return pluss::codem::_compat::invoke("istft", *this, {n_fft, hop_length, win_length, window, center, normalized, onesided, length}); }
 
   // `item` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -1816,7 +1818,7 @@
   Series standardize(std::int64_t dim) const { return pluss::codem::_compat::invoke("standardize", *this, {dim}); }
 
   // Typed wrappers for `stft` (staged migration off variadic surface).
-  Series stft() const { return pluss::codem::_compat::invoke("stft", *this); }
+  Series stft(std::int64_t n_fft, std::int64_t hop_length=-1, std::int64_t win_length=-1, const Series& window={}, bool center=true, const std::string& pad_mode="reflect", bool normalized=false, bool onesided=true, bool return_complex=true) const { return pluss::codem::_compat::invoke("stft", *this, {n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided, return_complex}); }
 
   // `stride` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 

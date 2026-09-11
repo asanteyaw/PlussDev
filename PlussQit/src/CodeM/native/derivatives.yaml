@@ -6,35 +6,35 @@
 
 - name: sqrt
   rule: Sqrt
-  reverse: out_sens.mul(0.5).mul(rsqrt(input))
+  reverse: out_sens.mul(conjugate_if_complex_(rsqrt(input).mul(0.5)))
   trace: x.value().sqrt()
   dual_primal: x.value().sqrt()
   dual_tangent: x.value().rsqrt().mul(0.5).mul(x.tangent())
 
 - name: exp
   rule: Exp
-  reverse: out_sens.mul(exp(input))
+  reverse: out_sens.mul(conjugate_if_complex_(exp(input)))
   trace: x.value().exp()
   dual_primal: x.value().exp()
   dual_tangent: primal.mul(x.tangent())
 
 - name: log
   rule: Log
-  reverse: out_sens.div(input)
+  reverse: out_sens.div(conjugate_if_complex_(input))
   trace: x.value().log()
   dual_primal: x.value().log()
   dual_tangent: x.tangent().div(x.value())
 
 - name: sin
   rule: Sin
-  reverse: out_sens.mul(cos(input))
+  reverse: out_sens.mul(conjugate_if_complex_(cos(input)))
   trace: x.value().sin()
   dual_primal: x.value().sin()
   dual_tangent: x.value().cos().mul(x.tangent())
 
 - name: cos
   rule: Cos
-  reverse: out_sens.mul(sin(input)).neg()
+  reverse: out_sens.mul(conjugate_if_complex_(sin(input))).neg()
   trace: x.value().cos()
   dual_primal: x.value().cos()
   dual_tangent: x.value().sin().neg().mul(x.tangent())
@@ -48,105 +48,105 @@
 
 - name: tan
   rule: Tan
-  reverse: out_sens.div(cos(input).mul(cos(input)))
+  reverse: out_sens.div(conjugate_if_complex_(cos(input).mul(cos(input))))
   trace: x.value().tan()
   dual_primal: x.value().tan()
   dual_tangent: detail::ones_like_(x.value()).div(x.value().cos().square()).mul(x.tangent())
 
 - name: asin
   rule: Asin
-  reverse: out_sens.div(scalar_like_(input, 1.0).sub(input.mul(input)).sqrt())
+  reverse: out_sens.div(conjugate_if_complex_(scalar_like_(input, 1.0).sub(input.mul(input)).sqrt()))
   trace: x.value().asin()
   dual_primal: x.value().asin()
   dual_tangent: x.tangent().div(detail::ones_like_(x.value()).sub(x.value().square()).sqrt())
 
 - name: acos
   rule: Acos
-  reverse: out_sens.div(scalar_like_(input, 1.0).sub(input.mul(input)).sqrt()).neg()
+  reverse: out_sens.div(conjugate_if_complex_(scalar_like_(input, 1.0).sub(input.mul(input)).sqrt())).neg()
   trace: x.value().acos()
   dual_primal: x.value().acos()
   dual_tangent: x.tangent().div(detail::ones_like_(x.value()).sub(x.value().square()).sqrt()).neg()
 
 - name: atan
   rule: Atan
-  reverse: out_sens.div(scalar_like_(input, 1.0).add(input.mul(input)))
+  reverse: out_sens.div(conjugate_if_complex_(scalar_like_(input, 1.0).add(input.mul(input))))
   trace: x.value().atan()
   dual_primal: x.value().atan()
   dual_tangent: x.tangent().div(detail::ones_like_(x.value()).add(x.value().square()))
 
 - name: sinh
   rule: Sinh
-  reverse: out_sens.mul(cosh(input))
+  reverse: out_sens.mul(conjugate_if_complex_(cosh(input)))
   trace: x.value().sinh()
   dual_primal: x.value().sinh()
   dual_tangent: x.value().cosh().mul(x.tangent())
 
 - name: cosh
   rule: Cosh
-  reverse: out_sens.mul(sinh(input))
+  reverse: out_sens.mul(conjugate_if_complex_(sinh(input)))
   trace: x.value().cosh()
   dual_primal: x.value().cosh()
   dual_tangent: x.value().sinh().mul(x.tangent())
 
 - name: log1p
   rule: Log1p
-  reverse: out_sens.div(input.add(1.0))
+  reverse: out_sens.div(conjugate_if_complex_(input.add(1.0)))
   trace: x.value().log1p()
   dual_primal: x.value().log1p()
   dual_tangent: x.tangent().div(detail::ones_like_(x.value()).add(x.value()))
 
 - name: expm1
   rule: Expm1
-  reverse: out_sens.mul(exp(input))
+  reverse: out_sens.mul(conjugate_if_complex_(exp(input)))
   trace: x.value().expm1()
   dual_primal: x.value().expm1()
   dual_tangent: x.value().exp().mul(x.tangent())
 
 - name: rsqrt
   rule: Rsqrt
-  reverse: out_sens.mul(-0.5).mul(rsqrt(input).square()).mul(rsqrt(input))
+  reverse: out_sens.mul(conjugate_if_complex_(rsqrt(input).square().mul(rsqrt(input)).mul(-0.5)))
   trace: x.value().rsqrt()
   dual_primal: x.value().rsqrt()
   dual_tangent: primal.square().mul(primal).mul(-0.5).mul(x.tangent())
 
 - name: reciprocal
   rule: Reciprocal
-  reverse: out_sens.div(input.mul(input)).neg()
+  reverse: out_sens.div(conjugate_if_complex_(input.mul(input))).neg()
   trace: x.value().reciprocal()
   dual_primal: x.value().reciprocal()
   dual_tangent: primal.square().neg().mul(x.tangent())
 
 - name: erf
   rule: Erf
-  reverse: out_sens.mul(input.mul(input).neg().exp()).mul(1.1283791670955126)
+  reverse: out_sens.mul(conjugate_if_complex_(input.mul(input).neg().exp().mul(1.1283791670955126)))
   trace: x.value().erf()
   dual_primal: x.value().erf()
   dual_tangent: x.value().square().neg().exp().mul(1.12837916709551257390).mul(x.tangent())
 
 - name: erfc
   rule: Erfc
-  reverse: out_sens.mul(input.mul(input).neg().exp()).mul(-1.1283791670955126)
+  reverse: out_sens.mul(conjugate_if_complex_(input.mul(input).neg().exp().mul(-1.1283791670955126)))
   trace: x.value().erfc()
   dual_primal: x.value().erfc()
   dual_tangent: x.value().square().neg().exp().mul(-1.12837916709551257390).mul(x.tangent())
 
 - name: asinh
   rule: Asinh
-  reverse: out_sens.div(input.mul(input).add(scalar_like_(input, 1.0)).sqrt())
+  reverse: out_sens.div(conjugate_if_complex_(input.mul(input).add(scalar_like_(input, 1.0)).sqrt()))
   trace: x.value().asinh()
   dual_primal: x.value().asinh()
   dual_tangent: detail::ones_like_(x.value()).div(detail::ones_like_(x.value()).add(x.value().square()).sqrt()).mul(x.tangent())
 
 - name: acosh
   rule: Acosh
-  reverse: out_sens.div(input.sub(scalar_like_(input, 1.0)).sqrt().mul(input.add(scalar_like_(input, 1.0)).sqrt()))
+  reverse: out_sens.div(conjugate_if_complex_(input.sub(scalar_like_(input, 1.0)).sqrt().mul(input.add(scalar_like_(input, 1.0)).sqrt())))
   trace: x.value().acosh()
   dual_primal: x.value().acosh()
   dual_tangent: detail::ones_like_(x.value()).div(x.value().sub(detail::ones_like_(x.value())).sqrt().mul(x.value().add(detail::ones_like_(x.value())).sqrt())).mul(x.tangent())
 
 - name: atanh
   rule: Atanh
-  reverse: out_sens.div(scalar_like_(input, 1.0).sub(input.mul(input)))
+  reverse: out_sens.div(conjugate_if_complex_(scalar_like_(input, 1.0).sub(input.mul(input))))
   trace: x.value().atanh()
   dual_primal: x.value().atanh()
   dual_tangent: detail::ones_like_(x.value()).div(detail::ones_like_(x.value()).sub(x.value().square())).mul(x.tangent())
@@ -167,7 +167,81 @@
 
 - name: square
   rule: Square
-  reverse: out_sens.mul(2.0).mul(input)
+  reverse: out_sens.mul(conjugate_if_complex_(input.mul(2.0)))
   trace: x.value().square()
   dual_primal: x.value().square()
   dual_tangent: x.value().mul(2.0).mul(x.tangent())
+
+- name: log2
+  rule: Log2
+  reverse: out_sens.div(conjugate_if_complex_(input.mul(0.69314718055994530942)))
+  trace: x.value().log2()
+  dual_primal: x.value().log2()
+  dual_tangent: x.tangent().div(x.value().mul(0.69314718055994530942))
+
+- name: log10
+  rule: Log10
+  reverse: out_sens.div(conjugate_if_complex_(input.mul(2.30258509299404568402)))
+  trace: x.value().log10()
+  dual_primal: x.value().log10()
+  dual_tangent: x.tangent().div(x.value().mul(2.30258509299404568402))
+
+- name: exp2
+  rule: Exp2
+  reverse: out_sens.mul(conjugate_if_complex_(output.mul(0.69314718055994530942)))
+  trace: x.value().exp2()
+  dual_primal: x.value().exp2()
+  dual_tangent: primal.mul(0.69314718055994530942).mul(x.tangent())
+
+- name: cbrt
+  rule: Cbrt
+  reverse: out_sens.div(conjugate_if_complex_(output.square().mul(3.0)))
+  trace: x.value().cbrt()
+  dual_primal: x.value().cbrt()
+  dual_tangent: x.tangent().div(primal.square().mul(3.0))
+
+# Primitive binary reverse formulas. These use the same generated-at-build
+# model as the unary rules above; broadcasting reduction and dtype transport
+# remain centralized in maybe_link_binary_op_.
+
+- name: add
+  arity: binary
+  rule: Add
+  lhs_reverse: out_sens
+  rhs_reverse: out_sens
+
+- name: sub
+  arity: binary
+  rule: Sub
+  lhs_reverse: out_sens
+  rhs_reverse: out_sens.neg()
+
+- name: mul
+  arity: binary
+  rule: Mul
+  lhs_reverse: mul_backward_product_(out_sens, conjugate_if_complex_(rhs))
+  rhs_reverse: mul_backward_product_(out_sens, conjugate_if_complex_(lhs))
+
+- name: div
+  arity: binary
+  rule: Div
+  lhs_reverse: div_lhs_backward_(out_sens, rhs)
+  rhs_reverse: div_rhs_backward_(out_sens, lhs, rhs)
+
+- name: pow
+  arity: binary
+  rule: Pow
+  lhs_reverse: pow_lhs_backward_(out_sens, lhs, rhs)
+  rhs_reverse: pow_rhs_backward_(out_sens, lhs, rhs, output)
+
+- name: maximum
+  arity: binary
+  rule: Maximum
+  lhs_reverse: maximum_lhs_backward_(out_sens, lhs, rhs)
+  rhs_reverse: maximum_rhs_backward_(out_sens, lhs, rhs)
+
+- name: minimum
+  arity: binary
+  rule: Minimum
+  lhs_reverse: minimum_lhs_backward_(out_sens, lhs, rhs)
+  rhs_reverse: minimum_rhs_backward_(out_sens, lhs, rhs)

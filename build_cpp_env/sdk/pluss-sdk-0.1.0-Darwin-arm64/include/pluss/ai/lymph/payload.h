@@ -79,12 +79,18 @@ class Payload final {
   }
 
   Payload& label(std::string feature_name) {
+    // Supervision is one role with two spellings -- attaching it by column
+    // name clears any previously attached Series label (and vice versa), so
+    // the later .label(...) call always wins and has_label() /
+    // has_label_feature() stay mutually exclusive.
     options_.label_feature = std::move(feature_name);
+    label_ = Series::undefined();
     return *this;
   }
 
   Payload& label(Series y) {
     label_ = std::move(y);
+    options_.label_feature.reset();
     return *this;
   }
 

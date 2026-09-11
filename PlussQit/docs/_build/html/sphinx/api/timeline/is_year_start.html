@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -44,16 +44,23 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_year_start</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">is_year_start()</span></code> is the sole public spelling.</p>
 </section>
-<section id="recognize-january-1-in-local-time">
-<h2>Recognize January 1 In Local Time<a class="headerlink" href="#recognize-january-1-in-local-time" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">is_year_start()</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> whenever a timestamp’s local month and day are
-January 1. The time-of-day does not matter. The result is a shape-preserving
-boolean Series, and <code class="docutils literal notranslate"><span class="pre">NaT</span></code> maps to <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<section id="what-counts-as-a-year-start">
+<h2>What Counts As A Year Start<a class="headerlink" href="#what-counts-as-a-year-start" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is_year_start()</span></code> marks every instant on January 1 in the Timeline’s local
+civil calendar. The local time can be midnight, noon, or any other time on that
+date. The predicate does not infer fiscal calendars and does not inspect which
+observation appears first in storage.</p>
 </section>
-<section id="example-year-starts-in-a-mixed-calendar">
-<h2>Example: Year Starts In A Mixed Calendar<a class="headerlink" href="#example-year-starts-in-a-mixed-calendar" title="Link to this heading">¶</a></h2>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">¶</a></h2>
+<p>The result is a newly allocated boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> with the same rank and shape
+as the receiver. Scalars remain rank zero, matrices remain matrices, empty
+extents remain empty, and <code class="docutils literal notranslate"><span class="pre">NaT</span></code> becomes <code class="docutils literal notranslate"><span class="pre">false</span></code>. The receiver is not changed.
+Timezone metadata matters because it determines the local month and day.</p>
+</section>
+<section id="example-1-mixed-calendar-dates">
+<h2>Example 1: Mixed Calendar Dates<a class="headerlink" href="#example-1-mixed-calendar-dates" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2019-12-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-01-01T12:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2020-02-29T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-03-31T12:00:00Z&quot;</span><span class="p">,</span>
@@ -63,40 +70,64 @@ boolean Series, and <code class="docutils literal notranslate"><span class="pre"
 <span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">calendar</span><span class="p">.</span><span class="n">is_year_start</span><span class="p">());</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
 data=[false, true, false, false, false, false, true, false, false]
 </pre></div>
 </div>
-<p>Only 1 January 2020 and 1 January 2021 qualify. Leap-year status has no effect
-on where a civil year begins.</p>
+<p>Leap-year status changes the year’s length, not its opening date.</p>
 </section>
+<section id="example-2-shape-and-time-of-day">
+<h2>Example 2: Shape And Time-Of-Day<a class="headerlink" href="#example-2-shape-and-time-of-day" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-01T23:59:59.999999999Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="s">&quot;2024-02-29T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-03-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-04-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="s">&quot;2024-12-31T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">is_year_start</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  true false false ⎤
+⎣ false false false ⎦
+</pre></div>
+</div>
+<p>January 1 remains a year start through its final nanosecond.</p>
 </section>
-<section id="example-one-instant-two-local-dates">
-<h2>Example: One Instant, Two Local Dates<a class="headerlink" href="#example-one-instant-two-local-dates" title="Link to this heading">¶</a></h2>
+<section id="example-3-select-the-reporting-timezone-first">
+<h2>Example 3: Select The Reporting Timezone First<a class="headerlink" href="#example-3-select-the-reporting-timezone-first" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2021-01-01T00:30:00Z&quot;</span><span class="p">);</span>
 <span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC year_start=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">is_year_start</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;New York year_start=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">is_year_start</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">is_year_start</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;New York=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">is_year_start</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>UTC year_start=true
-New York year_start=false
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>UTC=true
+New York=false
 </pre></div>
 </div>
-<p>The instant is unchanged; only its local calendar representation changed.</p>
+<p>The instant is January 1 in UTC but December 31 in New York.</p>
 </section>
+<section id="example-4-year-starts-are-quarter-starts">
+<h2>Example 4: Year Starts Are Quarter Starts<a class="headerlink" href="#example-4-year-starts-are-quarter-starts" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">starts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">is_year_start</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">starts</span><span class="p">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">dates</span><span class="p">.</span><span class="n">is_quarter_start</span><span class="p">()).</span><span class="n">equal</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
 </section>
 <section id="gotchas-and-failure-modes">
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>This means civil January 1, not fiscal-year start.</p></li>
-<li><p>It marks every timestamp on that date, not only midnight.</p></li>
-<li><p>Convert to the reporting timezone before creating the mask.</p></li>
+<li><p>This is civil January 1, not a configurable fiscal-year boundary.</p></li>
+<li><p>Every timestamp on January 1 qualifies; the method does not choose one row.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> does not establish validity because <code class="docutils literal notranslate"><span class="pre">NaT</span></code> is also false.</p></li>
+<li><p>The operation supports every Timeline rank and performs no reduction.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -107,8 +138,8 @@ New York year_start=false
 <li><p><a class="reference internal" href="year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">year</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_quarter_end.html"><span class="label">Previous</span><span class="title">is_quarter_end</span></a>
-  <a class="next-link" href="is_year_end.html"><span class="label">Next</span><span class="title">is_year_end</span></a>
+  <a class="prev-link" href="is_year_end.html"><span class="label">Previous</span><span class="title">is_year_end</span></a>
+  <a class="next-link" href="isnat.html"><span class="label">Next</span><span class="title">isnat</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -168,6 +199,7 @@ New York year_start=false
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -195,6 +227,7 @@ New York year_start=false
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

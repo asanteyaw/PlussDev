@@ -116,8 +116,8 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
     <span class="label">Previous</span>
     <span class="title">url_decode</span>
   </a>
-  <a class="next-link" href="../../note_api_reference.html">
+  <a class="next-link" href="vector.html">
     <span class="label">Next</span>
-    <span class="title">Note API Reference</span>
+    <span class="title">vector</span>
   </a>
 </div>

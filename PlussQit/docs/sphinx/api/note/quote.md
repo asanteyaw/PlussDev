@@ -130,9 +130,9 @@ in the second cell survive intact.
   the result must be a valid literal.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nlp_remove_urls.html">
+  <a class="prev-link" href="phonetic_soundex.html">
     <span class="label">Previous</span>
-    <span class="title">nlp_remove_urls</span>
+    <span class="title">phonetic_soundex</span>
   </a>
   <a class="next-link" href="regex_findall.html">
     <span class="label">Next</span>

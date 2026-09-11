@@ -109,7 +109,7 @@ offers boundary, completion, anchor, and sign policies.
 - [`span`](span.md): calculate configurable elementwise spans.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="month_scalar.html"><span class="label">Previous</span><span class="title">month_scalar</span></a>
+  <a class="prev-link" href="month_start_scalar.html"><span class="label">Previous</span><span class="title">month_start_scalar</span></a>
   <a class="next-link" href="nanosecond.html"><span class="label">Next</span><span class="title">nanosecond</span></a>
 </div>
 <!-- pluss-hand-authored -->

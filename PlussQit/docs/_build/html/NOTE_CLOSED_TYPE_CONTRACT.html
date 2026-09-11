@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Closed Note Type Contract &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=15722e59" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=41aa11a5"></script>
+    <script src="_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="NaN / Inf behavior" href="NaN_Inf.html" />
+    <link rel="prev" title="MSharp SnapPtr (intrusive reference counting)" href="MSharp_SnapPtr.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="closed-note-type-contract">
+<h1>Closed Note Type Contract<a class="headerlink" href="#closed-note-type-contract" title="Link to this heading">¶</a></h1>
+<p>This document freezes the target contract for making <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code> a closed,
+homogeneously typed value family. It is an implementation gate for the eight
+migration passes, not public API teaching.</p>
+<p>The priority order is strict:</p>
+<ol class="arabic simple">
+<li><p>semantic accuracy and validated failure behavior</p></li>
+<li><p>vectorized and batched execution</p></li>
+<li><p>allocation, locality, and throughput efficiency</p></li>
+</ol>
+<p>An optimization that changes shape, dtype, broadcasting, ordering, encoding, or
+failure behavior is not acceptable. A correct scalar loop is only an interim
+reference: production kernels must then process whole Notes in batches and use
+contiguous typed storage where the operation permits it.</p>
+<section id="why-note-is-a-family">
+<h2>Why Note Is A Family<a class="headerlink" href="#why-note-is-a-family" title="Link to this heading">¶</a></h2>
+<p>Text operations naturally produce more than text. A predicate produces boolean
+lanes, a length produces integer lanes, and a similarity produces floating-point
+lanes. Returning unrelated containers or a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> breaks the Note
+pipeline and loses the common shape and ownership model. Encoding booleans and
+numbers as text preserves the class name but not the type contract.</p>
+<p>The closed family therefore has five homogeneous dtypes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Dtype</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Required storage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Text</span></code></p></td>
+<td><p>UTF-8-oriented text cells</p></td>
+<td><p>packed byte arena plus cell spans</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Bytes</span></code></p></td>
+<td><p>uninterpreted byte cells</p></td>
+<td><p>packed byte arena plus cell spans</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Bool</span></code></p></td>
+<td><p>predicate and comparison lanes</p></td>
+<td><p>contiguous <code class="docutils literal notranslate"><span class="pre">std::uint8_t</span></code> lanes</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Int64</span></code></p></td>
+<td><p>counts, positions, lengths, and ragged offsets</p></td>
+<td><p>aligned contiguous <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code> lanes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Float64</span></code></p></td>
+<td><p>similarities, proportions, and model scores</p></td>
+<td><p>aligned contiguous <code class="docutils literal notranslate"><span class="pre">double</span></code> lanes</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">std::vector&lt;bool&gt;</span></code> is forbidden. Its proxy representation obstructs ordinary
+contiguous access and predictable vectorized kernels.</p>
+</section>
+<section id="return-boundary">
+<h2>Return Boundary<a class="headerlink" href="#return-boundary" title="Link to this heading">¶</a></h2>
+<p>Closed does not mean every member must return <code class="docutils literal notranslate"><span class="pre">Note</span></code>. Native C++ values remain
+appropriate when the operation crosses an explicit object or host boundary.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Operation class</p></th>
+<th class="head"><p>Target return</p></th>
+<th class="head"><p>Reason</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>text/byte transformation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Note</span></code></p></td>
+<td><p>preserves dtype and shape unless the operation explicitly reshapes</p></td>
+</tr>
+<tr class="row-odd"><td><p>predicate or comparison</p></td>
+<td><p>Bool <code class="docutils literal notranslate"><span class="pre">Note</span></code></p></td>
+<td><p>remains batchable and shape-aware</p></td>
+</tr>
+<tr class="row-even"><td><p>count, length, or position</p></td>
+<td><p>Int64 <code class="docutils literal notranslate"><span class="pre">Note</span></code></p></td>
+<td><p>remains in the Note family without string conversion</p></td>
+</tr>
+<tr class="row-odd"><td><p>similarity or score</p></td>
+<td><p>Float64 <code class="docutils literal notranslate"><span class="pre">Note</span></code></p></td>
+<td><p>preserves numeric precision and batch execution</p></td>
+</tr>
+<tr class="row-even"><td><p>reshape, selection, or ordering</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Note</span></code></p></td>
+<td><p>preserves the receiver dtype</p></td>
+</tr>
+<tr class="row-odd"><td><p>ragged tokenization</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code></p></td>
+<td><p>structured result made from a Text <code class="docutils literal notranslate"><span class="pre">Note</span></code> and Int64 <code class="docutils literal notranslate"><span class="pre">Note</span></code> offsets</p></td>
+</tr>
+<tr class="row-even"><td><p>rank, extent, cardinality, dtype query</p></td>
+<td><p>native scalar</p></td>
+<td><p>describes the Note object itself, not one lane per cell</p></td>
+</tr>
+<tr class="row-odd"><td><p>scalar/cell extraction</p></td>
+<td><p>typed scalar or owning typed reference</p></td>
+<td><p>explicit boundary from a Note to one host value</p></td>
+</tr>
+<tr class="row-even"><td><p>host export, iteration, streaming, debug rendering</p></td>
+<td><p>native host type</p></td>
+<td><p>explicit interoperability boundary</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">matrix()</span></code> and <code class="docutils literal notranslate"><span class="pre">tensor3()</span></code> are decompositions, not host exports. Their target
+forms are <code class="docutils literal notranslate"><span class="pre">std::vector&lt;Note&gt;</span></code> containing row or slab views that share storage
+with the source. <code class="docutils literal notranslate"><span class="pre">host()</span></code> is the explicit owning conversion when nested host
+containers are wanted.</p>
+</section>
+<section id="semantic-invariants">
+<h2>Semantic Invariants<a class="headerlink" href="#semantic-invariants" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Every defined <code class="docutils literal notranslate"><span class="pre">Note</span></code> has exactly one dtype. Mixed-dtype storage is invalid.</p></li>
+<li><p>Shape metadata is independent of dtype and supports scalar through rank three,
+matching the existing public rank contract.</p></li>
+<li><p>Elementwise predicates, measurements, comparisons, and scores preserve the
+input shape. They do not flatten merely because the old return container was
+one-dimensional.</p></li>
+<li><p>Binary elementwise operations validate their documented shape or scalar-
+broadcast contract before allocating output.</p></li>
+<li><p>Text transforms accept <code class="docutils literal notranslate"><span class="pre">Text</span></code>; byte-safe transforms may also accept <code class="docutils literal notranslate"><span class="pre">Bytes</span></code>.
+Invalid dtype use fails immediately rather than parsing a rendered value.</p></li>
+<li><p>Bool and numeric kernels read native lanes. They never parse strings produced
+by another Note operation, and typed results are never formatted to text for
+internal transport.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Text</span></code> and <code class="docutils literal notranslate"><span class="pre">Bytes</span></code> remain distinct even when their bytes happen to be valid
+UTF-8. <code class="docutils literal notranslate"><span class="pre">is_bytes()</span></code> is the scalar dtype query. <code class="docutils literal notranslate"><span class="pre">is_utf8_valid()</span></code> is the
+shape-preserving content predicate.</p></li>
+<li><p>Undefined, scalar, empty, and zero-extent Notes remain distinct states. Each
+operation must specify and test its behavior for every applicable state.</p></li>
+<li><p>Views retain ownership of their backing allocation. A borrowed host view is
+valid only while its owning Note or owning cell reference remains alive.</p></li>
+<li><p>In-place operations preserve dtype and shape unless their public contract
+explicitly permits a shape mutation. They must not expose a partially updated
+receiver after validation failure.</p></li>
+</ul>
+</section>
+<section id="accuracy-gates">
+<h2>Accuracy Gates<a class="headerlink" href="#accuracy-gates" title="Link to this heading">¶</a></h2>
+<p>Each migrated family requires a focused executable test before its old return
+path is removed. Tests must cover all overloads, scalar and higher-rank shape,
+empty and undefined inputs, dtype rejection, broadcasting, boundary values, and
+stable errors. Existing text behavior is the compatibility oracle except where
+the audit identifies an inconsistency such as flattened predicates or encoded
+numeric output.</p>
+<p>The machine-readable inventory is
+<code class="docutils literal notranslate"><span class="pre">tools/audit/note_closed_type_contract.json</span></code>. It is generated from the current
+declarations plus explicit records for handwritten and nonmember APIs. CMake’s
+<code class="docutils literal notranslate"><span class="pre">plussqit_coden_closed_note_contract_check</span></code> target rejects a stale inventory,
+and the CodeN library depends on that check.</p>
+<p>The inventory covers callable <code class="docutils literal notranslate"><span class="pre">Note</span></code> and <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> operations and their
+nonmember operators. Factories are a separate public family and will be migrated
+with typed construction in Pass 3. Compiler-generated copy/move/destruction is
+object lifecycle rather than a result operation and is intentionally excluded.</p>
+</section>
+<section id="vectorization-and-performance-gates">
+<h2>Vectorization And Performance Gates<a class="headerlink" href="#vectorization-and-performance-gates" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>A result kernel allocates its output storage once per Note, not once per cell.</p></li>
+<li><p>Bool, Int64, and Float64 results are written directly into contiguous lanes.</p></li>
+<li><p>Text kernels precompute or conservatively reserve output bytes and append into
+one packed arena; they do not construct one temporary Note per element.</p></li>
+<li><p>Predicate and numeric loops use batched contiguous traversal and are eligible
+for compiler vectorization. Branch-heavy Unicode work remains batched even
+when individual code-point decisions cannot be SIMD-vectorized.</p></li>
+<li><p>Ragged operations build one token arena and one contiguous Int64 offset Note.</p></li>
+<li><p>Row and slab decomposition is view construction; it does not copy cell bytes.</p></li>
+<li><p>Conversions to host containers occur only through explicit extraction APIs.</p></li>
+<li><p>Benchmarks record allocation count, bytes allocated, and throughput for small
+and large Notes. A pass cannot close with an unexplained material regression.</p></li>
+</ul>
+</section>
+<section id="compatibility-reality">
+<h2>Compatibility Reality<a class="headerlink" href="#compatibility-reality" title="Link to this heading">¶</a></h2>
+<p>High-level PlussMic <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and <code class="docutils literal notranslate"><span class="pre">Thread</span></code> operations can keep their public
+contracts. Their internals can consume typed Notes or call explicit host export
+at the boundary. Current production code relies mainly on <code class="docutils literal notranslate"><span class="pre">Note::vector()</span></code> for
+text extraction, which remains available for Text and Bytes Notes.</p>
+<p>Direct low-level callers are not source-compatible where a return type changes:
+comparisons and predicates become Bool Notes, measurements and <code class="docutils literal notranslate"><span class="pre">argsort()</span></code> become
+Int64 Notes, score methods become Float64 Notes, <code class="docutils literal notranslate"><span class="pre">matrix()</span></code> and <code class="docutils literal notranslate"><span class="pre">tensor3()</span></code>
+become Note decompositions, and <code class="docutils literal notranslate"><span class="pre">TokenBatch::offsets()</span></code> becomes an Int64 Note.
+The two Series-returning compatibility helpers, <code class="docutils literal notranslate"><span class="pre">contains_series()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">lengths_bytes_series()</span></code>, are removed rather than retained as aliases.</p>
+<p>NodeB and Ice must be rebuilt against the final public headers. The initial
+downstream scan found no production use of those return-type escape hatches, but
+the final pass still requires full builds and tests; absence in a text search is
+not accepted as ABI proof.</p>
+</section>
+<section id="eight-passes">
+<h2>Eight Passes<a class="headerlink" href="#eight-passes" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pass</p></th>
+<th class="head"><p>Scope</p></th>
+<th class="head"><p>Acceptance condition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>contract and complete surface inventory</p></td>
+<td><p>manifest is reproducible, CMake checks staleness, downstream risks are recorded</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>dtype tag and typed storage core</p></td>
+<td><p>all five dtypes satisfy ownership, shape, copy/move, and alignment tests</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>factories, typed access, views, and host export</p></td>
+<td><p>every dtype round-trips without text encoding; row/slab views share storage</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>Bool predicates and comparisons</p></td>
+<td><p>exact shape/broadcast/error parity, then batched contiguous Bool kernels</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>Int64 measurements and Float64 scores</p></td>
+<td><p>native precision and boundary behavior, then vectorized numeric output</p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> and ragged offsets</p></td>
+<td><p>tokens plus Int64 offsets validate segmentation without host containers</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>transformations, selections, operators, and in-place paths</p></td>
+<td><p>dtype-preserving closed results and transactional validation</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>downstream migration, benchmarks, documentation, and ABI cleanup</p></td>
+<td><p>PlussQit, PlussMic, NodeB, and Ice pass; no legacy escape aliases remain</p></td>
+</tr>
+</tbody>
+</table>
+<p>Pass 1 deliberately changes no runtime behavior. It closes only when every
+current public signature has a target disposition and the generated manifest is
+identical to the checked-in contract.</p>
+</section>
+<section id="implementation-status">
+<h2>Implementation Status<a class="headerlink" href="#implementation-status" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pass</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Evidence</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>complete</p></td>
+<td><p>514-signature manifest is reproducible and enforced by the CodeN build</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>complete</p></td>
+<td><p>five-state dtype tag, discriminated payload, checked shape/cardinality, 64-byte native lanes, zero-copy kernel-buffer adoption, normal and sanitizer tests</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>complete</p></td>
+<td><p>typed scalar/vector/explicit-shape factories, checked native extraction, dtype-aware host/rendering, and storage-sharing row/slab views pass normal and sanitizer suites</p></td>
+</tr>
+<tr class="row-odd"><td><p>4-8</p></td>
+<td><p>pending</p></td>
+<td><p>no acceptance claim until the matching pass gates succeed</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Closed Note Type Contract</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#why-note-is-a-family">Why Note Is A Family</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#return-boundary">Return Boundary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#semantic-invariants">Semantic Invariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#accuracy-gates">Accuracy Gates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#vectorization-and-performance-gates">Vectorization And Performance Gates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compatibility-reality">Compatibility Reality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#eight-passes">Eight Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementation-status">Implementation Status</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="MSharp_SnapPtr.html" title="previous chapter">MSharp SnapPtr (intrusive reference counting)</a></li>
+      <li>Next: <a href="NaN_Inf.html" title="next chapter">NaN / Inf behavior</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/NOTE_CLOSED_TYPE_CONTRACT.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

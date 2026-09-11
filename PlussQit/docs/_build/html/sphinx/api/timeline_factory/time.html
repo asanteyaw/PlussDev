@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -46,16 +46,21 @@
 <span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">time</span><span class="p">(</span><span class="n">string_range</span><span class="w"> </span><span class="n">values</span><span class="p">)</span>
 <span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">time</span><span class="p">(</span><span class="n">nested_string_values</span><span class="w"> </span><span class="n">values</span><span class="p">)</span>
 <span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">time</span><span class="p">(</span><span class="n">string_range</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">integer_range</span><span class="w"> </span><span class="n">sizes</span><span class="p">)</span>
+<span class="n">Timeline</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">time</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="turn-clock-readings-into-comparable-instants">
 <h2>Turn Clock Readings Into Comparable Instants<a class="headerlink" href="#turn-clock-readings-into-comparable-instants" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">time()</span></code> accepts clock-only text and anchors it to <code class="docutils literal notranslate"><span class="pre">1970-01-01</span></code>. A <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>
-always stores instants, so this anchor gives clock readings a stable numeric
-representation without pretending they recur every day. Use <code class="docutils literal notranslate"><span class="pre">time()</span></code> for
-time-of-day values that need ordering, duration arithmetic, shape, or exact
-nanosecond storage. Use <code class="docutils literal notranslate"><span class="pre">make()</span></code> when a real calendar date is present.</p>
+<p><code class="docutils literal notranslate"><span class="pre">time()</span></code> constructs anchored clock values in two ways. Text overloads parse
+clock-only input. The Timeline overload extracts each instant’s local hour,
+minute, second, and nanosecond fields. Both place those fields on <code class="docutils literal notranslate"><span class="pre">1970-01-01</span></code>
+because a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> always stores complete instants and therefore cannot store
+a clock with no date at all.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">time()</span></code> for time-of-day values that need ordering, duration arithmetic,
+shape, or exact nanosecond storage. Use the Timeline overload when the source
+already contains complete timestamps; use <code class="docutils literal notranslate"><span class="pre">make()</span></code> when the source date must
+remain part of the result.</p>
 <p>The default anchor timezone is UTC. A numeric offset on the clock is accepted
 and identifies an instant relative to that UTC anchor. For example,
 <code class="docutils literal notranslate"><span class="pre">09:30:00-07:00</span></code> becomes <code class="docutils literal notranslate"><span class="pre">16:30:00Z</span></code>. This may be useful for protocol fields,
@@ -65,6 +70,11 @@ date; an isolated clock cannot determine which seasonal offset applies.</p>
 seconds and a numeric offset. Hours are <code class="docutils literal notranslate"><span class="pre">0..23</span></code>, minutes and seconds are
 <code class="docutils literal notranslate"><span class="pre">0..59</span></code>, and leap-second spelling <code class="docutils literal notranslate"><span class="pre">60</span></code> is rejected. Fractions are retained to
 nanosecond precision.</p>
+<p>For a Timeline input, extraction occurs in <code class="docutils literal notranslate"><span class="pre">values.tz()</span></code>, then the clock is
+re-localized on the anchor date in that same timezone. This matters when the
+source date and 1970 anchor use different UTC offsets. Rank, shape, timezone,
+ordering, and lane-wise <code class="docutils literal notranslate"><span class="pre">NaT</span></code> are preserved. No lane without a time part exists
+inside a defined Timeline; <code class="docutils literal notranslate"><span class="pre">NaT</span></code> is the absent representation and propagates.</p>
 </section>
 <section id="example-1-one-nanosecond-after-the-anchor">
 <h2>Example 1: One Nanosecond After The Anchor<a class="headerlink" href="#example-1-one-nanosecond-after-the-anchor" title="Link to this heading">¶</a></h2>
@@ -139,10 +149,50 @@ display metadata.</p>
 values and geometry arrive separately at runtime.</p>
 </section>
 </section>
+<section id="example-5-extract-clock-values-from-a-timeline">
+<h2>Example 5: Extract Clock Values From A Timeline<a class="headerlink" href="#example-5-extract-clock-values-from-a-timeline" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-07-15T18:34:56.123456789Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="p">}).</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">time</span><span class="p">(</span><span class="n">events</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2], tz=America/Edmonton)
+[ 1970-01-01 12:34:56, NaT ]
+</pre></div>
+</div>
+<p>The compact printer hides the fraction, but the stored first lane retains
+<code class="docutils literal notranslate"><span class="pre">.123456789</span></code>. The overload is equivalent to <code class="docutils literal notranslate"><span class="pre">events.time()</span></code> and leaves <code class="docutils literal notranslate"><span class="pre">events</span></code>
+unchanged.</p>
+</section>
+</section>
+<section id="example-6-nested-clock-text-constructs-directly">
+<h2>Example 6: Nested Clock Text Constructs Directly<a class="headerlink" href="#example-6-nested-clock-text-constructs-directly" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">clocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">time</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;00:00:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;06:00:00&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;12:00:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;18:00:00&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">clocks</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2, 2], tz=UTC)
+[ 1970-01-01 00:00:00 1970-01-01 06:00:00 ]
+[ 1970-01-01 12:00:00 1970-01-01 18:00:00 ]
+</pre></div>
+</div>
+<p>This is the direct nested-brace construction form. No intermediate Timeline is
+required.</p>
+</section>
+</section>
 <section id="validation-and-failure">
 <h2>Validation And Failure<a class="headerlink" href="#validation-and-failure" title="Link to this heading">¶</a></h2>
-<p>Dates, empty tokens, impossible clock fields, invalid offsets, ragged nesting,
-shape mismatches, and ranks above three throw. No wrapping is performed:
+<p>For text overloads, dates, empty tokens, impossible clock fields, invalid
+offsets, ragged nesting, shape mismatches, and ranks above three throw. No
+wrapping is performed:
 <code class="docutils literal notranslate"><span class="pre">24:00:00</span></code> does not become the following day, and <code class="docutils literal notranslate"><span class="pre">23:59:60</span></code> does not become
 midnight.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -152,8 +202,8 @@ midnight.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rejected
 </pre></div>
 </div>
@@ -223,6 +273,7 @@ midnight.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -250,6 +301,7 @@ midnight.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

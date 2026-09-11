@@ -131,9 +131,9 @@ int main() {
   lstm->train(true);
   rnn_model->to(pluss::pCPU, ScalarType::Float64);
 
-  const let [rnn_pred, rnn_features, rnn_state] = rnn_model->forward(features);
-  const let [gru_features, gru_state] = gru->forward(features);
-  const let [lstm_features, lstm_state] = lstm->forward(features);
+  const auto [rnn_pred, rnn_features, rnn_state] = rnn_model->forward(features);
+  const auto [gru_features, gru_state] = gru->forward(features);
+  const auto [lstm_features, lstm_state] = lstm->forward(features);
   const Series gru_pred = rnn_model->head->forward(gru_features);
   const Series lstm_pred = rnn_model->head->forward(lstm_features);
 

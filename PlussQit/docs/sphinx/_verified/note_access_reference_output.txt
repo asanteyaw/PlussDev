@@ -1,0 +1,100 @@
+=== at row major ===
+at(0)=r0c0
+at(4)=r1c1
+at(5)=r1c2
+
+=== at indices ===
+matrix[1,2]=r1c2
+tensor[1,0,1]=101
+scalar[]=solo
+
+=== binary cell ===
+bytes=3 values=65,0,66
+
+=== owning cell ===
+defined=true bytes=4 text=beta
+copy=beta
+coordinate after source=south
+
+=== owned one element ===
+empty defined=true empty=true bytes=0
+matrix=one
+
+=== host ranks ===
+scalar kind=true value=alpha
+vector kind=true values=["a", "b"]
+array kind=true shape=[2, 2] values=["a", "b", "c", "d"] contiguous=true
+retained=["kept", "copy"]
+
+=== host empty geometry ===
+shape=[3, 0] values=0
+
+=== access failures ===
+at(-1): rejected
+at(6): rejected
+rank mismatch: rejected
+index out of bounds: rejected
+owned multi-cell: rejected
+host undefined: rejected
+wrong host accessor: rejected
+
+=== at scalar ===
+solo
+
+=== at copied borrow ===
+beta
+
+=== at short failures ===
+at(-1): rejected
+at(2): rejected
+
+=== coordinate containers ===
+c d d
+
+=== TextRef projections ===
+view=delta copy=delta first=d
+
+=== TextRef iteration ===
+65 66 67 
+
+=== TextRef empty states ===
+empty: defined=true empty=true
+default: defined=false empty=true
+
+=== TextRef binary ===
+bytes=3 middle=0
+
+=== cell short failures ===
+cell(-1): rejected
+cell(2): rejected
+
+=== cell_at matrix ===
+south
+
+=== cell_at ranks ===
+origin 110
+
+=== cell_at dynamic ===
+b
+
+=== cell_at failures ===
+rejected
+rejected
+rejected
+
+=== host vector ===
+vector kind=true size=2 last=b
+
+=== host tensor ===
+dim=3 numel=4 shape=[1, 2, 2]
+
+=== host independent copy ===
+kept changed
+
+=== owned scalar ===
+solo
+
+=== owned failures ===
+zero: rejected
+many: rejected
+undefined: rejected

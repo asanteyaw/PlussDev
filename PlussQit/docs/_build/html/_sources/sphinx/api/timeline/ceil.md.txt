@@ -5,57 +5,68 @@
 ## Signature
 
 ```cpp
-Timeline::ceil(std::string_view unit) -> Timeline
+Timeline Timeline::ceil(std::string_view unit) const
 ```
 
-## What It Does
+## Snap Forward In Local Time
 
-Rounds each timestamp up to the next boundary of the requested unit.
+`ceil()` returns the least requested-unit boundary that is not earlier than each local wall time. Already aligned values remain unchanged; use it for upper bucket boundaries rather than for a strictly-later boundary.
 
-## Parameters
+## Units
 
-**unit**
+| Accepted spellings | Boundary |
+|---|---|
+| `S / s / sec / second` | second |
+| `min / m / minute` | minute |
+| `H / h / hour` | hour |
+| `D / d / day` | local day |
 
-The target unit boundary, such as `"H"` for hourly rounding.
+## Result Contract
 
-## Returns
+The method allocates a new Timeline while preserving rank, shape, timezone, ordering, and `NaT` positions. The receiver is not modified. Boundaries are computed in local wall time and then resolved in the current timezone.
 
-`Timeline`
-    A timeline of ceiled timestamps.
-
-## Examples
-
-Example 1. Ceiling to the hour.
+## Example 1
 
 ```cpp
-auto out = base.ceil("H");
-std::cout << pluss::timeline::print(out) << "\n";
+const auto values = pluss::timeline::make({
+    "1969-12-31T23:29:30.123456789Z", "1969-12-31T23:30:00Z",
+    "1970-01-01T00:30:00Z", "1970-01-01T01:30:00Z", "",
+});
+std::cout << pluss::timeline::print(values.ceil("H")) << '\n';
 ```
-
-### Output
 
 ```text
-Timeline(shape=[4], tz=UTC)
-[ 2024-11-01 09:00:00, 2024-11-01 11:00:00, 2025-01-01 00:00:00, 2025-01-01 00:00:00 ]
+Timeline(shape=[5], tz=UTC)
+[ 1970-01-01 00:00:00, 1970-01-01 00:00:00, 1970-01-01 01:00:00, 1970-01-01 02:00:00, NaT ]
 ```
 
-## Notes
+## Example 2
 
-- Ceil may leave already-aligned timestamps unchanged.
-- It is useful for upper bucket boundaries and forward calendar binning.
+```cpp
+const auto spring = pluss::timeline::make(
+    "2024-03-10T08:30:00Z").tz_convert("America/Edmonton");
+try { (void)spring.ceil("H"); }
+catch (const std::exception&) { std::cout << "rejected\n"; }
+```
+
+```text
+rejected
+```
+
+## Edge Behavior
+
+A nominal boundary inside a spring-forward gap is rejected rather than shifted silently. Unsupported units and nanosecond overflow also fail; `NaT` propagates.
+
+All supported Timeline ranks are accepted; the operation is shape-preserving, not a reduction.
 
 ## See Also
 
-- [`Timeline::floor`](floor.md)
-- [`Timeline::round`](round.md)
+- [`floor`](floor.md)
+- [`ceil`](ceil.md)
+- [`round`](round.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="floor.html">
-    <span class="label">Previous</span>
-    <span class="title">floor</span>
-  </a>
-  <a class="next-link" href="concat.html">
-    <span class="label">Next</span>
-    <span class="title">concat</span>
-  </a>
+  <a class="prev-link" href="argsort.html"><span class="label">Previous</span><span class="title">argsort</span></a>
+  <a class="next-link" href="concat.html"><span class="label">Next</span><span class="title">concat</span></a>
 </div>
+<!-- pluss-hand-authored -->

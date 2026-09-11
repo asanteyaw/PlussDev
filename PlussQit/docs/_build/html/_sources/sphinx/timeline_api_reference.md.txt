@@ -131,7 +131,8 @@ The current handwritten pages cover these starting families:
 - formatting and text conversion: `strftime`, `to_note_iso`, `weekday_name`,
   and `month_name`; custom layouts belong in `strftime()` rather than named
   formatting aliases
-- rounding and projection: `floor`, `ceil`, `round`, `date`, `time`
+- rounding and projection: `floor`, `ceil`, `round`, `date`, `time`, and
+  local calendar boundary projection with `period_start`
 - timezone work: `tz_convert`, `tz_localize`
 - ordered insertion helpers on sorted 1D timelines:
   `searchsorted_left`, `searchsorted_right`
@@ -141,6 +142,9 @@ The current handwritten pages cover these starting families:
   `year_scalar`, `month_scalar`, `day_scalar`, `hour_scalar`, `minute_scalar`,
   `second_scalar`, `quarter_scalar`, `week_scalar`, `weekday_scalar`, and
   `yearday_scalar`
+- scalar calendar predicates: `leap_scalar`, `month_start_scalar`,
+  `month_end_scalar`, `quarter_start_scalar`, `quarter_end_scalar`, and
+  `is_weekend_scalar`
 - strict local-calendar field replacement: `set_year`, `set_month`, `set_day`,
   `set_hour`, `set_minute`, `set_second`
 - calendar predicates: `is_leap_year`, boundary predicates, business-day
@@ -223,6 +227,7 @@ api/timeline/is_thursday
 api/timeline/is_tuesday
 api/timeline/is_wednesday
 api/timeline/is_weekend
+api/timeline/is_weekend_scalar
 api/timeline/is_year_end
 api/timeline/is_year_start
 api/timeline/isnat
@@ -230,6 +235,7 @@ api/timeline/isnat_scalar
 api/timeline/isoformat
 api/timeline/isvalid
 api/timeline/le
+api/timeline/leap_scalar
 api/timeline/lt
 api/timeline/max
 api/timeline/microsecond
@@ -239,15 +245,20 @@ api/timeline/minute
 api/timeline/minute_scalar
 api/timeline/minutes_between
 api/timeline/month
+api/timeline/month_end_scalar
 api/timeline/month_name
 api/timeline/month_scalar
+api/timeline/month_start_scalar
 api/timeline/months_between
 api/timeline/nanosecond
 api/timeline/ne
 api/timeline/numel
 api/timeline/operators
+api/timeline/period_start
 api/timeline/quarter
+api/timeline/quarter_end_scalar
 api/timeline/quarter_scalar
+api/timeline/quarter_start_scalar
 api/timeline/repeat
 api/timeline/round
 api/timeline/searchsorted_left

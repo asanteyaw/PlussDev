@@ -86,6 +86,6 @@ std::cout << pluss::timeline::make("").quarter_scalar() << '\n';
 - [`is_quarter_start()`](is_quarter_start.md): classify quarter boundaries.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="quarter.html"><span class="label">Previous</span><span class="title">quarter</span></a>
-  <a class="next-link" href="repeat.html"><span class="label">Next</span><span class="title">repeat</span></a>
+  <a class="prev-link" href="quarter_end_scalar.html"><span class="label">Previous</span><span class="title">quarter_end_scalar</span></a>
+  <a class="next-link" href="quarter_start_scalar.html"><span class="label">Next</span><span class="title">quarter_start_scalar</span></a>
 </div>

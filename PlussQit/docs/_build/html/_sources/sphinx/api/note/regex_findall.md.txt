@@ -192,8 +192,8 @@ regex_findall: The expression contained mismatched ( and ).
     <span class="label">Previous</span>
     <span class="title">quote</span>
   </a>
-  <a class="next-link" href="remove_all.html">
+  <a class="next-link" href="regex_match.html">
     <span class="label">Next</span>
-    <span class="title">remove_all</span>
+    <span class="title">regex_match</span>
   </a>
 </div>

@@ -659,16 +659,6 @@
   }
 
   function buildPrevNext(methodNav) {
-    // apiref.py wire already writes a static prev/next footer
-    // (.pluss-inline-prev-next) into the page itself for every hand-authored
-    // reference page, computed from the manifest's own method order. Both
-    // branches below (the legacy methodNav-driven bar and the Sphinx
-    // rel="prev"/rel="next" toctree-order fallback) would otherwise inject a
-    // second, redundant #pluss-prev-next bar under it -- defer to the static
-    // one instead of stacking both.
-    if (document.querySelector(".pluss-inline-prev-next")) {
-      return;
-    }
     if (methodNav && methodNav.items && methodNav.items.length) {
       const bodywrapper = document.querySelector(".bodywrapper");
       if (!bodywrapper) {

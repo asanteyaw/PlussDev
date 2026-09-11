@@ -835,10 +835,29 @@ inline bool suppress_sentence_break(std::string_view s,
 }
 
 ::std::string to_ascii_lossy(::std::string_view s) {
+  // ASCII bytes pass through; each non-ASCII UTF-8 character becomes a single
+  // '?' (not one '?' per byte).
   std::string out;
   out.reserve(s.size());
-  for (unsigned char c : s) {
-    out.push_back(static_cast<char>(c < 0x80 ? c : '?'));
+  for (std::size_t i = 0; i < s.size();) {
+    const unsigned char c = static_cast<unsigned char>(s[i]);
+    if (c < 0x80) {
+      out.push_back(static_cast<char>(c));
+      ++i;
+      continue;
+    }
+    out.push_back('?');
+    std::size_t len = 1;
+    if ((c & 0xE0) == 0xC0) len = 2;
+    else if ((c & 0xF0) == 0xE0) len = 3;
+    else if ((c & 0xF8) == 0xF0) len = 4;
+    // Consume the lead byte plus any continuation bytes actually present.
+    ++i;
+    for (std::size_t k = 1; k < len && i < s.size() &&
+                            (static_cast<unsigned char>(s[i]) & 0xC0) == 0x80;
+         ++k) {
+      ++i;
+    }
   }
   return out;
 }
@@ -871,10 +890,15 @@ inline bool suppress_sentence_break(std::string_view s,
 }
 
 ::std::string remove_symbols_ascii(::std::string_view s) {
+  // Drop ASCII punctuation and ASCII control bytes; keep ASCII letters and
+  // digits, ASCII whitespace, and every non-ASCII byte (so accented and
+  // non-Latin text survives intact).
   std::string out;
   out.reserve(s.size());
   for (unsigned char c : s) {
-    if (is_ascii_alnum(c) || is_ascii_space(c)) out.push_back(static_cast<char>(c));
+    if (c >= 0x80 || is_ascii_alnum(c) || is_ascii_space(c)) {
+      out.push_back(static_cast<char>(c));
+    }
   }
   return out;
 }

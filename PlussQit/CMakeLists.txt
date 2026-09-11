@@ -11,7 +11,8 @@ project(PlussQit LANGUAGES CXX)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 option(PLUSS_ENABLE_TORCH "Enable LibTorch interop" OFF)
-if(PLUSS_ENABLE_TORCH)
+option(PLUSSQIT_AUTOGRAD_TORCH_ORACLE "Build direct CPU autograd comparisons against LibTorch" OFF)
+if(PLUSS_ENABLE_TORCH OR PLUSSQIT_AUTOGRAD_TORCH_ORACLE)
   if(NOT Torch_DIR)
     set(_pluss_torch_candidates "")
 
@@ -68,6 +69,8 @@ if(PLUSS_ENABLE_TORCH)
   endif()
 
   find_package(Torch REQUIRED)
+endif()
+if(PLUSS_ENABLE_TORCH)
   add_compile_definitions(PLUSS_ENABLE_TORCH)
 endif()
 
@@ -185,6 +188,7 @@ set(SERIES_OPSINTERNAL_CPP ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/OpsInterna
 set(SERIES_OPSINTERNAL_DECLS ${PLUSSQIT_GEN_DIR}/CodeM/Series/SeriesOpsInternalMethods.inc)
 set(SERIES_OPSINTERNAL_DEFS  ${PLUSSQIT_GEN_DIR}/CodeM/Series/SeriesOpsInternalMethods.cpp.inc)
 set(SERIES_AUTOGRAD_REVERSE_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutogradUnaryReverseGen.h)
+set(SERIES_AUTOGRAD_BINARY_REVERSE_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutogradBinaryReverseGen.h)
 set(SERIES_AUTOGRAD_DIFF_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutogradDiffUnaryGen.inc)
 
 add_custom_command(
@@ -217,11 +221,12 @@ add_custom_command(
 )
 
 add_custom_command(
-  OUTPUT ${SERIES_AUTOGRAD_REVERSE_GEN} ${SERIES_AUTOGRAD_DIFF_GEN}
+  OUTPUT ${SERIES_AUTOGRAD_REVERSE_GEN} ${SERIES_AUTOGRAD_BINARY_REVERSE_GEN} ${SERIES_AUTOGRAD_DIFF_GEN}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${PLUSSQIT_GEN_DIR}/CodeM/generated
   COMMAND ${Python3_EXECUTABLE} ${CODEM_AUTOGRAD_GEN_SCRIPT}
           --spec ${CODEM_DERIVATIVES_YAML}
           --out-reverse ${SERIES_AUTOGRAD_REVERSE_GEN}
+          --out-binary-reverse ${SERIES_AUTOGRAD_BINARY_REVERSE_GEN}
           --out-diff ${SERIES_AUTOGRAD_DIFF_GEN}
   DEPENDS ${CODEM_DERIVATIVES_YAML} ${CODEM_AUTOGRAD_GEN_SCRIPT}
   COMMENT "Generating Series autograd helpers from derivatives.yaml"
@@ -634,24 +639,35 @@ endif()
 # Close optional CodeM block before defining CodeN.
 endif() # PLUSSQIT_BUILD_CODEM
 
-# ---- CodeN (text, Note/Chord) ----
+# ---- CodeN (text, Note) ----
 set(CODEN_GEN_DIR ${CMAKE_BINARY_DIR}/generated/CodeN/generated)
 set(CODEN_DISPATCH_FALLBACKS_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/gen_coden_decl_dispatch_fallbacks.py)
 set(CODEN_NOTE_DECLS_GEN ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeN/generated/NoteMethodDeclsGen.h)
-set(CODEN_CHORD_DECLS_GEN ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeN/generated/ChordMethodDeclsGen.h)
 set(CODEN_DISPATCH_FALLBACKS_INC ${CODEN_GEN_DIR}/DispatchDeclFallbacks.inc)
+set(CODEN_CLOSED_NOTE_AUDIT ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit/note_closed_type_contract.py)
+set(CODEN_CLOSED_NOTE_MANIFEST ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit/note_closed_type_contract.json)
+
+add_custom_target(plussqit_coden_closed_note_contract_check
+  COMMAND ${Python3_EXECUTABLE} ${CODEN_CLOSED_NOTE_AUDIT}
+          --output ${CODEN_CLOSED_NOTE_MANIFEST}
+          --check
+  DEPENDS
+    ${CODEN_CLOSED_NOTE_AUDIT}
+    ${CODEN_CLOSED_NOTE_MANIFEST}
+    ${CODEN_NOTE_DECLS_GEN}
+  COMMENT "Checking the closed Note public return contract"
+  VERBATIM
+)
 
 add_custom_command(
   OUTPUT ${CODEN_DISPATCH_FALLBACKS_INC}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CODEN_GEN_DIR}
   COMMAND ${Python3_EXECUTABLE} ${CODEN_DISPATCH_FALLBACKS_GEN_SCRIPT}
           --note-decls ${CODEN_NOTE_DECLS_GEN}
-          --chord-decls ${CODEN_CHORD_DECLS_GEN}
           --out ${CODEN_DISPATCH_FALLBACKS_INC}
   DEPENDS
     ${CODEN_DISPATCH_FALLBACKS_GEN_SCRIPT}
     ${CODEN_NOTE_DECLS_GEN}
-    ${CODEN_CHORD_DECLS_GEN}
   COMMENT "Generating CodeN declared-dispatch fallback registry"
 )
 
@@ -666,12 +682,10 @@ add_library(plussqit_coden
   ${PLUSSQIT_CODEN_CPP}
   src/Flame/Flame.h
   src/CodeN/core/Errors.h
+  src/CodeN/core/AlignedAllocator.h
+  src/CodeN/core/NoteDType.h
   src/CodeN/core/TextArena.h
-  src/CodeN/core/ChordImpl.h
-  src/CodeN/core/ChordBase.h
-  src/CodeN/core/ChordSlim.h
-  src/CodeN/core/ChordSurface.h
-  src/CodeN/core/Chord.h
+  src/CodeN/core/TextRef.h
   src/CodeN/core/NoteImpl.h
   src/CodeN/core/NoteBase.h
   src/CodeN/core/NoteSlim.h
@@ -682,6 +696,7 @@ add_library(plussqit_coden
   src/CodeN/compat/Dispatch.h
   src/CodeN/compat/Dispatch.cpp
 )
+add_dependencies(plussqit_coden plussqit_coden_closed_note_contract_check)
 
 add_library(PlussQit::CodeN ALIAS plussqit_coden)
 add_library(pluss::plussqit_coden ALIAS plussqit_coden)
@@ -770,6 +785,34 @@ if (PLUSSQIT_BUILD_EXAMPLES)
   target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeN)
   if (TARGET plussqit_codem)
     target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_metadata_reference_demo
+    examples/CodeN/note_metadata_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_metadata_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_metadata_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_access_reference_demo
+    examples/CodeN/note_access_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_access_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_access_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_projection_reference_demo
+    examples/CodeN/note_projection_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_projection_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_projection_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_collection_reference_demo
+    examples/CodeN/note_collection_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_collection_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_collection_reference_demo PRIVATE PlussQit::CodeM)
   endif()
 
   add_executable(plussqit_coden_note_docverify_demo examples/CodeN/note_docverify_demo.cpp)
@@ -960,6 +1003,16 @@ if (PLUSSQIT_BUILD_CODEH)
     )
     target_link_libraries(plussqit_codeh_timeline_scalar_fields_reference_demo PRIVATE PlussQit::CodeH)
 
+    add_executable(plussqit_codeh_timeline_rounding_reference_demo
+      examples/CodeH/timeline_rounding_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_rounding_reference_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_period_start_reference_demo
+      examples/CodeH/timeline_period_start_reference_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_period_start_reference_demo PRIVATE PlussQit::CodeH)
+
     add_executable(plussqit_codeh_duration_docverify_demo
       examples/CodeH/duration_docverify_demo.cpp
     )
@@ -1059,9 +1112,21 @@ if (PLUSSQIT_BUILD_TESTS)
     add_executable(plussqit_codem_autodiff_tests
       tests/CodeM/test_patch67_autodiff_transforms.cpp
       tests/CodeM/test_patch167_cpu_autodiff_parity.cpp
+      tests/CodeM/test_patch177_cpu_torch_autograd_parity.cpp
     )
     target_link_libraries(plussqit_codem_autodiff_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_autodiff_tests PRIVATE cxx_std_20)
+    if(PLUSSQIT_AUTOGRAD_TORCH_ORACLE)
+      target_compile_definitions(plussqit_codem_autodiff_tests PRIVATE PLUSSQIT_AUTOGRAD_TORCH_ORACLE=1)
+      target_link_libraries(plussqit_codem_autodiff_tests PRIVATE ${TORCH_LIBRARIES})
+      set_source_files_properties(
+        tests/CodeM/test_patch177_cpu_torch_autograd_parity.cpp
+        PROPERTIES COMPILE_OPTIONS "-O0;-g0"
+      )
+      if(TORCH_CXX_FLAGS)
+        target_compile_options(plussqit_codem_autodiff_tests PRIVATE ${TORCH_CXX_FLAGS})
+      endif()
+    endif()
 
     set(CODEM_MPS_GATE_TEST_SOURCES
       tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp

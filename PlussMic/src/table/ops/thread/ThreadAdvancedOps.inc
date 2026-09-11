@@ -391,6 +391,13 @@ Thread note_bool_result_(const Thread& source,
   return Thread(bool_from_u8_(values), detail::validity_mask(source));
 }
 
+// Note predicate/comparison methods return a shape-preserving Bool Note
+// (pass 4 of the Note redesign) rather than a raw std::vector<uint8_t>.
+Thread note_bool_result_(const Thread& source, const pluss::Note& mask) {
+  const auto lanes = mask.bools();
+  return note_bool_result_(source, std::vector<std::uint8_t>(lanes.begin(), lanes.end()));
+}
+
 std::regex compile_regex_(std::string_view pattern,
                           std::string_view where) {
   try {
@@ -1650,7 +1657,7 @@ Thread Thread::titlecase() const {
 Thread Thread::length() const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::length: expected Note payload");
-  const auto lengths = as_note().lengths_chars();
+  const auto lengths = as_note().lengths_chars().integers();
   auto output = pluss::Series::empty(
       {static_cast<std::int64_t>(lengths.size())},
       pluss::codem::ScalarType::Int64);
@@ -1864,7 +1871,7 @@ DataFrame Thread::split(
   const auto batch =
       limit < 0 ? as_note().split(delimiter)
                 : as_note().split(delimiter, limit);
-  const auto& offsets = batch.offsets();
+  const auto offsets = batch.offsets().integers();
   const auto tokens = batch.tokens().vector();
   std::int64_t width = 0;
   for (std::size_t row = 0; row + 1 < offsets.size(); ++row) {
@@ -1976,7 +1983,7 @@ Thread Thread::pad(
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::pad: expected Note payload");
   PLUSS_CHECK(width >= 0, "Thread::pad: width must be >= 0");
-  const auto lengths = as_note().lengths_chars();
+  const auto lengths = as_note().lengths_chars().integers();
   std::vector<std::string> values;
   values.reserve(static_cast<std::size_t>(size()));
   for (std::int64_t row = 0; row < size(); ++row) {
@@ -2004,7 +2011,7 @@ Thread Thread::chars(
               "Thread::chars: expected Note payload");
   PLUSS_CHECK(step != 0, "Thread::chars: step cannot be zero");
   const auto chars = as_note().split_chars();
-  const auto& offsets = chars.offsets();
+  const auto offsets = chars.offsets().integers();
   const auto tokens = chars.tokens().vector();
   std::vector<std::string> output;
   output.reserve(static_cast<std::size_t>(size()));
@@ -2095,7 +2102,7 @@ DataFrame Thread::indicate(std::string_view delimiter,
   PLUSS_CHECK(!delimiter.empty(),
               "Thread::indicate: delimiter cannot be empty");
   const auto batch = as_note().split(delimiter);
-  const auto& offsets = batch.offsets();
+  const auto offsets = batch.offsets().integers();
   const auto tokens = batch.tokens().vector();
   std::set<std::string> levels;
   for (std::int64_t token = 0;
@@ -2519,7 +2526,7 @@ Thread ThreadTimelineAccessor::shift(std::int64_t periods, std::string_view freq
 
 Thread ThreadTimelineAccessor::period(std::string_view freq) const {
   PLUSS_CHECK(!freq.empty(), "Thread::tl().period: freq cannot be empty");
-  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().period").to_period(freq));
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().period").period_start(freq));
 }
 
 Thread ThreadTimelineAccessor::tz(std::string_view name) const {

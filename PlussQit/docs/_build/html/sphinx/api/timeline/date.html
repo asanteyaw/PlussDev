@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -36,8 +36,7 @@
 
           <div class="body" role="main">
             
-  <!-- pluss-hand-authored -->
-<section id="timeline-date">
+  <section id="timeline-date">
 <h1>Timeline::date<a class="headerlink" href="#timeline-date" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
 <section id="signature">
@@ -46,44 +45,68 @@
 </pre></div>
 </div>
 </section>
-<section id="retain-each-local-calendar-date">
-<h2>Retain Each Local Calendar Date<a class="headerlink" href="#retain-each-local-calendar-date" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">date()</span></code> replaces the clock fields of every represented instant with local
-midnight while preserving shape and timezone. “Local” is essential: the
-Timeline first interprets each instant in <code class="docutils literal notranslate"><span class="pre">tz()</span></code>, finds that civil date, and
-then resolves midnight in the same zone.</p>
-<p>This differs from dividing epoch ticks into 86,400-second blocks. Use
-<a class="reference internal" href="epoch_days.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">epoch_days()</span></code></span></a> for fixed UTC intervals; use <code class="docutils literal notranslate"><span class="pre">date()</span></code> when the
-calendar date visible in the Timeline’s zone is the identity that matters.</p>
+<section id="project-onto-local-calendar-dates">
+<h2>Project Onto Local Calendar Dates<a class="headerlink" href="#project-onto-local-calendar-dates" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">date()</span></code> extracts each instant’s local year, month, and day and represents that
+date as local midnight. A <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> cannot store a date without a clock, so
+midnight is the canonical instant representation rather than formatting text.
+Use it when the visible civil date is the identity; use <code class="docutils literal notranslate"><span class="pre">epoch_days()</span></code> for fixed
+UTC 86,400-second bins.</p>
+<p>For day-sized flooring, <code class="docutils literal notranslate"><span class="pre">floor(&quot;D&quot;)</span></code> produces the same ticks. The distinction is
+intent: <code class="docutils literal notranslate"><span class="pre">date()</span></code> is the component projection used by
+<code class="docutils literal notranslate"><span class="pre">pluss::timeline::date(existing_timeline)</span></code>, while <code class="docutils literal notranslate"><span class="pre">floor()</span></code> belongs to the
+parameterized rounding family alongside hour, minute, and second boundaries.</p>
+</section>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">¶</a></h2>
+<p>The result is a newly allocated Timeline with unchanged rank, shape, timezone, ordering, and <code class="docutils literal notranslate"><span class="pre">NaT</span></code> positions. The receiver is not modified. Scalar, vector, matrix, three-dimensional, and empty shapes are all preserved.</p>
+</section>
+<section id="example-1-shape-and-absence">
+<h2>Example 1: Shape And Absence<a class="headerlink" href="#example-1-shape-and-absence" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T09:00:00Z&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T23:59:59Z&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;&quot;</span><span class="p">,</span>
-<span class="p">});</span>
+<span class="w">    </span><span class="s">&quot;2024-07-15T18:34:56.123456789Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="p">}).</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">times</span><span class="p">.</span><span class="n">date</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[3], tz=UTC)
-[ 2024-11-01 00:00:00, 2024-11-01 00:00:00, NaT ]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[2], tz=America/Edmonton)
+[ 2024-07-15 00:00:00, NaT ]
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> remains <code class="docutils literal notranslate"><span class="pre">NaT</span></code>. The method is out of place and retains nanosecond storage,
-although every valid output is aligned to a local day boundary.</p>
 </section>
+<section id="example-2-timezone-and-precision">
+<h2>Example 2: Timezone And Precision<a class="headerlink" href="#example-2-timezone-and-precision" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">noon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;2024-03-10T18:00:00Z&quot;</span><span class="p">).</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">noon</span><span class="p">.</span><span class="n">date</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[], tz=America/Edmonton)
+2024-03-10 00:00:00
+</pre></div>
+</div>
+</section>
+<section id="choosing-the-projection">
+<h2>Choosing The Projection<a class="headerlink" href="#choosing-the-projection" title="Link to this heading">¶</a></h2>
+<p>Distinct clock times on one local date collapse to the same result. Midnight is resolved using its own offset, not the source time’s offset. A nonexistent local midnight is rejected.</p>
+<p>Every defined Timeline instant has a date. A value originally built from
+clock-only text uses the documented <code class="docutils literal notranslate"><span class="pre">1970-01-01</span></code> anchor, so its extracted date
+is that anchor; there is no hidden partial-date marker on which to return an
+empty result. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> lanes remain <code class="docutils literal notranslate"><span class="pre">NaT</span></code> without changing surrounding geometry.</p>
+<p><code class="docutils literal notranslate"><span class="pre">time()</span></code> keeps the complementary clock fields. Neither method formats text or retains enough information to reverse the projection.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="time.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::time</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="floor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::floor</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="epoch_days.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::epoch_days</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="time.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">time</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="floor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floor</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="epoch_days.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">epoch_days</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="round.html"><span class="label">Previous</span><span class="title">round</span></a>
-  <a class="next-link" href="time.html"><span class="label">Next</span><span class="title">time</span></a>
+  <a class="prev-link" href="copy_ticks.html"><span class="label">Previous</span><span class="title">copy_ticks</span></a>
+  <a class="next-link" href="date_range.html"><span class="label">Next</span><span class="title">date_range</span></a>
 </div>
+<!-- pluss-hand-authored -->
 </section>
 </section>
 
@@ -141,6 +164,7 @@ although every valid output is aligned to a local day boundary.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -168,6 +192,7 @@ although every valid output is aligned to a local day boundary.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

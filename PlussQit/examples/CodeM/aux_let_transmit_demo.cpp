@@ -38,7 +38,7 @@ int main() {
   for (auto v : squared.to_vec<double>()) std::cout << v << " ";
   std::cout << "\n";
 
-  let bills = pluss::make_series({42.50, 35.85, 50.03, 15.21, 5.45});
+  auto bills = pluss::make_series({42.50, 35.85, 50.03, 15.21, 5.45});
   auto tips = pluss::tils::transmit(calc_tip, bills);
   std::cout << "tips: ";
   for (auto v : tips.to_vec<double>()) std::cout << v << " ";

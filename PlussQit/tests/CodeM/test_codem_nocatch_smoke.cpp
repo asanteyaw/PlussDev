@@ -284,7 +284,7 @@ void test_aux_let_transmit() {
   auto la = suppose.as<double>(3).then([](double x) { return x + 0.5; }).value();
   expect_close(la, 3.5, 1e-12, "suppose typed conversion");
 
-  let declared = pluss::make_series({1.0, 2.0, 3.0});
+  auto declared = pluss::make_series({1.0, 2.0, 3.0});
   expect_true(declared.numel() == 3, "let declaration works for Series");
 
   std::cout << "[RUN] aux:transmit_range\n";

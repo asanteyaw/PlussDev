@@ -10,7 +10,7 @@ TEST_CASE("Bytes-mode Note basic behavior", "[coden][patch10]") {
 
   REQUIRE(b.defined());
   REQUIRE(b.dim() == 0);
-  REQUIRE(static_cast<const pluss::coden::NoteBase&>(b).is_bytes());
+  REQUIRE(b.is_bytes());
 
   auto v = b.at(0);
   REQUIRE(v.size() == 3);
@@ -19,8 +19,8 @@ TEST_CASE("Bytes-mode Note basic behavior", "[coden][patch10]") {
   REQUIRE(static_cast<unsigned char>(v[2]) == 0x42);
 
   // Byte-wise ops that are safe / intentional.
-  REQUIRE(b.lengths_bytes().at(0) == 3);
-  REQUIRE(b.contains(std::string_view("A", 1)).at(0) == 1);
+  REQUIRE(b.lengths_bytes().int_item() == 3);
+  REQUIRE(b.contains(std::string_view("A", 1)).bool_item());
 
   // Text-assuming ops should reject bytes-mode.
   REQUIRE_THROWS(b.lower());

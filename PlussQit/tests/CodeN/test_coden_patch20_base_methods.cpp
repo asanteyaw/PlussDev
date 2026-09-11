@@ -6,7 +6,6 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "CodeN/core/Chord.h"
 #include "CodeN/core/OpsInternal.h"
 #include "pluss/coden.h"
 #include "pluss/coden/note_factory.h"
@@ -35,10 +34,10 @@ TEST_CASE("CodeN NoteBase inherited convenience methods", "[coden][patch20]") {
     REQUIRE(mat.is_matrix());
     const auto mm = mat.matrix();
     REQUIRE(mm.size() == 2);
-    REQUIRE(mm[0].size() == 2);
-    REQUIRE(mm[1].size() == 2);
-    REQUIRE(mm[0][1] == "m01");
-    REQUIRE(mm[1][0] == "m10");
+    REQUIRE(mm[0].numel() == 2);
+    REQUIRE(mm[1].numel() == 2);
+    REQUIRE(mm[0].at(1) == "m01");
+    REQUIRE(mm[1].at(0) == "m10");
 
     std::vector<std::string> tflat = {"000", "001", "010", "011", "100", "101", "110", "111"};
     const std::array<std::int64_t, 3> tsz{2, 2, 2};
@@ -46,7 +45,7 @@ TEST_CASE("CodeN NoteBase inherited convenience methods", "[coden][patch20]") {
     REQUIRE(t3.is_tensor3());
     const auto tt = t3.tensor3();
     REQUIRE(tt.size() == 2);
-    REQUIRE(tt[1][0][1] == "101");
+    REQUIRE(tt[1].at(1) == "101");
     REQUIRE(t3.at_indices(std::array<std::int64_t, 3>{1, 1, 0}) == "110");
   }
 
@@ -55,9 +54,9 @@ TEST_CASE("CodeN NoteBase inherited convenience methods", "[coden][patch20]") {
     const std::array<std::int64_t, 2> sz{2, 3};
     auto note = pluss::make_note(flat, sz);
 
-    REQUIRE(note.linear_index(std::array<std::int64_t, 2>{0, 0}) == 0);
-    REQUIRE(note.linear_index(std::array<std::int64_t, 2>{1, 2}) == 5);
-    REQUIRE(note.flat_at(4) == "t");
+    REQUIRE(note.at_indices(std::array<std::int64_t, 2>{0, 0}) == "q");
+    REQUIRE(note.at_indices(std::array<std::int64_t, 2>{1, 2}) == "y");
+    REQUIRE(note.at(4) == "t");
 
     std::vector<std::string_view> copied;
     note.copy_flat_to(std::back_inserter(copied));
@@ -86,20 +85,78 @@ TEST_CASE("CodeN NoteBase inherited convenience methods", "[coden][patch20]") {
   }
 }
 
-TEST_CASE("CodeN ChordBase iterator and byte helpers", "[coden][patch20]") {
-  const auto chord = pluss::coden::ops_internal::chord_from_utf8("Ab1");
-  REQUIRE(chord.defined());
-  REQUIRE(!chord.empty());
-  REQUIRE(chord.size() == 3);
-  REQUIRE(chord.as_string() == "Ab1");
+TEST_CASE("CodeN TextRef owns its cell past the parent Note", "[coden][patch20]") {
+  pluss::TextRef ref;
+  {
+    const auto n = pluss::make_note({"Ab1", "xyz"});
+    ref = n.cell(0);
+  }  // n destroyed; ref keeps the arena alive
+
+  REQUIRE(ref.defined());
+  REQUIRE(!ref.empty());
+  REQUIRE(ref.size() == 3);
+  REQUIRE(ref.str() == "Ab1");
+  REQUIRE(ref == std::string_view("Ab1"));
 
   std::string out;
-  for (char c : chord) {
+  for (char c : ref) {
     out.push_back(c);
   }
   REQUIRE(out == "Ab1");
 
-  int ascii_sum = 0;
-  chord.for_each_byte([&](char c) { ascii_sum += static_cast<unsigned char>(c); });
-  REQUIRE(ascii_sum == (static_cast<int>('A') + static_cast<int>('b') + static_cast<int>('1')));
+  // Implicit conversion to std::string_view.
+  const std::string_view sv = ref;
+  REQUIRE(sv == "Ab1");
+
+  // owned() is the keep-past-lifetime form of scalar().
+  REQUIRE(pluss::make_note("solo").owned().str() == "solo");
+
+  // cell_at mirrors at_indices.
+  const auto grid = pluss::make_note(std::vector<std::string>{"p", "q", "r", "s"},
+                                     std::array<std::int64_t, 2>{2, 2});
+  REQUIRE(grid.cell_at(std::array<std::int64_t, 2>{1, 0}).str() == "r");
+}
+
+TEST_CASE("CodeN Note metadata distinguishes rank absence and empty extents",
+          "[coden][note-metadata]") {
+  const auto undefined = pluss::Note::undefined();
+  REQUIRE_FALSE(undefined.defined());
+  REQUIRE_FALSE(undefined.is_scalar());
+  REQUIRE_FALSE(undefined.is_vector());
+  REQUIRE_FALSE(undefined.is_matrix());
+  REQUIRE_FALSE(undefined.is_tensor3());
+  REQUIRE_THROWS(undefined.size(0));
+  REQUIRE_THROWS(undefined.sizes());
+
+  const auto scalar = pluss::make_note("one");
+  const auto singleton = pluss::make_note({"one"});
+  const auto matrix = pluss::make_note(
+      std::vector<std::string>{"a", "b", "c", "d", "e", "f"},
+      std::array<std::int64_t, 2>{2, 3});
+  const auto tensor = pluss::make_note(
+      std::vector<std::string>{"a", "b", "c", "d", "e", "f", "g", "h"},
+      std::array<std::int64_t, 3>{2, 2, 2});
+
+  REQUIRE(scalar.is_scalar());
+  REQUIRE_FALSE(singleton.is_scalar());
+  REQUIRE(singleton.is_vector());
+  REQUIRE(matrix.is_matrix());
+  REQUIRE(tensor.is_tensor3());
+  REQUIRE(matrix.dim() == 2);
+  REQUIRE(matrix.sizes() == std::vector<std::int64_t>{2, 3});
+  REQUIRE(matrix.numel() == 6);
+  REQUIRE(matrix.size(0) == 2);
+  REQUIRE(matrix.size(1) == 3);
+  REQUIRE(matrix.size(-1) == 3);
+  REQUIRE(matrix.size(-2) == 2);
+  REQUIRE_THROWS(matrix.size(2));
+  REQUIRE_THROWS(matrix.size(-3));
+
+  const auto empty = pluss::make_note(
+      std::vector<std::string>{}, std::array<std::int64_t, 2>{2, 0});
+  REQUIRE(empty.defined());
+  REQUIRE(empty.empty());
+  REQUIRE(empty.is_matrix());
+  REQUIRE(empty.sizes() == std::vector<std::int64_t>{2, 0});
+  REQUIRE(empty.numel() == 0);
 }

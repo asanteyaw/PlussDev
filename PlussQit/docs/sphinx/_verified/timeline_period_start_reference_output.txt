@@ -1,0 +1,56 @@
+
+=== source ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-07-15T12:34:56.123456789-06:00"
+
+=== year ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-01-01T00:00:00.000000000-07:00"
+
+=== month ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-07-01T00:00:00.000000000-06:00"
+
+=== day ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-07-15T00:00:00.000000000-06:00"
+
+=== hour ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-07-15T12:00:00.000000000-06:00"
+
+=== minute ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-07-15T12:34:00.000000000-06:00"
+
+=== second ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2024-07-15T12:34:56.000000000-06:00"
+
+=== idempotent ===
+true
+
+=== matrix_month ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["2024-02-01T00:00:00.000000000+00:00", "NaT"], 
+  ["1969-12-01T00:00:00.000000000+00:00", "2025-01-01T00:00:00.000000000+00:00"]
+]
+
+=== strided_year ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["2024-01-01T00:00:00.000000000+00:00", "2024-01-01T00:00:00.000000000+00:00"]
+
+=== fold_hour ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["2024-11-03T01:00:00.000000000-06:00", "2024-11-03T01:00:00.000000000-07:00"]
+
+=== empty_day ===
+Note(shape=[2, 0], dim=2, numel=0, encoding=utf8)
+[]
+
+=== plural_alias ===
+rejected
+
+=== unsupported_unit ===
+rejected

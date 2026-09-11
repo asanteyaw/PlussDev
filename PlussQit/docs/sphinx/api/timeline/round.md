@@ -5,61 +5,71 @@
 ## Signature
 
 ```cpp
-Timeline::round(std::string_view unit) -> Timeline
+Timeline Timeline::round(std::string_view unit) const
 ```
 
-## What It Does
+## Choose The Nearest Local Boundary
 
-Rounds each timestamp to the nearest boundary of the requested unit.
+`round()` selects the nearest requested-unit boundary in local wall time. Exact halfway cases use half-even, choosing the neighboring boundary with an even index and avoiding systematic upward bias.
 
-This is the midpoint-aware counterpart to [`floor`](floor.md) and
-[`ceil`](ceil.md).
+## Units
 
-## Parameters
+| Accepted spellings | Boundary |
+|---|---|
+| `S / s / sec / second` | second |
+| `min / m / minute` | minute |
+| `H / h / hour` | hour |
+| `D / d / day` | local day |
 
-**unit**
+## Result Contract
 
-The unit to round to, such as `"H"` for hours.
+The method allocates a new Timeline while preserving rank, shape, timezone, ordering, and `NaT` positions. The receiver is not modified. Boundaries are computed in local wall time and then resolved in the current timezone.
 
-## Returns
-
-`Timeline`
-    A rounded timeline.
-
-## Examples
-
-Example 1. Round timestamps to the nearest hour.
+## Example 1
 
 ```cpp
-auto out = base.round("H");
-std::cout << pluss::timeline::print(out) << "\n";
+const auto values = pluss::timeline::make({
+    "1969-12-31T23:29:30.123456789Z", "1969-12-31T23:30:00Z",
+    "1970-01-01T00:30:00Z", "1970-01-01T01:30:00Z", "",
+});
+std::cout << pluss::timeline::print(values.round("H")) << '\n';
 ```
-
-### Output
 
 ```text
-Timeline(shape=[4], tz=UTC)
-[ 2024-11-01 09:00:00, 2024-11-01 10:00:00, 2025-01-01 00:00:00, 2025-01-01 00:00:00 ]
+Timeline(shape=[5], tz=UTC)
+[ 1969-12-31 23:00:00, 1970-01-01 00:00:00, 1970-01-01 00:00:00, 1970-01-01 02:00:00, NaT ]
 ```
 
-## Notes
+## Example 2
 
-- Use `round()` when neither always-down nor always-up behavior is right for
-  the task.
+```cpp
+const auto matrix = pluss::timeline::make({
+    {"2024-01-01T00:29:00Z", "2024-01-01T00:31:00Z"},
+    {"2024-01-01T01:29:00Z", ""},
+});
+std::cout << pluss::timeline::print(matrix.round("H")) << '\n';
+```
+
+```text
+Timeline(shape=[2, 2], tz=UTC)
+[ 2024-01-01 00:00:00 2024-01-01 01:00:00 ]
+[ 2024-01-01 01:00:00                 NaT ]
+```
+
+## Edge Behavior
+
+Half-even applies symmetrically on both sides of the epoch. Unsupported units, overflow, and nonexistent local boundaries are rejected.
+
+All supported Timeline ranks are accepted; the operation is shape-preserving, not a reduction.
 
 ## See Also
 
-- [`Timeline::floor`](floor.md)
-- [`Timeline::ceil`](ceil.md)
-- [`Timeline::date`](date.md)
+- [`floor`](floor.md)
+- [`ceil`](ceil.md)
+- [`round`](round.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="repeat.html">
-    <span class="label">Previous</span>
-    <span class="title">repeat</span>
-  </a>
-  <a class="next-link" href="date.html">
-    <span class="label">Next</span>
-    <span class="title">date</span>
-  </a>
+  <a class="prev-link" href="repeat.html"><span class="label">Previous</span><span class="title">repeat</span></a>
+  <a class="next-link" href="searchsorted_left.html"><span class="label">Next</span><span class="title">searchsorted_left</span></a>
 </div>
+<!-- pluss-hand-authored -->

@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "CodeN/core/Chord.h"
 #include "CodeN/core/OpsInternal.h"
 #include "pluss/coden.h"
 #include "pluss/coden/note_factory.h"
@@ -21,7 +20,7 @@ int main() {
   std::cout << "join_flat('-'): " << matrix.join_flat("-") << "\n";
 
   const auto m = matrix.matrix();
-  std::cout << "matrix(1, 0): " << m[1][0] << "\n";
+  std::cout << "matrix(1, 0): " << m[1].at(0) << "\n";
   std::cout << "flat index [1,1]: " << matrix.at_indices(std::array<std::int64_t, 2>{1, 1}) << "\n";
 
   std::cout << "iterate:";
@@ -30,11 +29,15 @@ int main() {
   }
   std::cout << "\n";
 
-  const auto chord = pluss::coden::ops_internal::chord_from_utf8("Ab1");
-  std::cout << "chord.as_string(): " << chord.as_string() << "\n";
+  pluss::TextRef kept;
+  {
+    const auto tmp = pluss::make_note({"Ab1"});
+    kept = tmp.cell(0);  // co-owns the storage
+  }
+  std::cout << "textref after parent gone: " << kept << " (" << kept.str() << ")\n";
 
   int sum = 0;
-  chord.for_each_byte([&](char c) { sum += static_cast<unsigned char>(c); });
-  std::cout << "chord ascii sum: " << sum << "\n";
+  for (char c : kept) sum += static_cast<unsigned char>(c);
+  std::cout << "textref ascii sum: " << sum << "\n";
   return 0;
 }

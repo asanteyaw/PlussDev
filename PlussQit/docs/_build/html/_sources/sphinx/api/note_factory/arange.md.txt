@@ -14,9 +14,8 @@ Note pluss::note::arange(string_view start, string_view end,
 
 `arange()` builds a rank-`1` `Note` whose cells are consecutive single
 characters, walking the ASCII code-point line from `start` toward `end` in
-increments of `step`. It is the text analogue of `pluss::series::arange` and
-of Python's `range` — a generator of an ordered sequence — specialised to
-one-character strings.
+increments of `step`. It is the text analogue of `pluss::series::arange` — a generator of an
+ordered sequence — specialised to one-character strings.
 
 Typical uses are building an alphabet or digit axis (`"a"`..`"z"`,
 `"0"`..`"9"`), a header row of column letters, or a small fixed lookup of

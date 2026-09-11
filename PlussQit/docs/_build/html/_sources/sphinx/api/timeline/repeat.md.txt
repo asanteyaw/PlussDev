@@ -149,6 +149,6 @@ rejected
 - [`Timeline::fill_like`](fill_like.md): preserve shape but replace every value.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="quarter_scalar.html"><span class="label">Previous</span><span class="title">quarter_scalar</span></a>
+  <a class="prev-link" href="quarter_start_scalar.html"><span class="label">Previous</span><span class="title">quarter_start_scalar</span></a>
   <a class="next-link" href="round.html"><span class="label">Next</span><span class="title">round</span></a>
 </div>

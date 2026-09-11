@@ -130,8 +130,8 @@ Both input cells map to empty ranges.
     <span class="label">Previous</span>
     <span class="title">split_lines</span>
   </a>
-  <a class="next-link" href="starts_with.html">
+  <a class="next-link" href="squeeze.html">
     <span class="label">Next</span>
-    <span class="title">starts_with</span>
+    <span class="title">squeeze</span>
   </a>
 </div>

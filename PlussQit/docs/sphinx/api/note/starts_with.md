@@ -105,9 +105,9 @@ std::cout << "]\n";
   rather than test for it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="split_whitespace.html">
+  <a class="prev-link" href="squeeze.html">
     <span class="label">Previous</span>
-    <span class="title">split_whitespace</span>
+    <span class="title">squeeze</span>
   </a>
   <a class="next-link" href="strip.html">
     <span class="label">Next</span>

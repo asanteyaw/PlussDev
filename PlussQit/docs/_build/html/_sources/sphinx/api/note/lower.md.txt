@@ -146,8 +146,8 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
     <span class="label">Previous</span>
     <span class="title">lengths_graphemes</span>
   </a>
-  <a class="next-link" href="nlp_mask_pii.html">
+  <a class="next-link" href="lstrip.html">
     <span class="label">Next</span>
-    <span class="title">nlp_mask_pii</span>
+    <span class="title">lstrip</span>
   </a>
 </div>

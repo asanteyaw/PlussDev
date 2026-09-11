@@ -117,9 +117,9 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
   [`Note::swapcase`](swapcase.md): partial-case transforms (ASCII-only).
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="unquote.html">
+  <a class="prev-link" href="unsqueeze.html">
     <span class="label">Previous</span>
-    <span class="title">unquote</span>
+    <span class="title">unsqueeze</span>
   </a>
   <a class="next-link" href="url_decode.html">
     <span class="label">Next</span>

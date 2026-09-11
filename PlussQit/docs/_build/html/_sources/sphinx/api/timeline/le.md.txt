@@ -62,5 +62,5 @@ or timestamp precision.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lt.html"><span class="label">Previous</span><span class="title">lt</span></a>
-  <a class="next-link" href="gt.html"><span class="label">Next</span><span class="title">gt</span></a>
+  <a class="next-link" href="leap_scalar.html"><span class="label">Next</span><span class="title">leap_scalar</span></a>
 </div>

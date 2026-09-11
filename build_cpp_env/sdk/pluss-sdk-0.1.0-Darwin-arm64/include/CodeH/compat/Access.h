@@ -141,10 +141,10 @@ struct Access {
   }
 
   static ::pluss::codeh::Timeline min(const ::pluss::codeh::TimeIndex& self) {
-    return ::pluss::codeh::detail::impl_min(self.t_);
+    return ::pluss::codeh::detail::impl_min(self.t_, true);
   }
   static ::pluss::codeh::Timeline max(const ::pluss::codeh::TimeIndex& self) {
-    return ::pluss::codeh::detail::impl_max(self.t_);
+    return ::pluss::codeh::detail::impl_max(self.t_, true);
   }
 
   static ::pluss::codeh::TimeIndex sort(const ::pluss::codeh::TimeIndex& self) {
@@ -394,14 +394,22 @@ struct Access {
   static ::pluss::codeh::TimeIndex from_timeline(const ::pluss::codeh::Timeline& t, bool require_sorted) {
     CODEM_CHECK(t.defined(), "TimeIndex: timeline undefined");
     CODEM_CHECK(t.dim() == 1, "TimeIndex requires a 1D Timeline");
+
+    // TimeIndex kernels use packed binary search and scans. Materialize a
+    // strided Timeline once at the promotion boundary instead of letting each
+    // ordered operation reinterpret non-contiguous storage as packed.
+    auto ticks = t.ticks_.is_contiguous() ? t.ticks_ : t.ticks_.contiguous();
+    const auto* x = reinterpret_cast<const std::int64_t*>(ticks.raw_data());
+    for (std::int64_t i = 0; i < t.numel(); ++i) {
+      CODEM_CHECK(x[i] != ::pluss::codeh::Timeline::kNaT,
+                  "TimeIndex does not allow NaT");
+    }
     if (require_sorted) {
-      const auto* x = reinterpret_cast<const std::int64_t*>(t.ticks_.raw_data());
       for (std::int64_t i = 1; i < t.numel(); ++i) {
-        CODEM_CHECK(x[i - 1] != ::pluss::codeh::Timeline::kNaT && x[i] != ::pluss::codeh::Timeline::kNaT, "TimeIndex does not allow NaT");
         CODEM_CHECK(x[i - 1] <= x[i], "TimeIndex must be sorted (non-decreasing)");
       }
     }
-    return make(t);
+    return make(::pluss::codeh::Timeline(std::move(ticks), std::string(t.tz())));
   }
 
   static std::int64_t searchsorted(const ::pluss::codeh::TimeIndex& self, const ::pluss::codeh::Timeline& key, bool right) {

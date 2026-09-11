@@ -137,12 +137,12 @@ The `1×2` input flattens row-major: cell `0` → `[0, 2)`, cell `1` →
   tokenizers for other units.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="title.html">
+  <a class="prev-link" href="to_windows1252_lossy.html">
     <span class="label">Previous</span>
-    <span class="title">title</span>
+    <span class="title">to_windows1252_lossy</span>
   </a>
-  <a class="next-link" href="unquote.html">
+  <a class="next-link" href="transliterate_ascii.html">
     <span class="label">Next</span>
-    <span class="title">unquote</span>
+    <span class="title">transliterate_ascii</span>
   </a>
 </div>

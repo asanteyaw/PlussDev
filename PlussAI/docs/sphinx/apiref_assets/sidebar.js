@@ -12,7 +12,19 @@
 (function () {
   "use strict";
 
+  // The bundle may carry several framework nav trees (lymph, classic, ...).
+  // Pick the one whose pages match the current URL; fall back to the primary.
   var DATA = window.APIREF_NAV;
+  var ALL = window.APIREF_NAV_ALL;
+  if (Array.isArray(ALL) && ALL.length > 1) {
+    var here = currentRelPath();
+    var hit = ALL.filter(function (b) {
+      return b && b.framework &&
+        (here.indexOf("api/" + b.framework + "/") === 0 ||
+         here.indexOf("api/plussai_" + b.framework) === 0);
+    })[0];
+    if (hit) DATA = hit;
+  }
   if (!DATA || !Array.isArray(DATA.tree)) return;
 
   var STORE_KEY = "apiref-nav:open";

@@ -99,12 +99,12 @@ Timeline(shape=[4], tz=UTC)
 - [`Timeline::where`](where.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnat.html">
+  <a class="prev-link" href="isoformat.html">
     <span class="label">Previous</span>
-    <span class="title">isnat</span>
+    <span class="title">isoformat</span>
   </a>
-  <a class="next-link" href="isnat_scalar.html">
+  <a class="next-link" href="le.html">
     <span class="label">Next</span>
-    <span class="title">isnat_scalar</span>
+    <span class="title">le</span>
   </a>
 </div>

@@ -1,6 +1,7 @@
 #include "CodeM/native/cpu/UnaryExtraMathKernels.h"
 
 #include "CodeM/core/Errors.h"
+#include "CodeM/core/Complex.h"
 #include "CodeM/core/Half.h"
 #include "CodeM/core/SeriesIterator.h"
 
@@ -39,6 +40,8 @@ void rsqrt(const Series& a, Series& out) {
     case ScalarType::Float32: unary_apply<float>(a, out, [](float x){ return 1.0f/std::sqrt(x); }); return;
     case ScalarType::Float16: unary_half<Float16>(a,out,[](float x){ return 1.0f/std::sqrt(x); }, float16_to_float, float16_from_float); return;
     case ScalarType::BFloat16: unary_half<BFloat16>(a,out,[](float x){ return 1.0f/std::sqrt(x); }, bfloat16_to_float, bfloat16_from_float); return;
+    case ScalarType::Complex64: unary_apply<Complex64>(a, out, [](Complex64 x){ return Complex64(1.0f) / std::sqrt(x); }); return;
+    case ScalarType::Complex128: unary_apply<Complex128>(a, out, [](Complex128 x){ return Complex128(1.0) / std::sqrt(x); }); return;
     default: throw_error("rsqrt: dtype not implemented");
   }
 }
@@ -89,6 +92,8 @@ void square(const Series& a, const Series& out) {
     case ScalarType::Float32: unary_apply<float>(a, out, [](float x){ return x*x; }); return;
     case ScalarType::Float16: unary_half<Float16>(a,out,[](float x){ return x*x; }, float16_to_float, float16_from_float); return;
     case ScalarType::BFloat16: unary_half<BFloat16>(a,out,[](float x){ return x*x; }, bfloat16_to_float, bfloat16_from_float); return;
+    case ScalarType::Complex64: unary_apply<Complex64>(a, out, [](Complex64 x){ return x*x; }); return;
+    case ScalarType::Complex128: unary_apply<Complex128>(a, out, [](Complex128 x){ return x*x; }); return;
     case ScalarType::Int64: unary_apply<std::int64_t>(a, out, [](std::int64_t x){ return x*x; }); return;
     case ScalarType::Int32: unary_apply<std::int32_t>(a, out, [](std::int32_t x){ return x*x; }); return;
     case ScalarType::Int16: unary_apply<std::int16_t>(a, out, [](std::int16_t x){ return (std::int16_t)(x*x); }); return;

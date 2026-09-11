@@ -161,12 +161,6 @@ inline Series class_weight_view_(const Series& class_weight, const Series& logit
   return class_weight.reshape(weight_shape);
 }
 
-inline Series stable_log_probs_(const Series& logits, std::int64_t class_dim) {
-  const Series max_logits = logits.amax(class_dim, true);
-  const Series shifted = logits.sub(max_logits.expand(logits.sizes(), true));
-  const Series log_norm = shifted.exp().sum(class_dim, true).log();
-  return shifted.sub(log_norm.expand(logits.sizes(), true));
-}
 
 inline void require_target_matches_logits_except_class_(const Series& target,
                                                         const Series& logits,
@@ -361,7 +355,7 @@ inline Series CrossEntropy(const Series& logits, const Series& target, const Cro
 
   const std::int64_t class_dim = detail::normalize_dim_(options.class_dim, logits.dim(), "nn::losses::CrossEntropy");
   detail::require_class_weight_(options.class_weight, logits, class_dim, "nn::losses::CrossEntropy");
-  const Series log_probs = detail::stable_log_probs_(logits, class_dim);
+  const Series log_probs = logits.log_softmax(class_dim);
 
   const bool target_is_prob = pluss::codem::dtype_of(target.scalar_type()).is_floating();
   if (target_is_prob) {

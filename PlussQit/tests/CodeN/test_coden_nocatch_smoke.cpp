@@ -2,6 +2,7 @@
 #include <pluss/tils.h>
 #include "CodeN/native/cpu/TextKernels.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstdlib>
@@ -31,7 +32,9 @@ bool has_token(const pluss::Note& toks, const std::string& needle) {
 }
 
 double as_score(const pluss::Note& n, std::int64_t i = 0) {
-  return std::stod(std::string(n.at(i)));
+  // Numeric-score methods (nlp_sentiment, jaccard_*, overlap_*, ...) return
+  // a native Float64 Note (pass 8 cleanup), not a formatted Text Note.
+  return n.reals()[static_cast<std::size_t>(i)];
 }
 
 bool notes_equal_with_diag(const pluss::Note& a, const pluss::Note& b, std::string& diag) {
@@ -69,7 +72,9 @@ bool notes_equal_with_diag(const pluss::Note& a, const pluss::Note& b, std::stri
 bool token_batches_equal_with_diag(const pluss::TokenBatch& a,
                                    const pluss::TokenBatch& b,
                                    std::string& diag) {
-  if (a.offsets() != b.offsets()) {
+  const auto a_off = a.offsets().integers();
+  const auto b_off = b.offsets().integers();
+  if (!std::equal(a_off.begin(), a_off.end(), b_off.begin(), b_off.end())) {
     diag = "offset mismatch";
     return false;
   }
@@ -206,8 +211,9 @@ void test_nlp_keyword_frequency_order() {
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
   const auto kw = note.nlp_keywords(3);
-  expect_true(kw.offsets().size() == 3, "nlp_keywords returns row offsets");
-  expect_true(kw.offsets()[0] == 0 && kw.offsets()[1] == 3 && kw.offsets()[2] == 5,
+  const auto kw_offsets = kw.offsets().integers();
+  expect_true(kw_offsets.size() == 3, "nlp_keywords returns row offsets");
+  expect_true(kw_offsets[0] == 0 && kw_offsets[1] == 3 && kw_offsets[2] == 5,
               "nlp_keywords offsets match per-row top-k lengths");
 
   expect_true(kw.tokens().at(0) == "alpha" && kw.tokens().at(1) == "beta" && kw.tokens().at(2) == "gamma",
@@ -217,7 +223,8 @@ void test_nlp_keyword_frequency_order() {
 
   const auto stop_only = pluss::make_note("the and in to with");
   const auto kw_stop_only = stop_only.nlp_keywords(5);
-  expect_true(kw_stop_only.offsets().size() == 2 && kw_stop_only.offsets()[0] == 0 && kw_stop_only.offsets()[1] == 0,
+  const auto kw_stop_only_offsets = kw_stop_only.offsets().integers();
+  expect_true(kw_stop_only_offsets.size() == 2 && kw_stop_only_offsets[0] == 0 && kw_stop_only_offsets[1] == 0,
               "nlp_keywords stopword-only row produces empty token range");
   expect_true(kw_stop_only.tokens().numel() == 0, "nlp_keywords stopword-only row returns no keywords");
 }
@@ -250,7 +257,10 @@ void test_parallel_lane_parity() {
   }
   expect_true(same_sort, "parallel on/off sort parity is exact");
 
-  bool same_kw = (kw_off.offsets() == kw_on.offsets()) &&
+  const auto kw_off_offsets = kw_off.offsets().integers();
+  const auto kw_on_offsets = kw_on.offsets().integers();
+  bool same_kw = std::equal(kw_off_offsets.begin(), kw_off_offsets.end(),
+                            kw_on_offsets.begin(), kw_on_offsets.end()) &&
                  (kw_off.tokens().numel() == kw_on.tokens().numel());
   for (std::int64_t i = 0; same_kw && i < kw_off.tokens().numel(); ++i) {
     if (kw_off.tokens().at(i) != kw_on.tokens().at(i)) same_kw = false;
@@ -360,9 +370,10 @@ void test_pairwise_set_ops_and_fast_paths() {
   pluss::Note scalar = pluss::make_note("beta two");
 
   auto inter_b = docs.intersect_tokens(scalar);
-  expect_true(inter_b.offsets().size() == 3, "intersect_tokens broadcast preserves row offsets");
-  expect_true(inter_b.offsets()[1] >= 1, "intersect_tokens broadcast row0 has intersection");
-  expect_true(inter_b.offsets()[2] >= inter_b.offsets()[1], "intersect_tokens broadcast row1 offset monotonic");
+  const auto inter_b_offsets = inter_b.offsets().integers();
+  expect_true(inter_b_offsets.size() == 3, "intersect_tokens broadcast preserves row offsets");
+  expect_true(inter_b_offsets[1] >= 1, "intersect_tokens broadcast row0 has intersection");
+  expect_true(inter_b_offsets[2] >= inter_b_offsets[1], "intersect_tokens broadcast row1 offset monotonic");
 
   auto punct = docs.split_on_punct();
   expect_true(has_token(punct.tokens(), "One"), "split_on_punct extracts first token");
@@ -548,16 +559,18 @@ void test_perf_regression_corpus_ops() {
   expect_true(!undef.deduplicate().defined(), "deduplicate(undefined) remains undefined");
 }
 
-#ifdef CODEN_ENABLE_SERIES_INTEROP
 void test_argsort_interop_ops() {
+  // Note::argsort now returns a closed Int64 Note directly (pass 5 of the
+  // Note redesign) -- no CodeM/Series interop required to read the
+  // permutation back out, unlike before.
   std::cout << "[RUN] coden:argsort_interop\n";
   const std::array<std::int64_t, 1> shape{7};
   const std::vector<std::string> values{"b", "a", "b", "z", "", "b", "a"};
   const auto note = pluss::make_note(values, std::span<const std::int64_t>(shape.data(), shape.size()));
 
-  auto order_series = note.argsort(/*descending=*/false, /*stable=*/true)
-                          .to(pluss::pCPU, pluss::ScalarType::Int64);
-  auto order = order_series.to_vec<std::int64_t>();
+  const auto order_note = note.argsort(/*descending=*/false, /*stable=*/true);
+  expect_true(order_note.is_int64(), "argsort returns an Int64 Note");
+  const auto order = order_note.integers();
   expect_true(order.size() == values.size(), "argsort size matches input size");
   expect_true(order[0] == 4 && order[1] == 1 && order[2] == 6 && order[3] == 0 && order[4] == 2 && order[5] == 5 &&
                   order[6] == 3,
@@ -568,14 +581,11 @@ void test_argsort_interop_ops() {
                   sorted.at(4) == "b" && sorted.at(5) == "b" && sorted.at(6) == "z",
               "take(argsort()) reproduces lexicographically sorted Note");
 
-  auto desc_series = note.argsort(/*descending=*/true, /*stable=*/true)
-                         .to(pluss::pCPU, pluss::ScalarType::Int64);
-  auto desc = desc_series.to_vec<std::int64_t>();
+  const auto desc = note.argsort(/*descending=*/true, /*stable=*/true).integers();
   expect_true(desc[0] == 3 && desc[1] == 0 && desc[2] == 2 && desc[3] == 5 && desc[4] == 1 && desc[5] == 6 &&
                   desc[6] == 4,
               "argsort descending stable ordering matches expected permutation");
 }
-#endif
 
 void test_high_yield_nlp_and_printing() {
   std::cout << "[RUN] coden:high_yield_nlp_print\n";
@@ -606,7 +616,7 @@ void test_high_yield_nlp_and_printing() {
   auto decoded = pluss::note::bytes(latin1).from_latin1();
   expect_true(decoded.at(0) == "café", "from_latin1 decodes bytes to UTF-8");
   auto reenc = decoded.to_latin1_lossy();
-  expect_true(static_cast<const pluss::coden::NoteBase&>(reenc).is_bytes(),
+  expect_true(reenc.is_bytes(),
               "to_latin1_lossy switches encoding to bytes");
   expect_true(reenc.at(0) == latin1, "to_latin1_lossy round-trips basic latin1 text");
 
@@ -826,13 +836,13 @@ void test_note_factory_paths() {
               "note::perm permutation mode deduplicates repeated letters");
 
   pluss::Note b0 = pluss::note::bytes("hi");
-  expect_true(static_cast<const pluss::coden::NoteBase&>(b0).is_bytes(), "bytes_content uses bytes mode");
+  expect_true(b0.is_bytes(), "bytes_content uses bytes mode");
 
   pluss::Note b2 = pluss::note::bytes({{"\x01", "\x02"}, {"\x03", "\x04"}});
   expect_true(b2.dim() == 2 && b2.at(3).size() == 1, "bytes_content supports nested list");
 
   pluss::Note bfull = pluss::note::full_bytes_like(b2, "\xFF");
-  expect_true(static_cast<const pluss::coden::NoteBase&>(bfull).is_bytes(), "full_bytes_note_like preserves bytes");
+  expect_true(bfull.is_bytes(), "full_bytes_note_like preserves bytes");
 
   pluss::Note lower = s3.lower();
   expect_true(lower.dim() == 3 && lower.sizes() == s3.sizes(), "methods preserve 3D shape");
@@ -917,9 +927,7 @@ int main() {
   test_pairwise_set_ops_and_fast_paths();
   test_encoding_and_shape_ops();
   test_perf_regression_corpus_ops();
-#ifdef CODEN_ENABLE_SERIES_INTEROP
   test_argsort_interop_ops();
-#endif
   test_high_yield_nlp_and_printing();
   test_tex_canonicalize_and_macros();
   test_note_factory_paths();

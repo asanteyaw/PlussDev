@@ -10,15 +10,21 @@ Timeline pluss::timeline::time(std::string_view value)
 Timeline pluss::timeline::time(string_range values)
 Timeline pluss::timeline::time(nested_string_values values)
 Timeline pluss::timeline::time(string_range flat, integer_range sizes)
+Timeline pluss::timeline::time(const Timeline& values)
 ```
 
 ## Turn Clock Readings Into Comparable Instants
 
-`time()` accepts clock-only text and anchors it to `1970-01-01`. A `Timeline`
-always stores instants, so this anchor gives clock readings a stable numeric
-representation without pretending they recur every day. Use `time()` for
-time-of-day values that need ordering, duration arithmetic, shape, or exact
-nanosecond storage. Use `make()` when a real calendar date is present.
+`time()` constructs anchored clock values in two ways. Text overloads parse
+clock-only input. The Timeline overload extracts each instant's local hour,
+minute, second, and nanosecond fields. Both place those fields on `1970-01-01`
+because a `Timeline` always stores complete instants and therefore cannot store
+a clock with no date at all.
+
+Use `time()` for time-of-day values that need ordering, duration arithmetic,
+shape, or exact nanosecond storage. Use the Timeline overload when the source
+already contains complete timestamps; use `make()` when the source date must
+remain part of the result.
 
 The default anchor timezone is UTC. A numeric offset on the clock is accepted
 and identifies an instant relative to that UTC anchor. For example,
@@ -30,6 +36,12 @@ Accepted clocks are `HH:MM` or `HH:MM:SS`, optionally followed by fractional
 seconds and a numeric offset. Hours are `0..23`, minutes and seconds are
 `0..59`, and leap-second spelling `60` is rejected. Fractions are retained to
 nanosecond precision.
+
+For a Timeline input, extraction occurs in `values.tz()`, then the clock is
+re-localized on the anchor date in that same timezone. This matters when the
+source date and 1970 anchor use different UTC offsets. Rank, shape, timezone,
+ordering, and lane-wise `NaT` are preserved. No lane without a time part exists
+inside a defined Timeline; `NaT` is the absent representation and propagates.
 
 ## Example 1: One Nanosecond After The Anchor
 
@@ -108,10 +120,52 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 Nested braces can infer the same shape. Flat-plus-shape is preferable when the
 values and geometry arrive separately at runtime.
 
+## Example 5: Extract Clock Values From A Timeline
+
+```cpp
+const auto events = pluss::timeline::make({
+    "2024-07-15T18:34:56.123456789Z", "",
+}).tz_convert("America/Edmonton");
+std::cout << pluss::timeline::print(pluss::timeline::time(events)) << '\n';
+```
+
+### Output
+
+```text
+Timeline(shape=[2], tz=America/Edmonton)
+[ 1970-01-01 12:34:56, NaT ]
+```
+
+The compact printer hides the fraction, but the stored first lane retains
+`.123456789`. The overload is equivalent to `events.time()` and leaves `events`
+unchanged.
+
+## Example 6: Nested Clock Text Constructs Directly
+
+```cpp
+const auto clocks = pluss::timeline::time({
+    {"00:00:00", "06:00:00"},
+    {"12:00:00", "18:00:00"},
+});
+std::cout << pluss::timeline::print(clocks) << '\n';
+```
+
+### Output
+
+```text
+Timeline(shape=[2, 2], tz=UTC)
+[ 1970-01-01 00:00:00 1970-01-01 06:00:00 ]
+[ 1970-01-01 12:00:00 1970-01-01 18:00:00 ]
+```
+
+This is the direct nested-brace construction form. No intermediate Timeline is
+required.
+
 ## Validation And Failure
 
-Dates, empty tokens, impossible clock fields, invalid offsets, ragged nesting,
-shape mismatches, and ranks above three throw. No wrapping is performed:
+For text overloads, dates, empty tokens, impossible clock fields, invalid
+offsets, ragged nesting, shape mismatches, and ranks above three throw. No
+wrapping is performed:
 `24:00:00` does not become the following day, and `23:59:60` does not become
 midnight.
 

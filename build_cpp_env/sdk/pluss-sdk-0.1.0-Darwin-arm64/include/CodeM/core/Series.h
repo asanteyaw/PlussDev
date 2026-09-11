@@ -1049,9 +1049,9 @@ public:
   Series norm(double p) const;
   Series norm(double p, std::int64_t dim, bool keepdim) const;
   Series var(bool unbiased) const;
-  Series var(std::int64_t dim, bool unbiased, bool keepdim) const;
+  Series var(std::int64_t dim, bool unbiased = true, bool keepdim = false) const;
   Series std(bool unbiased) const;
-  Series std(std::int64_t dim, bool unbiased, bool keepdim) const;
+  Series std(std::int64_t dim, bool unbiased = true, bool keepdim = false) const;
   Series nan_to_num(double nan, double posinf, double neginf) const;
   Series& nan_to_num_(double nan, double posinf, double neginf);
   Series cumsum(std::int64_t dim, bool keepdim) const;
@@ -1239,6 +1239,18 @@ public:
     return out;
   }
 
+  // Native C++ introspection results. Elementwise predicates such as
+  // isclose(), isnan(), and isfinite() intentionally continue to return Series.
+  bool equal(const Series& rhs) const;
+  bool allclose(const Series& rhs,
+                double rtol = 1e-5,
+                double atol = 1e-8,
+                bool equal_nan = false) const;
+  bool is_leaf() const;
+  bool is_nonzero() const;
+  bool is_same_size(const Series& rhs) const noexcept;
+  bool is_set_to(const Series& rhs) const noexcept;
+
 #if __has_include("CodeM/Series/SeriesOpsInternalMethods.inc")
   #include "CodeM/Series/SeriesOpsInternalMethods.inc"
 #endif
@@ -1277,6 +1289,28 @@ public:
                                       std::int64_t dim=-1,
                                       bool largest=true,
                                       bool sorted=true) const;
+
+  // Decompose each element x into (mantissa, exponent) with
+  // x == mantissa * 2**exponent and 0.5 <= |mantissa| < 1 (both 0 when x == 0).
+  // Fixed arity of 2, so a pair; the exponent piece is int32 and never carries
+  // gradient.
+  std::pair<Series, Series> frexp() const;
+
+  // Smallest and largest values, together. Returned as std::pair<min, max> --
+  // a fixed arity of 2. The whole-tensor form reduces to two scalars; the
+  // dim form reduces that one axis. Both channels are differentiable (each
+  // routes its gradient to the position of the extremum, ties shared).
+  std::pair<Series, Series> aminmax() const;
+  std::pair<Series, Series> aminmax(std::int64_t dim, bool keepdim = false) const;
+
+  // Bucket the values into `bins` equal-width bins and return
+  // std::pair<hist, bin_edges>: `hist` holds the per-bin counts (float64, or a
+  // probability density when `density` is true) and `bin_edges` the `bins + 1`
+  // boundaries. With no range the bins span the finite [min, max] of the data.
+  // Not differentiable.
+  std::pair<Series, Series> histogram(std::int64_t bins = 100, bool density = false) const;
+  std::pair<Series, Series> histogram(std::int64_t bins, double lo, double hi,
+                                      bool density = false) const;
 
   // Split family: partition one axis into a variable-length list of pieces
   // (each a view). Returns std::vector<Series> because the piece count is a

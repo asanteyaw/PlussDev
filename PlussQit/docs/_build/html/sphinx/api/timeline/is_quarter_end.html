@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -44,18 +44,25 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_quarter_end</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">is_quarter_end()</span></code> is the sole public spelling.</p>
 </section>
-<section id="find-calendar-quarter-closing-dates">
-<h2>Find Calendar-Quarter Closing Dates<a class="headerlink" href="#find-calendar-quarter-closing-dates" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">is_quarter_end()</span></code> recognizes the final local date of March, June, September,
-and December. It checks both the quarter-ending month and that month’s actual
-last day, so an arbitrary date in those months does not qualify.</p>
-<p>The result has boolean dtype and preserves all input dimensions. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> is
-<code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<section id="calendar-quarter-membership">
+<h2>Calendar-Quarter Membership<a class="headerlink" href="#calendar-quarter-membership" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is_quarter_end()</span></code> marks the final local dates of March, June, September, and
+December. It checks both the quarter-ending month and that month’s actual last
+day. March 30 is therefore false, as is February 29 even though leap day is a
+month end.</p>
+<p>These are fixed January-based civil quarters. “End” does not mean the latest
+value in storage, the last observed date, or the final working day.</p>
 </section>
-<section id="example-month-end-is-necessary-but-not-sufficient">
-<h2>Example: Month End Is Necessary But Not Sufficient<a class="headerlink" href="#example-month-end-is-necessary-but-not-sufficient" title="Link to this heading">¶</a></h2>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">¶</a></h2>
+<p>The returned boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> preserves scalar, vector, matrix, three-dimensional,
+and empty shapes exactly. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> maps to <code class="docutils literal notranslate"><span class="pre">false</span></code>. The operation allocates its
+result, leaves the receiver untouched, and interprets boundaries in the
+Timeline’s current timezone.</p>
+</section>
+<section id="example-1-month-end-is-not-enough">
+<h2>Example 1: Month End Is Not Enough<a class="headerlink" href="#example-1-month-end-is-not-enough" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2019-12-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-01-01T12:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2020-02-29T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2020-03-31T12:00:00Z&quot;</span><span class="p">,</span>
@@ -65,41 +72,75 @@ last day, so an arbitrary date in those months does not qualify.</p>
 <span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">calendar</span><span class="p">.</span><span class="n">is_quarter_end</span><span class="p">());</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
 data=[true, false, false, true, false, true, false, false, false]
 </pre></div>
 </div>
-<p>February 29 is a month end but not a quarter end. March 31 qualifies, while
-December 31 is both a quarter end and year end.</p>
+<p>February 29 is a month end but not a quarter end. December 31 is both a quarter
+end and a year end.</p>
 </section>
+<section id="example-2-matrix-shape-is-preserved">
+<h2>Example 2: Matrix Shape Is Preserved<a class="headerlink" href="#example-2-matrix-shape-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-01T23:59:59.999999999Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="s">&quot;2024-02-29T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-03-31T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-04-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="s">&quot;2024-12-31T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">is_quarter_end</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ false false false ⎤
+⎣  true false  true ⎦
+</pre></div>
+</div>
 </section>
-<section id="composing-boundary-masks">
-<h2>Composing Boundary Masks<a class="headerlink" href="#composing-boundary-masks" title="Link to this heading">¶</a></h2>
-<p>Every <code class="docutils literal notranslate"><span class="pre">true</span></code> from <code class="docutils literal notranslate"><span class="pre">is_quarter_end()</span></code> is also <code class="docutils literal notranslate"><span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">is_month_end()</span></code>, but
-the reverse is not true. This containment is useful when progressively
-narrowing a reporting calendar without reconstructing month-length rules.</p>
+<section id="example-3-timezone-can-reveal-a-quarter-end">
+<h2>Example 3: Timezone Can Reveal A Quarter End<a class="headerlink" href="#example-3-timezone-can-reveal-a-quarter-end" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2021-01-01T00:30:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">is_quarter_end</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;New York=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">is_quarter_end</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>UTC=false
+New York=true
+</pre></div>
+</div>
+</section>
+<section id="example-4-verify-the-calendar-relationship">
+<h2>Example 4: Verify The Calendar Relationship<a class="headerlink" href="#example-4-verify-the-calendar-relationship" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">ends</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">is_quarter_end</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ends</span><span class="p">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">dates</span><span class="p">.</span><span class="n">is_month_end</span><span class="p">()).</span><span class="n">equal</span><span class="p">(</span><span class="n">ends</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
 </section>
 <section id="gotchas-and-failure-modes">
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Calendar quarters are fixed to January-March, April-June, July-September,
-and October-December.</p></li>
-<li><p>This does not find the last business day or last observed row.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> and ordinary non-boundary dates both return <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p>Every quarter end is a month end, but not every month end closes a quarter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NaT=false</span></code>; retain <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> when absence must be represented separately.</p></li>
+<li><p>Fiscal and working-day boundaries are outside this predicate’s contract.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">quarter_end_scalar()</span></code> for a native <code class="docutils literal notranslate"><span class="pre">bool</span></code> from scalar input.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
+<li><p><a class="reference internal" href="quarter_end_scalar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">quarter_end_scalar</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="is_month_end.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_month_end</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="is_quarter_start.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_quarter_start</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="is_year_end.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_year_end</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_quarter_start.html"><span class="label">Previous</span><span class="title">is_quarter_start</span></a>
-  <a class="next-link" href="is_year_start.html"><span class="label">Next</span><span class="title">is_year_start</span></a>
+  <a class="prev-link" href="is_month_start.html"><span class="label">Previous</span><span class="title">is_month_start</span></a>
+  <a class="next-link" href="is_quarter_start.html"><span class="label">Next</span><span class="title">is_quarter_start</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -159,6 +200,7 @@ and October-December.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -186,6 +228,7 @@ and October-December.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

@@ -105,6 +105,6 @@ dim=1, is_scalar=false, host scalar=true
 - [`Timeline::isoformat`](isoformat.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="numel.html"><span class="label">Previous</span><span class="title">numel</span></a>
-  <a class="next-link" href="tz.html"><span class="label">Next</span><span class="title">tz</span></a>
+  <a class="prev-link" href="is_saturday.html"><span class="label">Previous</span><span class="title">is_saturday</span></a>
+  <a class="next-link" href="is_sunday.html"><span class="label">Next</span><span class="title">is_sunday</span></a>
 </div>

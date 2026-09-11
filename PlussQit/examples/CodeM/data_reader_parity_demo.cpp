@@ -83,7 +83,7 @@ int main() {
       pluss::DataReader(std::vector<double>{7.0, 8.0, 9.0}),
       pluss::series_options().with_tracks_slope(true).with_retain_sensitivity(true));
   std::cout << "\n[factory autodiff options]\n";
-  std::cout << "is_leaf=" << traced.is_leaf().to_vec<bool>(0)
+  std::cout << "is_leaf=" << traced.is_leaf()
             << ", retains_grad=" << traced.retains_grad().to_vec<bool>(0)
             << ", values=" << traced << "\n";
 

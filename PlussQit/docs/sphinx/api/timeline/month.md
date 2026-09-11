@@ -79,6 +79,6 @@ which that instant is interpreted, so the month changed at the boundary.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="minutes_between.html"><span class="label">Previous</span><span class="title">minutes_between</span></a>
-  <a class="next-link" href="day.html"><span class="label">Next</span><span class="title">day</span></a>
+  <a class="next-link" href="month_end_scalar.html"><span class="label">Next</span><span class="title">month_end_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->

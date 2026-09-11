@@ -151,8 +151,8 @@ Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
     <span class="label">Previous</span>
     <span class="title">starts_with</span>
   </a>
-  <a class="next-link" href="swapcase.html">
+  <a class="next-link" href="strip_accents.html">
     <span class="label">Next</span>
-    <span class="title">swapcase</span>
+    <span class="title">strip_accents</span>
   </a>
 </div>

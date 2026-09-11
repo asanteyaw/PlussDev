@@ -83,16 +83,9 @@ struct EluOptions {
   double alpha = 1.0;
 };
 
-// ELU, applied elementwise: x > 0 ? x : alpha * (exp(x) - 1). No
-// Series::elu() exists in the engine, so built here from primitives that
-// do. Written as a branch-free identity rather than Series::where():
-// elu(x) = relu(x) + alpha * (exp(min(x, 0)) - 1). Check: x > 0 ->
-// relu(x)=x, min(x,0)=0 -> exp(0)-1=0, total=x. x <= 0 -> relu(x)=0,
-// min(x,0)=x -> total=alpha*(exp(x)-1). Both match ELU exactly.
-// (Series::where() itself does propagate gradients correctly -- verified
-// directly against OpsInternal.cpp's dispatch -- this formula was kept
-// because it was already validated and is no more complex than a
-// where()-based version.) Promoted out of
+// ELU, applied elementwise: x > 0 ? x : alpha * (exp(x) - 1). Runs through
+// Series::elu's single fused reverse node rather than a hand-composed
+// relu/clamp_max/exp/sub/mul chain. Promoted out of
 // ice::models::TemporalFusionTransformer's originally-private building
 // blocks (Ice/models/ts/tft_blocks.h) once a second consumer needed it --
 // see ICE_BLUEPRINT.md's centralization note.
@@ -101,9 +94,7 @@ public:
   using Module::Module;
   explicit EluImpl(EluOptions options = {}) : options_(options) {}
 
-  Series forward(const Series& input) const {
-    return input.relu().add(input.clamp_max(0.0).exp().sub(1.0).mul(options_.alpha));
-  }
+  Series forward(const Series& input) const { return input.elu(options_.alpha); }
   Series operator()(const Series& input) const { return forward(input); }
   EluImpl* operator->() noexcept { return this; }
   const EluImpl* operator->() const noexcept { return this; }
@@ -118,9 +109,7 @@ PLUSS_MODULE(Elu);
 
 // Free-function form, for callers (e.g. a GRN's own forward()) that want
 // ELU inline without constructing/holding a Module.
-[[nodiscard]] inline Series elu(const Series& x, double alpha = 1.0) {
-  return x.relu().add(x.clamp_max(0.0).exp().sub(1.0).mul(alpha));
-}
+[[nodiscard]] inline Series elu(const Series& x, double alpha = 1.0) { return x.elu(alpha); }
 
 class PLUSS_API IdentityImpl final : public Module {
 public:

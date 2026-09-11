@@ -23,7 +23,6 @@ struct Arg {
   Arg(const CodenValue& value) : v(value) {}
   Arg(CodenValue&& value) : v(::std::move(value)) {}
 
-  Arg(const ::pluss::coden::Chord& value) : v(value) {}
   Arg(const ::pluss::coden::Note& value) : v(value) {}
 
   Arg(bool value) : v(value) {}
@@ -67,21 +66,9 @@ inline R invoke(::std::string_view op, const Self& self, ArgView args_view = {})
     args.push_back(a.v);
   }
 
-  if constexpr (::std::is_same_v<Self, ::pluss::coden::Chord>) {
-    if constexpr (::std::is_same_v<R, ::pluss::coden::Chord>) {
-      return call_chord(op, self, args);
-    } else if constexpr (::std::is_same_v<R, bool>) {
-      return call_bool_chord(op, self, args);
-    } else if constexpr (::std::is_same_v<R, TokenBatch>) {
-      return call_tokenbatch_chord(op, self, args);
-    } else {
-      static_assert(always_false_v<R>, "Unsupported (Chord -> R) in CodeN invoke");
-    }
-  } else if constexpr (::std::is_same_v<Self, ::pluss::coden::Note>) {
+  if constexpr (::std::is_same_v<Self, ::pluss::coden::Note>) {
     if constexpr (::std::is_same_v<R, ::pluss::coden::Note>) {
       return call_note(op, self, args);
-    } else if constexpr (::std::is_same_v<R, ::pluss::coden::Chord>) {
-      return call_chord_note(op, self, args);
     } else if constexpr (::std::is_same_v<R, ::std::vector<::std::uint8_t>>) {
       return call_u8list_note(op, self, args);
     } else if constexpr (::std::is_same_v<R, ::std::vector<::std::int64_t>>) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/codem/series_factory.h"
+#include "pluss/subsp/linearalg/linearalg.h"
 #include "CodeM/compat/Invoke.h"
 #include "CodeM/core/OpsInternal.h"
 #include "CodeM/core/SeriesTape.h"
@@ -77,6 +78,11 @@ inline void ensure_tracks_slope_(const Series& value) {
   }
 }
 
+inline bool has_reverse_path_(const Series& value) {
+  return value.tracks_slope() ||
+         pluss::codem::series_tape::source_info(value).has_value();
+}
+
 inline void reverse_with_context_(const Series& output, const char* op) {
   try {
     output.reverse();
@@ -137,6 +143,35 @@ inline bool close_enough_(double analytic, double numeric, double atol, double r
   if (!std::isfinite(analytic) || !std::isfinite(numeric)) return false;
   const double tol = atol + rtol * std::abs(numeric);
   return std::abs(analytic - numeric) <= tol;
+}
+
+// Track C batch 6: QR's forward-mode formula needs Q and R together (see
+// qr_q/qr_r below, which each recompute this and take one half -- simple
+// over clever, matches this batch's general approach). Ported from
+// torch/csrc/autograd/FunctionsManual.cpp's linalg_qr_jvp, m>=n branch only
+// (the common "tall or square" case); m<n (wide matrices) throws loud
+// rather than silently using a formula that doesn't apply, matching
+// upstream's own restriction (its m<n branch needs mode='reduced', which
+// pluss's qr_q/qr_r always effectively use here anyway, but the underlying
+// math genuinely differs by branch and porting only one honestly).
+inline std::pair<Series, Series> qr_jvp_(const Series& Q, const Series& R, const Series& dA) {
+  const auto rank = Q.dim();
+  const auto m = Q.sizes()[static_cast<std::size_t>(rank - 2)];
+  const auto n = R.sizes()[static_cast<std::size_t>(rank - 1)];
+  if (m < n) {
+    ::pluss::throw_error(
+        "subsp::math::diff::qr: forward-mode not implemented for m < n (wide matrices)");
+  }
+  // dA @ R^{-1}, computed via the transpose trick since only left-solves
+  // are available: (dA R^{-1}) = X <=> X R = dA <=> R^H X^H = dA^H.
+  const Series dARinv = pluss::subsp::linearalg::triangular_solve(R.mH(), dA.mH(), /*upper=*/false, false).mH();
+  const Series QhdARinv = Q.mH().matmul(dARinv);
+  const Series sym = QhdARinv.add(QhdARinv.mH());
+  const Series sym_half_diag = sym.diagonal(0, -2, -1).mul(0.5).diag_embed();
+  const Series dR_scaled = sym.triu().sub(sym_half_diag);  // syminv(sym(...))
+  const Series dQ = dARinv.sub(Q.matmul(dR_scaled));
+  const Series dR = dR_scaled.matmul(R);
+  return {dQ, dR};
 }
 
 } // namespace detail
@@ -689,6 +724,196 @@ inline DualTrace clamp(const DualTrace& x, double min, double max) {
   return DualTrace(x.value().clamp(min, max), mask.mul(x.tangent()));
 }
 
+// ---------------------------------------------------------------------------
+// Track C batch 5: the Track B fused activation family (elu/celu/selu/
+// hardsigmoid/hardswish/mish/threshold), now given forward-mode duals too.
+// These are all pointwise scalar functions, so unlike the structural/
+// reduction batches above the JVP formula is literally the same
+// "multiply by the local derivative" shape as the VJP -- these are the
+// exact same analytic slope formulas from each op's fused reverse node in
+// OpsInternal.cpp, just applied to the tangent instead of the cotangent.
+// rrelu/dropout are deliberately NOT included: their randomness is drawn
+// once per forward call, and forward-mode AD's use case (propagating a
+// fixed direction through a numeric computation) doesn't have an
+// established convention for what "the same random draw" even means across
+// a swept batch of directions the way jvp_lanes/jacfwd would use them.
+// ---------------------------------------------------------------------------
+
+inline Trace elu(const Trace& x, double alpha = 1.0, double scale = 1.0, double input_scale = 1.0) {
+  detail::require_defined_(x.value(), "elu");
+  return Trace(x.value().elu(alpha, scale, input_scale));
+}
+
+inline DualTrace elu(const DualTrace& x, double alpha = 1.0, double scale = 1.0, double input_scale = 1.0) {
+  const Series primal = x.value().elu(alpha, scale, input_scale);
+  const Series one = detail::ones_like_(x.value());
+  const Series pos_mask = x.value().gt(0.0).to(x.value().scalar_type());
+  const Series neg_slope = x.value().mul(input_scale).exp().mul(alpha * scale * input_scale);
+  const Series slope = pos_mask.mul(scale).add(one.sub(pos_mask).mul(neg_slope));
+  return DualTrace(primal, slope.mul(x.tangent()));
+}
+
+inline Trace celu(const Trace& x, double alpha = 1.0) {
+  detail::require_defined_(x.value(), "celu");
+  return Trace(x.value().celu(alpha));
+}
+
+inline DualTrace celu(const DualTrace& x, double alpha = 1.0) {
+  return elu(x, alpha, 1.0, 1.0 / alpha);
+}
+
+inline Trace selu(const Trace& x) {
+  detail::require_defined_(x.value(), "selu");
+  return Trace(x.value().selu());
+}
+
+inline DualTrace selu(const DualTrace& x) {
+  constexpr double kSeluAlpha = 1.6732632423543772;
+  constexpr double kSeluScale = 1.0507009873554805;
+  return elu(x, kSeluAlpha, kSeluScale, 1.0);
+}
+
+inline Trace hardsigmoid(const Trace& x) {
+  detail::require_defined_(x.value(), "hardsigmoid");
+  return Trace(x.value().hardsigmoid());
+}
+
+inline DualTrace hardsigmoid(const DualTrace& x) {
+  const Series primal = x.value().hardsigmoid();
+  const Series mask = x.value().gt(-3.0).logical_and(x.value().lt(3.0)).to(x.value().scalar_type());
+  return DualTrace(primal, mask.mul(1.0 / 6.0).mul(x.tangent()));
+}
+
+inline Trace hardswish(const Trace& x) {
+  detail::require_defined_(x.value(), "hardswish");
+  return Trace(x.value().hardswish());
+}
+
+inline DualTrace hardswish(const DualTrace& x) {
+  const Series primal = x.value().hardswish();
+  const Series one = detail::ones_like_(x.value());
+  const Series lo_mask = x.value().le(-3.0).to(x.value().scalar_type());
+  const Series hi_mask = x.value().ge(3.0).to(x.value().scalar_type());
+  const Series mid_mask = one.sub(lo_mask).sub(hi_mask);
+  const Series mid_slope = x.value().mul(2.0).add(3.0).mul(1.0 / 6.0);
+  const Series slope = hi_mask.add(mid_mask.mul(mid_slope));
+  return DualTrace(primal, slope.mul(x.tangent()));
+}
+
+inline Trace mish(const Trace& x) {
+  detail::require_defined_(x.value(), "mish");
+  return Trace(x.value().mish());
+}
+
+inline DualTrace mish(const DualTrace& x) {
+  const Series primal = x.value().mish();
+  const Series t = x.value().softplus(1.0, 20.0).tanh();
+  const Series s = x.value().sigmoid();
+  const Series one = detail::ones_like_(x.value());
+  const Series slope = t.add(x.value().mul(s).mul(one.sub(t.mul(t))));
+  return DualTrace(primal, slope.mul(x.tangent()));
+}
+
+inline Trace threshold(const Trace& x, double threshold_val, double value) {
+  detail::require_defined_(x.value(), "threshold");
+  return Trace(x.value().threshold(threshold_val, value));
+}
+
+inline DualTrace threshold(const DualTrace& x, double threshold_val, double value) {
+  const Series primal = x.value().threshold(threshold_val, value);
+  const Series mask = x.value().gt(threshold_val).to(x.value().scalar_type());
+  return DualTrace(primal, mask.mul(x.tangent()));
+}
+
+// rrelu/dropout: DualTrace computes primal and tangent together in one
+// call, so unlike a separate forward+backward pass there is no need to
+// capture or recreate "the same random draw" -- the realized per-element
+// slope/scale is recoverable arithmetically straight from the primal that
+// was just computed (primal_i == x_i * realized_scale_i wherever the op is
+// linear-conditional-on-a-drawn-constant, so realized_scale_i ==
+// primal_i/x_i), without touching the compat-layer RNG at all.
+inline Trace rrelu(const Trace& x, double lower, double upper, bool training = false) {
+  detail::require_defined_(x.value(), "rrelu");
+  return Trace(x.value().rrelu(lower, upper, training));
+}
+
+inline DualTrace rrelu(const DualTrace& x, double lower, double upper, bool training = false) {
+  const Series primal = x.value().rrelu(lower, upper, training);
+  const Series one = detail::ones_like_(x.value());
+  const Series pos_mask = x.value().gt(0.0).to(x.value().scalar_type());
+  if (!training) {
+    const double mid = 0.5 * (lower + upper);
+    const Series slope = pos_mask.add(one.sub(pos_mask).mul(mid));
+    return DualTrace(primal, slope.mul(x.tangent()));
+  }
+  // x_i==0 forces primal_i==0 too (either branch gives 0 there), so
+  // dividing by a substituted 1 at that single point safely yields a slope
+  // of 0 -- a defensible value since the true drawn slope isn't recoverable
+  // at that measure-zero point either way.
+  const Series safe_x = x.value().where(x.value().eq(0.0), one);
+  const Series recovered_slope = primal.div(safe_x);
+  const Series slope = pos_mask.add(one.sub(pos_mask).mul(recovered_slope));
+  return DualTrace(primal, slope.mul(x.tangent()));
+}
+
+// Plain/feature dropout: primal_i = x_i * scale_i, scale_i in {0, 1/keep}.
+// Same recovery trick as rrelu above -- and it also happens to make
+// `feature_dropout` (whose noise broadcasts across extra dims before
+// multiplying) free: by the time we look at the elementwise primal/x
+// ratio, the broadcasting is already baked in, so the exact same formula
+// covers both without needing to know which one was used.
+inline Trace dropout(const Trace& x, double p, bool train) {
+  detail::require_defined_(x.value(), "dropout");
+  return Trace(pluss::codem::_compat::invoke("dropout", x.value(), {p, train}));
+}
+
+inline DualTrace dropout(const DualTrace& x, double p, bool train) {
+  const Series primal = pluss::codem::_compat::invoke("dropout", x.value(), {p, train});
+  if (!train || p <= 0.0) {
+    return DualTrace(primal, x.tangent());
+  }
+  if (p >= 1.0) {
+    return DualTrace(primal, detail::zeros_like_(x.tangent()));
+  }
+  const Series one = detail::ones_like_(x.value());
+  const Series zero = detail::zeros_like_(x.value());
+  const Series self_is_zero = x.value().eq(0.0);
+  const Series safe_self = x.value().where(self_is_zero, one);
+  const Series recovered_scale = primal.div(safe_self).where(self_is_zero, zero);
+  return DualTrace(primal, recovered_scale.mul(x.tangent()));
+}
+
+inline Trace feature_dropout(const Trace& x, double p, bool train) {
+  detail::require_defined_(x.value(), "feature_dropout");
+  return Trace(pluss::codem::_compat::invoke("feature_dropout", x.value(), {p, train}));
+}
+
+inline DualTrace feature_dropout(const DualTrace& x, double p, bool train) {
+  const Series primal = pluss::codem::_compat::invoke("feature_dropout", x.value(), {p, train});
+  if (!train || p <= 0.0) {
+    return DualTrace(primal, x.tangent());
+  }
+  if (p >= 1.0) {
+    return DualTrace(primal, detail::zeros_like_(x.tangent()));
+  }
+  const Series one = detail::ones_like_(x.value());
+  const Series zero = detail::zeros_like_(x.value());
+  const Series self_is_zero = x.value().eq(0.0);
+  const Series safe_self = x.value().where(self_is_zero, one);
+  const Series recovered_scale = primal.div(safe_self).where(self_is_zero, zero);
+  return DualTrace(primal, recovered_scale.mul(x.tangent()));
+}
+
+// alpha_dropout deliberately NOT included: out_i = x_i*a*noise_i +
+// alpha_a*(noise_i-1) + alpha_a*p has TWO free constants per element
+// (scale AND shift) tied to the same single Bernoulli draw `noise_i`, so
+// recovering it from the primal needs solving primal_i = noise_i*(x_i*a +
+// alpha_a) - alpha_a*(1-p) for noise_i -- exact in principle, but the
+// denominator x_i*a+alpha_a vanishes at x_i == -alpha_a/a == -alpha
+// (~ -1.758 for the default alpha), a perfectly ordinary activation value,
+// not a measure-zero edge case like rrelu/plain-dropout's x_i==0 -- so this
+// reconstruction is numerically fragile in a way the other two aren't.
+
 inline Trace sum(const Trace& x) {
   detail::require_defined_(x.value(), "sum");
   return Trace(x.value().sum());
@@ -705,6 +930,306 @@ inline Trace mean(const Trace& x) {
 
 inline DualTrace mean(const DualTrace& x) {
   return DualTrace(x.value().mean(), x.tangent().mean());
+}
+
+// ---------------------------------------------------------------------------
+// Track C: per-dim reductions and structural (shape-only) ops. All of these
+// are LINEAR in x, so their JVP is exactly "apply the same op to the
+// tangent" -- e.g. d(sum(x,dim))/dx . v = sum(v,dim) for any direction v.
+// That makes these rules exact by construction, not an approximation: no
+// case analysis, no risk of a missed branch, unlike e.g. amax/amin (a
+// selection, not linear) which are deliberately NOT included in this batch.
+// ---------------------------------------------------------------------------
+
+inline Trace sum(const Trace& x, std::int64_t dim, bool keepdim = false) {
+  detail::require_defined_(x.value(), "sum");
+  return Trace(x.value().sum(dim, keepdim));
+}
+
+inline DualTrace sum(const DualTrace& x, std::int64_t dim, bool keepdim = false) {
+  return DualTrace(x.value().sum(dim, keepdim), x.tangent().sum(dim, keepdim));
+}
+
+inline Trace sum(const Trace& x, pluss::msharp::RangeView::Int dims, bool keepdim = false) {
+  detail::require_defined_(x.value(), "sum");
+  return Trace(x.value().sum(dims, keepdim));
+}
+
+inline DualTrace sum(const DualTrace& x, pluss::msharp::RangeView::Int dims, bool keepdim = false) {
+  return DualTrace(x.value().sum(dims, keepdim), x.tangent().sum(dims, keepdim));
+}
+
+inline Trace mean(const Trace& x, std::int64_t dim, bool keepdim = false) {
+  detail::require_defined_(x.value(), "mean");
+  return Trace(x.value().mean(dim, keepdim));
+}
+
+inline DualTrace mean(const DualTrace& x, std::int64_t dim, bool keepdim = false) {
+  return DualTrace(x.value().mean(dim, keepdim), x.tangent().mean(dim, keepdim));
+}
+
+inline Trace mean(const Trace& x, pluss::msharp::RangeView::Int dims, bool keepdim = false) {
+  detail::require_defined_(x.value(), "mean");
+  return Trace(x.value().mean(dims, keepdim));
+}
+
+inline DualTrace mean(const DualTrace& x, pluss::msharp::RangeView::Int dims, bool keepdim = false) {
+  return DualTrace(x.value().mean(dims, keepdim), x.tangent().mean(dims, keepdim));
+}
+
+inline Trace reshape(const Trace& x, pluss::msharp::RangeView::Int new_sizes) {
+  detail::require_defined_(x.value(), "reshape");
+  return Trace(x.value().reshape(new_sizes));
+}
+
+inline DualTrace reshape(const DualTrace& x, pluss::msharp::RangeView::Int new_sizes) {
+  return DualTrace(x.value().reshape(new_sizes), x.tangent().reshape(new_sizes));
+}
+
+inline Trace transpose(const Trace& x, std::int64_t dim0, std::int64_t dim1) {
+  detail::require_defined_(x.value(), "transpose");
+  return Trace(x.value().transpose(dim0, dim1));
+}
+
+inline DualTrace transpose(const DualTrace& x, std::int64_t dim0, std::int64_t dim1) {
+  return DualTrace(x.value().transpose(dim0, dim1), x.tangent().transpose(dim0, dim1));
+}
+
+inline Trace squeeze(const Trace& x) {
+  detail::require_defined_(x.value(), "squeeze");
+  return Trace(x.value().squeeze());
+}
+
+inline DualTrace squeeze(const DualTrace& x) {
+  return DualTrace(x.value().squeeze(), x.tangent().squeeze());
+}
+
+inline Trace squeeze(const Trace& x, std::int64_t dim) {
+  detail::require_defined_(x.value(), "squeeze");
+  return Trace(x.value().squeeze(dim));
+}
+
+inline DualTrace squeeze(const DualTrace& x, std::int64_t dim) {
+  return DualTrace(x.value().squeeze(dim), x.tangent().squeeze(dim));
+}
+
+inline Trace unsqueeze(const Trace& x, std::int64_t dim) {
+  detail::require_defined_(x.value(), "unsqueeze");
+  return Trace(x.value().unsqueeze(dim));
+}
+
+inline DualTrace unsqueeze(const DualTrace& x, std::int64_t dim) {
+  return DualTrace(x.value().unsqueeze(dim), x.tangent().unsqueeze(dim));
+}
+
+inline Trace flatten(const Trace& x, std::int64_t start_dim, std::int64_t end_dim) {
+  detail::require_defined_(x.value(), "flatten");
+  return Trace(x.value().flatten(start_dim, end_dim));
+}
+
+inline DualTrace flatten(const DualTrace& x, std::int64_t start_dim, std::int64_t end_dim) {
+  return DualTrace(x.value().flatten(start_dim, end_dim), x.tangent().flatten(start_dim, end_dim));
+}
+
+// ---------------------------------------------------------------------------
+// Track C batch 2: amax/amin (a selection, NOT linear -- unlike everything
+// above) and var/std (a smooth quadratic, not linear either). Both need a
+// real derivative, not the "apply the same op to the tangent" shortcut.
+// ---------------------------------------------------------------------------
+
+// amax's JVP at x: the max is attained at every index where x_i equals the
+// max (ties split evenly, matching the reverse-mode rule in
+// maybe_link_extrema_reduce_ in OpsInternal.cpp -- both directions need the
+// same subgradient convention at a tie to be consistent with each other).
+// d(amax)/dx . v = sum_dim( (1{x_i==max}/count_ties) * v_i ).
+inline Trace amax(const Trace& x, std::int64_t dim, bool keepdim = false) {
+  detail::require_defined_(x.value(), "amax");
+  return Trace(x.value().amax(dim, keepdim));
+}
+
+inline DualTrace amax(const DualTrace& x, std::int64_t dim, bool keepdim = false) {
+  const Series primal = x.value().amax(dim, keepdim);
+  const Series value_bc = (keepdim ? primal : primal.unsqueeze(dim)).expand(x.value().sizes(), true);
+  const Series mask = x.value().eq(value_bc).to(x.value().scalar_type());
+  const Series count = mask.sum(dim, true);
+  const Series weight = mask.div(count);
+  return DualTrace(primal, weight.mul(x.tangent()).sum(dim, keepdim));
+}
+
+inline Trace amin(const Trace& x, std::int64_t dim, bool keepdim = false) {
+  detail::require_defined_(x.value(), "amin");
+  return Trace(x.value().amin(dim, keepdim));
+}
+
+inline DualTrace amin(const DualTrace& x, std::int64_t dim, bool keepdim = false) {
+  const Series primal = x.value().amin(dim, keepdim);
+  const Series value_bc = (keepdim ? primal : primal.unsqueeze(dim)).expand(x.value().sizes(), true);
+  const Series mask = x.value().eq(value_bc).to(x.value().scalar_type());
+  const Series count = mask.sum(dim, true);
+  const Series weight = mask.div(count);
+  return DualTrace(primal, weight.mul(x.tangent()).sum(dim, keepdim));
+}
+
+// var(x,dim) = mean((x-mean(x,dim))^2, dim) [* n/(n-1) if unbiased]. Letting
+// c = x - mean(x,dim) (the centered value), d(var)/dx . v =
+// 2*mean(c*dc, dim) where dc = v - mean(v,dim) is the tangent of c itself
+// (mean is linear, so its own tangent is just mean(v,dim)).
+inline Trace var(const Trace& x, std::int64_t dim, bool unbiased, bool keepdim = false) {
+  detail::require_defined_(x.value(), "var");
+  return Trace(x.value().var(dim, unbiased, keepdim));
+}
+
+inline DualTrace var(const DualTrace& x, std::int64_t dim, bool unbiased, bool keepdim = false) {
+  const Series primal = x.value().var(dim, unbiased, keepdim);
+  const Series m = x.value().mean(dim, true);
+  const Series c = x.value().sub(m);
+  const Series dm = x.tangent().mean(dim, true);
+  const Series dc = x.tangent().sub(dm);
+  Series dvar = c.mul(dc).mean(dim, keepdim).mul(2.0);
+  if (unbiased) {
+    const auto rank = x.value().dim();
+    const auto d = dim < 0 ? dim + rank : dim;
+    const double n = static_cast<double>(x.value().sizes()[static_cast<std::size_t>(d)]);
+    if (n <= 1.0) {
+      ::pluss::throw_error("subsp::math::diff::var(unbiased): reduced dimension must have more than one element");
+    }
+    dvar = dvar.mul(n / (n - 1.0));
+  }
+  return DualTrace(primal, dvar);
+}
+
+// std = sqrt(var); d(std)/dx . v = d(var)/dx.v / (2*sqrt(var)).
+inline Trace std(const Trace& x, std::int64_t dim, bool unbiased, bool keepdim = false) {
+  detail::require_defined_(x.value(), "std");
+  return Trace(x.value().std(dim, unbiased, keepdim));
+}
+
+inline DualTrace std(const DualTrace& x, std::int64_t dim, bool unbiased, bool keepdim = false) {
+  const DualTrace v = var(x, dim, unbiased, keepdim);
+  const Series primal = v.value().sqrt();
+  const Series dstd = v.tangent().div(primal.mul(2.0));
+  return DualTrace(primal, dstd);
+}
+
+// ---------------------------------------------------------------------------
+// Track C batch 3: cumulative ops. cumsum is linear (same "apply the op to
+// the tangent" rule as batch 1). cumprod is NOT linear and has a genuine
+// singularity at zero elements (the naive quotient-rule form divides by
+// x_k) -- mirrors the exact zero-safe construction PyTorch's own
+// `cumprod_jvp` (torch/csrc/autograd/FunctionsManual.cpp) uses rather than
+// inventing a formula: everywhere before the first zero (per reduced-dim
+// slice) the quotient-rule form is exact and used directly; from the first
+// zero onward, the correct value is a cumprod of (that position's own
+// tangent substituted in) times the values after it.
+// ---------------------------------------------------------------------------
+
+inline Trace cumsum(const Trace& x, std::int64_t dim) {
+  detail::require_defined_(x.value(), "cumsum");
+  return Trace(x.value().cumsum(dim));
+}
+
+inline DualTrace cumsum(const DualTrace& x, std::int64_t dim) {
+  return DualTrace(x.value().cumsum(dim), x.tangent().cumsum(dim));
+}
+
+inline Trace cumprod(const Trace& x, std::int64_t dim) {
+  detail::require_defined_(x.value(), "cumprod");
+  return Trace(x.value().cumprod(dim));
+}
+
+inline DualTrace cumprod(const DualTrace& x, std::int64_t dim) {
+  const Series result = x.value().cumprod(dim);
+  const Series generic_grad = x.tangent().div(x.value()).cumsum(dim).mul(result);
+
+  const Series mask_zeros = x.value().eq(0.0);
+  const Series mask_zeros_f = mask_zeros.to(x.value().scalar_type());
+  const Series mask_first_zero = mask_zeros.logical_and(mask_zeros_f.cumsum(dim).eq(1.0));
+  // Series::where(cond, other) selects `other` where cond is true and self
+  // (the receiver) where false -- the opposite of torch's Tensor::where --
+  // so "mask_first_zero ? tangent : value" is value.where(mask, tangent).
+  const Series new_grad = x.value().where(mask_first_zero, x.tangent()).cumprod(dim);
+  const Series mask_after_first_zero = mask_first_zero.to(x.value().scalar_type()).cumsum(dim).gt(0.0);
+  const Series grad = generic_grad.where(mask_after_first_zero, new_grad);
+  return DualTrace(result, grad);
+}
+
+// ---------------------------------------------------------------------------
+// Track C batch 4: index/gather/scatter and pile (torch's `stack` -- pluss
+// has no separate `cat`, see Series::pile in OpsInternal.cpp). All of these
+// are linear: each output element is either a fixed input element or a
+// fixed sum of input elements, entirely independent of the actual values,
+// so "apply the same op to the tangent(s)" is exact here too. `index` is
+// always a plain (non-differentiable) integer Series, never a DualTrace.
+// ---------------------------------------------------------------------------
+
+inline Trace index_select(const Trace& x, std::int64_t dim, const Series& index) {
+  detail::require_defined_(x.value(), "index_select");
+  return Trace(x.value().index_select(dim, index));
+}
+
+inline DualTrace index_select(const DualTrace& x, std::int64_t dim, const Series& index) {
+  return DualTrace(x.value().index_select(dim, index), x.tangent().index_select(dim, index));
+}
+
+inline Trace gather(const Trace& x, std::int64_t dim, const Series& index) {
+  detail::require_defined_(x.value(), "gather");
+  return Trace(x.value().gather(dim, index));
+}
+
+inline DualTrace gather(const DualTrace& x, std::int64_t dim, const Series& index) {
+  return DualTrace(x.value().gather(dim, index), x.tangent().gather(dim, index));
+}
+
+inline Trace scatter(const Trace& x, std::int64_t dim, const Series& index, const Trace& src) {
+  detail::require_defined_(x.value(), "scatter");
+  detail::require_defined_(src.value(), "scatter");
+  return Trace(x.value().scatter(dim, index, src.value()));
+}
+
+inline DualTrace scatter(const DualTrace& x, std::int64_t dim, const Series& index, const DualTrace& src) {
+  return DualTrace(
+      x.value().scatter(dim, index, src.value()),
+      x.tangent().scatter(dim, index, src.tangent()));
+}
+
+inline Trace scatter_add(const Trace& x, std::int64_t dim, const Series& index, const Trace& src) {
+  detail::require_defined_(x.value(), "scatter_add");
+  detail::require_defined_(src.value(), "scatter_add");
+  return Trace(x.value().scatter_add(dim, index, src.value()));
+}
+
+inline DualTrace scatter_add(const DualTrace& x, std::int64_t dim, const Series& index, const DualTrace& src) {
+  return DualTrace(
+      x.value().scatter_add(dim, index, src.value()),
+      x.tangent().scatter_add(dim, index, src.tangent()));
+}
+
+inline Trace pile(const std::vector<Trace>& xs, std::int64_t dim = 0) {
+  if (xs.empty()) {
+    ::pluss::throw_error("subsp::math::diff::pile: expected at least one input");
+  }
+  std::vector<Series> values;
+  values.reserve(xs.size());
+  for (const auto& x : xs) values.push_back(x.value());
+  const std::vector<Series> others(values.begin() + 1, values.end());
+  return Trace(values.front().pile(others, dim));
+}
+
+inline DualTrace pile(const std::vector<DualTrace>& xs, std::int64_t dim = 0) {
+  if (xs.empty()) {
+    ::pluss::throw_error("subsp::math::diff::pile: expected at least one input");
+  }
+  std::vector<Series> values;
+  std::vector<Series> tangents;
+  values.reserve(xs.size());
+  tangents.reserve(xs.size());
+  for (const auto& x : xs) {
+    values.push_back(x.value());
+    tangents.push_back(x.tangent());
+  }
+  const std::vector<Series> other_values(values.begin() + 1, values.end());
+  const std::vector<Series> other_tangents(tangents.begin() + 1, tangents.end());
+  return DualTrace(values.front().pile(other_values, dim), tangents.front().pile(other_tangents, dim));
 }
 
 inline Trace apply_loss_reduction(const Trace& x, LossReduction reduction) {
@@ -887,6 +1412,246 @@ inline DualTrace matmul(const DualTrace& a, const DualTrace& b) {
       a.tangent().matmul(b.value()).add(a.value().matmul(b.tangent())));
 }
 
+// pluss DOES have a `cat`-equivalent after all -- Series::unite(others, dim)
+// (torch's `cat`, joins along an EXISTING dim) -- this batch's `pile` note
+// above ("pluss has no cat, only pile/stack") was wrong; correcting it here
+// rather than leaving it stand. Same linearity as pile.
+inline Trace unite(const std::vector<Trace>& xs, std::int64_t dim = 0) {
+  if (xs.empty()) {
+    ::pluss::throw_error("subsp::math::diff::unite: expected at least one input");
+  }
+  std::vector<Series> values;
+  values.reserve(xs.size());
+  for (const auto& x : xs) values.push_back(x.value());
+  const std::vector<Series> others(values.begin() + 1, values.end());
+  return Trace(values.front().unite(others, dim));
+}
+
+inline DualTrace unite(const std::vector<DualTrace>& xs, std::int64_t dim = 0) {
+  if (xs.empty()) {
+    ::pluss::throw_error("subsp::math::diff::unite: expected at least one input");
+  }
+  std::vector<Series> values;
+  std::vector<Series> tangents;
+  values.reserve(xs.size());
+  tangents.reserve(xs.size());
+  for (const auto& x : xs) {
+    values.push_back(x.value());
+    tangents.push_back(x.tangent());
+  }
+  const std::vector<Series> other_values(values.begin() + 1, values.end());
+  const std::vector<Series> other_tangents(tangents.begin() + 1, tangents.end());
+  return DualTrace(values.front().unite(other_values, dim), tangents.front().unite(other_tangents, dim));
+}
+
+// ---------------------------------------------------------------------------
+// Track C batch 6: the linalg family. Scoped to real (non-complex) matrices,
+// matching the scope the reverse-mode linalg oracle tests already use for
+// this same op family (det/logdet/inverse/pinverse/cholesky/matrix_exp/
+// matrix_power in F64/F32; QR/SVD's complex coverage was a separate,
+// narrower reverse-mode test). Formulas ported from PyTorch's own
+// FunctionsManual.cpp (`cholesky_jvp`, `differential_analytic_matrix_
+// function`, `pinv_jvp`, `linalg_qr_jvp`) rather than re-derived, per the
+// project's "check against local torch" standard -- these are exactly the
+// formulas that file already documents, translated to Series calls.
+// ---------------------------------------------------------------------------
+
+inline Trace det(const Trace& x) {
+  detail::require_defined_(x.value(), "det");
+  return Trace(pluss::subsp::linearalg::det(x.value()));
+}
+
+inline DualTrace det(const DualTrace& x) {
+  const Series primal = pluss::subsp::linearalg::det(x.value());
+  const Series inv = pluss::subsp::linearalg::inverse(x.value());
+  const Series trace_term = inv.matmul(x.tangent()).diagonal(0, -2, -1).sum(-1, false);
+  return DualTrace(primal, trace_term.mul(primal));
+}
+
+inline Trace logdet(const Trace& x) {
+  detail::require_defined_(x.value(), "logdet");
+  return Trace(pluss::subsp::linearalg::logdet(x.value()));
+}
+
+inline DualTrace logdet(const DualTrace& x) {
+  const Series primal = pluss::subsp::linearalg::logdet(x.value());
+  const Series inv = pluss::subsp::linearalg::inverse(x.value());
+  const Series trace_term = inv.matmul(x.tangent()).diagonal(0, -2, -1).sum(-1, false);
+  return DualTrace(primal, trace_term);
+}
+
+// slogdet's packed [..., 2] output is [sign, logabsdet] (see
+// bind_slogdet_backward_ in LinearAlgFunctional.cpp for the same
+// convention). d(sign) = 0 for real matrices (sign is locally constant
+// a.e.); d(logabsdet) = tr(A^{-1} dA), same as logdet.
+inline Trace slogdet(const Trace& x) {
+  detail::require_defined_(x.value(), "slogdet");
+  return Trace(pluss::subsp::linearalg::slogdet(x.value()));
+}
+
+inline DualTrace slogdet(const DualTrace& x) {
+  const Series primal = pluss::subsp::linearalg::slogdet(x.value());
+  const Series inv = pluss::subsp::linearalg::inverse(x.value());
+  const Series trace_term = inv.matmul(x.tangent()).diagonal(0, -2, -1).sum(-1, false);
+  const Series dsign = detail::zeros_like_(trace_term);
+  const Series tangent = dsign.pile(std::vector<Series>{trace_term}, -1);
+  return DualTrace(primal, tangent);
+}
+
+inline Trace inverse(const Trace& x) {
+  detail::require_defined_(x.value(), "inverse");
+  return Trace(pluss::subsp::linearalg::inverse(x.value()));
+}
+
+inline DualTrace inverse(const DualTrace& x) {
+  const Series primal = pluss::subsp::linearalg::inverse(x.value());
+  const Series tangent = primal.matmul(x.tangent()).matmul(primal).neg();
+  return DualTrace(primal, tangent);
+}
+
+inline Trace cholesky(const Trace& x, bool upper = false) {
+  detail::require_defined_(x.value(), "cholesky");
+  return Trace(pluss::subsp::linearalg::cholesky(x.value(), upper));
+}
+
+inline DualTrace cholesky(const DualTrace& x, bool upper = false) {
+  const Series L = pluss::subsp::linearalg::cholesky(x.value(), upper);
+  const Series L_ = upper ? L.mH() : L;
+  Series dL = pluss::subsp::linearalg::triangular_solve(L_, x.tangent(), /*upper=*/false, false);
+  dL = pluss::subsp::linearalg::triangular_solve(L_, dL.mH(), /*upper=*/false, false).mH();
+  const Series half_diag = dL.diagonal(0, -2, -1).mul(0.5).diag_embed();
+  dL = dL.tril().sub(half_diag);
+  dL = L_.matmul(dL);
+  return DualTrace(L, upper ? dL.mH() : dL);
+}
+
+inline Trace matrix_exp(const Trace& x) {
+  detail::require_defined_(x.value(), "matrix_exp");
+  return Trace(pluss::subsp::linearalg::matrix_exp(x.value()));
+}
+
+inline DualTrace matrix_exp(const DualTrace& x) {
+  const Series& A = x.value();
+  const Series primal = pluss::subsp::linearalg::matrix_exp(A);
+  // Higham's classic trick (ported from torch's
+  // differential_analytic_matrix_function): the JVP of any analytic matrix
+  // function f at A in direction dA is the top-right block of
+  // f([[A, dA], [0, A]]).
+  const Series zero_block = detail::zeros_like_(A);
+  const Series top = A.unite(std::vector<Series>{x.tangent()}, -1);
+  const Series bottom = zero_block.unite(std::vector<Series>{A}, -1);
+  const Series block = top.unite(std::vector<Series>{bottom}, -2);
+  const Series block_exp = pluss::subsp::linearalg::matrix_exp(block);
+  const auto rank = A.dim();
+  const auto n = A.sizes()[static_cast<std::size_t>(rank - 1)];
+  const Series tangent = block_exp.slice(rank - 2, 0, n).slice(rank - 1, n, 2 * n);
+  return DualTrace(primal, tangent);
+}
+
+inline Trace matrix_power(const Trace& x, std::int64_t n) {
+  detail::require_defined_(x.value(), "matrix_power");
+  return Trace(pluss::subsp::linearalg::matrix_power(x.value(), n));
+}
+
+inline DualTrace matrix_power(const DualTrace& x, std::int64_t n) {
+  const Series primal = pluss::subsp::linearalg::matrix_power(x.value(), n);
+  if (n == 0) {
+    return DualTrace(primal, detail::zeros_like_(x.tangent()));
+  }
+  const bool neg = n < 0;
+  const Series base = neg ? pluss::subsp::linearalg::inverse(x.value()) : x.value();
+  const Series dbase = neg ? base.matmul(x.tangent()).matmul(base).neg() : x.tangent();
+  const std::int64_t k = neg ? -n : n;
+  Series acc;
+  for (std::int64_t i = 0; i < k; ++i) {
+    const Series left_pow = pluss::subsp::linearalg::matrix_power(base, i);
+    const Series right_pow = pluss::subsp::linearalg::matrix_power(base, k - 1 - i);
+    const Series term = left_pow.matmul(dbase).matmul(right_pow);
+    acc = (i == 0) ? term : acc.add(term);
+  }
+  return DualTrace(primal, acc);
+}
+
+// Direct (non-shape-optimized) form of Golub & Pereyra's pseudoinverse JVP,
+// ported from torch's pinv_jvp -- that function branches on m<=n vs m>n
+// purely to shrink an intermediate matrix for performance; both branches
+// are algebraically equivalent, so this uses the single unbranched formula.
+inline Trace pinverse(const Trace& x, double rcond = 1e-12) {
+  detail::require_defined_(x.value(), "pinverse");
+  return Trace(pluss::subsp::linearalg::pinverse(x.value(), rcond));
+}
+
+inline DualTrace pinverse(const DualTrace& x, double rcond = 1e-12) {
+  const Series& A = x.value();
+  const Series Ap = pluss::subsp::linearalg::pinverse(A, rcond);
+  const Series& dA = x.tangent();
+  const Series dAh = dA.mH();
+  const Series Aph = Ap.mH();
+  const Series ApA = Ap.matmul(A);
+  const Series AAp = A.matmul(Ap);
+  const Series I_n = pluss::subsp::linearalg::matrix_power(ApA, 0);
+  const Series I_m = pluss::subsp::linearalg::matrix_power(AAp, 0);
+  const Series term1 = Ap.matmul(dA).matmul(Ap).neg();
+  const Series term2 = I_n.sub(ApA).matmul(dAh).matmul(Aph).matmul(Ap);
+  const Series term3 = Ap.matmul(Aph).matmul(dAh).matmul(I_m.sub(AAp));
+  const Series dAp = term1.add(term2).add(term3);
+  return DualTrace(Ap, dAp);
+}
+
+inline Trace triangular_solve(const Trace& a, const Trace& b, bool upper = true, bool unitriangular = false) {
+  detail::require_defined_(a.value(), "triangular_solve");
+  detail::require_defined_(b.value(), "triangular_solve");
+  return Trace(pluss::subsp::linearalg::triangular_solve(a.value(), b.value(), upper, unitriangular));
+}
+
+inline DualTrace triangular_solve(
+    const DualTrace& a, const DualTrace& b, bool upper = true, bool unitriangular = false) {
+  const Series X = pluss::subsp::linearalg::triangular_solve(a.value(), b.value(), upper, unitriangular);
+  const Series rhs = b.tangent().sub(a.tangent().matmul(X));
+  const Series dX = pluss::subsp::linearalg::triangular_solve(a.value(), rhs, upper, unitriangular);
+  return DualTrace(X, dX);
+}
+
+inline Trace qr_q(const Trace& x, bool reduced = true) {
+  detail::require_defined_(x.value(), "qr_q");
+  return Trace(pluss::subsp::linearalg::qr_q(x.value(), reduced));
+}
+
+inline DualTrace qr_q(const DualTrace& x, bool reduced = true) {
+  const Series Q = pluss::subsp::linearalg::qr_q(x.value(), reduced);
+  const Series R = pluss::subsp::linearalg::qr_r(x.value(), reduced);
+  const auto jvp_pair = detail::qr_jvp_(Q, R, x.tangent());
+  return DualTrace(Q, jvp_pair.first);
+}
+
+inline Trace qr_r(const Trace& x, bool reduced = true) {
+  detail::require_defined_(x.value(), "qr_r");
+  return Trace(pluss::subsp::linearalg::qr_r(x.value(), reduced));
+}
+
+inline DualTrace qr_r(const DualTrace& x, bool reduced = true) {
+  const Series Q = pluss::subsp::linearalg::qr_q(x.value(), reduced);
+  const Series R = pluss::subsp::linearalg::qr_r(x.value(), reduced);
+  const auto jvp_pair = detail::qr_jvp_(Q, R, x.tangent());
+  return DualTrace(R, jvp_pair.second);
+}
+
+// Singular VALUES only -- U/V columns have gauge freedom under repeated
+// singular values with no clean closed form, so (matching the scope the
+// reverse-mode SVD oracle test already settled on for this same reason) only
+// dS is implemented. dS_i = Re(u_i^H dA v_i), which for real matrices is
+// just diagonal(U^H dA V).
+inline Trace svd_s(const Trace& x, bool full_matrices = false) {
+  detail::require_defined_(x.value(), "svd_s");
+  return Trace(pluss::subsp::linearalg::svd_s(x.value(), full_matrices));
+}
+
+inline DualTrace svd_s(const DualTrace& x, bool full_matrices = false) {
+  const auto decomp = pluss::subsp::linearalg::svd(x.value(), full_matrices);
+  const Series UhdAV = decomp.u.mH().matmul(x.tangent()).matmul(decomp.vh.mH());
+  return DualTrace(decomp.s, UhdAV.diagonal(0, -2, -1));
+}
+
 inline Trace operator+(const Trace& a, const Trace& b) { return add(a, b); }
 inline Trace operator-(const Trace& a, const Trace& b) { return sub(a, b); }
 inline Trace operator*(const Trace& a, const Trace& b) { return mul(a, b); }
@@ -1028,7 +1793,9 @@ std::pair<Series, std::vector<Series>> value_and_grad(
   reverse_policy.keep_graph = policy.keep_graph;
   reverse_policy.accumulate_sensitivity = policy.accumulate_input_sensitivity;
   reverse_policy.track_higher_order = policy.track_higher_order;
-  loss.reverse(reverse_policy);
+  if (detail::has_reverse_path_(loss.value())) {
+    loss.reverse(reverse_policy);
+  }
 
   std::vector<Series> grads;
   grads.reserve(vars.size());
@@ -1263,7 +2030,9 @@ std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(
     reverse_policy.keep_graph = policy.keep_graph;
     reverse_policy.accumulate_sensitivity = policy.accumulate_input_sensitivity;
     reverse_policy.track_higher_order = policy.track_higher_order;
-    output.reverse(cotangent, reverse_policy);
+    if (detail::has_reverse_path_(output.value())) {
+      output.reverse(cotangent, reverse_policy);
+    }
     pullback_consumed = true;
 
     std::vector<Series> grads;
@@ -2224,10 +2993,12 @@ Series nth_diff(Fn&& fn,
       reverse_policy.keep_graph = policy.keep_graph || interior_order_step;
       reverse_policy.accumulate_sensitivity = false;
       reverse_policy.track_higher_order = policy.track_higher_order || interior_order_step;
-      current.reverse(
-          reverse_policy.keep_graph,
-          reverse_policy.accumulate_sensitivity,
-          reverse_policy.track_higher_order);
+      if (detail::has_reverse_path_(current)) {
+        current.reverse(
+            reverse_policy.keep_graph,
+            reverse_policy.accumulate_sensitivity,
+            reverse_policy.track_higher_order);
+      }
 
       if (!leaf.has_sensitivity()) {
         if (policy.strict_dependency) {

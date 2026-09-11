@@ -1011,8 +1011,25 @@ Current coverage:
   **Third follow-up (same day): io + reports + options families -- prose
   and examples written, Output blocks pending build recovery.**
   - `options` family: `api/lymph/options.md` (single umbrella-alias landing,
-    `children = []`) verified accurate vs `options.h` and lint/forbidden
-    clean -- CLOSED, nothing more to write.
+    `children = []`). **Reworked after user review** ("you just listed the
+    aliases, underlying types and home, no sign of usage -- how can I know
+    what data fields and values each take?"): the 3-column alias tables are
+    replaced by a per-struct **field reference** -- one `Field | Type |
+    Default | Meaning / values` table for every option struct (verb options
+    DFBatch/Train/Infer/Assess; validation CrossVal/Split/Tune/Fit/
+    HoldoutSplit/TimeSplit; Workflow/Time/Profile; ClassReport/Confusion;
+    all 9 model-family options; every prep-stage options struct without a
+    dedicated page tabled in full, the 10 with a page linked + key-fields
+    hint), a "How An Options Struct Works" aggregate/brace-init note, a
+    "Shared Enumerations" enum-values table, and 3 verified end-to-end
+    examples (`lymph_options_example_{1,2,3}`: verb options ->
+    learn_/assess; `options::Linear::regularization_strength` shrinking a
+    ridge fit; `options::SimpleImputer::strategy` Median vs Constant fill).
+    All field names/defaults checked against the headers
+    (`nodej/options.h`, `nodej/data.h`, `nodej/metrics.h`,
+    `nodej/families.h`, `nodej/prep.h`, `lymph/prep.h`,
+    `lymph/selection.h`, `lymph/selection_options.h`, `lymph/workflow.h`,
+    `lymph/time.h`, `lymph/shape.h`). lint/forbidden/sphinx clean.
   - `io` family: `io.md` landing rewritten (cross-cutting persistence map +
     `FlowBundle` description); `io/save.md`, `io/load.md`,
     `io/persistence.md` rewritten from hand-wavy drafts to standard

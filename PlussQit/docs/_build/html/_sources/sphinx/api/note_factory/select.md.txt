@@ -33,8 +33,8 @@ and a matching list of text choices. At every output cell it walks the
 conditions **first to last** and takes the choice paired with the first one
 that is true there; if none is true, `default_value` supplies the cell.
 
-This is the text counterpart of `pluss::series::select` and NumPy's
-`select` — an *n*-way, priority-ordered generalisation of "where". It is the
+This is the text counterpart of `pluss::series::select` — an *n*-way,
+priority-ordered generalisation of "where". It is the
 tool for turning several overlapping masks into a single labelled column:
 bucket names from numeric thresholds, status strings from a set of flags, a
 category per row from a cascade of predicates.

@@ -148,9 +148,9 @@ Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
   or an allow-list) rather than mask them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="lower.html">
+  <a class="prev-link" href="narrow.html">
     <span class="label">Previous</span>
-    <span class="title">lower</span>
+    <span class="title">narrow</span>
   </a>
   <a class="next-link" href="nlp_remove_urls.html">
     <span class="label">Next</span>

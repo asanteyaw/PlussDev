@@ -1,0 +1,691 @@
+ROUTED	abs()
+ROUTED	abs2()
+ROUTED	abs_()
+ROUTED	absolute()
+ROUTED	absolute_()
+ROUTED	add(const Series&)
+ROUTED	add(const Series&, double)
+ROUTED	add(double, double)
+ROUTED	add_(const Series&)
+ROUTED	addbmm(const Series&, const Series&, double, double)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
+ROUTED	addbmm_(const Series&, const Series&, double, double)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
+ROUTED	addcdiv(const Series&, const Series&, double)
+ROUTED	addcdiv_(const Series&, const Series&, double)
+ROUTED	addcmul(const Series&, const Series&, double)
+ROUTED	addcmul_(const Series&, const Series&, double)
+ROUTED	addmm(const Series&, const Series&, double, double)	addmm: inner dimensions must match
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1402 (void pluss::codem::_compat::c
+ROUTED	addmm_(const Series&, const Series&, double, double)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
+ROUTED	addmv(const Series&, const Series&, double, double)	addmv: expected a 2D matrix and a 1D vector
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1416 (void pluss::codem::_
+ROUTED	addmv_(const Series&, const Series&, double, double)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
+ROUTED	addr(const Series&, const Series&, double, double)	addr: expected two 1D Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1423 (void pluss::codem::_compat::check_o
+ROUTED	addr_(const Series&, const Series&, double, double)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:195 (Series pluss::codem::native::cpu::(ano
+ROUTED	adjoint()
+ROUTED	airy()
+ROUTED	alias()
+ROUTED	align_as(const Series&)
+ROUTED	align_to(pluss::msharp::RangeView::Int)	permute: duplicate dim
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:7476 (Series pluss::codem::Series::permute(p
+ROUTED	all()
+ROUTED	all(std::int64_t)
+ROUTED	amax()
+ROUTED	amax(std::int64_t)
+ROUTED	amin()
+ROUTED	amin(std::int64_t)
+ROUTED	angle()
+ROUTED	any()
+ROUTED	any(std::int64_t)
+ROUTED	arccos()
+ROUTED	arccos_()
+ROUTED	arccosh()
+ROUTED	arccosh_()
+ROUTED	arcsin()
+ROUTED	arcsin_()
+ROUTED	arcsinh()
+ROUTED	arcsinh_()
+ROUTED	arctan()
+ROUTED	arctan2(const Series&)
+ROUTED	arctan2_(const Series&)
+ROUTED	arctan_()
+ROUTED	arctanh()
+ROUTED	arctanh_()
+ROUTED	argmax()
+ROUTED	argmax(std::int64_t)
+ROUTED	argmax(std::int64_t, bool)
+ROUTED	argmin()
+ROUTED	argmin(std::int64_t)
+ROUTED	argmin(std::int64_t, bool)
+ROUTED	argsort()
+ROUTED	argsort(std::int64_t)
+ROUTED	argsort(std::int64_t, bool)
+ROUTED	argsort(std::int64_t, bool, bool)
+ROUTED	argwhere()
+ROUTED	as_strided(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int)
+ROUTED	as_strided(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int, std::int64_t)
+ROUTED	as_strided_(pluss::msharp::RangeView::Int)
+ROUTED	as_strided_(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int)
+ROUTED	as_strided_(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int, std::int64_t)
+ROUTED	as_strided_scatter(const Series&, pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int)	as_strided_scatter: src shape must equal the requested view shape
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5607
+ROUTED	as_strided_scatter(const Series&, pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int, std::int64_t)	as_strided_scatter: src shape must equal the requested view shape
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5607
+ROUTED	atan2(const Series&)
+ROUTED	atan2_(const Series&)
+ROUTED	baddbmm(const Series&, const Series&, double, double)	baddbmm: expected two 3D Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1407 (void pluss::codem::_compat::chec
+ROUTED	baddbmm_(const Series&, const Series&, double, double)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
+ROUTED	bernoulli()	bernoulli: probabilities must be finite and in [0, 1]
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1934 (Series plu
+ROUTED	bernoulli(double)
+ROUTED	bernoulli_()
+ROUTED	bernoulli_(double)
+ROUTED	besseli()
+ROUTED	besseli(double)
+ROUTED	besselj()
+ROUTED	besselj(double)
+ROUTED	besselk()
+ROUTED	besselk(double)
+ROUTED	bessely()
+ROUTED	bessely(double)
+ROUTED	beta(double)
+ROUTED	betaln(double)
+ROUTED	bincount()	bincount: input must be integer
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6828 (Series pluss::codem::ops_inte
+ROUTED	bitwise_and_(const Series&)	bitwise: dtype must be integer/bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Bitwise.cpp:40 (void pluss::codem::native
+ROUTED	bitwise_left_shift(const Series&)
+ROUTED	bitwise_left_shift_(const Series&)
+ROUTED	bitwise_not_()	bitwise: dtype must be integer/bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Bitwise.cpp:40 (void pluss::codem::native
+ROUTED	bitwise_or_(const Series&)	bitwise: dtype must be integer/bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Bitwise.cpp:40 (void pluss::codem::native
+ROUTED	bitwise_right_shift(const Series&)
+ROUTED	bitwise_right_shift_(const Series&)
+ROUTED	bitwise_xor_(const Series&)	bitwise: dtype must be integer/bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Bitwise.cpp:40 (void pluss::codem::native
+ROUTED	block(std::int64_t, std::int64_t, std::int64_t, std::int64_t)
+ROUTED	bmm(const Series&)	bmm: expected two 3D Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1407 (void pluss::codem::_compat::check_bm
+ROUTED	broadcast_to(pluss::msharp::RangeView::Int)	expand: non-singleton dimension mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1732 (Series pluss::codem::_c
+ROUTED	cauchy_()
+ROUTED	cauchy_(double)
+ROUTED	cauchy_(double, double)
+ROUTED	cbrt()
+ROUTED	ccol_indices()
+ROUTED	cdist(const Series&)
+ROUTED	cdist(const Series&, double)
+ROUTED	center()
+ROUTED	center(std::int64_t)
+ROUTED	chalf()
+ROUTED	clamp(double, double)
+ROUTED	clamp_(double, double)
+ROUTED	coalesce()
+ROUTED	col_indices()
+ROUTED	conj()
+ROUTED	conj_physical()
+ROUTED	conj_physical_()
+ROUTED	copy_(const Series&)
+ROUTED	copy_(const Series&, bool)
+ROUTED	copysign(const Series&)
+ROUTED	copysign_(const Series&)
+ROUTED	corrcoef()
+ROUTED	count_nonzero()
+ROUTED	count_nonzero(std::int64_t)
+ROUTED	cov()
+ROUTED	cov(std::int64_t)
+ROUTED	cplxpair()
+ROUTED	cross(const Series&)
+ROUTED	cross(const Series&, std::int64_t)	cross: expected dim extent == 3
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3892 (Series pluss::codem::_compat::cr
+ROUTED	crow_indices()
+ROUTED	cube()
+ROUTED	cummax()
+ROUTED	cummax(std::int64_t)
+ROUTED	cummin()
+ROUTED	cummin(std::int64_t)
+ROUTED	cumprod(std::int64_t)
+ROUTED	cumprod_(std::int64_t)
+ROUTED	cumsum(std::int64_t)
+ROUTED	cumsum_(std::int64_t)
+ROUTED	data()
+ROUTED	dct()
+ROUTED	dct(std::int64_t)
+ROUTED	deg2rad()
+ROUTED	deg2rad_()
+ROUTED	dense_dim()
+ROUTED	dequantize()
+ROUTED	detach()
+ROUTED	detach_()
+ROUTED	diag()
+ROUTED	diag(std::int64_t)
+ROUTED	diag_embed()
+ROUTED	diag_embed(std::int64_t)
+ROUTED	diagflat()
+ROUTED	diagflat(std::int64_t)
+ROUTED	diagonal()
+ROUTED	diagonal(std::int64_t)
+ROUTED	diagonal(std::int64_t, std::int64_t, std::int64_t)	diagonal: dim1 and dim2 must differ
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:7323 (Series pluss::codem::_compat
+ROUTED	diagonal_scatter(const Series&)
+ROUTED	diagonal_scatter(const Series&, std::int64_t)
+ROUTED	diff(std::int64_t)
+ROUTED	diff(std::int64_t, std::int64_t)
+ROUTED	digamma()
+ROUTED	digamma_()
+ROUTED	dist(const Series&)
+ROUTED	dist(const Series&, double)
+ROUTED	div(const Series&)
+ROUTED	div_(const Series&)
+ROUTED	div_(double)
+ROUTED	divide(const Series&)
+ROUTED	divide_(const Series&)
+ROUTED	dot(const Series&)	dot: expected two 1D Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:6888 (Series pluss::codem::_compat::invoke
+ROUTED	dst()
+ROUTED	dst(std::int64_t)
+ROUTED	ediff1d()
+ROUTED	eq(const Series&)
+ROUTED	eq_(const Series&)
+ROUTED	erfcinv()
+ROUTED	erfcinv_()
+ROUTED	erfinv()
+ROUTED	erfinv_()
+ROUTED	exp2()
+ROUTED	exp2_()
+ROUTED	expand(pluss::msharp::RangeView::Int, bool)	expand: non-singleton dimension mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1732 (Series pluss::codem::_c
+ROUTED	expand_as(const Series&)
+ROUTED	expand_like(const Series&)
+ROUTED	exponential_()
+ROUTED	exponential_(double)
+ROUTED	factorial()	factorial: expects integral or bool dtype, got float64
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5157 (Series pl
+ROUTED	fftshift()
+ROUTED	fill_(double)
+ROUTED	fill_diagonal_(double)
+ROUTED	fill_diagonal_(double, bool)
+ROUTED	fix()
+ROUTED	fix_()
+ROUTED	flatten()
+ROUTED	flatten(std::int64_t)
+ROUTED	flip(std::int64_t)
+ROUTED	flip(pluss::msharp::RangeView::Int)
+ROUTED	fliplr()
+ROUTED	flipud()
+ROUTED	float_power(const Series&)
+ROUTED	float_power(double)
+ROUTED	float_power_(const Series&)
+ROUTED	floor_divide(const Series&)
+ROUTED	floor_divide(double)
+ROUTED	floor_divide_(const Series&)
+ROUTED	floor_divide_(double)
+ROUTED	fmax(const Series&)
+ROUTED	fmin(const Series&)
+ROUTED	fmod(const Series&)
+ROUTED	fmod(double)
+ROUTED	fmod_(const Series&)
+ROUTED	fmod_(double)
+ROUTED	frac()
+ROUTED	frac_()
+ROUTED	gcd(const Series&)	gcd: integer inputs required
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3726 (Series pluss::codem::_compat::gcd_i
+ROUTED	gcd_(const Series&)	gcd: integer inputs required
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3726 (Series pluss::codem::_compat::gcd_i
+ROUTED	ge(const Series&)
+ROUTED	ge_(const Series&)
+ROUTED	gelu()
+ROUTED	gelu(bool)
+ROUTED	gelu_()
+ROUTED	geometric_()
+ROUTED	geometric_(double)
+ROUTED	ger(const Series&)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:195 (Series pluss::codem::native::cpu::(ano
+ROUTED	greater(const Series&)
+ROUTED	greater_(const Series&)
+ROUTED	greater_equal(const Series&)
+ROUTED	greater_equal_(const Series&)
+ROUTED	gt(const Series&)
+ROUTED	gt_(const Series&)
+ROUTED	hardshrink()
+ROUTED	hardshrink(double)
+ROUTED	hardshrink_backward(const Series&, double)
+ROUTED	heaviside(const Series&)
+ROUTED	heaviside(double)
+ROUTED	heaviside_(const Series&)
+ROUTED	heaviside_(double)
+ROUTED	hilbert()
+ROUTED	hilbert(std::int64_t)
+ROUTED	histc()
+ROUTED	histc(std::int64_t)	histc: bins must be > 0
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6848 (Series pluss::codem::ops_internal::hi
+ROUTED	histcounts()
+ROUTED	histcounts(std::int64_t)	histc: bins must be > 0
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6848 (Series pluss::codem::ops_internal::hi
+ROUTED	histcounts(std::int64_t, double, double)	histc: bins must be > 0
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6848 (Series pluss::codem::ops_internal::hi
+ROUTED	hypot(const Series&)
+ROUTED	hypot_(const Series&)
+ROUTED	i0()
+ROUTED	i0_()
+ROUTED	idct()
+ROUTED	idct(std::int64_t)
+ROUTED	idst()
+ROUTED	idst(std::int64_t)
+ROUTED	ifftshift()
+ROUTED	ifftshift(pluss::msharp::RangeView::Int)
+ROUTED	ifftshift(pluss::msharp::RangeView::Int, std::int64_t)
+ROUTED	igamma(const Series&)
+ROUTED	igamma(double)
+ROUTED	igamma_(const Series&)
+ROUTED	igamma_(double)
+ROUTED	igammac(const Series&)
+ROUTED	igammac(double)
+ROUTED	igammac_(const Series&)
+ROUTED	igammac_(double)
+ROUTED	imag()
+ROUTED	index_add(std::int64_t, const Series&, const Series&)	index_add: index must be a scalar or one-dimensional Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5794 (Seri
+ROUTED	index_add(std::int64_t, const Series&, const Series&, double)	index_add: index must be a scalar or one-dimensional Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5794 (Seri
+ROUTED	index_add_(std::int64_t, const Series&, const Series&)	index_add: index must be a scalar or one-dimensional Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5794 (Seri
+ROUTED	index_add_(std::int64_t, const Series&, const Series&, double)	index_add: index must be a scalar or one-dimensional Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5794 (Seri
+ROUTED	index_copy(std::int64_t, const Series&, const Series&)	index_copy: index must be a scalar or one-dimensional Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5794 (Ser
+ROUTED	index_copy_(std::int64_t, const Series&, const Series&)	index_copy: index must be a scalar or one-dimensional Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5794 (Ser
+ROUTED	index_fill(std::int64_t, const Series&, double)	index_fill: index must be a scalar or one-dimensional Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5794 (Ser
+ROUTED	index_fill_(std::int64_t, const Series&, double)	index_fill: index must be a scalar or one-dimensional Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5794 (Ser
+ROUTED	index_reduce(std::int64_t, const Series&, const Series&, const std::string&)	index_reduce: reduce must be one of 'prod', 'mean', 'amax', or 'amin'
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:
+ROUTED	index_reduce(std::int64_t, const Series&, const Series&, const std::string&, bool)	index_reduce: reduce must be one of 'prod', 'mean', 'amax', or 'amin'
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:
+ROUTED	index_reduce_(std::int64_t, const Series&, const Series&, const std::string&)	index_reduce: reduce must be one of 'prod', 'mean', 'amax', or 'amin'
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:
+ROUTED	index_reduce_(std::int64_t, const Series&, const Series&, const std::string&, bool)	index_reduce: reduce must be one of 'prod', 'mean', 'amax', or 'amin'
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:
+ROUTED	index_select(std::int64_t, const Series&)
+ROUTED	indices()
+ROUTED	inner(const Series&)
+ROUTED	int_repr()
+ROUTED	isclose(const Series&)
+ROUTED	isclose(const Series&, double, double)
+ROUTED	isclose(const Series&, double, double, bool)
+ROUTED	isneginf()
+ROUTED	isposinf()
+ROUTED	isreal()
+ROUTED	istft(std::int64_t, std::int64_t, std::int64_t, const Series&, bool, bool, bool, std::int64_t)	istft: expected 0 < hop_length <= win_length <= n_fft
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3404 (Series plu
+ROUTED	kron(const Series&)
+ROUTED	kthvalue(std::int64_t)	kthvalue: k must be >= 1
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4559 (Series pluss::codem::_compat::kthvalue_
+ROUTED	kthvalue(std::int64_t, std::int64_t)	kthvalue: k must be >= 1
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4559 (Series pluss::codem::_compat::kthvalue_
+ROUTED	kthvalue(std::int64_t, std::int64_t, bool)	kthvalue: k must be >= 1
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4559 (Series pluss::codem::_compat::kthvalue_
+ROUTED	lcm(const Series&)	lcm: integer inputs required
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3745 (Series pluss::codem::_compat::lcm_i
+ROUTED	lcm_(const Series&)	lcm: integer inputs required
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3745 (Series pluss::codem::_compat::lcm_i
+ROUTED	ldexp(const Series&)
+ROUTED	ldexp(double)
+ROUTED	ldexp_(const Series&)
+ROUTED	le(const Series&)
+ROUTED	le_(const Series&)
+ROUTED	leaky_relu(double)
+ROUTED	leaky_relu_(double)
+ROUTED	lerp(double, double)
+ROUTED	lerp(const Series&, double)
+ROUTED	lerp(const Series&, const Series&)
+ROUTED	lerp_(const Series&, double)
+ROUTED	lerp_(const Series&, const Series&)
+ROUTED	less(const Series&)
+ROUTED	less_(const Series&)
+ROUTED	less_equal(const Series&)
+ROUTED	less_equal_(const Series&)
+ROUTED	log10()
+ROUTED	log10_()
+ROUTED	log2()
+ROUTED	log2_()
+ROUTED	log_normal_()
+ROUTED	log_normal_(double)
+ROUTED	log_normal_(double, double)
+ROUTED	log_softmax(std::int64_t)
+ROUTED	logaddexp(const Series&)
+ROUTED	logaddexp(double)
+ROUTED	logaddexp2(const Series&)
+ROUTED	logaddexp2(double)
+ROUTED	logcumsumexp()
+ROUTED	logcumsumexp(std::int64_t)
+ROUTED	logical_and_(const Series&)	logical_and: expects bool tensors
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2387 (Series pluss::codem::ops_in
+ROUTED	logical_or_(const Series&)	logical_or: expects bool tensors
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2397 (Series pluss::codem::ops_int
+ROUTED	logical_xor_(const Series&)	logical_xor: expects bool tensors
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2407 (Series pluss::codem::ops_in
+ROUTED	logit(double)
+ROUTED	logit_(double)
+ROUTED	logsumexp()
+ROUTED	logsumexp(std::int64_t)
+ROUTED	logsumexp(std::int64_t, bool)
+ROUTED	lt(const Series&)
+ROUTED	lt_(const Series&)
+ROUTED	masked_fill(const Series&, double)	masked_fill: mask must be bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2508 (Series pluss::codem::ops_inter
+ROUTED	masked_fill(const Series&, const Series&)	masked_fill: mask must be bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2508 (Series pluss::codem::ops_inter
+ROUTED	masked_fill_(const Series&, double)	masked_fill_: mask must be bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2521 (Series &pluss::codem::ops_int
+ROUTED	masked_fill_(const Series&, const Series&)	masked_fill_: mask must be bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2521 (Series &pluss::codem::ops_int
+ROUTED	matmul(const Series&)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
+ROUTED	max()
+ROUTED	max(std::int64_t)
+ROUTED	max(std::int64_t, bool)
+ROUTED	max(const Series&)
+ROUTED	maximum(const Series&)
+ROUTED	mean(std::int64_t)
+ROUTED	median()
+ROUTED	median(std::int64_t)
+ROUTED	min()
+ROUTED	min(std::int64_t)
+ROUTED	min(std::int64_t, bool)
+ROUTED	min(const Series&)
+ROUTED	minimum(const Series&)
+ROUTED	mm(const Series&)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
+ROUTED	mode()
+ROUTED	mode(std::int64_t)
+ROUTED	moveaxis(std::int64_t, std::int64_t)
+ROUTED	movedim(std::int64_t, std::int64_t)
+ROUTED	msort()
+ROUTED	mul(const Series&)
+ROUTED	mul_(const Series&)
+ROUTED	mul_(double)
+ROUTED	multinomial()	multinomial: probabilities must be finite and nonnegative
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5337 (Series
+ROUTED	multinomial(std::int64_t)	multinomial: num_samples must be greater than zero
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5316 (Series pluss:
+ROUTED	multinomial(std::int64_t, bool)	multinomial: num_samples must be greater than zero
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5316 (Series pluss:
+ROUTED	multiply(const Series&)
+ROUTED	multiply(double)
+ROUTED	multiply_(const Series&)
+ROUTED	multiply_(double)
+ROUTED	mv(const Series&)	mv: expected a 2D matrix and a 1D vector
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:6873 (Series pluss::codem::_c
+ROUTED	mvlgamma()
+ROUTED	mvlgamma(std::int64_t)	mvlgamma: p must be >= 1
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5221 (Series pluss::codem::_compat::mvlgamma_
+ROUTED	mvlgamma_(std::int64_t)	mvlgamma: p must be >= 1
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5221 (Series pluss::codem::_compat::mvlgamma_
+ROUTED	nan_to_num()
+ROUTED	nanmean()
+ROUTED	nanmean(std::int64_t)
+ROUTED	nanmean(std::int64_t, bool)
+ROUTED	nanmedian()
+ROUTED	nanmedian(std::int64_t)
+ROUTED	nanquantile()
+ROUTED	nanquantile(double)
+ROUTED	nanstd()
+ROUTED	nanstd(std::int64_t)
+ROUTED	nanstd(std::int64_t, bool)
+ROUTED	nansum()
+ROUTED	nansum(std::int64_t)
+ROUTED	nansum(std::int64_t, bool)
+ROUTED	nanvar()
+ROUTED	nanvar(std::int64_t)
+ROUTED	nanvar(std::int64_t, bool)
+ROUTED	narrow_copy(std::int64_t, std::int64_t, std::int64_t)
+ROUTED	ne(const Series&)
+ROUTED	ne_(const Series&)
+ROUTED	neg()
+ROUTED	neg_()
+ROUTED	negative()
+ROUTED	negative_()
+ROUTED	new_empty(pluss::msharp::RangeView::Int)
+ROUTED	new_empty_strided(pluss::msharp::RangeView::Int)
+ROUTED	new_empty_strided(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int)
+ROUTED	new_full(pluss::msharp::RangeView::Int, double)
+ROUTED	new_ones(pluss::msharp::RangeView::Int)
+ROUTED	new_zeros(pluss::msharp::RangeView::Int)
+ROUTED	nextafter(const Series&)
+ROUTED	nextafter_(const Series&)
+ROUTED	nonzero_static()
+ROUTED	norm()
+ROUTED	norm(std::int64_t, bool)
+ROUTED	normal_()
+ROUTED	normal_(double)
+ROUTED	normal_(double, double)
+ROUTED	normc()
+ROUTED	normr()
+ROUTED	not_equal(const Series&)
+ROUTED	not_equal(double)
+ROUTED	not_equal_(const Series&)
+ROUTED	not_equal_(double)
+ROUTED	outer(const Series&)	outer: expected two 1D Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1423 (void pluss::codem::_compat::check_
+ROUTED	output_nr()
+ROUTED	pdist2(const Series&)
+ROUTED	pdist2(const Series&, double)
+ROUTED	pin_memory()
+ROUTED	polygamma()
+ROUTED	polygamma(std::int64_t)
+ROUTED	polygamma_(std::int64_t)
+ROUTED	positive()
+ROUTED	positive_()
+ROUTED	pow(const Series&)
+ROUTED	pow_(const Series&)
+ROUTED	pow_(double)
+ROUTED	prelu(const Series&)
+ROUTED	prelu(double)
+ROUTED	prod()
+ROUTED	prod(std::int64_t)
+ROUTED	prod(std::int64_t, bool)
+ROUTED	put(const Series&, const Series&, bool)
+ROUTED	put_(const Series&, const Series&, bool)	put: index must be int64
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/IndexingExtras.cpp:244 (Series pluss::codem::native:
+ROUTED	q_per_channel_axis()
+ROUTED	q_per_channel_scales()
+ROUTED	q_per_channel_zero_points()
+ROUTED	q_scale()
+ROUTED	q_zero_point()
+ROUTED	qscheme()
+ROUTED	quantile()
+ROUTED	quantile(double)
+ROUTED	rad2deg()
+ROUTED	rad2deg_()
+ROUTED	random_()
+ROUTED	random_(std::int64_t)	random_: expected hi > lo
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3613 (Series pluss::codem::_compat::random_l
+ROUTED	random_(std::int64_t, std::int64_t)	random_: expected hi > lo
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3613 (Series pluss::codem::_compat::random_l
+ROUTED	ravel()
+ROUTED	real()
+ROUTED	record_stream()
+ROUTED	refine_names()
+ROUTED	remainder(const Series&)
+ROUTED	remainder(double)
+ROUTED	remainder_(const Series&)
+ROUTED	remainder_(double)
+ROUTED	rename()
+ROUTED	rename_()
+ROUTED	renorm(double)
+ROUTED	renorm(double, std::int64_t, double)
+ROUTED	renorm_(double, std::int64_t, double)
+ROUTED	repeat(pluss::msharp::RangeView::Int)
+ROUTED	repeat_interleave(std::int64_t)
+ROUTED	repeat_interleave(std::int64_t, std::int64_t)
+ROUTED	repeat_like(const Series&)
+ROUTED	reshape_as(const Series&)
+ROUTED	resize_(pluss::msharp::RangeView::Int)
+ROUTED	resize_as_(const Series&)
+ROUTED	resize_as_sparse_()
+ROUTED	resize_as_sparse_(const Series&)
+ROUTED	resolve_conj()
+ROUTED	resolve_neg()
+ROUTED	retain_grad()
+ROUTED	retain_grad(bool)
+ROUTED	retains_grad()
+ROUTED	roll(std::int64_t)
+ROUTED	roll(std::int64_t, std::int64_t)
+ROUTED	roll(pluss::msharp::RangeView::Int)	roll: flattened roll accepts exactly one shift; provide dims for multiple shifts
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/
+ROUTED	roll(pluss::msharp::RangeView::Int, std::int64_t)	roll: shifts and dims must have same length, or shifts length 1
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:1795 (
+ROUTED	roll(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int)
+ROUTED	rot90()
+ROUTED	rot90(std::int64_t)
+ROUTED	rot90(std::int64_t, std::int64_t, std::int64_t)	rot90: dims must be different
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4148 (Series pluss::codem::_compat::rot9
+ROUTED	row_indices()
+ROUTED	rsqrt()
+ROUTED	rsqrt_()
+ROUTED	scatter_reduce(std::int64_t, const Series&, const Series&, const std::string&)	scatter_reduce: index must be int64
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/ScatterKernels.cpp:50 (void pluss::codem:
+ROUTED	scatter_reduce(std::int64_t, const Series&, const Series&, const std::string&, bool)	scatter_reduce: index must be int64
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/ScatterKernels.cpp:50 (void pluss::codem:
+ROUTED	scatter_reduce(std::int64_t, const Series&, const Series&, const std::string&, bool, bool, double)	scatter_reduce: index must be int64
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/ScatterKernels.cpp:50 (void pluss::codem:
+ROUTED	scatter_reduce_(std::int64_t, const Series&, const Series&, const std::string&)	scatter_reduce_: index must be int64
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/ScatterKernels.cpp:50 (void pluss::codem
+ROUTED	scatter_reduce_(std::int64_t, const Series&, const Series&, const std::string&, bool)	scatter_reduce_: index must be int64
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/ScatterKernels.cpp:50 (void pluss::codem
+ROUTED	scatter_reduce_(std::int64_t, const Series&, const Series&, const std::string&, bool, bool, double)	scatter_reduce_: index must be int64
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/ScatterKernels.cpp:50 (void pluss::codem
+ROUTED	select_scatter(const Series&, std::int64_t, std::int64_t)	select_scatter: src shape must match self.select(dim, index)
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5738 (Ser
+ROUTED	set_()
+ROUTED	set_(const Series&)
+ROUTED	set_data(const Series&)
+ROUTED	sgn()
+ROUTED	sgn_()
+ROUTED	sign()
+ROUTED	sign_()
+ROUTED	signbit()
+ROUTED	signbit_()
+ROUTED	silu()
+ROUTED	silu_()
+ROUTED	sinc()
+ROUTED	sinc_()
+ROUTED	size()
+ROUTED	slice_inverse(std::int64_t, std::int64_t, std::int64_t)
+ROUTED	slice_scatter(const Series&, std::int64_t, std::int64_t, std::int64_t)	slice_scatter: src shape must match the selected slice of self
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5768 (S
+ROUTED	slice_scatter(const Series&, std::int64_t, std::int64_t, std::int64_t, std::int64_t)	slice_scatter: step must be > 0
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5751 (Series pluss::codem::_compat::sl
+ROUTED	smm()
+ROUTED	smm(const Series&)	matmul: shape mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
+ROUTED	softmax(std::int64_t)
+ROUTED	softplus()
+ROUTED	softplus(double, double)
+ROUTED	softplus_()
+ROUTED	softplus_(double, double)
+ROUTED	sort()
+ROUTED	sort(std::int64_t)
+ROUTED	sort(std::int64_t, bool)
+ROUTED	sort(std::int64_t, bool, bool)
+ROUTED	sparse_dim()
+ROUTED	sparse_mask()
+ROUTED	sparse_mask(const Series&)
+ROUTED	sparse_resize_()
+ROUTED	sparse_resize_and_clear_()
+ROUTED	square()
+ROUTED	square_()
+ROUTED	squeeze_()
+ROUTED	squeeze_(std::int64_t)
+ROUTED	sspaddmm()
+ROUTED	standardize()
+ROUTED	standardize(std::int64_t)
+ROUTED	stft(std::int64_t, std::int64_t, std::int64_t, const Series&, bool, const std::string&, bool, bool, bool)	stft: n_fft must be > 0
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3317 (Series pluss::codem::_compat::stft_impl(
+ROUTED	sub(const Series&)
+ROUTED	sub(const Series&, double)
+ROUTED	sub(double, double)
+ROUTED	sub_(const Series&)
+ROUTED	subtract(const Series&)
+ROUTED	subtract(const Series&, double)
+ROUTED	subtract(double, double)
+ROUTED	subtract_(const Series&)
+ROUTED	subtract_(const Series&, double)
+ROUTED	subtract_(double)
+ROUTED	sum()
+ROUTED	sum(std::int64_t)
+ROUTED	sum_to_size(pluss::msharp::RangeView::Int)
+ROUTED	swapaxes(std::int64_t, std::int64_t)
+ROUTED	swapaxes_(std::int64_t, std::int64_t)
+ROUTED	swapdims(std::int64_t, std::int64_t)
+ROUTED	swapdims_(std::int64_t, std::int64_t)
+ROUTED	t()
+ROUTED	t_()
+ROUTED	take_along_dim(const Series&)
+ROUTED	take_along_dim(const Series&, std::int64_t)
+ROUTED	tile(pluss::msharp::RangeView::Int)
+ROUTED	to_dense()
+ROUTED	to_mkldnn()
+ROUTED	to_padded_tensor()
+ROUTED	to_sparse()
+ROUTED	to_sparse_bsc()
+ROUTED	to_sparse_bsr()
+ROUTED	to_sparse_csc()
+ROUTED	to_sparse_csr()
+ROUTED	topk(std::int64_t)
+ROUTED	topk(std::int64_t, std::int64_t)
+ROUTED	topk(std::int64_t, std::int64_t, bool)
+ROUTED	topk(std::int64_t, std::int64_t, bool, bool)
+ROUTED	trace()
+ROUTED	tracks_slope_()
+ROUTED	tracks_slope_(bool)
+ROUTED	transpose_(std::int64_t, std::int64_t)
+ROUTED	tril()
+ROUTED	tril(std::int64_t)
+ROUTED	tril_()
+ROUTED	tril_(std::int64_t)
+ROUTED	triu()
+ROUTED	triu(std::int64_t)
+ROUTED	triu_()
+ROUTED	triu_(std::int64_t)
+ROUTED	true_divide(const Series&)
+ROUTED	true_divide(double)
+ROUTED	true_divide_(const Series&)
+ROUTED	true_divide_(double)
+ROUTED	type_as(const Series&)
+ROUTED	unflatten(std::int64_t, pluss::msharp::RangeView::Int)	unflatten: product mismatch
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4174 (Series pluss::codem::_compat::unflat
+ROUTED	unfold(std::int64_t, std::int64_t, std::int64_t)	unfold: size and step must be > 0
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4184 (Series pluss::codem::_compat::
+ROUTED	uniform_()
+ROUTED	uniform_(double, double)
+ROUTED	unique()
+ROUTED	unique(std::int64_t)
+ROUTED	unique(std::int64_t, bool)
+ROUTED	unsqueeze_(std::int64_t)
+ROUTED	unwrap()
+ROUTED	unwrap(double)
+ROUTED	unwrap(double, std::int64_t)
+ROUTED	values_copy()
+ROUTED	values_view()
+ROUTED	vdot(const Series&)	vdot: expected two 1D Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3579 (Series pluss::codem::_compat::vdot_
+ROUTED	view_as(const Series&)
+ROUTED	xlogy(const Series&)
+ROUTED	xlogy(double)
+ROUTED	xlogy_(const Series&)
+ROUTED	xlogy_(double)
+ROUTED	zero_()
+ROUTED	zeta(double)
+# 604 routed, 0 unrouted, 0 crashed

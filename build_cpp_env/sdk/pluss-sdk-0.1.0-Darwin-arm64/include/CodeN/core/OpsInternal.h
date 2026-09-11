@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "CodeN/core/Chord.h"
 #include "CodeN/core/Note.h"
 #include "CodeN/core/TokenBatch.h"
 
@@ -17,17 +16,12 @@
 namespace pluss::coden::ops_internal {
 
 // Internal accessors for Base implementations (keeps impl() protected).
-struct ChordAccess {
-  static const ::pluss::flame::intrusive_ptr<ChordImpl>& impl(const Chord& x) noexcept { return x.impl(); }
-  static ::pluss::flame::intrusive_ptr<ChordImpl>& impl(Chord& x) noexcept { return x.impl(); }
-};
 struct NoteAccess {
   static const ::pluss::flame::intrusive_ptr<NoteImpl>& impl(const Note& x) noexcept { return x.impl(); }
   static ::pluss::flame::intrusive_ptr<NoteImpl>& impl(Note& x) noexcept { return x.impl(); }
 };
 
 // ---- Factories ----
-Chord chord_from_utf8(::std::string_view utf8);
 Note note_from_utf8(::std::span<const ::std::string_view> utf8_flat,
                     ::std::span<const ::std::int64_t> sizes);
 Note note_from_utf8_packed(::std::vector<char>&& utf8_arena,
@@ -36,215 +30,17 @@ Note note_from_utf8_packed(::std::vector<char>&& utf8_arena,
 Note note_from_bytes(::std::span<const ::std::string_view> bytes_flat,
                      ::std::span<const ::std::int64_t> sizes);
 
-// ---- Chord ops ----
-Chord lower(const Chord& x);
-Chord upper(const Chord& x);
-Chord title(const Chord& x);
-Chord capitalize(const Chord& x);
-Chord swapcase(const Chord& x);
-Chord strip(const Chord& x);
-Chord lstrip(const Chord& x);
-Chord rstrip(const Chord& x);
-Chord trim(const Chord& x);
-Chord trim_left(const Chord& x);
-Chord trim_right(const Chord& x);
-Chord collapse_whitespace(const Chord& x);
-Chord dedent(const Chord& x);
-Chord indent(const Chord& x);
-Chord normalize_spaces(const Chord& x);
-Chord remove_control_chars(const Chord& x);
-Chord remove_non_ascii(const Chord& x);
-Chord to_ascii(const Chord& x);
-Chord remove_punctuation(const Chord& x);
-Chord remove_digits(const Chord& x);
-Chord remove_letters(const Chord& x);
-Chord remove_symbols(const Chord& x);
-Chord remove_emojis(const Chord& x);
-Chord keep_alnum(const Chord& x);
-Chord keep_alpha(const Chord& x);
-Chord keep_digits(const Chord& x);
-Chord keep_ascii(const Chord& x);
-Chord keep_printable(const Chord& x);
-Chord normalize_quotes(const Chord& x);
-Chord normalize_dashes(const Chord& x);
-Chord normalize_ellipsis(const Chord& x);
-Chord strip_accents(const Chord& x);
-Chord strip_diacritics(const Chord& x);
-Chord strip_zero_width(const Chord& x);
-Chord strip_bom(const Chord& x);
-Chord collapse_repeats(const Chord& x);
-Chord collapse_punct(const Chord& x);
-Chord collapse_spaces(const Chord& x);
-Chord collapse_newlines(const Chord& x);
-Chord nlp_clean(const Chord& x);
-Chord nlp_normalize_punct(const Chord& x, bool ascii_only = false);
-Chord nlp_normalize_numbers(const Chord& x);
-Chord nlp_expand_contractions(const Chord& x);
-Chord nlp_remove_stopwords(const Chord& x);
-Chord nlp_remove_stopwords(const Chord& x, ::std::string_view lang);
-Chord nlp_language(const Chord& x);
-Chord nlp_language_confidence(const Chord& x);
-Chord nlp_script(const Chord& x);
-Chord nlp_remove_urls(const Chord& x);
-Chord nlp_remove_emails(const Chord& x);
-Chord nlp_remove_mentions(const Chord& x);
-Chord nlp_remove_hashtags(const Chord& x);
-Chord nlp_remove_html(const Chord& x);
-Chord nlp_remove_markdown(const Chord& x);
-Chord nlp_remove_code(const Chord& x);
-Chord nlp_remove_math(const Chord& x);
-Chord nlp_remove_latex(const Chord& x);
-Chord nlp_remove_brackets(const Chord& x);
-Chord nlp_remove_parentheticals(const Chord& x);
-Chord nlp_remove_quotes(const Chord& x);
-Chord nlp_remove_bullets(const Chord& x);
-Chord nlp_remove_headers(const Chord& x);
-Chord nlp_remove_footers(const Chord& x);
-Chord nlp_remove_boilerplate(const Chord& x);
-Chord nlp_remove_tables(const Chord& x);
-Chord nlp_mask_numbers(const Chord& x);
-Chord nlp_mask_emails(const Chord& x);
-Chord nlp_mask_urls(const Chord& x);
-Chord nlp_mask_mentions(const Chord& x);
-Chord nlp_mask_hashtags(const Chord& x);
-Chord nlp_mask_dates(const Chord& x);
-Chord nlp_mask_times(const Chord& x);
-Chord nlp_mask_currency(const Chord& x);
-Chord nlp_mask_pii(const Chord& x, ::std::int64_t flags = 0);
 
-Chord strip(const Chord& x, ::std::string_view chars);
-Chord lstrip(const Chord& x, ::std::string_view chars);
-Chord rstrip(const Chord& x, ::std::string_view chars);
-Chord trim(const Chord& x, ::std::string_view chars);
-Chord trim_left(const Chord& x, ::std::string_view chars);
-Chord trim_right(const Chord& x, ::std::string_view chars);
 
-bool contains(const Chord& x, ::std::string_view needle);
-Chord replace(const Chord& x, ::std::string_view from, ::std::string_view to);
-Chord replace_first(const Chord& x, ::std::string_view from, ::std::string_view to);
-Chord replace_last(const Chord& x, ::std::string_view from, ::std::string_view to);
-Chord replace_n(const Chord& x, ::std::string_view from, ::std::string_view to, ::std::int64_t n);
-Chord remove(const Chord& x, ::std::string_view needle);
-Chord remove_all(const Chord& x, ::std::string_view needle);
-Chord remove_prefix(const Chord& x, ::std::string_view prefix);
-Chord remove_suffix(const Chord& x, ::std::string_view suffix);
-Chord ensure_prefix(const Chord& x, ::std::string_view prefix);
-Chord ensure_suffix(const Chord& x, ::std::string_view suffix);
-Chord surround(const Chord& x, ::std::string_view left, ::std::string_view right);
-Chord quote(const Chord& x);
-Chord unquote(const Chord& x);
-Chord base64_encode(const Chord& x);
-Chord base64_decode(const Chord& x);
-Chord hex_encode(const Chord& x);
-Chord hex_decode(const Chord& x);
-Chord url_encode(const Chord& x);
-Chord url_decode(const Chord& x);
-Chord html_escape(const Chord& x);
-Chord html_unescape(const Chord& x);
-Chord json_escape(const Chord& x);
 
 // ICU-optional Unicode-ish surface (no-op / ASCII fallback when ICU is absent).
 // form: 0=NFC, 1=NFD, 2=NFKC, 3=NFKD
-Chord normalize(const Chord& x, ::std::int64_t form);
-Chord casefold(const Chord& x, ::std::string_view locale = {});
 
 // Regex hooks (std::regex fallback; ICU optional later).
-bool regex_match(const Chord& x, ::std::string_view pattern);
-bool regex_search(const Chord& x, ::std::string_view pattern);
-Chord regex_replace(const Chord& x, ::std::string_view pattern, ::std::string_view repl);
 
 // Tokenization / splitting.
-TokenBatch split_whitespace(const Chord& x);
-TokenBatch split(const Chord& x, ::std::string_view delim);
-TokenBatch split_whitespace(const Chord& x, ::std::int64_t limit);
-TokenBatch split(const Chord& x, ::std::string_view delim, ::std::int64_t limit);
-TokenBatch split_lines(const Chord& x, bool keep_ends = false);
-TokenBatch split_chars(const Chord& x);
-TokenBatch split_graphemes(const Chord& x);
-TokenBatch tokenize_words(const Chord& x, ::std::int64_t flags = 0);
-TokenBatch tokenize_sentences(const Chord& x, ::std::int64_t flags = 0);
-TokenBatch tokenize_punct(const Chord& x);
-TokenBatch tokenize_regex(const Chord& x, ::std::string_view pattern);
-TokenBatch regex_findall(const Chord& x, ::std::string_view pattern, ::std::int64_t flags = 0);
-TokenBatch regex_split(const Chord& x, ::std::string_view pattern, ::std::int64_t limit = -1);
-TokenBatch token_feature(const Chord& x,
-                         ::std::string_view op,
-                         ::std::int64_t iarg = -1,
-                         ::std::string_view sarg = {});
 
 // TeX cleanup family (scalar semantics).
-Chord tex_strip_comments(const Chord& x);
-Chord tex_strip_preamble(const Chord& x);
-Chord tex_strip_metadata(const Chord& x);
-Chord tex_remove_commands(const Chord& x);
-Chord tex_remove_environments(const Chord& x);
-Chord tex_remove_environment(const Chord& x, ::std::string_view name);
-Chord tex_remove_labels(const Chord& x);
-Chord tex_remove_refs(const Chord& x);
-Chord tex_remove_citations(const Chord& x);
-Chord tex_remove_graphics(const Chord& x);
-Chord tex_remove_tables(const Chord& x);
-Chord tex_remove_figures(const Chord& x);
-Chord tex_remove_packages(const Chord& x);
-Chord tex_remove_bibliography(const Chord& x);
-Chord tex_remove_color(const Chord& x);
-Chord tex_remove_hyperref(const Chord& x);
-Chord tex_remove_urls(const Chord& x);
-Chord tex_remove_left_right(const Chord& x);
-Chord tex_remove_big_delims(const Chord& x);
-Chord tex_remove_spacing_cmds(const Chord& x);
-Chord tex_strip_math(const Chord& x);
-Chord tex_strip_text(const Chord& x);
-Chord tex_strip_environments(const Chord& x);
-Chord tex_strip_commands(const Chord& x);
-Chord tex_balance_braces(const Chord& x);
-Chord tex_balance_math_delims(const Chord& x);
-Chord tex_canonicalize_macros(const Chord& x);
-Chord tex_expand_macros(const Chord& x, ::std::int64_t max_passes = 1);
-Chord tex_inline_macros(const Chord& x);
-Chord tex_collapse_macros(const Chord& x);
-Chord tex_expand_inputs(const Chord& x);
-Chord tex_resolve_includes(const Chord& x);
-Chord tex_resolve_graphics(const Chord& x);
-Chord tex_set_macro(const Chord& x, ::std::string_view name, ::std::string_view body);
-Chord tex_remove_macro(const Chord& x, ::std::string_view name);
-Chord tex_wrap_inline_math(const Chord& x, ::std::string_view delim);
-Chord tex_wrap_display_math(const Chord& x, ::std::string_view delim);
-Chord tex_simplify_fractions(const Chord& x);
-Chord tex_simplify_roots(const Chord& x);
-Chord tex_simplify_spacing(const Chord& x);
-Chord tex_convert_frac_to_slash(const Chord& x);
-Chord tex_convert_sqrt_to_pow(const Chord& x);
-Chord tex_convert_pm_to_plusminus(const Chord& x);
-Chord tex_standardize_vectors(const Chord& x);
-Chord tex_standardize_matrices(const Chord& x);
-Chord tex_standardize_integrals(const Chord& x);
-Chord tex_standardize_summations(const Chord& x);
-Chord tex_standardize_limits(const Chord& x);
-Chord tex_standardize_subscripts(const Chord& x);
-Chord tex_standardize_superscripts(const Chord& x);
-Chord tex_standardize_primes(const Chord& x);
-Chord tex_standardize_dots(const Chord& x);
-Chord tex_remove_accents(const Chord& x);
-Chord tex_replace_command(const Chord& x, ::std::string_view cmd, ::std::string_view repl);
-Chord tex_to_text(const Chord& x, ::std::int64_t mode = 0);
-Chord text_to_tex(const Chord& x, ::std::int64_t mode = 0);
-Chord tex_render(const Chord& x, ::std::int64_t mode = 0);
-Chord tex_sanitize(const Chord& x, ::std::int64_t level = 0);
-Chord tex_normalize_newlines(const Chord& x);
-Chord tex_dedup_blank_lines(const Chord& x);
-Chord tex_collapse_whitespace(const Chord& x);
-Chord tex_fix_linebreaks(const Chord& x);
-Chord tex_escape(const Chord& x);
-Chord tex_unescape(const Chord& x);
-Chord tex_remove_math_delimiters(const Chord& x);
-Chord tex_add_math_delimiters(const Chord& x);
-Chord tex_math_only(const Chord& x);
-Chord tex_text_only(const Chord& x);
-Chord tex_remove_formatting(const Chord& x);
-Chord tex_remove_font_commands(const Chord& x);
-Chord tex_to_markdown(const Chord& x, ::std::int64_t mode = 0);
-Chord tex_to_html(const Chord& x, ::std::int64_t mode = 0);
 
 // ---- Note ops ----
 Note lower(const Note& x);
@@ -399,6 +195,8 @@ Note casefold(const Note& x, ::std::string_view locale = {});
 ::std::vector<::std::uint8_t> regex_match(const Note& x, ::std::string_view pattern);
 ::std::vector<::std::uint8_t> regex_search(const Note& x, ::std::string_view pattern);
 Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view repl);
+Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view repl,
+                   ::std::int64_t flags);
 
 TokenBatch split_whitespace(const Note& x);
 TokenBatch split(const Note& x, ::std::string_view delim);

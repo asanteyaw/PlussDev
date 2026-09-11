@@ -104,12 +104,12 @@ std::cout << "]\n";
   rather than test for it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="count_substring.html">
+  <a class="prev-link" href="empty.html">
     <span class="label">Previous</span>
-    <span class="title">count_substring</span>
+    <span class="title">empty</span>
   </a>
-  <a class="next-link" href="hex_decode.html">
+  <a class="next-link" href="ensure_prefix.html">
     <span class="label">Next</span>
-    <span class="title">hex_decode</span>
+    <span class="title">ensure_prefix</span>
   </a>
 </div>

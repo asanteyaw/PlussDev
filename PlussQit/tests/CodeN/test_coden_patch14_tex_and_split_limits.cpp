@@ -6,6 +6,15 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+namespace {
+// TokenBatch::offsets() is a closed Int64 Note (pass 6); flatten to a plain
+// vector<int64_t> for the REQUIRE comparisons below.
+std::vector<std::int64_t> offset_values(const pluss::TokenBatch& batch) {
+  const auto lanes = batch.offsets().integers();
+  return std::vector<std::int64_t>(lanes.begin(), lanes.end());
+}
+}  // namespace
+
 TEST_CASE("CodeN split limit overloads are concrete", "[coden][patch14]") {
   const std::array<std::int64_t, 1> sizes{2};
   pluss::Note n = pluss::make_note(
@@ -13,7 +22,7 @@ TEST_CASE("CodeN split limit overloads are concrete", "[coden][patch14]") {
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
 
   auto by_comma = n.split(",", 1);
-  REQUIRE(by_comma.offsets() == std::vector<std::int64_t>({0, 2, 4}));
+  REQUIRE(offset_values(by_comma) == std::vector<std::int64_t>({0, 2, 4}));
   REQUIRE(by_comma.tokens().at(0) == "a");
   REQUIRE(by_comma.tokens().at(1) == "b,c");
   REQUIRE(by_comma.tokens().at(2) == "d");
@@ -23,7 +32,7 @@ TEST_CASE("CodeN split limit overloads are concrete", "[coden][patch14]") {
       std::vector<std::string>{"x  y   z", "m n"},
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
   auto by_ws = ws.split_whitespace(1);
-  REQUIRE(by_ws.offsets() == std::vector<std::int64_t>({0, 2, 4}));
+  REQUIRE(offset_values(by_ws) == std::vector<std::int64_t>({0, 2, 4}));
   REQUIRE(by_ws.tokens().at(0) == "x");
   REQUIRE(by_ws.tokens().at(1) == "y   z");
   REQUIRE(by_ws.tokens().at(2) == "m");

@@ -106,12 +106,12 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
   known delimiter from one end.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tokenize_words.html">
+  <a class="prev-link" href="unique.html">
     <span class="label">Previous</span>
-    <span class="title">tokenize_words</span>
+    <span class="title">unique</span>
   </a>
-  <a class="next-link" href="upper.html">
+  <a class="next-link" href="unsqueeze.html">
     <span class="label">Next</span>
-    <span class="title">upper</span>
+    <span class="title">unsqueeze</span>
   </a>
 </div>

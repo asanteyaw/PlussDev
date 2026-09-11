@@ -8,19 +8,32 @@
 Series Timeline::is_leap_year() const
 ```
 
-`is_leap_year()` is the sole public spelling.
+## What The Predicate Asks
 
-## Classify The Local Calendar Year
+`is_leap_year()` classifies the **local civil year** containing each instant.
+It returns `true` for every instant in a 366-day Gregorian year, not only for
+29 February. This makes it useful before calendar arithmetic whose result may
+depend on February's length, or when partitioning observations by calendar
+type.
 
-`is_leap_year()` returns `true` for every timestamp whose local civil year has
-366 days. The Gregorian rule is applied in full: a year divisible by 4 is a
-leap year, except a century year must also be divisible by 400. The method
-tests year membership, not whether the timestamp itself is 29 February.
+The complete Gregorian rule is used: years divisible by four are leap years,
+except century years are common years unless divisible by 400. Consequently,
+1900 and 2100 are common years while 2000 is a leap year.
 
-The result is a shape-preserving boolean Series. `NaT` becomes `false`; combine
-with `isvalid()` if absent and non-leap positions must remain distinguishable.
+## Result Contract
 
-## Example: Membership Across Boundaries
+The result is a newly allocated boolean `Series` with exactly the receiver's
+rank and shape. A scalar Timeline produces a rank-zero Series; a matrix
+produces a matrix; an empty extent remains empty. `NaT` maps to `false`, so use
+`isvalid()` as a second mask when an absent instant must remain distinguishable
+from an instant in a common year.
+
+The receiver is not modified. The timezone is read as calendar context: the
+same stored instant can belong to different local years after `tz_convert()`.
+The operation performs one pass over the values and loads timezone rules once
+for the call.
+
+## Example 1: Classify Years, Not Leap Days
 
 ```cpp
 const auto calendar = pluss::timeline::make({
@@ -32,31 +45,79 @@ const auto calendar = pluss::timeline::make({
 pluss::series::print(std::cout, calendar.is_leap_year());
 ```
 
-### Output
-
 ```text
 Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
 data=[false, true, true, true, true, true, false, true, false]
 ```
 
-Every 2020 timestamp is `true`, not only leap day. The final `false` belongs to
-`NaT`, not to a known common year.
+Every 2020 instant is `true`. The final `false` represents `NaT`, not a known
+common year.
+
+## Example 2: Century Exceptions
+
+```cpp
+const auto centuries = pluss::timeline::make({
+    "1900-06-15T12:00:00Z",
+    "2000-06-15T12:00:00Z",
+    "2100-06-15T12:00:00Z",
+});
+pluss::series::print(std::cout, centuries.is_leap_year());
+```
+
+```text
+Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[false, true, false]
+```
+
+## Example 3: Scalar Rank Is Preserved
+
+```cpp
+const auto leap_day =
+    pluss::timeline::make("2024-02-29T23:59:59.999999999Z");
+pluss::series::print(std::cout, leap_day.is_leap_year());
+```
+
+```text
+Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+```
+
+Use `leap_scalar()` when the receiver is rank zero and a native `bool`, rather
+than a rank-zero `Series`, is the desired result.
+
+## Example 4: Timezone Can Change The Year
+
+```cpp
+const auto utc = pluss::timeline::make("2021-01-01T00:30:00Z");
+const auto local = utc.tz_convert("America/New_York");
+std::cout << std::boolalpha
+          << "UTC=" << utc.is_leap_year().item<bool>() << '\n'
+          << "New York=" << local.is_leap_year().item<bool>() << '\n';
+```
+
+```text
+UTC=false
+New York=true
+```
+
+Both values represent one instant. It lies in 2021 in UTC and in 2020 in New
+York.
 
 ## Gotchas And Failure Modes
 
-- This is an elementwise classifier, not one scalar property of the Timeline.
-- Timezone conversion can change the local year near New Year.
-- Do not infer validity from `false`; use `isvalid()`.
-- For leap-day itself, combine `month() == 2` and `day() == 29`.
+- `false` means either a common local year or `NaT`.
+- Time-of-day and month do not affect membership once the local year is known.
+- The method accepts every supported Timeline rank; it is not a reduction.
+- To identify leap day itself, combine `month() == 2` with `day() == 29`.
 
 ## See Also
 
+- [`leap_scalar`](leap_scalar.md)
 - [`year`](year.md)
-- [`dayofyear`](dayofyear.md)
-- [`is_month_start`](is_month_start.md)
+- [`isvalid`](isvalid.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="week.html"><span class="label">Previous</span><span class="title">week</span></a>
-  <a class="next-link" href="is_month_start.html"><span class="label">Next</span><span class="title">is_month_start</span></a>
+  <a class="prev-link" href="is_friday.html"><span class="label">Previous</span><span class="title">is_friday</span></a>
+  <a class="next-link" href="is_monday.html"><span class="label">Next</span><span class="title">is_monday</span></a>
 </div>
 <!-- pluss-hand-authored -->

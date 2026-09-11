@@ -443,9 +443,11 @@ void backpropagate(const Series& loss,
       PLUSS_CHECK(
           link->parent_versions.size() == link->parents.size(),
           "series_tape::backpropagate: saved parent version metadata mismatch");
+      const auto& guarded = link->parent_data_guarded;
       for (std::size_t i = 0; i < link->parents.size(); ++i) {
         const auto& p = link->parents[i];
         if (!p.defined()) continue;
+        if (i < guarded.size() && !guarded[i]) continue;  // graph edge only, data not read
         PLUSS_CHECK(
             p.storage().version() == link->parent_versions[i],
             std::string("series_tape::backpropagate: saved Series was modified after graph capture [op=") +

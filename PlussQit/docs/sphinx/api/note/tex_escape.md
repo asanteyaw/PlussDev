@@ -123,9 +123,9 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
   specific consumers.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="swapcase.html">
+  <a class="prev-link" href="tensor3.html">
     <span class="label">Previous</span>
-    <span class="title">swapcase</span>
+    <span class="title">tensor3</span>
   </a>
   <a class="next-link" href="tex_to_text.html">
     <span class="label">Next</span>

@@ -106,12 +106,12 @@ Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
   with whitespace cleanup.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="regex_findall.html">
+  <a class="prev-link" href="remove.html">
     <span class="label">Previous</span>
-    <span class="title">regex_findall</span>
+    <span class="title">remove</span>
   </a>
-  <a class="next-link" href="replace.html">
+  <a class="next-link" href="remove_control_chars.html">
     <span class="label">Next</span>
-    <span class="title">replace</span>
+    <span class="title">remove_control_chars</span>
   </a>
 </div>

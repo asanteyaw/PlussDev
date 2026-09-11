@@ -138,12 +138,12 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
   not a fixed string.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="remove_all.html">
+  <a class="prev-link" href="remove_symbols.html">
     <span class="label">Previous</span>
-    <span class="title">remove_all</span>
+    <span class="title">remove_symbols</span>
   </a>
-  <a class="next-link" href="split.html">
+  <a class="next-link" href="replace_first.html">
     <span class="label">Next</span>
-    <span class="title">split</span>
+    <span class="title">replace_first</span>
   </a>
 </div>

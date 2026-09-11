@@ -1,0 +1,108 @@
+=== join returns Note ===
+custom separator
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"red / green / blue"
+empty separator
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"redgreenblue"
+matrix=a/b/c/d
+empty cells
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"|x|"
+zero cells
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+""
+undefined join defined=false
+join bytes: rejected
+
+=== join_flat returns string ===
+default=red green blue
+custom=a/b/c/d
+zero cells bytes=0
+lifetime=left+right
+raw size=4 values=65,0,124,66
+join_flat undefined: rejected
+
+=== sort lanes ===
+default last axis
+Note(shape=[3, 2], dim=2, numel=6, encoding=utf8)
+[
+  ["2", "b"], 
+  ["3", "a"], 
+  ["1", "b"]
+]
+axis zero
+Note(shape=[3, 2], dim=2, numel=6, encoding=utf8)
+[
+  ["a", "1"], 
+  ["b", "2"], 
+  ["b", "3"]
+]
+explicit -1 matches default=true
+scalar
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"x"
+empty matrix
+Note(shape=[2, 0], dim=2, numel=0, encoding=utf8)
+[]
+undefined sort defined=false
+sort axis 2: rejected
+raw bytes
+Note(shape=[3], dim=1, numel=3, encoding=bytes)
+[b"a", b"b", b"b"]
+
+=== unique sorted distinct ===
+flattened
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["1", "2", "a", "b"]
+whole rows
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a", "1"], 
+  ["b", "2"]
+]
+whole columns
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a", "b"], 
+  ["1", "2"]
+]
+three equal empty slices
+Note(shape=[2, 1, 0], dim=3, numel=0, encoding=utf8)
+[]
+empty selected axis
+Note(shape=[0, 2], dim=2, numel=0, encoding=utf8)
+[]
+scalar flattened
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["x"]
+raw bytes
+Note(shape=[2], dim=1, numel=2, encoding=bytes)
+[b"a", b"b"]
+unique scalar axis: rejected
+undefined unique defined=false
+
+=== deduplicate first seen ===
+flattened
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["b", "2", "a", "1"]
+whole rows
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["b", "2"], 
+  ["a", "1"]
+]
+whole columns
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["b", "a"], 
+  ["2", "1"]
+]
+three equal empty slices
+Note(shape=[2, 1, 0], dim=3, numel=0, encoding=utf8)
+[]
+raw bytes
+Note(shape=[2], dim=1, numel=2, encoding=bytes)
+[b"b", b"a"]
+undefined deduplicate defined=false
+deduplicate axis 2: rejected

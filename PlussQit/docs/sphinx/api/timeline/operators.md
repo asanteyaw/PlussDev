@@ -676,6 +676,6 @@ than temporal operators. They copy or move a Timeline handle; only `+=` and
 - [`Timeline::epoch_nanos`](epoch_nanos.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="from_ymdhms.html"><span class="label">Previous</span><span class="title">from_ymdhms</span></a>
-  <a class="next-link" href="add_duration.html"><span class="label">Next</span><span class="title">add_duration</span></a>
+  <a class="prev-link" href="numel.html"><span class="label">Previous</span><span class="title">numel</span></a>
+  <a class="next-link" href="period_start.html"><span class="label">Next</span><span class="title">period_start</span></a>
 </div>

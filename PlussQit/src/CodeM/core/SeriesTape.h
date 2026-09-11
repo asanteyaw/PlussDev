@@ -20,6 +20,12 @@ namespace pluss::codem::series_tape {
 struct SourceLink {
   std::vector<Series> parents{};
   std::vector<std::int64_t> parent_versions{};
+  // Optional, parallel to `parents`: false means this parent is only a graph
+  // edge for gradient accumulation and its *data* is not read by any backward
+  // rule that will run, so an in-place mutation of it after capture is
+  // harmless and must not trip the version check (matches how libtorch guards
+  // only actually-saved variables). Empty => guard every parent (safe default).
+  std::vector<bool> parent_data_guarded{};
   std::int64_t output_version{0};
   std::string op_name{};
   std::string capture_file{};

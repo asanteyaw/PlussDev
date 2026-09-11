@@ -736,52 +736,68 @@ inline Note Note::tex_to_html(::std::int64_t mode) const {
   return ::pluss::coden::_compat::invoke<Note>("tex_to_html", *this, {mode});
 }
 
-inline ::std::vector<::std::uint8_t> Note::contains(::std::string_view needle) const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("contains", *this, {needle});
+// The predicates below dispatch through the existing (already-tested)
+// u8list-returning invoke path for the actual per-element computation, then
+// package the flat result as a shape-preserving Bool Note using the
+// receiver's own shape -- the closed-Note surface pass 4 asks for, without
+// duplicating or re-verifying the underlying per-cell logic.
+inline Note Note::contains(::std::string_view needle) const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("contains", *this, {needle});
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::starts_with(::std::string_view prefix) const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("starts_with", *this, {prefix});
+inline Note Note::starts_with(::std::string_view prefix) const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("starts_with", *this, {prefix});
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::ends_with(::std::string_view suffix) const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("ends_with", *this, {suffix});
+inline Note Note::ends_with(::std::string_view suffix) const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("ends_with", *this, {suffix});
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::regex_match(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("regex_match", *this, {pattern});
+inline Note Note::regex_match(::std::string_view pattern) const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("regex_match", *this, {pattern});
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::regex_search(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("regex_search", *this, {pattern});
+inline Note Note::regex_search(::std::string_view pattern) const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("regex_search", *this, {pattern});
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_ascii() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_ascii", *this);
+inline Note Note::is_ascii() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_ascii", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_utf8_valid() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_utf8_valid", *this);
+inline Note Note::is_utf8_valid() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_utf8_valid", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_bytes() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_bytes", *this);
+inline Note Note::is_blank() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_blank", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_blank() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_blank", *this);
+// Same pattern as the pass-4 predicates: dispatch through the existing
+// (already-tested) i64list-returning invoke path for the actual per-element
+// computation, then package the flat result as a shape-preserving Int64
+// Note using the receiver's own shape.
+inline Note Note::lengths_bytes() const {
+  const auto values = ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("lengths_bytes", *this);
+  return ops_internal::note_from_int64(values, this->sizes_view());
 }
 
-inline ::std::vector<::std::int64_t> Note::lengths_bytes() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("lengths_bytes", *this);
+inline Note Note::lengths_chars() const {
+  const auto values = ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("lengths_chars", *this);
+  return ops_internal::note_from_int64(values, this->sizes_view());
 }
 
-inline ::std::vector<::std::int64_t> Note::lengths_chars() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("lengths_chars", *this);
-}
-
-inline ::std::vector<::std::int64_t> Note::lengths_graphemes() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("lengths_graphemes", *this);
+inline Note Note::lengths_graphemes() const {
+  const auto values = ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("lengths_graphemes", *this);
+  return ops_internal::note_from_int64(values, this->sizes_view());
 }
 
 inline TokenBatch Note::split(::std::string_view delim) const {
@@ -1304,48 +1320,59 @@ inline Note Note::json_escape() const {
   return ::pluss::coden::_compat::invoke<Note>("json_escape", *this);
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_alpha() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_alpha", *this);
+inline Note Note::is_alpha() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_alpha", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_alnum() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_alnum", *this);
+inline Note Note::is_alnum() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_alnum", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_digit() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_digit", *this);
+inline Note Note::is_digit() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_digit", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_lower() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_lower", *this);
+inline Note Note::is_lower() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_lower", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_upper() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_upper", *this);
+inline Note Note::is_upper() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_upper", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_title() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_title", *this);
+inline Note Note::is_title() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_title", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::is_whitespace() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_whitespace", *this);
+inline Note Note::is_whitespace() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("is_whitespace", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::contains_any_digit() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("contains_any_digit", *this);
+inline Note Note::contains_any_digit() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("contains_any_digit", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::uint8_t> Note::contains_any_alpha() const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("contains_any_alpha", *this);
+inline Note Note::contains_any_alpha() const {
+  const auto flags = ::pluss::coden::_compat::invoke<::std::vector<::std::uint8_t>>("contains_any_alpha", *this);
+  return ops_internal::note_from_bool(flags, this->sizes_view());
 }
 
-inline ::std::vector<::std::int64_t> Note::count_substring(::std::string_view needle) const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("count_substring", *this, {needle});
+inline Note Note::count_substring(::std::string_view needle) const {
+  const auto values = ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("count_substring", *this, {needle});
+  return ops_internal::note_from_int64(values, this->sizes_view());
 }
 
-inline ::std::vector<::std::int64_t> Note::count_regex(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("count_regex", *this, {pattern});
+inline Note Note::count_regex(::std::string_view pattern) const {
+  const auto values = ::pluss::coden::_compat::invoke<::std::vector<::std::int64_t>>("count_regex", *this, {pattern});
+  return ops_internal::note_from_int64(values, this->sizes_view());
 }
 
 inline TokenBatch Note::split(::std::string_view delim, ::std::int64_t limit) const {

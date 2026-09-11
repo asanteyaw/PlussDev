@@ -1,6 +1,7 @@
 #include "CodeM/native/cpu/CumKernels.h"
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
+#include "CodeM/core/Complex.h"
 #include <vector>
 
 namespace pluss::codem::native::cpu {
@@ -49,6 +50,12 @@ void cumsum_dim(const Series& a, std::int64_t dim, Series& out) {
     case ScalarType::Float32:
       cum_impl<float>(a, dim, out, [](float acc, float x, std::int64_t r){ return (r==0)? x : (acc+x); }, 0.0f);
       return;
+    case ScalarType::Complex128:
+      cum_impl<Complex128>(a, dim, out, [](Complex128 acc, Complex128 x, std::int64_t r){ return (r==0)? x : (acc+x); }, Complex128(0.0, 0.0));
+      return;
+    case ScalarType::Complex64:
+      cum_impl<Complex64>(a, dim, out, [](Complex64 acc, Complex64 x, std::int64_t r){ return (r==0)? x : (acc+x); }, Complex64(0.0f, 0.0f));
+      return;
     case ScalarType::Int64:
       cum_impl<std::int64_t>(a, dim, out, [](std::int64_t acc, std::int64_t x, std::int64_t r){ return (r==0)? x : (acc+x); }, 0);
       return;
@@ -68,6 +75,12 @@ void cumprod_dim(const Series& a, std::int64_t dim, Series& out) {
       return;
     case ScalarType::Float32:
       cum_impl<float>(a, dim, out, [](float acc, float x, std::int64_t r){ return (r==0)? x : (acc*x); }, 1.0f);
+      return;
+    case ScalarType::Complex128:
+      cum_impl<Complex128>(a, dim, out, [](Complex128 acc, Complex128 x, std::int64_t r){ return (r==0)? x : (acc*x); }, Complex128(1.0, 0.0));
+      return;
+    case ScalarType::Complex64:
+      cum_impl<Complex64>(a, dim, out, [](Complex64 acc, Complex64 x, std::int64_t r){ return (r==0)? x : (acc*x); }, Complex64(1.0f, 0.0f));
       return;
     case ScalarType::Int64:
       cum_impl<std::int64_t>(a, dim, out, [](std::int64_t acc, std::int64_t x, std::int64_t r){ return (r==0)? x : (acc*x); }, 1);

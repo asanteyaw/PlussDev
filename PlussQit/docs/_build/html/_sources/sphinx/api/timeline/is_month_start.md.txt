@@ -8,18 +8,25 @@
 Series Timeline::is_month_start() const
 ```
 
-`is_month_start()` is the sole public spelling.
+## What Counts As A Month Start
 
-## Find The First Local Date Of Each Month
+`is_month_start()` marks every instant whose local day-of-month is `1`.
+Time-of-day is deliberately irrelevant: midnight, noon, and the final
+nanosecond before day 2 all belong to the first calendar date. The method does
+not inspect ordering or neighbors, so “start” never means the first stored
+observation or the earliest instant in the receiver.
 
-`is_month_start()` is `true` when the local day-of-month is `1`. Time-of-day is
-irrelevant: midnight, noon, and the final nanosecond of the first date all
-belong to the month start. The method does not ask whether the timestamp is the
-first observed row in your data.
+This is a civil-calendar predicate. It does not move an absent first-of-month
+date into the data, choose the first weekday, or apply a holiday calendar.
 
-The boolean output preserves shape. `NaT` returns `false`.
+## Result Contract
 
-## Example: Month And Year Starts
+The method returns a new boolean `Series`, preserving rank and every extent.
+`NaT` becomes `false`; zero-length dimensions remain zero-length. The receiver
+and its nanosecond values are unchanged. Calendar fields are interpreted in
+the Timeline's current timezone.
+
+## Example 1: Calendar Membership
 
 ```cpp
 const auto calendar = pluss::timeline::make({
@@ -31,37 +38,77 @@ const auto calendar = pluss::timeline::make({
 pluss::series::print(std::cout, calendar.is_month_start());
 ```
 
-### Output
-
 ```text
 Series(shape=[9], strides=[1], dtype=bool, platform=cpu, numel=9, contiguous=true)
 data=[false, true, false, false, true, false, true, false, false]
 ```
 
-January 1 and April 1 qualify. February 29 does not, despite being a notable
-calendar boundary of another kind.
+## Example 2: Matrices Stay Matrices
 
-## Using The Mask Correctly
+```cpp
+const auto dates = pluss::timeline::make({
+    {"2024-01-01T23:59:59.999999999Z", "2024-01-02T00:00:00Z",
+     "2024-02-29T00:00:00Z"},
+    {"2024-03-31T12:00:00Z", "2024-04-01T00:00:00Z",
+     "2024-12-31T00:00:00Z"},
+});
+pluss::series::print(std::cout, dates.is_month_start());
+```
 
-Use this predicate to select actual observations landing on day 1. It does not
-manufacture absent month starts, regularize an irregular Timeline, or choose the first
-available business day. Those require an explicit alignment policy.
+```text
+Series(shape=[2,3], strides=[3,1], dtype=bool, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  true false false ⎤
+⎣ false  true false ⎦
+```
 
-## Gotchas And Failure Modes
+The late time on January 1 remains a month start. No flattening or reduction
+occurs.
 
-- “Start” means calendar membership, not first array position.
-- The Timeline timezone decides the local date.
-- `false` includes both ordinary dates and `NaT`; preserve `isvalid()` when
-  missingness matters.
+## Example 3: Timezone Chooses The Local Date
+
+```cpp
+const auto utc = pluss::timeline::make("2021-01-01T00:30:00Z");
+const auto local = utc.tz_convert("America/New_York");
+std::cout << std::boolalpha
+          << "UTC=" << utc.is_month_start().item<bool>() << '\n'
+          << "New York=" << local.is_month_start().item<bool>() << '\n';
+```
+
+```text
+UTC=true
+New York=false
+```
+
+## Example 4: Empty Geometry Is Preserved
+
+```cpp
+const auto scalar = pluss::timeline::make("2024-02-29T00:00:00Z");
+const auto empty = pluss::timeline::full({0}, scalar);
+pluss::series::print(std::cout, empty.is_month_start());
+```
+
+```text
+Series(shape=[0], strides=[1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+```
+
+## Relationships And Failure Modes
+
+Every calendar quarter start and year start is also a month start, but most
+month starts are neither. `false` also covers `NaT`; pair with `isvalid()` when
+that distinction matters. There are no value-domain failures for a valid
+Timeline and no scalar-rank restriction. Use `month_start_scalar()` only when
+the receiver is rank zero and a native `bool` is required.
 
 ## See Also
 
+- [`month_start_scalar`](month_start_scalar.md)
 - [`is_month_end`](is_month_end.md)
 - [`is_quarter_start`](is_quarter_start.md)
-- [`day`](day.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_leap_year.html"><span class="label">Previous</span><span class="title">is_leap_year</span></a>
-  <a class="next-link" href="is_month_end.html"><span class="label">Next</span><span class="title">is_month_end</span></a>
+  <a class="prev-link" href="is_month_end.html"><span class="label">Previous</span><span class="title">is_month_end</span></a>
+  <a class="next-link" href="is_quarter_end.html"><span class="label">Next</span><span class="title">is_quarter_end</span></a>
 </div>
 <!-- pluss-hand-authored -->

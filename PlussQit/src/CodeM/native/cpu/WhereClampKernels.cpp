@@ -20,7 +20,9 @@ void clamp_inplace(const Series& a, double minv, double maxv) {
 #pragma clang loop vectorize(enable)
 #pragma clang loop interleave(enable)
 #endif
-      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      for (std::int64_t i=0;i<n;++i) {
+        if (!std::isnan(p[i])) p[i] = std::min(mx, std::max(mn, p[i]));
+      }
       return;
     }
     case ScalarType::Float64: {
@@ -30,7 +32,9 @@ void clamp_inplace(const Series& a, double minv, double maxv) {
 #pragma clang loop vectorize(enable)
 #pragma clang loop interleave(enable)
 #endif
-      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      for (std::int64_t i=0;i<n;++i) {
+        if (!std::isnan(p[i])) p[i] = std::min(mx, std::max(mn, p[i]));
+      }
       return;
     }
     case ScalarType::Int64: {
@@ -90,7 +94,7 @@ void clamp_inplace(const Series& a, double minv, double maxv) {
       const float mn = (float)minv, mx = (float)maxv;
       for (std::int64_t i=0;i<n;++i) {
         const float x = float16_to_float(p[i]);
-        p[i] = float16_from_float(std::min(mx, std::max(mn, x)));
+        p[i] = float16_from_float(std::isnan(x) ? x : std::min(mx, std::max(mn, x)));
       }
       return;
     }
@@ -99,7 +103,7 @@ void clamp_inplace(const Series& a, double minv, double maxv) {
       const float mn = (float)minv, mx = (float)maxv;
       for (std::int64_t i=0;i<n;++i) {
         const float x = bfloat16_to_float(p[i]);
-        p[i] = bfloat16_from_float(std::min(mx, std::max(mn, x)));
+        p[i] = bfloat16_from_float(std::isnan(x) ? x : std::min(mx, std::max(mn, x)));
       }
       return;
     }
@@ -182,11 +186,32 @@ static void clamp_max_loop(const Series& a, double max_v, Series& out) {
   });
 }
 
+// Half formats have no arithmetic operators; widen to float per element, clamp,
+// narrow back. NaN passes through unchanged, matching the float/double loops
+// (std::min/std::max propagate the non-NaN when NaN is the second argument).
+template <class HalfT, class ToF32, class FromF32>
+static void clamp_bound_half_loop(const Series& a, double bound, Series& out,
+                                  bool is_min, ToF32&& to, FromF32&& from) {
+  SeriesIterator it = SeriesIterator::unary(a,out);
+  auto* op = reinterpret_cast<HalfT*>(out.raw_data());
+  const auto* ap = reinterpret_cast<const HalfT*>(a.raw_data());
+  const float bv = (float)bound;
+  it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t, std::int64_t){
+    const float x = to(ap[ao]);
+    const float y = std::isnan(x) ? x : (is_min ? std::max(bv, x) : std::min(bv, x));
+    op[lin] = from(y);
+  });
+}
+
 void clamp_min(const Series& a, double min_v, Series& out) {
   PLUSS_CHECK(a.scalar_type()==out.scalar_type(), "clamp_min: dtype mismatch");
   switch (a.scalar_type()) {
     case ScalarType::Float64: clamp_min_loop<double>(a,min_v,out); return;
     case ScalarType::Float32: clamp_min_loop<float>(a,min_v,out); return;
+    case ScalarType::Float16:
+      clamp_bound_half_loop<Float16>(a,min_v,out,/*is_min=*/true, float16_to_float, float16_from_float); return;
+    case ScalarType::BFloat16:
+      clamp_bound_half_loop<BFloat16>(a,min_v,out,/*is_min=*/true, bfloat16_to_float, bfloat16_from_float); return;
     case ScalarType::Int32: clamp_min_loop<std::int32_t>(a,min_v,out); return;
     case ScalarType::Int64: clamp_min_loop<std::int64_t>(a,min_v,out); return;
     default: break;
@@ -199,6 +224,10 @@ void clamp_max(const Series& a, double max_v, Series& out) {
   switch (a.scalar_type()) {
     case ScalarType::Float64: clamp_max_loop<double>(a,max_v,out); return;
     case ScalarType::Float32: clamp_max_loop<float>(a,max_v,out); return;
+    case ScalarType::Float16:
+      clamp_bound_half_loop<Float16>(a,max_v,out,/*is_min=*/false, float16_to_float, float16_from_float); return;
+    case ScalarType::BFloat16:
+      clamp_bound_half_loop<BFloat16>(a,max_v,out,/*is_min=*/false, bfloat16_to_float, bfloat16_from_float); return;
     case ScalarType::Int32: clamp_max_loop<std::int32_t>(a,max_v,out); return;
     case ScalarType::Int64: clamp_max_loop<std::int64_t>(a,max_v,out); return;
     default: break;

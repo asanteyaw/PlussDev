@@ -689,21 +689,45 @@ Timeline impl_dt_round(const Timeline& a, std::string_view mode, std::string_vie
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto v = ap[ao];
     if (v == Timeline::kNaT) { op[oo] = Timeline::kNaT; return; }
-    // Round in local wall time, then map back using the original UTC offset at v.
     const int off = tz.offset_minutes_at_utc(v);
-    const std::int64_t local = v + (std::int64_t)off * 60LL * 1'000'000'000LL;
+    const __int128 local128 = static_cast<__int128>(v) +
+        static_cast<__int128>(off) * 60 * 1'000'000'000LL;
+    CODEM_CHECK(local128 > std::numeric_limits<std::int64_t>::min() &&
+                    local128 <= std::numeric_limits<std::int64_t>::max(),
+                "Timeline round: local timestamp is outside the supported range");
+    const auto local = static_cast<std::int64_t>(local128);
 
-    std::int64_t qv = 0;
+    // C++ division truncates toward zero. Build a mathematical floor quotient
+    // so pre-epoch timestamps obey the same boundary rules as later values.
+    std::int64_t quotient = local / q;
+    std::int64_t remainder = local % q;
+    if (remainder < 0) {
+      remainder += q;
+      --quotient;
+    }
+    __int128 rounded = static_cast<__int128>(quotient) * q;
     if (mode == "floor") {
-      qv = (local / q) * q;
+      // `rounded` is already the lower boundary.
     } else if (mode == "ceil") {
-      qv = ((local + q - 1) / q) * q;
+      if (remainder != 0) rounded += q;
     } else if (mode == "round") {
-      qv = ((local + q / 2) / q) * q;
+      const auto twice = static_cast<__int128>(remainder) * 2;
+      if (twice > q || (twice == q && (quotient % 2 != 0))) rounded += q;
     } else {
       CODEM_FAIL("Timeline round: unknown mode");
     }
-    op[oo] = qv - (std::int64_t)off * 60LL * 1'000'000'000LL;
+    CODEM_CHECK(rounded > std::numeric_limits<std::int64_t>::min() &&
+                    rounded <= std::numeric_limits<std::int64_t>::max(),
+                "Timeline round: result is outside the supported range");
+    const auto local_rounded = static_cast<std::int64_t>(rounded);
+
+    const auto earlier = tz.local_to_utc(local_rounded, 0, "raise");
+    const auto later = tz.local_to_utc(local_rounded, 1, "raise");
+    if (earlier != later && tz.offset_minutes_at_utc(later) == off) {
+      op[oo] = later;
+    } else {
+      op[oo] = earlier;
+    }
   });
 
   return Timeline(std::move(out), std::string(a.tz()));
@@ -856,11 +880,12 @@ Timeline impl_time_of_day(const Timeline& a) {
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto v = ap[ao];
     if (v == Timeline::kNaT) { op[oo] = Timeline::kNaT; return; }
-    int y, mo, d, hh, mm, ss, nsec, off;
-    epoch_nanos_to_local_fields(v, tz, y, mo, d, hh, mm, ss, nsec, &off);
+    int y, mo, d, hh, mm, ss, nsec;
+    epoch_nanos_to_local_fields(v, tz, y, mo, d, hh, mm, ss, nsec);
     std::int64_t tod = (std::int64_t)hh * 3600LL*1'000'000'000LL + (std::int64_t)mm * 60LL*1'000'000'000LL + (std::int64_t)ss * 1'000'000'000LL + nsec;
-    // return as UTC instant at base day + tod, keeping tz metadata.
-    op[oo] = base + tod - (std::int64_t)off * 60LL * 1'000'000'000LL;
+    // Re-localize the clock fields on the anchor date; the source date's DST
+    // offset need not be the offset in effect on 1970-01-01.
+    op[oo] = tz.local_to_utc(base + tod, 0, "raise");
   });
   return Timeline(std::move(out), std::string(a.tz()));
 }
@@ -1364,12 +1389,6 @@ static pluss::codem::Series make_i64_series(std::span<const std::int64_t> flat,
     std::memcpy(out.raw_data(), flat.data(), flat.size() * sizeof(std::int64_t));
   }
   return out;
-}
-
-static pluss::codem::Series full_i64_like(const Timeline& t, std::int64_t value) {
-  return pluss::codem::Series::full(t.sizes(),
-                                    static_cast<double>(value),
-                                    pluss::codem::ScalarType::Int64);
 }
 
 enum class LocalField { Year, Month, Day, Hour, Minute, Second };
@@ -2268,42 +2287,58 @@ Timeline TimelineBase::shift(int periods, std::string_view freq) const {
   CODEM_FAIL("Timeline::shift: unsupported frequency");
 }
 
-Timeline TimelineBase::to_period(std::string_view freq) const {
+Timeline TimelineBase::period_start(std::string_view unit) const {
   const auto& self = as_timeline(*this);
-  const auto f = lower_ascii(freq);
-  if (f == "y" || f == "yr" || f == "year" || f == "years" || f == "annual") {
-    return Timeline::from_ymdhms(
-        detail::impl_dt_field(self, "year"),
-        full_i64_like(self, 1),
-        full_i64_like(self, 1),
-        full_i64_like(self, 0),
-        full_i64_like(self, 0),
-        full_i64_like(self, 0),
-        self.tz());
+  const auto normalized = lower_ascii(unit);
+  if (normalized == "day") {
+    return detail::impl_dt_round(self, "floor", "day");
   }
-  if (f == "mo" || f == "mth" || f == "month" || f == "months") {
-    return Timeline::from_ymdhms(
-        detail::impl_dt_field(self, "year"),
-        detail::impl_dt_field(self, "month"),
-        full_i64_like(self, 1),
-        full_i64_like(self, 0),
-        full_i64_like(self, 0),
-        full_i64_like(self, 0),
-        self.tz());
+  if (normalized == "hour") {
+    return detail::impl_dt_round(self, "floor", "hour");
   }
-  if (f == "d" || f == "day" || f == "days") {
-    return detail::impl_dt_round(self, "floor", "D");
-  }
-  if (f == "h" || f == "hr" || f == "hour" || f == "hours") {
-    return detail::impl_dt_round(self, "floor", "H");
-  }
-  if (f == "t" || f == "min" || f == "minute" || f == "minutes") {
+  if (normalized == "minute") {
     return detail::impl_dt_round(self, "floor", "min");
   }
-  if (f == "s" || f == "sec" || f == "second" || f == "seconds") {
-    return detail::impl_dt_round(self, "floor", "S");
+  if (normalized == "second") {
+    return detail::impl_dt_round(self, "floor", "second");
   }
-  CODEM_FAIL("Timeline::to_period: unsupported frequency");
+  CODEM_CHECK(normalized == "year" || normalized == "month",
+              "Timeline::period_start: unsupported unit; expected year, month, day, hour, minute, or second");
+
+  const auto timezone = TimeZone::load(self.tz());
+  auto out = pluss::codem::Series::empty(self.sizes(), pluss::codem::ScalarType::Int64);
+  auto iterator = pluss::codem::SeriesIterator::unary(self.unsafe_ticks(), out);
+  const auto* input = reinterpret_cast<const std::int64_t*>(iterator.a().raw_data());
+  auto* output = reinterpret_cast<std::int64_t*>(out.raw_data());
+
+  iterator.for_each_index([&](std::int64_t, std::int64_t input_offset,
+                              std::int64_t, std::int64_t output_offset) {
+    const auto tick = input[input_offset];
+    if (tick == Timeline::kNaT) {
+      output[output_offset] = Timeline::kNaT;
+      return;
+    }
+
+    int year_value, month_value, day_value, hour_value, minute_value;
+    int second_value, nanosecond_value;
+    epoch_nanos_to_local_fields(tick, timezone, year_value, month_value, day_value,
+                                hour_value, minute_value, second_value,
+                                nanosecond_value);
+    if (normalized == "year") {
+      month_value = 1;
+    }
+    const auto first_day = std::chrono::year{year_value} /
+                           std::chrono::month{static_cast<unsigned>(month_value)} /
+                           std::chrono::day{1};
+    const auto local_midnight = std::chrono::sys_days(first_day);
+    output[output_offset] = timezone.local_to_utc(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            local_midnight.time_since_epoch()).count(),
+        0, "raise");
+  });
+
+  return pluss::codeh::ops_internal::timeline_from_series(
+      std::move(out), std::string(self.tz()));
 }
 
 TimeIndex TimelineBase::to_timeindex(bool require_sorted) const {
@@ -2491,7 +2526,7 @@ Timeline TimelineBase::now() {
   return scalar_from_utc_ns(ns, "UTC");
 }
 
-Timeline TimelineBase::today() { return now().to_period("D"); }
+Timeline TimelineBase::today() { return now().period_start("day"); }
 Timeline TimelineBase::yesterday() { return today().add_days(-1); }
 Timeline TimelineBase::tomorrow() { return today().add_days(1); }
 
@@ -2503,8 +2538,8 @@ std::vector<Timeline> TimelineBase::date_range(const Timeline& start,
   CODEM_CHECK(start.dim() == 0 && end.dim() == 0,
               "Timeline::date_range: scalar start/end required");
   std::vector<Timeline> out;
-  Timeline cur = start.to_period(freq);
-  const Timeline endp = end.to_period(freq);
+  Timeline cur = start.period_start(freq);
+  const Timeline endp = end.period_start(freq);
   if (step > 0) {
     while (scalar_bool_series(cur.le(endp), "Timeline::date_range")) {
       out.push_back(cur);

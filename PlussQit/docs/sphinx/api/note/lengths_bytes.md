@@ -113,9 +113,9 @@ std::cout << "]\n";
   returns a flat vector instead of a `Note`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="hex_encode.html">
+  <a class="prev-link" href="keep_printable.html">
     <span class="label">Previous</span>
-    <span class="title">hex_encode</span>
+    <span class="title">keep_printable</span>
   </a>
   <a class="next-link" href="lengths_chars.html">
     <span class="label">Next</span>

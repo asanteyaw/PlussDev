@@ -4099,6 +4099,48 @@ plussai_lymph_reports_model_example_1/fast:
 .PHONY : plussai_lymph_reports_model_example_1/fast
 
 # Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/rule
+
+# Convenience name for target.
+plussai_lymph_options_example_1: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/rule
+.PHONY : plussai_lymph_options_example_1
+
+# fast build rule for target.
+plussai_lymph_options_example_1/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/build
+.PHONY : plussai_lymph_options_example_1/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/rule
+
+# Convenience name for target.
+plussai_lymph_options_example_2: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/rule
+.PHONY : plussai_lymph_options_example_2
+
+# fast build rule for target.
+plussai_lymph_options_example_2/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/build
+.PHONY : plussai_lymph_options_example_2/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/rule
+
+# Convenience name for target.
+plussai_lymph_options_example_3: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/rule
+.PHONY : plussai_lymph_options_example_3
+
+# fast build rule for target.
+plussai_lymph_options_example_3/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/build
+.PHONY : plussai_lymph_options_example_3/fast
+
+# Convenience name for target.
 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_selection_gridaxis_example_1.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_selection_gridaxis_example_1.dir/rule
 .PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_selection_gridaxis_example_1.dir/rule
@@ -8403,6 +8445,78 @@ lymph_online_demo.s: lymph_online_demo.cpp.s
 lymph_online_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/lymph_online_demo.cpp.s
 .PHONY : lymph_online_demo.cpp.s
+
+lymph_options_example_1.o: lymph_options_example_1.cpp.o
+.PHONY : lymph_options_example_1.o
+
+# target to build an object file
+lymph_options_example_1.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/lymph_options_example_1.cpp.o
+.PHONY : lymph_options_example_1.cpp.o
+
+lymph_options_example_1.i: lymph_options_example_1.cpp.i
+.PHONY : lymph_options_example_1.i
+
+# target to preprocess a source file
+lymph_options_example_1.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/lymph_options_example_1.cpp.i
+.PHONY : lymph_options_example_1.cpp.i
+
+lymph_options_example_1.s: lymph_options_example_1.cpp.s
+.PHONY : lymph_options_example_1.s
+
+# target to generate assembly for a file
+lymph_options_example_1.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_1.dir/lymph_options_example_1.cpp.s
+.PHONY : lymph_options_example_1.cpp.s
+
+lymph_options_example_2.o: lymph_options_example_2.cpp.o
+.PHONY : lymph_options_example_2.o
+
+# target to build an object file
+lymph_options_example_2.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/lymph_options_example_2.cpp.o
+.PHONY : lymph_options_example_2.cpp.o
+
+lymph_options_example_2.i: lymph_options_example_2.cpp.i
+.PHONY : lymph_options_example_2.i
+
+# target to preprocess a source file
+lymph_options_example_2.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/lymph_options_example_2.cpp.i
+.PHONY : lymph_options_example_2.cpp.i
+
+lymph_options_example_2.s: lymph_options_example_2.cpp.s
+.PHONY : lymph_options_example_2.s
+
+# target to generate assembly for a file
+lymph_options_example_2.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_2.dir/lymph_options_example_2.cpp.s
+.PHONY : lymph_options_example_2.cpp.s
+
+lymph_options_example_3.o: lymph_options_example_3.cpp.o
+.PHONY : lymph_options_example_3.o
+
+# target to build an object file
+lymph_options_example_3.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/lymph_options_example_3.cpp.o
+.PHONY : lymph_options_example_3.cpp.o
+
+lymph_options_example_3.i: lymph_options_example_3.cpp.i
+.PHONY : lymph_options_example_3.i
+
+# target to preprocess a source file
+lymph_options_example_3.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/lymph_options_example_3.cpp.i
+.PHONY : lymph_options_example_3.cpp.i
+
+lymph_options_example_3.s: lymph_options_example_3.cpp.s
+.PHONY : lymph_options_example_3.s
+
+# target to generate assembly for a file
+lymph_options_example_3.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_options_example_3.dir/lymph_options_example_3.cpp.s
+.PHONY : lymph_options_example_3.cpp.s
 
 lymph_prep_column_router_docverify_demo.o: lymph_prep_column_router_docverify_demo.cpp.o
 .PHONY : lymph_prep_column_router_docverify_demo.o
@@ -14543,6 +14657,9 @@ help:
 	@echo "... plussai_lymph_models_model_prepare_example_2"
 	@echo "... plussai_lymph_models_model_prepare_example_3"
 	@echo "... plussai_lymph_online_demo"
+	@echo "... plussai_lymph_options_example_1"
+	@echo "... plussai_lymph_options_example_2"
+	@echo "... plussai_lymph_options_example_3"
 	@echo "... plussai_lymph_prep_column_router_docverify_demo"
 	@echo "... plussai_lymph_prep_docverify_demo"
 	@echo "... plussai_lymph_prep_encoding_basen_encoder_example_1"
@@ -15165,6 +15282,15 @@ help:
 	@echo "... lymph_online_demo.o"
 	@echo "... lymph_online_demo.i"
 	@echo "... lymph_online_demo.s"
+	@echo "... lymph_options_example_1.o"
+	@echo "... lymph_options_example_1.i"
+	@echo "... lymph_options_example_1.s"
+	@echo "... lymph_options_example_2.o"
+	@echo "... lymph_options_example_2.i"
+	@echo "... lymph_options_example_2.s"
+	@echo "... lymph_options_example_3.o"
+	@echo "... lymph_options_example_3.i"
+	@echo "... lymph_options_example_3.s"
 	@echo "... lymph_prep_column_router_docverify_demo.o"
 	@echo "... lymph_prep_column_router_docverify_demo.i"
 	@echo "... lymph_prep_column_router_docverify_demo.s"

@@ -25,11 +25,11 @@ class CODEH_API TimeIndex {
 public:
   TimeIndex() = delete;
 
-  static TimeIndex from_buffer_epoch_nanos(std::int64_t* data,
-                                           std::int64_t size,
-                                           std::int64_t stride = 1,
-                                           pluss::codem::BlobDeleter deleter = {},
-                                           bool require_sorted = true);
+  static TimeIndex from_buffer(std::int64_t* data,
+                               std::int64_t size,
+                               std::int64_t stride = 1,
+                               pluss::codem::BlobDeleter deleter = {},
+                               bool require_sorted = true);
 
 // ---------------------------------------------------------------------------
 // Full op surface (pandas/MATLAB-inspired)
@@ -40,7 +40,7 @@ public:
 
   const Timeline& timeline() const noexcept { return t_; }
   std::int64_t size() const { return t_.numel(); }
-  std::vector<std::int64_t> host() const { return t_.to_epoch_nanos_vector(); }
+  std::vector<std::int64_t> host() const { return t_.ticks(); }
 
   // searchsorted (like numpy/pandas). Returns insertion index in [0, size()].
   std::int64_t searchsorted(const Timeline& key, bool right = false) const { return ::pluss::codeh::_compat::invoke<std::int64_t>("searchsorted", *this, {key, right}); }
@@ -196,16 +196,16 @@ private:
   friend struct ::pluss::codeh::_compat::detail::Access;
 };
 
-inline TimeIndex TimeIndex::from_buffer_epoch_nanos(std::int64_t* data,
+inline TimeIndex TimeIndex::from_buffer(std::int64_t* data,
                                                     std::int64_t size,
                                                     std::int64_t stride,
                                                     pluss::codem::BlobDeleter deleter,
                                                     bool require_sorted) {
-  CODEM_CHECK(size >= 0, "TimeIndex::from_buffer_epoch_nanos: size must be non-negative");
-  CODEM_CHECK(stride > 0, "TimeIndex::from_buffer_epoch_nanos: stride must be positive");
+  CODEM_CHECK(size >= 0, "TimeIndex::from_buffer: size must be non-negative");
+  CODEM_CHECK(stride > 0, "TimeIndex::from_buffer: stride must be positive");
   const std::array<std::int64_t, 1> sizes{size};
   const std::array<std::int64_t, 1> strides{stride};
-  auto t = Timeline::from_buffer_epoch_nanos(
+  auto t = Timeline::from_buffer(
       data,
       std::span<const std::int64_t>(sizes.data(), sizes.size()),
       std::span<const std::int64_t>(strides.data(), strides.size()),

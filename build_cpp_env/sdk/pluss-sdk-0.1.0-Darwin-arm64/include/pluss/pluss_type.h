@@ -481,16 +481,15 @@ private:
     if (op == "minute") return "dt_minute";
     if (op == "second") return "dt_second";
     if (op == "quarter") return "dt_quarter";
-    if (op == "weekday" || op == "dayofweek" || op == "day_of_week") return "dt_weekday";
-    if (op == "dayofyear" || op == "day_of_year") return "dt_dayofyear";
-    if (op == "week" || op == "weekofyear" || op == "week_of_year") return "dt_week";
+    if (op == "weekday") return "dt_weekday";
+    if (op == "dayofyear") return "dt_dayofyear";
+    if (op == "week") return "dt_week";
 
     return op;
   }
 
   static std::string_view normalize_timeindex_op(std::string_view op) {
     if (op == "sort_values") return "sort";
-    if (op == "drop_duplicates") return "unique";
     if (op == "freq") return "infer_freq";
     return op;
   }

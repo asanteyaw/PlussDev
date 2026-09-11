@@ -328,12 +328,13 @@ private:
     return "Unknown";
   }
 
-  static ::pluss::Series u8_mask_to_bool_series_(const std::vector<std::uint8_t>& mask) {
-    auto out = ::pluss::Series::zeros({static_cast<std::int64_t>(mask.size())},
+  static ::pluss::Series u8_mask_to_bool_series_(const ::pluss::Note& mask) {
+    const auto lanes = mask.bools();
+    auto out = ::pluss::Series::zeros({static_cast<std::int64_t>(lanes.size())},
                                       ::pluss::codem::ScalarType::Bool);
     auto* p = reinterpret_cast<bool*>(out.raw_data());
-    for (std::size_t i = 0; i < mask.size(); ++i) {
-      p[i] = (mask[i] != 0);
+    for (std::size_t i = 0; i < lanes.size(); ++i) {
+      p[i] = (lanes[i] != 0);
     }
     return out;
   }

@@ -60,9 +60,9 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
   [`Note::url_decode`](url_decode.md): the other transport decoders.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ends_with.html">
+  <a class="prev-link" href="from_windows1252.html">
     <span class="label">Previous</span>
-    <span class="title">ends_with</span>
+    <span class="title">from_windows1252</span>
   </a>
   <a class="next-link" href="hex_encode.html">
     <span class="label">Next</span>

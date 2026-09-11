@@ -50,6 +50,6 @@ Any comparison involving `NaT` is `false`; an absent instant is unordered.
 - [`Timeline::sort`](sort.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ne.html"><span class="label">Previous</span><span class="title">ne</span></a>
+  <a class="prev-link" href="leap_scalar.html"><span class="label">Previous</span><span class="title">leap_scalar</span></a>
   <a class="next-link" href="le.html"><span class="label">Next</span><span class="title">le</span></a>
 </div>

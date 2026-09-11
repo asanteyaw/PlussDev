@@ -99,6 +99,19 @@ static ::std::string format_cell(::std::string_view s, bool is_bytes, const Note
   return maybe_clip(::std::move(body), budget);
 }
 
+static void format_value(::std::ostringstream &oss, const Note &n,
+                         ::std::int64_t index, const NotePrintOptions &opt) {
+  if (n.is_text() || n.is_bytes()) {
+    oss << format_cell(n.at(index), n.is_bytes(), opt);
+  } else if (n.is_bool()) {
+    oss << (n.bools()[static_cast<::std::size_t>(index)] ? "true" : "false");
+  } else if (n.is_int64()) {
+    oss << n.integers()[static_cast<::std::size_t>(index)];
+  } else {
+    oss << n.reals()[static_cast<::std::size_t>(index)];
+  }
+}
+
 static ::std::vector<::std::int64_t> visible_tokens(::std::int64_t n,
                                                     ::std::int64_t edge_items,
                                                     bool summarize) {
@@ -149,7 +162,10 @@ static void append_metadata(::std::ostringstream& oss, const Note& n, const Note
   if (opt.show_dim && !compact) add("dim", ::std::to_string(n.dim()));
   if (opt.show_numel && !compact) add("numel", ::std::to_string(n.numel()));
   if (opt.show_encoding || compact) {
-    add("encoding", static_cast<const NoteBase&>(n).is_bytes() ? "bytes" : "utf8");
+    if (n.is_text() || n.is_bytes())
+      add("encoding", n.is_bytes() ? "bytes" : "utf8");
+    else
+      add("dtype", ::std::string(dtype_name(n.dtype())));
   }
 
   oss << ")";
@@ -165,7 +181,7 @@ static void render_recursive(::std::ostringstream& oss,
                              ::std::int64_t indent,
                              bool summarize) {
   if (dim == static_cast<::std::int64_t>(sizes.size())) {
-    oss << format_cell(n.at(base), static_cast<const NoteBase&>(n).is_bytes(), opt);
+    format_value(oss, n, base, opt);
     return;
   }
 
@@ -217,7 +233,7 @@ static ::std::string render_note(const Note& n, const NotePrintOptions& opt) {
   if (!show_values(opt)) return oss.str();
 
   if (n.dim() == 0) {
-    oss << format_cell(n.at(0), static_cast<const NoteBase&>(n).is_bytes(), opt);
+    format_value(oss, n, 0, opt);
     return oss.str();
   }
 

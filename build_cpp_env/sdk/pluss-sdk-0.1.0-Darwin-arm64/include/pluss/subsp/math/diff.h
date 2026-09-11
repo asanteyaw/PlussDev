@@ -77,6 +77,11 @@ inline void ensure_tracks_slope_(const Series& value) {
   }
 }
 
+inline bool has_reverse_path_(const Series& value) {
+  return value.tracks_slope() ||
+         pluss::codem::series_tape::source_info(value).has_value();
+}
+
 inline void reverse_with_context_(const Series& output, const char* op) {
   try {
     output.reverse();
@@ -308,7 +313,7 @@ public:
 
   bool is_leaf() const {
     if (!defined()) return true;
-    return value_->is_leaf().item<bool>();
+    return value_->is_leaf();
   }
 
   const Series& value() const {
@@ -1028,7 +1033,9 @@ std::pair<Series, std::vector<Series>> value_and_grad(
   reverse_policy.keep_graph = policy.keep_graph;
   reverse_policy.accumulate_sensitivity = policy.accumulate_input_sensitivity;
   reverse_policy.track_higher_order = policy.track_higher_order;
-  loss.reverse(reverse_policy);
+  if (detail::has_reverse_path_(loss.value())) {
+    loss.reverse(reverse_policy);
+  }
 
   std::vector<Series> grads;
   grads.reserve(vars.size());
@@ -1263,7 +1270,9 @@ std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(
     reverse_policy.keep_graph = policy.keep_graph;
     reverse_policy.accumulate_sensitivity = policy.accumulate_input_sensitivity;
     reverse_policy.track_higher_order = policy.track_higher_order;
-    output.reverse(cotangent, reverse_policy);
+    if (detail::has_reverse_path_(output.value())) {
+      output.reverse(cotangent, reverse_policy);
+    }
     pullback_consumed = true;
 
     std::vector<Series> grads;
@@ -2224,10 +2233,12 @@ Series nth_diff(Fn&& fn,
       reverse_policy.keep_graph = policy.keep_graph || interior_order_step;
       reverse_policy.accumulate_sensitivity = false;
       reverse_policy.track_higher_order = policy.track_higher_order || interior_order_step;
-      current.reverse(
-          reverse_policy.keep_graph,
-          reverse_policy.accumulate_sensitivity,
-          reverse_policy.track_higher_order);
+      if (detail::has_reverse_path_(current)) {
+        current.reverse(
+            reverse_policy.keep_graph,
+            reverse_policy.accumulate_sensitivity,
+            reverse_policy.track_higher_order);
+      }
 
       if (!leaf.has_sensitivity()) {
         if (policy.strict_dependency) {

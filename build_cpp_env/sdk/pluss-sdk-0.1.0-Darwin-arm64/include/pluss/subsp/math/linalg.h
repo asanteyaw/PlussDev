@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <complex>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -53,6 +54,28 @@ inline std::vector<double> to_row_major_f64_(const Series& a) {
   return cpu.to_vec<double>();
 }
 
+inline bool is_complex_(const Series& a) {
+  return a.scalar_type() == ScalarType::Complex64 ||
+      a.scalar_type() == ScalarType::Complex128;
+}
+
+inline std::vector<std::complex<double>> to_row_major_c128_(const Series& a) {
+  auto cpu = a.to(pluss::pCPU, ScalarType::Complex128).contiguous();
+  return cpu.to_vec<std::complex<double>>();
+}
+
+inline Series complex_matrix_from_row_major_(
+    const std::vector<std::complex<double>>& row,
+    std::int64_t m,
+    std::int64_t n,
+    ScalarType dtype) {
+  auto out = pluss::make_series(
+      row,
+      {m, n},
+      Config{}.with_dtype(ScalarType::Complex128).with_platform(pluss::pCPU));
+  return dtype == ScalarType::Complex64 ? out.to(ScalarType::Complex64) : out;
+}
+
 inline Series matrix_from_row_major_(const std::vector<double>& row, std::int64_t m, std::int64_t n) {
   return pluss::make_series(row, {m, n}, cpu_f64_cfg_());
 }
@@ -63,6 +86,24 @@ inline Series vector_from_values_(const std::vector<double>& vals) {
 
 inline Series scalar_from_value_(double v) {
   return pluss::make_series(v, cpu_f64_cfg_());
+}
+
+inline Series complex_scalar_from_value_(std::complex<double> v, ScalarType dtype) {
+  auto out = pluss::make_series(
+      std::vector<std::complex<double>>{v},
+      std::vector<std::int64_t>{},
+      Config{}.with_dtype(ScalarType::Complex128).with_platform(pluss::pCPU));
+  return dtype == ScalarType::Complex64 ? out.to(ScalarType::Complex64) : out;
+}
+
+inline Series complex_vector_from_values_(
+    const std::vector<std::complex<double>>& values,
+    ScalarType dtype) {
+  auto out = pluss::make_series(
+      values,
+      {static_cast<std::int64_t>(values.size())},
+      Config{}.with_dtype(ScalarType::Complex128).with_platform(pluss::pCPU));
+  return dtype == ScalarType::Complex64 ? out.to(ScalarType::Complex64) : out;
 }
 
 inline std::vector<double> row_to_col_major_(const std::vector<double>& row, std::int64_t m, std::int64_t n) {
@@ -85,9 +126,48 @@ inline std::vector<double> col_to_row_major_(const std::vector<double>& col, std
   return row;
 }
 
+template <typename T>
+inline std::vector<T> row_to_col_major_t_(
+    const std::vector<T>& row,
+    std::int64_t m,
+    std::int64_t n) {
+  std::vector<T> col(static_cast<std::size_t>(m * n));
+  for (std::int64_t r = 0; r < m; ++r) {
+    for (std::int64_t c = 0; c < n; ++c) {
+      col[static_cast<std::size_t>(c * m + r)] =
+          row[static_cast<std::size_t>(r * n + c)];
+    }
+  }
+  return col;
+}
+
+template <typename T>
+inline std::vector<T> col_to_row_major_t_(
+    const std::vector<T>& col,
+    std::int64_t m,
+    std::int64_t n) {
+  std::vector<T> row(static_cast<std::size_t>(m * n));
+  for (std::int64_t r = 0; r < m; ++r) {
+    for (std::int64_t c = 0; c < n; ++c) {
+      row[static_cast<std::size_t>(r * n + c)] =
+          col[static_cast<std::size_t>(c * m + r)];
+    }
+  }
+  return row;
+}
+
 inline std::vector<double> identity_(std::int64_t n) {
   std::vector<double> out(static_cast<std::size_t>(n * n), 0.0);
   for (std::int64_t i = 0; i < n; ++i) out[static_cast<std::size_t>(i * n + i)] = 1.0;
+  return out;
+}
+
+template <typename T>
+inline std::vector<T> identity_t_(std::int64_t n) {
+  std::vector<T> out(static_cast<std::size_t>(n * n), T{});
+  for (std::int64_t i = 0; i < n; ++i) {
+    out[static_cast<std::size_t>(i * n + i)] = T{1};
+  }
   return out;
 }
 
@@ -112,6 +192,116 @@ inline std::vector<double> matmul_(const std::vector<double>& a, std::int64_t m,
       for (std::int64_t j = 0; j < n; ++j) {
         out[obase + static_cast<std::size_t>(j)] += av * b[bbase + static_cast<std::size_t>(j)];
       }
+    }
+  }
+  return out;
+}
+
+template <typename T>
+inline std::vector<T> matmul_t_(
+    const std::vector<T>& a,
+    std::int64_t m,
+    std::int64_t k,
+    const std::vector<T>& b,
+    std::int64_t n) {
+  std::vector<T> out(static_cast<std::size_t>(m * n), T{});
+  for (std::int64_t i = 0; i < m; ++i) {
+    for (std::int64_t p = 0; p < k; ++p) {
+      const T av = a[static_cast<std::size_t>(i * k + p)];
+      for (std::int64_t j = 0; j < n; ++j) {
+        out[static_cast<std::size_t>(i * n + j)] +=
+            av * b[static_cast<std::size_t>(p * n + j)];
+      }
+    }
+  }
+  return out;
+}
+
+template <typename T>
+inline T det_gauss_t_(const std::vector<T>& in, std::int64_t n) {
+  std::vector<T> m = in;
+  int sign = 1;
+  for (std::int64_t k = 0; k < n; ++k) {
+    std::int64_t pivot = k;
+    double largest = std::abs(m[static_cast<std::size_t>(k * n + k)]);
+    for (std::int64_t r = k + 1; r < n; ++r) {
+      const double candidate = std::abs(m[static_cast<std::size_t>(r * n + k)]);
+      if (candidate > largest) {
+        largest = candidate;
+        pivot = r;
+      }
+    }
+    if (largest == 0.0) return T{};
+    if (pivot != k) {
+      for (std::int64_t c = 0; c < n; ++c) {
+        std::swap(m[static_cast<std::size_t>(k * n + c)],
+                  m[static_cast<std::size_t>(pivot * n + c)]);
+      }
+      sign = -sign;
+    }
+    for (std::int64_t r = k + 1; r < n; ++r) {
+      const T factor = m[static_cast<std::size_t>(r * n + k)] /
+          m[static_cast<std::size_t>(k * n + k)];
+      for (std::int64_t c = k + 1; c < n; ++c) {
+        m[static_cast<std::size_t>(r * n + c)] -=
+            factor * m[static_cast<std::size_t>(k * n + c)];
+      }
+    }
+  }
+  T result{static_cast<double>(sign)};
+  for (std::int64_t i = 0; i < n; ++i) {
+    result *= m[static_cast<std::size_t>(i * n + i)];
+  }
+  return result;
+}
+
+template <typename T>
+inline std::vector<T> inverse_gauss_t_(const std::vector<T>& in, std::int64_t n) {
+  std::vector<T> aug(static_cast<std::size_t>(n * 2 * n), T{});
+  for (std::int64_t r = 0; r < n; ++r) {
+    for (std::int64_t c = 0; c < n; ++c) {
+      aug[static_cast<std::size_t>(r * (2 * n) + c)] =
+          in[static_cast<std::size_t>(r * n + c)];
+    }
+    aug[static_cast<std::size_t>(r * (2 * n) + n + r)] = T{1};
+  }
+  for (std::int64_t k = 0; k < n; ++k) {
+    std::int64_t pivot = k;
+    double largest = std::abs(aug[static_cast<std::size_t>(k * (2 * n) + k)]);
+    for (std::int64_t r = k + 1; r < n; ++r) {
+      const double candidate = std::abs(aug[static_cast<std::size_t>(r * (2 * n) + k)]);
+      if (candidate > largest) {
+        largest = candidate;
+        pivot = r;
+      }
+    }
+    if (largest == 0.0) {
+      ::pluss::throw_error("subsp::math::linalg::inverse: singular matrix");
+    }
+    if (pivot != k) {
+      for (std::int64_t c = 0; c < 2 * n; ++c) {
+        std::swap(aug[static_cast<std::size_t>(k * (2 * n) + c)],
+                  aug[static_cast<std::size_t>(pivot * (2 * n) + c)]);
+      }
+    }
+    const T diagonal = aug[static_cast<std::size_t>(k * (2 * n) + k)];
+    for (std::int64_t c = 0; c < 2 * n; ++c) {
+      aug[static_cast<std::size_t>(k * (2 * n) + c)] /= diagonal;
+    }
+    for (std::int64_t r = 0; r < n; ++r) {
+      if (r == k) continue;
+      const T factor = aug[static_cast<std::size_t>(r * (2 * n) + k)];
+      for (std::int64_t c = 0; c < 2 * n; ++c) {
+        aug[static_cast<std::size_t>(r * (2 * n) + c)] -=
+            factor * aug[static_cast<std::size_t>(k * (2 * n) + c)];
+      }
+    }
+  }
+  std::vector<T> out(static_cast<std::size_t>(n * n));
+  for (std::int64_t r = 0; r < n; ++r) {
+    for (std::int64_t c = 0; c < n; ++c) {
+      out[static_cast<std::size_t>(r * n + c)] =
+          aug[static_cast<std::size_t>(r * (2 * n) + n + c)];
     }
   }
   return out;
@@ -295,6 +485,36 @@ inline std::vector<double> matrix_exp_(const std::vector<double>& in, std::int64
   return out;
 }
 
+template <typename T>
+inline std::vector<T> matrix_exp_t_(const std::vector<T>& in, std::int64_t n) {
+  double norm_inf = 0.0;
+  for (std::int64_t r = 0; r < n; ++r) {
+    double row_sum = 0.0;
+    for (std::int64_t c = 0; c < n; ++c) {
+      row_sum += std::abs(in[static_cast<std::size_t>(r * n + c)]);
+    }
+    norm_inf = std::max(norm_inf, row_sum);
+  }
+  const std::int64_t squarings = norm_inf > 0.5
+      ? static_cast<std::int64_t>(std::ceil(std::log2(norm_inf / 0.5)))
+      : 0;
+  const double scale = std::ldexp(1.0, -static_cast<int>(squarings));
+  std::vector<T> scaled = in;
+  for (T& value : scaled) value *= scale;
+
+  std::vector<T> out = identity_t_<T>(n);
+  std::vector<T> term = identity_t_<T>(n);
+  for (std::int64_t k = 1; k <= 40; ++k) {
+    term = matmul_t_(term, n, n, scaled, n);
+    for (T& value : term) value /= static_cast<double>(k);
+    for (std::size_t i = 0; i < out.size(); ++i) out[i] += term[i];
+  }
+  for (std::int64_t i = 0; i < squarings; ++i) {
+    out = matmul_t_(out, n, n, out, n);
+  }
+  return out;
+}
+
 inline std::vector<double> matrix_exp_frechet_adjoint_(
     const std::vector<double>& a,
     const std::vector<double>& grad,
@@ -326,6 +546,27 @@ inline std::vector<double> matrix_exp_frechet_adjoint_(
 inline Series det(const Series& a) {
   detail::require_square_(a, "subsp::math::linalg::det");
   const auto n64 = a.sizes()[0];
+  if (detail::is_complex_(a)) {
+#if defined(__APPLE__)
+    int n = static_cast<int>(n64);
+    auto col = detail::row_to_col_major_t_(detail::to_row_major_c128_(a), n, n);
+    std::vector<int> ipiv(static_cast<std::size_t>(n));
+    int info = 0;
+    zgetrf_(&n, &n, col.data(), &n, ipiv.data(), &info);
+    if (info < 0) ::pluss::throw_error("subsp::math::linalg::det: invalid LAPACK arg");
+    std::complex<double> value =
+        info > 0 ? std::complex<double>{} : std::complex<double>{1.0, 0.0};
+    if (info == 0) {
+      for (int i = 0; i < n; ++i) {
+        value *= col[static_cast<std::size_t>(i * n + i)];
+        if (ipiv[static_cast<std::size_t>(i)] != i + 1) value = -value;
+      }
+    }
+#else
+    const auto value = detail::det_gauss_t_(detail::to_row_major_c128_(a), n64);
+#endif
+    return detail::complex_scalar_from_value_(value, a.scalar_type());
+  }
 #if defined(__APPLE__)
   int n = static_cast<int>(n64);
   auto row = detail::to_row_major_f64_(a);
@@ -351,6 +592,30 @@ inline Series det(const Series& a) {
 inline Series inverse(const Series& a) {
   detail::require_square_(a, "subsp::math::linalg::inverse");
   const auto n64 = a.sizes()[0];
+  if (detail::is_complex_(a)) {
+#if defined(__APPLE__)
+    int n = static_cast<int>(n64);
+    auto col = detail::row_to_col_major_t_(detail::to_row_major_c128_(a), n, n);
+    std::vector<int> ipiv(static_cast<std::size_t>(n));
+    int info = 0;
+    zgetrf_(&n, &n, col.data(), &n, ipiv.data(), &info);
+    if (info != 0) ::pluss::throw_error("subsp::math::linalg::inverse: LU factorization failed");
+    int lwork = -1;
+    std::complex<double> wkopt{};
+    zgetri_(&n, col.data(), &n, ipiv.data(), &wkopt, &lwork, &info);
+    if (info != 0) {
+      ::pluss::throw_error("subsp::math::linalg::inverse: LAPACK workspace query failed");
+    }
+    lwork = std::max(1, static_cast<int>(wkopt.real()));
+    std::vector<std::complex<double>> work(static_cast<std::size_t>(lwork));
+    zgetri_(&n, col.data(), &n, ipiv.data(), work.data(), &lwork, &info);
+    if (info != 0) ::pluss::throw_error("subsp::math::linalg::inverse: singular matrix");
+    auto row = detail::col_to_row_major_t_(col, n, n);
+#else
+    auto row = detail::inverse_gauss_t_(detail::to_row_major_c128_(a), n64);
+#endif
+    return detail::complex_matrix_from_row_major_(row, n64, n64, a.scalar_type());
+  }
 #if defined(__APPLE__)
   int n = static_cast<int>(n64);
   auto row = detail::to_row_major_f64_(a);
@@ -379,6 +644,25 @@ inline Series cholesky(const Series& a, bool upper = false) {
   const auto n64 = a.sizes()[0];
 #if defined(__APPLE__)
   int n = static_cast<int>(n64);
+  if (detail::is_complex_(a)) {
+    auto col = detail::row_to_col_major_t_(
+        detail::to_row_major_c128_(a), n, n);
+    char uplo = upper ? 'U' : 'L';
+    int info = 0;
+    zpotrf_(&uplo, &n, col.data(), &n, &info);
+    if (info != 0) {
+      ::pluss::throw_error(
+          "subsp::math::linalg::cholesky: matrix is not Hermitian positive-definite");
+    }
+    for (int c = 0; c < n; ++c) {
+      for (int r = 0; r < n; ++r) {
+        const bool keep = upper ? (r <= c) : (r >= c);
+        if (!keep) col[static_cast<std::size_t>(c * n + r)] = {};
+      }
+    }
+    return detail::complex_matrix_from_row_major_(
+        detail::col_to_row_major_t_(col, n, n), n, n, a.scalar_type());
+  }
   auto row = detail::to_row_major_f64_(a);
   auto col = detail::row_to_col_major_(row, n, n);
   char uplo = upper ? 'U' : 'L';
@@ -400,12 +684,25 @@ inline Series cholesky(const Series& a, bool upper = false) {
 }
 
 inline Series logdet(const Series& a) {
+  if (detail::is_complex_(a)) {
+    const auto values = det(a).to(ScalarType::Complex128).to_vec<std::complex<double>>();
+    return detail::complex_scalar_from_value_(std::log(values.front()), a.scalar_type());
+  }
   auto d = det(a).to_vec<double>();
   const double v = d.empty() ? 0.0 : d[0];
   return detail::scalar_from_value_(std::log(v));
 }
 
 inline Series slogdet(const Series& a) {
+  if (detail::is_complex_(a)) {
+    const auto values = det(a).to(ScalarType::Complex128).to_vec<std::complex<double>>();
+    const std::complex<double> value = values.front();
+    const double magnitude = std::abs(value);
+    const std::complex<double> sign =
+        magnitude == 0.0 ? std::complex<double>{} : value / magnitude;
+    return detail::complex_vector_from_values_(
+        {sign, {std::log(magnitude), 0.0}}, a.scalar_type());
+  }
   auto d = det(a).to_vec<double>();
   const double v = d.empty() ? 0.0 : d[0];
   const double s = (v > 0.0) ? 1.0 : (v < 0.0 ? -1.0 : 0.0);
@@ -421,6 +718,13 @@ inline Series matrix_power(const Series& a, std::int64_t n) {
 inline Series matrix_exp(const Series& a) {
   detail::require_square_(a, "subsp::math::linalg::matrix_exp");
   const auto n = a.sizes()[0];
+  if (detail::is_complex_(a)) {
+    return detail::complex_matrix_from_row_major_(
+        detail::matrix_exp_t_(detail::to_row_major_c128_(a), n),
+        n,
+        n,
+        a.scalar_type());
+  }
   return detail::matrix_from_row_major_(detail::matrix_exp_(detail::to_row_major_f64_(a), n), n, n);
 }
 
@@ -590,6 +894,61 @@ inline QRResult qr(const Series& a, bool reduced = true) {
   int n = static_cast<int>(a.sizes()[1]);
   int k = std::min(m, n);
 
+  if (detail::is_complex_(a)) {
+    auto col = detail::row_to_col_major_t_(
+        detail::to_row_major_c128_(a), m, n);
+    std::vector<std::complex<double>> tau(static_cast<std::size_t>(k));
+    int info = 0;
+    int lwork = -1;
+    std::complex<double> wkopt{};
+    zgeqrf_(&m, &n, col.data(), &m, tau.data(), &wkopt, &lwork, &info);
+    if (info != 0) {
+      ::pluss::throw_error("subsp::math::linalg::qr: zgeqrf workspace query failed");
+    }
+    lwork = std::max(1, static_cast<int>(wkopt.real()));
+    std::vector<std::complex<double>> work(static_cast<std::size_t>(lwork));
+    zgeqrf_(&m, &n, col.data(), &m, tau.data(), work.data(), &lwork, &info);
+    if (info != 0) ::pluss::throw_error("subsp::math::linalg::qr: zgeqrf failed");
+
+    const int q_cols = reduced ? k : m;
+    std::vector<std::complex<double>> qcol(static_cast<std::size_t>(m * q_cols));
+    for (int c = 0; c < q_cols; ++c) {
+      for (int r = 0; r < m; ++r) {
+        if (c < n) {
+          qcol[static_cast<std::size_t>(c * m + r)] =
+              col[static_cast<std::size_t>(c * m + r)];
+        } else if (r == c) {
+          qcol[static_cast<std::size_t>(c * m + r)] = {1.0, 0.0};
+        }
+      }
+    }
+    lwork = -1;
+    wkopt = {};
+    zungqr_(&m, &q_cols, &k, qcol.data(), &m, tau.data(), &wkopt, &lwork, &info);
+    if (info != 0) {
+      ::pluss::throw_error("subsp::math::linalg::qr: zungqr workspace query failed");
+    }
+    lwork = std::max(1, static_cast<int>(wkopt.real()));
+    work.assign(static_cast<std::size_t>(lwork), {});
+    zungqr_(&m, &q_cols, &k, qcol.data(), &m, tau.data(), work.data(), &lwork, &info);
+    if (info != 0) ::pluss::throw_error("subsp::math::linalg::qr: zungqr failed");
+
+    const int r_rows = reduced ? k : m;
+    std::vector<std::complex<double>> rrow(static_cast<std::size_t>(r_rows * n));
+    for (int r = 0; r < r_rows; ++r) {
+      for (int c = r; c < n; ++c) {
+        rrow[static_cast<std::size_t>(r * n + c)] =
+            col[static_cast<std::size_t>(c * m + r)];
+      }
+    }
+    return QRResult{
+        detail::complex_matrix_from_row_major_(
+            detail::col_to_row_major_t_(qcol, m, q_cols),
+            m, q_cols, a.scalar_type()),
+        detail::complex_matrix_from_row_major_(
+            rrow, r_rows, n, a.scalar_type())};
+  }
+
   auto row = detail::to_row_major_f64_(a);
   auto col = detail::row_to_col_major_(row, m, n);
   std::vector<double> tau(static_cast<std::size_t>(k));
@@ -643,6 +1002,47 @@ inline SVDResult svd(const Series& a, bool full_matrices = true) {
   int n = static_cast<int>(a.sizes()[1]);
   int k = std::min(m, n);
   char job = full_matrices ? 'A' : 'S';
+
+  if (detail::is_complex_(a)) {
+    auto col = detail::row_to_col_major_t_(
+        detail::to_row_major_c128_(a), m, n);
+    std::vector<double> s(static_cast<std::size_t>(k));
+    const int u_cols = full_matrices ? m : k;
+    const int vt_rows = full_matrices ? n : k;
+    const int ldvt = full_matrices ? n : vt_rows;
+    std::vector<std::complex<double>> ucol(static_cast<std::size_t>(m * u_cols));
+    std::vector<std::complex<double>> vtcol(static_cast<std::size_t>(ldvt * n));
+    std::vector<double> rwork(static_cast<std::size_t>(std::max(1, 5 * k)));
+    int info = 0;
+    int lwork = -1;
+    std::complex<double> wkopt{};
+    zgesvd_(&job, &job, &m, &n, col.data(), &m, s.data(),
+            ucol.data(), &m, vtcol.data(), &ldvt,
+            &wkopt, &lwork, rwork.data(), &info);
+    if (info != 0) {
+      ::pluss::throw_error("subsp::math::linalg::svd: zgesvd workspace query failed");
+    }
+    lwork = std::max(1, static_cast<int>(wkopt.real()));
+    std::vector<std::complex<double>> work(static_cast<std::size_t>(lwork));
+    zgesvd_(&job, &job, &m, &n, col.data(), &m, s.data(),
+            ucol.data(), &m, vtcol.data(), &ldvt,
+            work.data(), &lwork, rwork.data(), &info);
+    if (info != 0) ::pluss::throw_error("subsp::math::linalg::svd: zgesvd failed");
+
+    const ScalarType real_dtype = a.scalar_type() == ScalarType::Complex64
+        ? ScalarType::Float32
+        : ScalarType::Float64;
+    Series singular = detail::vector_from_values_(s);
+    if (real_dtype == ScalarType::Float32) singular = singular.to(real_dtype);
+    return SVDResult{
+        detail::complex_matrix_from_row_major_(
+            detail::col_to_row_major_t_(ucol, m, u_cols),
+            m, u_cols, a.scalar_type()),
+        std::move(singular),
+        detail::complex_matrix_from_row_major_(
+            detail::col_to_row_major_t_(vtcol, vt_rows, n),
+            vt_rows, n, a.scalar_type())};
+  }
 
   auto row = detail::to_row_major_f64_(a);
   auto col = detail::row_to_col_major_(row, m, n);

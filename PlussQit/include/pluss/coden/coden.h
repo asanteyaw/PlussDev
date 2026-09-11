@@ -1,7 +1,7 @@
 #pragma once
 
 // Public CodeN entry point (structured includes).
-// End users see Note (+ TokenBatch). Chord is internal.
+// End users see Note, TextRef, and TokenBatch.
 
 #include <cstdint>
 #include <span>
@@ -11,10 +11,13 @@
 
 #include "CodeN/core/Note.h"
 #include "CodeN/core/Printing.h"
+#include "CodeN/core/TextRef.h"
 #include "CodeN/core/TokenBatch.h"
 
 namespace pluss {
 using Note = coden::Note;
+using NoteDType = coden::NoteDType;
+using TextRef = coden::TextRef;
 using TokenBatch = coden::TokenBatch;
 using NotePrintOptions = coden::NotePrintOptions;
 using NotePrintMetadataMode = coden::NotePrintMetadataMode;

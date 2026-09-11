@@ -279,12 +279,12 @@ int main() {
   std::cout << "3D < 3D+1s: " << (t_3d_nested < t_3d_nested.add_seconds(1)) << "\n";
 
   show_timeline("shift(day)", t_3d_nested.shift(1, "day"));
-  show_timeline("to_period(year)", t_3d_nested.to_period("year"));
-  show_timeline("to_period(month)", t_3d_nested.to_period("month"));
-  show_timeline("to_period(day)", t_3d_nested.to_period("day"));
-  show_timeline("to_period(hour)", t_3d_nested.to_period("hour"));
-  show_timeline("to_period(min)", t_3d_nested.to_period("min"));
-  show_timeline("to_period(second)", t_3d_nested.to_period("second"));
+  show_timeline("period_start(year)", t_3d_nested.period_start("year"));
+  show_timeline("period_start(month)", t_3d_nested.period_start("month"));
+  show_timeline("period_start(day)", t_3d_nested.period_start("day"));
+  show_timeline("period_start(hour)", t_3d_nested.period_start("hour"));
+  show_timeline("period_start(minute)", t_3d_nested.period_start("minute"));
+  show_timeline("period_start(second)", t_3d_nested.period_start("second"));
 
   const auto idx_from_method = t_1d_init.to_timeindex(true);
   show_timeline("to_timeindex()", idx_from_method.timeline());

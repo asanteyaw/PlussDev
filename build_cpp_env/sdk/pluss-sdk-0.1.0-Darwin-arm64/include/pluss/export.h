@@ -49,7 +49,7 @@
 #endif
 
 
-// CodeN (text: Chord/Note)
+// CodeN (text: Note)
 #ifdef CODEN_BUILD_MAIN_LIB
   #define CODEN_API PLUSS_EXPORT
 #else

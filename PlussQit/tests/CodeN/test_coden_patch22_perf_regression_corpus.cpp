@@ -72,7 +72,9 @@ bool notes_equal_with_diag(const pluss::Note& a, const pluss::Note& b, std::stri
 bool token_batches_equal_with_diag(const pluss::TokenBatch& a,
                                    const pluss::TokenBatch& b,
                                    std::string& diag) {
-  if (a.offsets() != b.offsets()) {
+  const auto a_off = a.offsets().integers();
+  const auto b_off = b.offsets().integers();
+  if (!std::equal(a_off.begin(), a_off.end(), b_off.begin(), b_off.end())) {
     diag = "offset mismatch";
     return false;
   }
@@ -246,10 +248,11 @@ TEST_CASE("CodeN nlp_keywords frequency ordering and stopword filtering", "[code
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
   const auto kw = note.nlp_keywords(3);
-  REQUIRE(kw.offsets().size() == 3);
-  REQUIRE(kw.offsets()[0] == 0);
-  REQUIRE(kw.offsets()[1] == 3);
-  REQUIRE(kw.offsets()[2] == 5);
+  const auto kw_offsets = kw.offsets().integers();
+  REQUIRE(kw_offsets.size() == 3);
+  REQUIRE(kw_offsets[0] == 0);
+  REQUIRE(kw_offsets[1] == 3);
+  REQUIRE(kw_offsets[2] == 5);
 
   // Row 0: alpha(3), beta(3), gamma(1); tie alpha/beta resolved lexicographically.
   REQUIRE(kw.tokens().at(0) == "alpha");
@@ -262,9 +265,10 @@ TEST_CASE("CodeN nlp_keywords frequency ordering and stopword filtering", "[code
 
   const auto stop_only = pluss::make_note("the and in to with");
   const auto kw_stop_only = stop_only.nlp_keywords(5);
-  REQUIRE(kw_stop_only.offsets().size() == 2);
-  REQUIRE(kw_stop_only.offsets()[0] == 0);
-  REQUIRE(kw_stop_only.offsets()[1] == 0);
+  const auto kw_stop_only_offsets = kw_stop_only.offsets().integers();
+  REQUIRE(kw_stop_only_offsets.size() == 2);
+  REQUIRE(kw_stop_only_offsets[0] == 0);
+  REQUIRE(kw_stop_only_offsets[1] == 0);
   REQUIRE(kw_stop_only.tokens().numel() == 0);
 }
 
@@ -295,7 +299,10 @@ TEST_CASE("CodeN parallel lane execution parity (sort + tokenbatch)", "[coden][p
   }
   REQUIRE(same_sort);
 
-  REQUIRE(kw_off.offsets() == kw_on.offsets());
+  const auto kw_off_offsets = kw_off.offsets().integers();
+  const auto kw_on_offsets = kw_on.offsets().integers();
+  REQUIRE(std::equal(kw_off_offsets.begin(), kw_off_offsets.end(),
+                     kw_on_offsets.begin(), kw_on_offsets.end()));
   bool same_kw = (kw_off.tokens().numel() == kw_on.tokens().numel());
   for (std::int64_t i = 0; same_kw && i < kw_off.tokens().numel(); ++i) {
     if (kw_off.tokens().at(i) != kw_on.tokens().at(i)) same_kw = false;

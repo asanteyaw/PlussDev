@@ -103,16 +103,16 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
 - [`Note::lower`](lower.md): readable lowercase output (1:1 mappings only).
 - [`Note::contains`](contains.md): the byte-exact predicate that a shared
   `casefold` makes caseless.
-- `pluss::coden::Note::normalize`: Unicode normalization (NFC/NFD/NFKC/NFKD),
-  the other half of a robust comparison key.
+- [`Note::to_nfc`](to_nfc.md): Unicode normalization, the other half of a
+  robust comparison key.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="capitalize.html">
     <span class="label">Previous</span>
     <span class="title">capitalize</span>
   </a>
-  <a class="next-link" href="contains.html">
+  <a class="next-link" href="cell.html">
     <span class="label">Next</span>
-    <span class="title">contains</span>
+    <span class="title">cell</span>
   </a>
 </div>

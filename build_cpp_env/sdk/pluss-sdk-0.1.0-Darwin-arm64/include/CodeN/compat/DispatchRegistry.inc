@@ -23,10 +23,6 @@ struct OpSig {
 };
 
 inline constexpr OpSig kOpSigs[] = {
-  {"Chord", "lower", "Chord lower()", 0, ArgKind::kNone, ArgKind::kNone, ArgKind::kNone},
-  {"Chord", "strip", "Chord strip()", 0, ArgKind::kNone, ArgKind::kNone, ArgKind::kNone},
-  {"Chord", "replace", "Chord replace(string from, string to)", 2, ArgKind::kString, ArgKind::kString, ArgKind::kNone},
-  {"Chord->bool", "contains", "bool contains(string needle)", 1, ArgKind::kString, ArgKind::kNone, ArgKind::kNone},
   {"Note", "lower", "Note lower()", 0, ArgKind::kNone, ArgKind::kNone, ArgKind::kNone},
   {"Note", "strip", "Note strip()", 0, ArgKind::kNone, ArgKind::kNone, ArgKind::kNone},
   {"Note", "reshape", "Note reshape(intlist sizes)", 1, ArgKind::kIntList, ArgKind::kNone, ArgKind::kNone},

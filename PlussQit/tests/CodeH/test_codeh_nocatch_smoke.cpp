@@ -611,13 +611,13 @@ void test_3d_non_generated_timeline_support() {
   expect_true(mi.minute().to_vec<std::int32_t>(0) == 8, "set_minute(3D)");
   expect_true(s.second().to_vec<std::int32_t>(0) == 9, "set_second(3D)");
 
-  const auto y_period = t3.to_period("year");
-  const auto m_period = t3.to_period("month");
-  expect_true(y_period.dim() == 3 && m_period.dim() == 3, "to_period keeps 3D rank");
+  const auto y_period = t3.period_start("year");
+  const auto m_period = t3.period_start("month");
+  expect_true(y_period.dim() == 3 && m_period.dim() == 3, "period_start keeps 3D rank");
   expect_true(y_period.month().to_vec<std::int32_t>(0) == 1 &&
               y_period.day().to_vec<std::int32_t>(0) == 1,
-              "to_period(year) normalized components");
-  expect_true(m_period.day().to_vec<std::int32_t>(0) == 1, "to_period(month) normalized day");
+              "period_start(year) normalized components");
+  expect_true(m_period.day().to_vec<std::int32_t>(0) == 1, "period_start(month) normalized day");
 
   const auto t3_plus = t3.add_seconds(1);
   expect_true((t3 < t3_plus).all().item<bool>(), "operator< supports 3D");

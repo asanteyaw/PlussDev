@@ -1,0 +1,76 @@
+=== rank inventory ===
+scalar: defined=true dim=0 sizes=[] numel=1 empty=false scalar=true vector=false matrix=false tensor3=false
+singleton vector: defined=true dim=1 sizes=[1] numel=1 empty=false scalar=false vector=true matrix=false tensor3=false
+matrix: defined=true dim=2 sizes=[2, 3] numel=6 empty=false scalar=false vector=false matrix=true tensor3=false
+tensor: defined=true dim=3 sizes=[2, 2, 2] numel=8 empty=false scalar=false vector=false matrix=false tensor3=true
+empty matrix: defined=true dim=2 sizes=[2, 0] numel=0 empty=true scalar=false vector=false matrix=true tensor3=false
+undefined: defined=false dim=0 sizes=unavailable numel=0 empty=true scalar=false vector=false matrix=false tensor3=false
+
+=== dimensions ===
+matrix.size(0)=2
+matrix.size(1)=3
+matrix.size(-1)=3
+matrix.size(-2)=2
+
+=== failures ===
+matrix.size(2): rejected
+matrix.size(-3): rejected
+undefined.size(0): rejected
+undefined.sizes(): rejected
+
+=== defined examples ===
+absent=false
+empty text=true
+empty matrix=true
+no Note supplied
+defined=false dim=0 scalar=false
+
+=== dim examples ===
+0 1 2 3
+dim=2 numel=0 matrix=true
+defined=false dim=0 scalar=false
+
+=== empty examples ===
+empty=false numel=1 scalar=true
+empty=true dim=2 sizes=[2, 0]
+empty value: defined=true empty=true
+absent: defined=false empty=true
+
+=== size examples ===
+rows=2 columns=0 cells=0
+
+=== sizes examples ===
+[]
+[1]
+[1, 2]
+copy=[99, 3] note=[2, 3]
+empty sizes=[2, 0]
+undefined.sizes(): rejected
+
+=== numel examples ===
+scalar=1 singleton=1 matrix=6
+dim=3 numel=0 empty=true
+empty: defined=true numel=0
+absent: defined=false numel=0
+
+=== scalar examples ===
+scalar: true sizes=0
+singleton: false dim=1
+scalar=true empty=false bytes=0
+defined=false dim=0 scalar=false
+
+=== vector examples ===
+scalar vector=false
+[1] vector=true
+vector=true empty=true size=0
+matrix=false absent=false
+
+=== matrix examples ===
+matrix=true rows=2 columns=3
+matrix=true scalar=false numel=1
+matrix=true empty=true numel=0
+
+=== tensor3 examples ===
+tensor3=true dim=3 numel=8
+tensor3=true empty=true last=0
+matrix=true tensor3=false

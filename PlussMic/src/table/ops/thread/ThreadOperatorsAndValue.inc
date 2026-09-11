@@ -908,7 +908,7 @@ ThreadValue::HostAny ThreadValue::host() const {
       const auto& note = as_note();
       PLUSS_CHECK(note.numel() == 1,
                   "ThreadValue::host: Note payload must contain exactly one value");
-      return HostAny::string(std::string(note.flat_at(0)));
+      return HostAny::string(std::string(note.scalar()));
     }
     case ThreadKind::Timeline: {
       const auto nanos = scalar_timeline_nanos(as_timeline(), "ThreadValue::host");

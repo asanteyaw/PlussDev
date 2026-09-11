@@ -13,8 +13,12 @@ TEST_CASE("CodeN extended Note factories cover repetition, random letters, range
   REQUIRE(repeated.dim() == 2);
   REQUIRE(repeated.size(0) == 2);
   REQUIRE(repeated.size(1) == 2);
-  REQUIRE(repeated.matrix() ==
-          std::vector<std::vector<std::string_view>>({{"Alex", "Alex"}, {"Alex", "Alex"}}));
+  const auto repeated_rows = repeated.matrix();
+  REQUIRE(repeated_rows.size() == 2);
+  REQUIRE(repeated_rows[0].vector() ==
+          std::vector<std::string_view>({"Alex", "Alex"}));
+  REQUIRE(repeated.matrix()[1].vector() ==
+          std::vector<std::string_view>({"Alex", "Alex"}));
 
   const auto random_upper = pluss::note::rand({6}, true, 7);
   REQUIRE(random_upper.dim() == 1);

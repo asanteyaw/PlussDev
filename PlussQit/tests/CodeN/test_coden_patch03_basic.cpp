@@ -11,7 +11,7 @@ TEST_CASE("Scalar Note basic ops (ASCII)", "[coden][patch03]") {
   REQUIRE(a.strip().at(0) == "HeLLo");
   REQUIRE(a.lower().at(0) == "  hello  ");
   REQUIRE(a.strip().lower().at(0) == "hello");
-  REQUIRE(a.contains("LL").at(0) == 1);
+  REQUIRE(a.contains("LL").bool_item());
   REQUIRE(a.replace("HeL", "Ye").strip().at(0) == "YeLo");
 }
 
@@ -20,13 +20,15 @@ TEST_CASE("Note split_whitespace TokenBatch offsets", "[coden][patch03]") {
   const std::array<std::int64_t, 1> shape{3};
   Note n = pluss::make_note(flat, std::span<const std::int64_t>(shape));
   auto tb = n.split_whitespace();
-  // offsets length = numel+1
-  REQUIRE(tb.offsets().size() == 4);
+  // offsets is a closed Int64 Note (pass 6); length numel+1.
+  REQUIRE(tb.offsets().is_int64());
+  const auto offs = tb.offsets().integers();
+  REQUIRE(offs.size() == 4);
   // element0: 2 tokens, element1: 1 token, element2: 0 tokens
-  REQUIRE(tb.offsets()[0] == 0);
-  REQUIRE(tb.offsets()[1] == 2);
-  REQUIRE(tb.offsets()[2] == 3);
-  REQUIRE(tb.offsets()[3] == 3);
+  REQUIRE(offs[0] == 0);
+  REQUIRE(offs[1] == 2);
+  REQUIRE(offs[2] == 3);
+  REQUIRE(offs[3] == 3);
 
   // tokens should be ["a","bb","c"]
   REQUIRE(tb.tokens().defined());

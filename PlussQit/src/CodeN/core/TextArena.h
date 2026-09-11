@@ -13,7 +13,7 @@ namespace pluss::coden {
 
 // Arena-backed storage for UTF-8 bytes.
 //
-// This is a foundational building block for cheap-copy text views (Chord) and
+// This is a foundational building block for cheap-copy text views (TextRef) and
 // batched text tensors (Note). Text elements are stored in a single contiguous
 // byte buffer, referenced by (offset, length) pairs.
 class TextArena final : public ::pluss::flame::RefCounted {

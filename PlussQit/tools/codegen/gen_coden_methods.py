@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 
 RET_MAP = {
-  'Chord': 'Chord',
   'Note': 'Note',
   'bool': 'bool',
   'u8list': '::std::vector<::std::uint8_t>',
@@ -19,8 +18,6 @@ ARG_MAP = {
 }
 
 GROUP_TO_SELF = {
-  'Chord': 'Chord',
-  'Chord->bool': 'Chord',
   'Note': 'Note',
   'Note->u8list': 'Note',
   'Note->i64list': 'Note',
@@ -28,8 +25,6 @@ GROUP_TO_SELF = {
 }
 
 GROUP_TO_RET = {
-  'Chord': 'Chord',
-  'Chord->bool': 'bool',
   'Note': 'Note',
   'Note->u8list': 'u8list',
   'Note->i64list': 'i64list',
@@ -98,7 +93,6 @@ def main():
   out_dir = Path(args.out_dir)
   out_dir.mkdir(parents=True, exist_ok=True)
 
-  (out_dir / 'ChordMethodsGen.h').write_text(gen_for('Chord', ops), encoding='utf-8')
   (out_dir / 'NoteMethodsGen.h').write_text(gen_for('Note', ops), encoding='utf-8')
 
 

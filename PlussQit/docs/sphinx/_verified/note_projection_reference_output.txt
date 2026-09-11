@@ -1,0 +1,40 @@
+=== scalar cardinality ===
+rank0=alpha
+rank1=beta
+rank2=gamma
+rank3=delta
+empty text bytes=0
+scalar two cells: rejected
+scalar undefined: rejected
+
+=== vector flatten ===
+scalar=["alpha"]
+grid=["r0c0", "r0c1", "r0c2", "r1c0", "r1c1", "r1c2"]
+empty shape=[2, 0, 4] vector size=0
+vector undefined: rejected
+
+=== matrix promotion ===
+scalar=[["alpha"]]
+vector=[["a", "b"]]
+grid=[["r0c0", "r0c1", "r0c2"], ["r1c0", "r1c1", "r1c2"]]
+empty rows=2 widths=0,0
+empty vector rows=1 width=0
+matrix rank3: rejected
+matrix undefined: rejected
+
+=== tensor3 exact rank ===
+shape=[2, 2, 2] [1][0][1]=101 [1][1][0]=110
+empty slabs=2 rows=0,0
+tensor3 rank1: rejected
+tensor3 undefined: rejected
+
+=== borrowed bytes ===
+size=3 values=65,0,66
+owned copy after source=copy
+
+=== sizes view ===
+scalar=[] size=0
+grid=[2, 3]
+empty=[2, 0]
+view data stable=true copy independent=true
+sizes_view undefined: rejected

@@ -1,4 +1,5 @@
 #include "CodeM/native/cpu/UnaryBasicOps.h"
+#include "CodeM/core/Complex.h"
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/Half.h"
@@ -73,6 +74,8 @@ void sqrt(const Series& a, Series& out) {
     case ScalarType::Float32: unary_loop<float>(a,out,[](float x){ return std::sqrt(x); }); return;
     case ScalarType::Float16: unary_half_loop<Float16>(a,out,[](float x){ return std::sqrt(x); }, float16_to_float, float16_from_float); return;
     case ScalarType::BFloat16: unary_half_loop<BFloat16>(a,out,[](float x){ return std::sqrt(x); }, bfloat16_to_float, bfloat16_from_float); return;
+    case ScalarType::Complex64: unary_loop<Complex64>(a,out,[](Complex64 x){ return std::sqrt(x); }); return;
+    case ScalarType::Complex128: unary_loop<Complex128>(a,out,[](Complex128 x){ return std::sqrt(x); }); return;
     default: break;
   }
   throw_error("sqrt: dtype not implemented");

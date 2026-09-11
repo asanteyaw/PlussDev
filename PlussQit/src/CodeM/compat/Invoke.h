@@ -28,6 +28,14 @@ Series invoke(std::string_view op, const Series& self, ArgView args = {});
 Series& invoke_(std::string_view op, Series& self, ArgView args = {});
 Series& invoke_(std::string_view op, const Series& self, ArgView args = {});
 
+// Strict-unrouted mode. When enabled, a call that reaches the generic
+// "unrouted op" backstop on CPU throws instead of logging a warning and
+// returning the receiver unchanged (a silent identity). ON by default; set env
+// PLUSS_STRICT_UNROUTED=0 to restore the forgiving legacy behavior while a
+// specific unrouted call site is being migrated.
+void set_strict_unrouted(bool enabled) noexcept;
+bool strict_unrouted() noexcept;
+
 
 namespace detail {
 

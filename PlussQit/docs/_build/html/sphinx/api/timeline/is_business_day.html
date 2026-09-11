@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -44,17 +44,27 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">is_business_day</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">is_business_day()</span></code> is the sole public spelling.</p>
 </section>
-<section id="apply-the-built-in-weekday-rule">
-<h2>Apply The Built-In Weekday Rule<a class="headerlink" href="#apply-the-built-in-weekday-rule" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">is_business_day()</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> from Monday through Friday and <code class="docutils literal notranslate"><span class="pre">false</span></code> on
-Saturday, Sunday, and <code class="docutils literal notranslate"><span class="pre">NaT</span></code>. Its name describes a conventional five-day week,
-not a holiday-aware business calendar.</p>
-<p>The method preserves every input dimension and returns boolean values.</p>
+<section id="the-built-in-workweek-rule">
+<h2>The Built-In Workweek Rule<a class="headerlink" href="#the-built-in-workweek-rule" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is_business_day()</span></code> marks local Monday through Friday dates. It exists for the
+common case where a deterministic five-day workweek is the whole rule. It does
+not consult <code class="docutils literal notranslate"><span class="pre">BusinessCalendar</span></code>, public holidays, exchange sessions, emergency
+closures, half-days, or a region-specific weekend. Use an explicit calendar
+when any of those policies matter.</p>
+<p>The distinction is intentional: this method is a cheap weekday classifier,
+not a promise that an organization was open.</p>
 </section>
-<section id="example-weekday-classification">
-<h2>Example: Weekday Classification<a class="headerlink" href="#example-weekday-classification" title="Link to this heading">¶</a></h2>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">¶</a></h2>
+<p>The result is a newly allocated boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> with exactly the receiver’s
+rank, shape, and element order. Scalars remain rank zero, empty extents remain
+empty, and <code class="docutils literal notranslate"><span class="pre">NaT</span></code> becomes <code class="docutils literal notranslate"><span class="pre">false</span></code>. The receiver is not changed. The local date
+is computed in the Timeline’s current timezone, so call <code class="docutils literal notranslate"><span class="pre">tz_convert()</span></code> before
+classification when the operating timezone differs.</p>
+</section>
+<section id="example-1-a-complete-week">
+<h2>Example 1: A Complete Week<a class="headerlink" href="#example-1-a-complete-week" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">week</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-03-04T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-05T12:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-03-06T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-07T12:00:00Z&quot;</span><span class="p">,</span>
@@ -64,42 +74,87 @@ not a holiday-aware business calendar.</p>
 <span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">week</span><span class="p">.</span><span class="n">is_business_day</span><span class="p">());</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
 data=[true, true, true, true, true, false, false, false]
 </pre></div>
 </div>
-<p>The final <code class="docutils literal notranslate"><span class="pre">false</span></code> marks <code class="docutils literal notranslate"><span class="pre">NaT</span></code>, not a weekend. On valid instants,
-<code class="docutils literal notranslate"><span class="pre">is_business_day()</span></code> and <code class="docutils literal notranslate"><span class="pre">is_weekend()</span></code> are complements; across a Timeline that
-may contain <code class="docutils literal notranslate"><span class="pre">NaT</span></code>, retain <code class="docutils literal notranslate"><span class="pre">isvalid()</span></code> to express that identity correctly.</p>
+<p>The last <code class="docutils literal notranslate"><span class="pre">false</span></code> is <code class="docutils literal notranslate"><span class="pre">NaT</span></code>, not a weekend.</p>
 </section>
+<section id="example-2-weekday-does-not-mean-holiday-aware">
+<h2>Example 2: Weekday Does Not Mean Holiday-Aware<a class="headerlink" href="#example-2-weekday-does-not-mean-holiday-aware" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-12-25T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-12-28T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">dates</span><span class="p">.</span><span class="n">is_business_day</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=bool, platform=cpu, numel=2, contiguous=true)
+data=[true, false]
+</pre></div>
+</div>
+<p>The Wednesday is true under the built-in weekday rule regardless of its
+holiday status in any particular jurisdiction. The Saturday is false.</p>
 </section>
-<section id="what-the-method-does-not-model">
-<h2>What The Method Does Not Model<a class="headerlink" href="#what-the-method-does-not-model" title="Link to this heading">¶</a></h2>
-<p>Public holidays, emergency closures, exchange sessions, half-days, and regions
-whose work week is not Monday-Friday require application data or a dedicated
-calendar. This predicate intentionally supplies only the deterministic weekday
-rule.</p>
+<section id="example-3-timezone-can-change-the-workday">
+<h2>Example 3: Timezone Can Change The Workday<a class="headerlink" href="#example-3-timezone-can-change-the-workday" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-03-09T01:30:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/New_York&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;UTC=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">utc</span><span class="p">.</span><span class="n">is_business_day</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;New York=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">is_business_day</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>UTC=false
+New York=true
+</pre></div>
+</div>
+<p>The instant is Saturday in UTC but Friday in New York.</p>
+</section>
+<section id="example-4-empty-shape-is-preserved">
+<h2>Example 4: Empty Shape Is Preserved<a class="headerlink" href="#example-4-empty-shape-is-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-03-08T12:00:00Z&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">full</span><span class="p">({</span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="n">scalar</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">empty</span><span class="p">.</span><span class="n">is_business_day</span><span class="p">());</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[0], strides=[1], dtype=bool, platform=cpu, numel=0, contiguous=true)
+[]
+</pre></div>
+</div>
+</section>
+<section id="example-5-define-the-rule-from-named-days">
+<h2>Example 5: Define The Rule From Named Days<a class="headerlink" href="#example-5-define-the-rule-from-named-days" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">named</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">week</span><span class="p">.</span><span class="n">is_monday</span><span class="p">().</span><span class="n">logical_or</span><span class="p">(</span><span class="n">week</span><span class="p">.</span><span class="n">is_tuesday</span><span class="p">())</span>
+<span class="w">    </span><span class="p">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">week</span><span class="p">.</span><span class="n">is_wednesday</span><span class="p">()).</span><span class="n">logical_or</span><span class="p">(</span><span class="n">week</span><span class="p">.</span><span class="n">is_thursday</span><span class="p">())</span>
+<span class="w">    </span><span class="p">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">week</span><span class="p">.</span><span class="n">is_friday</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">named</span><span class="p">.</span><span class="n">equal</span><span class="p">(</span><span class="n">week</span><span class="p">.</span><span class="n">is_business_day</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
 </section>
 <section id="gotchas-and-failure-modes">
 <h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Friday is always <code class="docutils literal notranslate"><span class="pre">true</span></code>, even when it is a holiday in your domain.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NaT</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>; it is not classified as a weekend.</p></li>
-<li><p>Classification uses local date, so choose the operating timezone first.</p></li>
+<li><p>On valid instants, <code class="docutils literal notranslate"><span class="pre">is_business_day()</span></code> is the complement of <code class="docutils literal notranslate"><span class="pre">is_weekend()</span></code>.
+At <code class="docutils literal notranslate"><span class="pre">NaT</span></code>, both are false, so plain logical negation is not equivalent.</p></li>
+<li><p>The method classifies values; it does not filter, reorder, or regularize.</p></li>
+<li><p>All supported Timeline ranks are accepted and no dimensions are reduced.</p></li>
+<li><p>One call performs one pass and allocates one boolean result.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="is_weekend.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_weekend</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="is_monday.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_monday</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="weekday.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weekday</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="span.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">span</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="hours_between.html"><span class="label">Previous</span><span class="title">hours_between</span></a>
-  <a class="next-link" href="is_monday.html"><span class="label">Next</span><span class="title">is_monday</span></a>
+  <a class="next-link" href="is_friday.html"><span class="label">Next</span><span class="title">is_friday</span></a>
 </div>
 <!-- pluss-hand-authored -->
 </section>
@@ -159,6 +214,7 @@ rule.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -186,6 +242,7 @@ rule.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

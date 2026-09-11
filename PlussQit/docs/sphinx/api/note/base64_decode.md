@@ -83,9 +83,9 @@ No exception — the input is returned best-effort.
   the other transport decoders.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../note_api_reference.html">
+  <a class="prev-link" href="at_indices.html">
     <span class="label">Previous</span>
-    <span class="title">Note API Reference</span>
+    <span class="title">at_indices</span>
   </a>
   <a class="next-link" href="base64_encode.html">
     <span class="label">Next</span>

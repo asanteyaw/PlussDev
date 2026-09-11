@@ -216,7 +216,11 @@ auto transform_axis(F&& fn,
           ticks_slice,
           {layout.fixed_dims[p], fixed_index[p], static_cast<std::int64_t>(1)});
     }
-    return ::pluss::codeh::Timeline::fromSeries(ticks_slice);
+    // Zero-copy wrap of the sliced Int64 epoch-nanos tick Series back into a
+    // Timeline, preserving the source timezone. Mirrors the public factory path
+    // used across pluss/codeh/timeline_factory.h.
+    return ::pluss::codeh::ops_internal::timeline_from_series(
+        ticks_slice, std::string(x.tz()));
   };
 
   return detail::translate_slices(std::forward<F>(fn), layout.nslices, make_slice, opts);

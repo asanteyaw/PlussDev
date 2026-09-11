@@ -157,12 +157,12 @@ Four cells, flattened in row-major order; every one contains a `p`.
 - [`Note::lower`](lower.md): normalize case before a case-insensitive test.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="casefold.html">
+  <a class="prev-link" href="collapse_whitespace.html">
     <span class="label">Previous</span>
-    <span class="title">casefold</span>
+    <span class="title">collapse_whitespace</span>
   </a>
-  <a class="next-link" href="count_substring.html">
+  <a class="next-link" href="contains_any_alpha.html">
     <span class="label">Next</span>
-    <span class="title">count_substring</span>
+    <span class="title">contains_any_alpha</span>
   </a>
 </div>

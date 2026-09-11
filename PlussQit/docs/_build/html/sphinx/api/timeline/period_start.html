@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Timeline::period_start &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Timeline::quarter" href="quarter.html" />
+    <link rel="prev" title="Timeline operators" href="operators.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="timeline-period-start">
+<h1>Timeline::period_start<a class="headerlink" href="#timeline-period-start" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">period_start</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">unit</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="find-the-beginning-of-each-containing-time-unit">
+<h2>Find The Beginning Of Each Containing Time Unit<a class="headerlink" href="#find-the-beginning-of-each-containing-time-unit" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">period_start()</span></code> replaces every defined instant with the first instant of the
+local calendar unit that contains it. It answers questions such as “when did
+this value’s month begin?” and “which local hour contains this event?” while
+remaining a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> operation: the result still contains exact instants,
+not labels, interval objects, or integer group identifiers.</p>
+<p>This is useful when an instant is needed as a canonical boundary. Values that
+belong to the same month, for example, receive the same month-start instant
+and can then be compared or used as lower bounds. If the intended result is a
+calendar component such as the number <code class="docutils literal notranslate"><span class="pre">7</span></code>, use <code class="docutils literal notranslate"><span class="pre">month()</span></code> instead. If the
+intended result is a distance between two values, use <code class="docutils literal notranslate"><span class="pre">span()</span></code> or <code class="docutils literal notranslate"><span class="pre">diff()</span></code>.</p>
+<p>The accepted units are deliberately narrow and canonical:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">unit</span></code></p></th>
+<th class="head"><p>Retained local fields</p></th>
+<th class="head"><p>Fields reset to their beginning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code></p></td>
+<td><p>year</p></td>
+<td><p>month and day become January 1; clock becomes midnight</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code></p></td>
+<td><p>year and month</p></td>
+<td><p>day becomes 1; clock becomes midnight</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code></p></td>
+<td><p>year, month, and day</p></td>
+<td><p>clock becomes midnight</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;hour&quot;</span></code></p></td>
+<td><p>date and hour</p></td>
+<td><p>minute, second, and fraction become zero</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;minute&quot;</span></code></p></td>
+<td><p>date, hour, and minute</p></td>
+<td><p>second and fraction become zero</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;second&quot;</span></code></p></td>
+<td><p>date, hour, minute, and second</p></td>
+<td><p>fractional nanoseconds become zero</p></td>
+</tr>
+</tbody>
+</table>
+<p>Matching is ASCII case-insensitive, so <code class="docutils literal notranslate"><span class="pre">&quot;YEAR&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code> name the same
+unit. Abbreviations and plural spellings are not aliases: <code class="docutils literal notranslate"><span class="pre">&quot;Y&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">&quot;years&quot;</span></code> are rejected. One vocabulary avoids ambiguous call sites and
+keeps configuration text consistent with the named Timeline methods.</p>
+</section>
+<section id="example-1-see-every-boundary-from-one-instant">
+<h2>Example 1: See Every Boundary From One Instant<a class="headerlink" href="#example-1-see-every-boundary-from-one-instant" title="Link to this heading">¶</a></h2>
+<p>The source below is noon in Edmonton during daylight-saving time. Each call
+works from the displayed local calendar, not by truncating the stored UTC
+nanoseconds.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;2024-07-15T18:34:56.123456789Z&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">show</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">result</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">=== &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; ===</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">                   </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">show</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+<span class="n">show</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">));</span>
+<span class="n">show</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">));</span>
+<span class="n">show</span><span class="p">(</span><span class="s">&quot;day&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;day&quot;</span><span class="p">));</span>
+<span class="n">show</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">));</span>
+<span class="n">show</span><span class="p">(</span><span class="s">&quot;minute&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;minute&quot;</span><span class="p">));</span>
+<span class="n">show</span><span class="p">(</span><span class="s">&quot;second&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;second&quot;</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=== source ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2024-07-15T12:34:56.123456789-06:00&quot;
+
+=== year ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2024-01-01T00:00:00.000000000-07:00&quot;
+
+=== month ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2024-07-01T00:00:00.000000000-06:00&quot;
+
+=== day ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2024-07-15T00:00:00.000000000-06:00&quot;
+
+=== hour ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2024-07-15T12:00:00.000000000-06:00&quot;
+
+=== minute ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2024-07-15T12:34:00.000000000-06:00&quot;
+
+=== second ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+&quot;2024-07-15T12:34:56.000000000-06:00&quot;
+</pre></div>
+</div>
+<p>The year boundary uses <code class="docutils literal notranslate"><span class="pre">-07:00</span></code>, while the July boundaries use <code class="docutils literal notranslate"><span class="pre">-06:00</span></code>.
+<code class="docutils literal notranslate"><span class="pre">period_start()</span></code> preserves the timezone and the requested civil boundary; it
+does not preserve the source’s numeric UTC offset when the boundary belongs to
+a different offset season.</p>
+</section>
+</section>
+<section id="local-boundaries-not-elapsed-buckets">
+<h2>Local Boundaries, Not Elapsed Buckets<a class="headerlink" href="#local-boundaries-not-elapsed-buckets" title="Link to this heading">¶</a></h2>
+<p>For timezone-aware values, every unit is resolved in <code class="docutils literal notranslate"><span class="pre">tz()</span></code>. A day starts at
+local midnight even when the elapsed distance from the preceding midnight is
+23 or 25 hours. Year and month starts are reconstructed from local calendar
+fields. Day through second starts use local wall-clock flooring.</p>
+<p>This makes <code class="docutils literal notranslate"><span class="pre">period_start(&quot;day&quot;)</span></code> a calendar operation. It is not equivalent to
+dividing epoch nanoseconds by 86,400 seconds, which would create UTC-aligned
+buckets and assign the wrong local date in many timezones.</p>
+<p>Applying the same unit twice is idempotent in value:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">once</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">twice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">once</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">=== idempotent ===</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">once</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">twice</span><span class="p">).</span><span class="n">all</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=== idempotent ===
+true
+</pre></div>
+</div>
+<p>The method is nevertheless out-of-place. It allocates a result and leaves the
+receiver unchanged, even when every input already lies on the requested
+boundary.</p>
+</section>
+</section>
+<section id="example-2-shape-nat-leap-dates-and-pre-epoch-values">
+<h2>Example 2: Shape, <code class="docutils literal notranslate"><span class="pre">NaT</span></code>, Leap Dates, And Pre-Epoch Values<a class="headerlink" href="#example-2-shape-nat-leap-dates-and-pre-epoch-values" title="Link to this heading">¶</a></h2>
+<p>Projection is elementwise and shape-preserving. <code class="docutils literal notranslate"><span class="pre">NaT</span></code> remains <code class="docutils literal notranslate"><span class="pre">NaT</span></code>; it is not
+interpreted as an old date and does not make neighboring lanes fail.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-02-29T23:59:59.999999999Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;1969-12-31T23:59:59.500000000Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2025-01-01T00:00:00Z&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">matrix</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;2024-02-01T00:00:00.000000000+00:00&quot;, &quot;NaT&quot;], 
+  [&quot;1969-12-01T00:00:00.000000000+00:00&quot;, &quot;2025-01-01T00:00:00.000000000+00:00&quot;]
+]
+</pre></div>
+</div>
+<p>Leap-day input does not require a special policy because the result is the
+first day of February. Negative epoch values use mathematical calendar
+boundaries, so the December 1969 lane stays in December rather than being
+truncated toward the Unix epoch.</p>
+</section>
+</section>
+<section id="example-3-repeated-local-hours-retain-their-identity">
+<h2>Example 3: Repeated Local Hours Retain Their Identity<a class="headerlink" href="#example-3-repeated-local-hours-retain-their-identity" title="Link to this heading">¶</a></h2>
+<p>When clocks move backward, one wall-clock hour occurs twice. Flooring either
+occurrence must retain which occurrence contained the source instant.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">folds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-11-03T07:45:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-11-03T08:45:00Z&quot;</span><span class="p">,</span>
+<span class="p">}).</span><span class="n">tz_convert</span><span class="p">(</span><span class="s">&quot;America/Edmonton&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">folds</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;hour&quot;</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;2024-11-03T01:00:00.000000000-06:00&quot;, &quot;2024-11-03T01:00:00.000000000-07:00&quot;]
+</pre></div>
+</div>
+<p>Both results display <code class="docutils literal notranslate"><span class="pre">01:00</span></code>, but they remain different instants because their
+offsets differ. This distinction is preserved in <code class="docutils literal notranslate"><span class="pre">ticks()</span></code>, comparisons, and
+later elapsed-time arithmetic.</p>
+</section>
+</section>
+<section id="example-4-non-contiguous-input-uses-logical-order">
+<h2>Example 4: Non-Contiguous Input Uses Logical Order<a class="headerlink" href="#example-4-non-contiguous-input-uses-logical-order" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">period_start()</span></code> accepts the same strided Timeline storage as the rest of the
+public surface. It reads logical lanes through their strides and returns a
+contiguous owning result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-15T12:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2030-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-03-20T18:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2030-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">}).</span><span class="n">ticks</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">{</span><span class="mi">2</span><span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">strides</span><span class="p">{</span><span class="mi">2</span><span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">strided</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">::</span><span class="n">from_buffer</span><span class="p">(</span>
+<span class="w">    </span><span class="n">storage</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span><span class="w"> </span><span class="n">strides</span><span class="p">,</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="s">&quot;UTC&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">strided</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;2024-01-01T00:00:00.000000000+00:00&quot;, &quot;2024-01-01T00:00:00.000000000+00:00&quot;]
+</pre></div>
+</div>
+<p>The two interleaved 2030 storage positions are not part of the logical view.</p>
+</section>
+</section>
+<section id="example-5-empty-shapes-remain-empty">
+<h2>Example 5: Empty Shapes Remain Empty<a class="headerlink" href="#example-5-empty-shapes-remain-empty" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">from_epoch</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">format</span><span class="p">(</span>
+<span class="w">    </span><span class="n">empty</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;day&quot;</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;%FT%T.%f%z&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 0], dim=2, numel=0, encoding=utf8)
+[]
+</pre></div>
+</div>
+<p>The rank and zero extent are retained. Unit validation still occurs before
+element traversal, so an unsupported unit throws even for an empty Timeline.</p>
+</section>
+</section>
+<section id="example-6-invalid-and-removed-spellings-fail-clearly">
+<h2>Example 6: Invalid And Removed Spellings Fail Clearly<a class="headerlink" href="#example-6-invalid-and-removed-spellings-fail-clearly" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2024-07-15T18:34:56Z&quot;</span><span class="p">);</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;years&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">=== plural_alias ===</span><span class="se">\n</span><span class="s">rejected</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">value</span><span class="p">.</span><span class="n">period_start</span><span class="p">(</span><span class="s">&quot;week&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">=== unsupported_unit ===</span><span class="se">\n</span><span class="s">rejected</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=== plural_alias ===
+rejected
+
+=== unsupported_unit ===
+rejected
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;years&quot;</span></code> demonstrates that plural compatibility aliases are intentionally
+absent. <code class="docutils literal notranslate"><span class="pre">&quot;week&quot;</span></code> is not supported because a week boundary requires an explicit
+weekday convention; this method does not silently choose one.</p>
+<p>Timezone lookup and local-boundary resolution can also throw when timezone
+metadata is invalid or when a requested boundary cannot be represented as an
+epoch-nanosecond instant. No partial result is returned.</p>
+</section>
+</section>
+<section id="choosing-a-neighboring-operation">
+<h2>Choosing A Neighboring Operation<a class="headerlink" href="#choosing-a-neighboring-operation" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use <a class="reference internal" href="floor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floor</span></code></span></a> for second-through-day flooring when its compact unit
+vocabulary is already appropriate at the call site.</p></li>
+<li><p>Use <a class="reference internal" href="date.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">date</span></code></span></a> when the request is specifically local midnight for
+each value’s date.</p></li>
+<li><p>Use <a class="reference internal" href="year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">year</span></code></span></a>, <a class="reference internal" href="month.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">month</span></code></span></a>, or another field projection when
+the result should be an integer component rather than a boundary instant.</p></li>
+<li><p>Use <a class="reference internal" href="shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shift</span></code></span></a> to move values by units instead of locating the
+beginning of their current unit.</p></li>
+<li><p>Use <a class="reference internal" href="span.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">span</span></code></span></a> or <a class="reference internal" href="diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a> to measure between two Timelines.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="operators.html"><span class="label">Previous</span><span class="title">operators</span></a>
+  <a class="next-link" href="quarter.html"><span class="label">Next</span><span class="title">quarter</span></a>
+</div>
+<!-- pluss-hand-authored -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../timeline_api_reference.html">Timeline API Reference</a><ul>
+      <li>Previous: <a href="operators.html" title="previous chapter">Timeline operators</a></li>
+      <li>Next: <a href="quarter.html" title="next chapter">Timeline::quarter</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/timeline/period_start.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

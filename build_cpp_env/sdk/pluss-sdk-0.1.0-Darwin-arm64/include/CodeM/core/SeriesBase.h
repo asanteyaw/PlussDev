@@ -41,15 +41,20 @@ public:
   pluss::msharp::RangeView::Int sizes() const;
   std::int64_t size(std::int64_t dim) const;
   pluss::msharp::RangeView::Int strides() const;
+  std::int64_t stride(std::int64_t dim) const;
   std::int64_t dim() const;
   std::int64_t numel() const;
   std::int64_t itemsize() const { return static_cast<std::int64_t>(dtype().itemsize); }
   bool is_contiguous() const;
+  bool is_complex() const { return dtype().is_complex(); }
+  bool is_floating_point() const { return dtype().is_floating(); }
+  bool is_signed() const;
   Platform platform() const noexcept { return defined() ? impl_->platform() : Platform::CPU; }
   bool is_cpu() const noexcept { return platform() == Platform::CPU; }
   bool is_gpu() const noexcept { return !is_cpu(); }
   bool is_cuda() const noexcept { return platform() == Platform::CUDA; }
   bool is_mps() const noexcept { return platform() == Platform::MPS; }
+  bool is_pinned() const noexcept { return false; }
   // Vector-style bounds-checked scalar selection for 1-D Series.
   // Returns a rank-0 Series view of the selected element.
   Series pos(std::int64_t index) const;

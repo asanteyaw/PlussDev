@@ -1043,6 +1043,23 @@ public:
   Series sum(std::int64_t dim, bool keepdim) const;
   Series amax(std::int64_t dim, bool keepdim) const;
   Series amin(std::int64_t dim, bool keepdim) const;
+  // Multi-axis reductions (torch's `x.sum({1,2}, keepdim)`): each axis is
+  // reduced in turn with keepdim held true internally (mean/sum/amax/amin all
+  // commute across separate axes, so this is exact, not an approximation),
+  // then the reduced axes are squeezed together if the caller asked for
+  // keepdim=false. Differentiable for free -- every step reuses the
+  // already-verified single-dim reduction and its reverse rule.
+  Series mean(pluss::msharp::RangeView::Int dims, bool keepdim) const;
+  Series sum(pluss::msharp::RangeView::Int dims, bool keepdim) const;
+  Series amax(pluss::msharp::RangeView::Int dims, bool keepdim) const;
+  Series amin(pluss::msharp::RangeView::Int dims, bool keepdim) const;
+  // Layer normalization over the trailing `normalized_shape` axes: normalizes
+  // each row to zero mean / unit variance (biased) over those axes, then
+  // applies the per-feature affine `* weight + bias`. Single fused reverse
+  // node (analytic VJP) rather than the ~7-op mean/sub/mul/rsqrt/mul/mul/add
+  // composite chain this decomposes to -- see project memory for the formula.
+  Series layer_norm(pluss::msharp::RangeView::Int normalized_shape, const Series& weight,
+                     const Series& bias, double eps = 1e-5) const;
   Series all(std::int64_t dim, bool keepdim) const;
   Series any(std::int64_t dim, bool keepdim) const;
   Series flatten(std::int64_t start_dim, std::int64_t end_dim) const;

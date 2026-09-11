@@ -77,12 +77,12 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 - [`Timeline::strftime`](strftime.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="argsort.html">
+  <a class="prev-link" href="isnat_scalar.html">
     <span class="label">Previous</span>
-    <span class="title">argsort</span>
+    <span class="title">isnat_scalar</span>
   </a>
-  <a class="next-link" href="strftime.html">
+  <a class="next-link" href="isvalid.html">
     <span class="label">Next</span>
-    <span class="title">strftime</span>
+    <span class="title">isvalid</span>
   </a>
 </div>

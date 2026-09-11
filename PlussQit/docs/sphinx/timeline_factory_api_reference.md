@@ -28,9 +28,11 @@ which to call a method.
 - Resolve fixed or relative scalar expressions with `moment`, `now`, and `today`.
 
 Every deterministic output in these pages is produced by
-`examples/CodeH/timeline_factory_reference_demo.cpp`. Seeded examples make the
-random pages reproducible; live-clock examples state invariants rather than
-pretending that `now()` has a fixed output.
+`examples/CodeH/timeline_factory_reference_demo.cpp`; its exact transcript is
+checked in at
+`docs/sphinx/_verified/timeline_factory_reference_output.txt`. Seeded examples
+make the random pages reproducible; live-clock examples state invariants rather
+than pretending that `now()` has a fixed output.
 
 In signatures, `string_range` and `integer_range` mean any accepted contiguous
 range of those values; `nested_string_values` means a rectangular braced literal

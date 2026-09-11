@@ -83,5 +83,5 @@ is not accepted; call `month()` for vector, matrix, or higher-rank values.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="month_name.html"><span class="label">Previous</span><span class="title">month_name</span></a>
-  <a class="next-link" href="months_between.html"><span class="label">Next</span><span class="title">months_between</span></a>
+  <a class="next-link" href="month_start_scalar.html"><span class="label">Next</span><span class="title">month_start_scalar</span></a>
 </div>

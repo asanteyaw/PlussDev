@@ -18,12 +18,12 @@ the finished string. It is the assembly counterpart to the splitting
 factories: where [`from_lines`](from_lines.md) and [`from_words`](from_words.md)
 break a string apart, `format` builds one up.
 
-Use it wherever you would reach for `std::format` or an f-string: a labelled
-message, a generated identifier, a one-line report, a path or query built
-from parts. Unlike `std::format` it also evaluates a small **expression
-language** inside each placeholder, so light computation — arithmetic,
-choices, list joins, a bound callback — can happen in the template instead
-of in the surrounding code.
+Use it whenever a string has to be built from named parts: a labelled
+message, a generated identifier, a one-line report, a path or query. Beyond
+plain substitution it also evaluates a small **expression language** inside
+each placeholder, so light computation — arithmetic, choices, list joins, a
+bound callback — can happen in the template instead of in the surrounding
+code.
 
 The result is a scalar `Note` and never larger; `format` produces a single
 string, not a column. To build many strings, call it per row, or use the

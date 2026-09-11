@@ -24,7 +24,7 @@ int main() {
         {1.0, 2.0, 3.0},
         {4.0, 5.0, 6.0}
     });
-  let a2 = pluss::series::from_torch(A);
+  auto a2 = pluss::series::from_torch(A);
   torch::Tensor B = torch::tensor({
         {
             {1.0, 2.0},
@@ -35,7 +35,7 @@ int main() {
             {7.0, 8.0}
         }
     });
-  let b2 = pluss::series::from_torch(B);
+  auto b2 = pluss::series::from_torch(B);
 #endif
   std::vector<std::int64_t> raw{10, 20, 30, 40};
   pluss::Series b = pluss::make_series(raw, {2, 2}).to(platform);
@@ -69,16 +69,16 @@ int main() {
   std::cout << "looking at 1D rendering\n" << pluss::series::print(a) << "\n";
   std::cout << "looking at 0D rendering\n" << pluss::series::print(d) << "\n";
 
-  let rv = pluss::series::normal(0.0, 1.0, {5});
+  auto rv = pluss::series::normal(0.0, 1.0, {5});
   std::cout << "random values: " << rv << "\n";
   std::cout << "sum: " << rv.sum() << "\n";
   std::cout << "mean: " << rv.mean() << "\n";
   std::cout << "std: " << rv.std() << "\n";
 
-  let e = c + d;
+  auto e = c + d;
   std::cout << "e: " << e-a << "\n";
 
-  let rand_vals = pluss::series::randn({3, 4});
+  auto rand_vals = pluss::series::randn({3, 4});
   std::cout << "randn(3,4) default:\n" << rand_vals << "\n";
   std::cout << "to vec:\n";
   const auto all_vals = rand_vals.to_vec<double>();
@@ -108,23 +108,23 @@ int main() {
 
   std::cout << "randn(3,4) pretty default:\n" << pluss::series::print(rand_vals) << "\n";
 
-  let rand_3d = pluss::series::randn({3, 4, 5});
+  auto rand_3d = pluss::series::randn({3, 4, 5});
   std::cout << "randn(3,4,5) pretty:\n" << pluss::series::print(rand_3d) << "\n";
 
-  let big_mat = pluss::series::randn({8, 6});
+  auto big_mat = pluss::series::randn({8, 6});
   std::cout << "randn(8,6) default with row/col summary:\n" << big_mat << "\n";
   std::cout << "randn(8,6) pretty summarized:\n" << pluss::series::print(big_mat) << "\n";
 
 #ifdef PLUSS_ENABLE_TORCH
-  let torch_b = rand_3d.tensor();
+  auto torch_b = rand_3d.tensor();
   std::cout << "looking at the Series::tensor() conversion\n" << torch_b << "\n";
 #endif
 
-  let type_prom_2d = pluss::make_series ({
+  auto type_prom_2d = pluss::make_series ({
     {1, 2.5, 3},
     {4.75, 5, 6.125}
       });
-  let type_prom_3d = pluss::make_series({
+  auto type_prom_3d = pluss::make_series({
     {
       {1, 2.5, 3},
       {4.75, 5, 6.125}
@@ -139,7 +139,7 @@ int main() {
   std::cout << "Mixed types 3D\n" << pluss::series::print(type_prom_3d) << "\n";
 
   // 7D demos (rank-7): one rvalue literal path, one lvalue host-buffer path.
-  let seven_d_rvalue = pluss::make_series({
+  auto seven_d_rvalue = pluss::make_series({
     {
       {
         {
@@ -156,10 +156,10 @@ int main() {
   std::cout << "7D rvalue via value(...):\n" << pluss::series::print(seven_d_rvalue) << "\n";
 
   std::vector<double> seven_d_host{10.0, 11.0, 12.0, 13.0, 14.0, 15.0};
-  let seven_d_lvalue = pluss::make_series(seven_d_host, {1, 1, 1, 1, 1, 2, 3});
+  auto seven_d_lvalue = pluss::make_series(seven_d_host, {1, 1, 1, 1, 1, 2, 3});
   std::cout << "7D lvalue via make_series(host, sizes):\n" << pluss::series::print(seven_d_lvalue) << "\n";
 
-  let large_2d = pluss::series::randn({11, 7});
+  auto large_2d = pluss::series::randn({11, 7});
   std::cout << "large 2D with default summarization:\n" << pluss::series::print(large_2d) << "\n";
 
   // 1) Precision / notation / trailing-zero trim
@@ -224,7 +224,7 @@ int main() {
   std::cout << "header only:\n" << pluss::series::print(rand_vals, header_only) << "\n";
 
   // 6) Width controls: clip cell width + auto-wrap
-  let wide_mat = pluss::series::randn({4, 12});
+  auto wide_mat = pluss::series::randn({4, 12});
   pluss::PrintOptions wrapped;
   wrapped.pretty_matrix_max_cols = 0;
   wrapped.pretty_max_line_width = 44;
@@ -233,14 +233,14 @@ int main() {
   std::cout << "wrapped + clipped wide matrix:\n" << pluss::series::print(wide_mat, wrapped) << "\n";
 
   // 7) Type-specific bool/complex rendering
-  let bool_series = rand_vals.gt(0.0);
+  auto bool_series = rand_vals.gt(0.0);
   pluss::PrintOptions bool01;
   bool01.bool_style = pluss::codem::PrintBoolStyle::OneZero;
   std::cout << "bool as 0/1:\n" << pluss::to_string(bool_series, bool01) << "\n";
 
   std::vector<pluss::codem::Complex64> complex_vals{
       {1.25f, -0.5f}, {-2.0f, 3.0f}, {0.1f, 0.0f}, {4.0f, -1.2f}};
-  let complex_series = pluss::make_series(complex_vals, {2, 2});
+  auto complex_series = pluss::make_series(complex_vals, {2, 2});
   pluss::PrintOptions complex_i;
   complex_i.complex_style = pluss::codem::PrintComplexStyle::CartesianI;
   std::cout << "complex cartesian i-style:\n" << pluss::series::print(complex_series, complex_i) << "\n";
@@ -252,7 +252,7 @@ int main() {
   std::cout << "colorized (if terminal supports ANSI):\n" << pluss::series::print(rand_vals, colored) << "\n";
 
   // 9) Typed `let` stays focused on Pluss payloads
-  let series_alias = pluss::make_series(std::vector<double>{2.0, 4.0, 8.0}, {3});
+  auto series_alias = pluss::make_series(std::vector<double>{2.0, 4.0, 8.0}, {3});
   std::cout << "typed let on Series:\n" << pluss::series::print(series_alias) << "\n";
 
   return 0;

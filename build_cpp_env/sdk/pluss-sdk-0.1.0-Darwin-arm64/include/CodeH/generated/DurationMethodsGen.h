@@ -105,7 +105,6 @@ Duration max() const { return ::pluss::codeh::_compat::invoke<Duration>("max", *
 // ---- Sorting / uniqueness ----
 Duration sort() const { return ::pluss::codeh::_compat::invoke<Duration>("sort", *this); }
 Duration unique() const { return ::pluss::codeh::_compat::invoke<Duration>("unique", *this); }
-Duration drop_duplicates() const { return unique(); }
 pluss::codem::Series argsort() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("argsort", *this); }
 
 // More ordering helpers

@@ -99,9 +99,9 @@ data=[11, 11, 12, 1]
 - [`Timeline::year`](year.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="weekday_name.html">
+  <a class="prev-link" href="month_end_scalar.html">
     <span class="label">Previous</span>
-    <span class="title">weekday_name</span>
+    <span class="title">month_end_scalar</span>
   </a>
   <a class="next-link" href="month_scalar.html">
     <span class="label">Next</span>

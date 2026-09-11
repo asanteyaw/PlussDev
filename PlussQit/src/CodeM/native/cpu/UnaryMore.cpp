@@ -1,4 +1,5 @@
 #include "CodeM/core/Errors.h"
+#include "CodeM/core/Complex.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesIterator.h"
@@ -32,6 +33,26 @@ static void unary_apply(const Series& a, Series& out, Fn&& fn) {
 
 #define DISPATCH_FLOAT_ONLY(name, EXPR_D, EXPR_F)   void name(const Series& a, Series& out) {     switch (a.scalar_type()) {       case ScalarType::Float64: unary_apply<double>(a, out, [](double x){ return (EXPR_D); }); return;       case ScalarType::Float32: unary_apply<float>(a, out, [](float x){ return (float)(EXPR_F); }); return;       case ScalarType::Float16: unary_apply_convert<Float16, Float16>(a, out,         [](Float16 x){ return float16_to_float(x); },         [](float y){ return float16_from_float(y); },         [](float x){ return (float)(EXPR_F); }); return;       case ScalarType::BFloat16: unary_apply_convert<BFloat16, BFloat16>(a, out,         [](BFloat16 x){ return bfloat16_to_float(x); },         [](float y){ return bfloat16_from_float(y); },         [](float x){ return (float)(EXPR_F); }); return;       default: break;     }     throw_error(#name ": dtype not implemented (float-only)");   }
 
+#define DISPATCH_FLOAT_COMPLEX(name, EXPR_D, EXPR_F, EXPR_C64, EXPR_C128) \
+  void name(const Series& a, Series& out) { \
+    switch (a.scalar_type()) { \
+      case ScalarType::Float64: unary_apply<double>(a, out, [](double x){ return (EXPR_D); }); return; \
+      case ScalarType::Float32: unary_apply<float>(a, out, [](float x){ return (float)(EXPR_F); }); return; \
+      case ScalarType::Float16: unary_apply_convert<Float16, Float16>(a, out, \
+        [](Float16 x){ return float16_to_float(x); }, \
+        [](float y){ return float16_from_float(y); }, \
+        [](float x){ return (float)(EXPR_F); }); return; \
+      case ScalarType::BFloat16: unary_apply_convert<BFloat16, BFloat16>(a, out, \
+        [](BFloat16 x){ return bfloat16_to_float(x); }, \
+        [](float y){ return bfloat16_from_float(y); }, \
+        [](float x){ return (float)(EXPR_F); }); return; \
+      case ScalarType::Complex64: unary_apply<Complex64>(a, out, [](Complex64 x){ return (EXPR_C64); }); return; \
+      case ScalarType::Complex128: unary_apply<Complex128>(a, out, [](Complex128 x){ return (EXPR_C128); }); return; \
+      default: break; \
+    } \
+    throw_error(#name ": dtype not implemented"); \
+  }
+
 // psi(x) = d/dx ln|Gamma(x)|. Reflection for x <= 0, upward recurrence to the
 // asymptotic-series regime (x >= 6), then the standard Bernoulli tail. Poles at
 // 0 and the negative integers return NaN; NaN in maps to NaN out.
@@ -58,26 +79,27 @@ static double digamma_real_(double x) {
 
 DISPATCH_FLOAT_ONLY(digamma, digamma_real_(x), digamma_real_(x))
 
-DISPATCH_FLOAT_ONLY(tan, std::tan(x), std::tan(x))
-DISPATCH_FLOAT_ONLY(asin, std::asin(x), std::asin(x))
-DISPATCH_FLOAT_ONLY(acos, std::acos(x), std::acos(x))
-DISPATCH_FLOAT_ONLY(atan, std::atan(x), std::atan(x))
-DISPATCH_FLOAT_ONLY(sinh, std::sinh(x), std::sinh(x))
-DISPATCH_FLOAT_ONLY(cosh, std::cosh(x), std::cosh(x))
+DISPATCH_FLOAT_COMPLEX(tan, std::tan(x), std::tan(x), std::tan(x), std::tan(x))
+DISPATCH_FLOAT_COMPLEX(asin, std::asin(x), std::asin(x), std::asin(x), std::asin(x))
+DISPATCH_FLOAT_COMPLEX(acos, std::acos(x), std::acos(x), std::acos(x), std::acos(x))
+DISPATCH_FLOAT_COMPLEX(atan, std::atan(x), std::atan(x), std::atan(x), std::atan(x))
+DISPATCH_FLOAT_COMPLEX(sinh, std::sinh(x), std::sinh(x), std::sinh(x), std::sinh(x))
+DISPATCH_FLOAT_COMPLEX(cosh, std::cosh(x), std::cosh(x), std::cosh(x), std::cosh(x))
 
-DISPATCH_FLOAT_ONLY(reciprocal, (1.0 / x), (1.0f / x))
+DISPATCH_FLOAT_COMPLEX(reciprocal, (1.0 / x), (1.0f / x), (Complex64(1.0f) / x), (Complex128(1.0) / x))
 
-DISPATCH_FLOAT_ONLY(log1p, std::log1p(x), std::log1p(x))
-DISPATCH_FLOAT_ONLY(expm1, std::expm1(x), std::expm1(x))
+DISPATCH_FLOAT_COMPLEX(log1p, std::log1p(x), std::log1p(x), std::log(Complex64(1.0f) + x), std::log(Complex128(1.0) + x))
+DISPATCH_FLOAT_COMPLEX(expm1, std::expm1(x), std::expm1(x), std::exp(x) - Complex64(1.0f), std::exp(x) - Complex128(1.0))
 DISPATCH_FLOAT_ONLY(erf, std::erf(x), std::erf(x))
 DISPATCH_FLOAT_ONLY(erfc, std::erfc(x), std::erfc(x))
 DISPATCH_FLOAT_ONLY(lgamma, std::lgamma(x), std::lgamma(x))
-DISPATCH_FLOAT_ONLY(asinh, std::asinh(x), std::asinh(x))
-DISPATCH_FLOAT_ONLY(acosh, std::acosh(x), std::acosh(x))
-DISPATCH_FLOAT_ONLY(atanh, std::atanh(x), std::atanh(x))
+DISPATCH_FLOAT_COMPLEX(asinh, std::asinh(x), std::asinh(x), std::asinh(x), std::asinh(x))
+DISPATCH_FLOAT_COMPLEX(acosh, std::acosh(x), std::acosh(x), std::acosh(x), std::acosh(x))
+DISPATCH_FLOAT_COMPLEX(atanh, std::atanh(x), std::atanh(x), std::atanh(x), std::atanh(x))
 
 
 #undef DISPATCH_FLOAT_ONLY
+#undef DISPATCH_FLOAT_COMPLEX
 
 
 static void unary_is_predicate_(const Series& a, Series& out, bool(*pred)(double)) {

@@ -13,6 +13,7 @@
 
 #include "CodeN/core/Errors.h"
 #include "CodeN/core/NoteBase.h"
+#include "CodeN/core/TextRef.h"
 
 namespace pluss::codem {
 class Series;
@@ -39,9 +40,8 @@ struct NoteFactoryAccess;
 
 class TokenBatch;
 
-// Note: up to 3D "tensor" of UTF-8 text.
-// Patch 9: scalar text is represented as a 0D Note; the internal Chord type is
-// no longer part of the public surface.
+// Note: up to 3D "tensor" of UTF-8 text. Scalar text is a 0-D Note; use
+// cell(i) / owned() for an owning per-cell handle (TextRef).
 class CODEN_API Note final : public NoteBase {
 public:
   static Note undefined() noexcept { return Note(); }
@@ -50,6 +50,15 @@ public:
   ::std::vector<::std::int64_t> sizes() const;
   pluss::msharp::RangeView::Int sizes_view() const;
   ::std::string_view at(::std::int64_t linear) const;
+
+  // Owning per-cell access. `cell(i)` and `cell_at({i,j,...})` return a TextRef
+  // that co-owns the backing storage, so the result stays valid after this
+  // Note is destroyed (unlike the borrowed view from `at`). `owned()` is the
+  // keep-past-lifetime form of `scalar()` and requires exactly one element.
+  TextRef cell(::std::int64_t linear) const;
+  TextRef cell_at(::std::span<const ::std::int64_t> indices) const;
+  TextRef owned() const;
+
   Note latex_to_text(::std::int64_t mode = 0) const;
   Note text_to_latex(::std::int64_t mode = 0) const;
   Note render_latex(::std::int64_t mode = 0) const;

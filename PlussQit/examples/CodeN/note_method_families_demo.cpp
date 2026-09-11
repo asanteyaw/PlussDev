@@ -19,14 +19,14 @@ int main() {
 
   auto words = docs.tokenize_words();
   std::cout << "tokenize_words offsets:";
-  for (std::int64_t off : words.offsets()) std::cout << " " << off;
+  for (std::int64_t off : words.offsets().integers()) std::cout << " " << off;
   std::cout << "\n";
   for (std::int64_t i = 0; i < words.tokens().numel(); ++i) {
     std::cout << "  word[" << i << "] = " << words.tokens().at(i) << "\n";
   }
   auto limited = docs.split(",", 1);
   std::cout << "split(',',1) offsets:";
-  for (std::int64_t off : limited.offsets()) std::cout << " " << off;
+  for (std::int64_t off : limited.offsets().integers()) std::cout << " " << off;
   std::cout << "\n";
 
   pluss::Note tex = pluss::make_note(
@@ -95,8 +95,8 @@ int main() {
   std::cout << "inter_tokens:  ";
   for (std::int64_t i = 0; i < inter.tokens().numel(); ++i) std::cout << inter.tokens().at(i) << " ";
   std::cout << "\n";
-  std::cout << "jacc_tokens:   " << d1.jaccard_tokens(d2).at(0) << "\n";
-  std::cout << "overlap_tok:   " << d1.overlap_tokens(d2).at(0) << "\n";
+  std::cout << "jacc_tokens:   " << d1.jaccard_tokens(d2).float_item() << "\n";
+  std::cout << "overlap_tok:   " << d1.overlap_tokens(d2).float_item() << "\n";
 
   auto inter_terms = pluss::make_note("The quantum method is robust")
                          .intersect_terms(pluss::make_note("A robust quantum pipeline"));
@@ -120,8 +120,8 @@ int main() {
   std::cout << "inter_acr:     ";
   for (std::int64_t i = 0; i < ia.tokens().numel(); ++i) std::cout << ia.tokens().at(i) << " ";
   std::cout << "\n";
-  std::cout << "jac_cite:      " << e1.jaccard_citations(e2).at(0) << "\n";
-  std::cout << "ov_math:       " << e1.overlap_math_symbols(e2).at(0) << "\n";
+  std::cout << "jac_cite:      " << e1.jaccard_citations(e2).float_item() << "\n";
+  std::cout << "ov_math:       " << e1.overlap_math_symbols(e2).float_item() << "\n";
 
   pluss::Note codec = pluss::make_note("Hi!");
   std::cout << "b64_roundtrip: " << codec.base64_encode().base64_decode().at(0) << "\n";
@@ -143,9 +143,9 @@ int main() {
   std::cout << "expand_contr:  " << nlp.nlp_expand_contractions().at(0) << "\n";
   std::cout << "norm_numbers:  " << nlp.nlp_normalize_numbers().at(0) << "\n";
   std::cout << "lang/script:   " << nlp.nlp_language().at(0) << " / " << nlp.nlp_script().at(0) << "\n";
-  std::cout << "sent/tox:      " << nlp.nlp_sentiment().at(0) << " / " << nlp.nlp_toxicity().at(0) << "\n";
-  std::cout << "readability:   " << nlp.nlp_readability_grade().at(0) << " (" << nlp.nlp_readability_level().at(0) << ")\n";
-  std::cout << "form/subj:     " << nlp.nlp_formality().at(0) << " / " << nlp.nlp_subjectivity().at(0) << "\n";
+  std::cout << "sent/tox:      " << nlp.nlp_sentiment().float_item() << " / " << nlp.nlp_toxicity().float_item() << "\n";
+  std::cout << "readability:   " << nlp.nlp_readability_grade().float_item() << " (" << nlp.nlp_readability_level().at(0) << ")\n";
+  std::cout << "form/subj:     " << nlp.nlp_formality().float_item() << " / " << nlp.nlp_subjectivity().float_item() << "\n";
   std::cout << "translit:      " << nlp.transliterate_ascii().at(0) << "\n";
   std::cout << "soundex:       " << nlp.phonetic_soundex().at(0) << "\n";
 

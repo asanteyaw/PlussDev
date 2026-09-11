@@ -6,7 +6,9 @@
 #include "MSharp/Parallel.h"
 
 #include <algorithm>
+#include <cmath>
 #include <numeric>
+#include <type_traits>
 #include <vector>
 
 namespace pluss::codem::native::cpu {
@@ -28,6 +30,11 @@ static void sort_rows(const T* in, T* out, std::int64_t* idx_out,
       T* out_row = out + r * cols;
       std::iota(idx.begin(), idx.end(), 0);
       auto cmp = [&](std::int64_t i, std::int64_t j) {
+        if constexpr (std::is_floating_point_v<T>) {
+          const bool i_nan = std::isnan(row[i]);
+          const bool j_nan = std::isnan(row[j]);
+          if (i_nan != j_nan) return descending ? i_nan : !i_nan;
+        }
         if (descending) return row[i] > row[j];
         return row[i] < row[j];
       };
@@ -59,6 +66,11 @@ static void topk_rows(const T* in, T* out, std::int64_t* idx_out,
       const T* row = in + r * cols;
       std::iota(idx.begin(), idx.end(), 0);
       auto better = [&](std::int64_t i, std::int64_t j) {
+        if constexpr (std::is_floating_point_v<T>) {
+          const bool i_nan = std::isnan(row[i]);
+          const bool j_nan = std::isnan(row[j]);
+          if (i_nan != j_nan) return largest ? i_nan : !i_nan;
+        }
         if (largest) return row[i] > row[j];
         return row[i] < row[j];
       };
@@ -97,6 +109,11 @@ static void argsort_rows(const T* in, std::int64_t* idx_out,
       const T* row = in + r * cols;
       std::iota(idx.begin(), idx.end(), 0);
       auto cmp = [&](std::int64_t i, std::int64_t j) {
+        if constexpr (std::is_floating_point_v<T>) {
+          const bool i_nan = std::isnan(row[i]);
+          const bool j_nan = std::isnan(row[j]);
+          if (i_nan != j_nan) return descending ? i_nan : !i_nan;
+        }
         if (descending) return row[i] > row[j];
         return row[i] < row[j];
       };

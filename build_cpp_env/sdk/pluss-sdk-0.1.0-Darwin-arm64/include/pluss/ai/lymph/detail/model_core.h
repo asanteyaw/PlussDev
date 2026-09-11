@@ -173,6 +173,21 @@ public:
     return *this;
   }
 
+  // Shared guard for every entry point that can only ever see already-
+  // resolved stages (map's "apply the already-fitted preparation" contract,
+  // and any learn_map overload with no frame to resolve a pending stage's
+  // ColumnRouter against) -- same message shape as learn_(LabeledBatch)'s
+  // own pending-stage rejection above, so the fix is consistent across both.
+  void require_no_pending_stages_(const char* where) const {
+    if (!pending_stages_.empty()) {
+      ::pluss::throw_error(
+          std::string(where) + ": " + std::to_string(pending_stages_.size()) +
+          " append()'d stage(s) still pending -- call learn_/learn (or, for a "
+          "DataFrame input, learn_map) first so their ColumnRouter is resolved "
+          "against real column names.");
+    }
+  }
+
   ModelCore& learn_(const LabeledBatch& batch, const TrainOptions& options = {}) {
     if (!pending_stages_.empty()) {
       ::pluss::throw_error(
@@ -279,6 +294,14 @@ public:
   }
 
   [[nodiscard]] Series map(const FeatureBatch& batch, const InferOptions& options = {}) const {
+    // map only ever applies preparation already fitted by a prior learn_/
+    // learn/learn_map call -- an append()'d stage still pending (never
+    // resolved because no DataFrame-based learn_/learn_map has run yet)
+    // would otherwise be silently skipped instead of applied, which is
+    // exactly the "fitting a scaler yourself, then feeding already-scaled
+    // data to a model with no scaler of its own" class of bug elsewhere in
+    // this family -- fail loudly instead.
+    require_no_pending_stages_("map");
     return resolve(workflow_.map(batch, options), "map");
   }
 
@@ -300,6 +323,12 @@ public:
   [[nodiscard]] Series learn_map(const FeatureBatch& batch,
                                  const TrainOptions& learn_options = {},
                                  const InferOptions& infer_options = {}) {
+    // Mirrors learn_(LabeledBatch)'s own guard: a bare FeatureBatch carries
+    // no column names, so a still-pending append()'d stage's ColumnRouter
+    // has nothing to resolve against here. Reached only directly -- the
+    // DataFrame-based overload below always materializes first, so
+    // pending_stages_ is already empty by the time it calls this one.
+    require_no_pending_stages_("learn_map");
     Series mapped = resolve(workflow_.learn_map(batch, learn_options, infer_options), "learn_map");
     refresh_linear_summary_();
     return mapped;
@@ -310,11 +339,17 @@ public:
                                  const TrainOptions& learn_options = {},
                                  const InferOptions& infer_options = {}) {
     category_maps_.clear();
+    // Same materialization learn_(frame, data_options, ...) does: learn_map
+    // is a fit-and-map call, so a stage appended through the branch/route
+    // DSL but never yet resolved by a prior learn_ must be resolved here
+    // too, not silently skipped.
+    const auto names = resolve_feature_names_from_options_(frame, data_options, "learn_map");
+    materialize_pending_stages_(frame, names);
     const auto batch = resolve(
         feature_batch_from_dataframe(frame, data_options, nullptr, &category_maps_),
         "learn_map.feature_batch_from_dataframe");
     const Series mapped = learn_map(batch, learn_options, infer_options);
-    feature_names_ = resolve_feature_names_from_options_(frame, data_options, "learn_map");
+    feature_names_ = names;
     return mapped;
   }
 

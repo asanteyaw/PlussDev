@@ -34,6 +34,8 @@ enum class TimelineSpanUnit : std::uint8_t {
   Months = 6,
   Years = 7,
   BusinessDays = 8,
+  Minutes = 9,
+  Hours = 10,
 };
 
 enum class TimelineSpanMode : std::uint8_t {
@@ -202,7 +204,7 @@ public:
 
   // Materialize epoch nanos in row-major logical order.
   template <std::output_iterator<std::int64_t> OutIt>
-  void copy_epoch_nanos_to(OutIt out) const {
+  void copy_ticks(OutIt out) const {
     CODEM_CHECK(defined(), "Timeline: undefined");
     validate_ticks_series(ticks_);
 
@@ -221,17 +223,17 @@ public:
     std::copy_n(p, static_cast<std::size_t>(contig.numel()), out);
   }
 
-  std::vector<std::int64_t> to_epoch_nanos_vector() const {
+  std::vector<std::int64_t> ticks() const {
     CODEM_CHECK(defined(), "Timeline: undefined");
     std::vector<std::int64_t> out;
     out.reserve(static_cast<std::size_t>(numel()));
-    copy_epoch_nanos_to(std::back_inserter(out));
+    copy_ticks(std::back_inserter(out));
     return out;
   }
 
   HostAny host() const {
     CODEM_CHECK(defined(), "Timeline::host(): undefined");
-    auto values = to_epoch_nanos_vector();
+    auto values = ticks();
     if (numel() == 1) {
       CODEM_CHECK(!values.empty(), "Timeline::host(): scalar payload is empty");
       return HostAny::from_scalar(values.front(), tz_name_);
@@ -248,15 +250,10 @@ public:
   }
 
   // -----------------------------------------------------------------------
-  // Legacy-style convenience layer (inherited by Timeline).
+  // Additional Timeline operations inherited by Timeline.
   // Definitions are in Timeline.cpp to keep this header lightweight and to
   // avoid include cycles with Timeline/Duration internals.
   // -----------------------------------------------------------------------
-
-  // Old API compatibility: Timeline in CodeH always has both date/time parts
-  // when defined (stored as UTC epoch nanos).
-  bool has_date() const noexcept;
-  bool has_time() const noexcept;
 
   // Scalar field extraction helpers.
   int year_scalar() const;
@@ -265,16 +262,16 @@ public:
   int hour_scalar() const;
   int minute_scalar() const;
   int second_scalar() const;
-  int day_of_week_scalar() const; // 0=Sunday..6=Saturday
-  int day_of_year_scalar() const;
+  int weekday_scalar() const; // 0=Monday..6=Sunday
+  int yearday_scalar() const;
   int quarter_scalar() const;
-  int week_of_year_scalar() const;
+  int week_scalar() const;
 
-  bool is_leap_year_scalar() const;
-  bool is_month_start_scalar() const;
-  bool is_month_end_scalar() const;
-  bool is_quarter_start_scalar() const;
-  bool is_quarter_end_scalar() const;
+  bool leap_scalar() const;
+  bool month_start_scalar() const;
+  bool month_end_scalar() const;
+  bool quarter_start_scalar() const;
+  bool quarter_end_scalar() const;
   bool is_weekend_scalar() const;
 
   std::string weekday_name(bool abbreviated = false) const;
@@ -289,7 +286,6 @@ public:
   Timeline set_second(int second) const;
 
   std::string format(const std::string& format_str) const;
-  std::string toISOString() const;
   std::string to_string() const;
 
   pluss::codem::Series to_Series() const;
@@ -301,12 +297,12 @@ public:
   Timeline add_minutes(int minutes) const;
   Timeline add_seconds(int seconds) const;
 
-  int years_between(const Timeline& other) const;
-  int months_between(const Timeline& other) const;
-  int days_between(const Timeline& other) const;
-  int hours_between(const Timeline& other) const;
-  int minutes_between(const Timeline& other) const;
-  int seconds_between(const Timeline& other) const;
+  std::int64_t years_between(const Timeline& other) const;
+  std::int64_t months_between(const Timeline& other) const;
+  std::int64_t days_between(const Timeline& other) const;
+  std::int64_t hours_between(const Timeline& other) const;
+  std::int64_t minutes_between(const Timeline& other) const;
+  std::int64_t seconds_between(const Timeline& other) const;
 
   Timeline concat(const Timeline& other) const;
   Timeline concat(const std::vector<Timeline>& others) const;
@@ -315,12 +311,12 @@ public:
   Timeline fill_like(int year, int month, int day) const;
   Timeline fill_like(const std::string& date_str) const;
 
-  bool operator==(const Timeline& other) const;
-  bool operator!=(const Timeline& other) const;
-  bool operator<(const Timeline& other) const;
-  bool operator<=(const Timeline& other) const;
-  bool operator>(const Timeline& other) const;
-  bool operator>=(const Timeline& other) const;
+  pluss::codem::Series operator==(const Timeline& other) const;
+  pluss::codem::Series operator!=(const Timeline& other) const;
+  pluss::codem::Series operator<(const Timeline& other) const;
+  pluss::codem::Series operator<=(const Timeline& other) const;
+  pluss::codem::Series operator>(const Timeline& other) const;
+  pluss::codem::Series operator>=(const Timeline& other) const;
 
   Timeline shift(int periods, std::string_view freq) const;
   Timeline to_period(std::string_view freq) const;
@@ -360,12 +356,6 @@ public:
   static Timeline today();
   static Timeline yesterday();
   static Timeline tomorrow();
-  static Timeline fromTimestamp(std::int64_t timestamp_seconds);
-  static Timeline fromSeries(const pluss::codem::Series& series);
-  static Timeline createFromDateInts(int year, int month, int day);
-  static Timeline createFromTimeInts(int hour, int minute, int second);
-  static Timeline createFromDateTimeInts(int year, int month, int day,
-                                         int hour, int minute, int second);
   static std::vector<Timeline> date_range(const Timeline& start,
                                           const Timeline& end,
                                           std::string_view freq = "D",

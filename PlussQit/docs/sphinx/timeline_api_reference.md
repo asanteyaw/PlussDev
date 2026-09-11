@@ -131,7 +131,8 @@ The current handwritten pages cover these starting families:
 - formatting and text conversion: `strftime`, `to_note_iso`, `weekday_name`,
   and `month_name`; custom layouts belong in `strftime()` rather than named
   formatting aliases
-- rounding and projection: `floor`, `ceil`, `round`, `date`, `time`
+- rounding and projection: `floor`, `ceil`, `round`, `date`, `time`, and
+  local calendar boundary projection with `period_start`
 - timezone work: `tz_convert`, `tz_localize`
 - ordered insertion helpers on sorted 1D timelines:
   `searchsorted_left`, `searchsorted_right`
@@ -253,6 +254,7 @@ api/timeline/nanosecond
 api/timeline/ne
 api/timeline/numel
 api/timeline/operators
+api/timeline/period_start
 api/timeline/quarter
 api/timeline/quarter_end_scalar
 api/timeline/quarter_scalar

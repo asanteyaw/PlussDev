@@ -1052,13 +1052,24 @@ static Series reduce_broadcasted_sensitivity_to_like_(const Series& sens, const 
   return out;
 }
 
+// `lhs_rule` produces the gradient w.r.t. `a` and runs only when `a` tracks
+// slope; `rhs_rule` produces the gradient w.r.t. `b` and runs only when `b`
+// tracks slope. The `*_reads_*` flags say which operand's *data* each rule
+// actually consumes (default: assume both, i.e. guard conservatively). A parent
+// is version-checked only when some rule that will run reads its data -- so
+// `z = y * c; y.add_(k); z.backward()` is allowed when `c` is a constant,
+// exactly as in libtorch.
 static void maybe_link_binary_op_(
     const Series& out,
     const Series& a,
     const Series& b,
     const char* op,
     std::function<Series(const Series&)> lhs_rule,
-    std::function<Series(const Series&)> rhs_rule) {
+    std::function<Series(const Series&)> rhs_rule,
+    bool lhs_rule_reads_a = true,
+    bool lhs_rule_reads_b = true,
+    bool rhs_rule_reads_a = true,
+    bool rhs_rule_reads_b = true) {
   if (!series_tape::recording_enabled()) return;
   const bool ta = series_tape::tracks_slope(a);
   const bool tb = series_tape::tracks_slope(b);
@@ -1067,6 +1078,10 @@ static void maybe_link_binary_op_(
   auto link = std::make_shared<series_tape::SourceLink>();
   link->op_name = op;
   link->parents = {a, b};
+  link->parent_data_guarded = {
+      (ta && lhs_rule_reads_a) || (tb && rhs_rule_reads_a),
+      (ta && lhs_rule_reads_b) || (tb && rhs_rule_reads_b),
+  };
   link->propagate = [a, b, ta, tb, op, lhs_rule = std::move(lhs_rule), rhs_rule = std::move(rhs_rule)](const Series& out_sens) {
     if (ta) {
       const Series ga = reduce_broadcasted_sensitivity_to_like_(lhs_rule(out_sens), a, op);
@@ -1173,6 +1188,26 @@ static Series i64_index_vector_on_(std::span<const std::int64_t> values, Platfor
   return out;
 }
 
+static Series conjugate_if_complex_(const Series& x);
+static Series mul_backward_product_(const Series& lhs, const Series& rhs);
+static Series div_lhs_backward_(const Series& out_sens, const Series& rhs);
+static Series div_rhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs);
+static Series pow_lhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs);
+static Series pow_rhs_backward_(
+    const Series& out_sens,
+    const Series& lhs,
+    const Series& rhs,
+    const Series& output);
+static Series maximum_lhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs);
+static Series prod_dim_backward_(const Series& grad_out, const Series& input, ::std::int64_t dim, bool keepdim);
+static Series maximum_rhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs);
+static Series minimum_lhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs);
+static Series minimum_rhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs);
+
+#include "CodeM/generated/SeriesAutogradBinaryReverseGen.h"
+
+namespace autograd_binary = generated::autograd_binary;
+
 Series add(const Series& a, const Series& b) {
   const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Add, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
@@ -1180,8 +1215,14 @@ Series add(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Add, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "add",
-      [](const Series& g) { return g; },
-      [](const Series& g) { return g; });
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_lhs(autograd_binary::Rule::Add, g, a, b, out);
+      },
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_rhs(autograd_binary::Rule::Add, g, a, b, out);
+      },
+      /*lhs_reads_a=*/false, /*lhs_reads_b=*/false,
+      /*rhs_reads_a=*/false, /*rhs_reads_b=*/false);
   return out;
 }
 
@@ -1192,8 +1233,14 @@ Series sub(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Sub, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "sub",
-      [](const Series& g) { return g; },
-      [](const Series& g) { return g.neg(); });
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_lhs(autograd_binary::Rule::Sub, g, a, b, out);
+      },
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_rhs(autograd_binary::Rule::Sub, g, a, b, out);
+      },
+      /*lhs_reads_a=*/false, /*lhs_reads_b=*/false,
+      /*rhs_reads_a=*/false, /*rhs_reads_b=*/false);
   return out;
 }
 
@@ -1254,6 +1301,17 @@ static Series complex_imag_lift_(const Series& imag_part, ScalarType out_dt) {
   return complex_from_parts_(imag_part.mul(0.0), imag_part, out_dt);
 }
 
+Series complex_from_parts(const Series& real_part, const Series& imag_part, ScalarType out_dt) {
+  Series out = complex_from_parts_(real_part, imag_part, out_dt);
+  maybe_link_binary_op_(
+      out, real_part, imag_part, "complex",
+      [](const Series& g) { return real(g); },
+      [](const Series& g) { return imag(g); },
+      /*lhs_reads_a=*/false, /*lhs_reads_b=*/false,
+      /*rhs_reads_a=*/false, /*rhs_reads_b=*/false);
+  return out;
+}
+
 static Series complex_abs_backward_(const Series& out_sens, const Series& input) {
   const Series mag = abs(input);
   const Series zero_real = mag.mul(0.0);
@@ -1289,6 +1347,74 @@ static Series mul_backward_product_(const Series& lhs, const Series& rhs) {
   return lhs.mul(rhs);
 }
 
+static Series div_lhs_backward_(const Series& out_sens, const Series& rhs) {
+  return out_sens.div(conjugate_if_complex_(rhs));
+}
+
+static Series div_rhs_backward_(
+    const Series& out_sens,
+    const Series& lhs,
+    const Series& rhs) {
+  const Series conjugate_rhs = conjugate_if_complex_(rhs);
+  return out_sens.mul(conjugate_if_complex_(lhs)).div(conjugate_rhs.mul(conjugate_rhs)).neg();
+}
+
+static Series pow_lhs_backward_(
+    const Series& out_sens,
+    const Series& lhs,
+    const Series& rhs) {
+  const Series zero = Series::zeros({}, out_sens.scalar_type()).to(out_sens.platform());
+  const Series one = Series::ones({}, rhs.scalar_type()).to(rhs.platform());
+  const Series derivative = conjugate_if_complex_(rhs.mul(pow(lhs, rhs.sub(one))));
+  return where(rhs.eq(0.0), zero, out_sens.mul(derivative));
+}
+
+static Series pow_rhs_backward_(
+    const Series& out_sens,
+    const Series& lhs,
+    const Series& rhs,
+    const Series& output) {
+  const Series zero = Series::zeros({}, out_sens.scalar_type()).to(out_sens.platform());
+  const Series derivative = conjugate_if_complex_(output.mul(log(lhs)));
+  const Series nonnegative_real_exp = complex_scalar_type_(rhs.scalar_type())
+      ? logical_and(imag(rhs).eq(0.0), real(rhs).ge(0.0))
+      : rhs.ge(0.0);
+  const Series zero_base_nonnegative_exp = logical_and(lhs.eq(0.0), nonnegative_real_exp);
+  return out_sens.mul(where(zero_base_nonnegative_exp, zero, derivative));
+}
+
+static Series extrema_backward_(
+    const Series& out_sens,
+    const Series& lhs,
+    const Series& rhs,
+    bool choose_greater,
+    bool lhs_slot) {
+  const Series half = Series::full({}, 0.5, out_sens.scalar_type()).to(out_sens.platform());
+  const Series one = Series::ones({}, out_sens.scalar_type()).to(out_sens.platform());
+  const Series zero = Series::zeros({}, out_sens.scalar_type()).to(out_sens.platform());
+  const Series loses = choose_greater
+      ? (lhs_slot ? lt(lhs, rhs) : gt(lhs, rhs))
+      : (lhs_slot ? gt(lhs, rhs) : lt(lhs, rhs));
+  const Series weight = where(loses, zero, where(eq(lhs, rhs), half, one));
+  return mul(out_sens, weight);
+}
+
+static Series maximum_lhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs) {
+  return extrema_backward_(out_sens, lhs, rhs, /*choose_greater=*/true, /*lhs_slot=*/true);
+}
+
+static Series maximum_rhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs) {
+  return extrema_backward_(out_sens, lhs, rhs, /*choose_greater=*/true, /*lhs_slot=*/false);
+}
+
+static Series minimum_lhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs) {
+  return extrema_backward_(out_sens, lhs, rhs, /*choose_greater=*/false, /*lhs_slot=*/true);
+}
+
+static Series minimum_rhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs) {
+  return extrema_backward_(out_sens, lhs, rhs, /*choose_greater=*/false, /*lhs_slot=*/false);
+}
+
 Series mul(const Series& a, const Series& b) {
   const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Mul, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
@@ -1296,8 +1422,15 @@ Series mul(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Mul, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "mul",
-      [b](const Series& g) { return mul_backward_product_(g, conjugate_if_complex_(b)); },
-      [a](const Series& g) { return mul_backward_product_(g, conjugate_if_complex_(a)); });
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_lhs(autograd_binary::Rule::Mul, g, a, b, out);
+      },
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_rhs(autograd_binary::Rule::Mul, g, a, b, out);
+      },
+      // d/da reads b; d/db reads a.
+      /*lhs_reads_a=*/false, /*lhs_reads_b=*/true,
+      /*rhs_reads_a=*/true, /*rhs_reads_b=*/false);
   return out;
 }
 Series div(const Series& a, const Series& b) {
@@ -1307,13 +1440,15 @@ Series div(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Div, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "div",
-      [b](const Series& g) { return g.div(conjugate_if_complex_(b)); },
-      [a, b](const Series& g) {
-        const Series cb = conjugate_if_complex_(b);
-        const Series ca = conjugate_if_complex_(a);
-        const Series denom = cb.mul(cb);
-        return g.mul(ca).div(denom).neg();
-      });
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_lhs(autograd_binary::Rule::Div, g, a, b, out);
+      },
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_rhs(autograd_binary::Rule::Div, g, a, b, out);
+      },
+      // d/da reads b; d/db reads a and b.
+      /*lhs_reads_a=*/false, /*lhs_reads_b=*/true,
+      /*rhs_reads_a=*/true, /*rhs_reads_b=*/true);
   return out;
 }
 Series pow(const Series& a, const Series& b) {
@@ -1339,11 +1474,11 @@ Series pow(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Pow, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "pow",
-      [a, b](const Series& g) {
-        return g.mul(b).mul(pow(a, b)).div(a);
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_lhs(autograd_binary::Rule::Pow, g, a, b, out);
       },
-      [a, b](const Series& g) {
-        return g.mul(pow(a, b)).mul(log(a));
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_rhs(autograd_binary::Rule::Pow, g, a, b, out);
       });
   return out;
 }
@@ -1369,7 +1504,7 @@ static Series generated_tanh_sensitivity_(const Series& out_sens, const Series& 
   }
   const Series one = scalar_like_(input, 1.0);
   const Series y = tanh(input);
-  return out_sens.mul(sub(one, mul(y, y)));
+  return out_sens.mul(conjugate_if_complex_(sub(one, mul(y, y))));
 }
 
 static Series generated_sigmoid_sensitivity_(const Series& out_sens, const Series& input) {
@@ -1384,7 +1519,7 @@ static Series generated_sigmoid_sensitivity_(const Series& out_sens, const Serie
   }
   const Series one = scalar_like_(input, 1.0);
   const Series y = sigmoid(input);
-  return mul(out_sens, mul(y, sub(one, y)));
+  return mul(out_sens, conjugate_if_complex_(mul(y, sub(one, y))));
 }
 
 #include "CodeM/generated/SeriesAutogradUnaryReverseGen.h"
@@ -1396,8 +1531,8 @@ static void maybe_link_unary_rule_(
     const Series& a,
     const char* op,
     autograd_unary::Rule rule) {
-  maybe_link_unary_op_(out, a, op, [a, rule](const Series& out_sens) {
-    return autograd_unary::apply(rule, out_sens, a);
+  maybe_link_unary_op_(out, a, op, [a, out, rule](const Series& out_sens) {
+    return autograd_unary::apply(rule, out_sens, a, out);
   });
 }
 
@@ -2149,18 +2284,21 @@ Series squeeze(const Series& a, std::int64_t dim) { return a.squeeze(dim); }
 Series& squeeze_(Series& a) { a = a.squeeze(); return a; }
 Series& squeeze_(Series& a, std::int64_t dim) { a = a.squeeze(dim); return a; }
 
-// Bitwise ops
+// Bitwise ops. The in-place forms compute through the out-of-place member (which
+// carries the integer/bool dtype check) and write back; they must not call the
+// `_`-suffixed Series member, which routes back here through the compat invoke
+// layer and would recurse without bound.
 Series bitwise_not(const Series& a) { return a.bitwise_not(); }
-Series& bitwise_not_(Series& a) { return a.bitwise_not_(); }
+Series& bitwise_not_(Series& a) { a = a.bitwise_not(); return a; }
 
 Series bitwise_and(const Series& a, const Series& b) { return a.bitwise_and(b); }
-Series& bitwise_and_(Series& a, const Series& b) { return a.bitwise_and_(b); }
+Series& bitwise_and_(Series& a, const Series& b) { a = a.bitwise_and(b); return a; }
 
 Series bitwise_or(const Series& a, const Series& b) { return a.bitwise_or(b); }
-Series& bitwise_or_(Series& a, const Series& b) { return a.bitwise_or_(b); }
+Series& bitwise_or_(Series& a, const Series& b) { a = a.bitwise_or(b); return a; }
 
 Series bitwise_xor(const Series& a, const Series& b) { return a.bitwise_xor(b); }
-Series& bitwise_xor_(Series& a, const Series& b) { return a.bitwise_xor_(b); }
+Series& bitwise_xor_(Series& a, const Series& b) { a = a.bitwise_xor(b); return a; }
 
 Series isfinite(const Series& a) {
   auto cpu_route = [](const Series& in, Series& out) { native::cpu::isfinite(in, out); };
@@ -2276,6 +2414,27 @@ Series logical_xor(const Series& a, const Series& b) {
 Series masked_select(const Series& a, const Series& mask) {
   PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "masked_select: mask must be bool");
   require_same_platform(a, mask, "masked_select");
+  auto bind_backward = [&](Series out) {
+    if (!series_tape::recording_enabled() || !series_tape::tracks_slope(a) ||
+        !dtype_of(a.scalar_type()).is_floating()) {
+      return out;
+    }
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->op_name = "masked_select";
+    link->parents = {a};
+    link->propagate = [a, mask](const Series& out_sens) {
+      series_tape::NoGradGuard no_grad;
+      Series grad = Series::zeros(a.sizes(), a.scalar_type()).to(a.platform());
+      Series source = out_sens;
+      if (source.platform() != a.platform()) source = source.to(a.platform());
+      if (source.scalar_type() != a.scalar_type()) source = source.to(a.scalar_type());
+      masked_scatter_(grad, mask, source.flatten(0, -1));
+      series_tape::accumulate_sensitivity(a, grad);
+    };
+    series_tape::clear_source_link(out);
+    series_tape::bind_source_link(out, std::move(link));
+    return out;
+  };
   if (a.platform() == Platform::MPS) {
     const auto bshape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
     {
@@ -2290,10 +2449,10 @@ Series masked_select(const Series& a, const Series& mask) {
                                .reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
     const Series nz2d = nonzero(mm_flat);
     if (nz2d.numel() == 0) {
-      return Series::empty({0}, a.scalar_type(), a.platform());
+      return bind_backward(Series::empty({0}, a.scalar_type(), a.platform()));
     }
     const Series idx = nz2d.to(Platform::CPU).squeeze(-1).contiguous().to(Platform::MPS);
-    return gather(aa_flat, 0, idx);
+    return bind_backward(gather(aa_flat, 0, idx));
   }
   auto cpu_route = [&]() -> Series {
     // Broadcast mask to a's shape (Torch-like).
@@ -2332,16 +2491,16 @@ Series masked_select(const Series& a, const Series& mask) {
     const bool native_enabled = native::cuda::native_masking_enabled();
     const bool native_strict = native::cuda::native_masking_strict();
     const bool route_supported = native::cuda::supports_masked_select(a, mask);
-    return cuda_masking_route_or_bridge_(
+    return bind_backward(cuda_masking_route_or_bridge_(
         "masked_select",
         native_enabled,
         native_strict,
         route_supported,
-        cpu_route);
+        cpu_route));
   }
 
   require_backend_dispatch_supported_(a.platform(), "masked_select");
-  return cpu_route();
+  return bind_backward(cpu_route());
 }
 
 
@@ -2486,6 +2645,39 @@ static Series reverse_dim_(const Series& x, std::int64_t dim) {
   idx_shape[static_cast<std::size_t>(dim)] = n;
   const Series expanded = idx.reshape(idx_shape).expand(x.sizes(), true).contiguous();
   return gather(x, dim, expanded);
+}
+
+// Reverse-mode rule for prod(input, dim, keepdim). Mirrors the exclusive-scan
+// formulation used as the reference "safe zeros" path: the gradient w.r.t. each
+// element is grad times the product of every *other* element along `dim`, which
+// is computed exactly (including lanes with one or many zeros) as the product
+// of an exclusive prefix scan and an exclusive suffix scan. Fully vectorized:
+// two cumprods plus two axis reversals.
+static Series prod_dim_backward_(const Series& grad_out, const Series& input,
+                                 std::int64_t dim, bool keepdim) {
+  const auto nd = static_cast<std::int64_t>(input.dim());
+  if (nd == 0) return grad_out;
+  if (dim < 0) dim += nd;
+
+  std::vector<std::int64_t> keep_sizes(input.sizes().begin(), input.sizes().end());
+  keep_sizes[static_cast<std::size_t>(dim)] = 1;
+  const Series grad = keepdim ? grad_out : grad_out.reshape(keep_sizes);
+
+  const std::int64_t n = input.sizes()[static_cast<std::size_t>(dim)];
+  if (n <= 1) return grad;  // grad is already input-shaped for a size<=1 axis
+
+  const Series ones = Series::ones(keep_sizes, input.scalar_type()).to(input.platform());
+
+  const Series prefix_in = native::cpu::cat({ones, input.narrow_copy(dim, 0, n - 1)}, dim);
+  const Series excl_prefix = prefix_in.cumprod(dim);
+
+  const Series suffix_rev = reverse_dim_(input.narrow_copy(dim, 1, n - 1), dim);
+  const Series suffix_in = native::cpu::cat({ones, suffix_rev}, dim);
+  const Series excl_suffix = reverse_dim_(suffix_in.cumprod(dim), dim);
+
+  Series excl = excl_prefix.mul(excl_suffix);
+  if (dtype_of(input.scalar_type()).is_complex()) excl = conjugate_if_complex_(excl);
+  return grad.mul(excl);
 }
 
 static void maybe_link_extrema_reduce_(
@@ -2799,11 +2991,16 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
   if (dim < 0) dim += nd;
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, aa.scalar_type(), aa.platform());
+  const auto link_prod_dim_ = [&](Series result) -> Series {
+    maybe_link_unary_op_(result, a, "prod",
+        [a, dim, keepdim](const Series& g) { return prod_dim_backward_(g, a, dim, keepdim); });
+    return result;
+  };
   if (aa.platform() != Platform::CPU) {
     if (aa.platform() == Platform::MPS) {
       if (native::mps::supports_prod_dim(aa.scalar_type())) {
         native::mps::prod_dim(aa, dim, out);
-        return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+        return link_prod_dim_(maybe_keepdim_(out, aa.sizes(), dim, keepdim));
       }
       const bool supports_f32 = native::mps::supports_prod_dim(ScalarType::Float32);
       require_mps_support_or_policy_(supports_f32, "prod(dim)");
@@ -2815,7 +3012,7 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
       } else {
         native::cpu::prod_dim(aa, dim, out);
       }
-      return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      return link_prod_dim_(maybe_keepdim_(out, aa.sizes(), dim, keepdim));
     }
     if (aa.platform() == Platform::CUDA) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
@@ -2825,7 +3022,7 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
         if (!native::cuda::run_prod_reduction(aa, dim, out)) {
           PLUSS_FAIL("prod(dim): native CUDA reduction kernel launch failed");
         }
-        return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+        return link_prod_dim_(maybe_keepdim_(out, aa.sizes(), dim, keepdim));
       }
       (void)cuda_reduction_route_or_bridge_(
           "prod(dim)",
@@ -2838,7 +3035,7 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
     }
   }
   native::cpu::prod_dim(aa, dim, out);
-  return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+  return link_prod_dim_(maybe_keepdim_(out, aa.sizes(), dim, keepdim));
 }
 
 Series mean(const Series& a) {
@@ -3566,8 +3763,17 @@ Series& relu_(Series& a) {
 }
 
 Series sigmoid(const Series& a) {
-  const Series one = scalar_like_(a, 1.0);
-  Series out = div(one, add(one, exp(neg(a))));
+  Series out;
+  {
+    // The forward is a short elementwise composition whose intermediates
+    // (neg/exp/add/div) are never touched again -- Rule::Sigmoid's reverse
+    // formula is expressed directly in `input`/`output`, not through them.
+    // Pausing recording here skips building and discarding four throwaway
+    // tape nodes per call; the one real node is attached right after.
+    series_tape::NoGradGuard no_grad;
+    const Series one = scalar_like_(a, 1.0);
+    out = div(one, add(one, exp(neg(a))));
+  }
   maybe_link_unary_rule_(out, a, "sigmoid", autograd_unary::Rule::Sigmoid);
   return out;
 }
@@ -3577,12 +3783,16 @@ Series& sigmoid_(Series& a) {
 }
 
 Series softplus(const Series& a, double beta, double threshold) {
-  const Series beta_s = scalar_like_(a, beta);
-  const Series thresh_s = scalar_like_(a, threshold);
-  const Series bz = mul(a, beta_s);
-  const Series use_linear = gt(bz, thresh_s);
-  const Series smooth = div(log1p(exp(bz)), beta_s);
-  Series out = where(use_linear, a, smooth);
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;  // see sigmoid() -- forward intermediates are throwaway
+    const Series beta_s = scalar_like_(a, beta);
+    const Series thresh_s = scalar_like_(a, threshold);
+    const Series bz = mul(a, beta_s);
+    const Series use_linear = gt(bz, thresh_s);
+    const Series smooth = div(log1p(exp(bz)), beta_s);
+    out = where(use_linear, a, smooth);
+  }
   maybe_link_unary_op_(out, a, [a, beta, threshold](const Series& g) {
     const Series beta_s = scalar_like_(a, beta);
     const Series thresh_s = scalar_like_(a, threshold);
@@ -3600,7 +3810,18 @@ Series& softplus_(Series& a, double beta, double threshold) {
 }
 
 Series silu(const Series& a) {
-  return mul(a, sigmoid(a));
+  // x * sigmoid(x); d/dx = s * (1 + x*(1-s)), s = sigmoid(x).
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    out = mul(a, sigmoid(a));
+  }
+  maybe_link_unary_op_(out, a, "silu", [a](const Series& g) {
+    const Series s = sigmoid(a);  // fresh, tracked: keeps ds/dx in the graph for higher order
+    const Series one = scalar_like_(a, 1.0);
+    return mul(g, mul(s, add(one, mul(a, sub(one, s)))));
+  });
+  return out;
 }
 Series& silu_(Series& a) {
   a = silu(a);
@@ -3608,20 +3829,57 @@ Series& silu_(Series& a) {
 }
 
 Series gelu(const Series& a, bool approximate) {
+  Series out;
   if (approximate) {
+    {
+      series_tape::NoGradGuard no_grad;
+      const Series half = scalar_like_(a, 0.5);
+      const Series one = scalar_like_(a, 1.0);
+      const Series c0 = scalar_like_(a, 0.7978845608028654); // sqrt(2/pi)
+      const Series c1 = scalar_like_(a, 0.044715);
+      const Series x2 = mul(a, a);
+      const Series x3 = mul(x2, a);
+      const Series inner = mul(c0, add(a, mul(c1, x3)));
+      out = mul(mul(half, a), add(one, tanh(inner)));
+    }
+    // u = c0*(x + c1*x^3), t = tanh(u), out = 0.5*x*(1+t)
+    // d(out)/dx = 0.5*(1+t) + 0.5*x*(1-t^2)*c0*(1+3*c1*x^2)
+    maybe_link_unary_op_(out, a, "gelu_tanh", [a](const Series& g) {
+      const Series half = scalar_like_(a, 0.5);
+      const Series one = scalar_like_(a, 1.0);
+      const Series three = scalar_like_(a, 3.0);
+      const Series c0 = scalar_like_(a, 0.7978845608028654);
+      const Series c1 = scalar_like_(a, 0.044715);
+      const Series x2 = mul(a, a);
+      const Series inner = mul(c0, add(a, mul(c1, mul(x2, a))));
+      const Series t = tanh(inner);
+      const Series sech2 = sub(one, mul(t, t));
+      const Series dudx = mul(c0, add(one, mul(three, mul(c1, x2))));
+      const Series term1 = mul(half, add(one, t));
+      const Series term2 = mul(mul(half, a), mul(sech2, dudx));
+      return mul(g, add(term1, term2));
+    });
+    return out;
+  }
+  {
+    series_tape::NoGradGuard no_grad;
     const Series half = scalar_like_(a, 0.5);
     const Series one = scalar_like_(a, 1.0);
-    const Series c0 = scalar_like_(a, 0.7978845608028654); // sqrt(2/pi)
-    const Series c1 = scalar_like_(a, 0.044715);
-    const Series x2 = mul(a, a);
-    const Series x3 = mul(x2, a);
-    const Series inner = mul(c0, add(a, mul(c1, x3)));
-    return mul(mul(half, a), add(one, tanh(inner)));
+    const Series inv_sqrt2 = scalar_like_(a, 0.7071067811865475);
+    out = mul(mul(half, a), add(one, erf(mul(a, inv_sqrt2))));
   }
-  const Series half = scalar_like_(a, 0.5);
-  const Series one = scalar_like_(a, 1.0);
-  const Series inv_sqrt2 = scalar_like_(a, 0.7071067811865475);
-  return mul(mul(half, a), add(one, erf(mul(a, inv_sqrt2))));
+  // out = x*Phi(x); d(out)/dx = Phi(x) + x*phi(x), phi = N(0,1) pdf.
+  maybe_link_unary_op_(out, a, "gelu_exact", [a](const Series& g) {
+    const Series half = scalar_like_(a, 0.5);
+    const Series one = scalar_like_(a, 1.0);
+    const Series inv_sqrt2 = scalar_like_(a, 0.7071067811865475);
+    const Series inv_sqrt2pi = scalar_like_(a, 0.3989422804014327);
+    const Series neg_half = scalar_like_(a, -0.5);
+    const Series cdf = mul(half, add(one, erf(mul(a, inv_sqrt2))));
+    const Series pdf = mul(inv_sqrt2pi, exp(mul(neg_half, mul(a, a))));
+    return mul(g, add(cdf, mul(a, pdf)));
+  });
+  return out;
 }
 Series& gelu_(Series& a, bool approximate) {
   a = gelu(a, approximate);
@@ -3634,41 +3892,255 @@ Series leaky_relu(const Series& a0, double negative_slope) {
   const Series a = dtype_of(a0.scalar_type()).is_floating()
                        ? a0
                        : a0.to(promote_types(a0.scalar_type(), ScalarType::Float32));
-  const Series zero = scalar_like_(a, 0.0);
-  const Series slope = scalar_like_(a, negative_slope);
-  return where(ge(a, zero), a, mul(a, slope));
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    const Series zero = scalar_like_(a, 0.0);
+    const Series slope = scalar_like_(a, negative_slope);
+    out = where(ge(a, zero), a, mul(a, slope));
+  }
+  maybe_link_unary_op_(out, a, "leaky_relu", [a, negative_slope](const Series& g) {
+    const Series zero = scalar_like_(a, 0.0);
+    const Series one = scalar_like_(a, 1.0);
+    const Series slope = scalar_like_(a, negative_slope);
+    return mul(g, where(ge(a, zero), one, slope));
+  });
+  return out;
 }
 Series& leaky_relu_(Series& a, double negative_slope) {
   a = leaky_relu(a, negative_slope);
   return a;
 }
 
+// Matches `at::elu`'s 3-parameter form (also the shared implementation behind
+// CELU/SELU): scale*x for x>0, alpha*scale*(exp(input_scale*x)-1) otherwise.
+// Was previously only reachable as a 7-node where/mul/sub/exp composite
+// behind the untyped invoke("elu", ...) string dispatch (see celu_impl_/
+// selu_impl_ in Invoke.cpp, and NodeK's own independent EluImpl duplicate of
+// this exact formula) -- now a single fused node like the other activations.
+Series elu(const Series& a0, double alpha, double scale, double input_scale) {
+  const Series a = dtype_of(a0.scalar_type()).is_floating()
+                       ? a0
+                       : a0.to(promote_types(a0.scalar_type(), ScalarType::Float32));
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    const Series zero = scalar_like_(a, 0.0);
+    const Series pos = mul(a, scale);
+    const Series neg = mul(sub(exp(mul(a, input_scale)), 1.0), alpha * scale);
+    out = where(gt(a, zero), pos, neg);
+  }
+  // d/dx = scale for x>0; alpha*scale*input_scale*exp(input_scale*x) for
+  // x<=0 (recomputed fresh from `a`, not the NoGradGuard-detached forward
+  // exp() above, so a second differentiation keeps `a`'s dependency live).
+  maybe_link_unary_op_(out, a, "elu", [a, alpha, scale, input_scale](const Series& g) {
+    const Series zero = scalar_like_(a, 0.0);
+    const Series pos_grad = scalar_like_(a, scale);
+    const Series neg_grad = mul(exp(mul(a, input_scale)), alpha * scale * input_scale);
+    return mul(g, where(gt(a, zero), pos_grad, neg_grad));
+  });
+  return out;
+}
+Series& elu_(Series& a, double alpha, double scale, double input_scale) {
+  a = elu(a, alpha, scale, input_scale);
+  return a;
+}
+
+// CELU(x) = max(0,x) + min(0, alpha*(exp(x/alpha)-1)) is exactly `elu` with
+// scale=1, input_scale=1/alpha -- check: pos branch scale*x=x matches
+// max(0,x)'s active branch; neg branch alpha*1*(exp((1/alpha)*x)-1) =
+// alpha*(exp(x/alpha)-1) matches. Inherits elu's single fused node for free.
+Series celu(const Series& a, double alpha) {
+  PLUSS_CHECK(alpha != 0.0, "celu: expected alpha != 0");
+  return elu(a, alpha, 1.0, 1.0 / alpha);
+}
+Series& celu_(Series& a, double alpha) {
+  a = celu(a, alpha);
+  return a;
+}
+
+// SELU is `elu` with the two fixed constants from the original paper.
+Series selu(const Series& a) {
+  constexpr double kSeluAlpha = 1.6732632423543772;
+  constexpr double kSeluScale = 1.0507009873554805;
+  return elu(a, kSeluAlpha, kSeluScale, 1.0);
+}
+Series& selu_(Series& a) {
+  a = selu(a);
+  return a;
+}
+
+// hardsigmoid(x) = 0 (x<=-3), 1 (x>=3), x/6+0.5 otherwise. Piecewise-constant
+// derivative (1/6 on the open interval, 0 outside) -- like leaky_relu, its
+// true second derivative is zero a.e., so it carries no useful double-
+// backward, unlike hardswish/mish below.
+Series hardsigmoid(const Series& a) {
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    const Series lo = scalar_like_(a, -3.0);
+    const Series hi = scalar_like_(a, 3.0);
+    const Series zero = scalar_like_(a, 0.0);
+    const Series one = scalar_like_(a, 1.0);
+    const Series mid = add(mul(a, 1.0 / 6.0), 0.5);
+    out = where(le(a, lo), zero, where(ge(a, hi), one, mid));
+  }
+  maybe_link_unary_op_(out, a, "hardsigmoid", [a](const Series& g) {
+    const Series lo = scalar_like_(a, -3.0);
+    const Series hi = scalar_like_(a, 3.0);
+    const Series zero = scalar_like_(a, 0.0);
+    const Series sixth = scalar_like_(a, 1.0 / 6.0);
+    const Series mask = logical_and(gt(a, lo), lt(a, hi));
+    return mul(g, where(mask, sixth, zero));
+  });
+  return out;
+}
+Series& hardsigmoid_(Series& a) {
+  a = hardsigmoid(a);
+  return a;
+}
+
+// hardswish(x) = 0 (x<=-3), x (x>=3), x*(x+3)/6 otherwise -- the piecewise-
+// quadratic-free "cheap swish". Interior derivative (2x+3)/6 is genuinely
+// x-dependent (unlike hardsigmoid), so its curvature is real and worth a
+// double-backward check.
+Series hardswish(const Series& a) {
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    const Series lo = scalar_like_(a, -3.0);
+    const Series hi = scalar_like_(a, 3.0);
+    const Series zero = scalar_like_(a, 0.0);
+    const Series mid = mul(mul(a, add(a, 3.0)), 1.0 / 6.0);
+    out = where(le(a, lo), zero, where(ge(a, hi), a, mid));
+  }
+  maybe_link_unary_op_(out, a, "hardswish", [a](const Series& g) {
+    const Series lo = scalar_like_(a, -3.0);
+    const Series hi = scalar_like_(a, 3.0);
+    const Series zero = scalar_like_(a, 0.0);
+    const Series one = scalar_like_(a, 1.0);
+    const Series mid_grad = mul(add(mul(a, 2.0), 3.0), 1.0 / 6.0);
+    return mul(g, where(le(a, lo), zero, where(ge(a, hi), one, mid_grad)));
+  });
+  return out;
+}
+Series& hardswish_(Series& a) {
+  a = hardswish(a);
+  return a;
+}
+
+// mish(x) = x*tanh(softplus(x)). Fully smooth (no piecewise branches), so
+// unlike the two above its curvature is real everywhere.
+Series mish(const Series& a) {
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    out = mul(a, tanh(softplus(a, 1.0, 20.0)));
+  }
+  // d/dx[x*tanh(sp(x))] = tanh(sp(x)) + x*sigmoid(x)*(1-tanh(sp(x))^2);
+  // sp, tanh(sp), sigmoid(x) all recomputed fresh from `a` (tracked ops, not
+  // the NoGradGuard-detached forward values above) for higher-order use.
+  maybe_link_unary_op_(out, a, "mish", [a](const Series& g) {
+    const Series t = tanh(softplus(a, 1.0, 20.0));
+    const Series s = sigmoid(a);
+    const Series one = scalar_like_(a, 1.0);
+    return mul(g, add(t, mul(mul(a, s), sub(one, mul(t, t)))));
+  });
+  return out;
+}
+Series& mish_(Series& a) {
+  a = mish(a);
+  return a;
+}
+
+// threshold(x) = x if x > threshold_val else value. `value` is a raw
+// constant (no gradient contribution -- the earlier where()-based composite
+// already got this right since `value` was never a tracked Series, but this
+// gives it its own named tape node and typed member instead of the generic
+// binary `where` path).
+Series threshold(const Series& a, double threshold_val, double value) {
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;
+    const Series thr = scalar_like_(a, threshold_val);
+    const Series val = scalar_like_(a, value);
+    out = where(gt(a, thr), a, val);
+  }
+  maybe_link_unary_op_(out, a, "threshold", [a, threshold_val](const Series& g) {
+    const Series thr = scalar_like_(a, threshold_val);
+    const Series zero = scalar_like_(a, 0.0);
+    const Series one = scalar_like_(a, 1.0);
+    return mul(g, where(gt(a, thr), one, zero));
+  });
+  return out;
+}
+Series& threshold_(Series& a, double threshold_val, double value) {
+  a = threshold(a, threshold_val, value);
+  return a;
+}
+
 Series softmax(const Series& a, std::int64_t dim) {
   const auto nd = a.dim();
-  if (dim < 0) dim += nd;
-  const Series aa = a.contiguous();
-  const Series m = amax(aa, dim, true);
-  const Series z = sub(aa, m);
-  const Series e = exp(z);
-  const Series s = sum(e, dim, true);
-  return div(e, s);
+  const std::int64_t d = dim < 0 ? dim + nd : dim;
+  Series out;
+  {
+    // The max-subtract/exp/sum/div chain is purely for a numerically stable
+    // forward value; none of those intermediates feed the analytic reverse
+    // rule below, so building their tape nodes would be pure waste.
+    series_tape::NoGradGuard no_grad;
+    const Series aa = a.contiguous();
+    const Series m = amax(aa, d, true);
+    const Series z = sub(aa, m);
+    const Series e = exp(z);
+    const Series s = sum(e, d, true);
+    out = div(e, s);
+  }
+  // Standard softmax-Jacobian VJP: dL/dx = p * (dL/dp - sum(dL/dp * p, dim)).
+  maybe_link_unary_op_(out, a, "softmax", [a, d](const Series& g) {
+    const Series p = softmax(a, d);  // fresh, tracked -- keeps dp/dx in the graph for higher order
+    const Series dot = sum(mul(g, p), d, true);
+    return mul(p, sub(g, dot));
+  });
+  return out;
 }
 Series log_softmax(const Series& a, std::int64_t dim) {
   const auto nd = a.dim();
-  if (dim < 0) dim += nd;
-  const Series aa = a.contiguous();
-  const Series m = amax(aa, dim, true);
-  const Series z = sub(aa, m);
-  const Series lse = log(sum(exp(z), dim, true));
-  return sub(z, lse);
+  const std::int64_t d = dim < 0 ? dim + nd : dim;
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;  // see softmax() -- forward intermediates are throwaway
+    const Series aa = a.contiguous();
+    const Series m = amax(aa, d, true);
+    const Series z = sub(aa, m);
+    const Series lse = log(sum(exp(z), d, true));
+    out = sub(z, lse);
+  }
+  // dL/dx = dL/dlogp - softmax(x) * sum(dL/dlogp, dim).
+  maybe_link_unary_op_(out, a, "log_softmax", [a, d](const Series& g) {
+    const Series p = softmax(a, d);  // fresh, tracked
+    const Series sum_g = sum(g, d, true);
+    return sub(g, mul(p, sum_g));
+  });
+  return out;
 }
 Series logsumexp(const Series& a, std::int64_t dim, bool keepdim) {
   const auto nd = a.dim();
-  if (dim < 0) dim += nd;
-  const Series aa = a.contiguous();
-  const Series m = amax(aa, dim, true);
-  Series out = add(log(sum(exp(sub(aa, m)), dim, true)), m);
-  if (!keepdim) out = out.squeeze(dim);
+  const std::int64_t d = dim < 0 ? dim + nd : dim;
+  Series out;
+  {
+    series_tape::NoGradGuard no_grad;  // see softmax() -- forward intermediates are throwaway
+    const Series aa = a.contiguous();
+    const Series m = amax(aa, d, true);
+    out = add(log(sum(exp(sub(aa, m)), d, true)), m);
+    if (!keepdim) out = out.squeeze(d);
+  }
+  // d(logsumexp)/dx = softmax(x, dim); reinsert the reduced axis on the
+  // incoming cotangent when the forward squeezed it away.
+  maybe_link_unary_op_(out, a, "logsumexp", [a, d, keepdim](const Series& g) {
+    const Series p = softmax(a, d);  // fresh, tracked; reuses the fused softmax above
+    const Series g_bc = keepdim ? g : g.unsqueeze(d);
+    return mul(p, g_bc);
+  });
   return out;
 }
 
@@ -3954,46 +4426,50 @@ static void maybe_link_scatter_reduce_(
       const Series a_is_zero = a_value.eq(zero);
       const Series src_is_zero = src_value.eq(zero);
 
-      Series zero_count = include_self
-          ? a_is_zero.to(out_sens.scalar_type())
-          : Series::zeros(a.sizes(), out_sens.scalar_type()).to(out_sens.platform());
-      zero_count = scatter_add(zero_count, dim, idx, src_is_zero.to(out_sens.scalar_type()));
+      // Match torch::autograd::scatter_reduce_backward. Receiver and source
+      // use different exclusive products because source zero counts
+      // intentionally exclude zeros from the receiver.
+      const Series masked_a = where(a_is_zero, one, a_value);
+      const Series masked_a_result = scatter_reduce(
+          masked_a, dim, idx, src_value, "prod", include_self);
+      Series ga = out_sens.mul(masked_a_result).div(masked_a);
 
-      const Series a_nonzero = include_self
-          ? where(a_is_zero, one, a_value)
-          : Series::ones(a.sizes(), out_sens.scalar_type()).to(out_sens.platform());
-      const Series src_nonzero = where(src_is_zero, one, src_value);
-      const Series nonzero_product = scatter_reduce(
-          a_nonzero, dim, idx, src_nonzero, "prod", /*include_self=*/true);
-      const Series no_zeros = zero_count.eq(zero);
-      const Series one_zero = zero_count.eq(one);
+      const Series src_zero_count = scatter_add(
+          Series::zeros(a.sizes(), out_sens.scalar_type()).to(out_sens.platform()),
+          dim,
+          idx,
+          src_is_zero.to(out_sens.scalar_type())).gather(dim, idx);
+      const Series src_single_zero = logical_and(src_is_zero, src_zero_count.eq(one));
+      const Series masked_src = where(src_single_zero, one, src_value);
+      const Series masked_src_result = scatter_reduce(
+          a_value, dim, idx, masked_src, "prod", include_self);
+      const Series gathered_masked_result = gather(out_sens.mul(masked_src_result), dim, idx);
+      const Series gathered_result = gather(out_sens.mul(out.to(out_sens.scalar_type())), dim, idx);
+      Series gs_expanded = where(
+          src_single_zero,
+          gathered_masked_result,
+          gathered_result.div(where(src_is_zero, one, src_value)));
+
+      if (series_tape::recording_enabled() && src_zero_count.gt(one).any().item<bool>()) {
+        PLUSS_FAIL(
+            "scatter_reduce: double backward is unsupported for src when more than one zero "
+            "is scattered to the same receiver position");
+      }
+
+      if (!include_self) {
+        ga = scatter(
+            ga,
+            dim,
+            idx,
+            Series::zeros(idx.sizes(), ga.scalar_type()).to(ga.platform()));
+      }
 
       if (ta) {
-        Series ga = Series::zeros(a.sizes(), out_sens.scalar_type()).to(out_sens.platform());
-        if (include_self) {
-          const Series safe_factor = where(a_is_zero, one, a_value);
-          const Series ordinary = out_sens.mul(out.to(out_sens.scalar_type()).div(safe_factor));
-          const Series sole_zero = out_sens.mul(nonzero_product);
-          ga = where(no_zeros, ordinary,
-                     where(logical_and(one_zero, a_is_zero), sole_zero, ga));
-        }
         if (ga.scalar_type() != a.scalar_type()) ga = ga.to(a.scalar_type());
         if (ga.platform() != a.platform()) ga = ga.to(a.platform());
         series_tape::accumulate_sensitivity(a, ga);
       }
       if (ts) {
-        const Series gathered_zero_count = gather(zero_count, dim, idx);
-        const Series gathered_no_zeros = gathered_zero_count.eq(zero);
-        const Series gathered_one_zero = gathered_zero_count.eq(one);
-        const Series gathered_sens = gather(out_sens, dim, idx);
-        const Series gathered_out = gather(out.to(out_sens.scalar_type()), dim, idx);
-        const Series safe_factor = where(src_is_zero, one, src_value);
-        const Series ordinary = gathered_sens.mul(gathered_out.div(safe_factor));
-        const Series sole_zero = gathered_sens.mul(gather(nonzero_product, dim, idx));
-        const Series zeros = Series::zeros(idx.sizes(), out_sens.scalar_type()).to(out_sens.platform());
-        Series gs_expanded = where(
-            gathered_no_zeros, ordinary,
-            where(logical_and(gathered_one_zero, src_is_zero), sole_zero, zeros));
         Series gs = reduce_broadcasted_sensitivity_to_like_(gs_expanded, src, "scatter_reduce");
         if (gs.scalar_type() != src.scalar_type()) gs = gs.to(src.scalar_type());
         if (gs.platform() != src.platform()) gs = gs.to(src.platform());
@@ -4002,9 +4478,9 @@ static void maybe_link_scatter_reduce_(
     };
   } else {
     link->propagate = [a, out, src, idx, dim, include_self, ta, ts](const Series& out_sens) {
-      const Series self_matches = include_self
-          ? a.eq(out).to(out_sens.scalar_type())
-          : Series::zeros(a.sizes(), out_sens.scalar_type()).to(out_sens.platform());
+      // Receiver/result ties remain in PyTorch's divisor when
+      // include_self=false; receiver gradients are zeroed afterwards.
+      const Series self_matches = a.eq(out).to(out_sens.scalar_type());
       const Series n_mask = self_matches.scatter_add(
           dim, idx,
           src.expand(idx.sizes(), true).eq(out.gather(dim, idx)).to(out_sens.scalar_type()));
@@ -4450,14 +4926,14 @@ Series maximum(const Series& a, const Series& b) {
     require_backend_dispatch_supported_(a.platform(), "maximum");
     native::cpu::maximum(aa, bb, out);
   }
-  // No gradient registration existed here at all until this fix -- ties
-  // (a == b) attribute the full gradient to `a`, matching this file's
-  // established inclusive-boundary convention for clamp_min/clamp_max
-  // (see those functions' own comments).
   maybe_link_binary_op_(
       out, a, b, "maximum",
-      [a, b](const Series& g) { return mul(g, ge(a, b).to(g.scalar_type())); },
-      [a, b](const Series& g) { return mul(g, lt(a, b).to(g.scalar_type())); });
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_lhs(autograd_binary::Rule::Maximum, g, a, b, out);
+      },
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_rhs(autograd_binary::Rule::Maximum, g, a, b, out);
+      });
   return out;
 }
 
@@ -4491,14 +4967,14 @@ Series minimum(const Series& a, const Series& b) {
     require_backend_dispatch_supported_(a.platform(), "minimum");
     native::cpu::minimum(aa, bb, out);
   }
-  // No gradient registration existed here at all until this fix -- ties
-  // (a == b) attribute the full gradient to `a`, matching this file's
-  // established inclusive-boundary convention for clamp_min/clamp_max
-  // (see those functions' own comments).
   maybe_link_binary_op_(
       out, a, b, "minimum",
-      [a, b](const Series& g) { return mul(g, le(a, b).to(g.scalar_type())); },
-      [a, b](const Series& g) { return mul(g, gt(a, b).to(g.scalar_type())); });
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_lhs(autograd_binary::Rule::Minimum, g, a, b, out);
+      },
+      [a, b, out](const Series& g) {
+        return autograd_binary::apply_rhs(autograd_binary::Rule::Minimum, g, a, b, out);
+      });
   return out;
 }
 
@@ -4777,10 +5253,7 @@ Series log2(const Series& a) {
     auto aa = a.contiguous().to(out.scalar_type());
     native::cpu::log2(aa, out);
   }
-  // d/dx log2(x) = 1 / (x * ln 2)
-  maybe_link_unary_op_(out, a, "log2", [a](const Series& g) {
-    return div(g, mul(a, scalar_like_(a, 0.6931471805599453)));
-  });
+  maybe_link_unary_rule_(out, a, "log2", autograd_unary::Rule::Log2);
   return out;
 }
 Series log10(const Series& a) {
@@ -4809,10 +5282,7 @@ Series log10(const Series& a) {
     auto aa = a.contiguous().to(out.scalar_type());
     native::cpu::log10(aa, out);
   }
-  // d/dx log10(x) = 1 / (x * ln 10)
-  maybe_link_unary_op_(out, a, "log10", [a](const Series& g) {
-    return div(g, mul(a, scalar_like_(a, 2.302585092994046)));
-  });
+  maybe_link_unary_rule_(out, a, "log10", autograd_unary::Rule::Log10);
   return out;
 }
 Series exp2(const Series& a) {
@@ -4841,10 +5311,7 @@ Series exp2(const Series& a) {
     auto aa = a.contiguous().to(out.scalar_type());
     native::cpu::exp2(aa, out);
   }
-  // d/dx 2^x = 2^x * ln 2
-  maybe_link_unary_op_(out, a, "exp2", [out](const Series& g) {
-    return mul(g, mul(out, scalar_like_(out, 0.6931471805599453)));
-  });
+  maybe_link_unary_rule_(out, a, "exp2", autograd_unary::Rule::Exp2);
   return out;
 }
 Series cbrt(const Series& a) {
@@ -4874,9 +5341,7 @@ Series cbrt(const Series& a) {
     native::cpu::cbrt(aa, out);
   }
   // d/dx cbrt(x) = 1 / (3 * cbrt(x)^2); vertical tangent (inf) at x = 0.
-  maybe_link_unary_op_(out, a, "cbrt", [out](const Series& g) {
-    return div(g, mul(scalar_like_(out, 3.0), mul(out, out)));
-  });
+  maybe_link_unary_rule_(out, a, "cbrt", autograd_unary::Rule::Cbrt);
   return out;
 }
 Series square(const Series& a) {
@@ -4913,9 +5378,9 @@ Series square(const Series& a) {
     // Snapshot tracked MPS inputs used in backward formulas so gradient
     // replay does not depend on transient alias lifetimes.
     const Series a_snapshot = a.clone();
-    maybe_link_unary_op_(out, a, [a_snapshot](const Series& g) {
+    maybe_link_unary_op_(out, a, [a_snapshot, out](const Series& g) {
       Series grad = autograd_unary::apply(
-          autograd_unary::Rule::Square, g, a_snapshot);
+          autograd_unary::Rule::Square, g, a_snapshot, out);
       if (a_snapshot.platform() == Platform::MPS) {
         // Force materialization before parent accumulation to avoid transient
         // MPS alias/cache hazards across adjacent backward nodes.
@@ -4947,7 +5412,7 @@ Series nan_to_num(const Series& a, double nan, double posinf, double neginf) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_unary_elementwise(a);
-    return cuda_elementwise_route_or_bridge_(
+    Series out = cuda_elementwise_route_or_bridge_(
         "nan_to_num",
         native_enabled,
         native_strict,
@@ -4958,11 +5423,18 @@ Series nan_to_num(const Series& a, double nan, double posinf, double neginf) {
           native::cpu::nan_to_num(aa, nan, posinf, neginf, out);
           return out;
         });
+    maybe_link_unary_op_(out, a, "nan_to_num", [a](const Series& g) {
+      return mul(g, isfinite(a).to(g.scalar_type()));
+    });
+    return out;
   }
   require_backend_dispatch_supported_(a.platform(), "nan_to_num");
   auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
   native::cpu::nan_to_num(aa, nan, posinf, neginf, out);
+  maybe_link_unary_op_(out, a, "nan_to_num", [a](const Series& g) {
+    return mul(g, isfinite(a).to(g.scalar_type()));
+  });
   return out;
 }
 Series& nan_to_num_(Series& a, double nan, double posinf, double neginf) {
@@ -5126,6 +5598,30 @@ Series masked_scatter(const Series& a, const Series& mask, const Series& src) {
   require_same_platform(a, src, "masked_scatter");
   Series out = a.clone();
   masked_scatter_(out, mask, src);
+  if (series_tape::recording_enabled()) {
+    const bool track_a = series_tape::tracks_slope(a);
+    const bool track_src = series_tape::tracks_slope(src);
+    if (track_a || track_src) {
+      auto link = std::make_shared<series_tape::SourceLink>();
+      link->op_name = "masked_scatter";
+      link->parents = {a, src};
+      link->propagate = [a, mask, src, track_a, track_src](const Series& out_sens) {
+        if (track_a) {
+          Series grad_a = masked_fill(out_sens, mask, 0.0);
+          if (grad_a.scalar_type() != a.scalar_type()) grad_a = grad_a.to(a.scalar_type());
+          if (grad_a.platform() != a.platform()) grad_a = grad_a.to(a.platform());
+          series_tape::accumulate_sensitivity(a, grad_a);
+        }
+        if (track_src) {
+          Series grad_src = masked_select(out_sens, mask).reshape(src.sizes());
+          if (grad_src.scalar_type() != src.scalar_type()) grad_src = grad_src.to(src.scalar_type());
+          if (grad_src.platform() != src.platform()) grad_src = grad_src.to(src.platform());
+          series_tape::accumulate_sensitivity(src, grad_src);
+        }
+      };
+      series_tape::bind_source_link(out, std::move(link));
+    }
+  }
   return out;
 }
 
@@ -7212,6 +7708,74 @@ Series Series::var(std::int64_t dim_, bool unbiased, bool keepdim) const {
   return v;
 }
 
+Series Series::layer_norm(pluss::msharp::RangeView::Int normalized_shape, const Series& weight,
+                           const Series& bias, double eps) const {
+  const Series& a = *this;
+  const std::int64_t nd = a.dim();
+  const std::int64_t k = static_cast<std::int64_t>(normalized_shape.size());
+  PLUSS_CHECK(k >= 1 && k <= nd, "layer_norm: normalized_shape rank exceeds input rank");
+  std::vector<std::int64_t> dims_vec(static_cast<std::size_t>(k));
+  for (std::int64_t i = 0; i < k; ++i) dims_vec[static_cast<std::size_t>(i)] = nd - k + i;
+
+  Series out;
+  {
+    // The mean/center/var/rsqrt chain here is purely for a throwaway forward
+    // value; the analytic reverse rule below recomputes it fresh from `a`,
+    // so building tape nodes for these intermediates would be pure waste
+    // (same reasoning as softmax()/logsumexp() above).
+    series_tape::NoGradGuard no_grad;
+    const Series aa = a.contiguous();
+    const Series mu = aa.mean(dims_vec, true);
+    const Series xc = aa.sub(mu);
+    const Series var = xc.mul(xc).mean(dims_vec, true);
+    const Series rstd = var.add(eps).rsqrt();
+    const Series xhat = xc.mul(rstd);
+    out = xhat.mul(weight).add(bias);
+  }
+
+  const bool ta = series_tape::tracks_slope(a);
+  const bool tw = series_tape::tracks_slope(weight);
+  const bool tb = series_tape::tracks_slope(bias);
+  if (series_tape::recording_enabled() && (ta || tw || tb)) {
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->op_name = "layer_norm";
+    link->parents = {a, weight, bias};
+    // Analytic layer-norm VJP (mean/var reduced jointly over dims_vec):
+    //   dxhat   = g * weight                        (broadcasts over batch dims)
+    //   dweight = sum(g * xhat, batch dims)
+    //   dbias   = sum(g, batch dims)
+    //   dx      = rstd * (dxhat - mean(dxhat, dims) - xhat * mean(dxhat*xhat, dims))
+    // xhat/rstd are recomputed fresh from `a` here (tracked ops, not the
+    // NoGradGuard-detached forward values above) so a second differentiation
+    // keeps their dependency on `a`/`weight`/`bias` in the graph.
+    link->propagate = [a, weight, bias, dims_vec, eps, ta, tw, tb](const Series& g) {
+      const Series aa = a.contiguous();
+      const Series mu = aa.mean(dims_vec, true);
+      const Series xc = aa.sub(mu);
+      const Series var = xc.mul(xc).mean(dims_vec, true);
+      const Series rstd = var.add(eps).rsqrt();
+      const Series xhat = xc.mul(rstd);
+      if (tw) {
+        const Series dweight = reduce_broadcasted_sensitivity_to_like_(g.mul(xhat), weight, "layer_norm");
+        series_tape::accumulate_sensitivity(weight, dweight);
+      }
+      if (tb) {
+        const Series dbias = reduce_broadcasted_sensitivity_to_like_(g, bias, "layer_norm");
+        series_tape::accumulate_sensitivity(bias, dbias);
+      }
+      if (ta) {
+        const Series dxhat = g.mul(weight);
+        const Series mean_dxhat = dxhat.mean(dims_vec, true);
+        const Series mean_dxhat_xhat = dxhat.mul(xhat).mean(dims_vec, true);
+        const Series dx = rstd.mul(dxhat.sub(mean_dxhat).sub(xhat.mul(mean_dxhat_xhat)));
+        series_tape::accumulate_sensitivity(a, dx);
+      }
+    };
+    series_tape::bind_source_link(out, std::move(link));
+  }
+  return out;
+}
+
 Series Series::std(bool unbiased) const {
   return var(unbiased).sqrt();
 }
@@ -8364,9 +8928,7 @@ Series Series::scatter(std::int64_t dim, const Series& index, const Series& src)
 }
 
 Series& Series::scatter_(std::int64_t dim, const Series& index, const Series& src) {
-  guard_direct_inplace_value_op_("scatter_", *this);
-  ops_internal::scatter_(*this, dim, index, src);
-  return finish_direct_inplace_value_op_(*this);
+  return pluss::codem::_compat::invoke_("scatter_", *this, {dim, index, src});
 }
 
 Series Series::scatter_add(std::int64_t dim, const Series& index, const Series& src) const {
@@ -8374,9 +8936,7 @@ Series Series::scatter_add(std::int64_t dim, const Series& index, const Series& 
 }
 
 Series& Series::scatter_add_(std::int64_t dim, const Series& index, const Series& src) {
-  guard_direct_inplace_value_op_("scatter_add_", *this);
-  ops_internal::scatter_add_(*this, dim, index, src);
-  return finish_direct_inplace_value_op_(*this);
+  return pluss::codem::_compat::invoke_("scatter_add_", *this, {dim, index, src});
 }
 
 static Series scalar_to_series_(double v, ScalarType dt, Platform platform) {
@@ -8507,7 +9067,13 @@ static void bind_cpu_index_backward_(
   auto link = std::make_shared<series_tape::SourceLink>();
   link->op_name = "index";
   link->parents = {input};
-  link->propagate = [input, indices](const Series& out_sens) {
+  link->propagate = [input, indices, selected_numel = out.numel()](const Series& out_sens) {
+    if (selected_numel == 0) {
+      series_tape::accumulate_sensitivity(
+          input,
+          Series::zeros(input.sizes(), input.scalar_type()).to(input.platform()));
+      return;
+    }
     Series sens = out_sens;
     if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
     if (sens.platform() != Platform::CPU) sens = sens.to(Platform::CPU, input.scalar_type());
@@ -8536,7 +9102,13 @@ static void bind_single_integer_index_backward_(
 
     PLUSS_CHECK(input.dim() >= 1, "index: tracked backward expects rank >= 1 input");
     const std::int64_t dim0 = input.sizes()[0];
-    PLUSS_CHECK(dim0 > 0, "index: tracked backward does not support empty dim0 inputs");
+    if (dim0 == 0) {
+      PLUSS_CHECK(idx.numel() == 0, "index: index is out of bounds for an empty input");
+      series_tape::accumulate_sensitivity(
+          input,
+          Series::zeros(input.sizes(), input.scalar_type()).to(input.platform()));
+      return;
+    }
     const std::int64_t trailing = std::max<std::int64_t>(1, input.numel() / dim0);
 
     const std::array<std::int64_t, 1> flat_index_shape{{idx.numel()}};
@@ -8933,9 +9505,7 @@ Series Series::masked_select(const Series& mask) const {return pluss::codem::ops
 Series Series::masked_scatter(const Series& mask, const Series& src) const {return pluss::codem::ops_internal::masked_scatter(*this, mask, src);}
 
 Series& Series::masked_scatter_(const Series& mask, const Series& src) {
-  guard_direct_inplace_value_op_("masked_scatter_", *this);
-  pluss::codem::ops_internal::masked_scatter_(*this, mask, src);
-  return finish_direct_inplace_value_op_(*this);
+  return pluss::codem::_compat::invoke_("masked_scatter_", *this, {mask, src});
 }
 
 Series Series::unique(bool sorted) const {return pluss::codem::ops_internal::unique(*this, sorted);}
@@ -9255,6 +9825,53 @@ Series Series::amax(std::int64_t dim, bool keepdim) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
   return ops_internal::amax(*this, dim, keepdim);
+}
+
+namespace {
+// sum/mean/amax/amin all commute across independent axes (reducing axis B
+// after axis A gives the same result regardless of order), so a multi-axis
+// reduction is exactly a fold of the single-axis reduction -- no separate
+// kernel or reverse rule needed. keepdim is held true through the fold so
+// each axis index is still valid for the next step regardless of input
+// order; the requested axes are squeezed together at the end when the caller
+// wants keepdim=false.
+Series fold_reduce_dims_(const Series& a, pluss::msharp::RangeView::Int dims, bool keepdim,
+                         Series (Series::*single)(std::int64_t, bool) const) {
+  PLUSS_CHECK(dims.size() > 0, "multi-axis reduction: dims must not be empty");
+  Series out = a;
+  for (const std::int64_t d : dims) out = (out.*single)(d, /*keepdim=*/true);
+  if (!keepdim) {
+    std::vector<std::int64_t> sorted(dims.begin(), dims.end());
+    const std::int64_t nd = a.dim();
+    for (auto& d : sorted) {
+      if (d < 0) d += nd;
+    }
+    std::sort(sorted.rbegin(), sorted.rend());
+    for (const std::int64_t d : sorted) out = out.squeeze(d);
+  }
+  return out;
+}
+}  // namespace
+
+Series Series::sum(pluss::msharp::RangeView::Int dims, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return fold_reduce_dims_(*this, dims, keepdim,
+                           static_cast<Series (Series::*)(std::int64_t, bool) const>(&Series::sum));
+}
+
+Series Series::mean(pluss::msharp::RangeView::Int dims, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return fold_reduce_dims_(*this, dims, keepdim,
+                           static_cast<Series (Series::*)(std::int64_t, bool) const>(&Series::mean));
+}
+
+Series Series::amax(pluss::msharp::RangeView::Int dims, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return fold_reduce_dims_(*this, dims, keepdim,
+                           static_cast<Series (Series::*)(std::int64_t, bool) const>(&Series::amax));
 }
 
 std::pair<Series, Series> Series::max_pair(std::int64_t dim, bool keepdim) const {
@@ -9629,6 +10246,13 @@ Series Series::amin(std::int64_t dim, bool keepdim) const {
   return ops_internal::amin(*this, dim, keepdim);
 }
 
+Series Series::amin(pluss::msharp::RangeView::Int dims, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return fold_reduce_dims_(*this, dims, keepdim,
+                           static_cast<Series (Series::*)(std::int64_t, bool) const>(&Series::amin));
+}
+
 Series Series::all(std::int64_t dim, bool keepdim) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
@@ -9765,21 +10389,104 @@ Series& Series::cumsum_(std::int64_t dim, bool keepdim) {
 
 
 
+static void bind_cumprod_backward_(
+    const Series& out,
+    const Series& input,
+    std::int64_t dim) {
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(input)) return;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "cumprod";
+  link->parents = {input};
+  link->propagate = [input, dim](const Series& out_sens) {
+    series_tape::NoGradGuard no_grad;
+    const auto shape = std::vector<std::int64_t>(input.sizes().begin(), input.sizes().end());
+    const auto n = shape[static_cast<std::size_t>(dim)];
+    std::int64_t outer = 1;
+    std::int64_t inner = 1;
+    for (std::int64_t d = 0; d < dim; ++d) outer *= shape[static_cast<std::size_t>(d)];
+    for (std::int64_t d = dim + 1; d < input.dim(); ++d) inner *= shape[static_cast<std::size_t>(d)];
+
+    Series grad;
+    if (complex_scalar_type_(input.scalar_type())) {
+      const Series x = input.to(Platform::CPU, ScalarType::Complex128).contiguous();
+      const Series sens = out_sens.to(Platform::CPU, ScalarType::Complex128).contiguous();
+      grad = Series::zeros(shape, ScalarType::Complex128);
+      const auto* xp = reinterpret_cast<const Complex128*>(x.raw_data());
+      const auto* gp = reinterpret_cast<const Complex128*>(sens.raw_data());
+      auto* destination = reinterpret_cast<Complex128*>(grad.raw_mutable_data());
+      std::vector<Complex128> prefix(static_cast<std::size_t>(n + 1));
+      for (std::int64_t o = 0; o < outer; ++o) {
+        for (std::int64_t lane = 0; lane < inner; ++lane) {
+          prefix[0] = Complex128(1.0, 0.0);
+          for (std::int64_t k = 0; k < n; ++k) {
+            const auto offset = (o * n + k) * inner + lane;
+            prefix[static_cast<std::size_t>(k + 1)] =
+                prefix[static_cast<std::size_t>(k)] * xp[offset];
+          }
+          for (std::int64_t j = 0; j < n; ++j) {
+            Complex128 suffix(1.0, 0.0);
+            const auto output_offset = (o * n + j) * inner + lane;
+            for (std::int64_t i = j; i >= 0; --i) {
+              const auto input_offset = (o * n + i) * inner + lane;
+              destination[input_offset] += gp[output_offset] * std::conj(
+                  prefix[static_cast<std::size_t>(i)] * suffix);
+              suffix *= xp[input_offset];
+            }
+          }
+        }
+      }
+    } else {
+      const Series x = input.to(Platform::CPU, ScalarType::Float64).contiguous();
+      const Series sens = out_sens.to(Platform::CPU, ScalarType::Float64).contiguous();
+      grad = Series::zeros(shape, ScalarType::Float64);
+      const auto* xp = reinterpret_cast<const double*>(x.raw_data());
+      const auto* gp = reinterpret_cast<const double*>(sens.raw_data());
+      auto* destination = reinterpret_cast<double*>(grad.raw_mutable_data());
+      std::vector<double> prefix(static_cast<std::size_t>(n + 1));
+      for (std::int64_t o = 0; o < outer; ++o) {
+        for (std::int64_t lane = 0; lane < inner; ++lane) {
+          prefix[0] = 1.0;
+          for (std::int64_t k = 0; k < n; ++k) {
+            const auto offset = (o * n + k) * inner + lane;
+            prefix[static_cast<std::size_t>(k + 1)] =
+                prefix[static_cast<std::size_t>(k)] * xp[offset];
+          }
+          for (std::int64_t j = 0; j < n; ++j) {
+            double suffix = 1.0;
+            const auto output_offset = (o * n + j) * inner + lane;
+            for (std::int64_t i = j; i >= 0; --i) {
+              const auto input_offset = (o * n + i) * inner + lane;
+              destination[input_offset] +=
+                  gp[output_offset] * prefix[static_cast<std::size_t>(i)] * suffix;
+              suffix *= xp[input_offset];
+            }
+          }
+        }
+      }
+    }
+    if (grad.scalar_type() != input.scalar_type()) grad = grad.to(input.scalar_type());
+    if (grad.platform() != input.platform()) grad = grad.to(input.platform(), input.scalar_type());
+    series_tape::accumulate_sensitivity(input, grad);
+  };
+  series_tape::bind_source_link(out, std::move(link));
+}
+
 Series Series::cumprod(std::int64_t dim, bool keepdim) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
   (void)keepdim;
+  if (dim < 0) dim += this->dim();
+  PLUSS_CHECK(dim >= 0 && dim < this->dim(), "cumprod: dim out of range");
   Series a = is_contiguous() ? *this : contiguous();
+  Series out;
   if (platform() == Platform::MPS && native::mps::supports_cumprod_dim(a.scalar_type())) {
-    Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
+    out = Series::empty(a.sizes(), a.scalar_type(), platform());
     native::mps::cumprod_dim(a, dim, out);
-    return out;
-  }
-  if (platform() == Platform::CUDA) {
+  } else if (platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_scan_enabled();
     const bool native_strict = native::cuda::native_scan_strict();
     const bool route_supported = native::cuda::supports_cumprod_scan(a, dim);
-    return cuda_scan_route_or_bridge_(
+    out = cuda_scan_route_or_bridge_(
         "cumprod",
         native_enabled,
         native_strict,
@@ -9789,10 +10496,12 @@ Series Series::cumprod(std::int64_t dim, bool keepdim) const {
           native::cpu::cumprod_dim(a, dim, out);
           return out;
         });
+  } else {
+    require_backend_dispatch_supported_(platform(), "cumprod");
+    out = Series::empty(a.sizes(), a.scalar_type(), platform());
+    native::cpu::cumprod_dim(a, dim, out);
   }
-  require_backend_dispatch_supported_(platform(), "cumprod");
-  Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
-  native::cpu::cumprod_dim(a, dim, out);
+  bind_cumprod_backward_(out, *this, dim);
   return out;
 }
 

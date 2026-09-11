@@ -163,6 +163,10 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series real(const Series& a);
   Series imag(const Series& a);
   Series angle(const Series& a);
+  // torch.complex: build a complex Series from real + imaginary parts.
+  // Differentiable — grad flows back as real(grad) / imag(grad).
+  Series complex_from_parts(const Series& real_part, const Series& imag_part,
+                            ScalarType out_dt);
 
   // Ternary and masking
   Series where(const Series& cond, const Series& a, const Series& b);
@@ -181,10 +185,37 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series& softplus_(Series& a, double beta=1.0, double threshold=20.0);
   Series silu(const Series& a);
   Series& silu_(Series& a);
-  Series gelu(const Series& a, bool approximate=true);
-  Series& gelu_(Series& a, bool approximate=true);
+  // approximate=false is exact-erf gelu (x*Phi(x)); matches the torch default
+  // ('none'). Pass true for the tanh approximation.
+  Series gelu(const Series& a, bool approximate=false);
+  Series& gelu_(Series& a, bool approximate=false);
   Series leaky_relu(const Series& a, double negative_slope=0.01);
   Series& leaky_relu_(Series& a, double negative_slope=0.01);
+  // Matches at::elu's 3-parameter form (also the shared implementation
+  // behind celu/selu): scale*x for x>0, alpha*scale*(exp(input_scale*x)-1)
+  // otherwise.
+  Series elu(const Series& a, double alpha=1.0, double scale=1.0, double input_scale=1.0);
+  Series& elu_(Series& a, double alpha=1.0, double scale=1.0, double input_scale=1.0);
+  Series celu(const Series& a, double alpha=1.0);
+  Series& celu_(Series& a, double alpha=1.0);
+  Series selu(const Series& a);
+  Series& selu_(Series& a);
+  Series hardsigmoid(const Series& a);
+  Series& hardsigmoid_(Series& a);
+  Series hardswish(const Series& a);
+  Series& hardswish_(Series& a);
+  Series mish(const Series& a);
+  Series& mish_(Series& a);
+  // x if x > threshold_val else value (value is a plain constant, no grad).
+  Series threshold(const Series& a, double threshold_val, double value);
+  Series& threshold_(Series& a, double threshold_val, double value);
+  // rrelu's fused single-node form lives in compat/Invoke.cpp (rrelu_impl_)
+  // rather than here: its training-mode RNG must reuse the exact noise draw
+  // from forward in the backward closure (not recompute it -- unlike every
+  // other Track B op, since this noise never depends on `a` there's no
+  // higher-order pitfall in capturing it), and the uniform-sampling helper
+  // it needs (uniform_like) is a compat-layer primitive with no
+  // ops_internal equivalent.
 
 
   // Clamping / activations

@@ -13,11 +13,11 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Note::base64_decode" href="api/note/base64_decode.html" />
+    <link rel="next" title="Note::align_sentences" href="api/note/align_sentences.html" />
     <link rel="prev" title="pluss::series::from_torch" href="api/series_factory/from_torch.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -47,7 +47,7 @@ object references. For <em>building</em> a <code class="docutils literal notrans
 this page assumes a <code class="docutils literal notranslate"><span class="pre">Note</span></code> already exists.</p>
 <section id="what-note-is">
 <h2>What <code class="docutils literal notranslate"><span class="pre">Note</span></code> Is<a class="headerlink" href="#what-note-is" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Note</span></code> is the text object in the plussmic data-analysis stack. A <code class="docutils literal notranslate"><span class="pre">Note</span></code> is a
+<p><code class="docutils literal notranslate"><span class="pre">Note</span></code> is PlussQit’s low-level text value. A <code class="docutils literal notranslate"><span class="pre">Note</span></code> is a
 shape (up to 3-D) of text cells — UTF-8 by default, or raw bytes — and its
 methods transform those cells in a <strong>vectorized, shape-preserving</strong> way, the
 same way <code class="docutils literal notranslate"><span class="pre">Series</span></code> transforms numbers and <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> transforms instants.</p>
@@ -59,12 +59,16 @@ preprocessing.</p>
 <section id="how-the-methods-are-shaped">
 <h2>How The Methods Are Shaped<a class="headerlink" href="#how-the-methods-are-shaped" title="Link to this heading">¶</a></h2>
 <p>Most <code class="docutils literal notranslate"><span class="pre">Note</span></code> methods <strong>preserve shape</strong> and act cell by cell: a rank-<code class="docutils literal notranslate"><span class="pre">1</span></code>
-<code class="docutils literal notranslate"><span class="pre">Note</span></code> of three cells maps to a rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">Note</span></code> of three cells. Three
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> of three cells maps to a rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">Note</span></code> of three cells. A few
 families break that mould:</p>
 <ul class="simple">
 <li><p><strong>Predicates</strong> — <a class="reference internal" href="api/note/contains.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contains</span></code></span></a>,
-<a class="reference internal" href="api/note/starts_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">starts_with</span></code></span></a>, and
-<a class="reference internal" href="api/note/ends_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ends_with</span></code></span></a> return a flat
+<a class="reference internal" href="api/note/starts_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">starts_with</span></code></span></a>,
+<a class="reference internal" href="api/note/ends_with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ends_with</span></code></span></a>, the <code class="docutils literal notranslate"><span class="pre">is_*</span></code> character-property checks
+(<a class="reference internal" href="api/note/is_alpha.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_alpha</span></code></span></a>, <a class="reference internal" href="api/note/is_digit.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_digit</span></code></span></a>,
+<a class="reference internal" href="api/note/is_blank.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_blank</span></code></span></a>, …), and
+<a class="reference internal" href="api/note/regex_match.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex_match</span></code></span></a> /
+<a class="reference internal" href="api/note/regex_search.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex_search</span></code></span></a> return a flat
 <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::uint8_t&gt;</span></code> of <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code>, one entry per cell in row-major
 order.</p></li>
 <li><p><strong>Measurements</strong> — <a class="reference internal" href="api/note/lengths_bytes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lengths_bytes</span></code></span></a>,
@@ -76,18 +80,59 @@ order.</p></li>
 <a class="reference internal" href="api/note/split_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_lines</span></code></span></a>,
 <a class="reference internal" href="api/note/split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code></span></a>,
 <a class="reference internal" href="api/note/tokenize_words.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tokenize_words</span></code></span></a>, and
-<a class="reference internal" href="api/note/regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex_findall</span></code></span></a> return a <strong><code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code></strong>:
+<a class="reference internal" href="api/note/regex_findall.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex_findall</span></code></span></a>, and the diff / align family
+(<a class="reference internal" href="api/note/diff_words.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff_words</span></code></span></a>,
+<a class="reference internal" href="api/note/diff_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff_lines</span></code></span></a>,
+<a class="reference internal" href="api/note/diff_chars.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff_chars</span></code></span></a>,
+<a class="reference internal" href="api/note/align_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align_tokens</span></code></span></a>,
+<a class="reference internal" href="api/note/align_sentences.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align_sentences</span></code></span></a>) return a <strong><code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code></strong>:
 one flat token <code class="docutils literal notranslate"><span class="pre">Note</span></code> (<code class="docutils literal notranslate"><span class="pre">batch.tokens()</span></code>) plus an
 <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> vector (<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::int64_t&gt;</span></code>, length <code class="docutils literal notranslate"><span class="pre">numel</span> <span class="pre">+</span> <span class="pre">1</span></code>) that
 marks where each input cell’s run of tokens begins and ends in the flat
 stream. Row <code class="docutils literal notranslate"><span class="pre">r</span></code>’s tokens are <code class="docutils literal notranslate"><span class="pre">tokens()[offsets()[r]</span> <span class="pre">..</span> <span class="pre">offsets()[r+1])</span></code>.</p></li>
+<li><p><strong>Set-similarity comparisons</strong> — the <code class="docutils literal notranslate"><span class="pre">intersect_*</span></code>, <code class="docutils literal notranslate"><span class="pre">jaccard_*</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">overlap_*</span></code> methods each take a second <code class="docutils literal notranslate"><span class="pre">Note</span></code> and compare cell against
+matching cell (equal <code class="docutils literal notranslate"><span class="pre">numel</span></code>, or a scalar broadcast). <code class="docutils literal notranslate"><span class="pre">intersect_*</span></code>
+(<a class="reference internal" href="api/note/intersect_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">intersect_tokens</span></code></span></a>, …) return a
+<code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> of the shared tokens; <code class="docutils literal notranslate"><span class="pre">jaccard_*</span></code>
+(<a class="reference internal" href="api/note/jaccard_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">jaccard_tokens</span></code></span></a>, …) and <code class="docutils literal notranslate"><span class="pre">overlap_*</span></code>
+(<a class="reference internal" href="api/note/overlap_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">overlap_tokens</span></code></span></a>, …) return a
+shape-preserving <code class="docutils literal notranslate"><span class="pre">Note</span></code> whose cells are similarity scores formatted as
+strings in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>Shape &amp; layout</strong> — <a class="reference internal" href="api/note/reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape</span></code></span></a>,
+<a class="reference internal" href="api/note/flatten.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">flatten</span></code></span></a>, <a class="reference internal" href="api/note/squeeze.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">squeeze</span></code></span></a>,
+<a class="reference internal" href="api/note/unsqueeze.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">unsqueeze</span></code></span></a>, <a class="reference internal" href="api/note/transpose.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transpose</span></code></span></a>,
+<a class="reference internal" href="api/note/permute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permute</span></code></span></a>, and <a class="reference internal" href="api/note/contiguous.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contiguous</span></code></span></a>
+change the rank or axis order of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> without touching a single cell
+string.</p></li>
+<li><p><strong>Cell access &amp; ownership</strong> — <a class="reference internal" href="api/note/at.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">at</span></code></span></a> and
+<a class="reference internal" href="api/note/at_indices.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">at_indices</span></code></span></a> borrow one cell as a
+<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>; <a class="reference internal" href="api/note/cell.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cell</span></code></span></a>,
+<a class="reference internal" href="api/note/cell_at.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cell_at</span></code></span></a>, and <a class="reference internal" href="api/note/owned.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">owned</span></code></span></a> return a
+<code class="docutils literal notranslate"><span class="pre">TextRef</span></code> that keeps the packed arena alive; <a class="reference internal" href="api/note/host.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">host</span></code></span></a>
+materializes rank-aware owning standard-library strings.</p></li>
+<li><p><strong>Borrowed structural projections</strong> — <a class="reference internal" href="api/note/scalar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">scalar</span></code></span></a>
+borrows the sole cell regardless of rank; <a class="reference internal" href="api/note/vector.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">vector</span></code></span></a>
+flattens every rank; <a class="reference internal" href="api/note/matrix.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matrix</span></code></span></a> preserves rank two and
+promotes lower ranks; <a class="reference internal" href="api/note/tensor3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tensor3</span></code></span></a> requires exact rank
+three; <a class="reference internal" href="api/note/sizes_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes_view</span></code></span></a> borrows the extents without
+allocating.</p></li>
 </ul>
 </section>
 <section id="running-the-examples">
 <h2>Running The Examples<a class="headerlink" href="#running-the-examples" title="Link to this heading">¶</a></h2>
 <p>Every example is a runnable fragment (assume <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&lt;pluss/pluss.h&gt;</span></code> and
-<code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&lt;iostream&gt;</span></code>), and every <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">Output</span></code> block is copied verbatim from
-the compiled program <code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_method_reference_demo.cpp</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&lt;iostream&gt;</span></code>), and every <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">Output</span></code> block is copied verbatim from a
+permanent compiled reference executable. The cell-access family is verified by
+<code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_access_reference_demo.cpp</span></code>, with its exact transcript in
+<code class="docutils literal notranslate"><span class="pre">docs/sphinx/_verified/note_access_reference_output.txt</span></code>; broader transformation
+examples remain in <code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_method_reference_demo.cpp</span></code>. Structural
+projection examples are verified by
+<code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_projection_reference_demo.cpp</span></code>, with its exact transcript
+in <code class="docutils literal notranslate"><span class="pre">docs/sphinx/_verified/note_projection_reference_output.txt</span></code>. Collection
+reduction and ordering examples are verified by
+<code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_collection_reference_demo.cpp</span></code>, with its exact transcript
+in <code class="docutils literal notranslate"><span class="pre">docs/sphinx/_verified/note_collection_reference_output.txt</span></code>.</p>
 <p>To print a <code class="docutils literal notranslate"><span class="pre">Note</span></code>, any of these render byte-identical text, and the pages
 rotate through them:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// print(n) -&gt; std::string</span>
@@ -122,30 +167,71 @@ a <code class="docutils literal notranslate"><span class="pre">Triggered</span> 
 <h2>Coverage<a class="headerlink" href="#coverage" title="Link to this heading">¶</a></h2>
 <p>This reference documents the methods users reach for first:</p>
 <ul class="simple">
+<li><p><strong>Metadata and rank</strong> — <code class="docutils literal notranslate"><span class="pre">defined</span></code>, <code class="docutils literal notranslate"><span class="pre">dim</span></code>, <code class="docutils literal notranslate"><span class="pre">size</span></code>, <code class="docutils literal notranslate"><span class="pre">sizes</span></code>, <code class="docutils literal notranslate"><span class="pre">numel</span></code>,
+<code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">is_scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">is_vector</span></code>, <code class="docutils literal notranslate"><span class="pre">is_matrix</span></code>, and <code class="docutils literal notranslate"><span class="pre">is_tensor3</span></code>.</p></li>
 <li><p><strong>Case</strong> — <code class="docutils literal notranslate"><span class="pre">lower</span></code>, <code class="docutils literal notranslate"><span class="pre">upper</span></code>, <code class="docutils literal notranslate"><span class="pre">casefold</span></code>, <code class="docutils literal notranslate"><span class="pre">title</span></code>, <code class="docutils literal notranslate"><span class="pre">capitalize</span></code>,
 <code class="docutils literal notranslate"><span class="pre">swapcase</span></code>.</p></li>
-<li><p><strong>Boundary and rewriting</strong> — <code class="docutils literal notranslate"><span class="pre">strip</span></code>, <code class="docutils literal notranslate"><span class="pre">replace</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_all</span></code>, <code class="docutils literal notranslate"><span class="pre">quote</span></code>,
-<code class="docutils literal notranslate"><span class="pre">unquote</span></code>.</p></li>
-<li><p><strong>Inspection</strong> — <code class="docutils literal notranslate"><span class="pre">contains</span></code>, <code class="docutils literal notranslate"><span class="pre">starts_with</span></code>, <code class="docutils literal notranslate"><span class="pre">ends_with</span></code>,
-<code class="docutils literal notranslate"><span class="pre">count_substring</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_chars</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_graphemes</span></code>.</p></li>
+<li><p><strong>Boundary trimming</strong> — <code class="docutils literal notranslate"><span class="pre">strip</span></code>, <code class="docutils literal notranslate"><span class="pre">lstrip</span></code>, <code class="docutils literal notranslate"><span class="pre">rstrip</span></code>.</p></li>
+<li><p><strong>Whitespace &amp; layout</strong> — <code class="docutils literal notranslate"><span class="pre">collapse_whitespace</span></code>, <code class="docutils literal notranslate"><span class="pre">collapse_spaces</span></code>,
+<code class="docutils literal notranslate"><span class="pre">collapse_newlines</span></code>, <code class="docutils literal notranslate"><span class="pre">collapse_repeats</span></code>, <code class="docutils literal notranslate"><span class="pre">collapse_punct</span></code>, <code class="docutils literal notranslate"><span class="pre">dedent</span></code>,
+<code class="docutils literal notranslate"><span class="pre">indent</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_control_chars</span></code>, <code class="docutils literal notranslate"><span class="pre">to_ascii</span></code>.</p></li>
+<li><p><strong>Unicode normalization</strong> — <code class="docutils literal notranslate"><span class="pre">to_nfc</span></code>, <code class="docutils literal notranslate"><span class="pre">to_nfd</span></code>, <code class="docutils literal notranslate"><span class="pre">to_nfkc</span></code>, <code class="docutils literal notranslate"><span class="pre">to_nfkd</span></code>,
+<code class="docutils literal notranslate"><span class="pre">strip_accents</span></code>, <code class="docutils literal notranslate"><span class="pre">strip_bom</span></code>, <code class="docutils literal notranslate"><span class="pre">strip_zero_width</span></code>, <code class="docutils literal notranslate"><span class="pre">normalize_quotes</span></code>,
+<code class="docutils literal notranslate"><span class="pre">normalize_dashes</span></code>, <code class="docutils literal notranslate"><span class="pre">normalize_ellipsis</span></code>.</p></li>
+<li><p><strong>Character-class filters</strong> — <code class="docutils literal notranslate"><span class="pre">remove_punctuation</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_symbols</span></code>,
+<code class="docutils literal notranslate"><span class="pre">remove_digits</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_letters</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_emojis</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_alnum</span></code>,
+<code class="docutils literal notranslate"><span class="pre">keep_alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_digits</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_ascii</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_printable</span></code>.</p></li>
+<li><p><strong>Rewriting</strong> — <code class="docutils literal notranslate"><span class="pre">replace</span></code>, <code class="docutils literal notranslate"><span class="pre">replace_first</span></code>, <code class="docutils literal notranslate"><span class="pre">replace_last</span></code>, <code class="docutils literal notranslate"><span class="pre">replace_n</span></code>,
+<code class="docutils literal notranslate"><span class="pre">regex_replace</span></code>, <code class="docutils literal notranslate"><span class="pre">remove</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_all</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_prefix</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_suffix</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ensure_prefix</span></code>, <code class="docutils literal notranslate"><span class="pre">ensure_suffix</span></code>, <code class="docutils literal notranslate"><span class="pre">surround</span></code>, <code class="docutils literal notranslate"><span class="pre">quote</span></code>, <code class="docutils literal notranslate"><span class="pre">unquote</span></code>.</p></li>
+<li><p><strong>Inspection</strong> — <code class="docutils literal notranslate"><span class="pre">contains</span></code>, <code class="docutils literal notranslate"><span class="pre">contains_any_alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">contains_any_digit</span></code>,
+<code class="docutils literal notranslate"><span class="pre">starts_with</span></code>, <code class="docutils literal notranslate"><span class="pre">ends_with</span></code>, <code class="docutils literal notranslate"><span class="pre">count_substring</span></code>, <code class="docutils literal notranslate"><span class="pre">regex_match</span></code>,
+<code class="docutils literal notranslate"><span class="pre">regex_search</span></code>, <code class="docutils literal notranslate"><span class="pre">is_alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">is_alnum</span></code>, <code class="docutils literal notranslate"><span class="pre">is_digit</span></code>, <code class="docutils literal notranslate"><span class="pre">is_lower</span></code>, <code class="docutils literal notranslate"><span class="pre">is_upper</span></code>,
+<code class="docutils literal notranslate"><span class="pre">is_title</span></code>, <code class="docutils literal notranslate"><span class="pre">is_whitespace</span></code>, <code class="docutils literal notranslate"><span class="pre">is_blank</span></code>, <code class="docutils literal notranslate"><span class="pre">is_ascii</span></code>, <code class="docutils literal notranslate"><span class="pre">is_utf8_valid</span></code>,
+<code class="docutils literal notranslate"><span class="pre">is_bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_chars</span></code>, <code class="docutils literal notranslate"><span class="pre">lengths_graphemes</span></code>.</p></li>
 <li><p><strong>Tokenizers</strong> — <code class="docutils literal notranslate"><span class="pre">split</span></code>, <code class="docutils literal notranslate"><span class="pre">split_lines</span></code>, <code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code>,
 <code class="docutils literal notranslate"><span class="pre">tokenize_words</span></code>, <code class="docutils literal notranslate"><span class="pre">regex_findall</span></code>.</p></li>
+<li><p><strong>Diff &amp; align</strong> — <code class="docutils literal notranslate"><span class="pre">diff_words</span></code>, <code class="docutils literal notranslate"><span class="pre">diff_lines</span></code>, <code class="docutils literal notranslate"><span class="pre">diff_chars</span></code>,
+<code class="docutils literal notranslate"><span class="pre">align_tokens</span></code>, <code class="docutils literal notranslate"><span class="pre">align_sentences</span></code>.</p></li>
+<li><p><strong>Set similarity</strong> — <code class="docutils literal notranslate"><span class="pre">intersect_tokens</span></code>, <code class="docutils literal notranslate"><span class="pre">intersect_terms</span></code>,
+<code class="docutils literal notranslate"><span class="pre">intersect_acronyms</span></code>, <code class="docutils literal notranslate"><span class="pre">intersect_citations</span></code>, <code class="docutils literal notranslate"><span class="pre">intersect_math_symbols</span></code>;
+<code class="docutils literal notranslate"><span class="pre">jaccard_*</span></code> and <code class="docutils literal notranslate"><span class="pre">overlap_*</span></code> for the same five token-set kinds.</p></li>
 <li><p><strong>Targeted masking</strong> — <code class="docutils literal notranslate"><span class="pre">nlp_mask_pii</span></code>, <code class="docutils literal notranslate"><span class="pre">nlp_remove_urls</span></code>.</p></li>
 <li><p><strong>TeX</strong> — <code class="docutils literal notranslate"><span class="pre">tex_escape</span></code>, <code class="docutils literal notranslate"><span class="pre">tex_to_text</span></code>.</p></li>
 <li><p><strong>Transport encodings</strong> — <code class="docutils literal notranslate"><span class="pre">base64_encode</span></code>/<code class="docutils literal notranslate"><span class="pre">base64_decode</span></code>,
 <code class="docutils literal notranslate"><span class="pre">hex_encode</span></code>/<code class="docutils literal notranslate"><span class="pre">hex_decode</span></code>, <code class="docutils literal notranslate"><span class="pre">url_encode</span></code>/<code class="docutils literal notranslate"><span class="pre">url_decode</span></code>.</p></li>
+<li><p><strong>Escaping</strong> — <code class="docutils literal notranslate"><span class="pre">html_escape</span></code>/<code class="docutils literal notranslate"><span class="pre">html_unescape</span></code>, <code class="docutils literal notranslate"><span class="pre">json_escape</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tex_escape</span></code>/<code class="docutils literal notranslate"><span class="pre">tex_to_text</span></code>.</p></li>
+<li><p><strong>Encoding &amp; transcoding</strong> — <code class="docutils literal notranslate"><span class="pre">to_utf8_strict</span></code>, <code class="docutils literal notranslate"><span class="pre">to_utf8_lossy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">from_latin1</span></code>/<code class="docutils literal notranslate"><span class="pre">to_latin1_lossy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">from_windows1252</span></code>/<code class="docutils literal notranslate"><span class="pre">to_windows1252_lossy</span></code> — convert between a bytes-mode
+payload and UTF-8 text.</p></li>
+<li><p><strong>Transliteration &amp; phonetics</strong> — <code class="docutils literal notranslate"><span class="pre">transliterate_ascii</span></code> (and its synonym
+<code class="docutils literal notranslate"><span class="pre">transliterate_latin</span></code>), <code class="docutils literal notranslate"><span class="pre">transliterate_greek</span></code>, <code class="docutils literal notranslate"><span class="pre">transliterate_cyrillic</span></code>;
+<code class="docutils literal notranslate"><span class="pre">phonetic_soundex</span></code>, <code class="docutils literal notranslate"><span class="pre">phonetic_metaphone</span></code>.</p></li>
+<li><p><strong>Shape &amp; layout</strong> — <code class="docutils literal notranslate"><span class="pre">reshape</span></code>, <code class="docutils literal notranslate"><span class="pre">flatten</span></code>, <code class="docutils literal notranslate"><span class="pre">squeeze</span></code>,
+<code class="docutils literal notranslate"><span class="pre">unsqueeze</span></code> (synonym <code class="docutils literal notranslate"><span class="pre">expand_dims</span></code>), <code class="docutils literal notranslate"><span class="pre">transpose</span></code>, <code class="docutils literal notranslate"><span class="pre">permute</span></code>, <code class="docutils literal notranslate"><span class="pre">contiguous</span></code>.
+These are metadata-only: the cell strings are untouched, only the rank and
+axis order change.</p></li>
+<li><p><strong>Selection &amp; slicing</strong> — <code class="docutils literal notranslate"><span class="pre">select</span></code> (one slab along an axis, that axis
+dropped), <code class="docutils literal notranslate"><span class="pre">narrow</span></code> (a contiguous range along an axis, rank kept), <code class="docutils literal notranslate"><span class="pre">take</span></code>
+(gather cells by an index list, rank-1 result).</p></li>
+<li><p><strong>Collection reduction &amp; ordering</strong> — <code class="docutils literal notranslate"><span class="pre">join</span></code> reduces all text cells to a
+scalar Note, <code class="docutils literal notranslate"><span class="pre">join_flat</span></code> extracts one owning standard string, <code class="docutils literal notranslate"><span class="pre">sort</span></code> orders
+lanes, <code class="docutils literal notranslate"><span class="pre">unique</span></code> returns sorted distinct values or slices, and <code class="docutils literal notranslate"><span class="pre">deduplicate</span></code>
+keeps their first-seen order.</p></li>
 </ul>
-<p>The rest of the <code class="docutils literal notranslate"><span class="pre">Note</span></code> surface — broader cleanup, NLP extraction, diff/align,
-Unicode normalization, transliteration, and phonetics — is documented method
-by method in later passes.</p>
+<p>The rest of the <code class="docutils literal notranslate"><span class="pre">Note</span></code> surface — broader cleanup, NLP extraction, and the
+remaining structural operations (<code class="docutils literal notranslate"><span class="pre">repeat</span></code>, <code class="docutils literal notranslate"><span class="pre">repeat_interleave</span></code>) — is
+documented method by method in later passes.</p>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="../api_reference.html">
     <span class="label">Previous</span>
     <span class="title">PlussQit API Reference</span>
   </a>
-  <a class="next-link" href="api/note/base64_decode.html">
+  <a class="next-link" href="api/note/align_sentences.html">
     <span class="label">Next</span>
-    <span class="title">base64_decode</span>
+    <span class="title">align_sentences</span>
   </a>
 </div>
 </section>
@@ -205,6 +291,7 @@ by method in later passes.</p>
 <li class="toctree-l1"><a class="reference internal" href="../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -232,6 +319,7 @@ by method in later passes.</p>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">
@@ -240,7 +328,7 @@ by method in later passes.</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
       <li>Previous: <a href="api/series_factory/from_torch.html" title="previous chapter">pluss::series::from_torch</a></li>
-      <li>Next: <a href="api/note/base64_decode.html" title="next chapter">Note::base64_decode</a></li>
+      <li>Next: <a href="api/note/align_sentences.html" title="next chapter">Note::align_sentences</a></li>
   </ul></li>
   </ul></li>
 </ul>

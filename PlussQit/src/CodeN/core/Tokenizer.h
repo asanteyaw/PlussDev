@@ -12,7 +12,7 @@ namespace pluss::coden {
 //
 // Goals:
 // - Provide a stable OO surface for integrations (BPE, SentencePiece, etc.)
-// - Keep the core Note/Chord ops as pure functions (ops_internal)
+// - Keep the core Note/text ops as pure functions (ops_internal)
 // - Avoid committing to a specific tokenizer algorithm early
 
 class Tokenizer {

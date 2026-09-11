@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=d26de54a"></script>
+    <script src="../_static/api_nav.js?v=41aa11a5"></script>
     <script src="../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -64,9 +64,11 @@ values with <code class="docutils literal notranslate"><span class="pre">format<
 <li><p>Resolve fixed or relative scalar expressions with <code class="docutils literal notranslate"><span class="pre">moment</span></code>, <code class="docutils literal notranslate"><span class="pre">now</span></code>, and <code class="docutils literal notranslate"><span class="pre">today</span></code>.</p></li>
 </ul>
 <p>Every deterministic output in these pages is produced by
-<code class="docutils literal notranslate"><span class="pre">examples/CodeH/timeline_factory_reference_demo.cpp</span></code>. Seeded examples make the
-random pages reproducible; live-clock examples state invariants rather than
-pretending that <code class="docutils literal notranslate"><span class="pre">now()</span></code> has a fixed output.</p>
+<code class="docutils literal notranslate"><span class="pre">examples/CodeH/timeline_factory_reference_demo.cpp</span></code>; its exact transcript is
+checked in at
+<code class="docutils literal notranslate"><span class="pre">docs/sphinx/_verified/timeline_factory_reference_output.txt</span></code>. Seeded examples
+make the random pages reproducible; live-clock examples state invariants rather
+than pretending that <code class="docutils literal notranslate"><span class="pre">now()</span></code> has a fixed output.</p>
 <p>In signatures, <code class="docutils literal notranslate"><span class="pre">string_range</span></code> and <code class="docutils literal notranslate"><span class="pre">integer_range</span></code> mean any accepted contiguous
 range of those values; <code class="docutils literal notranslate"><span class="pre">nested_string_values</span></code> means a rectangular braced literal
 up to rank three. Those labels describe call-site concepts and intentionally do
@@ -134,6 +136,7 @@ not expose the private reader adapters that implement overload unification.</p>
 <li class="toctree-l1"><a class="reference internal" href="../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../NaN_Inf.html">NaN / Inf behavior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Norms.html">Norms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Ownership.html">Ownership &amp; lifetime</a></li>
@@ -161,6 +164,7 @@ not expose the private reader adapters that implement overload unification.</p>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
 <div class="relations">

@@ -566,7 +566,7 @@ inline void write_timeline_payload_(
   if (!value.defined()) return;
 
   const auto sizes = to_sizes_(value.sizes());
-  const auto flat = value.to_epoch_nanos_vector();
+  const auto flat = value.ticks();
   const auto numel = checked_numel_(sizes, "pluss::io::save(Timeline)");
 
   PLUSS_CHECK(
@@ -624,7 +624,7 @@ inline pluss::Timeline read_timeline_payload_(BinaryReader& reader, const LoadOp
   };
 
   try {
-    return pluss::codeh::Timeline::from_buffer_epoch_nanos(
+    return pluss::codeh::Timeline::from_buffer(
         raw,
         std::span<const std::int64_t>(sizes.data(), sizes.size()),
         std::span<const std::int64_t>(strides.data(), strides.size()),
@@ -653,7 +653,7 @@ inline void write_timeindex_payload_(
     BinaryWriter& writer,
     const pluss::TimeIndex& value,
     const SaveOptions& options) {
-  const auto ticks = value.timeline().to_epoch_nanos_vector();
+  const auto ticks = value.timeline().ticks();
   const bool require_sorted = is_non_decreasing_(std::span<const std::int64_t>(ticks.data(), ticks.size()));
   writer.write_u8(require_sorted ? 1U : 0U, "timeindex.require_sorted");
   write_value_(writer, value.timeline(), options);

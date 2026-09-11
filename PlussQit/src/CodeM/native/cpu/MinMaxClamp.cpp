@@ -28,7 +28,7 @@ static void clamp_apply(const Series& a, Series& out, T lo, T hi) {
   auto* op = reinterpret_cast<T*>(out.raw_data());
   it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t, std::int64_t){
     const T v = ap[ao];
-    op[lin] = std::min(hi, std::max(lo, v));
+    op[lin] = std::isnan(v) ? v : std::min(hi, std::max(lo, v));
   });
 }
 
@@ -40,7 +40,9 @@ static void minmax_half(const Series& a, const Series& b, Series& out, bool is_m
   auto* op = reinterpret_cast<HalfT*>(out.raw_data());
   it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t bo, std::int64_t){
     const float x = to(ap[ao]), y = to(bp[bo]);
-    const float r = is_min ? std::min(x,y) : std::max(x,y);
+    const float r = std::isnan(x) ? x
+                                  : (std::isnan(y) ? y
+                                                   : (is_min ? std::min(x,y) : std::max(x,y)));
     op[lin] = from(r);
   });
 }
@@ -52,15 +54,15 @@ static void clamp_half(const Series& a, Series& out, double lo, double hi, ToF32
   auto* op = reinterpret_cast<HalfT*>(out.raw_data());
   it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t, std::int64_t){
     const float x = to(ap[ao]);
-    const float r = std::min((float)hi, std::max((float)lo, x));
+    const float r = std::isnan(x) ? x : std::min((float)hi, std::max((float)lo, x));
     op[lin] = from(r);
   });
 }
 
-static float fminf_(float x,float y){return std::min(x,y);}
-static float fmaxf_(float x,float y){return std::max(x,y);}
-static double fmin_(double x,double y){return std::min(x,y);}
-static double fmax_(double x,double y){return std::max(x,y);}
+static float fminf_(float x,float y){return std::isnan(x) ? x : (std::isnan(y) ? y : std::min(x,y));}
+static float fmaxf_(float x,float y){return std::isnan(x) ? x : (std::isnan(y) ? y : std::max(x,y));}
+static double fmin_(double x,double y){return std::isnan(x) ? x : (std::isnan(y) ? y : std::min(x,y));}
+static double fmax_(double x,double y){return std::isnan(x) ? x : (std::isnan(y) ? y : std::max(x,y));}
 template <class T> static T imin_(T x,T y){return std::min(x,y);}
 template <class T> static T imax_(T x,T y){return std::max(x,y);}
 

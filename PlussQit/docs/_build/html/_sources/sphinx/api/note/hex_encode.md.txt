@@ -87,8 +87,8 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
     <span class="label">Previous</span>
     <span class="title">hex_decode</span>
   </a>
-  <a class="next-link" href="lengths_bytes.html">
+  <a class="next-link" href="host.html">
     <span class="label">Next</span>
-    <span class="title">lengths_bytes</span>
+    <span class="title">host</span>
   </a>
 </div>

@@ -168,9 +168,9 @@ split: delimiter must be non-empty
   delimiter fields.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="replace.html">
+  <a class="prev-link" href="sort.html">
     <span class="label">Previous</span>
-    <span class="title">replace</span>
+    <span class="title">sort</span>
   </a>
   <a class="next-link" href="split_lines.html">
     <span class="label">Next</span>

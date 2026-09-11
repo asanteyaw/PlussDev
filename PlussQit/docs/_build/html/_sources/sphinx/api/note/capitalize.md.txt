@@ -16,8 +16,7 @@ Note Note::capitalize() const
 following ASCII letter is lowercased. Use it to normalize a free-text field
 to a single leading capital — a name, a short label, a one-line description.
 
-This matches Python's `str.capitalize()`: the transform acts on **position
-0** regardless of what character is there. A leading space or digit is left
+The transform acts on **position 0** regardless of what character is there. A leading space or digit is left
 as-is (uppercasing a non-letter is a no-op), and the rest of the cell is
 lowercased from the second character on. It does **not** search for the first
 letter — `"3rd place"` stays `"3rd place"`, not `"3Rd place"`. For "capital

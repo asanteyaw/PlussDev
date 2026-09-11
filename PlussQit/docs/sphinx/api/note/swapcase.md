@@ -79,12 +79,12 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
   re-casing rather than inversion.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="strip.html">
+  <a class="prev-link" href="surround.html">
     <span class="label">Previous</span>
-    <span class="title">strip</span>
+    <span class="title">surround</span>
   </a>
-  <a class="next-link" href="tex_escape.html">
+  <a class="next-link" href="take.html">
     <span class="label">Next</span>
-    <span class="title">tex_escape</span>
+    <span class="title">take</span>
   </a>
 </div>

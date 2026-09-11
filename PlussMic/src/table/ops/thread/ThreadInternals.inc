@@ -61,6 +61,12 @@ pluss::Series bool_series_from_u8(const std::vector<std::uint8_t>& values) {
   return out;
 }
 
+// Note predicate/comparison methods return a shape-preserving Bool Note
+// (pass 4 of the Note redesign) rather than a raw std::vector<uint8_t>.
+pluss::Series bool_series_from_u8(const pluss::Note& mask) {
+  return bool_series_from_u8(std::vector<std::uint8_t>(mask.bools().begin(), mask.bools().end()));
+}
+
 pluss::Series int64_index_series(const std::vector<std::int64_t>& values) {
   auto out = pluss::Series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {

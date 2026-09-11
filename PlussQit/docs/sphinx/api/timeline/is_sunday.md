@@ -8,16 +8,29 @@
 Series Timeline::is_sunday() const
 ```
 
-`is_sunday()` is the sole public spelling.
+## Classify Local Sundays
 
-## Select Local Sundays
+`is_sunday()` marks each instant whose local civil date is Sunday. It is a
+named, fixed-day predicate: use it when the weekday itself expresses the rule,
+and use `weekday()` when the target weekday is supplied dynamically. The
+method classifies independently; it does not sort, filter, aggregate, or
+assume that the Timeline is regular.
 
-`is_sunday()` marks timestamps whose local date is Sunday. Although Sunday is
-the final day in the ISO-style Monday-first week used by `weekday()`, this
-method requires no numeric weekday knowledge. It returns a shape-preserving
-boolean Series and maps `NaT` to `false`.
+Sunday is the second half of the fixed weekend rule and the final value in the Monday-zero weekday convention.
 
-## Example
+## Result Contract
+
+The result is a newly allocated boolean `Series` with exactly the receiver's
+rank, shape, and ordering. Scalar input remains rank zero, matrices remain
+matrices, and empty extents remain empty. `NaT` maps to `false`, so validity
+must be retained separately when absence cannot share the false state.
+
+The receiver is unchanged. Weekday is determined after converting each instant
+to the Timeline's current timezone. A timezone conversion near midnight can
+therefore change the answer without changing the represented instant. One call
+performs one shape-preserving pass and has no options or scalar-rank restriction.
+
+## Example 1: Select Sunday From A Complete Week
 
 ```cpp
 const auto week = pluss::timeline::make({
@@ -29,37 +42,80 @@ const auto week = pluss::timeline::make({
 pluss::series::print(std::cout, week.is_sunday());
 ```
 
-### Output
-
 ```text
 Series(shape=[8], strides=[1], dtype=bool, platform=cpu, numel=8, contiguous=true)
 data=[false, false, false, false, false, false, true, false]
 ```
 
-Across seven valid dates containing one complete week, exactly one named-day
-predicate is true per element. At `NaT`, all seven predicates are false. Their
-combined OR therefore equals `isvalid()` for this complete weekday partition.
+The absent final element is false, just like every non-matching valid day.
+
+## Example 2: Relate The Name To Weekday Numbering
+
+```cpp
+std::cout << std::boolalpha
+          << week.is_sunday().equal(week.weekday().eq(6)) << '\n';
+```
+
+```text
+true
+```
+
+Sunday has code `6` under the Monday-zero convention. The named call
+avoids scattering that numeric convention through fixed scheduling rules.
+
+## Example 3: Preserve A Two-Dimensional Layout
+
+```cpp
+const auto matrix = pluss::timeline::make({
+    {"2024-03-04T12:00:00Z", "2024-03-05T12:00:00Z",
+     "2024-03-06T12:00:00Z", "2024-03-07T12:00:00Z"},
+    {"2024-03-08T12:00:00Z", "2024-03-09T12:00:00Z",
+     "2024-03-10T12:00:00Z", ""},
+});
+pluss::series::print(std::cout, matrix.is_sunday());
+```
+
+```text
+Series(shape=[2,4], strides=[4,1], dtype=bool, platform=cpu, numel=8, contiguous=true)
+data=
+⎡ false false false false ⎤
+⎣ false false  true false ⎦
+```
+
+The mask remains position-aligned with the temporal matrix; no flattening takes place.
+
+## Example 4: All Named Days Partition Valid Instants
+
+```cpp
+const auto any_day = week.is_monday().logical_or(week.is_tuesday())
+    .logical_or(week.is_wednesday()).logical_or(week.is_thursday())
+    .logical_or(week.is_friday()).logical_or(week.is_saturday())
+    .logical_or(week.is_sunday());
+std::cout << std::boolalpha << any_day.equal(week.isvalid()) << '\n';
+```
+
+```text
+true
+```
+
+Exactly one named predicate is true for each valid instant. None is true for `NaT`.
 
 ## Gotchas And Failure Modes
 
-- Sunday corresponds to `weekday() == 6`, not zero.
-- It is part of `is_weekend()` and excluded by `is_business_day()`.
-- Named weekday tests classify; they do not sort or aggregate.
-
-## Summary
-
-Use the named weekday methods when the day itself expresses the business rule.
-Use `weekday()` when the weekday is data-driven. In both cases, choose the
-timezone first and retain validity when absent instants are possible.
+- `is_sunday()` returns a mask, not the matching Timeline values.
+- `false` can mean another weekday or `NaT`.
+- Choose the operational timezone before classification.
+- Calendar holidays do not change weekday identity.
+- Valid Timeline values of every supported rank are accepted.
 
 ## See Also
 
 - [`weekday`](weekday.md)
-- [`is_saturday`](is_saturday.md)
+- [`is_business_day`](is_business_day.md)
 - [`is_weekend`](is_weekend.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_saturday.html"><span class="label">Previous</span><span class="title">is_saturday</span></a>
-  <a class="next-link" href="date_range.html"><span class="label">Next</span><span class="title">date_range</span></a>
+  <a class="prev-link" href="is_scalar.html"><span class="label">Previous</span><span class="title">is_scalar</span></a>
+  <a class="next-link" href="is_thursday.html"><span class="label">Next</span><span class="title">is_thursday</span></a>
 </div>
 <!-- pluss-hand-authored -->

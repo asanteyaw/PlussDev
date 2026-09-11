@@ -50,7 +50,7 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Note& value) {
   try {
     if (value.dim() == 0) {
       return (*this = ThreadValue(Thread(pluss::make_note(
-          std::vector<std::string>{std::string(value.flat_at(0))}))));
+          std::vector<std::string>{std::string(value.scalar())}))));
     }
     return (*this = Thread(value));
   } catch (const std::exception& e) {

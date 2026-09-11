@@ -1,0 +1,1302 @@
+# apiref_manifest_classic.toml -- the `pluss::ai::classic` public framework.
+# `classic` is the public name for the classical-ML engine; the substrate name
+# must never appear in rendered pages. Drive the toolchain at this file with
+#   python3 apiref.py <cmd> --manifest apiref_manifest_classic.toml
+# `apiref.py nav` still bundles every apiref_manifest*.toml into one sidebar.
+
+[framework.classic]
+title = "classic"
+summary = "PlussAI classical machine-learning framework."
+include = "<pluss/ai/ml.h>"
+header = "PlussAI/include/pluss/ai/nodej"
+
+# ===========================================================================
+#  FAMILIES
+# ===========================================================================
+
+[[family]]
+path = "classic/core"
+page = "api/classic/core.md"
+title = "core"
+maxdepth = 2
+children = ["core/Introduction", "core/Status", "core/StatusOr", "core/TrainOptions", "core/InferOptions", "core/AssessOptions", "core/RandomState"]
+
+[[family]]
+path = "classic/data"
+page = "api/classic/data.md"
+title = "data"
+maxdepth = 2
+children = ["data/Introduction", "data/FeatureBatch", "data/LabeledBatch", "data/DataFrameBatchOptions", "data/feature_batch_from_dataframe", "data/labeled_batch_from_dataframe", "data/CategoryMap"]
+
+[[family]]
+path = "classic/families"
+page = "api/classic/families.md"
+title = "families"
+maxdepth = 2
+children = ["families/Introduction", "families/ModelSpec", "families/LinearFamilyOptions", "families/TreeFamilyOptions", "families/EnsembleFamilyOptions", "families/NeighborFamilyOptions", "families/KernelFamilyOptions", "families/BayesFamilyOptions", "families/ClusterFamilyOptions", "families/DecomposeFamilyOptions", "families/DetectFamilyOptions"]
+
+[[family]]
+path = "classic/estimators"
+page = "api/classic/estimators.md"
+title = "estimators"
+maxdepth = 2
+children = ["estimators/Introduction", "estimators/EstimatorBase", "estimators/ClassifierBase", "estimators/RegressorBase", "estimators/TransformerBase", "estimators/make_classifier", "estimators/make_regressor", "estimators/make_transformer"]
+
+[[family]]
+path = "classic/compose"
+page = "api/classic/compose.md"
+title = "compose"
+maxdepth = 2
+children = ["compose/Introduction", "compose/Flow", "compose/make_flow", "compose/TransformSpec", "compose/FlowGraphInfo"]
+
+[[family]]
+path = "classic/prep"
+page = "api/classic/prep.md"
+title = "prep"
+maxdepth = 2
+children = ["prep/Introduction", "prep/scaling", "prep/encoding", "prep/imputation", "prep/transform", "prep/outlier"]
+
+[[family]]
+path = "classic/prep/scaling"
+page = "api/classic/prep/scaling.md"
+title = "scaling"
+maxdepth = 2
+children = ["scaling/Introduction", "scaling/StandardScaler", "scaling/MinMaxScaler", "scaling/RobustScaler", "scaling/MaxAbsScaler"]
+
+[[family]]
+path = "classic/prep/encoding"
+page = "api/classic/prep/encoding.md"
+title = "encoding"
+maxdepth = 2
+children = ["encoding/Introduction", "encoding/OneHotEncoder", "encoding/FrequencyEncoder", "encoding/OrdinalEncoder", "encoding/LabelEncoder", "encoding/BaseNEncoder", "encoding/HashingEncoder", "encoding/TargetEncoder", "encoding/WOEEncoder"]
+
+[[family]]
+path = "classic/prep/imputation"
+page = "api/classic/prep/imputation.md"
+title = "imputation"
+maxdepth = 2
+children = ["imputation/Introduction", "imputation/SimpleImputer", "imputation/NeighborImputer", "imputation/IterativeImputer"]
+
+[[family]]
+path = "classic/prep/transform"
+page = "api/classic/prep/transform.md"
+title = "transform"
+maxdepth = 2
+children = ["transform/Introduction", "transform/VectorNormalizer", "transform/QuantileMap", "transform/PowerMap", "transform/ThresholdBinarizer", "transform/PolynomialLift", "transform/FunctionTransformer", "transform/FeatureTransformer"]
+
+[[family]]
+path = "classic/prep/outlier"
+page = "api/classic/prep/outlier.md"
+title = "outlier"
+maxdepth = 2
+children = ["outlier/Introduction", "outlier/OutlierIsolator"]
+
+[[family]]
+path = "classic/split"
+page = "api/classic/split.md"
+title = "split"
+maxdepth = 2
+children = ["split/Introduction", "split/holdout", "split/crossval_plan", "split/ts_crossval_plan", "split/slice_batch", "split/IndexSplit", "split/SplitPlan", "split/SplitOptions"]
+
+[[family]]
+path = "classic/metrics"
+page = "api/classic/metrics.md"
+title = "metrics"
+maxdepth = 2
+children = ["metrics/Introduction", "metrics/cross_assess", "metrics/confusion_table", "metrics/classification_summary", "metrics/classification_metrics", "metrics/regression_metrics", "metrics/score_metrics", "metrics/threshold_curve", "metrics/CrossAssessReport", "metrics/ClassReport", "metrics/ConfusionTable", "metrics/ThresholdCurve", "metrics/ConfusionOptions", "metrics/ClassReportOptions"]
+
+[[family]]
+path = "classic/tune"
+page = "api/classic/tune.md"
+title = "tune"
+maxdepth = 2
+children = ["tune/Introduction", "tune/sweep", "tune/probe", "tune/tune", "tune/TuneReport", "tune/TuneLedger", "tune/TuneOptions"]
+
+[[family]]
+path = "classic/online"
+page = "api/classic/online.md"
+title = "online"
+maxdepth = 2
+children = ["online/Introduction", "online/OnlineLinearClassifier", "online/OnlineLinearRegressor", "online/make_online_linear_classifier", "online/make_online_linear_regressor", "online/OnlineLinearOptions"]
+
+[[family]]
+path = "classic/sparse"
+page = "api/classic/sparse.md"
+title = "sparse"
+maxdepth = 2
+children = ["sparse/Introduction", "sparse/SparseTripletMatrix", "sparse/SparseCsrMatrix", "sparse/make_sparse_triplet", "sparse/SparseLinearBinaryClassifier", "sparse/SparseLinearRegressor", "sparse/SparseLinearMultiClassifier", "sparse/cross_assess_sparse", "sparse/sweep_sparse", "sparse/tune_sparse", "sparse/SparseCrossReport", "sparse/SparseTuneReport"]
+
+[[family]]
+path = "classic/text"
+page = "api/classic/text.md"
+title = "text"
+maxdepth = 2
+children = ["text/Introduction", "text/LexiconMapper", "text/HashMapper"]
+
+[[family]]
+path = "classic/features"
+page = "api/classic/features.md"
+title = "features"
+maxdepth = 2
+children = ["features/Introduction", "features/variance_prune", "features/rank_features", "features/pick_features", "features/f_score_rank", "features/f_regression_rank", "features/take_features"]
+
+[[family]]
+path = "classic/inspection"
+page = "api/classic/inspection.md"
+title = "inspection"
+maxdepth = 2
+children = ["inspection/Introduction", "inspection/permutation_impact", "inspection/dependence_curve", "inspection/dependence_surface"]
+
+[[family]]
+path = "classic/balance"
+page = "api/classic/balance.md"
+title = "balance"
+maxdepth = 2
+children = ["balance/Introduction", "balance/class_mix", "balance/resolve_weight_plan", "balance/plan_balance", "balance/balance_rows", "balance/ClassMix", "balance/BalancePlan", "balance/BalanceTarget"]
+
+[[family]]
+path = "classic/neighbors"
+page = "api/classic/neighbors.md"
+title = "neighbors"
+maxdepth = 2
+children = ["neighbors/Introduction", "neighbors/SpatialIndex"]
+
+[[family]]
+path = "classic/io"
+page = "api/classic/io.md"
+title = "io"
+maxdepth = 2
+children = ["io/Introduction", "io/FlowBundle", "io/save", "io/load"]
+
+# ===========================================================================
+#  SYMBOLS
+# ===========================================================================
+
+# --- core ------------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::Status"
+kind = "class"
+family = "classic/core"
+page = "api/classic/core/Status.md"
+summary = "The result type every fallible classic call returns instead of throwing."
+
+[[symbol]]
+qualname = "pluss::ai::classic::StatusOr"
+kind = "class"
+family = "classic/core"
+page = "api/classic/core/StatusOr.md"
+summary = "A Status paired with a value that is present only when the Status is ok."
+
+[[symbol]]
+qualname = "pluss::ai::classic::TrainOptions"
+kind = "options"
+family = "classic/core"
+page = "api/classic/core/TrainOptions.md"
+summary = "Per-fit configuration every learn(...) call accepts."
+fields = ["layout", "missing", "unknown_categorical", "max_iterations", "tolerance", "warm_start", "track_diagnostics", "random", "sample_weights", "class_weight", "class_weights", "calibration", "calibration_iterations", "calibration_tolerance", "parameter_lower_bounds", "parameter_upper_bounds", "balance"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::InferOptions"
+kind = "options"
+family = "classic/core"
+page = "api/classic/core/InferOptions.md"
+summary = "Prediction-time configuration; most importantly the binary decision threshold."
+fields = ["layout", "missing", "unknown_categorical", "positive_threshold"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::AssessOptions"
+kind = "options"
+family = "classic/core"
+page = "api/classic/core/AssessOptions.md"
+summary = "Which metrics assess(...) computes and how."
+fields = ["layout", "metrics", "sample_weights", "positive_threshold", "regression_quantile"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::RandomState"
+kind = "options"
+family = "classic/core"
+page = "api/classic/core/RandomState.md"
+summary = "Seed plus determinism flag for every stochastic classic routine."
+fields = ["seed", "deterministic"]
+
+# --- data ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::FeatureBatch"
+kind = "class"
+family = "classic/data"
+page = "api/classic/data/FeatureBatch.md"
+summary = "A rank-2 feature Series plus its observation layout -- the input every estimator consumes."
+
+[[symbol]]
+qualname = "pluss::ai::classic::LabeledBatch"
+kind = "class"
+family = "classic/data"
+page = "api/classic/data/LabeledBatch.md"
+summary = "A FeatureBatch with an aligned label Series and optional per-sample weights."
+
+[[symbol]]
+qualname = "pluss::ai::classic::DataFrameBatchOptions"
+kind = "options"
+family = "classic/data"
+page = "api/classic/data/DataFrameBatchOptions.md"
+summary = "Names the feature / label / weight columns when building a batch from a DataFrame."
+fields = ["feature_names", "label_feature", "sample_weight_feature", "layout", "thread_policy", "note_policy", "note_hash_seed", "factorize_unknown_categorical"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::feature_batch_from_dataframe"
+kind = "function"
+family = "classic/data"
+page = "api/classic/data/feature_batch_from_dataframe.md"
+summary = "Build a FeatureBatch from a DataFrame, optionally reusing fitted category codes."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::labeled_batch_from_dataframe"
+kind = "function"
+family = "classic/data"
+page = "api/classic/data/labeled_batch_from_dataframe.md"
+summary = "Build a LabeledBatch from a DataFrame; same category-map reuse contract."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::CategoryMap"
+kind = "class"
+family = "classic/data"
+page = "api/classic/data/CategoryMap.md"
+summary = "The fitted string-to-integer code table for one factorized column; keyed by name in CategoryMaps."
+
+# --- families ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::ModelSpec"
+kind = "class"
+family = "classic/families"
+page = "api/classic/families/ModelSpec.md"
+summary = "The task + family + options triple that names one estimator configuration."
+
+[[symbol]]
+qualname = "pluss::ai::classic::LinearFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/LinearFamilyOptions.md"
+summary = "Objective, regularization, and intercept controls for the linear family."
+fields = ["objective", "regularization", "regularization_strength", "elastic_l1_ratio", "robust_transition", "fit_intercept"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::TreeFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/TreeFamilyOptions.md"
+summary = "Split criterion and growth limits for the decision-tree family."
+fields = ["criterion", "max_depth", "min_samples_leaf", "min_samples_split"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::EnsembleFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/EnsembleFamilyOptions.md"
+summary = "Method, learner count, and shrinkage for the ensemble family."
+fields = ["method", "learners", "subsample", "learning_rate"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::NeighborFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/NeighborFamilyOptions.md"
+summary = "Neighbor count, query mode, and distance weighting for the neighbor family."
+fields = ["k", "query_mode", "radius", "radius_fallback_k", "distance_weighted", "standardize"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::KernelFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/KernelFamilyOptions.md"
+summary = "Kernel, form, and the C / gamma / epsilon / nu parameters for the kernel family."
+fields = ["kernel", "form", "c", "gamma", "epsilon", "nu"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::BayesFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/BayesFamilyOptions.md"
+summary = "Likelihood model and smoothing for the naive Bayes family."
+fields = ["likelihood", "use_gaussian", "smoothing"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::ClusterFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/ClusterFamilyOptions.md"
+summary = "Cluster count and iteration controls for the clustering family."
+fields = ["method", "clusters", "max_iterations", "restarts", "tolerance"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::DecomposeFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/DecomposeFamilyOptions.md"
+summary = "Component count and solver controls for the decomposition family."
+fields = ["method", "components", "whiten", "max_iterations", "tolerance"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::DetectFamilyOptions"
+kind = "options"
+family = "classic/families"
+page = "api/classic/families/DetectFamilyOptions.md"
+summary = "Outlier-detection method plus the isolation-forest options it wraps."
+fields = ["method", "isolation"]
+
+# --- estimators ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::EstimatorBase"
+kind = "class"
+family = "classic/estimators"
+page = "api/classic/estimators/EstimatorBase.md"
+summary = "The learn / infer / assess / state contract shared by every classic estimator."
+methods = ["learn", "infer", "assess", "dump_state", "load_state", "task_kind", "trained"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::ClassifierBase"
+kind = "class"
+family = "classic/estimators"
+page = "api/classic/estimators/ClassifierBase.md"
+summary = "An EstimatorBase fixed to classification, adding infer_scores."
+
+[[symbol]]
+qualname = "pluss::ai::classic::RegressorBase"
+kind = "class"
+family = "classic/estimators"
+page = "api/classic/estimators/RegressorBase.md"
+summary = "An EstimatorBase fixed to regression."
+
+[[symbol]]
+qualname = "pluss::ai::classic::TransformerBase"
+kind = "class"
+family = "classic/estimators"
+page = "api/classic/estimators/TransformerBase.md"
+summary = "The learn / map / learn_map contract for stateful feature transforms."
+
+[[symbol]]
+qualname = "pluss::ai::classic::make_classifier"
+kind = "function"
+family = "classic/estimators"
+page = "api/classic/estimators/make_classifier.md"
+summary = "Construct a ClassifierBase from a ModelSpec."
+
+[[symbol]]
+qualname = "pluss::ai::classic::make_regressor"
+kind = "function"
+family = "classic/estimators"
+page = "api/classic/estimators/make_regressor.md"
+summary = "Construct a RegressorBase from a ModelSpec."
+
+[[symbol]]
+qualname = "pluss::ai::classic::make_transformer"
+kind = "function"
+family = "classic/estimators"
+page = "api/classic/estimators/make_transformer.md"
+summary = "Construct a TransformerBase from a ModelSpec."
+
+# --- compose ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::Flow"
+kind = "class"
+family = "classic/compose"
+page = "api/classic/compose/Flow.md"
+summary = "A routed transform pipeline plus optional final model, learned and driven as one unit. Aliased Workflow."
+methods = ["add_column_stage", "add_feature_transformer", "add_function_transformer", "add_named_transform", "add_stage", "append_transform", "assess", "clear_model", "clear_transforms", "clone", "dump_model_state", "dump_transform_states", "flow_summary", "graph_info", "infer", "infer_scores", "learn", "learn_map", "load_blueprint", "load_model_state", "load_transform_states", "map", "mark_trained", "nested_param", "nested_param_keys", "save_blueprint", "set_classifier", "set_model", "set_nested_param", "set_regressor", "set_stage_key", "set_stage_remainder", "set_stage_route"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::make_flow"
+kind = "function"
+family = "classic/compose"
+page = "api/classic/compose/make_flow.md"
+summary = "Create a Flow seeded with a final model from a ModelSpec. Aliased make_workflow."
+
+[[symbol]]
+qualname = "pluss::ai::classic::TransformSpec"
+kind = "class"
+family = "classic/compose"
+page = "api/classic/compose/TransformSpec.md"
+summary = "The declarative record of one pipeline stage: kind, options, feature route, remainder policy."
+
+[[symbol]]
+qualname = "pluss::ai::classic::FlowGraphInfo"
+kind = "class"
+family = "classic/compose"
+page = "api/classic/compose/FlowGraphInfo.md"
+summary = "An introspection snapshot of a Flow: task, trained state, and per-stage routing."
+
+# --- prep / scaling ----------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::prep::StandardScaler"
+kind = "class"
+family = "classic/prep/scaling"
+page = "api/classic/prep/scaling/StandardScaler.md"
+summary = "Center and scale each feature to zero mean and unit variance."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::StandardScalerOptions"
+kind = "options"
+family = "classic/prep/scaling"
+page = "api/classic/prep/scaling/StandardScalerOptions.md"
+owner = "pluss::ai::classic::prep::StandardScaler"
+summary = "Centering / scaling toggles and the variance floor."
+fields = ["with_centering", "with_scaling", "variance_floor"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::MinMaxScaler"
+kind = "class"
+family = "classic/prep/scaling"
+page = "api/classic/prep/scaling/MinMaxScaler.md"
+summary = "Linearly map each feature onto a fixed [lower, upper] range."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::MinMaxScalerOptions"
+kind = "options"
+family = "classic/prep/scaling"
+page = "api/classic/prep/scaling/MinMaxScalerOptions.md"
+owner = "pluss::ai::classic::prep::MinMaxScaler"
+summary = "Target range, clipping, and the range floor."
+fields = ["lower", "upper", "clip", "range_floor"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::RobustScaler"
+kind = "class"
+family = "classic/prep/scaling"
+page = "api/classic/prep/scaling/RobustScaler.md"
+summary = "Center on the median and scale by an inter-quantile range."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::RobustScalerOptions"
+kind = "options"
+family = "classic/prep/scaling"
+page = "api/classic/prep/scaling/RobustScalerOptions.md"
+owner = "pluss::ai::classic::prep::RobustScaler"
+summary = "Centering / scaling toggles, quantile bounds, range floor."
+fields = ["with_centering", "with_scaling", "lower_quantile", "upper_quantile", "range_floor"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::MaxAbsScaler"
+kind = "class"
+family = "classic/prep/scaling"
+page = "api/classic/prep/scaling/MaxAbsScaler.md"
+summary = "Scale each feature by its maximum absolute value, preserving sign and sparsity."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::MaxAbsScalerOptions"
+kind = "options"
+family = "classic/prep/scaling"
+page = "api/classic/prep/scaling/MaxAbsScalerOptions.md"
+owner = "pluss::ai::classic::prep::MaxAbsScaler"
+summary = "The divide-by-zero floor."
+fields = ["floor"]
+
+# --- prep / encoding -------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::prep::OneHotEncoder"
+kind = "class"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/OneHotEncoder.md"
+summary = "Expand a categorical feature into one indicator column per category."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::OneHotEncoderOptions"
+kind = "options"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/OneHotEncoderOptions.md"
+owner = "pluss::ai::classic::prep::OneHotEncoder"
+summary = "Category cap, overflow policy, unknown bucket."
+fields = ["max_categories", "overflow", "include_unknown_bucket"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::FrequencyEncoder"
+kind = "class"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/FrequencyEncoder.md"
+summary = "Replace each category with its training-set frequency."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::FrequencyEncoderOptions"
+kind = "options"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/FrequencyEncoderOptions.md"
+owner = "pluss::ai::classic::prep::FrequencyEncoder"
+summary = "Category cap, overflow policy, unknown frequency."
+fields = ["max_categories", "overflow", "unknown_frequency"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::OrdinalEncoder"
+kind = "class"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/OrdinalEncoder.md"
+summary = "Map each category to an integer code."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::OrdinalEncoderOptions"
+kind = "options"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/OrdinalEncoderOptions.md"
+owner = "pluss::ai::classic::prep::OrdinalEncoder"
+summary = "Category cap, overflow policy, unknown bucket, 1-based codes."
+fields = ["max_categories", "overflow", "include_unknown_bucket", "one_based"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::LabelEncoder"
+kind = "class"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/LabelEncoder.md"
+summary = "Ordinal coding tuned for a single target vector."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::LabelEncoderOptions"
+kind = "options"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/LabelEncoderOptions.md"
+owner = "pluss::ai::classic::prep::LabelEncoder"
+summary = "Category cap, overflow policy, unknown bucket, 0-based codes."
+fields = ["max_categories", "overflow", "include_unknown_bucket", "one_based"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::BaseNEncoder"
+kind = "class"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/BaseNEncoder.md"
+summary = "Encode categories as their digits in a chosen base across several columns."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::BaseNEncoderOptions"
+kind = "options"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/BaseNEncoderOptions.md"
+owner = "pluss::ai::classic::prep::BaseNEncoder"
+summary = "The base, category cap, overflow policy."
+fields = ["base", "max_categories", "overflow"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::HashingEncoder"
+kind = "class"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/HashingEncoder.md"
+summary = "Hash categories into a fixed number of columns; stateless, no category table."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::HashingEncoderOptions"
+kind = "options"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/HashingEncoderOptions.md"
+owner = "pluss::ai::classic::prep::HashingEncoder"
+summary = "Output width and hash seed."
+fields = ["n_components", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::TargetEncoder"
+kind = "class"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/TargetEncoder.md"
+summary = "Replace each category with a smoothed mean of the training target."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::TargetEncoderOptions"
+kind = "options"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/TargetEncoderOptions.md"
+owner = "pluss::ai::classic::prep::TargetEncoder"
+summary = "Smoothing weight, category cap, overflow policy."
+fields = ["smoothing", "max_categories", "overflow"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::WOEEncoder"
+kind = "class"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/WOEEncoder.md"
+summary = "Replace each category with its weight-of-evidence log-odds against a binary target."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::WOEEncoderOptions"
+kind = "options"
+family = "classic/prep/encoding"
+page = "api/classic/prep/encoding/WOEEncoderOptions.md"
+owner = "pluss::ai::classic::prep::WOEEncoder"
+summary = "Regularization count, category cap, overflow policy."
+fields = ["regularization", "max_categories", "overflow"]
+
+# --- prep / imputation ---------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::prep::SimpleImputer"
+kind = "class"
+family = "classic/prep/imputation"
+page = "api/classic/prep/imputation/SimpleImputer.md"
+summary = "Fill missing cells with a per-feature statistic or a constant."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::SimpleImputerOptions"
+kind = "options"
+family = "classic/prep/imputation"
+page = "api/classic/prep/imputation/SimpleImputerOptions.md"
+owner = "pluss::ai::classic::prep::SimpleImputer"
+summary = "Strategy, constant value, all-missing fallback."
+fields = ["strategy", "constant_value", "empty_feature_fallback"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::NeighborImputer"
+kind = "class"
+family = "classic/prep/imputation"
+page = "api/classic/prep/imputation/NeighborImputer.md"
+summary = "Fill missing cells from the nearest complete rows."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::NeighborImputerOptions"
+kind = "options"
+family = "classic/prep/imputation"
+page = "api/classic/prep/imputation/NeighborImputerOptions.md"
+owner = "pluss::ai::classic::prep::NeighborImputer"
+summary = "Donor count, weighting, distance floor, fallback."
+fields = ["neighbors", "weighting", "distance_floor", "empty_feature_fallback"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::IterativeImputer"
+kind = "class"
+family = "classic/prep/imputation"
+page = "api/classic/prep/imputation/IterativeImputer.md"
+summary = "Round-robin regression imputation across the feature set."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::IterativeImputerOptions"
+kind = "options"
+family = "classic/prep/imputation"
+page = "api/classic/prep/imputation/IterativeImputerOptions.md"
+owner = "pluss::ai::classic::prep::IterativeImputer"
+summary = "Round count, ridge penalty, all-missing fallback."
+fields = ["rounds", "ridge", "empty_feature_fallback"]
+
+# --- prep / transform --------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::prep::VectorNormalizer"
+kind = "class"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/VectorNormalizer.md"
+summary = "Scale each row to unit norm."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::VectorNormalizerOptions"
+kind = "options"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/VectorNormalizerOptions.md"
+owner = "pluss::ai::classic::prep::VectorNormalizer"
+summary = "Norm choice and the zero-norm floor."
+fields = ["norm", "floor"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::QuantileMap"
+kind = "class"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/QuantileMap.md"
+summary = "Map each feature onto a uniform or Gaussian distribution by its rank."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::QuantileMapOptions"
+kind = "options"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/QuantileMapOptions.md"
+owner = "pluss::ai::classic::prep::QuantileMap"
+summary = "Output distribution and the quantile clip."
+fields = ["output", "clip"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::PowerMap"
+kind = "class"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/PowerMap.md"
+summary = "Yeo-Johnson or Box-Cox power transform toward normality."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::PowerMapOptions"
+kind = "options"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/PowerMapOptions.md"
+owner = "pluss::ai::classic::prep::PowerMap"
+summary = "Mode, standardization, and the lambda search."
+fields = ["mode", "standardize", "lambda", "lambda_min", "lambda_max", "lambda_grid", "variance_floor"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::ThresholdBinarizer"
+kind = "class"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/ThresholdBinarizer.md"
+summary = "Map each value to one of two outputs by comparison with a threshold."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::ThresholdBinarizerOptions"
+kind = "options"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/ThresholdBinarizerOptions.md"
+owner = "pluss::ai::classic::prep::ThresholdBinarizer"
+summary = "Threshold and the two output values."
+fields = ["threshold", "low_value", "high_value"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::PolynomialLift"
+kind = "class"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/PolynomialLift.md"
+summary = "Expand features into polynomial and interaction terms."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::PolynomialLiftOptions"
+kind = "options"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/PolynomialLiftOptions.md"
+owner = "pluss::ai::classic::prep::PolynomialLift"
+summary = "Degree, interactions-only, bias term."
+fields = ["degree", "interactions_only", "include_bias"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::FunctionTransformer"
+kind = "class"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/FunctionTransformer.md"
+summary = "Wrap a user callable as a stateless transform stage."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::FunctionTransformerOptions"
+kind = "options"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/FunctionTransformerOptions.md"
+owner = "pluss::ai::classic::prep::FunctionTransformer"
+summary = "Input validation and sample-count preservation checks."
+fields = ["validate_input", "preserve_sample_count"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::FeatureTransformer"
+kind = "class"
+family = "classic/prep/transform"
+page = "api/classic/prep/transform/FeatureTransformer.md"
+summary = "Route disjoint feature groups through their own sub-transforms and recombine."
+
+# --- prep / outlier ----------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::prep::OutlierIsolator"
+kind = "class"
+family = "classic/prep/outlier"
+page = "api/classic/prep/outlier/OutlierIsolator.md"
+summary = "Isolation-forest outlier scoring and flagging."
+
+[[symbol]]
+qualname = "pluss::ai::classic::prep::OutlierIsolatorOptions"
+kind = "options"
+family = "classic/prep/outlier"
+page = "api/classic/prep/outlier/OutlierIsolatorOptions.md"
+owner = "pluss::ai::classic::prep::OutlierIsolator"
+summary = "Tree count, sampling, contamination, RNG."
+fields = ["estimators", "max_samples", "max_samples_auto", "max_features_ratio", "bootstrap", "contamination_auto", "contamination", "random"]
+
+# --- split ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::holdout_split"
+kind = "function"
+family = "classic/split"
+page = "api/classic/split/holdout.md"
+summary = "One train/test index split; plain and label-stratified forms."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::crossval_plan"
+kind = "function"
+family = "classic/split"
+page = "api/classic/split/crossval_plan.md"
+summary = "K-fold index plans: plain, stratified, and grouped."
+overloads = 3
+
+[[symbol]]
+qualname = "pluss::ai::classic::ts_crossval_plan"
+kind = "function"
+family = "classic/split"
+page = "api/classic/split/ts_crossval_plan.md"
+summary = "Forward-chaining index plan for time-ordered data."
+
+[[symbol]]
+qualname = "pluss::ai::classic::slice_feature_batch"
+kind = "function"
+family = "classic/split"
+page = "api/classic/split/slice_batch.md"
+summary = "Materialize the rows an index vector names from a FeatureBatch or LabeledBatch."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::IndexSplit"
+kind = "class"
+family = "classic/split"
+page = "api/classic/split/IndexSplit.md"
+summary = "A pair of train / test row-index Series."
+
+[[symbol]]
+qualname = "pluss::ai::classic::SplitPlan"
+kind = "class"
+family = "classic/split"
+page = "api/classic/split/SplitPlan.md"
+summary = "An ordered list of IndexSplit folds."
+
+[[symbol]]
+qualname = "pluss::ai::classic::SplitOptions"
+kind = "options"
+family = "classic/split"
+page = "api/classic/split/SplitOptions.md"
+summary = "Plan kind and every fold / holdout / time-window control the split functions read."
+fields = ["plan", "holdout_fraction", "folds", "repeats", "time_gap", "time_test_size", "time_max_train_size", "stratified", "groups", "reliability_defaults", "shuffle", "max_parallel", "random"]
+
+# --- metrics -----------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::cross_assess"
+kind = "function"
+family = "classic/metrics"
+page = "api/classic/metrics/cross_assess.md"
+summary = "Fit + score a ModelSpec across a split plan; also cross_scores and cross_score for one metric."
+overloads = 3
+
+[[symbol]]
+qualname = "pluss::ai::classic::confusion_table"
+kind = "function"
+family = "classic/metrics"
+page = "api/classic/metrics/confusion_table.md"
+summary = "Confusion matrix from label vectors or straight from a classifier + batch."
+overloads = 4
+
+[[symbol]]
+qualname = "pluss::ai::classic::classification_summary"
+kind = "function"
+family = "classic/metrics"
+page = "api/classic/metrics/classification_summary.md"
+summary = "Per-class precision / recall / f1 plus aggregates, from labels or a classifier + batch."
+overloads = 4
+
+[[symbol]]
+qualname = "pluss::ai::classic::classification_metrics"
+kind = "function"
+family = "classic/metrics"
+page = "api/classic/metrics/classification_metrics.md"
+summary = "A chosen list of scalar classification metrics as one Series."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::regression_metrics"
+kind = "function"
+family = "classic/metrics"
+page = "api/classic/metrics/regression_metrics.md"
+summary = "A chosen list of scalar regression metrics from truth / prediction vectors."
+
+[[symbol]]
+qualname = "pluss::ai::classic::score_metrics"
+kind = "function"
+family = "classic/metrics"
+page = "api/classic/metrics/score_metrics.md"
+summary = "Score / probability metrics (ROC-AUC, Brier, ...) from a prediction Series the caller holds."
+
+[[symbol]]
+qualname = "pluss::ai::classic::threshold_curve"
+kind = "function"
+family = "classic/metrics"
+page = "api/classic/metrics/threshold_curve.md"
+summary = "Precision / recall / f1 at every achievable cutoff; plus best_threshold and average_precision."
+overloads = 3
+
+[[symbol]]
+qualname = "pluss::ai::classic::CrossAssessReport"
+kind = "class"
+family = "classic/metrics"
+page = "api/classic/metrics/CrossAssessReport.md"
+summary = "Per-fold metrics plus their mean and standard deviation."
+
+[[symbol]]
+qualname = "pluss::ai::classic::ClassReport"
+kind = "class"
+family = "classic/metrics"
+page = "api/classic/metrics/ClassReport.md"
+summary = "The full per-class classification breakdown returned by classification_summary."
+
+[[symbol]]
+qualname = "pluss::ai::classic::ConfusionTable"
+kind = "class"
+family = "classic/metrics"
+page = "api/classic/metrics/ConfusionTable.md"
+summary = "Class labels plus the count (or normalized) matrix."
+
+[[symbol]]
+qualname = "pluss::ai::classic::ThresholdCurve"
+kind = "class"
+family = "classic/metrics"
+page = "api/classic/metrics/ThresholdCurve.md"
+summary = "Aligned thresholds / precision / recall / f1 vectors."
+
+[[symbol]]
+qualname = "pluss::ai::classic::ConfusionOptions"
+kind = "options"
+family = "classic/metrics"
+page = "api/classic/metrics/ConfusionOptions.md"
+owner = "pluss::ai::classic::confusion_table"
+summary = "Normalization, label order, sample weights."
+fields = ["normalize", "label_order", "sample_weights"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::ClassReportOptions"
+kind = "options"
+family = "classic/metrics"
+page = "api/classic/metrics/ClassReportOptions.md"
+owner = "pluss::ai::classic::classification_summary"
+summary = "Label order, zero-division fill, weights, balance-quality shape."
+fields = ["label_order", "zero_division", "sample_weights", "balance_quality_alpha", "square_balance_quality"]
+
+# --- tune ------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::sweep"
+kind = "function"
+family = "classic/tune"
+page = "api/classic/tune/sweep.md"
+summary = "Cross-assess an explicit list of ModelSpec candidates and rank them."
+
+[[symbol]]
+qualname = "pluss::ai::classic::probe"
+kind = "function"
+family = "classic/tune"
+page = "api/classic/tune/probe.md"
+summary = "Sampled search: draw candidate ModelSpecs from a sampler callable and rank them."
+
+[[symbol]]
+qualname = "pluss::ai::classic::tune"
+kind = "function"
+family = "classic/tune"
+page = "api/classic/tune/tune.md"
+summary = "Run sweep or probe under a TuneOptions budget; candidate-list and sampler forms."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::TuneReport"
+kind = "class"
+family = "classic/tune"
+page = "api/classic/tune/TuneReport.md"
+summary = "Every trial, the best index, the objective ranks, and the ledger."
+
+[[symbol]]
+qualname = "pluss::ai::classic::TuneLedger"
+kind = "class"
+family = "classic/tune"
+page = "api/classic/tune/TuneLedger.md"
+summary = "Columnar per-trial record: objective, ranks, timings, encoded parameters."
+
+[[symbol]]
+qualname = "pluss::ai::classic::TuneOptions"
+kind = "options"
+family = "classic/tune"
+page = "api/classic/tune/TuneOptions.md"
+summary = "Search kind, trial budget, parallelism, inner split, RNG."
+fields = ["search", "trials", "max_parallel", "split", "random"]
+
+# --- online --------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::online::OnlineLinearClassifier"
+kind = "class"
+family = "classic/online"
+page = "api/classic/online/OnlineLinearClassifier.md"
+summary = "An incrementally-updated linear binary classifier."
+
+[[symbol]]
+qualname = "pluss::ai::classic::online::OnlineLinearRegressor"
+kind = "class"
+family = "classic/online"
+page = "api/classic/online/OnlineLinearRegressor.md"
+summary = "An incrementally-updated linear regressor."
+
+[[symbol]]
+qualname = "pluss::ai::classic::online::make_online_linear_classifier"
+kind = "function"
+family = "classic/online"
+page = "api/classic/online/make_online_linear_classifier.md"
+summary = "Construct an OnlineLinearClassifier from OnlineLinearOptions."
+
+[[symbol]]
+qualname = "pluss::ai::classic::online::make_online_linear_regressor"
+kind = "function"
+family = "classic/online"
+page = "api/classic/online/make_online_linear_regressor.md"
+summary = "Construct an OnlineLinearRegressor from OnlineLinearOptions."
+
+[[symbol]]
+qualname = "pluss::ai::classic::online::OnlineLinearOptions"
+kind = "options"
+family = "classic/online"
+page = "api/classic/online/OnlineLinearOptions.md"
+summary = "The wrapped linear-family options plus the learning-rate schedule."
+fields = ["family", "learning_rate", "decaying_rate"]
+
+# --- sparse ------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::SparseTripletMatrix"
+kind = "class"
+family = "classic/sparse"
+page = "api/classic/sparse/SparseTripletMatrix.md"
+summary = "A coordinate-format sparse matrix: row / column / value Series plus shape."
+
+[[symbol]]
+qualname = "pluss::ai::classic::SparseCsrMatrix"
+kind = "class"
+family = "classic/sparse"
+page = "api/classic/sparse/SparseCsrMatrix.md"
+summary = "A compressed-sparse-row matrix; the form the sparse learners consume fastest."
+
+[[symbol]]
+qualname = "pluss::ai::classic::make_sparse_triplet"
+kind = "function"
+family = "classic/sparse"
+page = "api/classic/sparse/make_sparse_triplet.md"
+summary = "Build a SparseTripletMatrix from row / column / value ranges; sparse_triplet_to_csr converts."
+
+[[symbol]]
+qualname = "pluss::ai::classic::SparseLinearBinaryClassifier"
+kind = "class"
+family = "classic/sparse"
+page = "api/classic/sparse/SparseLinearBinaryClassifier.md"
+summary = "A linear binary classifier that trains and infers directly on sparse matrices."
+
+[[symbol]]
+qualname = "pluss::ai::classic::SparseLinearRegressor"
+kind = "class"
+family = "classic/sparse"
+page = "api/classic/sparse/SparseLinearRegressor.md"
+summary = "A linear regressor over sparse matrices."
+
+[[symbol]]
+qualname = "pluss::ai::classic::SparseLinearMultiClassifier"
+kind = "class"
+family = "classic/sparse"
+page = "api/classic/sparse/SparseLinearMultiClassifier.md"
+summary = "A one-vs-rest linear multiclass classifier over sparse matrices."
+
+[[symbol]]
+qualname = "pluss::ai::classic::cross_assess_sparse_binary"
+kind = "function"
+family = "classic/sparse"
+page = "api/classic/sparse/cross_assess_sparse.md"
+summary = "Cross-validated assessment of the sparse linear learners (binary / regression / multiclass)."
+overloads = 3
+
+[[symbol]]
+qualname = "pluss::ai::classic::sweep_sparse_binary"
+kind = "function"
+family = "classic/sparse"
+page = "api/classic/sparse/sweep_sparse.md"
+summary = "Rank LinearFamilyOptions candidates for a sparse task (binary / regression / multiclass)."
+overloads = 3
+
+[[symbol]]
+qualname = "pluss::ai::classic::tune_sparse_binary"
+kind = "function"
+family = "classic/sparse"
+page = "api/classic/sparse/tune_sparse.md"
+summary = "Budgeted search over LinearFamilyOptions for a sparse task."
+overloads = 3
+
+[[symbol]]
+qualname = "pluss::ai::classic::SparseCrossReport"
+kind = "class"
+family = "classic/sparse"
+page = "api/classic/sparse/SparseCrossReport.md"
+summary = "Per-fold train / test metrics and timings for a sparse cross-assessment."
+
+[[symbol]]
+qualname = "pluss::ai::classic::SparseTuneReport"
+kind = "class"
+family = "classic/sparse"
+page = "api/classic/sparse/SparseTuneReport.md"
+summary = "Trials, best index, ranks, and ledger for a sparse search."
+
+# --- text ------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::LexiconMapper"
+kind = "class"
+family = "classic/text"
+page = "api/classic/text/LexiconMapper.md"
+summary = "Learn a vocabulary from documents, then vectorize as counts or TF-IDF, dense or sparse."
+
+[[symbol]]
+qualname = "pluss::ai::classic::LexiconMapOptions"
+kind = "options"
+family = "classic/text"
+page = "api/classic/text/LexiconMapOptions.md"
+owner = "pluss::ai::classic::LexiconMapper"
+summary = "Casing, vocabulary caps, document-frequency floor, n-gram range, binary counts."
+fields = ["lowercase", "max_features", "min_document_frequency", "binary", "min_ngram", "max_ngram"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::TfIdfMapOptions"
+kind = "options"
+family = "classic/text"
+page = "api/classic/text/TfIdfMapOptions.md"
+owner = "pluss::ai::classic::LexiconMapper"
+summary = "IDF smoothing, sublinear term frequency, L2 row normalization."
+fields = ["smooth_idf", "sublinear_tf", "l2_normalize"]
+
+[[symbol]]
+qualname = "pluss::ai::classic::HashMapper"
+kind = "class"
+family = "classic/text"
+page = "api/classic/text/HashMapper.md"
+summary = "Stateless hashing vectorizer: no vocabulary, fixed output width."
+
+[[symbol]]
+qualname = "pluss::ai::classic::HashMapOptions"
+kind = "options"
+family = "classic/text"
+page = "api/classic/text/HashMapOptions.md"
+owner = "pluss::ai::classic::HashMapper"
+summary = "Casing, output width, binary counts, sign hashing, n-gram range."
+fields = ["lowercase", "n_features", "binary", "alternate_sign", "min_ngram", "max_ngram"]
+
+# --- features --------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::variance_prune"
+kind = "function"
+family = "classic/features"
+page = "api/classic/features/variance_prune.md"
+summary = "Drop near-constant features below a variance floor."
+
+[[symbol]]
+qualname = "pluss::ai::classic::rank_features"
+kind = "function"
+family = "classic/features"
+page = "api/classic/features/rank_features.md"
+summary = "Score and order features by a univariate F-statistic."
+
+[[symbol]]
+qualname = "pluss::ai::classic::pick_features"
+kind = "function"
+family = "classic/features"
+page = "api/classic/features/pick_features.md"
+summary = "Rank then keep the top-k (or top fraction) features, returning the reduced batch."
+
+[[symbol]]
+qualname = "pluss::ai::classic::f_score_rank"
+kind = "function"
+family = "classic/features"
+page = "api/classic/features/f_score_rank.md"
+summary = "ANOVA F-score feature ranking for a classification target."
+
+[[symbol]]
+qualname = "pluss::ai::classic::f_regression_rank"
+kind = "function"
+family = "classic/features"
+page = "api/classic/features/f_regression_rank.md"
+summary = "Correlation F-score feature ranking for a regression target."
+
+[[symbol]]
+qualname = "pluss::ai::classic::take_features"
+kind = "function"
+family = "classic/features"
+page = "api/classic/features/take_features.md"
+summary = "Select a fixed set of feature columns from a FeatureBatch by index."
+
+# --- inspection ---------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::permutation_impact"
+kind = "function"
+family = "classic/inspection"
+page = "api/classic/inspection/permutation_impact.md"
+summary = "Per-feature score drop when that feature's values are shuffled on held-out data."
+
+[[symbol]]
+qualname = "pluss::ai::classic::dependence_curve"
+kind = "function"
+family = "classic/inspection"
+page = "api/classic/inspection/dependence_curve.md"
+summary = "Mean model prediction as one feature sweeps a grid."
+
+[[symbol]]
+qualname = "pluss::ai::classic::dependence_surface"
+kind = "function"
+family = "classic/inspection"
+page = "api/classic/inspection/dependence_surface.md"
+summary = "Mean model prediction over a 2-D grid of two features."
+
+# --- balance ----------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::class_mix"
+kind = "function"
+family = "classic/balance"
+page = "api/classic/balance/class_mix.md"
+summary = "Class counts, proportions, inverse frequencies, and the imbalance ratio for a label vector."
+
+[[symbol]]
+qualname = "pluss::ai::classic::resolve_weight_plan"
+kind = "function"
+family = "classic/balance"
+page = "api/classic/balance/resolve_weight_plan.md"
+summary = "Turn a class-weight policy plus batch weights into concrete per-sample weights; resolve_training_weights returns just the vector."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::plan_balance"
+kind = "function"
+family = "classic/balance"
+page = "api/classic/balance/plan_balance.md"
+summary = "Compute the resample / synthesize / clean plan for a target class mix, without moving data."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::balance_rows"
+kind = "function"
+family = "classic/balance"
+page = "api/classic/balance/balance_rows.md"
+summary = "Apply a balance plan and return the rebalanced LabeledBatch."
+
+[[symbol]]
+qualname = "pluss::ai::classic::ClassMix"
+kind = "class"
+family = "classic/balance"
+page = "api/classic/balance/ClassMix.md"
+summary = "The class-distribution summary shared by every balance routine."
+
+[[symbol]]
+qualname = "pluss::ai::classic::BalancePlan"
+kind = "class"
+family = "classic/balance"
+page = "api/classic/balance/BalancePlan.md"
+summary = "The full index / synthesis / cleaning recipe balance_rows executes."
+
+[[symbol]]
+qualname = "pluss::ai::classic::BalanceTarget"
+kind = "options"
+family = "classic/balance"
+page = "api/classic/balance/BalanceTarget.md"
+summary = "The desired class mix and how to reach it: resample, blend neighbors, clean."
+fields = ["kind", "ratio", "counts", "growth", "neighbors", "clean", "clean_neighbors", "clean_vote", "protect_small_classes"]
+
+# --- neighbors ------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::SpatialIndex"
+kind = "class"
+family = "classic/neighbors"
+page = "api/classic/neighbors/SpatialIndex.md"
+summary = "An exact KD-tree k-nearest-neighbor index over a fixed point set."
+methods = ["build", "query_k", "query_self_k"]
+
+# --- io ------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::classic::io::FlowBundle"
+kind = "class"
+family = "classic/io"
+page = "api/classic/io/FlowBundle.md"
+summary = "The serialized form of a Flow: specs, fitted state, training batch, category maps."
+
+[[symbol]]
+qualname = "pluss::ai::classic::io::save"
+kind = "function"
+family = "classic/io"
+page = "api/classic/io/save.md"
+summary = "Write a Flow to a bundle file; the self-describing and explicit-batch forms."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::classic::io::load"
+kind = "function"
+family = "classic/io"
+page = "api/classic/io/load.md"
+summary = "Read a FlowBundle from disk; restore and load_and_restore rebuild a runnable Flow."
+overloads = 3

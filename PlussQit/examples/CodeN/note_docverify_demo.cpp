@@ -14,19 +14,22 @@ void print_marker(::std::string_view label) {
   std::cout << "== " << label << " ==\n";
 }
 
-void print_mask(::std::string_view label, const std::vector<std::uint8_t>& values) {
+// contains()/is_*() predicates and lengths_*()/count_*() measurements return
+// a shape-preserving Bool/Int64 Note (passes 4-5 of the Note redesign), not
+// a raw std::vector.
+void print_mask(::std::string_view label, const pluss::Note& mask) {
   print_marker(label);
   std::cout << label << ":";
-  for (std::uint8_t v : values) {
+  for (std::uint8_t v : mask.bools()) {
     std::cout << " " << static_cast<int>(v);
   }
   std::cout << "\n";
 }
 
-void print_lengths(::std::string_view label, const std::vector<std::int64_t>& values) {
+void print_lengths(::std::string_view label, const pluss::Note& lengths) {
   print_marker(label);
   std::cout << label << ":";
-  for (std::int64_t v : values) {
+  for (std::int64_t v : lengths.integers()) {
     std::cout << " " << v;
   }
   std::cout << "\n";
@@ -48,7 +51,7 @@ void print_batch(::std::string_view label, const pluss::coden::TokenBatch& batch
   }
   std::cout << "\n";
   std::cout << label << " offsets:";
-  for (std::int64_t off : batch.offsets()) {
+  for (std::int64_t off : batch.offsets().integers()) {
     std::cout << " " << off;
   }
   std::cout << "\n";

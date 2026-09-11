@@ -2751,7 +2751,7 @@ Thread Thread::compare(double other, ThreadBinaryCompareOp op) const {
 
 Thread Thread::compare(std::string_view other, ThreadBinaryCompareOp op) const {
   if (kind() == ThreadKind::Note) {
-    std::vector<std::uint8_t> raw;
+    pluss::Note raw = pluss::Note::undefined();
     switch (op) {
       case ThreadBinaryCompareOp::Eq:
         raw = (as_note() == other);

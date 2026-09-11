@@ -64,7 +64,7 @@ the associated year boundary ambiguous.
 - [`week`](week.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dayofyear.html"><span class="label">Previous</span><span class="title">dayofyear</span></a>
-  <a class="next-link" href="quarter_scalar.html"><span class="label">Next</span><span class="title">quarter_scalar</span></a>
+  <a class="prev-link" href="period_start.html"><span class="label">Previous</span><span class="title">period_start</span></a>
+  <a class="next-link" href="quarter_end_scalar.html"><span class="label">Next</span><span class="title">quarter_end_scalar</span></a>
 </div>
 <!-- pluss-hand-authored -->

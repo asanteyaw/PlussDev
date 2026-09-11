@@ -17,7 +17,7 @@ ExtractSpecView as_specs(const std::vector<ExtractSpec>& specs) {
 } // namespace
 
 int main() {
-  let x = pluss::make_series(
+  auto x = pluss::make_series(
       std::vector<double>{
           10, 11, 12, 13,
           20, 21, 22, 23,

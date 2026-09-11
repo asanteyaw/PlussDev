@@ -278,6 +278,9 @@ set(NODEJ_LYMPH_DEMOS
   lymph_reports_threshold_curve_example_2
   lymph_reports_threshold_curve_example_3
   lymph_reports_model_example_1
+  lymph_options_example_1
+  lymph_options_example_2
+  lymph_options_example_3
   lymph_selection_gridaxis_example_1
   lymph_selection_gridaxis_example_2
   lymph_selection_gridaxis_example_3

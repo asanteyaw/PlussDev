@@ -65,12 +65,12 @@ true
 - [`Timeline::isoformat`](isoformat.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isvalid.html">
+  <a class="prev-link" href="isnat.html">
     <span class="label">Previous</span>
-    <span class="title">isvalid</span>
+    <span class="title">isnat</span>
   </a>
-  <a class="next-link" href="argsort.html">
+  <a class="next-link" href="isoformat.html">
     <span class="label">Next</span>
-    <span class="title">argsort</span>
+    <span class="title">isoformat</span>
   </a>
 </div>
